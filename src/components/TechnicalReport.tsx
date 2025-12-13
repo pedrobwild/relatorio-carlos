@@ -34,15 +34,14 @@ const TechnicalReport = () => {
   return (
     <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
       <ReportSection variant="purple" title="">
-        <h2 className="text-xl md:text-2xl font-bold text-foreground mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-foreground">
           Atualização Técnica da Obra
         </h2>
-        <p className="text-foreground font-semibold">
-          Olá, Carlos Ney, tudo bem?
-        </p>
       </ReportSection>
 
       <p className="text-muted-foreground leading-relaxed mb-6">
+        <strong className="text-foreground">Olá, Carlos Ney, tudo bem?</strong>
+        <br /><br />
         Quero te trazer uma atualização técnica e objetiva sobre o andamento da obra. 
         De fato, tivemos um atraso concentrado no início (mobilização e encadeamento de frentes), 
         mas a obra está estabilizada, com planejamento reprogramado, equipes sincronizadas e 
