@@ -1,17 +1,52 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, FileText } from "lucide-react";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import TechnicalReport from "@/components/TechnicalReport";
+import { toast } from "sonner";
+import html2pdf from "html2pdf.js";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("curvaS");
+  const [isExporting, setIsExporting] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current) return;
+
+    setIsExporting(true);
+    toast.info("Gerando PDF...");
+
+    try {
+      const element = reportRef.current;
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `Relatorio_Obra_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+      toast.success("PDF exportado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error);
+      toast.error("Erro ao gerar PDF. Tente novamente.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen p-3 md:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto" ref={reportRef}>
         <ReportHeader
           projectName="Condomínio MY ONE BROOKLIN"
           unitName="Unidade 502"
@@ -21,6 +56,8 @@ const Index = () => {
           completedActivities={4}
           totalActivities={16}
           startedActivities={7}
+          onExportPDF={handleExportPDF}
+          isExporting={isExporting}
         />
 
         <div className="bg-card rounded-xl shadow-card overflow-hidden animate-fade-in" style={{ animationDelay: "0.1s" }}>
