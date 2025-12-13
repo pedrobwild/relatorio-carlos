@@ -1,3 +1,5 @@
+import bwildLogo from "@/assets/bwild-logo.png";
+
 interface ReportHeaderProps {
   projectName: string;
   unitName: string;
@@ -25,11 +27,11 @@ const ReportHeader = ({
   return (
     <header className="bg-card rounded-xl shadow-card p-6 md:p-8 mb-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div className="gradient-primary rounded-lg px-6 py-3 flex items-center justify-center">
-          <span className="text-primary-foreground text-2xl font-bold tracking-tight">
-            Bwild
-          </span>
-        </div>
+        <img 
+          src={bwildLogo} 
+          alt="Bwild Logo" 
+          className="h-12 md:h-14 w-auto"
+        />
         <div className="text-left md:text-right">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
             Relatório de Obra
