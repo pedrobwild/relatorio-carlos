@@ -189,14 +189,15 @@ const ScheduleTable = () => {
         Cronograma Detalhado
       </h3>
 
-      {/* Mobile Card View - UX Optimized */}
+      {/* Mobile Card View - UX Optimized with Staggered Animations */}
       <div className="md:hidden space-y-3">
         {activities.map((activity, index) => {
           const status = getActivityStatus(activity);
           return (
             <div
               key={index}
-              className="bg-card border border-border rounded-xl p-4 shadow-sm active:scale-[0.99] transition-transform"
+              className="bg-card border border-border rounded-xl p-4 shadow-sm active:scale-[0.99] transition-transform opacity-0 animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
             >
               {/* Header with status */}
               <div className="flex items-start justify-between gap-2 mb-3">
