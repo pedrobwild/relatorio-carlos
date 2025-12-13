@@ -36,23 +36,28 @@ const SCurveChart = () => {
         Curva S - Atividades Iniciadas
       </h2>
 
-      <div className="h-[300px] md:h-[400px] w-full">
+      <div className="h-[250px] md:h-[400px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="date"
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
               tickLine={{ stroke: "hsl(var(--border))" }}
+              interval="preserveStartEnd"
+              angle={-45}
+              textAnchor="end"
+              height={50}
             />
             <YAxis
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
               tickLine={{ stroke: "hsl(var(--border))" }}
               tickFormatter={(value) => `${value}%`}
               domain={[0, 100]}
+              width={40}
             />
             <Tooltip
               contentStyle={{
@@ -60,31 +65,32 @@ const SCurveChart = () => {
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 boxShadow: "var(--shadow-md)",
+                fontSize: "12px",
               }}
               labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
               formatter={(value: number) => [`${value}%`, ""]}
             />
             <Legend
-              wrapperStyle={{ paddingTop: "20px" }}
+              wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
               formatter={(value) =>
-                value === "previsto" ? "Curva Prevista" : "Curva Realizada"
+                value === "previsto" ? "Prevista" : "Realizada"
               }
             />
             <Line
               type="monotone"
               dataKey="previsto"
               stroke="hsl(var(--primary))"
-              strokeWidth={3}
-              dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+              strokeWidth={2}
+              dot={{ fill: "hsl(var(--primary))", strokeWidth: 1, r: 3 }}
+              activeDot={{ r: 5, fill: "hsl(var(--primary))" }}
             />
             <Line
               type="monotone"
               dataKey="realizado"
               stroke="hsl(var(--success))"
-              strokeWidth={3}
-              dot={{ fill: "hsl(var(--success))", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: "hsl(var(--success))" }}
+              strokeWidth={2}
+              dot={{ fill: "hsl(var(--success))", strokeWidth: 1, r: 3 }}
+              activeDot={{ r: 5, fill: "hsl(var(--success))" }}
             />
           </LineChart>
         </ResponsiveContainer>

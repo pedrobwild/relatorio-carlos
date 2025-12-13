@@ -132,28 +132,57 @@ const activities: Activity[] = [
 
 const ScheduleTable = () => {
   return (
-    <div className="mt-8">
-      <h3 className="text-lg md:text-xl font-bold text-foreground mb-4">
+    <div className="mt-6 md:mt-8">
+      <h3 className="text-base md:text-xl font-bold text-foreground mb-3 md:mb-4">
         Cronograma Detalhado
       </h3>
 
-      <div className="overflow-x-auto rounded-lg border-2 border-muted-foreground/30 shadow-card">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {activities.map((activity, index) => (
+          <div
+            key={index}
+            className="bg-card border border-border rounded-lg p-3 shadow-sm"
+          >
+            <p className="text-sm font-medium text-foreground mb-2">
+              {activity.description}
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-accent/50 rounded p-2">
+                <p className="text-muted-foreground mb-1">Previsto</p>
+                <p className="text-foreground font-medium">
+                  {activity.plannedStart} - {activity.plannedEnd}
+                </p>
+              </div>
+              <div className="bg-success-light rounded p-2">
+                <p className="text-muted-foreground mb-1">Realizado</p>
+                <p className="text-foreground font-medium">
+                  {activity.actualStart} - {activity.actualEnd}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto rounded-lg border-2 border-muted-foreground/30 shadow-card">
         <Table>
           <TableHeader>
             <TableRow className="gradient-primary hover:bg-transparent">
-              <TableHead className="text-primary-foreground font-bold text-xs md:text-sm w-[40%] text-left border-r-2 border-primary-dark">
+              <TableHead className="text-primary-foreground font-bold text-sm w-[40%] text-left border-r-2 border-primary-dark">
                 DESCRIÇÃO DE ATIVIDADES
               </TableHead>
-              <TableHead className="text-primary-foreground font-bold text-xs md:text-sm text-center border-r-2 border-primary-dark">
+              <TableHead className="text-primary-foreground font-bold text-sm text-center border-r-2 border-primary-dark">
                 DATA DE INÍCIO<br />PREVISTA
               </TableHead>
-              <TableHead className="text-primary-foreground font-bold text-xs md:text-sm text-center border-r-2 border-primary-dark">
+              <TableHead className="text-primary-foreground font-bold text-sm text-center border-r-2 border-primary-dark">
                 DATA DE TÉRMINO<br />PREVISTO
               </TableHead>
-              <TableHead className="bg-accent text-foreground font-bold text-xs md:text-sm text-center border-r-2 border-muted-foreground/30">
+              <TableHead className="bg-accent text-foreground font-bold text-sm text-center border-r-2 border-muted-foreground/30">
                 DATA DE INÍCIO
               </TableHead>
-              <TableHead className="bg-accent text-foreground font-bold text-xs md:text-sm text-center">
+              <TableHead className="bg-accent text-foreground font-bold text-sm text-center">
                 DATA DE TÉRMINO
               </TableHead>
             </TableRow>
@@ -164,19 +193,19 @@ const ScheduleTable = () => {
                 key={index}
                 className="transition-colors hover:bg-muted/50"
               >
-                <TableCell className="bg-accent/50 text-foreground text-xs md:text-sm font-medium border-r-2 border-border">
+                <TableCell className="bg-accent/50 text-foreground text-sm font-medium border-r-2 border-border">
                   {activity.description}
                 </TableCell>
-                <TableCell className="text-center text-xs md:text-sm border-r-2 border-border">
+                <TableCell className="text-center text-sm border-r-2 border-border">
                   {activity.plannedStart}
                 </TableCell>
-                <TableCell className="text-center text-xs md:text-sm border-r-2 border-border">
+                <TableCell className="text-center text-sm border-r-2 border-border">
                   {activity.plannedEnd}
                 </TableCell>
-                <TableCell className="text-center text-xs md:text-sm border-r-2 border-border">
+                <TableCell className="text-center text-sm border-r-2 border-border">
                   {activity.actualStart}
                 </TableCell>
-                <TableCell className="text-center text-xs md:text-sm">
+                <TableCell className="text-center text-sm">
                   {activity.actualEnd}
                 </TableCell>
               </TableRow>
