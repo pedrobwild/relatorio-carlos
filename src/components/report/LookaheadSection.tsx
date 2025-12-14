@@ -11,11 +11,11 @@ interface LookaheadSectionProps {
 const getRiskBadge = (risk: LookaheadTask["risk"]) => {
   switch (risk) {
     case "baixo":
-      return <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">Baixo</Badge>;
+      return null; // Don't show badge for low risk
     case "médio":
-      return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">Médio</Badge>;
+      return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">Risco Mapeado</Badge>;
     case "alto":
-      return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">Alto</Badge>;
+      return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">Risco Mapeado</Badge>;
   }
 };
 
