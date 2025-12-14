@@ -1,6 +1,6 @@
 import bwildLogo from "@/assets/bwild-logo.png";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar, Target, FileText } from "lucide-react";
+import { Download, Calendar, Target, FileText, CheckCircle2 } from "lucide-react";
 import { Activity } from "@/types/report";
 import { Progress } from "@/components/ui/progress";
 
@@ -35,15 +35,12 @@ const calculateTotalDeviation = (activities: Activity[]): number => {
   let totalDeviation = 0;
   
   activities.forEach(a => {
-    // Para atividades concluídas, usar o desvio do término
     if (a.actualEnd && a.plannedEnd) {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       const actualEnd = new Date(a.actualEnd + "T00:00:00");
       const diffDays = Math.ceil((actualEnd.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24));
       totalDeviation += diffDays;
-    }
-    // Para atividades em andamento, usar o desvio do início
-    else if (a.actualStart && a.plannedStart && !a.actualEnd) {
+    } else if (a.actualStart && a.plannedStart && !a.actualEnd) {
       const plannedStart = new Date(a.plannedStart + "T00:00:00");
       const actualStart = new Date(a.actualStart + "T00:00:00");
       const diffDays = Math.ceil((actualStart.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24));
@@ -73,97 +70,140 @@ const ReportHeader = ({
   
   // Calculate total deviation
   const totalDeviation = calculateTotalDeviation(activities);
+  
+  // Determine schedule status
+  const getScheduleStatus = () => {
+    if (totalDeviation <= 0) return { label: "Em dia", color: "text-success", bgColor: "bg-success/10" };
+    if (totalDeviation <= 3) return { label: "Atenção", color: "text-warning", bgColor: "bg-warning/10" };
+    return { label: "Atrasado", color: "text-destructive", bgColor: "bg-destructive/10" };
+  };
+  
+  const scheduleStatus = getScheduleStatus();
 
   return (
     <header className="bg-card rounded-xl shadow-card overflow-hidden mb-4 md:mb-6 animate-fade-in">
-      {/* Top Section - Logo, Title, Export */}
-      <div className="p-4 md:p-6 lg:p-8">
-        <div className="flex flex-col gap-5">
-          {/* Header Row: Logo + Title + Export */}
-          <div className="flex items-center justify-between gap-4">
-            {/* Logo */}
-            <div className="shrink-0">
-              <img 
-                src={bwildLogo} 
-                alt="Bwild Logo" 
-                className="h-10 md:h-12 w-auto transition-transform hover:scale-105"
-              />
+      {/* Top Section - Branding & Actions */}
+      <div className="relative">
+        {/* Gradient accent bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
+        
+        <div className="p-5 md:p-6 lg:p-8 pt-6 md:pt-7 lg:pt-9">
+          {/* Header Row */}
+          <div className="flex items-start justify-between gap-4 mb-6">
+            {/* Logo with container */}
+            <div className="flex items-center gap-4">
+              <div className="bg-background rounded-xl p-2.5 shadow-sm border border-border/50">
+                <img 
+                  src={bwildLogo} 
+                  alt="Bwild" 
+                  className="h-8 md:h-10 w-auto"
+                />
+              </div>
+              
+              {/* Desktop: Inline project badge */}
+              <div className="hidden lg:flex items-center gap-2">
+                <span className="text-xs font-medium text-foreground/50 uppercase tracking-wider">Relatório de Obra</span>
+              </div>
             </div>
 
             {/* Export Button - Desktop */}
             {onExportPDF && (
-              <div className="hidden md:block shrink-0">
-                <Button
-                  onClick={onExportPDF}
-                  disabled={isExporting}
-                  size="default"
-                  className="shadow-sm"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {isExporting ? "Gerando..." : "Exportar PDF"}
-                </Button>
+              <Button
+                onClick={onExportPDF}
+                disabled={isExporting}
+                size="default"
+                className="hidden md:inline-flex shadow-sm gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {isExporting ? "Gerando..." : "Exportar PDF"}
+              </Button>
+            )}
+          </div>
+
+          {/* Project Title Section */}
+          <div className="space-y-3 mb-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground tracking-tight leading-none">
+                {projectName}
+              </h1>
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm md:text-base font-semibold">
+                {unitName}
+              </span>
+            </div>
+            
+            {clientName && (
+              <div className="flex items-center gap-2 text-sm md:text-base">
+                <span className="text-foreground/60">Cliente:</span>
+                <span className="font-semibold text-foreground">{clientName}</span>
               </div>
             )}
           </div>
 
-          {/* Project Info */}
-          <div className="space-y-1">
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground tracking-tight leading-tight">
-              {projectName} – {unitName}
-            </h1>
-            {clientName && (
-              <p className="text-sm md:text-base text-foreground/70">
-                Cliente: <span className="font-medium text-foreground">{clientName}</span>
-              </p>
-            )}
-          </div>
-
-          {/* Export Button - Mobile (Full width) */}
+          {/* Mobile Export Button */}
           {onExportPDF && (
-            <div className="md:hidden">
-              <Button
-                onClick={onExportPDF}
-                disabled={isExporting}
-                className="w-full h-12 text-base font-semibold"
-                size="lg"
-              >
-                <Download className="w-5 h-5 mr-2" />
-                {isExporting ? "Gerando..." : "Exportar PDF"}
-              </Button>
-            </div>
+            <Button
+              onClick={onExportPDF}
+              disabled={isExporting}
+              className="w-full h-12 text-base font-semibold md:hidden"
+              size="lg"
+            >
+              <Download className="w-5 h-5 mr-2" />
+              {isExporting ? "Gerando..." : "Exportar PDF"}
+            </Button>
           )}
         </div>
       </div>
 
-      {/* KPI Cards Section - Horizontal scroll on mobile */}
-      <div className="border-t border-border bg-secondary/30 px-3 py-3 md:px-6 md:py-5 lg:px-8 lg:py-6">
-        <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 md:grid md:grid-cols-4 md:gap-4 snap-x snap-mandatory scrollbar-hide">
-          <div className="min-w-[140px] md:min-w-0 snap-start">
-            <StatCard 
-              icon={Calendar}
-              label="Início" 
+      {/* KPI Section */}
+      <div className="border-t border-border bg-muted/30">
+        <div className="p-4 md:p-6 lg:p-8">
+          {/* Mobile: Horizontal scroll cards */}
+          <div className="flex gap-3 overflow-x-auto pb-2 md:hidden snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
+            <MetricCard 
+              label="Início"
               value={formatDate(startDate, baseYear)}
+              sublabel="Previsto"
             />
-          </div>
-          <div className="min-w-[140px] md:min-w-0 snap-start">
-            <StatCard 
-              icon={Target}
-              label="Término" 
+            <MetricCard 
+              label="Término"
               value={formatDate(endDate, baseYear)}
+              sublabel="Meta"
             />
-          </div>
-          <div className="min-w-[140px] md:min-w-0 snap-start">
-            <StatCard 
-              icon={FileText}
-              label="Relatório" 
+            <MetricCard 
+              label="Relatório"
               value={formatDate(reportDate, baseYear)}
+              sublabel="Emissão"
+            />
+            <ProgressMetricCard
+              percentage={completionPercentage}
+              completed={completedActivities}
+              total={activities.length}
+              status={scheduleStatus}
             />
           </div>
-          <div className="min-w-[160px] md:min-w-0 snap-start">
-            <ProgressCard
-              completionPercentage={completionPercentage}
-              completedActivities={completedActivities}
-              totalActivities={activities.length}
+          
+          {/* Desktop: Grid layout */}
+          <div className="hidden md:grid md:grid-cols-4 gap-4 lg:gap-6">
+            <MetricCard 
+              label="Início"
+              value={formatDate(startDate, baseYear)}
+              sublabel="Previsto"
+            />
+            <MetricCard 
+              label="Término"
+              value={formatDate(endDate, baseYear)}
+              sublabel="Meta"
+            />
+            <MetricCard 
+              label="Relatório"
+              value={formatDate(reportDate, baseYear)}
+              sublabel="Emissão"
+            />
+            <ProgressMetricCard
+              percentage={completionPercentage}
+              completed={completedActivities}
+              total={activities.length}
+              status={scheduleStatus}
             />
           </div>
         </div>
@@ -172,57 +212,61 @@ const ReportHeader = ({
   );
 };
 
-interface StatCardProps {
-  icon: React.ElementType;
+interface MetricCardProps {
   label: string;
   value: string;
+  sublabel: string;
 }
 
-const StatCard = ({ icon: Icon, label, value }: StatCardProps) => {
+const MetricCard = ({ label, value, sublabel }: MetricCardProps) => {
   return (
-    <div className="bg-card rounded-lg p-3 md:p-4 border border-border/50 hover:border-border transition-colors">
-      <div className="flex items-start gap-3">
-        <div className="shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide font-medium truncate">
-            {label}
-          </p>
-          <p className="text-base md:text-xl font-bold text-foreground tabular-nums mt-0.5">
-            {value}
-          </p>
-        </div>
+    <div className="min-w-[130px] md:min-w-0 snap-start bg-card rounded-xl p-4 border border-border/60 hover:border-border hover:shadow-sm transition-all duration-200">
+      <div className="flex flex-col">
+        <span className="text-xs text-foreground/50 uppercase tracking-wider font-medium mb-1">
+          {sublabel}
+        </span>
+        <span className="text-2xl md:text-3xl font-bold text-foreground tabular-nums leading-none mb-1">
+          {value}
+        </span>
+        <span className="text-sm text-foreground/70 font-medium">
+          {label}
+        </span>
       </div>
     </div>
   );
 };
 
-
-interface ProgressCardProps {
-  completionPercentage: number;
-  completedActivities: number;
-  totalActivities: number;
+interface ProgressMetricCardProps {
+  percentage: number;
+  completed: number;
+  total: number;
+  status: { label: string; color: string; bgColor: string };
 }
 
-const ProgressCard = ({ completionPercentage, completedActivities, totalActivities }: ProgressCardProps) => {
+const ProgressMetricCard = ({ percentage, completed, total, status }: ProgressMetricCardProps) => {
   return (
-    <div className="bg-card rounded-lg p-3 md:p-4 border border-border/50 hover:border-border transition-colors">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide font-medium">
-            Conclusão
-          </p>
-          <span className="text-xs md:text-sm text-muted-foreground font-medium">
-            {completedActivities}/{totalActivities}
+    <div className="min-w-[160px] md:min-w-0 snap-start bg-card rounded-xl p-4 border border-border/60 hover:border-border hover:shadow-sm transition-all duration-200">
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-foreground/50 uppercase tracking-wider font-medium">
+            Progresso
+          </span>
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${status.bgColor} ${status.color}`}>
+            <CheckCircle2 className="w-3 h-3" />
+            {status.label}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <Progress value={completionPercentage} className="h-2.5 flex-1" />
-          <span className="text-lg md:text-xl font-bold text-primary tabular-nums min-w-[3rem] text-right">
-            {completionPercentage}%
+        
+        <div className="flex items-end justify-between gap-3 mb-2">
+          <span className="text-3xl md:text-4xl font-bold text-primary tabular-nums leading-none">
+            {percentage}%
+          </span>
+          <span className="text-sm text-foreground/60 font-medium pb-1">
+            {completed}/{total} etapas
           </span>
         </div>
+        
+        <Progress value={percentage} className="h-2" />
       </div>
     </div>
   );
