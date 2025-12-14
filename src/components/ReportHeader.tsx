@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
-import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Calendar, ChevronRight } from "lucide-react";
+import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Calendar, ChevronDown } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ReportHeaderProps {
@@ -252,9 +252,9 @@ const ReportHeader = ({
                   <p className="text-[9px] font-medium text-primary/70 uppercase tracking-wide">{contact.role}</p>
                   <p className="text-xs font-semibold text-foreground">{contact.name}</p>
                 </div>
-                <div className="flex items-center gap-0.5 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
-                  <Phone className="w-3 h-3" />
-                  <span className="text-[10px] font-semibold">Ligar</span>
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
+                  <span className="text-[10px] font-semibold">Contato</span>
+                  <ChevronDown className="w-3 h-3" />
                 </div>
               </a>
             ))}
