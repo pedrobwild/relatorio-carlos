@@ -1,6 +1,6 @@
 import bwildLogo from "@/assets/bwild-logo.png";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar, Target, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Download, Calendar, Target, FileText } from "lucide-react";
 import { Activity } from "@/types/report";
 import { Progress } from "@/components/ui/progress";
 
@@ -10,6 +10,7 @@ interface ReportHeaderProps {
   clientName: string;
   startDate: string;
   endDate: string;
+  reportDate: string;
   activities: Activity[];
   onExportPDF?: () => void;
   isExporting?: boolean;
@@ -59,6 +60,7 @@ const ReportHeader = ({
   clientName,
   startDate,
   endDate,
+  reportDate,
   activities,
   onExportPDF,
   isExporting = false,
@@ -138,7 +140,7 @@ const ReportHeader = ({
 
       {/* KPI Cards Section */}
       <div className="border-t border-border bg-secondary/30 px-4 py-4 md:px-6 md:py-5 lg:px-8 lg:py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 md:gap-4">
           <StatCard 
             icon={Calendar}
             label="Início da Obra" 
@@ -148,6 +150,11 @@ const ReportHeader = ({
             icon={Target}
             label="Previsão de Término" 
             value={formatDate(endDate, baseYear)}
+          />
+          <StatCard 
+            icon={FileText}
+            label="Data do Relatório" 
+            value={formatDate(reportDate, baseYear)}
           />
           <ProgressCard
             completionPercentage={completionPercentage}
@@ -186,43 +193,6 @@ const StatCard = ({ icon: Icon, label, value }: StatCardProps) => {
   );
 };
 
-interface DeviationCardProps {
-  totalDeviation: number;
-}
-
-const DeviationCard = ({ totalDeviation }: DeviationCardProps) => {
-  const isAhead = totalDeviation < 0;
-  const isOnTime = totalDeviation === 0;
-  
-  const Icon = isOnTime ? Minus : isAhead ? TrendingUp : TrendingDown;
-  const statusText = isOnTime ? "No prazo" : isAhead ? "Adiantado" : "Atrasado";
-  const colorClass = isOnTime ? "text-muted-foreground" : isAhead ? "text-success" : "text-warning";
-  const bgClass = isOnTime ? "bg-muted" : isAhead ? "bg-success/10" : "bg-warning/10";
-  const iconBgClass = isOnTime ? "bg-muted" : isAhead ? "bg-success/10" : "bg-warning/10";
-  
-  return (
-    <div className="bg-card rounded-lg p-3 md:p-4 border border-border/50 hover:border-border transition-colors">
-      <div className="flex items-start gap-3">
-        <div className={`shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-lg ${iconBgClass} flex items-center justify-center`}>
-          <Icon className={`w-4 h-4 md:w-5 md:h-5 ${colorClass}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide font-medium truncate">
-            Status Geral
-          </p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className={`text-base md:text-xl font-bold tabular-nums ${colorClass}`}>
-              {isOnTime ? "0d" : isAhead ? `${Math.abs(totalDeviation)}d` : `+${totalDeviation}d`}
-            </span>
-            <span className={`text-[10px] md:text-xs font-semibold px-1.5 py-0.5 rounded ${bgClass} ${colorClass}`}>
-              {statusText}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 interface ProgressCardProps {
   completionPercentage: number;
