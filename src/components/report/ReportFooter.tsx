@@ -10,21 +10,6 @@ interface ReportFooterProps {
 const ReportFooter = ({ data }: ReportFooterProps) => {
   return (
     <div className="bg-card rounded-lg border border-border p-4 sm:p-5 space-y-4">
-      {/* Next Milestones Reminder */}
-      <div className="flex items-start gap-3">
-        <Calendar className="w-4 h-4 text-foreground/60 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-semibold text-foreground mb-2">Próximos marcos</p>
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-            {data.nextMilestones.slice(0, 3).map((milestone, index) => (
-              <span key={index} className="text-xs sm:text-sm text-foreground/70 bg-secondary px-2.5 py-1.5 rounded">
-                {milestone.description} ({format(new Date(milestone.dueDate), "dd/MM", { locale: ptBR })})
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Disclaimer */}
       <div className="flex items-start gap-3 text-xs sm:text-sm text-foreground/70">
         <Info className="w-4 h-4 shrink-0 mt-0.5" />
