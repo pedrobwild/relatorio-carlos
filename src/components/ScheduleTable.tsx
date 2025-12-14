@@ -67,9 +67,17 @@ const getDelayDays = (activity: Activity): number | null => {
   if (plannedEnd && actualEnd) {
     const diffTime = actualEnd.getTime() - plannedEnd.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return diffDays; // Positive = delayed, Negative = ahead
   }
   return null;
+};
+
+// Formatação do desvio em dias
+const formatDeviation = (days: number | null): { text: string; className: string } => {
+  if (days === null) return { text: "—", className: "text-muted-foreground" };
+  if (days === 0) return { text: "No prazo", className: "text-success" };
+  if (days > 0) return { text: `+${days}d`, className: "text-warning font-semibold" };
+  return { text: `${days}d`, className: "text-success font-semibold" };
 };
 
 const statusOrder: Record<Status, number> = {
@@ -264,9 +272,9 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                     {index + 1}
                   </span>
-                  {isDelayed && delayDays && (
-                    <span className="text-[10px] font-semibold text-warning">
-                      +{delayDays} dias
+                  {delayDays !== null && (
+                    <span className={`text-[10px] font-semibold ${formatDeviation(delayDays).className}`}>
+                      {formatDeviation(delayDays).text}
                     </span>
                   )}
                 </div>
@@ -365,10 +373,13 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                   currentField={sortField}
                   direction={sortDirection}
                   onSort={handleSort}
-                  className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5 pr-4"
+                  className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5"
                 >
                   Status
                 </SortableHeader>
+                <TableHead className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5 pr-4 text-center">
+                  Desvio
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -418,17 +429,15 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                       {formatDate(activity.actualStart, baseYear)}
                     </TableCell>
                     <TableCell className={`py-3.5 text-center text-sm font-medium tabular-nums ${
-                      isDelayed ? "text-warning" : "text-foreground"
+                      delayDays !== null && delayDays > 0 ? "text-warning" : "text-foreground"
                     }`}>
                       {formatDate(activity.actualEnd, baseYear)}
-                      {isDelayed && delayDays && (
-                        <span className="ml-1.5 text-[10px] text-warning font-semibold">
-                          (+{delayDays}d)
-                        </span>
-                      )}
                     </TableCell>
-                    <TableCell className="py-3.5 pr-4 text-center">
+                    <TableCell className="py-3.5 text-center">
                       <StatusBadge status={status} />
+                    </TableCell>
+                    <TableCell className={`py-3.5 pr-4 text-center text-sm tabular-nums ${formatDeviation(delayDays).className}`}>
+                      {formatDeviation(delayDays).text}
                     </TableCell>
                   </TableRow>
                 );
