@@ -37,7 +37,7 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
             )}
             
             <div className="flex flex-col gap-1.5 text-xs">
-              <div className="flex items-center gap-1.5 text-warning font-semibold">
+              <div className="flex items-center gap-1.5 text-foreground font-semibold">
                 <Calendar className="w-3 h-3 shrink-0" />
                 <span>Prazo para decisão: {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}</span>
               </div>
