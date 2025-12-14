@@ -141,10 +141,11 @@ export const week10SeedData: WeeklyReportData = {
   ],
   
   deliverablesCompleted: [
-    { id: "1", description: "Ajustes finais de portas e alinhamentos da marcenaria", completed: true },
-    { id: "2", description: "Instalação de puxadores e ferragens finais", completed: true },
-    { id: "3", description: "Testes elétricos (tomadas críticas e disjuntores) + revisão de pontos", completed: true },
-    { id: "4", description: "Selagens/acabamentos finais em áreas molhadas (silicone e arremates)", completed: true },
+    { id: "1", description: "Armários montados e instalados (cozinha/ambientes previstos)", completed: true },
+    { id: "2", description: "Portas e gavetas ajustadas para abrir/fechar bem", completed: true },
+    { id: "3", description: "Puxadores e ferragens instalados", completed: true },
+    { id: "4", description: "Alinhamento e nivelamento final conferidos", completed: true },
+    { id: "5", description: "Acabamentos e arremates finalizados (laterais/rodapé/encontros)", completed: true },
   ],
   
   lookaheadTasks: [
