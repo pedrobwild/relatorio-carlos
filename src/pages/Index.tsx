@@ -140,8 +140,6 @@ const Index = () => {
             endDate={reportData.endDate}
             reportDate={reportData.reportDate}
             activities={reportData.activities}
-            onExportPDF={handleExportPDF}
-            isExporting={isExporting}
           />
 
           <div className="bg-card rounded-xl shadow-card overflow-hidden animate-fade-in" style={{ animationDelay: "0.1s" }}>

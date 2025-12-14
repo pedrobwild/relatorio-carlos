@@ -1,6 +1,5 @@
 import bwildLogo from "@/assets/bwild-logo.png";
-import { Button } from "@/components/ui/button";
-import { Download, FileText, Box, Ruler, DollarSign, Headphones } from "lucide-react";
+import { FileText, Box, Ruler, DollarSign, Headphones } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ReportHeaderProps {
@@ -11,8 +10,6 @@ interface ReportHeaderProps {
   endDate: string;
   reportDate: string;
   activities: Activity[];
-  onExportPDF?: () => void;
-  isExporting?: boolean;
 }
 
 const formatDate = (dateStr: string): string => {
@@ -31,12 +28,7 @@ const ReportHeader = ({
   endDate,
   reportDate,
   activities,
-  onExportPDF,
-  isExporting = false,
 }: ReportHeaderProps) => {
-  const completedActivities = activities.filter(a => a.actualEnd).length;
-  const completionPercentage = Math.round((completedActivities / activities.length) * 100);
-
   const quickLinks = [
     { icon: FileText, label: "Contrato", href: "#contrato" },
     { icon: Box, label: "Projeto 3D", href: "#projeto-3d" },
@@ -48,7 +40,7 @@ const ReportHeader = ({
   return (
     <header className="bg-card rounded-xl border border-border overflow-hidden mb-4 md:mb-6 animate-fade-in">
       <div className="p-4 md:p-5">
-        {/* Row 1: Logo + Project + Quick Links + Export */}
+        {/* Row 1: Logo + Project + Quick Links */}
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-4">
             <img 
@@ -69,33 +61,18 @@ const ReportHeader = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Quick Links - Desktop */}
-            <div className="hidden md:flex items-center gap-1 mr-2">
-              {quickLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                >
-                  <link.icon className="w-3.5 h-3.5" />
-                  {link.label}
-                </a>
-              ))}
-            </div>
-
-            {onExportPDF && (
-              <Button
-                onClick={onExportPDF}
-                disabled={isExporting}
-                size="sm"
-                variant="outline"
-                className="hidden md:inline-flex gap-2"
+          {/* Quick Links - Desktop */}
+          <div className="hidden md:flex items-center gap-1">
+            {quickLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
-                <Download className="w-4 h-4" />
-                {isExporting ? "Gerando..." : "Exportar PDF"}
-              </Button>
-            )}
+                <link.icon className="w-3.5 h-3.5" />
+                {link.label}
+              </a>
+            ))}
           </div>
         </div>
 
@@ -138,19 +115,6 @@ const ReportHeader = ({
             <span className="font-medium text-foreground">08/09/2025</span>
           </span>
         </div>
-
-        {/* Mobile Export Button */}
-        {onExportPDF && (
-          <Button
-            onClick={onExportPDF}
-            disabled={isExporting}
-            className="w-full mt-4 md:hidden"
-            size="default"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            {isExporting ? "Gerando..." : "Exportar PDF"}
-          </Button>
-        )}
       </div>
     </header>
   );
