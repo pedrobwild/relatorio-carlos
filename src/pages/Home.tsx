@@ -1,19 +1,89 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, Building2 } from "lucide-react";
+import { Plus, FileText, Building2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreateReportModal from "@/components/CreateReportModal";
 import { ReportData } from "@/types/report";
 import bwildLogo from "@/assets/bwild-logo.png";
+
+const sampleReportData: ReportData = {
+  projectName: "Hub Brooklyn",
+  unitName: "502",
+  clientName: "Construtora Nova Era",
+  startDate: "2024-01-15",
+  endDate: "2024-06-30",
+  activities: [
+    {
+      description: "Fundação e Terraplanagem",
+      plannedStart: "2024-01-15",
+      plannedEnd: "2024-02-10",
+      actualStart: "2024-01-15",
+      actualEnd: "2024-02-08",
+    },
+    {
+      description: "Estrutura - Pilares e Vigas",
+      plannedStart: "2024-02-11",
+      plannedEnd: "2024-03-15",
+      actualStart: "2024-02-10",
+      actualEnd: "2024-03-18",
+    },
+    {
+      description: "Alvenaria Externa",
+      plannedStart: "2024-03-16",
+      plannedEnd: "2024-04-10",
+      actualStart: "2024-03-20",
+      actualEnd: "2024-04-15",
+    },
+    {
+      description: "Instalações Elétricas",
+      plannedStart: "2024-04-11",
+      plannedEnd: "2024-04-30",
+      actualStart: "2024-04-16",
+      actualEnd: "2024-05-05",
+    },
+    {
+      description: "Instalações Hidráulicas",
+      plannedStart: "2024-04-11",
+      plannedEnd: "2024-04-30",
+      actualStart: "2024-04-18",
+      actualEnd: "2024-05-02",
+    },
+    {
+      description: "Revestimento Interno",
+      plannedStart: "2024-05-01",
+      plannedEnd: "2024-05-20",
+      actualStart: "2024-05-06",
+      actualEnd: "2024-05-22",
+    },
+    {
+      description: "Pintura e Acabamentos",
+      plannedStart: "2024-05-21",
+      plannedEnd: "2024-06-10",
+      actualStart: "2024-05-23",
+      actualEnd: "",
+    },
+    {
+      description: "Limpeza Final e Entrega",
+      plannedStart: "2024-06-11",
+      plannedEnd: "2024-06-30",
+      actualStart: "",
+      actualEnd: "",
+    },
+  ],
+};
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleCreateReport = (data: ReportData) => {
-    // Store report data in sessionStorage for now
     sessionStorage.setItem("currentReport", JSON.stringify(data));
     setIsModalOpen(false);
+    navigate("/relatorio");
+  };
+
+  const handleViewSample = () => {
+    sessionStorage.setItem("currentReport", JSON.stringify(sampleReportData));
     navigate("/relatorio");
   };
 
@@ -81,15 +151,26 @@ const Home = () => {
             </div>
           </div>
 
-          {/* CTA Button */}
-          <Button
-            size="lg"
-            className="gradient-primary text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Criar Novo Relatório
-          </Button>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              className="gradient-primary text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Criar Novo Relatório
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/5 transition-all"
+              onClick={handleViewSample}
+            >
+              <Eye className="w-5 h-5 mr-2" />
+              Ver Exemplo
+            </Button>
+          </div>
         </div>
       </main>
 
