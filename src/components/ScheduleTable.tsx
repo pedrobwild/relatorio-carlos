@@ -89,7 +89,7 @@ const statusOrder: Record<Status, number> = {
   completed: 4,
 };
 
-const StatusBadge = ({ status, isCurrentPhase }: { status: Status; isCurrentPhase?: boolean }) => {
+const StatusBadge = ({ status }: { status: Status }) => {
   const config = {
     completed: {
       icon: CheckCircle2,
@@ -109,9 +109,7 @@ const StatusBadge = ({ status, isCurrentPhase }: { status: Status; isCurrentPhas
     "in-progress": {
       icon: Clock,
       label: "Em andamento",
-      className: isCurrentPhase 
-        ? "bg-primary text-primary-foreground border-primary" 
-        : "bg-info/10 text-info border-info/30",
+      className: "bg-info/10 text-info border-info/30",
     },
     pending: {
       icon: Clock,
@@ -278,30 +276,20 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
           return (
             <div
               key={index}
-              className={`bg-card border-2 rounded-xl p-3.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] ${
-                isCurrentPhase ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
-                isDelayed ? "border-destructive/40 bg-destructive/5" : 
-                isAhead ? "border-success/40 bg-success/5" : "border-border"
-              }`}
+              className="bg-card border rounded-xl p-3.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] border-border"
               style={{ animationDelay: `${index * 30}ms` }}
             >
-              {/* Current phase indicator */}
-              
               {/* Top row: Number, Title, Status */}
               <div className="flex items-start gap-2.5 mb-2">
-                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${
-                  isCurrentPhase ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-                }`}>
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 bg-primary/10 text-primary">
                   {originalIndex + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold leading-tight truncate ${
-                    isCurrentPhase ? "text-primary" : "text-foreground"
-                  }`}>
+                  <p className="text-sm font-semibold leading-tight truncate text-foreground">
                     {activity.description}
                   </p>
                 </div>
-                <StatusBadge status={status} isCurrentPhase={isCurrentPhase} />
+                <StatusBadge status={status} />
               </div>
 
               {/* Date info row */}
@@ -314,7 +302,7 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Real</p>
-                  <p className={`text-xs font-medium tabular-nums ${isDelayed ? "text-destructive" : isAhead ? "text-success" : "text-foreground"}`}>
+                  <p className="text-xs font-medium tabular-nums text-foreground">
                     {activity.actualStart ? `${formatDate(activity.actualStart, baseYear)} → ${formatDate(activity.actualEnd, baseYear)}` : "—"}
                   </p>
                 </div>
@@ -390,45 +378,24 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
               {sortedActivities.map((activity, index) => {
                 const originalIndex = activities.indexOf(activity);
                 const status = getActivityStatus(activity);
-                const isCurrentPhase = originalIndex === currentActivityIndex;
-                const delayDays = getDelayDays(activity);
-                const isDelayed = delayDays !== null && delayDays > 0;
                 
                 return (
                   <TableRow
                     key={index}
                     className={`transition-colors border-b border-border/50 last:border-b-0 ${
-                      isCurrentPhase
-                        ? "bg-primary/10 hover:bg-primary/15 ring-2 ring-inset ring-primary/30"
-                        : isDelayed 
-                          ? "bg-destructive/5 hover:bg-destructive/10" 
-                          : index % 2 === 0 
-                            ? "bg-card hover:bg-accent/30" 
-                            : "bg-secondary/20 hover:bg-accent/30"
+                      index % 2 === 0 
+                        ? "bg-card hover:bg-accent/30" 
+                        : "bg-secondary/20 hover:bg-accent/30"
                     }`}
                   >
                     <TableCell className="py-3.5 pl-4 pr-3">
                       <div className="flex items-center gap-2.5">
-                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 ${
-                          isCurrentPhase ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-                        }`}>
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary">
                           {originalIndex + 1}
                         </span>
-                        <span className={`text-sm font-medium leading-snug ${
-                          isCurrentPhase ? "text-primary" : "text-foreground"
-                        }`}>
+                        <span className="text-sm font-medium leading-snug text-foreground">
                           {activity.description}
                         </span>
-                        {isDelayed && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Atraso de {delayDays} dias</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell className="py-3.5 text-center text-sm text-muted-foreground tabular-nums">
@@ -440,13 +407,11 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
                     <TableCell className="py-3.5 text-center text-sm font-medium text-foreground tabular-nums">
                       {formatDate(activity.actualStart, baseYear)}
                     </TableCell>
-                    <TableCell className={`py-3.5 text-center text-sm font-medium tabular-nums ${
-                      isDelayed ? "text-destructive" : "text-foreground"
-                    }`}>
+                    <TableCell className="py-3.5 text-center text-sm font-medium tabular-nums text-foreground">
                       {formatDate(activity.actualEnd, baseYear)}
                     </TableCell>
                     <TableCell className="py-3.5 pr-4 text-center">
-                      <StatusBadge status={status} isCurrentPhase={isCurrentPhase} />
+                      <StatusBadge status={status} />
                     </TableCell>
                   </TableRow>
                 );
