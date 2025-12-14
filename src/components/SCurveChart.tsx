@@ -80,36 +80,36 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     const currentDate = parseDate(date);
     if (!currentDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null };
     
-    // Count planned started activities by this date
-    const plannedStarted = activities.filter(a => {
-      const plannedStart = parseDate(a.plannedStart);
-      return plannedStart && plannedStart <= currentDate;
+    // Count planned COMPLETED activities by this date (based on plannedEnd)
+    const plannedCompleted = activities.filter(a => {
+      const plannedEnd = parseDate(a.plannedEnd);
+      return plannedEnd && plannedEnd <= currentDate;
     }).length;
     
     // Only show "realizado" for dates up to report date AND only if there are actual dates
     const isFutureDate = reportDateParsed && currentDate > reportDateParsed;
     
     // Check if any activity has actual data for this date
-    const hasAnyActualData = activities.some(a => a.actualStart || a.actualEnd);
+    const hasAnyActualData = activities.some(a => a.actualEnd);
     
-    // Count actual started activities by this date
-    let actualStarted: number | null = null;
+    // Count actual COMPLETED activities by this date (based on actualEnd)
+    let actualCompleted: number | null = null;
     if (!isFutureDate && hasAnyActualData) {
       const actualCount = activities.filter(a => {
-        const actualStart = parseDate(a.actualStart);
-        return actualStart && actualStart <= currentDate;
+        const actualEnd = parseDate(a.actualEnd);
+        return actualEnd && actualEnd <= currentDate;
       }).length;
-      // Only show realizado if at least one activity has started by this date
+      // Only show realizado if at least one activity has completed by this date
       // or if this date is from actual dates set
       if (actualCount > 0 || actualDates.has(date)) {
-        actualStarted = actualCount;
+        actualCompleted = actualCount;
       }
     }
 
     return {
       date: formatDisplayDate(date, baseYear),
-      previsto: Math.round((plannedStarted / totalActivities) * 100),
-      realizado: actualStarted !== null ? Math.round((actualStarted / totalActivities) * 100) : null,
+      previsto: Math.round((plannedCompleted / totalActivities) * 100),
+      realizado: actualCompleted !== null ? Math.round((actualCompleted / totalActivities) * 100) : null,
     };
   });
 };
