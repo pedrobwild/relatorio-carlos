@@ -9,6 +9,34 @@ interface WeeklyReportsHistoryProps {
   onReportClick?: (report: WeeklyReport) => void;
 }
 
+const calculateActivityProgress = (
+  activity: Activity,
+  weekEndDate: Date
+): number => {
+  const plannedStart = new Date(activity.plannedStart);
+  const plannedEnd = new Date(activity.plannedEnd);
+  
+  // If activity has actual end date and it's before or on weekEnd, it's 100% complete
+  if (activity.actualEnd) {
+    const actualEndDate = new Date(activity.actualEnd);
+    if (isBefore(actualEndDate, weekEndDate) || actualEndDate.getTime() === weekEndDate.getTime()) {
+      return 1;
+    }
+  }
+  
+  // If week is before planned start, no progress
+  if (isBefore(weekEndDate, plannedStart)) {
+    return 0;
+  }
+  
+  // Calculate intermediate progress based on time elapsed within planned duration
+  const totalPlannedDays = Math.max(1, (plannedEnd.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24));
+  const elapsedDays = Math.max(0, (weekEndDate.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Cap at 95% for incomplete activities (reserve 100% for actually completed)
+  return Math.min(0.95, elapsedDays / totalPlannedDays);
+};
+
 const generateWeeklyReports = (
   projectStartDate: string,
   reportDate: string,
@@ -20,21 +48,22 @@ const generateWeeklyReports = (
   
   let weekNumber = 1;
   let weekStart = startOfWeek(startDate, { weekStartsOn: 1 }); // Monday start
+  let previousPercentage = 0;
   
   while (isBefore(weekStart, currentReportDate) || weekStart.getTime() === currentReportDate.getTime()) {
     const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 }); // Sunday end
-    
-    // Calculate completion percentage for this week
-    // Count activities that were completed by the end of this week
     const weekEndDate = isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd;
     
-    const completedActivities = activities.filter(activity => {
-      if (!activity.actualEnd) return false;
-      const actualEndDate = new Date(activity.actualEnd);
-      return isBefore(actualEndDate, weekEndDate) || actualEndDate.getTime() === weekEndDate.getTime();
-    });
+    // Calculate total progress including intermediate progress for in-progress activities
+    const totalProgress = activities.reduce((sum, activity) => {
+      return sum + calculateActivityProgress(activity, weekEndDate);
+    }, 0);
     
-    const completionPercentage = Math.round((completedActivities.length / activities.length) * 100);
+    let completionPercentage = Math.round((totalProgress / activities.length) * 100);
+    
+    // Ensure percentage never decreases from previous week
+    completionPercentage = Math.max(completionPercentage, previousPercentage);
+    previousPercentage = completionPercentage;
     
     reports.push({
       weekNumber,
