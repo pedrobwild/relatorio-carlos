@@ -87,7 +87,7 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
               
               {/* Show action plan directly */}
               <div className="bg-secondary rounded-lg p-2.5 sm:p-3">
-                <p className="text-xs font-bold text-foreground/60 mb-1">Plano de Ação</p>
+                <p className="text-xs font-bold text-foreground mb-1">Plano de Ação</p>
                 <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{issue.actionPlan}</p>
               </div>
             </div>
