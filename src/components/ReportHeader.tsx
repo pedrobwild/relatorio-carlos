@@ -87,28 +87,19 @@ const ReportHeader = ({
         </div>
 
         {/* Row 2: Metrics */}
-        <div className="flex items-center gap-4 md:gap-6 text-sm">
-          <div className="flex items-center gap-4 md:gap-6 text-foreground/70">
-            <span>
-              <span className="text-foreground/50">Início:</span>{" "}
-              <span className="font-medium text-foreground">{formatDate(startDate)}</span>
-            </span>
-            <span>
-              <span className="text-foreground/50">Término:</span>{" "}
-              <span className="font-medium text-foreground">{formatDate(endDate)}</span>
-            </span>
-            <span className="hidden sm:inline">
-              <span className="text-foreground/50">Emissão:</span>{" "}
-              <span className="font-medium text-foreground">{formatDate(reportDate)}</span>
-            </span>
-          </div>
-          
-          <div className="ml-auto flex items-center gap-3">
-            <Progress value={completionPercentage} className="h-2 w-20 md:w-32" />
-            <span className="text-sm font-semibold text-primary tabular-nums">
-              {completionPercentage}%
-            </span>
-          </div>
+        <div className="flex items-center gap-4 md:gap-6 text-sm text-foreground/70">
+          <span>
+            <span className="text-foreground/50">Início:</span>{" "}
+            <span className="font-medium text-foreground">01/07/2025</span>
+          </span>
+          <span>
+            <span className="text-foreground/50">Término:</span>{" "}
+            <span className="font-medium text-foreground">14/09/2025</span>
+          </span>
+          <span className="hidden sm:inline">
+            <span className="text-foreground/50">Última atualização:</span>{" "}
+            <span className="font-medium text-foreground">08/09/2025</span>
+          </span>
         </div>
 
         {/* Mobile Export Button */}
