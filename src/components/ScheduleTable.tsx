@@ -279,30 +279,30 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
               className="bg-card border rounded-xl p-3.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] border-border"
               style={{ animationDelay: `${index * 30}ms` }}
             >
-              {/* Top row: Number, Title, Status */}
-              <div className="flex items-start gap-2.5 mb-2">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 bg-primary/10 text-primary">
+              {/* Top row: Number + Status */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary">
                   {originalIndex + 1}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold leading-tight truncate text-foreground">
-                    {activity.description}
-                  </p>
-                </div>
                 <StatusBadge status={status} />
               </div>
 
-              {/* Date info row */}
-              <div className="flex items-center justify-between pl-9 gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Previsto</p>
-                  <p className="text-xs font-medium text-foreground tabular-nums">
+              {/* Title - Full width, no truncation */}
+              <p className="text-sm font-semibold leading-snug text-foreground mb-3">
+                {activity.description}
+              </p>
+
+              {/* Dates grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-muted/40 rounded-lg px-2.5 py-2">
+                  <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Previsto</p>
+                  <p className="text-[11px] font-semibold text-foreground tabular-nums">
                     {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
                   </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Real</p>
-                  <p className="text-xs font-medium tabular-nums text-foreground">
+                <div className="bg-muted/40 rounded-lg px-2.5 py-2">
+                  <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Real</p>
+                  <p className="text-[11px] font-semibold tabular-nums text-foreground">
                     {activity.actualStart ? `${formatDate(activity.actualStart, baseYear)} → ${formatDate(activity.actualEnd, baseYear)}` : "—"}
                   </p>
                 </div>

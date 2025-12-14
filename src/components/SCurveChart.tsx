@@ -280,10 +280,6 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
         </div>
       </div>
 
-      {/* Footer description */}
-      <p className="text-center text-xs text-muted-foreground mt-4 px-4">
-        A Curva S mostra o acúmulo de atividades iniciadas, permitindo visualizar o ritmo de mobilização da obra
-      </p>
     </div>
   );
 };
