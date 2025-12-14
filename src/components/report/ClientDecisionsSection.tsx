@@ -16,33 +16,33 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border">
       <div className="p-4 sm:p-5 border-b border-border">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground">Decisões e Aprovações do Cliente</h3>
+        <h3 className="text-sm sm:text-base font-semibold text-foreground">Decisões e Aprovações do Cliente</h3>
       </div>
       
       <div className="divide-y divide-border">
         {pendingDecisions.map((decision) => (
-          <div key={decision.id} className="p-4 sm:p-5 space-y-3">
+          <div key={decision.id} className="p-4 sm:p-5 space-y-2">
             <div className="flex items-start justify-between gap-3">
-              <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{decision.description}</p>
+              <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{decision.description}</p>
               <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs shrink-0">
                 Pendente
               </Badge>
             </div>
             
             {decision.options && decision.options.length > 0 && (
-              <div className="text-xs sm:text-sm text-foreground/70">
+              <div className="text-xs text-foreground/70">
                 <span className="font-medium">Opções: </span>
                 {decision.options.join(" | ")}
               </div>
             )}
             
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-3 text-xs">
               <div className="flex items-start gap-1.5 text-destructive">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
                 <span><span className="font-medium">Se atrasar:</span> {decision.impactIfDelayed}</span>
               </div>
               <div className="flex items-center gap-1.5 text-warning font-semibold">
-                <Calendar className="w-3.5 h-3.5 shrink-0" />
+                <Calendar className="w-3 h-3 shrink-0" />
                 <span>Precisamos até {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}</span>
               </div>
             </div>
