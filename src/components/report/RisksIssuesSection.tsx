@@ -1,16 +1,8 @@
 import { RiskIssue } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AlertTriangle, AlertCircle, Clock, User, ChevronRight, Shield } from "lucide-react";
+import { Clock, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface RisksIssuesSectionProps {
   issues: RiskIssue[];
@@ -68,10 +60,7 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
       {/* Full Table */}
       <div className="bg-card rounded-lg border border-border">
         <div className="p-4 sm:p-5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary shrink-0" />
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">Riscos, Impedimentos e Plano de Ação</h3>
-          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Riscos, Impedimentos e Plano de Ação</h3>
         </div>
         
         <div className="divide-y divide-border">

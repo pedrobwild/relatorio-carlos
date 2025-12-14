@@ -1,7 +1,7 @@
 import { WeeklyReportQualityItem, PendingItem } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckSquare, XCircle, AlertTriangle, Clock, ChevronRight } from "lucide-react";
+import { CheckSquare, XCircle, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -37,10 +37,7 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
       {/* Checklists Executed */}
       <div className="bg-card rounded-lg border border-border">
         <div className="p-4 sm:p-5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <CheckSquare className="w-5 h-5 text-primary shrink-0" />
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">Qualidade, Testes e Pendências</h3>
-          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Qualidade, Testes e Pendências</h3>
         </div>
         
         <div className="divide-y divide-border">
@@ -125,10 +122,7 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
       {/* Pending Items (Semáforo) */}
       {allPendingItems.length > 0 && (
         <div className="bg-card rounded-lg border border-border p-4 sm:p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-5 h-5 text-primary shrink-0" />
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">Pendências para Entrega</h3>
-          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3">Pendências para Entrega</h3>
           <ul className="space-y-2">
             {allPendingItems.map((item) => (
               <li key={item.id} className="flex items-center gap-3 p-2 rounded bg-secondary/50">
