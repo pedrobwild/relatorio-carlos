@@ -18,5 +18,6 @@ export interface ReportData {
   clientName: string;
   startDate: string;
   endDate: string;
+  reportDate: string; // Data de geração do relatório
   activities: Activity[];
 }
