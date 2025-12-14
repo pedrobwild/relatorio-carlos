@@ -192,9 +192,9 @@ const WeeklyReportsHistory = ({
         </span>
       </div>
 
-      {/* Variance Evolution Chart */}
+      {/* Variance Evolution Chart - Hidden on mobile */}
       {weeklyReports.length > 1 && (
-        <div className="bg-card border border-border rounded-xl p-4 md:p-5">
+        <div className="hidden sm:block bg-card border border-border rounded-xl p-4 md:p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-foreground">Evolução do Desvio</h3>
