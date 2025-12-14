@@ -1,7 +1,7 @@
 import { ClientDecision } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AlertCircle, Calendar } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface ClientDecisionsSectionProps {
@@ -37,9 +37,11 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
             )}
             
             <div className="flex flex-col gap-1.5 text-xs">
-              <div className="flex items-center gap-1.5 text-foreground font-semibold">
-                <Calendar className="w-3 h-3 shrink-0 text-foreground" />
-                <span>Prazo para decisão: {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                  {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}
+                </span>
+                <span className="text-foreground/70">Prazo para decisão</span>
               </div>
               <p className="text-destructive text-[10px] sm:text-xs leading-snug">
                 <span className="font-medium">Importante:</span> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
