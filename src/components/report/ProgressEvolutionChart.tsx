@@ -1,7 +1,6 @@
 import { WeeklyReportActivitySnapshot } from "@/types/weeklyReport";
 import { startOfWeek, addWeeks } from "date-fns";
 import {
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -9,6 +8,9 @@ import {
   ResponsiveContainer,
   Line,
   ComposedChart,
+  ReferenceLine,
+  Bar,
+  Cell,
 } from "recharts";
 
 interface ProgressEvolutionChartProps {
@@ -78,6 +80,43 @@ const generateWeeklyProgressData = (
   }
   
   return data;
+};
+
+// Custom dot component with dynamic colors
+const CustomDot = (props: any) => {
+  const { cx, cy, payload } = props;
+  if (!cx || !cy) return null;
+  
+  const color = payload.desvio >= 0 ? "#22c55e" : "#ef4444";
+  
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={5}
+      fill={color}
+      stroke="hsl(var(--card))"
+      strokeWidth={2}
+    />
+  );
+};
+
+const CustomActiveDot = (props: any) => {
+  const { cx, cy, payload } = props;
+  if (!cx || !cy) return null;
+  
+  const color = payload.desvio >= 0 ? "#22c55e" : "#ef4444";
+  
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={7}
+      fill={color}
+      stroke="hsl(var(--card))"
+      strokeWidth={2}
+    />
+  );
 };
 
 const ProgressEvolutionChart = ({ 
@@ -157,44 +196,32 @@ const ProgressEvolutionChart = ({
             />
             
             {/* Reference line at 0 */}
-            <Line
-              type="monotone"
-              dataKey={() => 0}
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth={1}
+            <ReferenceLine 
+              y={0} 
+              stroke="hsl(var(--muted-foreground))" 
               strokeDasharray="4 4"
-              dot={false}
-              activeDot={false}
+              strokeWidth={1}
             />
             
-            {/* Deviation area - shows positive (green) and negative (red) */}
-            <Area
-              type="monotone"
-              dataKey="desvio"
-              stroke="none"
-              fill="url(#positiveGradient)"
-              fillOpacity={1}
-              baseValue={0}
-            />
+            {/* Deviation bars with dynamic colors */}
+            <Bar dataKey="desvio" radius={[4, 4, 0, 0]}>
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.desvio >= 0 ? "#22c55e" : "#ef4444"}
+                  fillOpacity={0.7}
+                />
+              ))}
+            </Bar>
             
-            {/* Deviation line */}
+            {/* Deviation line with custom dots */}
             <Line
               type="monotone"
               dataKey="desvio"
-              stroke={data.length > 0 && data[data.length - 1].desvio >= 0 ? "#22c55e" : "#ef4444"}
-              strokeWidth={2.5}
-              dot={{
-                fill: data.length > 0 && data[data.length - 1].desvio >= 0 ? "#22c55e" : "#ef4444",
-                stroke: "hsl(var(--card))",
-                strokeWidth: 2,
-                r: 4,
-              }}
-              activeDot={{
-                fill: data.length > 0 && data[data.length - 1].desvio >= 0 ? "#22c55e" : "#ef4444",
-                stroke: "hsl(var(--card))",
-                strokeWidth: 2,
-                r: 6,
-              }}
+              stroke="hsl(var(--foreground))"
+              strokeWidth={2}
+              dot={<CustomDot />}
+              activeDot={<CustomActiveDot />}
             />
           </ComposedChart>
         </ResponsiveContainer>
