@@ -322,7 +322,7 @@ export const week10SeedData: WeeklyReportData = {
   clientDecisions: [
     {
       id: "cd-1",
-      description: "Definir posição final do suporte articulado de TV 65\" na sala: altura do centro da tela (sugestão: 1,10m do piso) e alinhamento com sofá (centralizado ou deslocado 15cm à esquerda)",
+      description: "Definir posição final do suporte articulado de TV 65\" na sala",
       options: ["Altura 1,10m centralizado", "Altura 1,10m deslocado 15cm esquerda", "Altura 1,20m centralizado", "Agendar visita para definir no local"],
       impactIfDelayed: "Atraso na instalação elétrica embutida e possível necessidade de retrabalho no gesso/pintura",
       dueDate: "2025-09-09",
