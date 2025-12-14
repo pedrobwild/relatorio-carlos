@@ -1,17 +1,16 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, ArrowLeft } from "lucide-react";
+import { BarChart3, FileText, ArrowLeft, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
-import TechnicalReport from "@/components/TechnicalReport";
-import WeeklyReportsHistory from "@/components/WeeklyReportsHistory";
-import WeeklyReportHeader from "@/components/WeeklyReportHeader";
+import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport } from "@/types/report";
+import { week10SeedData } from "@/data/week10SeedData";
 import { startOfWeek, endOfWeek, addWeeks, isBefore, isAfter } from "date-fns";
 
 // Helper to generate all weekly reports
@@ -163,7 +162,7 @@ const Index = () => {
                       className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-4 md:px-6 py-3.5 md:py-4 font-semibold text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
                     >
                       <FileText className="w-4 h-4 mr-2" />
-                      Relatório
+                      Relatórios Semanais
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -177,62 +176,37 @@ const Index = () => {
                 </TabsContent>
 
                 <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
-                  {selectedWeeklyReport ? (
-                    <div>
+                  {/* Actions Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Semana {week10SeedData.weekNumber} - {week10SeedData.projectName} {week10SeedData.unitName}
+                    </h2>
+                    <div className="flex items-center gap-2">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
                         onClick={() => {
-                          setSelectedWeeklyReport(null);
-                          setSelectedWeekIndex(0);
+                          navigator.clipboard.writeText(window.location.href);
+                          toast.success("Link copiado!");
                         }}
                       >
-                        <ArrowLeft className="w-4 h-4 mr-1.5" />
-                        Voltar para histórico
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Compartilhar
                       </Button>
-                      <WeeklyReportHeader
-                        weeklyReport={selectedWeeklyReport}
-                        activities={reportData.activities}
-                        totalWeeks={allWeeklyReports.length}
-                        hasPrevious={selectedWeekIndex < allWeeklyReports.length - 1}
-                        hasNext={selectedWeekIndex > 0}
-                        onPreviousWeek={() => {
-                          const newIndex = selectedWeekIndex + 1;
-                          if (newIndex < allWeeklyReports.length) {
-                            setSelectedWeekIndex(newIndex);
-                            setSelectedWeeklyReport(allWeeklyReports[allWeeklyReports.length - 1 - newIndex]);
-                          }
-                        }}
-                        onNextWeek={() => {
-                          const newIndex = selectedWeekIndex - 1;
-                          if (newIndex >= 0) {
-                            setSelectedWeekIndex(newIndex);
-                            setSelectedWeeklyReport(allWeeklyReports[allWeeklyReports.length - 1 - newIndex]);
-                          }
-                        }}
-                      />
-                      <TechnicalReport
-                        weeklyReport={selectedWeeklyReport}
-                        clientName={reportData.clientName}
-                        activities={reportData.activities}
-                        endDate={reportData.endDate}
-                        projectStartDate={reportData.startDate}
-                      />
+                      <Button
+                        size="sm"
+                        onClick={handleExportPDF}
+                        disabled={isExporting}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {isExporting ? "Exportando..." : "Exportar PDF"}
+                      </Button>
                     </div>
-                  ) : (
-                    <WeeklyReportsHistory
-                      projectStartDate={reportData.startDate}
-                      reportDate={reportData.reportDate}
-                      activities={reportData.activities}
-                      onReportClick={(report) => {
-                        setSelectedWeeklyReport(report);
-                        // Find the index (reports are in reverse order - most recent first)
-                        const index = allWeeklyReports.length - report.weekNumber;
-                        setSelectedWeekIndex(index);
-                      }}
-                    />
-                  )}
+                  </div>
+                  
+                  {/* Week 10 Seed Data Template */}
+                  <WeeklyReportTemplate data={week10SeedData} />
                 </TabsContent>
               </div>
             </Tabs>
