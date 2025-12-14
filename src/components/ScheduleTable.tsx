@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -6,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, Clock, AlertCircle, CalendarDays } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, CalendarDays, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ScheduleTableProps {
@@ -14,25 +15,35 @@ interface ScheduleTableProps {
 }
 
 type Status = "completed" | "delayed" | "on-time" | "pending";
+type SortField = "description" | "plannedStart" | "plannedEnd" | "actualStart" | "actualEnd" | "status";
+type SortDirection = "asc" | "desc";
+
+const parseDate = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+  const [day, month] = dateStr.split("/").map(Number);
+  const year = month >= 10 ? 2024 : 2025;
+  return new Date(year, month - 1, day);
+};
 
 const getActivityStatus = (activity: Activity): Status => {
   if (!activity.actualEnd) {
     return "pending";
   }
 
-  const parseDate = (dateStr: string): Date => {
-    const [day, month] = dateStr.split("/").map(Number);
-    const year = month >= 10 ? 2024 : 2025;
-    return new Date(year, month - 1, day);
-  };
-
   const plannedEnd = parseDate(activity.plannedEnd);
   const actualEnd = parseDate(activity.actualEnd);
 
-  if (actualEnd > plannedEnd) {
+  if (plannedEnd && actualEnd && actualEnd > plannedEnd) {
     return "delayed";
   }
   return "completed";
+};
+
+const statusOrder: Record<Status, number> = {
+  delayed: 0,
+  pending: 1,
+  "on-time": 2,
+  completed: 3,
 };
 
 const StatusBadge = ({ status }: { status: Status }) => {
@@ -71,7 +82,78 @@ const StatusBadge = ({ status }: { status: Status }) => {
   );
 };
 
+interface SortableHeaderProps {
+  field: SortField;
+  currentField: SortField | null;
+  direction: SortDirection;
+  onSort: (field: SortField) => void;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const SortableHeader = ({ field, currentField, direction, onSort, children, className = "" }: SortableHeaderProps) => {
+  const isActive = currentField === field;
+  
+  return (
+    <TableHead
+      className={`cursor-pointer select-none transition-colors hover:bg-primary-dark/20 ${className}`}
+      onClick={() => onSort(field)}
+    >
+      <div className="flex items-center justify-center gap-1.5">
+        <span>{children}</span>
+        {isActive ? (
+          direction === "asc" ? (
+            <ArrowUp className="w-3.5 h-3.5" />
+          ) : (
+            <ArrowDown className="w-3.5 h-3.5" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3.5 h-3.5 opacity-50" />
+        )}
+      </div>
+    </TableHead>
+  );
+};
+
 const ScheduleTable = ({ activities }: ScheduleTableProps) => {
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortedActivities = useMemo(() => {
+    if (!sortField) return activities;
+
+    return [...activities].sort((a, b) => {
+      let comparison = 0;
+
+      if (sortField === "status") {
+        const statusA = getActivityStatus(a);
+        const statusB = getActivityStatus(b);
+        comparison = statusOrder[statusA] - statusOrder[statusB];
+      } else if (sortField === "description") {
+        comparison = a.description.localeCompare(b.description, "pt-BR");
+      } else {
+        const dateA = parseDate(a[sortField]);
+        const dateB = parseDate(b[sortField]);
+        
+        if (!dateA && !dateB) comparison = 0;
+        else if (!dateA) comparison = 1;
+        else if (!dateB) comparison = -1;
+        else comparison = dateA.getTime() - dateB.getTime();
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [activities, sortField, sortDirection]);
+
   if (activities.length === 0) {
     return (
       <div className="mt-8 flex flex-col items-center justify-center py-12 text-muted-foreground">
@@ -92,7 +174,7 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
-        {activities.map((activity, index) => {
+        {sortedActivities.map((activity, index) => {
           const status = getActivityStatus(activity);
           return (
             <div
@@ -162,30 +244,66 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b-0">
-              <TableHead className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 pl-5 text-left rounded-tl-xl">
+              <SortableHeader
+                field="description"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+                className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 pl-5 text-left rounded-tl-xl"
+              >
                 Atividade
-              </TableHead>
-              <TableHead className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+              </SortableHeader>
+              <SortableHeader
+                field="plannedStart"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+                className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4"
+              >
                 Início Previsto
-              </TableHead>
-              <TableHead className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+              </SortableHeader>
+              <SortableHeader
+                field="plannedEnd"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+                className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4"
+              >
                 Término Previsto
-              </TableHead>
-              <TableHead className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+              </SortableHeader>
+              <SortableHeader
+                field="actualStart"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+                className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4"
+              >
                 Início Real
-              </TableHead>
-              <TableHead className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+              </SortableHeader>
+              <SortableHeader
+                field="actualEnd"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+                className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4"
+              >
                 Término Real
-              </TableHead>
-              <TableHead className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 pr-5 text-center rounded-tr-xl">
+              </SortableHeader>
+              <SortableHeader
+                field="status"
+                currentField={sortField}
+                direction={sortDirection}
+                onSort={handleSort}
+                className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 pr-5 rounded-tr-xl"
+              >
                 Status
-              </TableHead>
+              </SortableHeader>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {activities.map((activity, index) => {
+            {sortedActivities.map((activity, index) => {
               const status = getActivityStatus(activity);
-              const isLast = index === activities.length - 1;
+              const isLast = index === sortedActivities.length - 1;
               return (
                 <TableRow
                   key={index}
