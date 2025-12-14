@@ -156,7 +156,7 @@ export const week10SeedData: WeeklyReportData = {
       prerequisites: "Entrega confirmada + liberação do condomínio",
       responsible: "Equipe de instalação",
       risk: "médio",
-      riskReason: "Depende de janela de elevador do condomínio",
+      riskReason: "Dificuldade para contornar a restrição em relação a instalação da coifa que não constava no memorial descritivo do condomínio.",
     },
     {
       id: "2",
