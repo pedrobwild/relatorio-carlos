@@ -6,7 +6,7 @@ interface WeeklyReportsHistoryProps {
   projectStartDate: string;
   reportDate: string;
   activities: Activity[];
-  onReportClick?: (report: WeeklyReport) => void;
+  onReportClick?: (report: WeeklyReport, index: number) => void;
 }
 
 const calculateActivityProgress = (
@@ -37,7 +37,7 @@ const calculateActivityProgress = (
   return Math.min(0.95, elapsedDays / totalPlannedDays);
 };
 
-const generateWeeklyReports = (
+export const generateWeeklyReports = (
   projectStartDate: string,
   reportDate: string,
   activities: Activity[]
@@ -106,10 +106,10 @@ const WeeklyReportsHistory = ({
       </div>
 
       <div className="space-y-3 md:space-y-4">
-        {weeklyReports.map((report) => (
+        {weeklyReports.map((report, index) => (
           <button
             key={report.weekNumber}
-            onClick={() => onReportClick?.(report)}
+            onClick={() => onReportClick?.(report, weeklyReports.length - 1 - index)}
             className="w-full bg-card hover:bg-accent/50 border border-border rounded-xl p-4 md:p-5 flex items-center justify-between transition-all duration-200 active:scale-[0.99] group"
           >
             <div className="flex flex-col items-start gap-1.5 md:gap-2">
