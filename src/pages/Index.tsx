@@ -106,18 +106,22 @@ const Index = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border md:hidden px-4 py-3">
-        <div className="flex items-center justify-center gap-2.5">
-          <img src={bwildLogo} alt="Bwild" className="h-5 w-auto" />
-          <div className="h-4 w-px bg-border" />
-          <h1 className="font-semibold text-sm text-foreground tracking-tight">Portal do Cliente</h1>
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-4 py-4">
+        <div className="flex items-center gap-3">
+          <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
+          <div className="h-5 w-px bg-border/60" />
+          <h1 className="font-bold text-lg text-foreground">Portal do Cliente</h1>
         </div>
       </div>
 
       <div className="p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Title - Desktop only */}
-          <h1 className="text-xl font-semibold text-foreground mb-4 hidden md:block">Portal do Cliente</h1>
+          <div className="hidden md:flex items-center gap-4 mb-6">
+            <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
+            <div className="h-6 w-px bg-border/60" />
+            <h1 className="text-2xl font-bold text-foreground">Portal do Cliente</h1>
+          </div>
 
         <div ref={reportRef}>
           <ReportHeader
