@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, FileText, ArrowLeft } from "lucide-react";
@@ -8,9 +8,42 @@ import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import TechnicalReport from "@/components/TechnicalReport";
 import WeeklyReportsHistory from "@/components/WeeklyReportsHistory";
+import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport } from "@/types/report";
+import { startOfWeek, endOfWeek, addWeeks, isBefore, isAfter } from "date-fns";
+
+// Helper to generate all weekly reports
+const generateAllWeeklyReports = (
+  projectStartDate: string,
+  reportDate: string
+): WeeklyReport[] => {
+  const startDate = new Date(projectStartDate);
+  const currentReportDate = new Date(reportDate);
+  const reports: WeeklyReport[] = [];
+  
+  let weekNumber = 1;
+  let weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
+  
+  while (isBefore(weekStart, currentReportDate) || weekStart.getTime() === currentReportDate.getTime()) {
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    
+    reports.push({
+      weekNumber,
+      startDate: weekStart,
+      endDate: isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd,
+      completionPercentage: 0, // Will be calculated separately
+    });
+    
+    weekStart = addWeeks(weekStart, 1);
+    weekNumber++;
+    
+    if (weekNumber > 52) break;
+  }
+  
+  return reports;
+};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -18,14 +51,19 @@ const Index = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  const allWeeklyReports = useMemo(() => {
+    if (!reportData) return [];
+    return generateAllWeeklyReports(reportData.startDate, reportData.reportDate);
+  }, [reportData]);
 
   useEffect(() => {
     const storedData = sessionStorage.getItem("currentReport");
     if (storedData) {
       setReportData(JSON.parse(storedData));
     } else {
-      // Redirect to home if no report data
       navigate("/");
     }
   }, [navigate]);
@@ -145,11 +183,35 @@ const Index = () => {
                         variant="ghost"
                         size="sm"
                         className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-                        onClick={() => setSelectedWeeklyReport(null)}
+                        onClick={() => {
+                          setSelectedWeeklyReport(null);
+                          setSelectedWeekIndex(0);
+                        }}
                       >
                         <ArrowLeft className="w-4 h-4 mr-1.5" />
                         Voltar para histórico
                       </Button>
+                      <WeeklyReportHeader
+                        weeklyReport={selectedWeeklyReport}
+                        activities={reportData.activities}
+                        totalWeeks={allWeeklyReports.length}
+                        hasPrevious={selectedWeekIndex < allWeeklyReports.length - 1}
+                        hasNext={selectedWeekIndex > 0}
+                        onPreviousWeek={() => {
+                          const newIndex = selectedWeekIndex + 1;
+                          if (newIndex < allWeeklyReports.length) {
+                            setSelectedWeekIndex(newIndex);
+                            setSelectedWeeklyReport(allWeeklyReports[allWeeklyReports.length - 1 - newIndex]);
+                          }
+                        }}
+                        onNextWeek={() => {
+                          const newIndex = selectedWeekIndex - 1;
+                          if (newIndex >= 0) {
+                            setSelectedWeekIndex(newIndex);
+                            setSelectedWeeklyReport(allWeeklyReports[allWeeklyReports.length - 1 - newIndex]);
+                          }
+                        }}
+                      />
                       <TechnicalReport
                         weeklyReport={selectedWeeklyReport}
                         clientName={reportData.clientName}
@@ -163,7 +225,12 @@ const Index = () => {
                       projectStartDate={reportData.startDate}
                       reportDate={reportData.reportDate}
                       activities={reportData.activities}
-                      onReportClick={(report) => setSelectedWeeklyReport(report)}
+                      onReportClick={(report) => {
+                        setSelectedWeeklyReport(report);
+                        // Find the index (reports are in reverse order - most recent first)
+                        const index = allWeeklyReports.length - report.weekNumber;
+                        setSelectedWeekIndex(index);
+                      }}
                     />
                   )}
                 </TabsContent>
