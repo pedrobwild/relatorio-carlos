@@ -190,76 +190,63 @@ const ReportHeader = ({
       </div>
 
       {/* Mobile Layout (< sm) */}
-      <div className="sm:hidden">
-        {/* Header with logo and project */}
-        <div className="p-4 pb-3">
-          <div className="flex items-center gap-3 mb-3">
-            <img 
-              src={bwildLogo} 
-              alt="Bwild" 
-              className="h-6 w-auto"
-            />
-            <div className="h-4 w-px bg-border" />
-            <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-semibold text-foreground leading-tight truncate">
-                {projectName} – {unitName}
-              </h1>
-              {clientName && (
-                <p className="text-xs text-foreground/70 truncate">{clientName}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Date chips - Compact horizontal */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 py-1">
-            {dateMetrics.map((metric) => (
-              <div
-                key={metric.label}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 text-xs whitespace-nowrap"
-              >
-                <Calendar className="w-3 h-3 text-muted-foreground" />
-                <span className="font-medium text-foreground">{metric.label}:</span>
-                <span className="text-foreground/70">{metric.value}</span>
-              </div>
-            ))}
+      <div className="sm:hidden p-4">
+        {/* Row 1: Logo + Project info */}
+        <div className="flex items-center gap-3 mb-3">
+          <img 
+            src={bwildLogo} 
+            alt="Bwild" 
+            className="h-7 w-auto"
+          />
+          <div className="h-5 w-px bg-border" />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-semibold text-foreground leading-tight">
+              {projectName} – {unitName}
+            </h1>
+            {clientName && (
+              <p className="text-sm text-foreground/70">{clientName}</p>
+            )}
           </div>
         </div>
 
-        {/* Quick Links - Full width pills */}
-        <div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
+        {/* Row 2: Date info - Simple inline */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-3">
+          {dateMetrics.map((metric) => (
+            <span key={metric.label} className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-foreground/70">{metric.label}:</span>
+              <span className="font-medium text-foreground">{metric.value}</span>
+            </span>
+          ))}
+        </div>
+
+        {/* Row 3: Quick Links - Horizontal scroll */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-3 mb-3 border-b border-border">
           {quickLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap min-h-[36px]"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap"
             >
-              <link.icon className="w-3.5 h-3.5" />
               {link.label}
             </a>
           ))}
         </div>
 
-        {/* Team contacts - Stacked cards */}
-        <div className="border-t border-border">
-          {teamContacts.map((contact, index) => (
+        {/* Row 4: Team contacts - Compact grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {teamContacts.map((contact) => (
             <a
               key={contact.role}
               href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-              className={`flex items-center gap-3 px-4 py-3 hover:bg-accent/30 active:bg-accent/50 transition-colors ${
-                index < teamContacts.length - 1 ? 'border-b border-border/50' : ''
-              }`}
+              className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 active:bg-accent/50 transition-colors"
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent shrink-0">
-                <User className="w-5 h-5 text-accent-foreground" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent shrink-0">
+                <User className="w-4 h-4 text-accent-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground/60">{contact.role}</p>
-                <p className="text-sm font-medium text-foreground">{contact.name}</p>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="w-4 h-4" />
-                <span className="text-xs">{contact.phone}</span>
-                <ChevronRight className="w-4 h-4" />
+                <p className="text-[11px] text-foreground/60">{contact.role}</p>
+                <p className="text-xs font-medium text-foreground truncate">{contact.name}</p>
               </div>
             </a>
           ))}
