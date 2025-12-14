@@ -60,22 +60,22 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
       {/* Full Table */}
       <div className="bg-card rounded-lg border border-border">
         <div className="p-4 sm:p-5 border-b border-border">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground">Riscos, Impedimentos e Plano de Ação</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-foreground">Riscos, Impedimentos e Plano de Ação</h3>
         </div>
         
         <div className="divide-y divide-border">
           {issues.map((issue) => (
-            <div key={issue.id} className="p-4 sm:p-5 space-y-3">
+            <div key={issue.id} className="p-4 sm:p-5 space-y-2.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{issue.title}</p>
-                  <div className="flex flex-wrap items-center gap-3 mt-2 text-xs sm:text-sm text-foreground/70">
+                  <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{issue.title}</p>
+                  <div className="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-foreground/70">
                     <span className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 shrink-0" />
+                      <User className="w-3 h-3 shrink-0" />
                       <span className="font-medium">{issue.owner}</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 shrink-0" />
+                      <Clock className="w-3 h-3 shrink-0" />
                       <span className="font-medium">{format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}</span>
                     </span>
                   </div>
@@ -83,9 +83,9 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
               </div>
               
               {/* Show action plan directly */}
-              <div className="bg-secondary rounded-lg p-3 sm:p-4">
-                <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide mb-1.5">Plano de Ação</p>
-                <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{issue.actionPlan}</p>
+              <div className="bg-secondary rounded-lg p-2.5 sm:p-3">
+                <p className="text-xs font-semibold text-foreground/60 uppercase tracking-wide mb-1">Plano de Ação</p>
+                <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{issue.actionPlan}</p>
               </div>
             </div>
           ))}
