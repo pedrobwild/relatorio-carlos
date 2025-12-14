@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Calendar, ChevronRight } from "lucide-react";
 import { Activity } from "@/types/report";
@@ -30,11 +31,11 @@ const ReportHeader = ({
   activities,
 }: ReportHeaderProps) => {
   const quickLinks = [
-    { icon: FileText, label: "Contrato", href: "#contrato" },
-    { icon: Box, label: "Projeto 3D", href: "#projeto-3d" },
-    { icon: Ruler, label: "Executivo", href: "#projeto-executivo" },
-    { icon: DollarSign, label: "Financeiro", href: "#financeiro" },
-    { icon: Headphones, label: "Suporte", href: "#suporte" },
+    { icon: FileText, label: "Contrato", href: "/contrato" },
+    { icon: Box, label: "Projeto 3D", href: "/projeto-3d" },
+    { icon: Ruler, label: "Executivo", href: "/executivo" },
+    { icon: DollarSign, label: "Financeiro", href: "/financeiro" },
+    { icon: Headphones, label: "Suporte", href: "/suporte" },
   ];
 
   const teamContacts = [
@@ -76,14 +77,14 @@ const ReportHeader = ({
           {/* Quick Links */}
           <div className="flex items-center gap-1.5">
             {quickLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
-                href={link.href}
+                to={link.href}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
                 <link.icon className="w-5 h-5" />
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -144,14 +145,14 @@ const ReportHeader = ({
         {/* Quick Links - Horizontal scroll */}
         <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide -mx-4 px-4">
           {quickLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href={link.href}
+              to={link.href}
               className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap"
             >
               <link.icon className="w-4 h-4" />
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -207,16 +208,16 @@ const ReportHeader = ({
           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Menu de Acesso</p>
           <div className="grid grid-cols-5 gap-1">
             {quickLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
-                href={link.href}
+                to={link.href}
                 className="flex flex-col items-center justify-center gap-1.5 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all min-h-[56px]"
               >
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                   <link.icon className="w-4 h-4" />
                 </div>
                 <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
