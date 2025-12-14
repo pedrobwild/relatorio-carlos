@@ -224,93 +224,81 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
   }
 
   return (
-    <div className="mt-6 md:mt-8">
+    <div className="mt-4 md:mt-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+      <div className="flex flex-col gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <CalendarDays className="w-5 h-5 text-primary" />
+          <div className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <CalendarDays className="w-4 h-4 md:w-5 md:h-5 text-primary" />
           </div>
-          <div>
-            <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+          <div className="flex-1">
+            <h3 className="text-base md:text-xl font-bold text-foreground tracking-tight">
               Cronograma Detalhado
             </h3>
             <p className="text-xs text-muted-foreground">
-              {stats.total} atividades • {stats.completed} concluídas • {stats.delayed} atrasadas
+              {stats.total} atividades • {stats.completed} concluídas
             </p>
           </div>
-        </div>
-
-        {/* Quick stats badges */}
-        <div className="flex items-center gap-2">
+          
+          {/* Quick stats badge - inline on mobile */}
           {stats.delayed > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-warning/10 text-warning border border-warning/30">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold bg-warning/10 text-warning border border-warning/30 shrink-0">
               <AlertTriangle className="w-3 h-3" />
-              {stats.delayed} atrasada{stats.delayed > 1 ? "s" : ""}
+              {stats.delayed}
             </span>
           )}
         </div>
       </div>
 
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
+      {/* Mobile Card View - Optimized for touch */}
+      <div className="md:hidden space-y-2">
         {sortedActivities.map((activity, index) => {
           const status = getActivityStatus(activity);
           const delayDays = getDelayDays(activity);
-          const isDelayed = status === "delayed";
+          const isDelayed = delayDays !== null && delayDays > 0;
+          const isAhead = delayDays !== null && delayDays < 0;
           
           return (
             <div
               key={index}
-              className={`bg-card border rounded-xl p-4 shadow-sm opacity-0 animate-fade-in transition-all ${
-                isDelayed ? "border-warning/40 bg-warning/5" : "border-border"
+              className={`bg-card border rounded-xl p-3.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] ${
+                isDelayed ? "border-warning/40 bg-warning/5" : 
+                isAhead ? "border-success/40 bg-success/5" : "border-border"
               }`}
-              style={{ animationDelay: `${index * 40}ms` }}
+              style={{ animationDelay: `${index * 30}ms` }}
             >
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
-                    {index + 1}
-                  </span>
-                  {delayDays !== null && (
-                    <span className={`text-[10px] font-semibold ${formatDeviation(delayDays).className}`}>
-                      {formatDeviation(delayDays).text}
-                    </span>
-                  )}
+              {/* Top row: Number, Title, Status */}
+              <div className="flex items-start gap-2.5 mb-2">
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                  {index + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground leading-tight truncate">
+                    {activity.description}
+                  </p>
                 </div>
                 <StatusBadge status={status} />
               </div>
 
-              <p className="text-sm font-medium text-foreground mb-3 leading-relaxed">
-                {activity.description}
-              </p>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-secondary/60 rounded-lg p-2.5">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-1">
-                    Previsto
-                  </p>
-                  <p className="text-xs font-semibold text-foreground tabular-nums">
-                    {formatDate(activity.plannedStart, baseYear)} – {formatDate(activity.plannedEnd, baseYear)}
+              {/* Date info row */}
+              <div className="flex items-center justify-between pl-9 gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Previsto</p>
+                  <p className="text-xs font-medium text-foreground tabular-nums">
+                    {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
                   </p>
                 </div>
-                
-                <div className={`rounded-lg p-2.5 ${
-                  isDelayed
-                    ? "bg-warning/10"
-                    : status === "completed"
-                    ? "bg-success/10"
-                    : "bg-secondary/60"
-                }`}>
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-1">
-                    Realizado
-                  </p>
-                  <p className={`text-xs font-semibold tabular-nums ${
-                    isDelayed ? "text-warning" : "text-foreground"
-                  }`}>
-                    {formatDate(activity.actualStart, baseYear)} – {formatDate(activity.actualEnd, baseYear)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Real</p>
+                  <p className={`text-xs font-medium tabular-nums ${isDelayed ? "text-warning" : isAhead ? "text-success" : "text-foreground"}`}>
+                    {activity.actualStart ? `${formatDate(activity.actualStart, baseYear)} → ${formatDate(activity.actualEnd, baseYear)}` : "—"}
                   </p>
                 </div>
+                {delayDays !== null && (
+                  <span className={`text-xs font-bold tabular-nums shrink-0 ${formatDeviation(delayDays).className}`}>
+                    {formatDeviation(delayDays).text}
+                  </span>
+                )}
               </div>
             </div>
           );

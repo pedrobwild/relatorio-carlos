@@ -168,37 +168,37 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
   return (
     <div className="mb-6 md:mb-10">
       {/* Header with title and description */}
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4 md:mb-6">
+      <div className="flex flex-col gap-3 mb-4 md:mb-6">
         <div className="flex items-start gap-3">
-          <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-primary" />
+          <div className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-primary" />
           </div>
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base md:text-xl font-bold text-foreground tracking-tight">
               Cronograma Previsto x Realizado
             </h2>
-            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5 hidden md:block">
               Comparação entre o previsto e o realizado ao longo do cronograma
             </p>
           </div>
         </div>
         
-        {/* Current activity indicator */}
+        {/* Current activity indicator - Full width on mobile */}
         {currentActivity && (
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-info/10 text-info border border-info/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-info animate-pulse" />
-            {currentActivity.description}
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold bg-info/10 text-info border border-info/30 md:self-start md:rounded-full md:py-1.5">
+            <span className="w-2 h-2 rounded-full bg-info animate-pulse shrink-0" />
+            <span className="truncate">{currentActivity.description}</span>
           </div>
         )}
       </div>
 
       {/* Chart Container */}
-      <div className="bg-secondary/30 rounded-xl p-3 md:p-6 border border-border/50">
-        <div className="h-[280px] md:h-[360px] lg:h-[400px] w-full">
+      <div className="bg-secondary/30 rounded-xl p-2 md:p-6 border border-border/50 -mx-1 md:mx-0">
+        <div className="h-[260px] md:h-[360px] lg:h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 10, right: 10, left: -15, bottom: 10 }}
+              margin={{ top: 10, right: 5, left: -20, bottom: 5 }}
             >
               <CartesianGrid 
                 strokeDasharray="3 3" 
