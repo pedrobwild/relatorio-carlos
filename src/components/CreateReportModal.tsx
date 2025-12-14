@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Plus, Trash2, Building2, User, Calendar } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Building2, User, Calendar, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
   const [clientName, setClientName] = useState("");
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [reportDate, setReportDate] = useState<Date>(new Date());
   const [activities, setActivities] = useState<Activity[]>([
     { description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "" }
   ]);
@@ -62,6 +63,11 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     setActivities(updated);
   };
 
+  const formatDateToISO = (date: Date | undefined) => {
+    if (!date) return "";
+    return format(date, "yyyy-MM-dd");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -69,8 +75,9 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
       projectName,
       unitName,
       clientName,
-      startDate: formatDateForDisplay(startDate),
-      endDate: formatDateForDisplay(endDate),
+      startDate: formatDateToISO(startDate),
+      endDate: formatDateToISO(endDate),
+      reportDate: formatDateToISO(reportDate),
       activities: activities.filter(a => a.description.trim() !== ""),
     };
 
@@ -82,6 +89,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     setClientName("");
     setStartDate(undefined);
     setEndDate(undefined);
+    setReportDate(new Date());
     setActivities([{ description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "" }]);
   };
 
@@ -209,6 +217,40 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                     </PopoverContent>
                   </Popover>
                 </div>
+              </div>
+
+              {/* Report Date Field */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  Data de Geração do Relatório
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full md:w-auto justify-start text-left font-normal",
+                        !reportDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {reportDate ? formatDateForDisplay(reportDate) : "Selecione a data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={reportDate}
+                      onSelect={(date) => date && setReportDate(date)}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Define até onde a linha "realizado" aparece na Curva S
+                </p>
               </div>
             </div>
 

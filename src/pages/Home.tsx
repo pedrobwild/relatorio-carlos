@@ -14,6 +14,7 @@ const sampleReportData: ReportData = {
   clientName: "Pedro Alves",
   startDate: "2025-07-15",
   endDate: "2025-09-29", // 55 business days from 15/07/2025
+  reportDate: "2025-08-22", // Data de geração do relatório
   activities: [
     {
       description: "Fundação e Terraplanagem",
