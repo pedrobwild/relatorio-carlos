@@ -3,7 +3,7 @@ import { ptBR } from "date-fns/locale";
 import { Activity, WeeklyReport } from "@/types/report";
 import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip, BarChart, Bar, Cell } from "recharts";
 
 interface WeeklyReportsHistoryProps {
   projectStartDate: string;
@@ -213,17 +213,7 @@ const WeeklyReportsHistory = ({
           
           <div className="h-32 md:h-40">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgb(16, 185, 129)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="rgb(16, 185, 129)" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id="negativeGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgb(239, 68, 68)" stopOpacity={0.05} />
-                    <stop offset="100%" stopColor="rgb(239, 68, 68)" stopOpacity={0.4} />
-                  </linearGradient>
-                </defs>
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <XAxis 
                   dataKey="week" 
                   axisLine={false} 
@@ -235,28 +225,21 @@ const WeeklyReportsHistory = ({
                   axisLine={false} 
                   tickLine={false}
                   tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => `${value}%`}
+                  tickFormatter={(value) => `${value > 0 ? '+' : ''}${value}%`}
                   domain={['dataMin - 5', 'dataMax + 5']}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                <Area
-                  type="monotone"
-                  dataKey="variance"
-                  stroke="none"
-                  fillOpacity={1}
-                  fill="url(#positiveGradient)"
-                />
-                {/* Overlay negative values with different color */}
-                <Area
-                  type="monotone"
-                  dataKey={(data) => data.variance < 0 ? data.variance : null}
-                  stroke="none"
-                  fillOpacity={1}
-                  fill="url(#negativeGradient)"
-                  baseValue={0}
-                />
-              </AreaChart>
+                <Bar dataKey="variance" radius={[4, 4, 4, 4]}>
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.variance >= 0 ? "rgb(16, 185, 129)" : "rgb(239, 68, 68)"}
+                      fillOpacity={0.7}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
           
