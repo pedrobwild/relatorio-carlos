@@ -10,13 +10,14 @@ import TechnicalReport from "@/components/TechnicalReport";
 import WeeklyReportsHistory from "@/components/WeeklyReportsHistory";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
-import { ReportData } from "@/types/report";
+import { ReportData, WeeklyReport } from "@/types/report";
 
 const Index = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("curvaS");
   const [isExporting, setIsExporting] = useState(false);
   const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -138,14 +139,45 @@ const Index = () => {
                 </TabsContent>
 
                 <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
-                  <WeeklyReportsHistory
-                    projectStartDate={reportData.startDate}
-                    reportDate={reportData.reportDate}
-                    activities={reportData.activities}
-                    onReportClick={(report) => {
-                      toast.info(`Abrindo relatório da Semana ${report.weekNumber}`);
-                    }}
-                  />
+                  {selectedWeeklyReport ? (
+                    <div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setSelectedWeeklyReport(null)}
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-1.5" />
+                        Voltar para histórico
+                      </Button>
+                      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs md:text-sm font-semibold">
+                              Semana {selectedWeeklyReport.weekNumber}
+                            </span>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              {selectedWeeklyReport.startDate.toLocaleDateString('pt-BR')} - {selectedWeeklyReport.endDate.toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-2xl font-bold text-primary">
+                              {selectedWeeklyReport.completionPercentage}%
+                            </span>
+                            <p className="text-xs text-muted-foreground">Conclusão</p>
+                          </div>
+                        </div>
+                      </div>
+                      <TechnicalReport />
+                    </div>
+                  ) : (
+                    <WeeklyReportsHistory
+                      projectStartDate={reportData.startDate}
+                      reportDate={reportData.reportDate}
+                      activities={reportData.activities}
+                      onReportClick={(report) => setSelectedWeeklyReport(report)}
+                    />
+                  )}
                 </TabsContent>
               </div>
             </Tabs>
