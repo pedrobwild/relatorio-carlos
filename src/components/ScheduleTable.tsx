@@ -18,6 +18,7 @@ import {
 
 interface ScheduleTableProps {
   activities: Activity[];
+  reportDate?: string;
 }
 
 type Status = "completed" | "delayed" | "on-time" | "in-progress" | "pending";
@@ -76,7 +77,7 @@ const getDelayDays = (activity: Activity): number | null => {
 const formatDeviation = (days: number | null): { text: string; className: string } => {
   if (days === null) return { text: "—", className: "text-muted-foreground" };
   if (days === 0) return { text: "No prazo", className: "text-success" };
-  if (days > 0) return { text: `+${days}d`, className: "text-warning font-semibold" };
+  if (days > 0) return { text: `+${days}d`, className: "text-destructive font-semibold" };
   return { text: `${days}d`, className: "text-success font-semibold" };
 };
 
@@ -88,7 +89,7 @@ const statusOrder: Record<Status, number> = {
   completed: 4,
 };
 
-const StatusBadge = ({ status }: { status: Status }) => {
+const StatusBadge = ({ status, isCurrentPhase }: { status: Status; isCurrentPhase?: boolean }) => {
   const config = {
     completed: {
       icon: CheckCircle2,
@@ -98,7 +99,7 @@ const StatusBadge = ({ status }: { status: Status }) => {
     delayed: {
       icon: AlertTriangle,
       label: "Atrasado",
-      className: "bg-warning/10 text-warning border-warning/30",
+      className: "bg-destructive/10 text-destructive border-destructive/30",
     },
     "on-time": {
       icon: Clock,
@@ -108,7 +109,9 @@ const StatusBadge = ({ status }: { status: Status }) => {
     "in-progress": {
       icon: Clock,
       label: "Em andamento",
-      className: "bg-info/10 text-info border-info/30",
+      className: isCurrentPhase 
+        ? "bg-primary text-primary-foreground border-primary" 
+        : "bg-info/10 text-info border-info/30",
     },
     pending: {
       icon: Clock,
@@ -162,7 +165,7 @@ const SortableHeader = ({ field, currentField, direction, onSort, children, clas
   );
 };
 
-const ScheduleTable = ({ activities }: ScheduleTableProps) => {
+const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
@@ -170,6 +173,18 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
   const baseYear = activities.length > 0 && activities[0].plannedStart
     ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
     : new Date().getFullYear();
+
+  // Find current activity index based on reportDate
+  const currentActivityIndex = useMemo(() => {
+    if (!reportDate) return -1;
+    const currentDate = new Date(reportDate + "T00:00:00");
+    
+    return activities.findIndex(activity => {
+      const plannedStart = new Date(activity.plannedStart + "T00:00:00");
+      const plannedEnd = new Date(activity.plannedEnd + "T00:00:00");
+      return currentDate >= plannedStart && currentDate <= plannedEnd;
+    });
+  }, [activities, reportDate]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -253,7 +268,9 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
       {/* Mobile Card View - Optimized for touch */}
       <div className="md:hidden space-y-2">
         {sortedActivities.map((activity, index) => {
+          const originalIndex = activities.indexOf(activity);
           const status = getActivityStatus(activity);
+          const isCurrentPhase = originalIndex === currentActivityIndex;
           const delayDays = getDelayDays(activity);
           const isDelayed = delayDays !== null && delayDays > 0;
           const isAhead = delayDays !== null && delayDays < 0;
@@ -261,23 +278,36 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
           return (
             <div
               key={index}
-              className={`bg-card border rounded-xl p-3.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] ${
-                isDelayed ? "border-warning/40 bg-warning/5" : 
+              className={`bg-card border-2 rounded-xl p-3.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] ${
+                isCurrentPhase ? "border-primary bg-primary/5 ring-2 ring-primary/20" :
+                isDelayed ? "border-destructive/40 bg-destructive/5" : 
                 isAhead ? "border-success/40 bg-success/5" : "border-border"
               }`}
               style={{ animationDelay: `${index * 30}ms` }}
             >
+              {/* Current phase indicator */}
+              {isCurrentPhase && (
+                <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold text-primary">
+                  <Clock className="w-3.5 h-3.5" />
+                  Etapa Atual
+                </div>
+              )}
+              
               {/* Top row: Number, Title, Status */}
               <div className="flex items-start gap-2.5 mb-2">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
-                  {index + 1}
+                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 ${
+                  isCurrentPhase ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                }`}>
+                  {originalIndex + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground leading-tight truncate">
+                  <p className={`text-sm font-semibold leading-tight truncate ${
+                    isCurrentPhase ? "text-primary" : "text-foreground"
+                  }`}>
                     {activity.description}
                   </p>
                 </div>
-                <StatusBadge status={status} />
+                <StatusBadge status={status} isCurrentPhase={isCurrentPhase} />
               </div>
 
               {/* Date info row */}
@@ -290,15 +320,10 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Real</p>
-                  <p className={`text-xs font-medium tabular-nums ${isDelayed ? "text-warning" : isAhead ? "text-success" : "text-foreground"}`}>
+                  <p className={`text-xs font-medium tabular-nums ${isDelayed ? "text-destructive" : isAhead ? "text-success" : "text-foreground"}`}>
                     {activity.actualStart ? `${formatDate(activity.actualStart, baseYear)} → ${formatDate(activity.actualEnd, baseYear)}` : "—"}
                   </p>
                 </div>
-                {delayDays !== null && (
-                  <span className={`text-xs font-bold tabular-nums shrink-0 ${formatDeviation(delayDays).className}`}>
-                    {formatDeviation(delayDays).text}
-                  </span>
-                )}
               </div>
             </div>
           );
@@ -361,44 +386,56 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                   currentField={sortField}
                   direction={sortDirection}
                   onSort={handleSort}
-                  className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5"
+                  className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5 pr-4"
                 >
                   Status
                 </SortableHeader>
-                <TableHead className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5 pr-4 text-center">
-                  Desvio
-                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedActivities.map((activity, index) => {
+                const originalIndex = activities.indexOf(activity);
                 const status = getActivityStatus(activity);
+                const isCurrentPhase = originalIndex === currentActivityIndex;
                 const delayDays = getDelayDays(activity);
-                const isDelayed = status === "delayed";
+                const isDelayed = delayDays !== null && delayDays > 0;
                 
                 return (
                   <TableRow
                     key={index}
                     className={`transition-colors border-b border-border/50 last:border-b-0 ${
-                      isDelayed 
-                        ? "bg-warning/5 hover:bg-warning/10" 
-                        : index % 2 === 0 
-                          ? "bg-card hover:bg-accent/30" 
-                          : "bg-secondary/20 hover:bg-accent/30"
+                      isCurrentPhase
+                        ? "bg-primary/10 hover:bg-primary/15 ring-2 ring-inset ring-primary/30"
+                        : isDelayed 
+                          ? "bg-destructive/5 hover:bg-destructive/10" 
+                          : index % 2 === 0 
+                            ? "bg-card hover:bg-accent/30" 
+                            : "bg-secondary/20 hover:bg-accent/30"
                     }`}
                   >
                     <TableCell className="py-3.5 pl-4 pr-3">
                       <div className="flex items-center gap-2.5">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">
-                          {index + 1}
+                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 ${
+                          isCurrentPhase ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                        }`}>
+                          {originalIndex + 1}
                         </span>
-                        <span className="text-sm font-medium text-foreground leading-snug">
-                          {activity.description}
-                        </span>
+                        <div className="flex flex-col">
+                          {isCurrentPhase && (
+                            <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
+                              Etapa Atual
+                            </span>
+                          )}
+                          <span className={`text-sm font-medium leading-snug ${
+                            isCurrentPhase ? "text-primary" : "text-foreground"
+                          }`}>
+                            {activity.description}
+                          </span>
+                        </div>
                         {isDelayed && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+                              <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>Atraso de {delayDays} dias</p>
@@ -417,15 +454,12 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                       {formatDate(activity.actualStart, baseYear)}
                     </TableCell>
                     <TableCell className={`py-3.5 text-center text-sm font-medium tabular-nums ${
-                      delayDays !== null && delayDays > 0 ? "text-warning" : "text-foreground"
+                      isDelayed ? "text-destructive" : "text-foreground"
                     }`}>
                       {formatDate(activity.actualEnd, baseYear)}
                     </TableCell>
-                    <TableCell className="py-3.5 text-center">
-                      <StatusBadge status={status} />
-                    </TableCell>
-                    <TableCell className={`py-3.5 pr-4 text-center text-sm tabular-nums ${formatDeviation(delayDays).className}`}>
-                      {formatDeviation(delayDays).text}
+                    <TableCell className="py-3.5 pr-4 text-center">
+                      <StatusBadge status={status} isCurrentPhase={isCurrentPhase} />
                     </TableCell>
                   </TableRow>
                 );
