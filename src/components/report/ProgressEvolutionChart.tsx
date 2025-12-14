@@ -127,7 +127,7 @@ const ProgressEvolutionChart = ({
   const data = generateWeeklyProgressData(activities, currentWeek, projectStartDate);
 
   return (
-    <div className="bg-card rounded-lg border border-border p-4 md:p-6">
+    <div className="hidden sm:block bg-card rounded-lg border border-border p-4 md:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h3 className="text-base sm:text-lg font-semibold text-foreground">Evolução do Desvio</h3>
         <div className="flex items-center gap-4 text-xs sm:text-sm">
