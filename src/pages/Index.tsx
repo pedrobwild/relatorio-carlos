@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, ArrowLeft, Download, Share2 } from "lucide-react";
+import { BarChart3, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport } from "@/types/report";
 import { week10SeedData } from "@/data/week10SeedData";
+import bwildLogo from "@/assets/bwild-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -106,8 +107,10 @@ const Index = () => {
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border md:hidden px-4 py-3">
-        <div className="flex items-center justify-center">
-          <h1 className="font-semibold text-base text-foreground tracking-tight">Portal do Cliente</h1>
+        <div className="flex items-center justify-center gap-2.5">
+          <img src={bwildLogo} alt="Bwild" className="h-5 w-auto" />
+          <div className="h-4 w-px bg-border" />
+          <h1 className="font-semibold text-sm text-foreground tracking-tight">Portal do Cliente</h1>
         </div>
       </div>
 
