@@ -1,7 +1,7 @@
 import { WeeklyReportData } from "@/types/weeklyReport";
 import ReportKPICards from "./ReportKPICards";
 import ExecutiveSummary from "./ExecutiveSummary";
-import ActivitiesTable from "./ActivitiesTable";
+import ProgressEvolutionChart from "./ProgressEvolutionChart";
 import LookaheadSection from "./LookaheadSection";
 import RisksIssuesSection from "./RisksIssuesSection";
 import QualitySection from "./QualitySection";
@@ -22,8 +22,8 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
       {/* 2. Executive Summary */}
       <ExecutiveSummary data={data} />
 
-      {/* 3. Activities Table */}
-      <ActivitiesTable activities={data.activities} />
+      {/* 3. Progress Evolution Chart (S-Curve) */}
+      <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
 
       {/* 4. Lookahead (Next 7 Days) */}
       <LookaheadSection tasks={data.lookaheadTasks} />
