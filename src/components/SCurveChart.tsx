@@ -53,14 +53,19 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     ? parseDate(reportDate) 
     : new Date();
 
-  // Collect all unique dates
-  const allDates = new Set<string>();
+  // Collect all unique dates - only planned dates and actual dates that exist
+  const plannedDates = new Set<string>();
+  const actualDates = new Set<string>();
+  
   activities.forEach(a => {
-    if (a.plannedStart) allDates.add(a.plannedStart);
-    if (a.plannedEnd) allDates.add(a.plannedEnd);
-    if (a.actualStart) allDates.add(a.actualStart);
-    if (a.actualEnd) allDates.add(a.actualEnd);
+    if (a.plannedStart) plannedDates.add(a.plannedStart);
+    if (a.plannedEnd) plannedDates.add(a.plannedEnd);
+    if (a.actualStart) actualDates.add(a.actualStart);
+    if (a.actualEnd) actualDates.add(a.actualEnd);
   });
+
+  // Combine all dates for sorting
+  const allDates = new Set([...plannedDates, ...actualDates]);
 
   const sortedDates = Array.from(allDates).sort((a, b) => {
     const dateA = parseDate(a);
@@ -81,14 +86,25 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       return plannedStart && plannedStart <= currentDate;
     }).length;
     
-    // Only show "realizado" for dates up to report date
+    // Only show "realizado" for dates up to report date AND only if there are actual dates
     const isFutureDate = reportDateParsed && currentDate > reportDateParsed;
     
+    // Check if any activity has actual data for this date
+    const hasAnyActualData = activities.some(a => a.actualStart || a.actualEnd);
+    
     // Count actual started activities by this date
-    const actualStarted = isFutureDate ? null : activities.filter(a => {
-      const actualStart = parseDate(a.actualStart);
-      return actualStart && actualStart <= currentDate;
-    }).length;
+    let actualStarted: number | null = null;
+    if (!isFutureDate && hasAnyActualData) {
+      const actualCount = activities.filter(a => {
+        const actualStart = parseDate(a.actualStart);
+        return actualStart && actualStart <= currentDate;
+      }).length;
+      // Only show realizado if at least one activity has started by this date
+      // or if this date is from actual dates set
+      if (actualCount > 0 || actualDates.has(date)) {
+        actualStarted = actualCount;
+      }
+    }
 
     return {
       date: formatDisplayDate(date, baseYear),
