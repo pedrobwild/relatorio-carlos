@@ -108,7 +108,7 @@ const ReportHeader = ({
             <span className="text-foreground/70">Lucas Tresmondi</span>
             <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Phone className="w-3 h-3" />
-              <span className="text-xs">(99) 99999-9999</span>
+              <span className="text-sm">(99) 99999-9999</span>
             </a>
           </div>
           <div className="flex items-center gap-2 text-sm">
@@ -117,13 +117,13 @@ const ReportHeader = ({
             <span className="text-foreground/70">Victorya Capponi</span>
             <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Phone className="w-3 h-3" />
-              <span className="text-xs">(99) 99999-9999</span>
+              <span className="text-sm">(99) 99999-9999</span>
             </a>
           </div>
         </div>
 
         {/* Row 3: Metrics */}
-        <div className="flex items-center gap-4 md:gap-6 text-sm text-foreground/70">
+        <div className="flex items-center gap-4 md:gap-6 text-sm">
           <span>
             <span className="font-medium text-foreground">Início:</span>{" "}
             <span className="text-foreground/70">01/07/2025</span>
