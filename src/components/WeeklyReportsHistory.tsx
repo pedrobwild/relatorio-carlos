@@ -30,28 +30,23 @@ const calculatePlannedProgress = (
   return Math.round((plannedComplete / totalActivities) * 100);
 };
 
-const calculateActivityProgress = (
-  activity: Activity,
+const calculateActualProgress = (
+  activities: Activity[],
   weekEndDate: Date
 ): number => {
-  const plannedStart = new Date(activity.plannedStart);
-  const plannedEnd = new Date(activity.plannedEnd);
+  const totalActivities = activities.length;
+  let actualComplete = 0;
   
-  if (activity.actualEnd) {
-    const actualEndDate = new Date(activity.actualEnd);
-    if (isBefore(actualEndDate, weekEndDate) || actualEndDate.getTime() === weekEndDate.getTime()) {
-      return 1;
+  activities.forEach(activity => {
+    if (activity.actualEnd) {
+      const actualEnd = new Date(activity.actualEnd);
+      if (isBefore(actualEnd, weekEndDate) || actualEnd.getTime() === weekEndDate.getTime()) {
+        actualComplete++;
+      }
     }
-  }
+  });
   
-  if (isBefore(weekEndDate, plannedStart)) {
-    return 0;
-  }
-  
-  const totalPlannedDays = Math.max(1, (plannedEnd.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24));
-  const elapsedDays = Math.max(0, (weekEndDate.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24));
-  
-  return Math.min(0.95, elapsedDays / totalPlannedDays);
+  return Math.round((actualComplete / totalActivities) * 100);
 };
 
 export interface ExtendedWeeklyReport extends WeeklyReport {
@@ -78,11 +73,8 @@ export const generateWeeklyReports = (
     const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
     const weekEndDate = isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd;
     
-    const totalProgress = activities.reduce((sum, activity) => {
-      return sum + calculateActivityProgress(activity, weekEndDate);
-    }, 0);
     
-    let completionPercentage = Math.round((totalProgress / activities.length) * 100);
+    let completionPercentage = calculateActualProgress(activities, weekEndDate);
     completionPercentage = Math.max(completionPercentage, previousPercentage);
     previousPercentage = completionPercentage;
     
