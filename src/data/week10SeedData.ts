@@ -185,7 +185,7 @@ export const week10SeedData: WeeklyReportData = {
     {
       id: "5",
       date: "2025-09-13",
-      description: "Preparação de entrega + orientações de uso",
+      description: "Vistoria final e assinatura do termo de entrega da obra",
       prerequisites: "Vistoria aprovada",
       responsible: "Gestão de obra",
       risk: "baixo",
