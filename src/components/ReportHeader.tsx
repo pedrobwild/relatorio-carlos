@@ -1,5 +1,5 @@
 import bwildLogo from "@/assets/bwild-logo.png";
-import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone } from "lucide-react";
+import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Calendar, ChevronRight } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ReportHeaderProps {
@@ -37,9 +37,21 @@ const ReportHeader = ({
     { icon: Headphones, label: "Suporte", href: "#suporte" },
   ];
 
+  const teamContacts = [
+    { role: "Engenheiro", name: "Lucas Tresmondi", phone: "(99) 99999-9999" },
+    { role: "Gerente", name: "Victorya Capponi", phone: "(99) 99999-9999" },
+  ];
+
+  const dateMetrics = [
+    { label: "Início", value: "01/07/2025" },
+    { label: "Término", value: "14/09/2025" },
+    { label: "Atualização", value: "08/09/2025" },
+  ];
+
   return (
     <header className="bg-card rounded-xl border border-border overflow-hidden mb-4 md:mb-6 animate-fade-in">
-      <div className="p-4 md:p-5">
+      {/* Desktop Layout */}
+      <div className="hidden md:block p-5">
         {/* Row 1: Logo + Project + Quick Links */}
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-4">
@@ -48,9 +60,9 @@ const ReportHeader = ({
               alt="Bwild" 
               className="h-8 w-auto"
             />
-            <div className="hidden sm:block h-6 w-px bg-border" />
-            <div className="hidden sm:block">
-              <h1 className="text-base md:text-lg font-semibold text-foreground leading-tight">
+            <div className="h-6 w-px bg-border" />
+            <div>
+              <h1 className="text-lg font-semibold text-foreground leading-tight">
                 {projectName} – {unitName}
               </h1>
               {clientName && (
@@ -61,38 +73,165 @@ const ReportHeader = ({
             </div>
           </div>
 
-          {/* Quick Links - Desktop */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Quick Links */}
+          <div className="flex items-center gap-1">
             {quickLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
-                <link.icon className="w-3.5 h-3.5" />
+                <link.icon className="w-4 h-4" />
                 {link.label}
               </a>
             ))}
           </div>
         </div>
 
-        {/* Mobile: Project name */}
-        <div className="sm:hidden mb-4">
-          <h1 className="text-base font-semibold text-foreground leading-tight">
-            {projectName} – {unitName}
-          </h1>
-          {clientName && (
-            <p className="text-sm text-foreground/70">{clientName}</p>
-          )}
+        {/* Row 2: Team contacts */}
+        <div className="flex items-center gap-8 mb-4 pb-4 border-b border-border">
+          {teamContacts.map((contact) => (
+            <div key={contact.role} className="flex items-center gap-3 text-sm">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent">
+                <User className="w-4 h-4 text-accent-foreground" />
+              </div>
+              <div>
+                <span className="font-medium text-foreground">{contact.role}:</span>{" "}
+                <span className="text-foreground/70">{contact.name}</span>
+              </div>
+              <a 
+                href={`tel:+55${contact.phone.replace(/\D/g, '')}`} 
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>{contact.phone}</span>
+              </a>
+            </div>
+          ))}
         </div>
 
-        {/* Quick Links - Mobile */}
-        <div className="flex md:hidden items-center justify-start gap-1 mb-4 overflow-x-auto pb-1">
+        {/* Row 3: Date Metrics */}
+        <div className="flex items-center gap-6 text-sm">
+          {dateMetrics.map((metric) => (
+            <span key={metric.label}>
+              <span className="font-medium text-foreground">{metric.label}:</span>{" "}
+              <span className="text-foreground/70">{metric.value}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Tablet Layout (sm to md) */}
+      <div className="hidden sm:block md:hidden p-4">
+        {/* Row 1: Logo + Project */}
+        <div className="flex items-center gap-3 mb-4">
+          <img 
+            src={bwildLogo} 
+            alt="Bwild" 
+            className="h-7 w-auto"
+          />
+          <div className="h-5 w-px bg-border" />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-semibold text-foreground leading-tight truncate">
+              {projectName} – {unitName}
+            </h1>
+            {clientName && (
+              <p className="text-sm text-foreground/70 truncate">{clientName}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Links - Horizontal scroll */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide -mx-4 px-4">
           {quickLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap"
+            >
+              <link.icon className="w-4 h-4" />
+              {link.label}
+            </a>
+          ))}
+        </div>
+
+        {/* Team contacts - Cards */}
+        <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-border">
+          {teamContacts.map((contact) => (
+            <a
+              key={contact.role}
+              href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+              className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-accent/50 active:scale-[0.98] transition-all"
+            >
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent shrink-0">
+                <User className="w-5 h-5 text-accent-foreground" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-foreground/70">{contact.role}</p>
+                <p className="text-sm font-medium text-foreground truncate">{contact.name}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Phone className="w-3 h-3" />
+                  {contact.phone}
+                </p>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        {/* Date Metrics - Horizontal */}
+        <div className="flex items-center justify-between text-sm">
+          {dateMetrics.map((metric) => (
+            <div key={metric.label} className="text-center">
+              <p className="text-xs font-medium text-foreground/50 mb-0.5">{metric.label}</p>
+              <p className="font-medium text-foreground">{metric.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile Layout (< sm) */}
+      <div className="sm:hidden">
+        {/* Header with logo and project */}
+        <div className="p-4 pb-3">
+          <div className="flex items-center gap-3 mb-3">
+            <img 
+              src={bwildLogo} 
+              alt="Bwild" 
+              className="h-6 w-auto"
+            />
+            <div className="h-4 w-px bg-border" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm font-semibold text-foreground leading-tight truncate">
+                {projectName} – {unitName}
+              </h1>
+              {clientName && (
+                <p className="text-xs text-foreground/70 truncate">{clientName}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Date chips - Compact horizontal */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 py-1">
+            {dateMetrics.map((metric) => (
+              <div
+                key={metric.label}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 text-xs whitespace-nowrap"
+              >
+                <Calendar className="w-3 h-3 text-muted-foreground" />
+                <span className="font-medium text-foreground">{metric.label}:</span>
+                <span className="text-foreground/70">{metric.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Links - Full width pills */}
+        <div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
+          {quickLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap min-h-[36px]"
             >
               <link.icon className="w-3.5 h-3.5" />
               {link.label}
@@ -100,42 +239,30 @@ const ReportHeader = ({
           ))}
         </div>
 
-        {/* Row 2: Team contacts */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mb-4 pb-4 border-b border-border">
-          <div className="flex items-center gap-2 text-sm">
-            <User className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="font-medium text-foreground">Engenheiro:</span>
-            <span className="text-foreground/70">Lucas Tresmondi</span>
-            <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <Phone className="w-3 h-3" />
-              <span className="text-sm">(99) 99999-9999</span>
+        {/* Team contacts - Stacked cards */}
+        <div className="border-t border-border">
+          {teamContacts.map((contact, index) => (
+            <a
+              key={contact.role}
+              href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+              className={`flex items-center gap-3 px-4 py-3 hover:bg-accent/30 active:bg-accent/50 transition-colors ${
+                index < teamContacts.length - 1 ? 'border-b border-border/50' : ''
+              }`}
+            >
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent shrink-0">
+                <User className="w-5 h-5 text-accent-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground/60">{contact.role}</p>
+                <p className="text-sm font-medium text-foreground">{contact.name}</p>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Phone className="w-4 h-4" />
+                <span className="text-xs">{contact.phone}</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
             </a>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <User className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="font-medium text-foreground">Gerente:</span>
-            <span className="text-foreground/70">Victorya Capponi</span>
-            <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <Phone className="w-3 h-3" />
-              <span className="text-sm">(99) 99999-9999</span>
-            </a>
-          </div>
-        </div>
-
-        {/* Row 3: Metrics */}
-        <div className="flex items-center gap-4 md:gap-6 text-sm">
-          <span>
-            <span className="font-medium text-foreground">Início:</span>{" "}
-            <span className="text-foreground/70">01/07/2025</span>
-          </span>
-          <span>
-            <span className="font-medium text-foreground">Término:</span>{" "}
-            <span className="text-foreground/70">14/09/2025</span>
-          </span>
-          <span className="hidden sm:inline">
-            <span className="font-medium text-foreground">Última atualização:</span>{" "}
-            <span className="text-foreground/70">08/09/2025</span>
-          </span>
+          ))}
         </div>
       </div>
     </header>
