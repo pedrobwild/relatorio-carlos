@@ -121,19 +121,23 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
 
       {/* Pending Items (Semáforo) */}
       {allPendingItems.length > 0 && (
-        <div className="bg-card rounded-lg border border-border p-4 sm:p-5">
-          <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2.5">Pendências para Entrega</h3>
-          <ul className="space-y-1.5">
-            {allPendingItems.map((item) => (
-              <li key={item.id} className="flex items-center gap-2.5 p-2 rounded bg-secondary/50">
-                <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
-                <span className="text-xs sm:text-sm text-foreground flex-1">{item.description}</span>
-                <span className="text-xs text-muted-foreground">
-                  até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <div className="bg-card rounded-lg border border-border">
+          <div className="p-4 sm:p-5 border-b border-border">
+            <h3 className="text-sm sm:text-base font-semibold text-foreground">Pendências para Entrega</h3>
+          </div>
+          <div className="p-4 sm:p-5">
+            <ul className="space-y-1.5">
+              {allPendingItems.map((item) => (
+                <li key={item.id} className="flex items-center gap-2.5 p-2 rounded bg-secondary/50">
+                  <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
+                  <span className="text-xs sm:text-sm text-foreground flex-1">{item.description}</span>
+                  <span className="text-xs text-muted-foreground">
+                    até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>
