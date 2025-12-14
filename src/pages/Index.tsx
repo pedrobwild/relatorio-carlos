@@ -7,6 +7,7 @@ import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import TechnicalReport from "@/components/TechnicalReport";
+import WeeklyReportsHistory from "@/components/WeeklyReportsHistory";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData } from "@/types/report";
@@ -137,7 +138,14 @@ const Index = () => {
                 </TabsContent>
 
                 <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
-                  <TechnicalReport />
+                  <WeeklyReportsHistory
+                    projectStartDate={reportData.startDate}
+                    reportDate={reportData.reportDate}
+                    activities={reportData.activities}
+                    onReportClick={(report) => {
+                      toast.info(`Abrindo relatório da Semana ${report.weekNumber}`);
+                    }}
+                  />
                 </TabsContent>
               </div>
             </Tabs>
