@@ -1,7 +1,7 @@
 import { RiskIssue } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface RisksIssuesSectionProps {
@@ -66,30 +66,30 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
         <div className="divide-y divide-border">
           {issues.map((issue) => (
             <div key={issue.id} className="p-4 sm:p-5 space-y-2.5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
-                    <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{issue.title}</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-foreground/70 ml-5.5">
-                    <span className="flex items-center gap-1.5">
-                      <User className="w-3 h-3 shrink-0" />
-                      <span className="font-medium">{issue.owner}</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3 h-3 shrink-0" />
-                      <span className="font-medium">{format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}</span>
-                    </span>
-                  </div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
+                  <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{issue.title}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-foreground/70 ml-5.5">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    <span className="font-medium">{format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}</span>
+                  </span>
                 </div>
               </div>
-              
-              {/* Show action plan directly */}
-              <div className="bg-secondary rounded-lg p-2.5 sm:p-3">
-                <p className="text-xs font-bold text-foreground mb-1">Plano de Ação</p>
-                <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{issue.actionPlan}</p>
+            </div>
+            
+            {/* Show action plan directly with numbered lines */}
+            <div className="bg-secondary rounded-lg p-2.5 sm:p-3">
+              <p className="text-xs font-bold text-foreground mb-1">Plano de Ação</p>
+              <div className="text-xs sm:text-sm text-foreground/80 leading-relaxed space-y-1">
+                {issue.actionPlan.split('\n').map((line, idx) => (
+                  <p key={idx}>{idx + 1}) {line.trim()}</p>
+                ))}
               </div>
+            </div>
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import { LookaheadTask } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AlertTriangle, User, CheckCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface LookaheadSectionProps {
@@ -45,10 +45,6 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
               <div className="flex items-start gap-1.5">
                 <CheckCircle className="w-3 h-3 shrink-0 mt-0.5" />
                 <span><span className="font-medium">Pré-requisito:</span> {task.prerequisites}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <User className="w-3 h-3 shrink-0" />
-                <span className="font-medium">{task.responsible}</span>
               </div>
             </div>
             
