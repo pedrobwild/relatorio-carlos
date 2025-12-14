@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, CalendarDays } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ScheduleTableProps {
@@ -38,19 +38,19 @@ const getActivityStatus = (activity: Activity): Status => {
 const StatusBadge = ({ status }: { status: Status }) => {
   const config = {
     completed: {
-      icon: CheckCircle,
+      icon: CheckCircle2,
       label: "Concluído",
-      className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+      className: "bg-success/10 text-success border-success/20",
     },
     delayed: {
-      icon: AlertTriangle,
+      icon: AlertCircle,
       label: "Atrasado",
-      className: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+      className: "bg-warning/10 text-warning border-warning/20",
     },
     "on-time": {
       icon: Clock,
       label: "No prazo",
-      className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+      className: "bg-info/10 text-info border-info/20",
     },
     pending: {
       icon: Clock,
@@ -63,9 +63,9 @@ const StatusBadge = ({ status }: { status: Status }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border tracking-wide ${className}`}
     >
-      <Icon className="w-3 h-3" />
+      <Icon className="w-3.5 h-3.5" />
       {label}
     </span>
   );
@@ -74,75 +74,81 @@ const StatusBadge = ({ status }: { status: Status }) => {
 const ScheduleTable = ({ activities }: ScheduleTableProps) => {
   if (activities.length === 0) {
     return (
-      <div className="mt-6 md:mt-8 text-center text-muted-foreground py-8">
-        Nenhuma atividade cadastrada.
+      <div className="mt-8 flex flex-col items-center justify-center py-12 text-muted-foreground">
+        <CalendarDays className="w-12 h-12 mb-3 opacity-40" />
+        <p className="text-sm font-medium">Nenhuma atividade cadastrada.</p>
       </div>
     );
   }
-  return (
-    <div className="mt-6 md:mt-8">
-      <h3 className="text-base md:text-xl font-bold text-foreground mb-3 md:mb-4">
-        Cronograma Detalhado
-      </h3>
 
-      {/* Mobile Card View - UX Optimized with Staggered Animations */}
+  return (
+    <div className="mt-8 md:mt-10">
+      <div className="flex items-center gap-2 mb-5">
+        <CalendarDays className="w-5 h-5 text-primary" />
+        <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+          Cronograma Detalhado
+        </h3>
+      </div>
+
+      {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
         {activities.map((activity, index) => {
           const status = getActivityStatus(activity);
           return (
             <div
               key={index}
-              className="bg-card border border-border rounded-xl p-4 shadow-sm active:scale-[0.99] transition-transform opacity-0 animate-fade-in"
-              style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
+              className="bg-card border border-border rounded-xl p-4 shadow-card opacity-0 animate-fade-in"
+              style={{ animationDelay: `${index * 60}ms` }}
             >
-              {/* Header with status */}
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <span className="text-xs text-muted-foreground font-medium">
-                  #{index + 1}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                  {index + 1}
                 </span>
                 <StatusBadge status={status} />
               </div>
 
-              {/* Activity description */}
-              <p className="text-sm font-semibold text-foreground mb-4 leading-snug">
+              <p className="text-sm font-semibold text-foreground mb-4 leading-relaxed">
                 {activity.description}
               </p>
 
-              {/* Timeline comparison */}
               <div className="space-y-2">
-                {/* Planned */}
-                <div className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between py-2.5 px-3 bg-secondary rounded-lg">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary/60" />
-                    <span className="text-xs text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Previsto
                     </span>
                   </div>
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-sm font-semibold text-foreground tabular-nums">
                     {activity.plannedStart} → {activity.plannedEnd}
                   </span>
                 </div>
 
-                {/* Actual */}
                 <div
-                  className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg ${
                     status === "delayed"
-                      ? "bg-amber-500/10"
-                      : "bg-emerald-500/10"
+                      ? "bg-warning/10"
+                      : status === "completed"
+                      ? "bg-success/10"
+                      : "bg-secondary"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <div
                       className={`w-2 h-2 rounded-full ${
-                        status === "delayed" ? "bg-amber-500" : "bg-emerald-500"
+                        status === "delayed"
+                          ? "bg-warning"
+                          : status === "completed"
+                          ? "bg-success"
+                          : "bg-muted-foreground"
                       }`}
                     />
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Realizado
                     </span>
                   </div>
-                  <span className="text-sm font-medium text-foreground">
-                    {activity.actualStart} → {activity.actualEnd}
+                  <span className="text-sm font-semibold text-foreground tabular-nums">
+                    {activity.actualStart || "—"} → {activity.actualEnd || "—"}
                   </span>
                 </div>
               </div>
@@ -152,58 +158,68 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block overflow-x-auto rounded-lg border-2 border-muted-foreground/30 shadow-card">
+      <div className="hidden md:block overflow-hidden rounded-xl border border-border shadow-card">
         <Table>
           <TableHeader>
-            <TableRow className="gradient-primary hover:bg-transparent">
-              <TableHead className="text-primary-foreground font-bold text-sm w-[35%] text-left border-r-2 border-primary-dark">
-                DESCRIÇÃO DE ATIVIDADES
+            <TableRow className="hover:bg-transparent border-b-0">
+              <TableHead className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 pl-5 text-left rounded-tl-xl">
+                Atividade
               </TableHead>
-              <TableHead className="text-primary-foreground font-bold text-sm text-center border-r-2 border-primary-dark">
-                DATA DE INÍCIO
-                <br />
-                PREVISTA
+              <TableHead className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+                Início Previsto
               </TableHead>
-              <TableHead className="text-primary-foreground font-bold text-sm text-center border-r-2 border-primary-dark">
-                DATA DE TÉRMINO
-                <br />
-                PREVISTO
+              <TableHead className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+                Término Previsto
               </TableHead>
-              <TableHead className="bg-accent text-foreground font-bold text-sm text-center border-r-2 border-muted-foreground/30">
-                DATA DE INÍCIO
+              <TableHead className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+                Início Real
               </TableHead>
-              <TableHead className="bg-accent text-foreground font-bold text-sm text-center border-r-2 border-muted-foreground/30">
-                DATA DE TÉRMINO
+              <TableHead className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 text-center">
+                Término Real
               </TableHead>
-              <TableHead className="bg-accent text-foreground font-bold text-sm text-center">
-                STATUS
+              <TableHead className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 pr-5 text-center rounded-tr-xl">
+                Status
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {activities.map((activity, index) => {
               const status = getActivityStatus(activity);
+              const isLast = index === activities.length - 1;
               return (
                 <TableRow
                   key={index}
-                  className="transition-colors hover:bg-muted/50"
+                  className={`transition-colors hover:bg-accent/30 ${
+                    index % 2 === 0 ? "bg-card" : "bg-secondary/30"
+                  }`}
                 >
-                  <TableCell className="bg-accent/50 text-foreground text-sm font-medium border-r-2 border-border">
-                    {activity.description}
+                  <TableCell
+                    className={`py-4 pl-5 pr-4 ${isLast ? "rounded-bl-xl" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                        {index + 1}
+                      </span>
+                      <span className="text-sm font-medium text-foreground leading-snug">
+                        {activity.description}
+                      </span>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-center text-sm border-r-2 border-border">
+                  <TableCell className="py-4 text-center text-sm font-medium text-muted-foreground tabular-nums">
                     {activity.plannedStart}
                   </TableCell>
-                  <TableCell className="text-center text-sm border-r-2 border-border">
+                  <TableCell className="py-4 text-center text-sm font-medium text-muted-foreground tabular-nums">
                     {activity.plannedEnd}
                   </TableCell>
-                  <TableCell className="text-center text-sm border-r-2 border-border">
-                    {activity.actualStart}
+                  <TableCell className="py-4 text-center text-sm font-semibold text-foreground tabular-nums">
+                    {activity.actualStart || "—"}
                   </TableCell>
-                  <TableCell className="text-center text-sm border-r-2 border-border">
-                    {activity.actualEnd}
+                  <TableCell className="py-4 text-center text-sm font-semibold text-foreground tabular-nums">
+                    {activity.actualEnd || "—"}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell
+                    className={`py-4 pr-5 text-center ${isLast ? "rounded-br-xl" : ""}`}
+                  >
                     <StatusBadge status={status} />
                   </TableCell>
                 </TableRow>
