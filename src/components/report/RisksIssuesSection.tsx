@@ -93,13 +93,11 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
                 </div>
               </div>
               
-              {/* Show action plan directly for first item (example) */}
-              {index === 0 && (
-                <div className="bg-secondary/50 rounded-lg p-3 mt-2">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Plano de Ação</p>
-                  <p className="text-sm text-foreground">{issue.actionPlan}</p>
-                </div>
-              )}
+              {/* Show action plan directly */}
+              <div className="bg-secondary/50 rounded-lg p-3 mt-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Plano de Ação</p>
+                <p className="text-sm text-foreground">{issue.actionPlan}</p>
+              </div>
             </div>
           ))}
         </div>
