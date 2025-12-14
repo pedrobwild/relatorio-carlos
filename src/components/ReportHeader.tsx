@@ -29,17 +29,27 @@ const formatDate = (dateStr: string, baseYear?: number): string => {
   return `${day}/${month}`;
 };
 
-// Calcula o desvio total em dias das atividades concluídas
+// Calcula o desvio total em dias considerando início e término
 const calculateTotalDeviation = (activities: Activity[]): number => {
   let totalDeviation = 0;
+  
   activities.forEach(a => {
+    // Para atividades concluídas, usar o desvio do término
     if (a.actualEnd && a.plannedEnd) {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       const actualEnd = new Date(a.actualEnd + "T00:00:00");
       const diffDays = Math.ceil((actualEnd.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24));
       totalDeviation += diffDays;
     }
+    // Para atividades em andamento, usar o desvio do início
+    else if (a.actualStart && a.plannedStart && !a.actualEnd) {
+      const plannedStart = new Date(a.plannedStart + "T00:00:00");
+      const actualStart = new Date(a.actualStart + "T00:00:00");
+      const diffDays = Math.ceil((actualStart.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24));
+      totalDeviation += diffDays;
+    }
   });
+  
   return totalDeviation;
 };
 
