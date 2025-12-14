@@ -22,10 +22,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
       {/* Deliverables Completed This Week */}
       {data.deliverablesCompleted.length > 0 && (
         <div className="bg-card rounded-lg p-4 sm:p-5 border border-border">
-          <div className="flex items-center gap-2 mb-3">
-            <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">Entregáveis concluídos na semana</h3>
-          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3">Entregáveis concluídos na semana</h3>
           <ul className="space-y-2.5">
             {data.deliverablesCompleted.map((item) => (
               <li key={item.id} className="flex items-start gap-2.5 text-sm sm:text-base text-foreground/80">
