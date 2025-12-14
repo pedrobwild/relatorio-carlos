@@ -193,71 +193,71 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
       </div>
 
       {/* Chart Container */}
-      <div className="bg-secondary/30 rounded-xl p-2 md:p-6 border border-border/50 -mx-1 md:mx-0">
-        <div className="h-[260px] md:h-[360px] lg:h-[400px] w-full">
+      <div className="bg-secondary/30 rounded-xl p-3 sm:p-4 md:p-6 border border-border/50">
+        <div className="h-[220px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+              margin={{ top: 5, right: 8, left: -5, bottom: 0 }}
             >
               <CartesianGrid 
                 strokeDasharray="3 3" 
                 stroke="hsl(var(--border))" 
-                strokeOpacity={0.6}
+                strokeOpacity={0.5}
                 vertical={false}
               />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
                 tickLine={false}
-                axisLine={{ stroke: "hsl(var(--border))" }}
+                axisLine={{ stroke: "hsl(var(--border))", strokeOpacity: 0.5 }}
                 interval="preserveStartEnd"
                 angle={-45}
                 textAnchor="end"
-                height={60}
-                dy={10}
+                height={45}
+                dy={8}
               />
               <YAxis
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `${value}%`}
                 domain={[0, 100]}
                 ticks={[0, 25, 50, 75, 100]}
-                width={40}
+                width={32}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                wrapperStyle={{ paddingTop: "16px" }}
+                wrapperStyle={{ paddingTop: "8px" }}
                 formatter={(value) => (
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">
                     {value === "previsto" ? "Previsto" : "Realizado"}
                   </span>
                 )}
                 iconType="circle"
-                iconSize={8}
+                iconSize={6}
               />
               <ReferenceLine 
                 y={50} 
                 stroke="hsl(var(--border))" 
                 strokeDasharray="6 6"
-                strokeOpacity={0.5}
+                strokeOpacity={0.4}
               />
               <Line
                 type="monotone"
                 dataKey="previsto"
                 name="previsto"
                 stroke="hsl(var(--primary))"
-                strokeWidth={2.5}
-                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 4 }}
-                activeDot={{ r: 6, fill: "hsl(var(--primary))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                strokeWidth={2}
+                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 3 }}
+                activeDot={{ r: 5, fill: "hsl(var(--primary))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
               />
               <Line
                 type="monotone"
                 dataKey="realizado"
                 name="realizado"
                 stroke="hsl(var(--success))"
-                strokeWidth={3}
+                strokeWidth={2.5}
                 dot={(props: any) => {
                   const { cx, cy, payload } = props;
                   if (payload.realizado === null) return null;
@@ -266,14 +266,14 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                     <circle
                       cx={cx}
                       cy={cy}
-                      r={isMatch ? 5 : 4}
+                      r={isMatch ? 4 : 3}
                       fill="hsl(var(--success))"
                       stroke={isMatch ? "hsl(var(--primary))" : "none"}
-                      strokeWidth={isMatch ? 2.5 : 0}
+                      strokeWidth={isMatch ? 2 : 0}
                     />
                   );
                 }}
-                activeDot={{ r: 6, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
