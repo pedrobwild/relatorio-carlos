@@ -106,11 +106,10 @@ const Index = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-4 py-4">
-        <div className="flex items-center gap-3">
-          <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
-          <div className="h-5 w-px bg-border/60" />
-          <h1 className="font-bold text-lg text-foreground">Portal do Cliente</h1>
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-4 py-3">
+        <div className="flex flex-col items-center gap-1">
+          <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
+          <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
         </div>
       </div>
 
