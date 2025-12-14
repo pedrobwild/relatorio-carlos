@@ -2,7 +2,7 @@ import { useState } from "react";
 import { GalleryPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,11 +35,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   return (
     <div className="bg-card rounded-lg border border-border">
       <div className="p-4 sm:p-5 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Camera className="w-5 h-5 text-primary shrink-0" />
-          <h3 className="text-base sm:text-lg font-semibold text-foreground">Galeria de Fotos</h3>
-          <span className="text-sm text-foreground/60">({photos.length} fotos)</span>
-        </div>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">
+          Galeria de Fotos <span className="text-sm font-normal text-foreground/60">({photos.length} fotos)</span>
+        </h3>
       </div>
       
       <div className="p-4">

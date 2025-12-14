@@ -1,7 +1,7 @@
 import { LookaheadTask } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, AlertTriangle, User, CheckCircle } from "lucide-react";
+import { AlertTriangle, User, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface LookaheadSectionProps {
@@ -23,10 +23,7 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border">
       <div className="p-4 sm:p-5 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary shrink-0" />
-          <h3 className="text-base sm:text-lg font-semibold text-foreground">Plano da Próxima Semana</h3>
-        </div>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">Plano da Próxima Semana</h3>
       </div>
       
       <div className="divide-y divide-border">
