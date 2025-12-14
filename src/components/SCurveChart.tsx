@@ -158,6 +158,9 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
   const chartData = generateChartData(activities, reportDate);
   
+  // Find current activity in progress (has actualStart but no actualEnd)
+  const currentActivity = activities.find(a => a.actualStart && !a.actualEnd);
+  
   // Get last data point for comparison
   const lastPoint = chartData[chartData.length - 1];
   const deviation = lastPoint ? lastPoint.realizado - lastPoint.previsto : 0;
@@ -180,17 +183,11 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
           </div>
         </div>
         
-        {/* Deviation indicator */}
-        {lastPoint && (
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-            deviation >= 0 
-              ? "bg-success/10 text-success" 
-              : "bg-warning/10 text-warning"
-          }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${
-              deviation >= 0 ? "bg-success" : "bg-warning"
-            }`} />
-            {deviation >= 0 ? "Adiantado" : "Atrasado"}: {Math.abs(deviation)}%
+        {/* Current activity indicator */}
+        {currentActivity && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-info/10 text-info border border-info/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-info animate-pulse" />
+            {currentActivity.description}
           </div>
         )}
       </div>
