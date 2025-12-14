@@ -106,7 +106,7 @@ const ProgressEvolutionChart = ({
   return (
     <div className="bg-card rounded-lg border border-border p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-sm font-medium text-foreground">Evolução do Progresso</h3>
+        <h3 className="text-sm font-medium text-foreground">Progresso Previsto x Realizado</h3>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-primary" />

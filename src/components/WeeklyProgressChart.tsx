@@ -122,7 +122,7 @@ const WeeklyProgressChart = ({
     <div className="bg-card/50 rounded-lg p-4 border border-border">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
         <h4 className="text-sm md:text-base font-semibold text-foreground">
-          Evolução do Progresso
+          Progresso Previsto x Realizado
         </h4>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
