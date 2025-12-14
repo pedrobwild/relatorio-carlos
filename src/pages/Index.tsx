@@ -170,7 +170,7 @@ const Index = () => {
               <div className="p-4 md:p-6 lg:p-8">
                 <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
                   <SCurveChart activities={reportData.activities} reportDate={reportData.reportDate} />
-                  <ScheduleTable activities={reportData.activities} />
+                  <ScheduleTable activities={reportData.activities} reportDate={reportData.reportDate} />
                 </TabsContent>
 
                 <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
