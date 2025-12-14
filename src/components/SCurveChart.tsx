@@ -156,7 +156,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
           </div>
           <div>
             <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-              Curva S – Atividades Iniciadas
+              Cronograma Previsto x Realizado
             </h2>
             <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
               Comparação entre o previsto e o realizado ao longo do cronograma
@@ -244,8 +244,22 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 dataKey="realizado"
                 name="realizado"
                 stroke="hsl(var(--success))"
-                strokeWidth={2.5}
-                dot={{ fill: "hsl(var(--success))", strokeWidth: 0, r: 4 }}
+                strokeWidth={3}
+                dot={(props: any) => {
+                  const { cx, cy, payload } = props;
+                  if (payload.realizado === null) return null;
+                  const isMatch = payload.previsto === payload.realizado;
+                  return (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={isMatch ? 5 : 4}
+                      fill="hsl(var(--success))"
+                      stroke={isMatch ? "hsl(var(--primary))" : "none"}
+                      strokeWidth={isMatch ? 2.5 : 0}
+                    />
+                  );
+                }}
                 activeDot={{ r: 6, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
               />
             </LineChart>
