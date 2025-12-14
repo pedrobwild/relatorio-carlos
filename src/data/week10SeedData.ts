@@ -92,7 +92,7 @@ export const week10SeedData: WeeklyReportData = {
     },
     {
       activityId: "6",
-      description: "Marcenaria",
+      description: "Conclusão da Marcenaria",
       plannedStart: "2025-08-20",
       plannedEnd: "2025-09-05",
       actualStart: "2025-08-20",
