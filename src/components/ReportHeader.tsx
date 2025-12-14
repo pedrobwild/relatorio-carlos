@@ -191,65 +191,73 @@ const ReportHeader = ({
 
       {/* Mobile Layout (< sm) */}
       <div className="sm:hidden p-3">
-        {/* Row 1: Project info */}
+        {/* Row 1: Project info - Primary hierarchy */}
         <div className="mb-3 pb-3 border-b border-border">
-          <h1 className="text-sm font-semibold text-foreground leading-tight">
+          <p className="text-[10px] font-medium text-primary/80 uppercase tracking-wider mb-0.5">Projeto</p>
+          <h1 className="text-base font-bold text-foreground leading-tight">
             {projectName} – {unitName}
           </h1>
           {clientName && (
-            <p className="text-xs text-foreground/70">{clientName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Cliente: <span className="text-foreground/80">{clientName}</span></p>
           )}
         </div>
 
         {/* Row 2: Quick Links - Icon grid */}
-        <div className="grid grid-cols-5 gap-1 mb-3 pb-3 border-b border-border">
-          {quickLinks.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 active:scale-95 transition-all min-h-[56px]"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/60">
-                <link.icon className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
-            </a>
-          ))}
+        <div className="mb-3 pb-3 border-b border-border">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Documentos</p>
+          <div className="grid grid-cols-5 gap-1">
+            {quickLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="flex flex-col items-center justify-center gap-1.5 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all min-h-[52px]"
+              >
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
+                  <link.icon className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[9px] font-medium leading-tight text-center">{link.label}</span>
+              </a>
+            ))}
+          </div>
         </div>
 
-        {/* Row 3: Dates - Compact horizontal */}
-        <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
-          {dateMetrics.map((metric, index) => (
-            <div key={metric.label} className="flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
-              <span className="text-[10px] text-foreground/60">{metric.label}:</span>
-              <span className="text-[10px] font-medium text-foreground">{metric.value}</span>
-            </div>
-          ))}
+        {/* Row 3: Dates - Secondary hierarchy */}
+        <div className="mb-3 pb-3 border-b border-border">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Cronograma</p>
+          <div className="flex items-center justify-between">
+            {dateMetrics.map((metric) => (
+              <div key={metric.label} className="text-center">
+                <p className="text-[9px] text-muted-foreground mb-0.5">{metric.label}</p>
+                <p className="text-xs font-semibold text-foreground">{metric.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Row 4: Team contacts - Full width cards */}
-        <div className="space-y-2">
-          {teamContacts.map((contact) => (
-            <a
-              key={contact.role}
-              href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-              className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/30 active:bg-accent/50 transition-colors"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent shrink-0">
-                <User className="w-3.5 h-3.5 text-accent-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-foreground/60">{contact.role}</p>
-                <p className="text-xs font-medium text-foreground">{contact.name}</p>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-primary shrink-0">
-                <Phone className="w-3 h-3" />
-                <span>Ligar</span>
-                <ChevronRight className="w-3 h-3" />
-              </div>
-            </a>
-          ))}
+        {/* Row 4: Team contacts - Tertiary hierarchy */}
+        <div>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Equipe</p>
+          <div className="space-y-1.5">
+            {teamContacts.map((contact) => (
+              <a
+                key={contact.role}
+                href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+                className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/40 hover:bg-accent/60 active:scale-[0.98] transition-all"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-medium text-primary/70 uppercase tracking-wide">{contact.role}</p>
+                  <p className="text-xs font-semibold text-foreground">{contact.name}</p>
+                </div>
+                <div className="flex items-center gap-0.5 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
+                  <Phone className="w-3 h-3" />
+                  <span className="text-[10px] font-semibold">Ligar</span>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </header>
