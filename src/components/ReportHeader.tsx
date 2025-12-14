@@ -190,63 +190,72 @@ const ReportHeader = ({
       </div>
 
       {/* Mobile Layout (< sm) */}
-      <div className="sm:hidden p-4">
+      <div className="sm:hidden p-3">
         {/* Row 1: Logo + Project info */}
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex items-center gap-2.5 mb-3 pb-3 border-b border-border">
           <img 
             src={bwildLogo} 
             alt="Bwild" 
-            className="h-7 w-auto"
+            className="h-6 w-auto shrink-0"
           />
-          <div className="h-5 w-px bg-border" />
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-semibold text-foreground leading-tight">
+            <h1 className="text-sm font-semibold text-foreground leading-tight truncate">
               {projectName} – {unitName}
             </h1>
             {clientName && (
-              <p className="text-sm text-foreground/70">{clientName}</p>
+              <p className="text-xs text-foreground/70">{clientName}</p>
             )}
           </div>
         </div>
 
-        {/* Row 2: Date info - Simple inline */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-3">
-          {dateMetrics.map((metric) => (
-            <span key={metric.label} className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-foreground/70">{metric.label}:</span>
-              <span className="font-medium text-foreground">{metric.value}</span>
-            </span>
-          ))}
-        </div>
-
-        {/* Row 3: Quick Links - Horizontal scroll */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-3 mb-3 border-b border-border">
+        {/* Row 2: Quick Links - Icon grid */}
+        <div className="grid grid-cols-5 gap-1 mb-3 pb-3 border-b border-border">
           {quickLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap"
+              className="flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 active:scale-95 transition-all min-h-[56px]"
             >
-              {link.label}
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/60">
+                <link.icon className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
             </a>
           ))}
         </div>
 
-        {/* Row 4: Team contacts - Compact grid */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Row 3: Dates - Compact horizontal */}
+        <div className="flex items-center justify-between text-xs mb-3 pb-3 border-b border-border">
+          {dateMetrics.map((metric, index) => (
+            <div key={metric.label} className="flex items-center gap-1.5">
+              <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+              <div>
+                <span className="text-foreground/60">{metric.label}: </span>
+                <span className="font-medium text-foreground">{metric.value}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Row 4: Team contacts - Full width cards */}
+        <div className="space-y-2">
           {teamContacts.map((contact) => (
             <a
               key={contact.role}
               href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-              className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 active:bg-accent/50 transition-colors"
+              className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 active:bg-accent/50 transition-colors"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent shrink-0">
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-accent shrink-0">
                 <User className="w-4 h-4 text-accent-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] text-foreground/60">{contact.role}</p>
-                <p className="text-xs font-medium text-foreground truncate">{contact.name}</p>
+                <p className="text-sm font-medium text-foreground">{contact.name}</p>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-primary shrink-0">
+                <Phone className="w-3.5 h-3.5" />
+                <span>Ligar</span>
+                <ChevronRight className="w-3.5 h-3.5" />
               </div>
             </a>
           ))}
