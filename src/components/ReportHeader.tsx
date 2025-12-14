@@ -1,5 +1,5 @@
 import bwildLogo from "@/assets/bwild-logo.png";
-import { FileText, Box, Ruler, DollarSign, Headphones } from "lucide-react";
+import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ReportHeaderProps {
@@ -100,7 +100,29 @@ const ReportHeader = ({
           ))}
         </div>
 
-        {/* Row 2: Metrics */}
+        {/* Row 2: Team contacts */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-2 text-sm">
+            <User className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-foreground/70">Engenheiro:</span>
+            <span className="font-medium text-foreground">Lucas Tresmondi</span>
+            <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              <Phone className="w-3 h-3" />
+              <span className="text-xs">(99) 99999-9999</span>
+            </a>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <User className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-foreground/70">Gerente:</span>
+            <span className="font-medium text-foreground">Victorya Capponi</span>
+            <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              <Phone className="w-3 h-3" />
+              <span className="text-xs">(99) 99999-9999</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Row 3: Metrics */}
         <div className="flex items-center gap-4 md:gap-6 text-sm text-foreground/70">
           <span>
             <span className="text-foreground/50">Início:</span>{" "}
