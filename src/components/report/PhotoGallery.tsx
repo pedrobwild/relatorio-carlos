@@ -58,7 +58,6 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-left">
                 <p className="text-xs sm:text-sm font-medium text-white line-clamp-2">{photo.caption}</p>
-                <p className="text-xs text-white/80 mt-0.5">{photo.area}</p>
               </div>
             </button>
           ))}
