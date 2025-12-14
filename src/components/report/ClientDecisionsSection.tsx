@@ -17,35 +17,35 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
     <div className="bg-card rounded-lg border border-border">
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-medium text-foreground">Decisões e Aprovações do Cliente</h3>
+          <MessageSquare className="w-4 h-4 text-foreground/60 shrink-0" />
+          <h3 className="text-sm font-semibold text-foreground">Decisões e Aprovações do Cliente</h3>
         </div>
       </div>
       
       <div className="divide-y divide-border">
         {pendingDecisions.map((decision) => (
-          <div key={decision.id} className="p-4 space-y-3">
+          <div key={decision.id} className="p-4 sm:p-5 space-y-3">
             <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-medium text-foreground">{decision.description}</p>
+              <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{decision.description}</p>
               <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs shrink-0">
                 Pendente
               </Badge>
             </div>
             
             {decision.options && decision.options.length > 0 && (
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs sm:text-sm text-foreground/70">
                 <span className="font-medium">Opções: </span>
                 {decision.options.join(" | ")}
               </div>
             )}
             
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="flex items-center gap-1 text-destructive">
-                <AlertCircle className="w-3 h-3" />
-                <span>Se atrasar: {decision.impactIfDelayed}</span>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+              <div className="flex items-start gap-1.5 text-destructive">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span><span className="font-medium">Se atrasar:</span> {decision.impactIfDelayed}</span>
               </div>
-              <div className="flex items-center gap-1 text-warning font-medium">
-                <Calendar className="w-3 h-3" />
+              <div className="flex items-center gap-1.5 text-warning font-semibold">
+                <Calendar className="w-3.5 h-3.5 shrink-0" />
                 <span>Precisamos até {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}</span>
               </div>
             </div>
