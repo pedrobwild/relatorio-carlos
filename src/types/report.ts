@@ -12,6 +12,13 @@ export interface SCurveDataPoint {
   realizado: number;
 }
 
+export interface WeeklyReport {
+  weekNumber: number;
+  startDate: Date;
+  endDate: Date;
+  completionPercentage: number;
+}
+
 export interface ReportData {
   projectName: string;
   unitName: string;

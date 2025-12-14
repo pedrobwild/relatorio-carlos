@@ -1,13 +1,6 @@
 import { format, addWeeks, startOfWeek, endOfWeek, isBefore, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Activity } from "@/types/report";
-
-interface WeeklyReport {
-  weekNumber: number;
-  startDate: Date;
-  endDate: Date;
-  completionPercentage: number;
-}
+import { Activity, WeeklyReport } from "@/types/report";
 
 interface WeeklyReportsHistoryProps {
   projectStartDate: string;
