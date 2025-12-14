@@ -1,7 +1,7 @@
 import { RiskIssue } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface RisksIssuesSectionProps {
@@ -72,10 +72,9 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
                   <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
                   <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{issue.title}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2.5 mt-1.5 text-xs text-foreground/70 ml-5.5">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3 shrink-0" />
-                    <span className="font-medium">{format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}</span>
+                <div className="flex flex-wrap items-center gap-2.5 mt-1.5 ml-5.5">
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                    {format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}
                   </span>
                 </div>
               </div>
