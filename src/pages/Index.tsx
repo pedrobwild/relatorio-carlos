@@ -84,6 +84,7 @@ const Index = () => {
             clientName={reportData.clientName}
             startDate={reportData.startDate}
             endDate={reportData.endDate}
+            reportDate={reportData.reportDate}
             activities={reportData.activities}
             onExportPDF={handleExportPDF}
             isExporting={isExporting}
