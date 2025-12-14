@@ -58,6 +58,7 @@ export interface ExtendedWeeklyReport extends WeeklyReport {
   plannedPercentage: number;
   status: 'ahead' | 'on-track' | 'behind';
   variance: number;
+  currentActivityName: string | null;
 }
 
 export const generateWeeklyReports = (
@@ -91,6 +92,14 @@ export const generateWeeklyReports = (
     let status: 'ahead' | 'on-track' | 'behind' = 'on-track';
     if (variance > 5) status = 'ahead';
     else if (variance < -5) status = 'behind';
+
+    // Find the current activity for this week
+    const currentActivity = activities.find(activity => {
+      const plannedStart = new Date(activity.plannedStart);
+      const plannedEnd = new Date(activity.plannedEnd);
+      return (isBefore(plannedStart, weekEndDate) || plannedStart.getTime() === weekEndDate.getTime()) &&
+             (isAfter(plannedEnd, weekStart) || plannedEnd.getTime() === weekStart.getTime());
+    });
     
     reports.push({
       weekNumber,
@@ -100,6 +109,7 @@ export const generateWeeklyReports = (
       plannedPercentage,
       status,
       variance,
+      currentActivityName: currentActivity?.description || null,
     });
     
     weekStart = addWeeks(weekStart, 1);
@@ -316,7 +326,17 @@ const WeeklyReportsHistory = ({
                   {/* Progress Bar */}
                   <div className="mb-2">
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Progresso</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Progresso</span>
+                        {report.variance !== 0 && (
+                          <span className={cn(
+                            "font-medium",
+                            report.variance > 0 ? "text-emerald-600" : "text-red-600"
+                          )}>
+                            ({report.variance > 0 ? '+' : ''}{report.variance}% vs previsto)
+                          </span>
+                        )}
+                      </div>
                       <span className="font-medium">{report.completionPercentage}%</span>
                     </div>
                     <div className="relative h-2 bg-muted rounded-full overflow-hidden">
@@ -325,44 +345,24 @@ const WeeklyReportsHistory = ({
                         className="absolute top-0 bottom-0 w-0.5 bg-muted-foreground/50 z-10"
                         style={{ left: `${report.plannedPercentage}%` }}
                       />
-                      {/* Actual progress */}
+                      {/* Actual progress - Green if ahead or on-track, red if behind */}
                       <div 
                         className={cn(
                           "h-full rounded-full transition-all duration-500",
-                          report.status === 'ahead' && "bg-emerald-500",
-                          report.status === 'on-track' && "bg-primary",
-                          report.status === 'behind' && "bg-red-500"
+                          report.variance >= 0 ? "bg-emerald-500" : "bg-red-500"
                         )}
                         style={{ width: `${report.completionPercentage}%` }}
                       />
                     </div>
                   </div>
                   
-                  {/* Status Badge - Only show full badge for latest, variance only for others */}
-                  <div className="flex items-center gap-2">
-                    {isLatest ? (
-                      <span className={cn(
-                        "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border",
-                        statusConfig.className
-                      )}>
-                        <StatusIcon className="h-3 w-3" />
-                        {statusConfig.label}
-                      </span>
-                    ) : null}
-                    {report.variance !== 0 && (
-                      <span className={cn(
-                        "text-xs font-medium",
-                        report.variance > 0 ? "text-emerald-600" : "text-red-600"
-                      )}>
-                        {report.variance > 0 ? '+' : ''}{report.variance}% vs previsto
-                      </span>
-                    )}
-                    {report.variance === 0 && !isLatest && (
-                      <span className="text-xs text-muted-foreground">
-                        No cronograma
-                      </span>
-                    )}
-                  </div>
+                  {/* Current Activity/Phase */}
+                  {report.currentActivityName && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span className="truncate">Etapa: {report.currentActivityName}</span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Arrow */}
