@@ -61,51 +61,53 @@ const WeeklyReportHeader = ({
   const currentPhase = getCurrentPhase(activities, weeklyReport.startDate, weeklyReport.endDate);
 
   return (
-    <div className="bg-card rounded-xl border border-border p-3 md:p-5 mb-4 animate-fade-in">
+    <div className="bg-card rounded-xl border border-border p-4 md:p-5 mb-4 animate-fade-in">
       {/* Back to list button */}
       <Button
         variant="ghost"
         size="sm"
         onClick={onBackToList}
-        className="mb-2 -ml-2 text-muted-foreground hover:text-foreground h-7 text-xs"
+        className="mb-3 -ml-2 text-muted-foreground hover:text-foreground h-8 text-sm"
       >
-        <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+        <ArrowLeft className="w-4 h-4 mr-1.5" />
         Ver todos
       </Button>
 
-      {/* Top row: Week badge, date range, current phase */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
+      {/* Top row: Week badge, date range */}
+      <div className="flex flex-wrap items-center gap-2.5 mb-2">
+        <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap">
           Semana {weeklyReport.weekNumber}
         </span>
-        <span className="text-muted-foreground text-xs">
+        <span className="text-muted-foreground text-sm">
           {dateRange}
-        </span>
-        <span className="text-foreground text-xs font-medium">
-          Etapa: Marcenaria
         </span>
       </div>
 
+      {/* Current phase */}
+      <p className="text-foreground text-sm font-medium mb-3">
+        Etapa: Marcenaria
+      </p>
+
       {/* Progress bar */}
-      <div className="mb-3">
+      <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-muted-foreground">Progresso da obra</span>
-          <span className="text-xs font-bold text-primary">{weeklyReport.completionPercentage}%</span>
+          <span className="text-sm text-muted-foreground">Progresso da obra</span>
+          <span className="text-sm font-bold text-primary">{weeklyReport.completionPercentage}%</span>
         </div>
-        <Progress value={weeklyReport.completionPercentage} className="h-1.5" />
+        <Progress value={weeklyReport.completionPercentage} className="h-2" />
       </div>
 
       {/* Navigation and export buttons - All in one row */}
-      <div className="flex items-center justify-between gap-1.5">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={onPreviousWeek}
             disabled={!hasPrevious}
-            className="h-7 px-2 text-xs"
+            className="h-9 px-3 text-sm"
           >
-            <ArrowLeft className="w-3 h-3 mr-0.5" />
+            <ArrowLeft className="w-4 h-4 mr-1" />
             Anterior
           </Button>
           <Button
@@ -113,10 +115,10 @@ const WeeklyReportHeader = ({
             size="sm"
             onClick={onNextWeek}
             disabled={!hasNext}
-            className="h-7 px-2 text-xs"
+            className="h-9 px-3 text-sm"
           >
             Próxima
-            <ArrowRight className="w-3 h-3 ml-0.5" />
+            <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
 
@@ -124,10 +126,10 @@ const WeeklyReportHeader = ({
           <Button
             onClick={onExportPDF}
             disabled={isExporting}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-2 text-xs"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 px-3 text-sm"
             size="sm"
           >
-            <Download className="w-3 h-3 mr-1" />
+            <Download className="w-4 h-4 mr-1.5" />
             {isExporting ? "..." : "PDF"}
           </Button>
         )}
