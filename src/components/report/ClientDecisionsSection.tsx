@@ -15,10 +15,10 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 sm:p-5 border-b border-border">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-foreground/60 shrink-0" />
-          <h3 className="text-sm font-semibold text-foreground">Decisões e Aprovações do Cliente</h3>
+          <MessageSquare className="w-5 h-5 text-primary shrink-0" />
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Decisões e Aprovações do Cliente</h3>
         </div>
       </div>
       

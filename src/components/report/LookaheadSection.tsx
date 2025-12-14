@@ -22,10 +22,10 @@ const getRiskBadge = (risk: LookaheadTask["risk"]) => {
 const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 sm:p-5 border-b border-border">
         <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-foreground/60 shrink-0" />
-          <h3 className="text-sm font-semibold text-foreground">Plano da Próxima Semana (Lookahead 7 dias)</h3>
+          <Calendar className="w-5 h-5 text-primary shrink-0" />
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Plano da Próxima Semana</h3>
         </div>
       </div>
       

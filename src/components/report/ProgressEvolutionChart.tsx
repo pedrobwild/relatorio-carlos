@@ -105,16 +105,16 @@ const ProgressEvolutionChart = ({
 
   return (
     <div className="bg-card rounded-lg border border-border p-4 md:p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-sm font-medium text-foreground">Progresso Previsto x Realizado</h3>
-        <div className="flex items-center gap-4 text-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">Progresso Previsto x Realizado</h3>
+        <div className="flex items-center gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-muted-foreground">Realizado</span>
+            <span className="text-foreground/70">Realizado</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-6 h-0 border-t-2 border-dashed border-muted-foreground" />
-            <span className="text-muted-foreground">Previsto</span>
+            <span className="w-6 h-0 border-t-2 border-dashed border-foreground/50" />
+            <span className="text-foreground/70">Previsto</span>
           </div>
         </div>
       </div>
@@ -142,14 +142,14 @@ const ProgressEvolutionChart = ({
               dataKey="week"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 500 }}
               dy={10}
             />
             
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 500 }}
               tickFormatter={(value) => `${value}%`}
               domain={[0, 100]}
               ticks={[0, 25, 50, 75, 100]}
