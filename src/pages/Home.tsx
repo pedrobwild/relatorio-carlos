@@ -6,83 +6,83 @@ import CreateReportModal from "@/components/CreateReportModal";
 import { ReportData } from "@/types/report";
 import bwildLogo from "@/assets/bwild-logo.png";
 
-// Start date: 01/07/2025, End date: 10/09/2025
-// Report generated on: 22/08/2025
+// Start date: 01/07/2025, End date: 14/09/2025
+// Report generated on: 08/09/2025 (activity 7 in progress)
 const sampleReportData: ReportData = {
   projectName: "Hub Brooklyn",
   unitName: "502",
   clientName: "Pedro Alves",
   startDate: "2025-07-01",
-  endDate: "2025-09-10",
-  reportDate: "2025-08-22",
+  endDate: "2025-09-14",
+  reportDate: "2025-09-08",
   activities: [
     {
       description: "Preparação e Mobilização",
       plannedStart: "2025-07-01",
-      plannedEnd: "2025-07-04",
+      plannedEnd: "2025-07-05",
       actualStart: "2025-07-01",
       actualEnd: "2025-07-04",
     },
     {
       description: "Proteções, demolições e infraestrutura",
       plannedStart: "2025-07-07",
-      plannedEnd: "2025-07-14",
-      actualStart: "2025-07-07",
-      actualEnd: "2025-07-16", // 2 dias após previsto
+      plannedEnd: "2025-07-18",
+      actualStart: "2025-07-05",
+      actualEnd: "2025-07-19", // +1 dia atrasado
     },
     {
       description: "Pisos, revestimentos, bancadas e box",
-      plannedStart: "2025-07-15",
-      plannedEnd: "2025-07-25",
-      actualStart: "2025-07-17",
-      actualEnd: "2025-07-25",
+      plannedStart: "2025-07-21",
+      plannedEnd: "2025-08-03",
+      actualStart: "2025-07-21",
+      actualEnd: "2025-08-03",
     },
     {
       description: "Pinturas e metais",
-      plannedStart: "2025-07-28",
-      plannedEnd: "2025-08-04",
-      actualStart: "2025-07-28",
-      actualEnd: "2025-08-06", // 2 dias após previsto
+      plannedStart: "2025-08-04",
+      plannedEnd: "2025-08-10",
+      actualStart: "2025-08-06",
+      actualEnd: "2025-08-12", // +2 dias atrasado
     },
     {
       description: "Instalações e elétrica",
-      plannedStart: "2025-08-05",
-      plannedEnd: "2025-08-11",
-      actualStart: "2025-08-07",
-      actualEnd: "2025-08-11",
+      plannedStart: "2025-08-11",
+      plannedEnd: "2025-08-17",
+      actualStart: "2025-08-14",
+      actualEnd: "2025-08-17",
     },
     {
       description: "Marcenaria",
-      plannedStart: "2025-08-12",
-      plannedEnd: "2025-08-18",
-      actualStart: "2025-08-12",
-      actualEnd: "2025-08-18",
+      plannedStart: "2025-08-20",
+      plannedEnd: "2025-09-05",
+      actualStart: "2025-08-20",
+      actualEnd: "2025-09-05",
     },
     {
       description: "Mobiliário e eletros",
-      plannedStart: "2025-08-19",
-      plannedEnd: "2025-08-22",
-      actualStart: "2025-08-19",
-      actualEnd: "", // Em andamento em 22/08/2025
+      plannedStart: "2025-09-08",
+      plannedEnd: "2025-09-10",
+      actualStart: "2025-09-08",
+      actualEnd: "", // Em andamento
     },
     {
       description: "Limpeza fina",
-      plannedStart: "2025-08-25",
-      plannedEnd: "2025-08-27",
+      plannedStart: "2025-09-11",
+      plannedEnd: "2025-09-11",
       actualStart: "",
       actualEnd: "",
     },
     {
       description: "Vistoria de qualidade",
-      plannedStart: "2025-08-28",
-      plannedEnd: "2025-09-03",
+      plannedStart: "2025-09-12",
+      plannedEnd: "2025-09-12",
       actualStart: "",
       actualEnd: "",
     },
     {
       description: "Conclusão",
-      plannedStart: "2025-09-04",
-      plannedEnd: "2025-09-10",
+      plannedStart: "2025-09-14",
+      plannedEnd: "2025-09-14",
       actualStart: "",
       actualEnd: "",
     },
