@@ -74,14 +74,14 @@ const ReportHeader = ({
           </div>
 
           {/* Quick Links */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {quickLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
-                <link.icon className="w-4 h-4" />
+                <link.icon className="w-5 h-5" />
                 {link.label}
               </a>
             ))}
