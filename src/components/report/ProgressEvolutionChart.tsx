@@ -1,5 +1,5 @@
 import { WeeklyReportActivitySnapshot } from "@/types/weeklyReport";
-import { startOfWeek, addWeeks, isBefore, isAfter, differenceInDays } from "date-fns";
+import { startOfWeek, addWeeks } from "date-fns";
 import {
   Area,
   XAxis,
@@ -17,7 +17,7 @@ interface ProgressEvolutionChartProps {
   projectStartDate?: string;
 }
 
-// Calculate progress at a given date based on activities
+// Calculate progress at a given date based on completed activities only
 const calculateProgressAtDate = (
   activities: WeeklyReportActivitySnapshot[],
   targetDate: Date,
@@ -26,45 +26,25 @@ const calculateProgressAtDate = (
   const totalActivities = activities.length;
   if (totalActivities === 0) return 0;
 
-  let totalProgress = 0;
+  let completedCount = 0;
 
   activities.forEach((activity) => {
-    const plannedStart = new Date(activity.plannedStart);
-    const plannedEnd = new Date(activity.plannedEnd);
-    
     if (useActual) {
-      // Calculate actual progress
-      const actualStart = activity.actualStart ? new Date(activity.actualStart) : null;
+      // Calculate actual progress - count only completed activities
       const actualEnd = activity.actualEnd ? new Date(activity.actualEnd) : null;
-
       if (actualEnd && actualEnd <= targetDate) {
-        // Activity completed
-        totalProgress += 100;
-      } else if (actualStart && actualStart <= targetDate) {
-        // Activity in progress - estimate based on time elapsed
-        const totalDuration = differenceInDays(plannedEnd, plannedStart) || 1;
-        const elapsed = differenceInDays(targetDate, actualStart);
-        const progress = Math.min(95, Math.max(0, (elapsed / totalDuration) * 100));
-        totalProgress += progress;
+        completedCount++;
       }
-      // If not started, progress is 0
     } else {
-      // Calculate planned progress
+      // Calculate planned progress - count activities that should be done by this date
+      const plannedEnd = new Date(activity.plannedEnd);
       if (plannedEnd <= targetDate) {
-        // Should be completed by this date
-        totalProgress += 100;
-      } else if (plannedStart <= targetDate) {
-        // Should be in progress
-        const totalDuration = differenceInDays(plannedEnd, plannedStart) || 1;
-        const elapsed = differenceInDays(targetDate, plannedStart);
-        const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-        totalProgress += progress;
+        completedCount++;
       }
-      // If not started yet, progress is 0
     }
   });
 
-  return Math.round(totalProgress / totalActivities);
+  return Math.round((completedCount / totalActivities) * 100);
 };
 
 // Generate weekly progress data based on activities
