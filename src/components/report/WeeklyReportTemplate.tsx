@@ -13,7 +13,7 @@ interface WeeklyReportTemplateProps {
 
 const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-3 animate-fade-in">
       {/* Executive Summary */}
       <section>
         <ExecutiveSummary data={data} />
@@ -23,9 +23,6 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
       <section>
         <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
       </section>
-
-      {/* Divider */}
-      <div className="border-t border-border/50" />
 
       {/* Lookahead (Next 7 Days) */}
       <section>
@@ -37,9 +34,6 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
         <RisksIssuesSection issues={data.risksAndIssues} />
       </section>
 
-      {/* Divider */}
-      <div className="border-t border-border/50" />
-
       {/* Client Decisions */}
       <section>
         <ClientDecisionsSection decisions={data.clientDecisions} />
@@ -50,11 +44,8 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
         <PhotoGallery photos={data.gallery} />
       </section>
 
-      {/* Divider */}
-      <div className="border-t border-border/50" />
-
       {/* Footer */}
-      <section>
+      <section className="pt-2 border-t border-border/50">
         <ReportFooter data={data} />
       </section>
     </div>
