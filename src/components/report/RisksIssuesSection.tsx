@@ -65,32 +65,6 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Top 3 Highlight */}
-      {top3.length > 0 && (
-        <div className="bg-card rounded-lg border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4 text-warning" />
-            <span className="text-sm font-medium text-foreground">Top 3 Pontos de Atenção</span>
-          </div>
-          <div className="space-y-2">
-            {top3.map((issue, index) => (
-              <div key={issue.id} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
-                <span className="text-lg font-bold text-muted-foreground">{index + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    {getTypeBadge(issue.type)}
-                    {getSeverityBadge(issue.severity)}
-                    {getStatusBadge(issue.status)}
-                  </div>
-                  <p className="text-sm font-medium text-foreground">{issue.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{issue.actionPlan}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Full Table */}
       <div className="bg-card rounded-lg border border-border">
         <div className="p-4 border-b border-border">
@@ -109,10 +83,6 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
                   className="w-full justify-between h-auto p-4 rounded-none hover:bg-secondary/50"
                 >
                   <div className="flex-1 text-left">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      {getTypeBadge(issue.type)}
-                      {getSeverityBadge(issue.severity)}
-                    </div>
                     <p className="text-sm font-medium text-foreground">{issue.title}</p>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -133,30 +103,9 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
                   <DialogTitle className="text-lg font-semibold">{issue.title}</DialogTitle>
                 </DialogHeader>
                 <div className="mt-4 space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {getTypeBadge(issue.type)}
-                    {getSeverityBadge(issue.severity)}
-                    {getStatusBadge(issue.status)}
-                  </div>
-                  
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Descrição</p>
                     <p className="text-sm text-foreground">{issue.description}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Impacto Prazo</p>
-                      <Badge variant="outline" className="text-xs capitalize">{issue.impact.time}</Badge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Impacto Custo</p>
-                      <Badge variant="outline" className="text-xs capitalize">{issue.impact.cost}</Badge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Impacto Qualidade</p>
-                      <Badge variant="outline" className="text-xs capitalize">{issue.impact.quality}</Badge>
-                    </div>
                   </div>
                   
                   <div className="bg-secondary/50 rounded-lg p-3">
