@@ -246,7 +246,7 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
           </div>
           <div className="flex-1">
             <h3 className="text-base md:text-xl font-bold text-foreground tracking-tight">
-              Cronograma Detalhado
+              Cronograma
             </h3>
             <p className="text-xs text-muted-foreground">
               {stats.total} atividades • {stats.completed} concluídas
