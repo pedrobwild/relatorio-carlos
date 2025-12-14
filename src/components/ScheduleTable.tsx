@@ -49,19 +49,13 @@ const getActivityStatus = (activity: Activity): Status => {
     return "pending";
   }
   
+  // Has actual end date = completed (regardless of delay)
+  if (activity.actualEnd) {
+    return "completed";
+  }
+  
   // Started but not finished
-  if (activity.actualStart && !activity.actualEnd) {
-    return "in-progress";
-  }
-
-  // Finished - check if delayed
-  const plannedEnd = parseDate(activity.plannedEnd);
-  const actualEnd = parseDate(activity.actualEnd);
-
-  if (plannedEnd && actualEnd && actualEnd > plannedEnd) {
-    return "delayed";
-  }
-  return "completed";
+  return "in-progress";
 };
 
 const getDelayDays = (activity: Activity): number | null => {

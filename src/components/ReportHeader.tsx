@@ -1,7 +1,8 @@
 import bwildLogo from "@/assets/bwild-logo.png";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar, Target, TrendingUp, PlayCircle, ArrowRight } from "lucide-react";
+import { Download, Calendar, Target } from "lucide-react";
 import { Activity } from "@/types/report";
+import { Progress } from "@/components/ui/progress";
 
 interface ReportHeaderProps {
   projectName: string;
@@ -43,12 +44,6 @@ const ReportHeader = ({
   // Calculate completion percentage
   const completedActivities = activities.filter(a => a.actualEnd).length;
   const completionPercentage = Math.round((completedActivities / activities.length) * 100);
-  
-  // Find current activity (started but not finished)
-  const currentActivity = activities.find(a => a.actualStart && !a.actualEnd);
-  
-  // Find next activity (not started yet)
-  const nextActivity = activities.find(a => !a.actualStart);
 
   return (
     <header className="bg-card rounded-xl shadow-card overflow-hidden mb-6 animate-fade-in">
@@ -116,29 +111,21 @@ const ReportHeader = ({
 
       {/* KPI Cards Section */}
       <div className="border-t border-border bg-secondary/30 px-4 py-4 md:px-6 md:py-5 lg:px-8 lg:py-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <StatCard 
             icon={Calendar}
             label="Início da Obra" 
             value={formatDate(startDate, baseYear)}
-            variant="default"
           />
           <StatCard 
             icon={Target}
             label="Previsão de Término" 
             value={formatDate(endDate, baseYear)}
-            variant="default"
           />
-          <StatCard
-            icon={TrendingUp}
-            label="Conclusão"
-            value={`${completionPercentage}%`}
-            subValue={`${completedActivities}/${activities.length}`}
-            variant="success"
-          />
-          <ActivityCard
-            currentActivity={currentActivity?.description}
-            nextActivity={nextActivity?.description}
+          <ProgressCard
+            completionPercentage={completionPercentage}
+            completedActivities={completedActivities}
+            totalActivities={activities.length}
           />
         </div>
       </div>
@@ -150,101 +137,52 @@ interface StatCardProps {
   icon: React.ElementType;
   label: string;
   value: string;
-  subValue?: string;
-  variant?: "default" | "success" | "info";
 }
 
-const StatCard = ({ icon: Icon, label, value, subValue, variant = "default" }: StatCardProps) => {
-  const config = {
-    default: {
-      iconBg: "bg-primary/10",
-      iconColor: "text-primary",
-      valueColor: "text-foreground",
-    },
-    success: {
-      iconBg: "bg-success/10",
-      iconColor: "text-success",
-      valueColor: "text-success",
-    },
-    info: {
-      iconBg: "bg-info/10",
-      iconColor: "text-info",
-      valueColor: "text-info",
-    },
-  };
-
-  const { iconBg, iconColor, valueColor } = config[variant];
-
+const StatCard = ({ icon: Icon, label, value }: StatCardProps) => {
   return (
     <div className="bg-card rounded-lg p-3 md:p-4 border border-border/50 hover:border-border transition-colors">
       <div className="flex items-start gap-3">
-        <div className={`shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-lg ${iconBg} flex items-center justify-center`}>
-          <Icon className={`w-4 h-4 md:w-5 md:h-5 ${iconColor}`} />
+        <div className="shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide font-medium truncate">
             {label}
           </p>
-          <div className="flex items-baseline gap-2 mt-0.5">
-            <p className={`text-base md:text-xl font-bold ${valueColor} tabular-nums`}>
-              {value}
-            </p>
-            {subValue && (
-              <span className="text-xs md:text-sm text-muted-foreground font-medium">
-                ({subValue})
-              </span>
-            )}
-          </div>
+          <p className="text-base md:text-xl font-bold text-foreground tabular-nums mt-0.5">
+            {value}
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
-interface ActivityCardProps {
-  currentActivity?: string;
-  nextActivity?: string;
+interface ProgressCardProps {
+  completionPercentage: number;
+  completedActivities: number;
+  totalActivities: number;
 }
 
-const ActivityCard = ({ currentActivity, nextActivity }: ActivityCardProps) => {
+const ProgressCard = ({ completionPercentage, completedActivities, totalActivities }: ProgressCardProps) => {
   return (
-    <div className="bg-card rounded-lg p-3 md:p-4 border border-border/50 hover:border-border transition-colors col-span-2 lg:col-span-1">
+    <div className="bg-card rounded-lg p-3 md:p-4 border border-border/50 hover:border-border transition-colors">
       <div className="flex flex-col gap-2">
-        {currentActivity && (
-          <div className="flex items-start gap-2">
-            <div className="shrink-0 w-6 h-6 rounded-full bg-info/10 flex items-center justify-center mt-0.5">
-              <PlayCircle className="w-3.5 h-3.5 text-info" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
-                Em andamento
-              </p>
-              <p className="text-xs md:text-sm font-medium text-foreground truncate" title={currentActivity}>
-                {currentActivity}
-              </p>
-            </div>
-          </div>
-        )}
-        {nextActivity && (
-          <div className="flex items-start gap-2">
-            <div className="shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center mt-0.5">
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
-                Próxima
-              </p>
-              <p className="text-xs md:text-sm font-medium text-muted-foreground truncate" title={nextActivity}>
-                {nextActivity}
-              </p>
-            </div>
-          </div>
-        )}
-        {!currentActivity && !nextActivity && (
-          <div className="flex items-center justify-center h-full py-2">
-            <p className="text-xs text-muted-foreground">Obra concluída</p>
-          </div>
-        )}
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide font-medium">
+            Conclusão
+          </p>
+          <span className="text-xs md:text-sm text-muted-foreground font-medium">
+            {completedActivities}/{totalActivities}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Progress value={completionPercentage} className="h-2.5 flex-1" />
+          <span className="text-lg md:text-xl font-bold text-primary tabular-nums min-w-[3rem] text-right">
+            {completionPercentage}%
+          </span>
+        </div>
       </div>
     </div>
   );
