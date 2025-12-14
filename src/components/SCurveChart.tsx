@@ -16,11 +16,36 @@ interface SCurveChartProps {
   activities: Activity[];
 }
 
+// Parse ISO date string to Date object
+const parseDate = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+  return new Date(dateStr + "T00:00:00");
+};
+
+// Format date for display (dd/mm or dd/mm/aa if different year)
+const formatDisplayDate = (dateStr: string, baseYear?: number): string => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr + "T00:00:00");
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  
+  if (baseYear && year !== baseYear) {
+    return `${day}/${month}/${year.toString().slice(-2)}`;
+  }
+  return `${day}/${month}`;
+};
+
 // Generate S-Curve data from activities
 const generateChartData = (activities: Activity[]) => {
   if (activities.length === 0) {
     return [{ date: "Início", previsto: 0, realizado: 0 }];
   }
+
+  // Get base year from first activity
+  const baseYear = activities[0].plannedStart 
+    ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
+    : new Date().getFullYear();
 
   // Collect all unique dates
   const allDates = new Set<string>();
@@ -32,39 +57,32 @@ const generateChartData = (activities: Activity[]) => {
   });
 
   const sortedDates = Array.from(allDates).sort((a, b) => {
-    const parseDate = (d: string) => {
-      const [day, month] = d.split("/").map(Number);
-      const year = month >= 10 ? 2024 : 2025;
-      return new Date(year, month - 1, day);
-    };
-    return parseDate(a).getTime() - parseDate(b).getTime();
+    const dateA = parseDate(a);
+    const dateB = parseDate(b);
+    if (!dateA || !dateB) return 0;
+    return dateA.getTime() - dateB.getTime();
   });
 
   const totalActivities = activities.length;
   
   return sortedDates.map(date => {
-    const parseDate = (d: string) => {
-      const [day, month] = d.split("/").map(Number);
-      const year = month >= 10 ? 2024 : 2025;
-      return new Date(year, month - 1, day);
-    };
-    
     const currentDate = parseDate(date);
+    if (!currentDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: 0 };
     
     // Count planned started activities by this date
     const plannedStarted = activities.filter(a => {
-      if (!a.plannedStart) return false;
-      return parseDate(a.plannedStart) <= currentDate;
+      const plannedStart = parseDate(a.plannedStart);
+      return plannedStart && plannedStart <= currentDate;
     }).length;
     
     // Count actual started activities by this date
     const actualStarted = activities.filter(a => {
-      if (!a.actualStart) return false;
-      return parseDate(a.actualStart) <= currentDate;
+      const actualStart = parseDate(a.actualStart);
+      return actualStart && actualStart <= currentDate;
     }).length;
 
     return {
-      date,
+      date: formatDisplayDate(date, baseYear),
       previsto: Math.round((plannedStarted / totalActivities) * 100),
       realizado: Math.round((actualStarted / totalActivities) * 100),
     };

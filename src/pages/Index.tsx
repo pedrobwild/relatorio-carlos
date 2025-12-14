@@ -63,11 +63,6 @@ const Index = () => {
     return null;
   }
 
-  // Calculate activity stats from report data
-  const totalActivities = reportData.activities.length;
-  const completedActivities = reportData.activities.filter(a => a.actualEnd).length;
-  const startedActivities = reportData.activities.filter(a => a.actualStart).length;
-
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -89,9 +84,7 @@ const Index = () => {
             clientName={reportData.clientName}
             startDate={reportData.startDate}
             endDate={reportData.endDate}
-            completedActivities={completedActivities}
-            totalActivities={totalActivities}
-            startedActivities={startedActivities}
+            activities={reportData.activities}
             onExportPDF={handleExportPDF}
             isExporting={isExporting}
           />
