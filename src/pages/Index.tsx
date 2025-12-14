@@ -1,17 +1,32 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText } from "lucide-react";
+import { BarChart3, FileText, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import TechnicalReport from "@/components/TechnicalReport";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
+import { ReportData } from "@/types/report";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("curvaS");
   const [isExporting, setIsExporting] = useState(false);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const storedData = sessionStorage.getItem("currentReport");
+    if (storedData) {
+      setReportData(JSON.parse(storedData));
+    } else {
+      // Redirect to home if no report data
+      navigate("/");
+    }
+  }, [navigate]);
 
   const handleExportPDF = async () => {
     if (!reportRef.current) return;
@@ -44,21 +59,41 @@ const Index = () => {
     }
   };
 
+  if (!reportData) {
+    return null;
+  }
+
+  // Calculate activity stats from report data
+  const totalActivities = reportData.activities.length;
+  const completedActivities = reportData.activities.filter(a => a.actualEnd).length;
+  const startedActivities = reportData.activities.filter(a => a.actualStart).length;
+
   return (
     <div className="min-h-screen p-3 md:p-8">
-      <div className="max-w-7xl mx-auto" ref={reportRef}>
-        <ReportHeader
-          projectName="Condomínio MY ONE BROOKLIN"
-          unitName="Unidade 502"
-          clientName="Carlos Ney Kailer Costa"
-          startDate="27/10/2025"
-          endDate="19/01/2026"
-          completedActivities={4}
-          totalActivities={16}
-          startedActivities={7}
-          onExportPDF={handleExportPDF}
-          isExporting={isExporting}
-        />
+      <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-4 -ml-2"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+
+        <div ref={reportRef}>
+          <ReportHeader
+            projectName={reportData.projectName}
+            unitName={reportData.unitName}
+            clientName={reportData.clientName}
+            startDate={reportData.startDate}
+            endDate={reportData.endDate}
+            completedActivities={completedActivities}
+            totalActivities={totalActivities}
+            startedActivities={startedActivities}
+            onExportPDF={handleExportPDF}
+            isExporting={isExporting}
+          />
 
         <div className="bg-card rounded-xl shadow-card overflow-hidden animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -83,8 +118,8 @@ const Index = () => {
 
             <div className="p-3 md:p-8">
               <TabsContent value="curvaS" className="mt-0">
-                <SCurveChart />
-                <ScheduleTable />
+                <SCurveChart activities={reportData.activities} />
+                <ScheduleTable activities={reportData.activities} />
               </TabsContent>
 
               <TabsContent value="relatorio" className="mt-0">
@@ -92,6 +127,7 @@ const Index = () => {
               </TabsContent>
             </div>
           </Tabs>
+        </div>
         </div>
       </div>
     </div>

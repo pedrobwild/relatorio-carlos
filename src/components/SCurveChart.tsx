@@ -8,28 +8,69 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { Activity } from "@/types/report";
 
-const chartData = [
-  { date: "26/10", previsto: 0, realizado: 0 },
-  { date: "01/11", previsto: 0, realizado: 0 },
-  { date: "07/11", previsto: 0, realizado: 0 },
-  { date: "10/11", previsto: 0, realizado: 0 },
-  { date: "13/11", previsto: 6.25, realizado: 0 },
-  { date: "16/11", previsto: 12.5, realizado: 0 },
-  { date: "19/11", previsto: 18.75, realizado: 0 },
-  { date: "25/11", previsto: 25, realizado: 0 },
-  { date: "01/12", previsto: 31.25, realizado: 0 },
-  { date: "07/12", previsto: 37.5, realizado: 0 },
-  { date: "13/12", previsto: 56.25, realizado: 18.75 },
-  { date: "19/12", previsto: 62.5, realizado: 37.5 },
-  { date: "25/12", previsto: 62.5, realizado: 37.5 },
-  { date: "31/12", previsto: 62.5, realizado: 37.5 },
-  { date: "06/01", previsto: 93.75, realizado: 87.5 },
-  { date: "12/01", previsto: 93.75, realizado: 93.75 },
-  { date: "18/01", previsto: 100, realizado: 100 },
-];
+interface SCurveChartProps {
+  activities: Activity[];
+}
 
-const SCurveChart = () => {
+// Generate S-Curve data from activities
+const generateChartData = (activities: Activity[]) => {
+  if (activities.length === 0) {
+    return [{ date: "Início", previsto: 0, realizado: 0 }];
+  }
+
+  // Collect all unique dates
+  const allDates = new Set<string>();
+  activities.forEach(a => {
+    if (a.plannedStart) allDates.add(a.plannedStart);
+    if (a.plannedEnd) allDates.add(a.plannedEnd);
+    if (a.actualStart) allDates.add(a.actualStart);
+    if (a.actualEnd) allDates.add(a.actualEnd);
+  });
+
+  const sortedDates = Array.from(allDates).sort((a, b) => {
+    const parseDate = (d: string) => {
+      const [day, month] = d.split("/").map(Number);
+      const year = month >= 10 ? 2024 : 2025;
+      return new Date(year, month - 1, day);
+    };
+    return parseDate(a).getTime() - parseDate(b).getTime();
+  });
+
+  const totalActivities = activities.length;
+  
+  return sortedDates.map(date => {
+    const parseDate = (d: string) => {
+      const [day, month] = d.split("/").map(Number);
+      const year = month >= 10 ? 2024 : 2025;
+      return new Date(year, month - 1, day);
+    };
+    
+    const currentDate = parseDate(date);
+    
+    // Count planned started activities by this date
+    const plannedStarted = activities.filter(a => {
+      if (!a.plannedStart) return false;
+      return parseDate(a.plannedStart) <= currentDate;
+    }).length;
+    
+    // Count actual started activities by this date
+    const actualStarted = activities.filter(a => {
+      if (!a.actualStart) return false;
+      return parseDate(a.actualStart) <= currentDate;
+    }).length;
+
+    return {
+      date,
+      previsto: Math.round((plannedStarted / totalActivities) * 100),
+      realizado: Math.round((actualStarted / totalActivities) * 100),
+    };
+  });
+};
+
+const SCurveChart = ({ activities }: SCurveChartProps) => {
+  const chartData = generateChartData(activities);
   return (
     <div className="mb-8">
       <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6">
