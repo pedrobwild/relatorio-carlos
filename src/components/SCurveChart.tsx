@@ -14,6 +14,7 @@ import { TrendingUp } from "lucide-react";
 
 interface SCurveChartProps {
   activities: Activity[];
+  reportDate?: string; // Data de geração do relatório (YYYY-MM-DD)
 }
 
 // Parse ISO date string to Date object
@@ -37,15 +38,20 @@ const formatDisplayDate = (dateStr: string, baseYear?: number): string => {
 };
 
 // Generate S-Curve data from activities
-const generateChartData = (activities: Activity[]) => {
+const generateChartData = (activities: Activity[], reportDate?: string) => {
   if (activities.length === 0) {
-    return [{ date: "Início", previsto: 0, realizado: 0 }];
+    return [{ date: "Início", previsto: 0, realizado: null }];
   }
 
   // Get base year from first activity
   const baseYear = activities[0].plannedStart 
     ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
     : new Date().getFullYear();
+
+  // Parse report date (defaults to today if not provided)
+  const reportDateParsed = reportDate 
+    ? parseDate(reportDate) 
+    : new Date();
 
   // Collect all unique dates
   const allDates = new Set<string>();
@@ -67,7 +73,7 @@ const generateChartData = (activities: Activity[]) => {
   
   return sortedDates.map(date => {
     const currentDate = parseDate(date);
-    if (!currentDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: 0 };
+    if (!currentDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null };
     
     // Count planned started activities by this date
     const plannedStarted = activities.filter(a => {
@@ -75,8 +81,11 @@ const generateChartData = (activities: Activity[]) => {
       return plannedStart && plannedStart <= currentDate;
     }).length;
     
+    // Only show "realizado" for dates up to report date
+    const isFutureDate = reportDateParsed && currentDate > reportDateParsed;
+    
     // Count actual started activities by this date
-    const actualStarted = activities.filter(a => {
+    const actualStarted = isFutureDate ? null : activities.filter(a => {
       const actualStart = parseDate(a.actualStart);
       return actualStart && actualStart <= currentDate;
     }).length;
@@ -84,7 +93,7 @@ const generateChartData = (activities: Activity[]) => {
     return {
       date: formatDisplayDate(date, baseYear),
       previsto: Math.round((plannedStarted / totalActivities) * 100),
-      realizado: Math.round((actualStarted / totalActivities) * 100),
+      realizado: actualStarted !== null ? Math.round((actualStarted / totalActivities) * 100) : null,
     };
   });
 };
@@ -130,8 +139,8 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-const SCurveChart = ({ activities }: SCurveChartProps) => {
-  const chartData = generateChartData(activities);
+const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
+  const chartData = generateChartData(activities, reportDate);
   
   // Get last data point for comparison
   const lastPoint = chartData[chartData.length - 1];
