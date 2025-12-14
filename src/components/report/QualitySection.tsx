@@ -33,11 +33,11 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
   const allNonConformities = qualityItems.flatMap(q => q.nonConformities);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Checklists Executed */}
       <div className="bg-card rounded-lg border border-border">
         <div className="p-4 sm:p-5 border-b border-border">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground">Qualidade, Testes e Pendências</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-foreground">Qualidade, Testes e Pendências</h3>
         </div>
         
         <div className="divide-y divide-border">
@@ -46,11 +46,11 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
               <DialogTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-between h-auto p-4 rounded-none hover:bg-secondary/50"
+                  className="w-full justify-between h-auto p-3 sm:p-4 rounded-none hover:bg-secondary/50"
                 >
-                  <div className="flex items-center gap-3">
-                    <CheckSquare className="w-4 h-4 text-success" />
-                    <span className="text-sm font-medium text-foreground">{item.checklistName}</span>
+                  <div className="flex items-center gap-2.5">
+                    <CheckSquare className="w-3.5 h-3.5 text-success" />
+                    <span className="text-xs sm:text-sm font-medium text-foreground">{item.checklistName}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {item.nonConformities.length > 0 && (
@@ -58,22 +58,22 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
                         {item.nonConformities.length} NC
                       </Badge>
                     )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold">{item.checklistName}</DialogTitle>
+                  <DialogTitle className="text-sm sm:text-base font-semibold">{item.checklistName}</DialogTitle>
                 </DialogHeader>
-                <div className="mt-4 space-y-4">
+                <div className="mt-3 space-y-3">
                   {/* Checklist Items */}
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Itens do Checklist</p>
-                    <ul className="space-y-2">
+                    <ul className="space-y-1.5">
                       {item.items.map((checkItem, idx) => (
                         <li key={idx} className="flex items-center justify-between p-2 rounded bg-secondary/50">
-                          <span className="text-sm text-foreground">{checkItem.name}</span>
+                          <span className="text-xs sm:text-sm text-foreground">{checkItem.name}</span>
                           <Badge 
                             variant="outline" 
                             className={`text-xs ${
@@ -95,13 +95,13 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
                   {item.nonConformities.length > 0 && (
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Não Conformidades</p>
-                      <ul className="space-y-2">
+                      <ul className="space-y-1.5">
                         {item.nonConformities.map((nc) => (
-                          <li key={nc.id} className="p-3 rounded bg-destructive/5 border border-destructive/20">
+                          <li key={nc.id} className="p-2.5 rounded bg-destructive/5 border border-destructive/20">
                             <div className="flex items-start gap-2">
-                              <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                              <XCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
                               <div>
-                                <p className="text-sm text-foreground">{nc.description}</p>
+                                <p className="text-xs sm:text-sm text-foreground">{nc.description}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
                                   Responsável: {nc.responsible} • Correção: {format(new Date(nc.correctionDate), "dd/MM", { locale: ptBR })}
                                 </p>
@@ -122,12 +122,12 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
       {/* Pending Items (Semáforo) */}
       {allPendingItems.length > 0 && (
         <div className="bg-card rounded-lg border border-border p-4 sm:p-5">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3">Pendências para Entrega</h3>
-          <ul className="space-y-2">
+          <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2.5">Pendências para Entrega</h3>
+          <ul className="space-y-1.5">
             {allPendingItems.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 p-2 rounded bg-secondary/50">
+              <li key={item.id} className="flex items-center gap-2.5 p-2 rounded bg-secondary/50">
                 <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
-                <span className="text-sm text-foreground flex-1">{item.description}</span>
+                <span className="text-xs sm:text-sm text-foreground flex-1">{item.description}</span>
                 <span className="text-xs text-muted-foreground">
                   até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
                 </span>

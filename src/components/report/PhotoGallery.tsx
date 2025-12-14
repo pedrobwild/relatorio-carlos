@@ -35,13 +35,13 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   return (
     <div className="bg-card rounded-lg border border-border">
       <div className="p-4 sm:p-5 border-b border-border">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground">
-          Galeria de Fotos <span className="text-sm font-normal text-foreground/60">({photos.length} fotos)</span>
+        <h3 className="text-sm sm:text-base font-semibold text-foreground">
+          Galeria de Fotos <span className="text-xs font-normal text-foreground/60">({photos.length} fotos)</span>
         </h3>
       </div>
       
-      <div className="p-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="p-3 sm:p-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
           {photos.map((photo, index) => (
             <button
               key={photo.id}
@@ -54,8 +54,8 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-left">
-                <p className="text-xs sm:text-sm font-medium text-white line-clamp-2">{photo.caption}</p>
+              <div className="absolute bottom-0 left-0 right-0 p-2">
+                <p className="text-xs font-medium text-white line-clamp-2">{photo.caption}</p>
               </div>
             </button>
           ))}
@@ -116,8 +116,8 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
 
               {/* Caption */}
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                <p className="text-white font-medium">{photos[selectedIndex].caption}</p>
-                <p className="text-white/70 text-sm">
+                <p className="text-white text-sm font-medium">{photos[selectedIndex].caption}</p>
+                <p className="text-white/70 text-xs">
                   {photos[selectedIndex].area} • {photos[selectedIndex].category} • {format(new Date(photos[selectedIndex].date), "dd/MM/yyyy", { locale: ptBR })}
                 </p>
               </div>
