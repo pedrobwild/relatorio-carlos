@@ -138,7 +138,7 @@ const ReportHeader = ({
 
       {/* KPI Cards Section */}
       <div className="border-t border-border bg-secondary/30 px-4 py-4 md:px-6 md:py-5 lg:px-8 lg:py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           <StatCard 
             icon={Calendar}
             label="Início da Obra" 
@@ -149,7 +149,6 @@ const ReportHeader = ({
             label="Previsão de Término" 
             value={formatDate(endDate, baseYear)}
           />
-          <DeviationCard totalDeviation={totalDeviation} />
           <ProgressCard
             completionPercentage={completionPercentage}
             completedActivities={completedActivities}
