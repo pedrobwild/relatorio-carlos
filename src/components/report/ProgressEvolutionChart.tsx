@@ -66,10 +66,14 @@ const generateWeeklyProgressData = (
     // Calculate actual progress at this week
     const realizado = calculateProgressAtDate(activities, weekEndDate, true);
     
+    // Calculate deviation: positive = ahead, negative = behind
+    const desvio = realizado - previsto;
+    
     data.push({
       week: `S${week}`,
       previsto,
       realizado,
+      desvio,
     });
   }
   
@@ -86,15 +90,15 @@ const ProgressEvolutionChart = ({
   return (
     <div className="bg-card rounded-lg border border-border p-4 md:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground">Progresso Previsto x Realizado</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">Evolução do Desvio</h3>
         <div className="flex items-center gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-foreground/70">Realizado</span>
+            <span className="w-3 h-3 rounded-full bg-green-500" />
+            <span className="text-foreground/70">Adiantado</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-6 h-0 border-t-2 border-dashed border-foreground/50" />
-            <span className="text-foreground/70">Previsto</span>
+            <span className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="text-foreground/70">Atrasado</span>
           </div>
         </div>
       </div>
@@ -106,9 +110,13 @@ const ProgressEvolutionChart = ({
             margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
           >
             <defs>
-              <linearGradient id="progressGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+              <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05} />
+              </linearGradient>
+              <linearGradient id="negativeGradient" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05} />
               </linearGradient>
             </defs>
             
@@ -130,9 +138,8 @@ const ProgressEvolutionChart = ({
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 500 }}
-              tickFormatter={(value) => `${value}%`}
-              domain={[0, 100]}
-              ticks={[0, 25, 50, 75, 100]}
+              tickFormatter={(value) => `${value > 0 ? '+' : ''}${value}%`}
+              domain={['auto', 'auto']}
             />
             
             <Tooltip
@@ -143,38 +150,47 @@ const ProgressEvolutionChart = ({
                 boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
               }}
               labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
-              formatter={(value: number, name: string) => [
-                `${value}%`,
-                name === "realizado" ? "Realizado" : "Previsto",
+              formatter={(value: number) => [
+                `${value > 0 ? '+' : ''}${value}%`,
+                value >= 0 ? "Adiantado" : "Atrasado",
               ]}
             />
             
-            {/* Previsto line (dashed) */}
+            {/* Reference line at 0 */}
             <Line
               type="monotone"
-              dataKey="previsto"
+              dataKey={() => 0}
               stroke="hsl(var(--muted-foreground))"
-              strokeWidth={2}
-              strokeDasharray="6 4"
+              strokeWidth={1}
+              strokeDasharray="4 4"
               dot={false}
               activeDot={false}
             />
             
-            {/* Realizado area with gradient fill */}
+            {/* Deviation area - shows positive (green) and negative (red) */}
             <Area
               type="monotone"
-              dataKey="realizado"
-              stroke="hsl(var(--primary))"
+              dataKey="desvio"
+              stroke="none"
+              fill="url(#positiveGradient)"
+              fillOpacity={1}
+              baseValue={0}
+            />
+            
+            {/* Deviation line */}
+            <Line
+              type="monotone"
+              dataKey="desvio"
+              stroke={data.length > 0 && data[data.length - 1].desvio >= 0 ? "#22c55e" : "#ef4444"}
               strokeWidth={2.5}
-              fill="url(#progressGradient)"
               dot={{
-                fill: "hsl(var(--primary))",
+                fill: data.length > 0 && data[data.length - 1].desvio >= 0 ? "#22c55e" : "#ef4444",
                 stroke: "hsl(var(--card))",
                 strokeWidth: 2,
                 r: 4,
               }}
               activeDot={{
-                fill: "hsl(var(--primary))",
+                fill: data.length > 0 && data[data.length - 1].desvio >= 0 ? "#22c55e" : "#ef4444",
                 stroke: "hsl(var(--card))",
                 strokeWidth: 2,
                 r: 6,
