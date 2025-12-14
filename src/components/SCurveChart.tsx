@@ -7,8 +7,10 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import { Activity } from "@/types/report";
+import { TrendingUp } from "lucide-react";
 
 interface SCurveChartProps {
   activities: Activity[];
@@ -69,75 +71,163 @@ const generateChartData = (activities: Activity[]) => {
   });
 };
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    dataKey: string;
+    color: string;
+  }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card border border-border rounded-lg shadow-lg p-3 min-w-[140px]">
+        <p className="text-sm font-semibold text-foreground mb-2 pb-2 border-b border-border">
+          {label}
+        </p>
+        <div className="space-y-1.5">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span 
+                  className="w-2.5 h-2.5 rounded-full" 
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {entry.dataKey === "previsto" ? "Previsto" : "Realizado"}
+                </span>
+              </div>
+              <span className="text-sm font-bold text-foreground">
+                {entry.value}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const SCurveChart = ({ activities }: SCurveChartProps) => {
   const chartData = generateChartData(activities);
-  return (
-    <div className="mb-8">
-      <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6">
-        Curva S - Atividades Iniciadas
-      </h2>
+  
+  // Get last data point for comparison
+  const lastPoint = chartData[chartData.length - 1];
+  const deviation = lastPoint ? lastPoint.realizado - lastPoint.previsto : 0;
 
-      <div className="h-[250px] md:h-[400px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={chartData}
-            margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-              tickLine={{ stroke: "hsl(var(--border))" }}
-              interval="preserveStartEnd"
-              angle={-45}
-              textAnchor="end"
-              height={50}
-            />
-            <YAxis
-              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-              tickLine={{ stroke: "hsl(var(--border))" }}
-              tickFormatter={(value) => `${value}%`}
-              domain={[0, 100]}
-              width={40}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                boxShadow: "var(--shadow-md)",
-                fontSize: "12px",
-              }}
-              labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
-              formatter={(value: number) => [`${value}%`, ""]}
-            />
-            <Legend
-              wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
-              formatter={(value) =>
-                value === "previsto" ? "Prevista" : "Realizada"
-              }
-            />
-            <Line
-              type="monotone"
-              dataKey="previsto"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
-              dot={{ fill: "hsl(var(--primary))", strokeWidth: 1, r: 3 }}
-              activeDot={{ r: 5, fill: "hsl(var(--primary))" }}
-            />
-            <Line
-              type="monotone"
-              dataKey="realizado"
-              stroke="hsl(var(--success))"
-              strokeWidth={2}
-              dot={{ fill: "hsl(var(--success))", strokeWidth: 1, r: 3 }}
-              activeDot={{ r: 5, fill: "hsl(var(--success))" }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+  return (
+    <div className="mb-6 md:mb-10">
+      {/* Header with title and description */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4 md:mb-6">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+              Curva S – Atividades Iniciadas
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+              Comparação entre o previsto e o realizado ao longo do cronograma
+            </p>
+          </div>
+        </div>
+        
+        {/* Deviation indicator */}
+        {lastPoint && (
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+            deviation >= 0 
+              ? "bg-success/10 text-success" 
+              : "bg-warning/10 text-warning"
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              deviation >= 0 ? "bg-success" : "bg-warning"
+            }`} />
+            {deviation >= 0 ? "Adiantado" : "Atrasado"}: {Math.abs(deviation)}%
+          </div>
+        )}
       </div>
 
-      <p className="text-center text-sm text-muted-foreground mt-4">
+      {/* Chart Container */}
+      <div className="bg-secondary/30 rounded-xl p-3 md:p-6 border border-border/50">
+        <div className="h-[280px] md:h-[360px] lg:h-[400px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{ top: 10, right: 10, left: -15, bottom: 10 }}
+            >
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                stroke="hsl(var(--border))" 
+                strokeOpacity={0.6}
+                vertical={false}
+              />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tickLine={false}
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                interval="preserveStartEnd"
+                angle={-45}
+                textAnchor="end"
+                height={60}
+                dy={10}
+              />
+              <YAxis
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${value}%`}
+                domain={[0, 100]}
+                ticks={[0, 25, 50, 75, 100]}
+                width={45}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                wrapperStyle={{ paddingTop: "16px" }}
+                formatter={(value) => (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {value === "previsto" ? "Previsto" : "Realizado"}
+                  </span>
+                )}
+                iconType="circle"
+                iconSize={8}
+              />
+              <ReferenceLine 
+                y={50} 
+                stroke="hsl(var(--border))" 
+                strokeDasharray="6 6"
+                strokeOpacity={0.5}
+              />
+              <Line
+                type="monotone"
+                dataKey="previsto"
+                name="previsto"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2.5}
+                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 4 }}
+                activeDot={{ r: 6, fill: "hsl(var(--primary))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="realizado"
+                name="realizado"
+                stroke="hsl(var(--success))"
+                strokeWidth={2.5}
+                dot={{ fill: "hsl(var(--success))", strokeWidth: 0, r: 4 }}
+                activeDot={{ r: 6, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Footer description */}
+      <p className="text-center text-xs text-muted-foreground mt-4 px-4">
         A Curva S mostra o acúmulo de atividades iniciadas, permitindo visualizar o ritmo de mobilização da obra
       </p>
     </div>

@@ -7,8 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, Clock, AlertCircle, CalendarDays, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, CalendarDays, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Activity } from "@/types/report";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ScheduleTableProps {
   activities: Activity[];
@@ -39,6 +45,20 @@ const getActivityStatus = (activity: Activity): Status => {
   return "completed";
 };
 
+const getDelayDays = (activity: Activity): number | null => {
+  if (!activity.actualEnd) return null;
+  
+  const plannedEnd = parseDate(activity.plannedEnd);
+  const actualEnd = parseDate(activity.actualEnd);
+  
+  if (plannedEnd && actualEnd) {
+    const diffTime = actualEnd.getTime() - plannedEnd.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+  return null;
+};
+
 const statusOrder: Record<Status, number> = {
   delayed: 0,
   pending: 1,
@@ -51,17 +71,17 @@ const StatusBadge = ({ status }: { status: Status }) => {
     completed: {
       icon: CheckCircle2,
       label: "Concluído",
-      className: "bg-success/10 text-success border-success/20",
+      className: "bg-success/10 text-success border-success/30",
     },
     delayed: {
-      icon: AlertCircle,
+      icon: AlertTriangle,
       label: "Atrasado",
-      className: "bg-warning/10 text-warning border-warning/20",
+      className: "bg-warning/10 text-warning border-warning/30",
     },
     "on-time": {
       icon: Clock,
       label: "No prazo",
-      className: "bg-info/10 text-info border-info/20",
+      className: "bg-info/10 text-info border-info/30",
     },
     pending: {
       icon: Clock,
@@ -74,9 +94,9 @@ const StatusBadge = ({ status }: { status: Status }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border tracking-wide ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold border ${className}`}
     >
-      <Icon className="w-3.5 h-3.5" />
+      <Icon className="w-3 h-3 md:w-3.5 md:h-3.5" />
       {label}
     </span>
   );
@@ -96,19 +116,19 @@ const SortableHeader = ({ field, currentField, direction, onSort, children, clas
   
   return (
     <TableHead
-      className={`cursor-pointer select-none transition-colors hover:bg-primary-dark/20 ${className}`}
+      className={`cursor-pointer select-none transition-all hover:bg-primary/10 group ${className}`}
       onClick={() => onSort(field)}
     >
-      <div className="flex items-center justify-center gap-1.5">
-        <span>{children}</span>
+      <div className="flex items-center justify-center gap-1">
+        <span className="truncate">{children}</span>
         {isActive ? (
           direction === "asc" ? (
-            <ArrowUp className="w-3.5 h-3.5" />
+            <ArrowUp className="w-3 h-3 shrink-0" />
           ) : (
-            <ArrowDown className="w-3.5 h-3.5" />
+            <ArrowDown className="w-3 h-3 shrink-0" />
           )
         ) : (
-          <ArrowUpDown className="w-3.5 h-3.5 opacity-50" />
+          <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 shrink-0 transition-opacity" />
         )}
       </div>
     </TableHead>
@@ -154,9 +174,17 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
     });
   }, [activities, sortField, sortDirection]);
 
+  // Stats
+  const stats = useMemo(() => {
+    const delayed = activities.filter(a => getActivityStatus(a) === "delayed").length;
+    const completed = activities.filter(a => getActivityStatus(a) === "completed").length;
+    const pending = activities.filter(a => getActivityStatus(a) === "pending").length;
+    return { delayed, completed, pending, total: activities.length };
+  }, [activities]);
+
   if (activities.length === 0) {
     return (
-      <div className="mt-8 flex flex-col items-center justify-center py-12 text-muted-foreground">
+      <div className="mt-8 flex flex-col items-center justify-center py-12 text-muted-foreground bg-secondary/30 rounded-xl border border-border/50">
         <CalendarDays className="w-12 h-12 mb-3 opacity-40" />
         <p className="text-sm font-medium">Nenhuma atividade cadastrada.</p>
       </div>
@@ -164,74 +192,92 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
   }
 
   return (
-    <div className="mt-8 md:mt-10">
-      <div className="flex items-center gap-2 mb-5">
-        <CalendarDays className="w-5 h-5 text-primary" />
-        <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-          Cronograma Detalhado
-        </h3>
+    <div className="mt-6 md:mt-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <CalendarDays className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+              Cronograma Detalhado
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {stats.total} atividades • {stats.completed} concluídas • {stats.delayed} atrasadas
+            </p>
+          </div>
+        </div>
+
+        {/* Quick stats badges */}
+        <div className="flex items-center gap-2">
+          {stats.delayed > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-warning/10 text-warning border border-warning/30">
+              <AlertTriangle className="w-3 h-3" />
+              {stats.delayed} atrasada{stats.delayed > 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
         {sortedActivities.map((activity, index) => {
           const status = getActivityStatus(activity);
+          const delayDays = getDelayDays(activity);
+          const isDelayed = status === "delayed";
+          
           return (
             <div
               key={index}
-              className="bg-card border border-border rounded-xl p-4 shadow-card opacity-0 animate-fade-in"
-              style={{ animationDelay: `${index * 60}ms` }}
+              className={`bg-card border rounded-xl p-4 shadow-sm opacity-0 animate-fade-in transition-all ${
+                isDelayed ? "border-warning/40 bg-warning/5" : "border-border"
+              }`}
+              style={{ animationDelay: `${index * 40}ms` }}
             >
               <div className="flex items-start justify-between gap-3 mb-3">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                  {index + 1}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                    {index + 1}
+                  </span>
+                  {isDelayed && delayDays && (
+                    <span className="text-[10px] font-semibold text-warning">
+                      +{delayDays} dias
+                    </span>
+                  )}
+                </div>
                 <StatusBadge status={status} />
               </div>
 
-              <p className="text-sm font-semibold text-foreground mb-4 leading-relaxed">
+              <p className="text-sm font-medium text-foreground mb-3 leading-relaxed">
                 {activity.description}
               </p>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between py-2.5 px-3 bg-secondary rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Previsto
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-foreground tabular-nums">
-                    {activity.plannedStart} → {activity.plannedEnd}
-                  </span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-secondary/60 rounded-lg p-2.5">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-1">
+                    Previsto
+                  </p>
+                  <p className="text-xs font-semibold text-foreground tabular-nums">
+                    {activity.plannedStart} – {activity.plannedEnd}
+                  </p>
                 </div>
-
-                <div
-                  className={`flex items-center justify-between py-2.5 px-3 rounded-lg ${
-                    status === "delayed"
-                      ? "bg-warning/10"
-                      : status === "completed"
-                      ? "bg-success/10"
-                      : "bg-secondary"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        status === "delayed"
-                          ? "bg-warning"
-                          : status === "completed"
-                          ? "bg-success"
-                          : "bg-muted-foreground"
-                      }`}
-                    />
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Realizado
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-foreground tabular-nums">
-                    {activity.actualStart || "—"} → {activity.actualEnd || "—"}
-                  </span>
+                
+                <div className={`rounded-lg p-2.5 ${
+                  isDelayed
+                    ? "bg-warning/10"
+                    : status === "completed"
+                    ? "bg-success/10"
+                    : "bg-secondary/60"
+                }`}>
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-1">
+                    Realizado
+                  </p>
+                  <p className={`text-xs font-semibold tabular-nums ${
+                    isDelayed ? "text-warning" : "text-foreground"
+                  }`}>
+                    {activity.actualStart || "—"} – {activity.actualEnd || "—"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -240,112 +286,133 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block overflow-hidden rounded-xl border border-border shadow-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b-0">
-              <SortableHeader
-                field="description"
-                currentField={sortField}
-                direction={sortDirection}
-                onSort={handleSort}
-                className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4 pl-5 text-left rounded-tl-xl"
-              >
-                Atividade
-              </SortableHeader>
-              <SortableHeader
-                field="plannedStart"
-                currentField={sortField}
-                direction={sortDirection}
-                onSort={handleSort}
-                className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4"
-              >
-                Início Previsto
-              </SortableHeader>
-              <SortableHeader
-                field="plannedEnd"
-                currentField={sortField}
-                direction={sortDirection}
-                onSort={handleSort}
-                className="gradient-primary text-primary-foreground font-bold text-xs uppercase tracking-wider py-4"
-              >
-                Término Previsto
-              </SortableHeader>
-              <SortableHeader
-                field="actualStart"
-                currentField={sortField}
-                direction={sortDirection}
-                onSort={handleSort}
-                className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4"
-              >
-                Início Real
-              </SortableHeader>
-              <SortableHeader
-                field="actualEnd"
-                currentField={sortField}
-                direction={sortDirection}
-                onSort={handleSort}
-                className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4"
-              >
-                Término Real
-              </SortableHeader>
-              <SortableHeader
-                field="status"
-                currentField={sortField}
-                direction={sortDirection}
-                onSort={handleSort}
-                className="bg-accent text-accent-foreground font-bold text-xs uppercase tracking-wider py-4 pr-5 rounded-tr-xl"
-              >
-                Status
-              </SortableHeader>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedActivities.map((activity, index) => {
-              const status = getActivityStatus(activity);
-              const isLast = index === sortedActivities.length - 1;
-              return (
-                <TableRow
-                  key={index}
-                  className={`transition-colors hover:bg-accent/30 ${
-                    index % 2 === 0 ? "bg-card" : "bg-secondary/30"
-                  }`}
+      <TooltipProvider>
+        <div className="hidden md:block overflow-hidden rounded-xl border border-border shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b-0">
+                <SortableHeader
+                  field="description"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                  className="bg-primary text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5 pl-4 text-left w-[35%]"
                 >
-                  <TableCell
-                    className={`py-4 pl-5 pr-4 ${isLast ? "rounded-bl-xl" : ""}`}
+                  Atividade
+                </SortableHeader>
+                <SortableHeader
+                  field="plannedStart"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                  className="bg-primary text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5"
+                >
+                  Início Prev.
+                </SortableHeader>
+                <SortableHeader
+                  field="plannedEnd"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                  className="bg-primary text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5"
+                >
+                  Término Prev.
+                </SortableHeader>
+                <SortableHeader
+                  field="actualStart"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                  className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5"
+                >
+                  Início Real
+                </SortableHeader>
+                <SortableHeader
+                  field="actualEnd"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                  className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5"
+                >
+                  Término Real
+                </SortableHeader>
+                <SortableHeader
+                  field="status"
+                  currentField={sortField}
+                  direction={sortDirection}
+                  onSort={handleSort}
+                  className="bg-primary-dark text-primary-foreground font-semibold text-[11px] uppercase tracking-wider py-3.5 pr-4"
+                >
+                  Status
+                </SortableHeader>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedActivities.map((activity, index) => {
+                const status = getActivityStatus(activity);
+                const delayDays = getDelayDays(activity);
+                const isDelayed = status === "delayed";
+                
+                return (
+                  <TableRow
+                    key={index}
+                    className={`transition-colors border-b border-border/50 last:border-b-0 ${
+                      isDelayed 
+                        ? "bg-warning/5 hover:bg-warning/10" 
+                        : index % 2 === 0 
+                          ? "bg-card hover:bg-accent/30" 
+                          : "bg-secondary/20 hover:bg-accent/30"
+                    }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
-                        {index + 1}
-                      </span>
-                      <span className="text-sm font-medium text-foreground leading-snug">
-                        {activity.description}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4 text-center text-sm font-medium text-muted-foreground tabular-nums">
-                    {activity.plannedStart}
-                  </TableCell>
-                  <TableCell className="py-4 text-center text-sm font-medium text-muted-foreground tabular-nums">
-                    {activity.plannedEnd}
-                  </TableCell>
-                  <TableCell className="py-4 text-center text-sm font-semibold text-foreground tabular-nums">
-                    {activity.actualStart || "—"}
-                  </TableCell>
-                  <TableCell className="py-4 text-center text-sm font-semibold text-foreground tabular-nums">
-                    {activity.actualEnd || "—"}
-                  </TableCell>
-                  <TableCell
-                    className={`py-4 pr-5 text-center ${isLast ? "rounded-br-xl" : ""}`}
-                  >
-                    <StatusBadge status={status} />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+                    <TableCell className="py-3.5 pl-4 pr-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">
+                          {index + 1}
+                        </span>
+                        <span className="text-sm font-medium text-foreground leading-snug">
+                          {activity.description}
+                        </span>
+                        {isDelayed && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Atraso de {delayDays} dias</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5 text-center text-sm text-muted-foreground tabular-nums">
+                      {activity.plannedStart}
+                    </TableCell>
+                    <TableCell className="py-3.5 text-center text-sm text-muted-foreground tabular-nums">
+                      {activity.plannedEnd}
+                    </TableCell>
+                    <TableCell className="py-3.5 text-center text-sm font-medium text-foreground tabular-nums">
+                      {activity.actualStart || "—"}
+                    </TableCell>
+                    <TableCell className={`py-3.5 text-center text-sm font-medium tabular-nums ${
+                      isDelayed ? "text-warning" : "text-foreground"
+                    }`}>
+                      {activity.actualEnd || "—"}
+                      {isDelayed && delayDays && (
+                        <span className="ml-1.5 text-[10px] text-warning font-semibold">
+                          (+{delayDays}d)
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3.5 pr-4 text-center">
+                      <StatusBadge status={status} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </TooltipProvider>
     </div>
   );
 };
