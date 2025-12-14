@@ -75,14 +75,14 @@ const ReportHeader = ({
   const totalDeviation = calculateTotalDeviation(activities);
 
   return (
-    <header className="bg-card rounded-xl shadow-card overflow-hidden mb-6 animate-fade-in">
+    <header className="bg-card rounded-xl shadow-card overflow-hidden mb-4 md:mb-6 animate-fade-in">
       {/* Top Section - Logo, Title, Export */}
       <div className="p-4 md:p-6 lg:p-8">
         <div className="flex flex-col gap-4">
-          {/* Mobile: Stack vertically, Desktop: Side by side */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            {/* Logo */}
-            <div className="shrink-0">
+          {/* Mobile: Compact layout */}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+            {/* Logo - Hidden on mobile (shown in sticky header) */}
+            <div className="shrink-0 hidden md:block">
               <img 
                 src={bwildLogo} 
                 alt="Logo" 
@@ -92,14 +92,11 @@ const ReportHeader = ({
 
             {/* Title & Info */}
             <div className="flex-1 md:text-right">
-              <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
-                Relatório de Obra
-              </h1>
-              <p className="text-sm md:text-base font-medium text-primary mt-1">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
                 {projectName} – {unitName}
-              </p>
+              </h1>
               {clientName && (
-                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                <p className="text-sm text-muted-foreground mt-1">
                   Cliente: {clientName}
                 </p>
               )}
@@ -121,16 +118,16 @@ const ReportHeader = ({
             )}
           </div>
 
-          {/* Export Button - Mobile (Full Width) */}
+          {/* Export Button - Mobile (Floating Action Button style) */}
           {onExportPDF && (
             <div className="md:hidden">
               <Button
                 onClick={onExportPDF}
                 disabled={isExporting}
-                className="w-full"
+                className="w-full h-12 text-base font-semibold"
                 size="lg"
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-5 h-5 mr-2" />
                 {isExporting ? "Gerando..." : "Exportar PDF"}
               </Button>
             </div>
@@ -138,29 +135,37 @@ const ReportHeader = ({
         </div>
       </div>
 
-      {/* KPI Cards Section */}
-      <div className="border-t border-border bg-secondary/30 px-4 py-4 md:px-6 md:py-5 lg:px-8 lg:py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 md:gap-4">
-          <StatCard 
-            icon={Calendar}
-            label="Início da Obra" 
-            value={formatDate(startDate, baseYear)}
-          />
-          <StatCard 
-            icon={Target}
-            label="Previsão de Término" 
-            value={formatDate(endDate, baseYear)}
-          />
-          <StatCard 
-            icon={FileText}
-            label="Data do Relatório" 
-            value={formatDate(reportDate, baseYear)}
-          />
-          <ProgressCard
-            completionPercentage={completionPercentage}
-            completedActivities={completedActivities}
-            totalActivities={activities.length}
-          />
+      {/* KPI Cards Section - Horizontal scroll on mobile */}
+      <div className="border-t border-border bg-secondary/30 px-3 py-3 md:px-6 md:py-5 lg:px-8 lg:py-6">
+        <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 md:grid md:grid-cols-4 md:gap-4 snap-x snap-mandatory scrollbar-hide">
+          <div className="min-w-[140px] md:min-w-0 snap-start">
+            <StatCard 
+              icon={Calendar}
+              label="Início" 
+              value={formatDate(startDate, baseYear)}
+            />
+          </div>
+          <div className="min-w-[140px] md:min-w-0 snap-start">
+            <StatCard 
+              icon={Target}
+              label="Término" 
+              value={formatDate(endDate, baseYear)}
+            />
+          </div>
+          <div className="min-w-[140px] md:min-w-0 snap-start">
+            <StatCard 
+              icon={FileText}
+              label="Relatório" 
+              value={formatDate(reportDate, baseYear)}
+            />
+          </div>
+          <div className="min-w-[160px] md:min-w-0 snap-start">
+            <ProgressCard
+              completionPercentage={completionPercentage}
+              completedActivities={completedActivities}
+              totalActivities={activities.length}
+            />
+          </div>
         </div>
       </div>
     </header>
