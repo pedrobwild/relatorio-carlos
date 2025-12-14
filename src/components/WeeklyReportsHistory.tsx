@@ -1,9 +1,9 @@
 import { format, addWeeks, startOfWeek, endOfWeek, isBefore, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Activity, WeeklyReport } from "@/types/report";
-import { Progress } from "@/components/ui/progress";
 import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip } from "recharts";
 
 interface WeeklyReportsHistoryProps {
   projectStartDate: string;
@@ -17,7 +17,6 @@ const calculatePlannedProgress = (
   weekEndDate: Date,
   projectStartDate: Date
 ): number => {
-  // Calculate what percentage should be planned complete by this week
   const totalActivities = activities.length;
   let plannedComplete = 0;
   
@@ -144,6 +143,25 @@ const getStatusConfig = (status: 'ahead' | 'on-track' | 'behind') => {
   }
 };
 
+// Custom tooltip for the variance chart
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const variance = payload[0].value;
+    return (
+      <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+        <p className="text-xs text-muted-foreground mb-1">Semana {label}</p>
+        <p className={cn(
+          "text-sm font-bold",
+          variance >= 0 ? "text-emerald-600" : "text-red-600"
+        )}>
+          {variance > 0 ? '+' : ''}{variance}% vs previsto
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const WeeklyReportsHistory = ({
   projectStartDate,
   reportDate,
@@ -152,56 +170,106 @@ const WeeklyReportsHistory = ({
 }: WeeklyReportsHistoryProps) => {
   const weeklyReports = generateWeeklyReports(projectStartDate, reportDate, activities);
   const latestReport = weeklyReports[0];
+  
+  // Prepare chart data (chronological order for the chart)
+  const chartData = [...weeklyReports].reverse().map(report => ({
+    week: report.weekNumber,
+    variance: report.variance,
+    fill: report.variance >= 0 ? "url(#positiveGradient)" : "url(#negativeGradient)",
+  }));
 
   return (
     <div className="animate-fade-in space-y-6" style={{ animationDelay: "0.1s" }}>
       {/* Header Section */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground">
-            Histórico de Relatórios
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {weeklyReports.length} relatórios
-          </span>
-        </div>
-        
-        {/* Summary Stats */}
-        {latestReport && (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-card border border-border rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Conclusão</span>
-              </div>
-              <span className="text-2xl font-bold text-foreground">{latestReport.completionPercentage}%</span>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl md:text-2xl font-bold text-foreground">
+          Histórico de Relatórios
+        </h2>
+        <span className="text-sm text-muted-foreground">
+          {weeklyReports.length} relatórios
+        </span>
+      </div>
+
+      {/* Variance Evolution Chart */}
+      {weeklyReports.length > 1 && (
+        <div className="bg-card border border-border rounded-xl p-4 md:p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Evolução do Desvio</h3>
+              <p className="text-xs text-muted-foreground">Realizado vs Previsto por semana</p>
             </div>
-            <div className="bg-card border border-border rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Previsto</span>
-              </div>
-              <span className="text-2xl font-bold text-foreground">{latestReport.plannedPercentage}%</span>
-            </div>
-            <div className="bg-card border border-border rounded-xl p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                {latestReport.variance >= 0 ? (
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-red-500" />
-                )}
-                <span className="text-xs text-muted-foreground">Desvio</span>
-              </div>
-              <span className={cn(
-                "text-2xl font-bold",
-                latestReport.variance >= 0 ? "text-emerald-600" : "text-red-600"
+            {latestReport && (
+              <div className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold",
+                latestReport.variance >= 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
               )}>
+                {latestReport.variance >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 {latestReport.variance > 0 ? '+' : ''}{latestReport.variance}%
-              </span>
+              </div>
+            )}
+          </div>
+          
+          <div className="h-32 md:h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgb(16, 185, 129)" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="rgb(16, 185, 129)" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="negativeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgb(239, 68, 68)" stopOpacity={0.05} />
+                    <stop offset="100%" stopColor="rgb(239, 68, 68)" stopOpacity={0.4} />
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="week" 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => `S${value}`}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => `${value}%`}
+                  domain={['dataMin - 5', 'dataMax + 5']}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                <Area
+                  type="monotone"
+                  dataKey="variance"
+                  stroke="none"
+                  fillOpacity={1}
+                  fill="url(#positiveGradient)"
+                />
+                {/* Overlay negative values with different color */}
+                <Area
+                  type="monotone"
+                  dataKey={(data) => data.variance < 0 ? data.variance : null}
+                  stroke="none"
+                  fillOpacity={1}
+                  fill="url(#negativeGradient)"
+                  baseValue={0}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div className="flex items-center justify-center gap-6 mt-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm bg-emerald-500/40" />
+              <span>Adiantado</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm bg-red-500/40" />
+              <span>Atrasado</span>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Reports List */}
       <div className="space-y-3">
@@ -270,18 +338,28 @@ const WeeklyReportsHistory = ({
                     </div>
                   </div>
                   
-                  {/* Status Badge */}
+                  {/* Status Badge - Only show full badge for latest, variance only for others */}
                   <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border",
-                      statusConfig.className
-                    )}>
-                      <StatusIcon className="h-3 w-3" />
-                      {statusConfig.label}
-                    </span>
+                    {isLatest ? (
+                      <span className={cn(
+                        "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border",
+                        statusConfig.className
+                      )}>
+                        <StatusIcon className="h-3 w-3" />
+                        {statusConfig.label}
+                      </span>
+                    ) : null}
                     {report.variance !== 0 && (
+                      <span className={cn(
+                        "text-xs font-medium",
+                        report.variance > 0 ? "text-emerald-600" : "text-red-600"
+                      )}>
+                        {report.variance > 0 ? '+' : ''}{report.variance}% vs previsto
+                      </span>
+                    )}
+                    {report.variance === 0 && !isLatest && (
                       <span className="text-xs text-muted-foreground">
-                        ({report.variance > 0 ? '+' : ''}{report.variance}% vs previsto)
+                        No cronograma
                       </span>
                     )}
                   </div>
