@@ -155,6 +155,7 @@ const Index = () => {
                         clientName={reportData.clientName}
                         activities={reportData.activities}
                         endDate={reportData.endDate}
+                        projectStartDate={reportData.startDate}
                       />
                     </div>
                   ) : (
