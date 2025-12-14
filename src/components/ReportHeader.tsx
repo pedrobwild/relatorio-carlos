@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
-import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Calendar, ChevronDown } from "lucide-react";
+import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Mail, ChevronDown, ChevronUp } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ReportHeaderProps {
@@ -11,6 +12,14 @@ interface ReportHeaderProps {
   endDate: string;
   reportDate: string;
   activities: Activity[];
+}
+
+interface TeamContact {
+  role: string;
+  name: string;
+  phone: string;
+  email: string;
+  crea?: string;
 }
 
 const formatDate = (dateStr: string): string => {
@@ -30,6 +39,8 @@ const ReportHeader = ({
   reportDate,
   activities,
 }: ReportHeaderProps) => {
+  const [expandedContact, setExpandedContact] = useState<string | null>(null);
+
   const quickLinks = [
     { icon: FileText, label: "Contrato", href: "/contrato" },
     { icon: Box, label: "Projeto 3D", href: "/projeto-3d" },
@@ -38,10 +49,14 @@ const ReportHeader = ({
     { icon: Headphones, label: "Suporte", href: "/suporte" },
   ];
 
-  const teamContacts = [
-    { role: "Engenheiro", name: "Lucas Tresmondi", phone: "(99) 99999-9999" },
-    { role: "Gerente", name: "Victorya Capponi", phone: "(99) 99999-9999" },
+  const teamContacts: TeamContact[] = [
+    { role: "Engenheiro", name: "Lucas", phone: "(99) 99999-9999", email: "lucas@bwild.com.br", crea: "5071459470-SP" },
+    { role: "Gerente", name: "Victorya", phone: "(99) 99999-9999", email: "victorya@bwild.com.br" },
   ];
+
+  const toggleContact = (role: string) => {
+    setExpandedContact(expandedContact === role ? null : role);
+  };
 
   const dateMetrics = [
     { label: "Início", value: "01/07/2025" },
@@ -92,21 +107,55 @@ const ReportHeader = ({
         {/* Row 2: Team contacts */}
         <div className="flex items-center gap-8 mb-4 pb-4 border-b border-border">
           {teamContacts.map((contact) => (
-            <div key={contact.role} className="flex items-center gap-3 text-sm">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent">
-                <User className="w-4 h-4 text-accent-foreground" />
-              </div>
-              <div>
-                <span className="font-medium text-foreground">{contact.role}:</span>{" "}
-                <span className="text-foreground/70">{contact.name}</span>
-              </div>
-              <a 
-                href={`tel:+55${contact.phone.replace(/\D/g, '')}`} 
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+            <div key={contact.role} className="relative">
+              <button
+                onClick={() => toggleContact(contact.role)}
+                className="flex items-center gap-3 text-sm hover:bg-accent/50 p-2 rounded-lg transition-colors"
               >
-                <Phone className="w-3.5 h-3.5" />
-                <span>{contact.phone}</span>
-              </a>
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent">
+                  <User className="w-4 h-4 text-accent-foreground" />
+                </div>
+                <div>
+                  <span className="font-medium text-foreground">{contact.role}:</span>{" "}
+                  <span className="text-foreground/70">{contact.name}</span>
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md text-muted-foreground">
+                  <span className="text-sm">Contato</span>
+                  {expandedContact === contact.role ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </div>
+              </button>
+              
+              {/* Expanded contact details */}
+              {expandedContact === contact.role && (
+                <div className="absolute top-full left-0 mt-1 z-10 bg-card border border-border rounded-lg shadow-lg p-3 min-w-[240px] animate-fade-in">
+                  <div className="space-y-2">
+                    <a 
+                      href={`mailto:${contact.email}`}
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span>{contact.email}</span>
+                    </a>
+                    <a 
+                      href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>{contact.phone}</span>
+                    </a>
+                    {contact.crea && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1 border-t border-border">
+                        <span className="font-medium">CREA:</span>
+                        <span>{contact.crea}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -159,23 +208,56 @@ const ReportHeader = ({
         {/* Team contacts - Cards */}
         <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-border">
           {teamContacts.map((contact) => (
-            <a
-              key={contact.role}
-              href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-              className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-accent/50 active:scale-[0.98] transition-all"
-            >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent shrink-0">
-                <User className="w-5 h-5 text-accent-foreground" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-foreground/70">{contact.role}</p>
-                <p className="text-sm font-medium text-foreground truncate">{contact.name}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Phone className="w-3 h-3" />
-                  {contact.phone}
-                </p>
-              </div>
-            </a>
+            <div key={contact.role} className="relative">
+              <button
+                onClick={() => toggleContact(contact.role)}
+                className="w-full flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-accent/50 active:scale-[0.98] transition-all text-left"
+              >
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent shrink-0">
+                  <User className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-foreground/70">{contact.role}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{contact.name}</p>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
+                  <span className="text-[10px] font-semibold">Contato</span>
+                  {expandedContact === contact.role ? (
+                    <ChevronUp className="w-3 h-3" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3" />
+                  )}
+                </div>
+              </button>
+              
+              {/* Expanded contact details */}
+              {expandedContact === contact.role && (
+                <div className="mt-2 bg-card border border-border rounded-lg p-3 animate-fade-in">
+                  <div className="space-y-2">
+                    <a 
+                      href={`mailto:${contact.email}`}
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span>{contact.email}</span>
+                    </a>
+                    <a 
+                      href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>{contact.phone}</span>
+                    </a>
+                    {contact.crea && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1 border-t border-border">
+                        <span className="font-medium">CREA:</span>
+                        <span>{contact.crea}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
@@ -240,23 +322,56 @@ const ReportHeader = ({
           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Equipe</p>
           <div className="space-y-1.5">
             {teamContacts.map((contact) => (
-              <a
-                key={contact.role}
-                href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-                className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/40 hover:bg-accent/60 active:scale-[0.98] transition-all"
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
-                  <User className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-medium text-primary/70 uppercase tracking-wide">{contact.role}</p>
-                  <p className="text-xs font-semibold text-foreground">{contact.name}</p>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
-                  <span className="text-[10px] font-semibold">Contato</span>
-                  <ChevronDown className="w-3 h-3" />
-                </div>
-              </a>
+              <div key={contact.role}>
+                <button
+                  onClick={() => toggleContact(contact.role)}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-lg bg-muted/40 hover:bg-accent/60 active:scale-[0.98] transition-all text-left"
+                >
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
+                    <User className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-medium text-primary/70 uppercase tracking-wide">{contact.role}</p>
+                    <p className="text-xs font-semibold text-foreground">{contact.name}</p>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
+                    <span className="text-[10px] font-semibold">Contato</span>
+                    {expandedContact === contact.role ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                  </div>
+                </button>
+                
+                {/* Expanded contact details */}
+                {expandedContact === contact.role && (
+                  <div className="mt-1.5 ml-10.5 bg-card border border-border rounded-lg p-2.5 animate-fade-in">
+                    <div className="space-y-1.5">
+                      <a 
+                        href={`mailto:${contact.email}`}
+                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>{contact.email}</span>
+                      </a>
+                      <a 
+                        href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>{contact.phone}</span>
+                      </a>
+                      {contact.crea && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
+                          <span className="font-medium">CREA:</span>
+                          <span>{contact.crea}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
