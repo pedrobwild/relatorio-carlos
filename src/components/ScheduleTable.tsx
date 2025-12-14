@@ -285,13 +285,6 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
               }`}
               style={{ animationDelay: `${index * 30}ms` }}
             >
-              {/* Current phase indicator */}
-              {isCurrentPhase && (
-                <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold text-primary">
-                  <Clock className="w-3.5 h-3.5" />
-                  Etapa Atual
-                </div>
-              )}
               
               {/* Top row: Number, Title, Status */}
               <div className="flex items-start gap-2.5 mb-2">
@@ -420,18 +413,11 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
                         }`}>
                           {originalIndex + 1}
                         </span>
-                        <div className="flex flex-col">
-                          {isCurrentPhase && (
-                            <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
-                              Etapa Atual
-                            </span>
-                          )}
-                          <span className={`text-sm font-medium leading-snug ${
-                            isCurrentPhase ? "text-primary" : "text-foreground"
-                          }`}>
-                            {activity.description}
-                          </span>
-                        </div>
+                        <span className={`text-sm font-medium leading-snug ${
+                          isCurrentPhase ? "text-primary" : "text-foreground"
+                        }`}>
+                          {activity.description}
+                        </span>
                         {isDelayed && (
                           <Tooltip>
                             <TooltipTrigger asChild>
