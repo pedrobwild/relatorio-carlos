@@ -6,69 +6,69 @@ import CreateReportModal from "@/components/CreateReportModal";
 import { ReportData } from "@/types/report";
 import bwildLogo from "@/assets/bwild-logo.png";
 
-// Start date: 15/07/2025, End date: 55 business days after (approx. 29/09/2025)
+// Start date: 01/07/2025, End date: 10/09/2025
 // Report generated on: 22/08/2025 (activity 6 in progress)
 const sampleReportData: ReportData = {
   projectName: "Hub Brooklyn",
   unitName: "502",
   clientName: "Pedro Alves",
-  startDate: "2025-07-15",
-  endDate: "2025-09-29", // 55 business days from 15/07/2025
+  startDate: "2025-07-01",
+  endDate: "2025-09-10",
   reportDate: "2025-08-22", // Data de geração do relatório
   activities: [
     {
       description: "Fundação e Terraplanagem",
-      plannedStart: "2025-07-15",
-      plannedEnd: "2025-07-24",
-      actualStart: "2025-07-15",
-      actualEnd: "2025-07-24",
+      plannedStart: "2025-07-01",
+      plannedEnd: "2025-07-10",
+      actualStart: "2025-07-01",
+      actualEnd: "2025-07-10",
     },
     {
       description: "Estrutura - Pilares e Vigas",
-      plannedStart: "2025-07-25",
-      plannedEnd: "2025-08-01",
-      actualStart: "2025-07-25",
-      actualEnd: "2025-08-01",
+      plannedStart: "2025-07-11",
+      plannedEnd: "2025-07-18",
+      actualStart: "2025-07-11",
+      actualEnd: "2025-07-18",
     },
     {
       description: "Alvenaria Externa",
-      plannedStart: "2025-08-04",
-      plannedEnd: "2025-08-11",
-      actualStart: "2025-08-04",
-      actualEnd: "2025-08-13", // 2 dias após previsto
+      plannedStart: "2025-07-21",
+      plannedEnd: "2025-07-28",
+      actualStart: "2025-07-21",
+      actualEnd: "2025-07-30", // 2 dias após previsto
     },
     {
       description: "Instalações Elétricas",
-      plannedStart: "2025-08-12",
-      plannedEnd: "2025-08-19",
-      actualStart: "2025-08-14", // 2 dias após previsto
-      actualEnd: "2025-08-20", // 1 dia após previsto
+      plannedStart: "2025-07-29",
+      plannedEnd: "2025-08-05",
+      actualStart: "2025-07-31", // 2 dias após previsto
+      actualEnd: "2025-08-06", // 1 dia após previsto
     },
     {
       description: "Instalações Hidráulicas",
-      plannedStart: "2025-08-20",
-      plannedEnd: "2025-08-27",
-      actualStart: "2025-08-18", // 2 dias ANTES do previsto
-      actualEnd: "2025-08-26", // 1 dia antes do previsto
+      plannedStart: "2025-08-06",
+      plannedEnd: "2025-08-13",
+      actualStart: "2025-08-04", // 2 dias ANTES do previsto
+      actualEnd: "2025-08-12", // 1 dia antes do previsto
     },
     {
       description: "Revestimento Interno",
-      plannedStart: "2025-08-28",
-      plannedEnd: "2025-09-08",
-      actualStart: "2025-08-26", // 2 dias ANTES do previsto
+      plannedStart: "2025-08-14",
+      plannedEnd: "2025-08-25",
+      actualStart: "2025-08-12", // 2 dias ANTES do previsto
       actualEnd: "", // Em andamento em 22/08/2025
     },
     {
       description: "Pintura e Acabamentos",
-      plannedStart: "2025-09-09",
-      plannedEnd: "2025-09-22",
+      plannedStart: "2025-08-26",
+      plannedEnd: "2025-09-04",
       actualStart: "",
       actualEnd: "",
     },
     {
       description: "Limpeza Final e Entrega",
-      plannedStart: "2025-09-23",
-      plannedEnd: "2025-09-29",
+      plannedStart: "2025-09-05",
+      plannedEnd: "2025-09-10",
       actualStart: "",
       actualEnd: "",
     },
