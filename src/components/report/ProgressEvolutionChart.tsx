@@ -127,9 +127,9 @@ const ProgressEvolutionChart = ({
   const data = generateWeeklyProgressData(activities, currentWeek, projectStartDate);
 
   return (
-    <div className="hidden sm:block bg-card rounded-lg border border-border p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground">Evolução do Desvio</h3>
+    <div className="hidden sm:block bg-card rounded-lg border border-border">
+      <div className="p-4 sm:p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h3 className="text-sm sm:text-base font-semibold text-foreground">Evolução do Desvio</h3>
         <div className="flex items-center gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-green-500" />
@@ -141,6 +141,7 @@ const ProgressEvolutionChart = ({
           </div>
         </div>
       </div>
+      <div className="p-4 md:p-6">
       
       <div className="h-[280px] md:h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -225,6 +226,7 @@ const ProgressEvolutionChart = ({
             />
           </ComposedChart>
         </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
