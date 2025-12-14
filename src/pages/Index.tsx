@@ -105,31 +105,16 @@ const Index = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border md:hidden px-4 py-3 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <span className="font-semibold text-sm text-foreground">Relatório de Obra</span>
-        <div className="w-10" /> {/* Spacer for centering */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border md:hidden px-4 py-3">
+        <div className="flex items-center justify-center">
+          <h1 className="font-semibold text-base text-foreground tracking-tight">Portal do Cliente</h1>
+        </div>
       </div>
 
       <div className="p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Back Button - Desktop only */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground hidden md:inline-flex"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Voltar
-          </Button>
+          {/* Page Title - Desktop only */}
+          <h1 className="text-xl font-semibold text-foreground mb-4 hidden md:block">Portal do Cliente</h1>
 
         <div ref={reportRef}>
           <ReportHeader
