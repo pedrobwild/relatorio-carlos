@@ -32,7 +32,7 @@ export const week10SeedData: WeeklyReportData = {
     { description: "Conclusão/Entrega", dueDate: "2025-09-14", status: "pending" },
   ],
   
-  executiveSummary: "Nesta semana encerramos marcenaria (com ajustes finos) e iniciamos a etapa de mobiliário e eletros. O cronograma segue com marco final mantido, com atenção especial às entregas de eletros e aos testes finais. Próxima semana é focada em instalação, limpeza fina, vistoria e preparação da entrega.",
+  executiveSummary: "Concluímos a montagem completa da marcenaria, incluindo instalação e fixação dos módulos, alinhamento e nivelamento, ajustes de portas e frentes, aplicação de ferragens e arremates finais. Também realizamos a checagem de funcionamento (aberturas, folgas, amortecedores e puxadores). O cronograma segue com marco final mantido.",
   
   activities: [
     {
