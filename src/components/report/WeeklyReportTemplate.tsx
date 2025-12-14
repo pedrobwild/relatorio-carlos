@@ -31,8 +31,6 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
       {/* 5. Risks, Issues, Action Plans */}
       <RisksIssuesSection issues={data.risksAndIssues} />
 
-      {/* 6. Quality, Tests, Pending Items */}
-      <QualitySection qualityItems={data.qualityItems} />
 
       {/* 7. Client Decisions */}
       <ClientDecisionsSection decisions={data.clientDecisions} />
