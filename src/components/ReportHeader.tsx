@@ -104,8 +104,8 @@ const ReportHeader = ({
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mb-4 pb-4 border-b border-border">
           <div className="flex items-center gap-2 text-sm">
             <User className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-foreground/70">Engenheiro:</span>
-            <span className="font-medium text-foreground">Lucas Tresmondi</span>
+            <span className="font-medium text-foreground">Engenheiro:</span>
+            <span className="text-foreground/70">Lucas Tresmondi</span>
             <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Phone className="w-3 h-3" />
               <span className="text-xs">(99) 99999-9999</span>
@@ -113,8 +113,8 @@ const ReportHeader = ({
           </div>
           <div className="flex items-center gap-2 text-sm">
             <User className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-foreground/70">Gerente:</span>
-            <span className="font-medium text-foreground">Victorya Capponi</span>
+            <span className="font-medium text-foreground">Gerente:</span>
+            <span className="text-foreground/70">Victorya Capponi</span>
             <a href="tel:+5599999999999" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Phone className="w-3 h-3" />
               <span className="text-xs">(99) 99999-9999</span>
@@ -125,16 +125,16 @@ const ReportHeader = ({
         {/* Row 3: Metrics */}
         <div className="flex items-center gap-4 md:gap-6 text-sm text-foreground/70">
           <span>
-            <span className="text-foreground/50">Início:</span>{" "}
-            <span className="font-medium text-foreground">01/07/2025</span>
+            <span className="font-medium text-foreground">Início:</span>{" "}
+            <span className="text-foreground/70">01/07/2025</span>
           </span>
           <span>
-            <span className="text-foreground/50">Término:</span>{" "}
-            <span className="font-medium text-foreground">14/09/2025</span>
+            <span className="font-medium text-foreground">Término:</span>{" "}
+            <span className="text-foreground/70">14/09/2025</span>
           </span>
           <span className="hidden sm:inline">
-            <span className="text-foreground/50">Última atualização:</span>{" "}
-            <span className="font-medium text-foreground">08/09/2025</span>
+            <span className="font-medium text-foreground">Última atualização:</span>{" "}
+            <span className="text-foreground/70">08/09/2025</span>
           </span>
         </div>
       </div>
