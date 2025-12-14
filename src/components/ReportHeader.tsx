@@ -78,28 +78,16 @@ const ReportHeader = ({
     <header className="bg-card rounded-xl shadow-card overflow-hidden mb-4 md:mb-6 animate-fade-in">
       {/* Top Section - Logo, Title, Export */}
       <div className="p-4 md:p-6 lg:p-8">
-        <div className="flex flex-col gap-4">
-          {/* Mobile: Compact layout */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-            {/* Logo - Hidden on mobile (shown in sticky header) */}
-            <div className="shrink-0 hidden md:block">
+        <div className="flex flex-col gap-5">
+          {/* Header Row: Logo + Title + Export */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Logo */}
+            <div className="shrink-0">
               <img 
                 src={bwildLogo} 
-                alt="Logo" 
-                className="h-8 md:h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                alt="Bwild Logo" 
+                className="h-10 md:h-12 w-auto transition-transform hover:scale-105"
               />
-            </div>
-
-            {/* Title & Info */}
-            <div className="flex-1 md:text-right">
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
-                {projectName} – {unitName}
-              </h1>
-              {clientName && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Cliente: {clientName}
-                </p>
-              )}
             </div>
 
             {/* Export Button - Desktop */}
@@ -118,7 +106,19 @@ const ReportHeader = ({
             )}
           </div>
 
-          {/* Export Button - Mobile (Floating Action Button style) */}
+          {/* Project Info */}
+          <div className="space-y-1">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground tracking-tight leading-tight">
+              {projectName} – {unitName}
+            </h1>
+            {clientName && (
+              <p className="text-sm md:text-base text-foreground/70">
+                Cliente: <span className="font-medium text-foreground">{clientName}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Export Button - Mobile (Full width) */}
           {onExportPDF && (
             <div className="md:hidden">
               <Button
