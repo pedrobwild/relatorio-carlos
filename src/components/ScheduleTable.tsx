@@ -20,22 +20,41 @@ interface ScheduleTableProps {
   activities: Activity[];
 }
 
-type Status = "completed" | "delayed" | "on-time" | "pending";
+type Status = "completed" | "delayed" | "on-time" | "in-progress" | "pending";
 type SortField = "description" | "plannedStart" | "plannedEnd" | "actualStart" | "actualEnd" | "status";
 type SortDirection = "asc" | "desc";
 
+// Formata data ISO (YYYY-MM-DD) para dd/mm ou dd/mm/aa se ano diferente do base
+const formatDate = (dateStr: string, baseYear?: number): string => {
+  if (!dateStr) return "—";
+  const date = new Date(dateStr + "T00:00:00");
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  
+  if (baseYear && year !== baseYear) {
+    return `${day}/${month}/${year.toString().slice(-2)}`;
+  }
+  return `${day}/${month}`;
+};
+
 const parseDate = (dateStr: string): Date | null => {
   if (!dateStr) return null;
-  const [day, month] = dateStr.split("/").map(Number);
-  const year = month >= 10 ? 2024 : 2025;
-  return new Date(year, month - 1, day);
+  return new Date(dateStr + "T00:00:00");
 };
 
 const getActivityStatus = (activity: Activity): Status => {
-  if (!activity.actualEnd) {
+  // Not started yet
+  if (!activity.actualStart) {
     return "pending";
   }
+  
+  // Started but not finished
+  if (activity.actualStart && !activity.actualEnd) {
+    return "in-progress";
+  }
 
+  // Finished - check if delayed
   const plannedEnd = parseDate(activity.plannedEnd);
   const actualEnd = parseDate(activity.actualEnd);
 
@@ -61,9 +80,10 @@ const getDelayDays = (activity: Activity): number | null => {
 
 const statusOrder: Record<Status, number> = {
   delayed: 0,
-  pending: 1,
-  "on-time": 2,
-  completed: 3,
+  "in-progress": 1,
+  pending: 2,
+  "on-time": 3,
+  completed: 4,
 };
 
 const StatusBadge = ({ status }: { status: Status }) => {
@@ -81,6 +101,11 @@ const StatusBadge = ({ status }: { status: Status }) => {
     "on-time": {
       icon: Clock,
       label: "No prazo",
+      className: "bg-info/10 text-info border-info/30",
+    },
+    "in-progress": {
+      icon: Clock,
+      label: "Em andamento",
       className: "bg-info/10 text-info border-info/30",
     },
     pending: {
@@ -138,6 +163,11 @@ const SortableHeader = ({ field, currentField, direction, onSort, children, clas
 const ScheduleTable = ({ activities }: ScheduleTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  
+  // Get base year from first activity's planned start
+  const baseYear = activities.length > 0 && activities[0].plannedStart
+    ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
+    : new Date().getFullYear();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -259,7 +289,7 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                     Previsto
                   </p>
                   <p className="text-xs font-semibold text-foreground tabular-nums">
-                    {activity.plannedStart} – {activity.plannedEnd}
+                    {formatDate(activity.plannedStart, baseYear)} – {formatDate(activity.plannedEnd, baseYear)}
                   </p>
                 </div>
                 
@@ -276,7 +306,7 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                   <p className={`text-xs font-semibold tabular-nums ${
                     isDelayed ? "text-warning" : "text-foreground"
                   }`}>
-                    {activity.actualStart || "—"} – {activity.actualEnd || "—"}
+                    {formatDate(activity.actualStart, baseYear)} – {formatDate(activity.actualEnd, baseYear)}
                   </p>
                 </div>
               </div>
@@ -385,18 +415,18 @@ const ScheduleTable = ({ activities }: ScheduleTableProps) => {
                       </div>
                     </TableCell>
                     <TableCell className="py-3.5 text-center text-sm text-muted-foreground tabular-nums">
-                      {activity.plannedStart}
+                      {formatDate(activity.plannedStart, baseYear)}
                     </TableCell>
                     <TableCell className="py-3.5 text-center text-sm text-muted-foreground tabular-nums">
-                      {activity.plannedEnd}
+                      {formatDate(activity.plannedEnd, baseYear)}
                     </TableCell>
                     <TableCell className="py-3.5 text-center text-sm font-medium text-foreground tabular-nums">
-                      {activity.actualStart || "—"}
+                      {formatDate(activity.actualStart, baseYear)}
                     </TableCell>
                     <TableCell className={`py-3.5 text-center text-sm font-medium tabular-nums ${
                       isDelayed ? "text-warning" : "text-foreground"
                     }`}>
-                      {activity.actualEnd || "—"}
+                      {formatDate(activity.actualEnd, baseYear)}
                       {isDelayed && delayDays && (
                         <span className="ml-1.5 text-[10px] text-warning font-semibold">
                           (+{delayDays}d)

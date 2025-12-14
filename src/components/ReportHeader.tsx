@@ -1,6 +1,7 @@
 import bwildLogo from "@/assets/bwild-logo.png";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar, Target, CheckCircle2, PlayCircle } from "lucide-react";
+import { Download, Calendar, Target, TrendingUp, PlayCircle, ArrowRight } from "lucide-react";
+import { Activity } from "@/types/report";
 
 interface ReportHeaderProps {
   projectName: string;
@@ -8,12 +9,24 @@ interface ReportHeaderProps {
   clientName: string;
   startDate: string;
   endDate: string;
-  completedActivities: number;
-  totalActivities: number;
-  startedActivities: number;
+  activities: Activity[];
   onExportPDF?: () => void;
   isExporting?: boolean;
 }
+
+// Formata data como dd/mm ou dd/mm/aa se for ano diferente do ano base
+const formatDate = (dateStr: string, baseYear?: number): string => {
+  if (!dateStr) return "-";
+  const date = new Date(dateStr + "T00:00:00");
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  
+  if (baseYear && year !== baseYear) {
+    return `${day}/${month}/${year.toString().slice(-2)}`;
+  }
+  return `${day}/${month}`;
+};
 
 const ReportHeader = ({
   projectName,
@@ -21,14 +34,21 @@ const ReportHeader = ({
   clientName,
   startDate,
   endDate,
-  completedActivities,
-  totalActivities,
-  startedActivities,
+  activities,
   onExportPDF,
   isExporting = false,
 }: ReportHeaderProps) => {
-  const completedPercentage = ((completedActivities / totalActivities) * 100).toFixed(0);
-  const startedPercentage = ((startedActivities / totalActivities) * 100).toFixed(0);
+  const baseYear = startDate ? new Date(startDate + "T00:00:00").getFullYear() : new Date().getFullYear();
+  
+  // Calculate completion percentage
+  const completedActivities = activities.filter(a => a.actualEnd).length;
+  const completionPercentage = Math.round((completedActivities / activities.length) * 100);
+  
+  // Find current activity (started but not finished)
+  const currentActivity = activities.find(a => a.actualStart && !a.actualEnd);
+  
+  // Find next activity (not started yet)
+  const nextActivity = activities.find(a => !a.actualStart);
 
   return (
     <header className="bg-card rounded-xl shadow-card overflow-hidden mb-6 animate-fade-in">
@@ -100,28 +120,25 @@ const ReportHeader = ({
           <StatCard 
             icon={Calendar}
             label="Início da Obra" 
-            value={startDate}
+            value={formatDate(startDate, baseYear)}
             variant="default"
           />
           <StatCard 
             icon={Target}
             label="Previsão de Término" 
-            value={endDate}
+            value={formatDate(endDate, baseYear)}
             variant="default"
           />
           <StatCard
-            icon={CheckCircle2}
-            label="Atividades Concluídas"
-            value={`${completedActivities}/${totalActivities}`}
-            subValue={`${completedPercentage}%`}
+            icon={TrendingUp}
+            label="Conclusão"
+            value={`${completionPercentage}%`}
+            subValue={`${completedActivities}/${activities.length}`}
             variant="success"
           />
-          <StatCard
-            icon={PlayCircle}
-            label="Atividades Iniciadas"
-            value={`${startedActivities}/${totalActivities}`}
-            subValue={`${startedPercentage}%`}
-            variant="info"
+          <ActivityCard
+            currentActivity={currentActivity?.description}
+            nextActivity={nextActivity?.description}
           />
         </div>
       </div>
@@ -179,6 +196,55 @@ const StatCard = ({ icon: Icon, label, value, subValue, variant = "default" }: S
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+interface ActivityCardProps {
+  currentActivity?: string;
+  nextActivity?: string;
+}
+
+const ActivityCard = ({ currentActivity, nextActivity }: ActivityCardProps) => {
+  return (
+    <div className="bg-card rounded-lg p-3 md:p-4 border border-border/50 hover:border-border transition-colors col-span-2 lg:col-span-1">
+      <div className="flex flex-col gap-2">
+        {currentActivity && (
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 w-6 h-6 rounded-full bg-info/10 flex items-center justify-center mt-0.5">
+              <PlayCircle className="w-3.5 h-3.5 text-info" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+                Em andamento
+              </p>
+              <p className="text-xs md:text-sm font-medium text-foreground truncate" title={currentActivity}>
+                {currentActivity}
+              </p>
+            </div>
+          </div>
+        )}
+        {nextActivity && (
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center mt-0.5">
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+                Próxima
+              </p>
+              <p className="text-xs md:text-sm font-medium text-muted-foreground truncate" title={nextActivity}>
+                {nextActivity}
+              </p>
+            </div>
+          </div>
+        )}
+        {!currentActivity && !nextActivity && (
+          <div className="flex items-center justify-center h-full py-2">
+            <p className="text-xs text-muted-foreground">Obra concluída</p>
+          </div>
+        )}
       </div>
     </div>
   );
