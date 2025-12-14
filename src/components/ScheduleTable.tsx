@@ -7,138 +7,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { Activity } from "@/types/report";
 
-interface Activity {
-  description: string;
-  plannedStart: string;
-  plannedEnd: string;
-  actualStart: string;
-  actualEnd: string;
+interface ScheduleTableProps {
+  activities: Activity[];
 }
 
-const activities: Activity[] = [
-  {
-    description: "EMPREITA 8 - Nivelamento de contra piso.",
-    plannedStart: "17/11",
-    plannedEnd: "18/11",
-    actualStart: "12/12",
-    actualEnd: "13/12",
-  },
-  {
-    description: "EMPREITA 9 - Instalação do piso vinílico",
-    plannedStart: "18/11",
-    plannedEnd: "19/11",
-    actualStart: "12/12",
-    actualEnd: "13/12",
-  },
-  {
-    description: "EMPREITA 10 - Cobrir o Piso.",
-    plannedStart: "19/11",
-    plannedEnd: "19/11",
-    actualStart: "13/12",
-    actualEnd: "13/12",
-  },
-  {
-    description: "MARCENARIA – Montagem dos móveis marcenaria.",
-    plannedStart: "24/11",
-    plannedEnd: "1/12",
-    actualStart: "16/12",
-    actualEnd: "19/12",
-  },
-  {
-    description: "VIDROS E ESPELHOS 3 - Instalação do box",
-    plannedStart: "1/12",
-    plannedEnd: "5/12",
-    actualStart: "17/12",
-    actualEnd: "17/12",
-  },
-  {
-    description: "AR CONDICIONADO 3 - Instalação das máquinas de ar condicionado.",
-    plannedStart: "17/11",
-    plannedEnd: "17/11",
-    actualStart: "5/1",
-    actualEnd: "12/1",
-  },
-  {
-    description: "COMPRAS 7 - Solicitação do Enxoval, Acessórios de cozinha, Acessórios de banheiro e diversos",
-    plannedStart: "8/12",
-    plannedEnd: "10/12",
-    actualStart: "11/12",
-    actualEnd: "12/12",
-  },
-  {
-    description: "EMPREITA 12- Instalação do rodapé.",
-    plannedStart: "8/12",
-    plannedEnd: "12/12",
-    actualStart: "5/1",
-    actualEnd: "7/1",
-  },
-  {
-    description: "EMPREITA 13 - Finalização da pintura.",
-    plannedStart: "8/12",
-    plannedEnd: "12/12",
-    actualStart: "5/1",
-    actualEnd: "7/1",
-  },
-  {
-    description: "EMPREITA 13.1 Finalização de instalação de iluminação",
-    plannedStart: "15/12",
-    plannedEnd: "18/12",
-    actualStart: "5/1",
-    actualEnd: "7/1",
-  },
-  {
-    description: "CARRETO - Buscar materiais.",
-    plannedStart: "15/12",
-    plannedEnd: "18/12",
-    actualStart: "8/1",
-    actualEnd: "8/1",
-  },
-  {
-    description: "EMPREITA 14- Instalação de acessórios.",
-    plannedStart: "15/12",
-    plannedEnd: "18/12",
-    actualStart: "9/1",
-    actualEnd: "14/1",
-  },
-  {
-    description: "EMPREITA 15- Montagem de mobiliários.",
-    plannedStart: "15/12",
-    plannedEnd: "18/12",
-    actualStart: "9/1",
-    actualEnd: "14/1",
-  },
-  {
-    description: "VIDROS E ESPELHOS 4 - Instalação dos espelhos.",
-    plannedStart: "15/12",
-    plannedEnd: "18/12",
-    actualStart: "9/1",
-    actualEnd: "14/1",
-  },
-  {
-    description: "CORTINA 2- Instalação da cortina.",
-    plannedStart: "15/12",
-    plannedEnd: "18/12",
-    actualStart: "16/01",
-    actualEnd: "16/01",
-  },
-  {
-    description: "Limpeza",
-    plannedStart: "16/01",
-    plannedEnd: "16/01",
-    actualStart: "17/01",
-    actualEnd: "17/01",
-  },
-];
-
-type Status = "completed" | "delayed" | "on-time";
+type Status = "completed" | "delayed" | "on-time" | "pending";
 
 const getActivityStatus = (activity: Activity): Status => {
-  // Simple logic: if actual dates exist, it's completed
-  // Compare dates to determine if delayed
+  if (!activity.actualEnd) {
+    return "pending";
+  }
+
   const parseDate = (dateStr: string): Date => {
     const [day, month] = dateStr.split("/").map(Number);
-    const year = month >= 11 ? 2024 : 2025; // Assuming Nov-Dec 2024, Jan 2025
+    const year = month >= 10 ? 2024 : 2025;
     return new Date(year, month - 1, day);
   };
 
@@ -168,6 +52,11 @@ const StatusBadge = ({ status }: { status: Status }) => {
       label: "No prazo",
       className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
     },
+    pending: {
+      icon: Clock,
+      label: "Pendente",
+      className: "bg-muted text-muted-foreground border-border",
+    },
   };
 
   const { icon: Icon, label, className } = config[status];
@@ -182,7 +71,14 @@ const StatusBadge = ({ status }: { status: Status }) => {
   );
 };
 
-const ScheduleTable = () => {
+const ScheduleTable = ({ activities }: ScheduleTableProps) => {
+  if (activities.length === 0) {
+    return (
+      <div className="mt-6 md:mt-8 text-center text-muted-foreground py-8">
+        Nenhuma atividade cadastrada.
+      </div>
+    );
+  }
   return (
     <div className="mt-6 md:mt-8">
       <h3 className="text-base md:text-xl font-bold text-foreground mb-3 md:mb-4">
