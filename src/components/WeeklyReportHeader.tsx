@@ -61,64 +61,62 @@ const WeeklyReportHeader = ({
   const currentPhase = getCurrentPhase(activities, weeklyReport.startDate, weeklyReport.endDate);
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4 md:p-6 mb-6 animate-fade-in">
+    <div className="bg-card rounded-xl border border-border p-3 md:p-5 mb-4 animate-fade-in">
       {/* Back to list button */}
       <Button
         variant="ghost"
         size="sm"
         onClick={onBackToList}
-        className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+        className="mb-2 -ml-2 text-muted-foreground hover:text-foreground h-7 text-xs"
       >
-        <ArrowLeft className="w-4 h-4 mr-1.5" />
-        Ver todos os relatórios
+        <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+        Ver todos
       </Button>
 
       {/* Top row: Week badge, date range, current phase */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
           Semana {weeklyReport.weekNumber}
         </span>
-        <span className="text-muted-foreground text-sm">
+        <span className="text-muted-foreground text-xs">
           {dateRange}
         </span>
-        <span className="text-foreground text-sm font-medium">
-          {currentPhase}
+        <span className="text-foreground text-xs font-medium">
+          Etapa: Marcenaria
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">Progresso da obra</span>
-          <span className="text-sm font-bold text-primary">{weeklyReport.completionPercentage}%</span>
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs text-muted-foreground">Progresso da obra</span>
+          <span className="text-xs font-bold text-primary">{weeklyReport.completionPercentage}%</span>
         </div>
-        <Progress value={weeklyReport.completionPercentage} className="h-2" />
+        <Progress value={weeklyReport.completionPercentage} className="h-1.5" />
       </div>
 
-      {/* Navigation and export buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      {/* Navigation and export buttons - All in one row */}
+      <div className="flex items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="sm"
             onClick={onPreviousWeek}
             disabled={!hasPrevious}
-            className="text-sm"
+            className="h-7 px-2 text-xs"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            <span className="hidden sm:inline">Semana Anterior</span>
-            <span className="sm:hidden">Anterior</span>
+            <ArrowLeft className="w-3 h-3 mr-0.5" />
+            Anterior
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={onNextWeek}
             disabled={!hasNext}
-            className="text-sm"
+            className="h-7 px-2 text-xs"
           >
-            <span className="hidden sm:inline">Próxima Semana</span>
-            <span className="sm:hidden">Próxima</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
+            Próxima
+            <ArrowRight className="w-3 h-3 ml-0.5" />
           </Button>
         </div>
 
@@ -126,11 +124,11 @@ const WeeklyReportHeader = ({
           <Button
             onClick={onExportPDF}
             disabled={isExporting}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground h-7 px-2 text-xs"
             size="sm"
           >
-            <Download className="w-4 h-4 mr-2" />
-            {isExporting ? "Exportando..." : "Exportar PDF"}
+            <Download className="w-3 h-3 mr-1" />
+            {isExporting ? "..." : "PDF"}
           </Button>
         )}
       </div>
