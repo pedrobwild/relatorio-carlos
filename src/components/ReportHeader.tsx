@@ -218,14 +218,12 @@ const ReportHeader = ({
         </div>
 
         {/* Row 3: Dates - Compact horizontal */}
-        <div className="flex items-center justify-between text-xs mb-3 pb-3 border-b border-border">
+        <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
           {dateMetrics.map((metric, index) => (
-            <div key={metric.label} className="flex items-center gap-1.5">
+            <div key={metric.label} className="flex items-center gap-1">
               <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
-              <div>
-                <span className="text-foreground/60">{metric.label}: </span>
-                <span className="font-medium text-foreground">{metric.value}</span>
-              </div>
+              <span className="text-[10px] text-foreground/60">{metric.label}:</span>
+              <span className="text-[10px] font-medium text-foreground">{metric.value}</span>
             </div>
           ))}
         </div>
@@ -236,19 +234,19 @@ const ReportHeader = ({
             <a
               key={contact.role}
               href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-              className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 active:bg-accent/50 transition-colors"
+              className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/30 active:bg-accent/50 transition-colors"
             >
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-accent shrink-0">
-                <User className="w-4 h-4 text-accent-foreground" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent shrink-0">
+                <User className="w-3.5 h-3.5 text-accent-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-foreground/60">{contact.role}</p>
-                <p className="text-sm font-medium text-foreground">{contact.name}</p>
+                <p className="text-[10px] text-foreground/60">{contact.role}</p>
+                <p className="text-xs font-medium text-foreground">{contact.name}</p>
               </div>
-              <div className="flex items-center gap-1 text-xs text-primary shrink-0">
-                <Phone className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1 text-[10px] text-primary shrink-0">
+                <Phone className="w-3 h-3" />
                 <span>Ligar</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-3 h-3" />
               </div>
             </a>
           ))}
