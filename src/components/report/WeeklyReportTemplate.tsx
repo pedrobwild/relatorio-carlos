@@ -13,28 +13,50 @@ interface WeeklyReportTemplateProps {
 
 const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* 2. Executive Summary */}
-      <ExecutiveSummary data={data} />
+    <div className="space-y-8 animate-fade-in">
+      {/* Executive Summary */}
+      <section>
+        <ExecutiveSummary data={data} />
+      </section>
 
-      {/* 3. Progress Evolution Chart (S-Curve) */}
-      <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
+      {/* Progress Evolution Chart (S-Curve) */}
+      <section className="pt-2">
+        <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
+      </section>
 
-      {/* 4. Lookahead (Next 7 Days) */}
-      <LookaheadSection tasks={data.lookaheadTasks} />
+      {/* Divider */}
+      <div className="border-t border-border/50" />
 
-      {/* 5. Risks, Issues, Action Plans */}
-      <RisksIssuesSection issues={data.risksAndIssues} />
+      {/* Lookahead (Next 7 Days) */}
+      <section>
+        <LookaheadSection tasks={data.lookaheadTasks} />
+      </section>
 
+      {/* Risks, Issues, Action Plans */}
+      <section>
+        <RisksIssuesSection issues={data.risksAndIssues} />
+      </section>
 
-      {/* 7. Client Decisions */}
-      <ClientDecisionsSection decisions={data.clientDecisions} />
+      {/* Divider */}
+      <div className="border-t border-border/50" />
 
-      {/* 8. Photo Gallery */}
-      <PhotoGallery photos={data.gallery} />
+      {/* Client Decisions */}
+      <section>
+        <ClientDecisionsSection decisions={data.clientDecisions} />
+      </section>
 
-      {/* 9. Footer */}
-      <ReportFooter data={data} />
+      {/* Photo Gallery */}
+      <section>
+        <PhotoGallery photos={data.gallery} />
+      </section>
+
+      {/* Divider */}
+      <div className="border-t border-border/50" />
+
+      {/* Footer */}
+      <section>
+        <ReportFooter data={data} />
+      </section>
     </div>
   );
 };
