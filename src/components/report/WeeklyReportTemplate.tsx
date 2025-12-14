@@ -13,14 +13,14 @@ interface WeeklyReportTemplateProps {
 
 const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* Executive Summary */}
       <section>
         <ExecutiveSummary data={data} />
       </section>
 
       {/* Progress Evolution Chart (S-Curve) */}
-      <section className="pt-2">
+      <section>
         <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
       </section>
 
