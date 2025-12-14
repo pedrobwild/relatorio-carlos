@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
-import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Mail, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Mail, ChevronDown } from "lucide-react";
 import { Activity } from "@/types/report";
 
 interface ReportHeaderProps {
@@ -121,11 +121,7 @@ const ReportHeader = ({
                 </div>
                 <div className="flex items-center gap-1 px-2.5 py-1 rounded-md text-muted-foreground">
                   <span className="text-sm">Contato</span>
-                  {expandedContact === contact.role ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
                 </div>
               </button>
               
@@ -222,11 +218,7 @@ const ReportHeader = ({
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
                   <span className="text-[10px] font-semibold">Contato</span>
-                  {expandedContact === contact.role ? (
-                    <ChevronUp className="w-3 h-3" />
-                  ) : (
-                    <ChevronDown className="w-3 h-3" />
-                  )}
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
                 </div>
               </button>
               
@@ -336,11 +328,7 @@ const ReportHeader = ({
                   </div>
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
                     <span className="text-[10px] font-semibold">Contato</span>
-                    {expandedContact === contact.role ? (
-                      <ChevronUp className="w-3 h-3" />
-                    ) : (
-                      <ChevronDown className="w-3 h-3" />
-                    )}
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
                   </div>
                 </button>
                 
