@@ -36,15 +36,18 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
               </div>
             )}
             
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1.5 sm:gap-3 text-xs">
+            <div className="flex flex-col gap-1.5 text-xs">
               <div className="flex items-start gap-1.5 text-destructive">
                 <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
                 <span><span className="font-medium">Se atrasar:</span> {decision.impactIfDelayed}</span>
               </div>
               <div className="flex items-center gap-1.5 text-warning font-semibold">
                 <Calendar className="w-3 h-3 shrink-0" />
-                <span>Precisamos até {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}</span>
+                <span>Prazo para decisão: {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}</span>
               </div>
+              <p className="text-foreground/60 text-[10px] sm:text-xs leading-snug">
+                <span className="font-medium">Importante:</span> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
+              </p>
             </div>
           </div>
         ))}
