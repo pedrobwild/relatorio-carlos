@@ -1,6 +1,6 @@
 import { WeeklyReportActivitySnapshot } from "@/types/weeklyReport";
+import { startOfWeek, addWeeks, isBefore, isAfter, differenceInDays } from "date-fns";
 import {
-  AreaChart,
   Area,
   XAxis,
   YAxis,
@@ -9,58 +9,99 @@ import {
   ResponsiveContainer,
   Line,
   ComposedChart,
-  Legend,
 } from "recharts";
 
 interface ProgressEvolutionChartProps {
   activities: WeeklyReportActivitySnapshot[];
   currentWeek: number;
+  projectStartDate?: string;
 }
+
+// Calculate progress at a given date based on activities
+const calculateProgressAtDate = (
+  activities: WeeklyReportActivitySnapshot[],
+  targetDate: Date,
+  useActual: boolean
+): number => {
+  const totalActivities = activities.length;
+  if (totalActivities === 0) return 0;
+
+  let totalProgress = 0;
+
+  activities.forEach((activity) => {
+    const plannedStart = new Date(activity.plannedStart);
+    const plannedEnd = new Date(activity.plannedEnd);
+    
+    if (useActual) {
+      // Calculate actual progress
+      const actualStart = activity.actualStart ? new Date(activity.actualStart) : null;
+      const actualEnd = activity.actualEnd ? new Date(activity.actualEnd) : null;
+
+      if (actualEnd && actualEnd <= targetDate) {
+        // Activity completed
+        totalProgress += 100;
+      } else if (actualStart && actualStart <= targetDate) {
+        // Activity in progress - estimate based on time elapsed
+        const totalDuration = differenceInDays(plannedEnd, plannedStart) || 1;
+        const elapsed = differenceInDays(targetDate, actualStart);
+        const progress = Math.min(95, Math.max(0, (elapsed / totalDuration) * 100));
+        totalProgress += progress;
+      }
+      // If not started, progress is 0
+    } else {
+      // Calculate planned progress
+      if (plannedEnd <= targetDate) {
+        // Should be completed by this date
+        totalProgress += 100;
+      } else if (plannedStart <= targetDate) {
+        // Should be in progress
+        const totalDuration = differenceInDays(plannedEnd, plannedStart) || 1;
+        const elapsed = differenceInDays(targetDate, plannedStart);
+        const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+        totalProgress += progress;
+      }
+      // If not started yet, progress is 0
+    }
+  });
+
+  return Math.round(totalProgress / totalActivities);
+};
 
 // Generate weekly progress data based on activities
 const generateWeeklyProgressData = (
   activities: WeeklyReportActivitySnapshot[],
-  currentWeek: number
+  currentWeek: number,
+  projectStartDate: string
 ) => {
   const data = [];
-  const totalActivities = activities.length;
+  const startDate = new Date(projectStartDate);
   
   for (let week = 1; week <= currentWeek; week++) {
-    // Calculate planned progress for this week (linear distribution based on activity completion)
-    const plannedProgress = Math.min(100, Math.round((week / 11) * 100)); // Assuming 11 weeks total
+    // Get the end of each week
+    const weekEndDate = addWeeks(startOfWeek(startDate, { weekStartsOn: 1 }), week);
     
-    // Calculate actual progress based on activities completed by this week
-    let actualProgress = 0;
+    // Calculate planned progress at this week
+    const previsto = calculateProgressAtDate(activities, weekEndDate, false);
     
-    if (week <= currentWeek) {
-      // Simulate realistic progress curve
-      const progressCurve: Record<number, number> = {
-        1: 10,
-        2: 10,
-        3: 20,
-        4: 20,
-        5: 30,
-        6: 30,
-        7: 50,
-        8: 50,
-        9: 50,
-        10: 60,
-      };
-      actualProgress = progressCurve[week] || Math.round((week / 11) * 100);
-    }
+    // Calculate actual progress at this week
+    const realizado = calculateProgressAtDate(activities, weekEndDate, true);
     
     data.push({
       week: `S${week}`,
-      previsto: plannedProgress,
-      realizado: actualProgress,
+      previsto,
+      realizado,
     });
   }
   
   return data;
 };
 
-const ProgressEvolutionChart = ({ activities, currentWeek }: ProgressEvolutionChartProps) => {
-  const data = generateWeeklyProgressData(activities, currentWeek);
+const ProgressEvolutionChart = ({ 
+  activities, 
+  currentWeek,
+  projectStartDate = "2025-07-01" 
+}: ProgressEvolutionChartProps) => {
+  const data = generateWeeklyProgressData(activities, currentWeek, projectStartDate);
 
   return (
     <div className="bg-card rounded-lg border border-border p-4 md:p-6">
