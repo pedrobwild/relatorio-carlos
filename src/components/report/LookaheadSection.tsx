@@ -56,9 +56,9 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
             </div>
             
             {task.riskReason && (
-              <div className="flex items-start gap-2 text-xs sm:text-sm text-warning bg-warning/10 p-3 rounded-lg">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{task.riskReason}</span>
+              <div className="flex items-start gap-2 text-xs sm:text-sm bg-warning/10 p-3 rounded-lg">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
+                <span className="leading-relaxed text-foreground">{task.riskReason}</span>
               </div>
             )}
           </div>
