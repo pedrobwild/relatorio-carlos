@@ -69,15 +69,16 @@ const Index = () => {
   const startedActivities = reportData.activities.filter(a => a.actualStart).length;
 
   return (
-    <div className="min-h-screen p-3 md:p-8">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <Button
           variant="ghost"
-          className="mb-4 -ml-2"
+          size="sm"
+          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
           onClick={() => navigate("/")}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
           Voltar
         </Button>
 
@@ -95,39 +96,43 @@ const Index = () => {
             isExporting={isExporting}
           />
 
-        <div className="bg-card rounded-xl shadow-card overflow-hidden animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="border-b-2 border-border px-3 md:px-6">
-              <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto">
-                <TabsTrigger
-                  value="curvaS"
-                  className="flex-1 md:flex-none data-[state=active]:bg-accent data-[state=active]:text-primary data-[state=active]:border-b-4 data-[state=active]:border-primary data-[state=inactive]:border-b-4 data-[state=inactive]:border-transparent rounded-none px-3 md:px-8 py-3 md:py-4 font-bold text-xs md:text-base transition-all"
-                >
-                  <BarChart3 className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" />
-                  Curva S
-                </TabsTrigger>
-                <TabsTrigger
-                  value="relatorio"
-                  className="flex-1 md:flex-none data-[state=active]:bg-accent data-[state=active]:text-primary data-[state=active]:border-b-4 data-[state=active]:border-primary data-[state=inactive]:border-b-4 data-[state=inactive]:border-transparent rounded-none px-3 md:px-8 py-3 md:py-4 font-bold text-xs md:text-base transition-all"
-                >
-                  <FileText className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" />
-                  Relatório
-                </TabsTrigger>
-              </TabsList>
-            </div>
+          <div className="bg-card rounded-xl shadow-card overflow-hidden animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              {/* Tabs Navigation */}
+              <div className="border-b border-border bg-secondary/30">
+                <div className="px-4 md:px-6">
+                  <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto">
+                    <TabsTrigger
+                      value="curvaS"
+                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-4 md:px-6 py-3.5 md:py-4 font-semibold text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Curva S
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="relatorio"
+                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-4 md:px-6 py-3.5 md:py-4 font-semibold text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Relatório
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+              </div>
 
-            <div className="p-3 md:p-8">
-              <TabsContent value="curvaS" className="mt-0">
-                <SCurveChart activities={reportData.activities} />
-                <ScheduleTable activities={reportData.activities} />
-              </TabsContent>
+              {/* Tab Content */}
+              <div className="p-4 md:p-6 lg:p-8">
+                <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
+                  <SCurveChart activities={reportData.activities} />
+                  <ScheduleTable activities={reportData.activities} />
+                </TabsContent>
 
-              <TabsContent value="relatorio" className="mt-0">
-                <TechnicalReport />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
+                <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
+                  <TechnicalReport />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
