@@ -191,21 +191,14 @@ const ReportHeader = ({
 
       {/* Mobile Layout (< sm) */}
       <div className="sm:hidden p-3">
-        {/* Row 1: Logo + Project info */}
-        <div className="flex items-center gap-2.5 mb-3 pb-3 border-b border-border">
-          <img 
-            src={bwildLogo} 
-            alt="Bwild" 
-            className="h-6 w-auto shrink-0"
-          />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-semibold text-foreground leading-tight truncate">
-              {projectName} – {unitName}
-            </h1>
-            {clientName && (
-              <p className="text-xs text-foreground/70">{clientName}</p>
-            )}
-          </div>
+        {/* Row 1: Project info */}
+        <div className="mb-3 pb-3 border-b border-border">
+          <h1 className="text-sm font-semibold text-foreground leading-tight">
+            {projectName} – {unitName}
+          </h1>
+          {clientName && (
+            <p className="text-xs text-foreground/70">{clientName}</p>
+          )}
         </div>
 
         {/* Row 2: Quick Links - Icon grid */}
