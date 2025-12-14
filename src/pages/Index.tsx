@@ -7,42 +7,12 @@ import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
+import WeeklyReportsHistory, { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
+import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport } from "@/types/report";
 import { week10SeedData } from "@/data/week10SeedData";
-import { startOfWeek, endOfWeek, addWeeks, isBefore, isAfter } from "date-fns";
-
-// Helper to generate all weekly reports
-const generateAllWeeklyReports = (
-  projectStartDate: string,
-  reportDate: string
-): WeeklyReport[] => {
-  const startDate = new Date(projectStartDate);
-  const currentReportDate = new Date(reportDate);
-  const reports: WeeklyReport[] = [];
-  
-  let weekNumber = 1;
-  let weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
-  
-  while (isBefore(weekStart, currentReportDate) || weekStart.getTime() === currentReportDate.getTime()) {
-    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-    
-    reports.push({
-      weekNumber,
-      startDate: weekStart,
-      endDate: isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd,
-      completionPercentage: 0, // Will be calculated separately
-    });
-    
-    weekStart = addWeeks(weekStart, 1);
-    weekNumber++;
-    
-    if (weekNumber > 52) break;
-  }
-  
-  return reports;
-};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -55,8 +25,13 @@ const Index = () => {
 
   const allWeeklyReports = useMemo(() => {
     if (!reportData) return [];
-    return generateAllWeeklyReports(reportData.startDate, reportData.reportDate);
+    return generateWeeklyReports(reportData.startDate, reportData.reportDate, reportData.activities);
   }, [reportData]);
+
+  // Get reports in chronological order (oldest first) for navigation
+  const reportsChronological = useMemo(() => {
+    return [...allWeeklyReports].reverse();
+  }, [allWeeklyReports]);
 
   useEffect(() => {
     const storedData = sessionStorage.getItem("currentReport");
@@ -95,6 +70,31 @@ const Index = () => {
       toast.error("Erro ao gerar PDF. Tente novamente.");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleReportClick = (report: WeeklyReport, index: number) => {
+    setSelectedWeeklyReport(report);
+    setSelectedWeekIndex(index);
+  };
+
+  const handleBackToList = () => {
+    setSelectedWeeklyReport(null);
+  };
+
+  const handlePreviousWeek = () => {
+    if (selectedWeekIndex > 0) {
+      const newIndex = selectedWeekIndex - 1;
+      setSelectedWeekIndex(newIndex);
+      setSelectedWeeklyReport(reportsChronological[newIndex]);
+    }
+  };
+
+  const handleNextWeek = () => {
+    if (selectedWeekIndex < reportsChronological.length - 1) {
+      const newIndex = selectedWeekIndex + 1;
+      setSelectedWeekIndex(newIndex);
+      setSelectedWeeklyReport(reportsChronological[newIndex]);
     }
   };
 
@@ -176,37 +176,33 @@ const Index = () => {
                 </TabsContent>
 
                 <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
-                  {/* Actions Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                    <h2 className="text-lg font-semibold text-foreground">
-                      Semana {week10SeedData.weekNumber} - {week10SeedData.projectName} {week10SeedData.unitName}
-                    </h2>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(window.location.href);
-                          toast.success("Link copiado!");
-                        }}
-                      >
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Compartilhar
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleExportPDF}
-                        disabled={isExporting}
-                        className="bg-primary hover:bg-primary/90"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        {isExporting ? "Exportando..." : "Exportar PDF"}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Week 10 Seed Data Template */}
-                  <WeeklyReportTemplate data={week10SeedData} />
+                  {selectedWeeklyReport ? (
+                    <>
+                      {/* Weekly Report Header with Navigation */}
+                      <WeeklyReportHeader
+                        weeklyReport={selectedWeeklyReport}
+                        activities={reportData.activities}
+                        onPreviousWeek={handlePreviousWeek}
+                        onNextWeek={handleNextWeek}
+                        onBackToList={handleBackToList}
+                        onExportPDF={handleExportPDF}
+                        isExporting={isExporting}
+                        hasPrevious={selectedWeekIndex > 0}
+                        hasNext={selectedWeekIndex < reportsChronological.length - 1}
+                      />
+                      
+                      {/* Week 10 Seed Data Template (for demo purposes) */}
+                      <WeeklyReportTemplate data={week10SeedData} />
+                    </>
+                  ) : (
+                    /* Weekly Reports History List */
+                    <WeeklyReportsHistory
+                      projectStartDate={reportData.startDate}
+                      reportDate={reportData.reportDate}
+                      activities={reportData.activities}
+                      onReportClick={handleReportClick}
+                    />
+                  )}
                 </TabsContent>
               </div>
             </Tabs>

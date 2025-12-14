@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, ArrowRight, Download } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { WeeklyReport, Activity } from "@/types/report";
@@ -8,9 +8,9 @@ import { WeeklyReport, Activity } from "@/types/report";
 interface WeeklyReportHeaderProps {
   weeklyReport: WeeklyReport;
   activities: Activity[];
-  totalWeeks: number;
   onPreviousWeek: () => void;
   onNextWeek: () => void;
+  onBackToList: () => void;
   onExportPDF?: () => void;
   isExporting?: boolean;
   hasPrevious: boolean;
@@ -49,9 +49,9 @@ const getCurrentPhase = (activities: Activity[], weekStart: Date, weekEnd: Date)
 const WeeklyReportHeader = ({
   weeklyReport,
   activities,
-  totalWeeks,
   onPreviousWeek,
   onNextWeek,
+  onBackToList,
   onExportPDF,
   isExporting,
   hasPrevious,
@@ -62,6 +62,17 @@ const WeeklyReportHeader = ({
 
   return (
     <div className="bg-card rounded-xl border border-border p-4 md:p-6 mb-6 animate-fade-in">
+      {/* Back to list button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onBackToList}
+        className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="w-4 h-4 mr-1.5" />
+        Ver todos os relatórios
+      </Button>
+
       {/* Top row: Week badge, date range, current phase */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap">
@@ -95,7 +106,8 @@ const WeeklyReportHeader = ({
             className="text-sm"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Semana Anterior
+            <span className="hidden sm:inline">Semana Anterior</span>
+            <span className="sm:hidden">Anterior</span>
           </Button>
           <Button
             variant="outline"
@@ -104,7 +116,8 @@ const WeeklyReportHeader = ({
             disabled={!hasNext}
             className="text-sm"
           >
-            Próxima Semana
+            <span className="hidden sm:inline">Próxima Semana</span>
+            <span className="sm:hidden">Próxima</span>
             <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
