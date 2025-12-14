@@ -26,7 +26,7 @@ export const week10SeedData: WeeklyReportData = {
   },
   
   nextMilestones: [
-    { description: "Concluir Mobiliário e eletros", dueDate: "2025-09-10", status: "pending" },
+    { description: "Concluir instalação de mobiliário e eletros", dueDate: "2025-09-10", status: "pending" },
     { description: "Limpeza fina", dueDate: "2025-09-11", status: "pending" },
     { description: "Vistoria de qualidade", dueDate: "2025-09-12", status: "pending" },
     { description: "Conclusão/Entrega", dueDate: "2025-09-14", status: "pending" },
@@ -103,7 +103,7 @@ export const week10SeedData: WeeklyReportData = {
     },
     {
       activityId: "7",
-      description: "Mobiliário e eletros",
+      description: "Etapa atual: Instalação de mobiliário e eletros",
       plannedStart: "2025-09-08",
       plannedEnd: "2025-09-10",
       actualStart: "2025-09-08",

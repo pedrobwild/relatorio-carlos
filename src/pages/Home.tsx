@@ -59,7 +59,7 @@ const sampleReportData: ReportData = {
       actualEnd: "2025-09-05",
     },
     {
-      description: "Mobiliário e eletros",
+      description: "Etapa atual: Instalação de mobiliário e eletros",
       plannedStart: "2025-09-08",
       plannedEnd: "2025-09-10",
       actualStart: "2025-09-08",
