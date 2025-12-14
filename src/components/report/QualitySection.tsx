@@ -36,10 +36,10 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
     <div className="space-y-4">
       {/* Checklists Executed */}
       <div className="bg-card rounded-lg border border-border">
-        <div className="p-4 border-b border-border">
+        <div className="p-4 sm:p-5 border-b border-border">
           <div className="flex items-center gap-2">
-            <CheckSquare className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium text-foreground">Qualidade, Testes e Pendências</h3>
+            <CheckSquare className="w-5 h-5 text-primary shrink-0" />
+            <h3 className="text-base sm:text-lg font-semibold text-foreground">Qualidade, Testes e Pendências</h3>
           </div>
         </div>
         
@@ -124,10 +124,10 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
 
       {/* Pending Items (Semáforo) */}
       {allPendingItems.length > 0 && (
-        <div className="bg-card rounded-lg border border-border p-4">
+        <div className="bg-card rounded-lg border border-border p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium text-foreground">Pendências para Entrega</h3>
+            <Clock className="w-5 h-5 text-primary shrink-0" />
+            <h3 className="text-base sm:text-lg font-semibold text-foreground">Pendências para Entrega</h3>
           </div>
           <ul className="space-y-2">
             {allPendingItems.map((item) => (

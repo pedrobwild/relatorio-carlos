@@ -34,11 +34,11 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 sm:p-5 border-b border-border">
         <div className="flex items-center gap-2">
-          <Camera className="w-4 h-4 text-foreground/60 shrink-0" />
-          <h3 className="text-sm font-semibold text-foreground">Galeria de Fotos</h3>
-          <span className="text-xs text-foreground/60">({photos.length} fotos)</span>
+          <Camera className="w-5 h-5 text-primary shrink-0" />
+          <h3 className="text-base sm:text-lg font-semibold text-foreground">Galeria de Fotos</h3>
+          <span className="text-sm text-foreground/60">({photos.length} fotos)</span>
         </div>
       </div>
       
