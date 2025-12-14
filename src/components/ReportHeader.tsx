@@ -32,7 +32,7 @@ const ReportHeader = ({
   const quickLinks = [
     { icon: FileText, label: "Contrato", href: "#contrato" },
     { icon: Box, label: "Projeto 3D", href: "#projeto-3d" },
-    { icon: Ruler, label: "Projeto Executivo", href: "#projeto-executivo" },
+    { icon: Ruler, label: "Executivo", href: "#projeto-executivo" },
     { icon: DollarSign, label: "Financeiro", href: "#financeiro" },
     { icon: Headphones, label: "Suporte", href: "#suporte" },
   ];
@@ -204,18 +204,18 @@ const ReportHeader = ({
 
         {/* Row 2: Quick Links - Icon grid */}
         <div className="mb-3 pb-3 border-b border-border">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Documentos</p>
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Menu de Acesso</p>
           <div className="grid grid-cols-5 gap-1">
             {quickLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className="flex flex-col items-center justify-center gap-1.5 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all min-h-[52px]"
+                className="flex flex-col items-center justify-center gap-1.5 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all min-h-[56px]"
               >
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
-                  <link.icon className="w-3.5 h-3.5" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                  <link.icon className="w-4 h-4" />
                 </div>
-                <span className="text-[9px] font-medium leading-tight text-center">{link.label}</span>
+                <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
               </a>
             ))}
           </div>
