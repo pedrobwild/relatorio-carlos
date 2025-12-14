@@ -20,7 +20,7 @@ export const week10SeedData: WeeklyReportData = {
   preparedBy: "Eng. Pedro Henrique",
   
   kpis: {
-    physicalPlanned: 62,
+    physicalPlanned: 60,
     physicalActual: 60,
     scheduleVarianceDays: 0,
   },
