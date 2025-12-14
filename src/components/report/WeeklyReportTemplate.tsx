@@ -1,5 +1,4 @@
 import { WeeklyReportData } from "@/types/weeklyReport";
-import ReportKPICards from "./ReportKPICards";
 import ExecutiveSummary from "./ExecutiveSummary";
 import ProgressEvolutionChart from "./ProgressEvolutionChart";
 import LookaheadSection from "./LookaheadSection";
@@ -8,7 +7,6 @@ import QualitySection from "./QualitySection";
 import ClientDecisionsSection from "./ClientDecisionsSection";
 import PhotoGallery from "./PhotoGallery";
 import ReportFooter from "./ReportFooter";
-
 interface WeeklyReportTemplateProps {
   data: WeeklyReportData;
 }
@@ -16,9 +14,6 @@ interface WeeklyReportTemplateProps {
 const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* 1. KPIs and Header */}
-      <ReportKPICards data={data} />
-
       {/* 2. Executive Summary */}
       <ExecutiveSummary data={data} />
 
