@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { WeeklyReport, Activity } from "@/types/report";
+import WeeklyProgressChart from "./WeeklyProgressChart";
 
 interface ReportSectionProps {
   title: string;
@@ -13,6 +14,7 @@ interface TechnicalReportProps {
   clientName: string;
   activities: Activity[];
   endDate: string;
+  projectStartDate: string;
 }
 
 const sectionVariants = {
@@ -106,7 +108,7 @@ const getStatusMessage = (completion: number, weekNumber: number): string => {
   return "Estamos finalizando os últimos detalhes para entrega. A obra está em fase de conclusão e limpeza final.";
 };
 
-const TechnicalReport = ({ weeklyReport, clientName, activities, endDate }: TechnicalReportProps) => {
+const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projectStartDate }: TechnicalReportProps) => {
   const totalWeeks = 20; // Estimated total project weeks
   const phase = getPhaseDescription(weeklyReport.weekNumber, totalWeeks);
   const { completed, inProgress, upcoming } = getWeekActivities(
@@ -134,7 +136,13 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate }: Tech
       </p>
 
       <ReportSection variant="blue" title="1) Resumo da Semana">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <WeeklyProgressChart
+          activities={activities}
+          projectStartDate={projectStartDate}
+          currentWeekNumber={weeklyReport.weekNumber}
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-4">
           <div className="bg-card/50 rounded-lg p-3 border border-border">
             <p className="text-2xl font-bold text-success">{completed.length}</p>
             <p className="text-xs text-muted-foreground">Atividades concluídas</p>
