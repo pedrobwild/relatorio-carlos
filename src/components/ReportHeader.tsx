@@ -389,15 +389,20 @@ const ReportHeader = ({
         </div>
 
         {/* Project Info + Schedule Metrics - Unified Card */}
-        <div className="p-2.5 border-b border-border">
-          {/* Project Header */}
-          <div className="mb-2">
-            <h1 className="text-h2 leading-tight">
-              {projectName} – {unitName}
-            </h1>
-            {clientName && (
-              <p className="text-tiny">Cliente: {clientName}</p>
-            )}
+        <div className="p-3 border-b border-border">
+          {/* Project Header with Dates */}
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div>
+              <h1 className="text-h2 leading-tight">
+                {projectName} – {unitName}
+              </h1>
+              {clientName && (
+                <p className="text-caption">Cliente: {clientName}</p>
+              )}
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-tiny">{formatDateFull(startDate)} → {formatDateFull(endDate)}</p>
+            </div>
           </div>
 
           {/* Timeline Progress Bar - First */}

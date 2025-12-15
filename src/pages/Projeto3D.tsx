@@ -38,7 +38,7 @@ const Projeto3D = () => {
             <div className="flex items-center gap-2.5">
               <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
               <span className="text-muted-foreground/40">|</span>
-              <h1 className="font-semibold text-base text-foreground">Projeto 3D</h1>
+              <h1 className="text-h2">Projeto 3D</h1>
             </div>
           </div>
           {hasDocument && (
@@ -69,7 +69,7 @@ const Projeto3D = () => {
             <div className="bg-card rounded-xl border border-border overflow-hidden">
               <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
                 <Play className="w-4 h-4 text-white" />
-                <h2 className="font-semibold text-sm text-white">Tour Virtual 3D</h2>
+                <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
               </div>
               <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
             </div>
@@ -80,7 +80,7 @@ const Projeto3D = () => {
             <div className="bg-card rounded-xl border border-border overflow-hidden">
               <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
                 <FileText className="w-4 h-4 text-white" />
-                <h2 className="font-semibold text-sm text-white">Projeto 3D - PDF</h2>
+                <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
               </div>
               <div className="h-[500px] sm:h-[600px]">
                 <PDFViewer url={pdfUrl} title="Projeto 3D" />
@@ -100,15 +100,15 @@ const Projeto3D = () => {
                   <Box className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">Projeto 3D</h2>
-                  <p className="text-sm text-muted-foreground">Visualização tridimensional do projeto</p>
+                  <h2 className="text-h2">Projeto 3D</h2>
+                  <p className="text-caption">Visualização tridimensional do projeto</p>
                 </div>
               </div>
               
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <p className="text-muted-foreground">Documento em preparação</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">O arquivo será disponibilizado em breve</p>
+                <p className="text-body text-muted-foreground">Documento em preparação</p>
+                <p className="text-caption mt-1">O arquivo será disponibilizado em breve</p>
               </div>
             </div>
           </div>

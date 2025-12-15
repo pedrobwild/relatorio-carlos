@@ -60,7 +60,7 @@ const Contrato = () => {
             <div className="flex items-center gap-2.5">
               <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
               <span className="text-muted-foreground/40">|</span>
-              <h1 className="font-semibold text-base text-foreground">Contrato</h1>
+              <h1 className="text-h2">Contrato</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -90,7 +90,7 @@ const Contrato = () => {
 
           {/* Aditivos Section */}
           <div className="mt-6 space-y-4">
-            <h2 className="text-lg font-semibold text-foreground">Aditivos</h2>
+            <h2 className="text-h2">Aditivos</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {aditivos.map((aditivo) => (
                 <Dialog key={aditivo.id}>
@@ -101,10 +101,10 @@ const Contrato = () => {
                           <FileText className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm text-foreground">{aditivo.title}</h3>
+                          <h3 className="text-h3">{aditivo.title}</h3>
                           <div className="flex items-center gap-1.5 mt-1">
                             <Calendar className="w-3.5 h-3.5 text-primary" />
-                            <span className="text-xs font-medium text-primary">{aditivo.month} {aditivo.year}</span>
+                            <span className="text-caption text-primary">{aditivo.month} {aditivo.year}</span>
                           </div>
                         </div>
                       </div>

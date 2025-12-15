@@ -132,11 +132,11 @@ const Home = () => {
                 alt="Bwild Logo" 
                 className="h-7 md:h-10 w-auto"
               />
-              <h1 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
+              <h1 className="text-h1 text-3xl md:text-5xl tracking-tight">
                 Portal do Cliente
               </h1>
             </div>
-            <p className="text-muted-foreground text-base md:text-lg max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards] px-2">
+            <p className="text-body text-muted-foreground max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards] px-2">
               Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado.
             </p>
           </div>
@@ -145,8 +145,8 @@ const Home = () => {
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-4 scrollbar-hide snap-x snap-mandatory">
             <div className="min-w-[200px] md:min-w-0 p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:200ms] opacity-0 [animation-fill-mode:forwards] snap-start">
               <Building2 className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3" />
-              <h3 className="font-semibold text-foreground text-sm md:text-base mb-1">Dados do Projeto</h3>
-              <p className="text-xs md:text-sm text-muted-foreground">
+              <h3 className="text-h3 mb-1">Dados do Projeto</h3>
+              <p className="text-caption">
                 Registre informações do empreendimento e cliente.
               </p>
             </div>
@@ -155,8 +155,8 @@ const Home = () => {
                 <path d="M3 3v18h18" />
                 <path d="M7 16c3-4 5-8 10-11" />
               </svg>
-              <h3 className="font-semibold text-foreground text-sm md:text-base mb-1">Curva S</h3>
-              <p className="text-xs md:text-sm text-muted-foreground">
+              <h3 className="text-h3 mb-1">Curva S</h3>
+              <p className="text-caption">
                 Visualize o progresso previsto vs realizado.
               </p>
             </div>
@@ -167,8 +167,8 @@ const Home = () => {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <h3 className="font-semibold text-foreground text-sm md:text-base mb-1">Cronograma</h3>
-              <p className="text-xs md:text-sm text-muted-foreground">
+              <h3 className="text-h3 mb-1">Cronograma</h3>
+              <p className="text-caption">
                 Acompanhe atividades e identifique atrasos.
               </p>
             </div>
@@ -198,7 +198,7 @@ const Home = () => {
       </main>
 
       {/* Footer */}
-      <footer className="p-4 text-center text-xs md:text-sm text-muted-foreground border-t border-border/50 bg-card/20 backdrop-blur-sm">
+      <footer className="p-4 text-center text-caption border-t border-border/50 bg-card/20 backdrop-blur-sm">
         © {new Date().getFullYear()} Bwild. Todos os direitos reservados.
       </footer>
 

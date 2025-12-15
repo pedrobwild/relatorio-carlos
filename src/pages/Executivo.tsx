@@ -59,7 +59,7 @@ const Executivo = () => {
             <div className="flex items-center gap-2.5">
               <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
               <span className="text-muted-foreground/40">|</span>
-              <h1 className="font-semibold text-base text-foreground">Projeto Executivo</h1>
+              <h1 className="text-h2">Projeto Executivo</h1>
             </div>
           </div>
           {hasDocument && (
@@ -99,8 +99,8 @@ const Executivo = () => {
                     <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-sm text-foreground truncate">ART - Anotação de Responsabilidade Técnica</h3>
-                    <p className="text-xs text-muted-foreground">Documento de responsabilidade técnica</p>
+                    <h3 className="text-h3 truncate">ART - Anotação de Responsabilidade Técnica</h3>
+                    <p className="text-caption">Documento de responsabilidade técnica</p>
                   </div>
                 </div>
                 <Dialog open={artModalOpen} onOpenChange={setArtModalOpen}>
@@ -140,8 +140,8 @@ const Executivo = () => {
                     <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-sm text-foreground truncate">Plano de Reforma</h3>
-                    <p className="text-xs text-muted-foreground">Documento de planejamento da reforma</p>
+                    <h3 className="text-h3 truncate">Plano de Reforma</h3>
+                    <p className="text-caption">Documento de planejamento da reforma</p>
                   </div>
                 </div>
                 <Dialog open={planoReformaModalOpen} onOpenChange={setPlanoReformaModalOpen}>
@@ -183,15 +183,15 @@ const Executivo = () => {
                   <Ruler className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">Projeto Executivo</h2>
-                  <p className="text-sm text-muted-foreground">Documentação técnica detalhada</p>
+                  <h2 className="text-h2">Projeto Executivo</h2>
+                  <p className="text-caption">Documentação técnica detalhada</p>
                 </div>
               </div>
               
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <p className="text-muted-foreground">Documento em preparação</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">O arquivo será disponibilizado em breve</p>
+                <p className="text-body text-muted-foreground">Documento em preparação</p>
+                <p className="text-caption mt-1">O arquivo será disponibilizado em breve</p>
               </div>
             </div>
           </div>
