@@ -119,6 +119,8 @@ export interface Incident {
   cause: string;
   action: string;
   impact: string;
+  status: 'aberto' | 'em andamento' | 'resolvido';
+  expectedResolutionDate: string;
 }
 
 export interface WeeklyReportData {

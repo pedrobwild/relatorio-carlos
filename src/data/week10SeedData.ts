@@ -396,6 +396,8 @@ export const week10SeedData: WeeklyReportData = {
       cause: "Vazamento no sistema hidráulico do banheiro da unidade logo acima.",
       action: "Chamado de urgência aberto no sistema para a construtora, única capaz de cessar o vazamento.",
       impact: "Será necessário nova pintura no local. Atividade não prevista no escopo do contrato. A execução dependente do aceite do orçamento e assinatura do aditivo pelo cliente.",
+      status: "em andamento",
+      expectedResolutionDate: "2025-09-14",
     },
   ],
   
