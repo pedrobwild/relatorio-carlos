@@ -101,8 +101,6 @@ const Financeiro = () => {
     urgency: getUrgency(inst.dueDate, inst.status),
   }));
 
-  const paidInstallments = installments.filter((i) => i.status === "paid");
-
   const totalValue = 110000;
   const paidAmount = installments
     .filter((i) => i.status === "paid")
@@ -326,219 +324,6 @@ const Financeiro = () => {
             </CardContent>
           </Card>
 
-          {/* Payment Timeline */}
-          <Card className="bg-card border-border overflow-hidden">
-            <CardHeader className="bg-primary-dark py-3 px-4">
-              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Timeline de Pagamentos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              <div className="relative">
-                {/* Timeline line */}
-                <div className="absolute left-4 sm:left-6 top-0 bottom-0 w-0.5 bg-border" />
-                
-                {/* Timeline items */}
-                <div className="space-y-6">
-                  {installments.map((installment, index) => {
-                    const isPaid = installment.status === "paid";
-                    const isPending = installment.status === "pending";
-                    const isLast = index === installments.length - 1;
-                    
-                    return (
-                      <div key={installment.id} className="relative flex gap-4 sm:gap-6">
-                        {/* Timeline dot */}
-                        <div className={`relative z-10 flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 shrink-0 ${
-                          isPaid 
-                            ? "bg-emerald-500 border-emerald-500" 
-                            : isPending 
-                              ? installment.urgency === "overdue" || installment.urgency === "urgent"
-                                ? "bg-red-500/10 border-red-500"
-                                : installment.urgency === "approaching"
-                                  ? "bg-amber-500/10 border-amber-500"
-                                  : "bg-background border-muted-foreground/30"
-                              : "bg-background border-muted-foreground/20"
-                        }`}>
-                          {isPaid ? (
-                            <Check className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                          ) : isPending ? (
-                            installment.urgency === "overdue" || installment.urgency === "urgent" ? (
-                              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
-                            ) : (
-                              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                            )
-                          ) : (
-                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">{index + 1}</span>
-                          )}
-                        </div>
-                        
-                        {/* Content */}
-                        <div className={`flex-1 pb-6 ${isLast ? "pb-0" : ""}`}>
-                          <div className={`p-3 sm:p-4 rounded-lg border ${
-                            isPaid 
-                              ? "bg-emerald-500/5 border-emerald-200" 
-                              : installment.urgency === "overdue" || installment.urgency === "urgent"
-                                ? "bg-red-500/5 border-red-200"
-                                : installment.urgency === "approaching"
-                                  ? "bg-amber-500/5 border-amber-200"
-                                  : "bg-muted/30 border-border"
-                          }`}>
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-                              <div className="flex-1">
-                                <p className="font-medium text-foreground text-sm sm:text-base">
-                                  {installment.stage}
-                                  {installment.isForecast && (
-                                    <span className="text-[10px] text-muted-foreground italic ml-1">(previsão)</span>
-                                  )}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs sm:text-sm text-muted-foreground">
-                                  <span>Venc: {formatDate(installment.dueDate)}</span>
-                                  {isPaid && installment.paidDate && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="text-emerald-600 font-medium">
-                                        Pago em {formatDate(installment.paidDate)}
-                                      </span>
-                                    </>
-                                  )}
-                                  {!isPaid && getDaysUntilDueLabel(installment)}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 sm:gap-3">
-                                <p className="font-bold text-foreground text-base sm:text-lg">
-                                  {formatCurrency(installment.amount)}
-                                </p>
-                                <div className="hidden sm:block">
-                                  {getStatusBadge(installment)}
-                                </div>
-                                {isPaid ? (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50 cursor-not-allowed">
-                                        <FileX className="w-4 h-4 text-muted-foreground/50" />
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">
-                                      <p>Boleto indisponível - parcela já quitada</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                ) : (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 hover:bg-primary/10"
-                                    title="Baixar boleto"
-                                  >
-                                    <Download className="w-4 h-4 text-primary" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                            <div className="sm:hidden mt-2 flex items-center gap-2">
-                              {getStatusBadge(installment)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border overflow-hidden">
-            <CardHeader className="bg-primary-dark py-3 px-4">
-              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Evolução Financeira
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="h-[280px] w-full">
-                <ChartContainer config={chartConfig}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={chartData}
-                      margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
-                    >
-                      <defs>
-                        <linearGradient id="colorPrevisto" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="colorRealizado" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis
-                        dataKey="date"
-                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                        tickLine={false}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                        tickLine={false}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                        tickFormatter={(value) => `${value}%`}
-                        domain={[0, 100]}
-                      />
-                      <ChartTooltip
-                        content={
-                          <ChartTooltipContent
-                            formatter={(value, name) => (
-                              <span className="font-medium">
-                                {name === "previsto" ? "Previsto" : "Realizado"}: {value}%
-                              </span>
-                            )}
-                          />
-                        }
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="previsto"
-                        stroke="hsl(var(--muted-foreground))"
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        fill="url(#colorPrevisto)"
-                        connectNulls={false}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="realizado"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2.5}
-                        fill="url(#colorRealizado)"
-                        connectNulls={false}
-                      />
-                      <ReferenceLine
-                        y={paidPercentage}
-                        stroke="hsl(var(--primary))"
-                        strokeDasharray="3 3"
-                        strokeOpacity={0.5}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-0.5 bg-muted-foreground" style={{ borderStyle: 'dashed', borderWidth: '1px 0 0 0', borderColor: 'hsl(var(--muted-foreground))' }} />
-                  <span className="text-muted-foreground">Previsto</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-1 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">Realizado</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Payment Schedule Table */}
           <Card className="bg-card border-border overflow-hidden">
             <CardHeader className="bg-primary-dark py-3 px-4">
@@ -681,76 +466,97 @@ const Financeiro = () => {
             </CardContent>
           </Card>
 
-          {/* Payment History */}
-          {paidInstallments.length > 0 && (
-            <Card className="bg-card border-border overflow-hidden">
-              <CardHeader className="bg-emerald-600 py-3 px-4">
-                <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
-                  <Check className="w-4 h-4" />
-                  Histórico de Pagamentos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {/* Desktop */}
-                <div className="hidden sm:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-emerald-500/5 hover:bg-emerald-500/5">
-                        <TableHead className="font-semibold text-foreground">Etapa</TableHead>
-                        <TableHead className="font-semibold text-foreground text-right">Valor</TableHead>
-                        <TableHead className="font-semibold text-foreground text-center">Vencimento</TableHead>
-                        <TableHead className="font-semibold text-foreground text-center">Data do Pagamento</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paidInstallments.map((installment) => (
-                        <TableRow key={installment.id} className="bg-emerald-500/5">
-                          <TableCell className="font-medium text-foreground">
-                            {installment.stage}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold text-foreground">
-                            {formatCurrency(installment.amount)}
-                          </TableCell>
-                          <TableCell className="text-center text-muted-foreground">
-                            {formatDate(installment.dueDate)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="font-medium text-emerald-600">
-                                {installment.paidDate ? formatDate(installment.paidDate) : "-"}
+          {/* Financial Evolution Chart */}
+          <Card className="bg-card border-border overflow-hidden">
+            <CardHeader className="bg-primary-dark py-3 px-4">
+              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Evolução Financeira
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-[280px] w-full">
+                <ChartContainer config={chartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={chartData}
+                      margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorPrevisto" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
+                          <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorRealizado" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tickFormatter={(value) => `${value}%`}
+                        domain={[0, 100]}
+                      />
+                      <ChartTooltip
+                        content={
+                          <ChartTooltipContent
+                            formatter={(value, name) => (
+                              <span className="font-medium">
+                                {name === "previsto" ? "Previsto" : "Realizado"}: {value}%
                               </span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            )}
+                          />
+                        }
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="previsto"
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        fill="url(#colorPrevisto)"
+                        connectNulls={false}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="realizado"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2.5}
+                        fill="url(#colorRealizado)"
+                        connectNulls={false}
+                      />
+                      <ReferenceLine
+                        y={paidPercentage}
+                        stroke="hsl(var(--primary))"
+                        strokeDasharray="3 3"
+                        strokeOpacity={0.5}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-0.5 bg-muted-foreground" style={{ borderStyle: 'dashed', borderWidth: '1px 0 0 0', borderColor: 'hsl(var(--muted-foreground))' }} />
+                  <span className="text-muted-foreground">Previsto</span>
                 </div>
-
-                {/* Mobile */}
-                <div className="sm:hidden divide-y divide-border">
-                  {paidInstallments.map((installment) => (
-                    <div key={installment.id} className="p-4 space-y-2 bg-emerald-500/5">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="font-medium text-foreground text-sm">{installment.stage}</p>
-                        <p className="font-bold text-foreground">{formatCurrency(installment.amount)}</p>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Venc: {formatDate(installment.dueDate)}</span>
-                        <div className="flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="font-medium text-emerald-600">
-                            Pago em {installment.paidDate ? formatDate(installment.paidDate) : "-"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-1 rounded-full bg-primary" />
+                  <span className="text-muted-foreground">Realizado</span>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Info Note */}
           <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
