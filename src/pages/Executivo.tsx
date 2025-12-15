@@ -73,30 +73,30 @@ const Executivo = () => {
 
       {/* Content */}
       {hasDocument ? (
-        <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-hidden flex flex-col gap-4">
-          <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col gap-4">
+        <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
+          <div className="max-w-5xl mx-auto w-full flex flex-col gap-3">
             {/* PDF Viewer */}
-            <div className="h-[calc(100vh-180px)] sm:h-[calc(100vh-200px)]">
+            <div className="h-[70vh] sm:h-[75vh]">
               <PDFViewer url={pdfUrl} title="Projeto Executivo" />
             </div>
 
             {/* ART Section */}
-            <div className="bg-card rounded-lg border border-border p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-                    <Award className="w-5 h-5 text-primary" />
+            <div className="bg-card rounded-lg border border-border p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 shrink-0">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-sm text-foreground">ART - Anotação de Responsabilidade Técnica</h3>
-                    <p className="text-xs text-muted-foreground">Documento de responsabilidade técnica do projeto</p>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm text-foreground truncate">ART - Anotação de Responsabilidade Técnica</h3>
+                    <p className="text-xs text-muted-foreground">Documento de responsabilidade técnica</p>
                   </div>
                 </div>
                 <Dialog open={artModalOpen} onOpenChange={setArtModalOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button variant="outline" size="sm" className="gap-2 shrink-0">
                       <FileText className="w-4 h-4" />
-                      <span className="hidden sm:inline">Visualizar ART</span>
+                      <span className="hidden sm:inline">Visualizar</span>
                       <span className="sm:hidden">Ver</span>
                     </Button>
                   </DialogTrigger>
