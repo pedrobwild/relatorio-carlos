@@ -55,8 +55,8 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
-        <h3 className="text-xs sm:text-sm font-semibold text-white">Gestão de Riscos</h3>
+      <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
+        <h3 className="text-sm sm:text-base font-semibold text-white">Gestão de Riscos</h3>
       </div>
       
       {/* Desktop: Always show all */}

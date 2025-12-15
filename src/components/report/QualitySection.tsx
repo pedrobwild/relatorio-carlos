@@ -127,8 +127,8 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
     <div className="space-y-2">
       {/* Checklists Executed */}
       <div className="bg-card rounded-lg border border-border overflow-hidden">
-        <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
-          <h3 className="text-xs sm:text-sm font-semibold text-white">Qualidade, Testes e Pendências</h3>
+        <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
+          <h3 className="text-sm sm:text-base font-semibold text-white">Qualidade, Testes e Pendências</h3>
         </div>
         
         <div className="hidden sm:block divide-y divide-border">
@@ -165,8 +165,8 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
       {/* Pending Items */}
       {allPendingItems.length > 0 && (
         <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
-            <h3 className="text-xs sm:text-sm font-semibold text-white">Pendências para Entrega</h3>
+          <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
+            <h3 className="text-sm sm:text-base font-semibold text-white">Pendências para Entrega</h3>
           </div>
           
           <div className="hidden sm:block p-2.5 sm:p-3">
