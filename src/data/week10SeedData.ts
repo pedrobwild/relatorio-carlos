@@ -7,6 +7,7 @@ import bancadaDormitorio from "@/assets/gallery/bancada-dormitorio.jpg";
 import armarioBanheiro from "@/assets/gallery/armario-banheiro.jpg";
 import moduloCozinha from "@/assets/gallery/modulo-cozinha.jpg";
 import armarioHall from "@/assets/gallery/armario-hall.jpg";
+import infiltracaoParede from "@/assets/gallery/infiltracao-parede.jpg";
 
 export const week10SeedData: WeeklyReportData = {
   projectId: "hub-brooklyn-502",
@@ -398,6 +399,13 @@ export const week10SeedData: WeeklyReportData = {
       impact: "Será necessário nova pintura no local. Atividade não prevista no escopo do contrato. A execução dependente do aceite do orçamento e assinatura do aditivo pelo cliente.",
       status: "em andamento",
       expectedResolutionDate: "2025-09-14",
+      photos: [
+        {
+          id: "inc-1-photo-1",
+          url: infiltracaoParede,
+          caption: "Mancha de infiltração identificada na parede do dormitório",
+        },
+      ],
     },
   ],
   
