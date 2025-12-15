@@ -538,94 +538,159 @@ const Financeiro = () => {
             </CardContent>
           </Card>
 
-          {/* Financial Evolution Chart */}
-          <Card className="bg-card border-border overflow-hidden">
-            <CardHeader className="bg-primary-dark py-3 px-4">
-              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Evolução Financeira
-              </CardTitle>
+          {/* Financial Evolution Chart - Premium Design */}
+          <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-card to-card">
+            <CardHeader className="bg-gradient-to-r from-primary-dark to-primary py-4 px-5">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/15">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  Evolução Financeira
+                </CardTitle>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-[2px] bg-white/60" style={{ borderTop: '2px dashed rgba(255,255,255,0.6)' }} />
+                    <span className="text-primary-foreground/80">Previsto</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-1.5 rounded-full bg-emerald-400" />
+                    <span className="text-primary-foreground/80">Realizado</span>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="p-4">
-              <div className="h-[280px] w-full">
+            <CardContent className="p-5 pt-6">
+              <div className="h-[300px] w-full">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={chartData}
-                      margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                      margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
                     >
                       <defs>
-                        <linearGradient id="colorPrevisto" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                        <linearGradient id="colorPrevistoFinanceiro" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
+                          <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
                         </linearGradient>
-                        <linearGradient id="colorRealizado" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                        <linearGradient id="colorRealizadoFinanceiro" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
+                          <stop offset="50%" stopColor="#10b981" stopOpacity={0.2} />
+                          <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
                         </linearGradient>
+                        <filter id="glow">
+                          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                          <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                          </feMerge>
+                        </filter>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <CartesianGrid 
+                        strokeDasharray="3 3" 
+                        stroke="hsl(var(--border))" 
+                        strokeOpacity={0.5}
+                        vertical={false}
+                      />
                       <XAxis
                         dataKey="date"
                         tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                         tickLine={false}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        axisLine={false}
+                        dy={10}
                       />
                       <YAxis
                         tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                         tickLine={false}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        axisLine={false}
                         tickFormatter={(value) => `${value}%`}
                         domain={[0, 100]}
+                        dx={-5}
                       />
                       <ChartTooltip
-                        content={
-                          <ChartTooltipContent
-                            formatter={(value, name) => (
-                              <span className="font-medium">
-                                {name === "previsto" ? "Previsto" : "Realizado"}: {value}%
-                              </span>
-                            )}
-                          />
-                        }
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload) return null;
+                          const previstoData = payload.find(p => p.dataKey === 'previsto');
+                          const realizadoData = payload.find(p => p.dataKey === 'realizado');
+                          return (
+                            <div className="bg-card/95 backdrop-blur-sm border border-border shadow-xl rounded-xl p-4 min-w-[180px]">
+                              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+                                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                                <span className="text-xs font-medium text-foreground">{label}</span>
+                              </div>
+                              <div className="space-y-2.5">
+                                {previstoData && (
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                                      <span className="text-xs text-muted-foreground">Previsto</span>
+                                    </div>
+                                    <span className="text-sm font-semibold text-foreground">{previstoData.value}%</span>
+                                  </div>
+                                )}
+                                {realizadoData && realizadoData.value !== null && (
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                      <span className="text-xs text-muted-foreground">Realizado</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-emerald-600">{realizadoData.value}%</span>
+                                  </div>
+                                )}
+                                {previstoData && realizadoData && realizadoData.value !== null && (
+                                  <div className="pt-2 mt-2 border-t border-border">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Desvio</span>
+                                      <span className={`text-sm font-bold ${
+                                        Number(realizadoData.value) >= Number(previstoData.value) 
+                                          ? 'text-emerald-600' 
+                                          : 'text-red-500'
+                                      }`}>
+                                        {Number(realizadoData.value) >= Number(previstoData.value) ? '+' : ''}
+                                        {(Number(realizadoData.value) - Number(previstoData.value)).toFixed(0)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }}
                       />
                       <Area
                         type="monotone"
                         dataKey="previsto"
                         stroke="hsl(var(--muted-foreground))"
                         strokeWidth={2}
-                        strokeDasharray="5 5"
-                        fill="url(#colorPrevisto)"
+                        strokeDasharray="6 4"
+                        fill="url(#colorPrevistoFinanceiro)"
                         connectNulls={false}
                       />
                       <Area
                         type="monotone"
                         dataKey="realizado"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2.5}
-                        fill="url(#colorRealizado)"
+                        stroke="#10b981"
+                        strokeWidth={3}
+                        fill="url(#colorRealizadoFinanceiro)"
                         connectNulls={false}
+                        filter="url(#glow)"
                       />
                       <ReferenceLine
                         y={paidPercentage}
-                        stroke="hsl(var(--primary))"
-                        strokeDasharray="3 3"
-                        strokeOpacity={0.5}
+                        stroke="#10b981"
+                        strokeDasharray="4 4"
+                        strokeOpacity={0.4}
+                        label={{
+                          value: `${paidPercentage.toFixed(0)}% pago`,
+                          position: 'right',
+                          fill: '#10b981',
+                          fontSize: 10,
+                          fontWeight: 600,
+                        }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-              </div>
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-0.5 bg-muted-foreground" style={{ borderStyle: 'dashed', borderWidth: '1px 0 0 0', borderColor: 'hsl(var(--muted-foreground))' }} />
-                  <span className="text-muted-foreground">Previsto</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-1 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">Realizado</span>
-                </div>
               </div>
             </CardContent>
           </Card>
