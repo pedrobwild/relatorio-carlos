@@ -192,30 +192,6 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
         </div>
       </div>
 
-      {/* Mobile Navigation - Bottom with swipe hint */}
-      <div className="sm:hidden flex flex-col items-center gap-2 px-3 py-3 bg-card border-t border-border">
-        <p className="text-xs text-muted-foreground">Deslize para navegar entre páginas</p>
-        <div className="flex items-center justify-center gap-4 w-full">
-          <Button
-            variant="outline"
-            onClick={goToPrevPage}
-            disabled={pageNumber <= 1}
-            className="h-12 flex-1 max-w-32 touch-manipulation"
-          >
-            <ChevronLeft className="w-5 h-5 mr-1" />
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages}
-            className="h-12 flex-1 max-w-32 touch-manipulation"
-          >
-            Próxima
-            <ChevronRight className="w-5 h-5 ml-1" />
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
