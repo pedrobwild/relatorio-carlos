@@ -457,34 +457,6 @@ const ReportHeader = ({
             </div>
             <p className="text-sm font-bold text-foreground">{formatDateFull(endDate)}</p>
           </div>
-          <div className="bg-secondary/30 rounded-lg p-2.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
-              <Clock className="w-3 h-3" />
-              Dias Úteis
-            </div>
-            <p className="text-sm font-bold text-foreground">{projectMetrics.totalWorkingDays} <span className="text-xs font-normal text-muted-foreground">dias</span></p>
-          </div>
-          <div className={`rounded-lg p-2.5 ${
-            projectMetrics.remainingWorkingDays <= 7 
-              ? 'bg-amber-500/15' 
-              : 'bg-secondary/30'
-          }`}>
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
-              {projectMetrics.remainingWorkingDays <= 7 ? (
-                <AlertTriangle className="w-3 h-3 text-amber-500" />
-              ) : (
-                <Clock className="w-3 h-3" />
-              )}
-              Restantes
-            </div>
-            <p className={`text-sm font-bold ${
-              projectMetrics.remainingWorkingDays <= 7 
-                ? 'text-amber-600' 
-                : 'text-foreground'
-            }`}>
-              {projectMetrics.remainingWorkingDays} <span className="text-xs font-normal opacity-70">dias úteis</span>
-            </p>
-          </div>
         </div>
 
         {/* Timeline Progress Bar - Mobile */}
