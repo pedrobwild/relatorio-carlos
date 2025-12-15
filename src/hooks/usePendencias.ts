@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { parseISO, differenceInDays } from "date-fns";
+import { parseISO, differenceInDays, addDays } from "date-fns";
 
 export type PendingType = "decision" | "invoice" | "signature" | "approval_3d" | "approval_exec";
 export type PendingPriority = "alta" | "média" | "baixa";
@@ -10,12 +10,22 @@ export interface PendingItem {
   type: PendingType;
   title: string;
   description: string;
-  dueDate: string;
+  dueDate: string; // Data limite para ação
+  createdDate: string; // Data de criação/envio da pendência
   priority: PendingPriority;
   impact?: string;
   options?: string[];
   amount?: number;
 }
+
+// Prazos por tipo de pendência (em dias)
+export const DEADLINE_BY_TYPE: Record<PendingType, number> = {
+  decision: 0, // Decisões usam prazo específico do item
+  invoice: 0, // Faturas usam data de vencimento
+  signature: 5, // Aditivos e formalizações: 5 dias
+  approval_3d: 2, // Projeto 3D: 2 dias
+  approval_exec: 2, // Projeto Executivo: 2 dias
+};
 
 // Demo date - in production this would be new Date()
 export const DEMO_DATE = new Date("2025-09-08");
@@ -28,6 +38,7 @@ export const pendingItemsData: PendingItem[] = [
     type: "decision",
     title: "Posição do suporte articulado de TV 65\"",
     description: "Definir altura e posição do suporte na parede da sala",
+    createdDate: "2025-09-05",
     dueDate: "2025-09-09",
     priority: "alta",
     impact: "Atraso na instalação elétrica embutida e possível retrabalho no gesso/pintura",
@@ -38,6 +49,7 @@ export const pendingItemsData: PendingItem[] = [
     type: "decision",
     title: "Aprovar torneira alternativa para banheiro social",
     description: "Modelo Docol Bistro Cromado (original Deca Polo indisponível até 20/09)",
+    createdDate: "2025-09-06",
     dueDate: "2025-09-10",
     priority: "média",
     impact: "Atraso de 12 dias se aguardar modelo original",
@@ -48,6 +60,7 @@ export const pendingItemsData: PendingItem[] = [
     type: "invoice",
     title: "Parcela 6 - Marcenaria",
     description: "Vencimento original: 05/09/2025",
+    createdDate: "2025-08-25",
     dueDate: "2025-09-05",
     priority: "alta",
     amount: 28500,
@@ -58,45 +71,51 @@ export const pendingItemsData: PendingItem[] = [
     type: "invoice",
     title: "Parcela 7 - Instalações e acabamentos",
     description: "Próximo vencimento",
+    createdDate: "2025-09-01",
     dueDate: "2025-09-12",
     priority: "média",
     amount: 15200,
   },
-  // Pending Signatures
+  // Pending Signatures - Aditivo enviado 03/09, prazo 5 dias = vence 08/09
   {
     id: "sig-1",
     type: "signature",
     title: "Aditivo de Contrato - Julho",
     description: "Inclusão de marcenaria adicional no hall de entrada",
-    dueDate: "2025-09-08",
+    createdDate: "2025-09-03",
+    dueDate: "2025-09-08", // 5 dias após criação
     priority: "alta",
     impact: "Pendente de assinatura para formalização do serviço adicional",
   },
+  // Ata enviada 05/09, prazo 5 dias = vence 10/09
   {
     id: "sig-2",
     type: "signature",
     title: "Ata de Reunião - Semana 9",
     description: "Definições sobre instalação de coifa e eletros",
-    dueDate: "2025-09-10",
+    createdDate: "2025-09-05",
+    dueDate: "2025-09-10", // 5 dias após criação
     priority: "baixa",
   },
-  // 3D Project Approval
+  // 3D Project Approval - enviado 07/09, prazo 2 dias = vence 09/09
   {
     id: "3d-1",
     type: "approval_3d",
     title: "Aprovação do Projeto 3D - Cozinha",
     description: "Renderização final com ajustes de iluminação solicitados",
-    dueDate: "2025-09-11",
+    createdDate: "2025-09-07",
+    dueDate: "2025-09-09", // 2 dias após criação
     priority: "média",
     impact: "Liberação para produção de peças de marcenaria customizadas",
   },
-  // Executive Project Approval
+  // Executive Project Approval - enviado 04/09, prazo 2 dias = venceu 06/09
   {
     id: "exec-1",
     type: "approval_exec",
     title: "Aprovação do Projeto Executivo - Elétrica",
     description: "Planta baixa com pontos elétricos e circuitos dedicados",
-    dueDate: "2025-09-07",
+    createdDate: "2025-09-04",
+    dueDate: "2025-09-06", // 2 dias após criação - já venceu
     priority: "alta",
     impact: "Execução da instalação elétrica já iniciada - aprovação retroativa necessária",
   },
@@ -109,6 +128,20 @@ export const getStatus = (dueDate: string, referenceDate: Date = DEMO_DATE): Pen
   if (diff < 0) return "atrasado";
   if (diff <= 2) return "urgente";
   return "pendente";
+};
+
+// Calcula quantos dias está atrasado em relação ao prazo do tipo
+export const getDaysOverdue = (item: PendingItem, referenceDate: Date = DEMO_DATE): number => {
+  const due = parseISO(item.dueDate);
+  const diff = differenceInDays(referenceDate, due);
+  return diff > 0 ? diff : 0;
+};
+
+// Calcula dias restantes até o vencimento
+export const getDaysRemaining = (item: PendingItem, referenceDate: Date = DEMO_DATE): number => {
+  const due = parseISO(item.dueDate);
+  const diff = differenceInDays(due, referenceDate);
+  return diff;
 };
 
 export const usePendencias = () => {

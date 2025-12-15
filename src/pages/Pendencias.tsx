@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, CheckCircle2, Calendar, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format, differenceInDays, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { usePendencias, getStatus, DEMO_DATE, PendingType, PendingStatus } from "@/hooks/usePendencias";
+import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, DEMO_DATE, PendingType, PendingStatus, DEADLINE_BY_TYPE } from "@/hooks/usePendencias";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {
@@ -123,7 +123,9 @@ const Pendencias = () => {
         <div className="space-y-2">
           {sortedItems.map((item, index) => {
             const status = getStatus(item.dueDate);
-            const daysUntil = differenceInDays(parseISO(item.dueDate), today);
+            const daysOverdue = getDaysOverdue(item, today);
+            const daysRemaining = getDaysRemaining(item, today);
+            const deadlineDays = DEADLINE_BY_TYPE[item.type];
             
             return (
               <div 
@@ -185,12 +187,24 @@ const Pendencias = () => {
                       status === "atrasado" ? "text-rose-600" : 
                       status === "urgente" ? "text-amber-600" : "text-foreground"
                     }`}>
-                      {formatDate(item.dueDate)}
-                      {daysUntil < 0 && ` (${Math.abs(daysUntil)}d atrasado)`}
-                      {daysUntil === 0 && " (hoje)"}
-                      {daysUntil === 1 && " (amanhã)"}
-                      {daysUntil > 1 && ` (em ${daysUntil}d)`}
+                      Prazo: {formatDate(item.dueDate)}
+                      {deadlineDays > 0 && ` (${deadlineDays}d)`}
                     </span>
+                    {status === "atrasado" && (
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0 ml-1">
+                        {daysOverdue}d atrasado
+                      </Badge>
+                    )}
+                    {status === "urgente" && daysRemaining >= 0 && (
+                      <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0 ml-1">
+                        {daysRemaining === 0 ? "vence hoje" : daysRemaining === 1 ? "vence amanhã" : `${daysRemaining}d restantes`}
+                      </Badge>
+                    )}
+                    {status === "pendente" && (
+                      <span className="text-tiny text-muted-foreground ml-1">
+                        ({daysRemaining}d restantes)
+                      </span>
+                    )}
                   </div>
                   <Link 
                     to={item.type === "invoice" ? "/financeiro" : 
