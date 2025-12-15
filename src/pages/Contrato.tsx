@@ -1,7 +1,7 @@
-import { ArrowLeft, Download, ExternalLink, FileText, Calendar } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, FileText, Calendar, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
 
@@ -120,14 +120,21 @@ const Contrato = () => {
                             <span className="text-xs font-medium text-primary">{aditivo.month} {aditivo.year}</span>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => handleDownload(aditivo.pdfUrl, `Aditivo_${aditivo.month}_${aditivo.year}.pdf`)}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          Download
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => handleDownload(aditivo.pdfUrl, `Aditivo_${aditivo.month}_${aditivo.year}.pdf`)}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Download
+                          </Button>
+                          <DialogClose asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </DialogClose>
+                        </div>
                       </div>
                     </DialogHeader>
                     <div className="flex-1 overflow-hidden p-2">
