@@ -299,11 +299,11 @@ const ReportHeader = ({
         {/* Row 3: Dates - Secondary hierarchy */}
         <div className="mb-3 pb-3 border-b border-border">
           <p className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2">Cronograma</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2.5">
             {dateMetrics.map((metric) => (
-              <div key={metric.label} className="bg-muted/30 rounded-lg px-2 py-1.5 text-center">
-                <p className="text-[10px] font-bold text-foreground uppercase tracking-wide">{metric.label}</p>
-                <p className="text-[11px] font-medium text-foreground">{metric.value}</p>
+              <div key={metric.label} className="bg-muted/30 rounded-lg px-3 py-2.5 text-center">
+                <p className="text-[10px] font-bold text-foreground uppercase tracking-wide mb-0.5">{metric.label}</p>
+                <p className="text-xs font-medium text-foreground">{metric.value}</p>
               </div>
             ))}
           </div>
