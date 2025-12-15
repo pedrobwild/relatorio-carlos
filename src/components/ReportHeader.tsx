@@ -374,6 +374,26 @@ const ReportHeader = ({
           )}
         </div>
 
+        {/* Quick Links - Now between Project and Current Activity */}
+        <div className="p-3 border-b border-border">
+          <p className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-2">Menu</p>
+          <div className="grid grid-cols-5 gap-1">
+            {quickLinks.map((link) => (
+              <Link
+                key={link.label}
+                to={link.href}
+                className="flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all"
+                aria-label={`Acessar ${link.label}`}
+              >
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
+                  <link.icon className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Current Activity */}
         <div className="p-3 bg-secondary/30 border-b border-border">
           <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
@@ -442,26 +462,6 @@ const ReportHeader = ({
             }`}>
               {projectMetrics.remainingWorkingDays} <span className="text-xs font-normal opacity-70">dias úteis</span>
             </p>
-          </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="p-3 border-b border-border">
-          <p className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-2">Menu</p>
-          <div className="grid grid-cols-5 gap-1">
-            {quickLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all"
-                aria-label={`Acessar ${link.label}`}
-              >
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
-                  <link.icon className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
-              </Link>
-            ))}
           </div>
         </div>
 
