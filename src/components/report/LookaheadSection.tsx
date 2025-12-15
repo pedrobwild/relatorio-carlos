@@ -96,7 +96,8 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
           {remainingTasks.length > 0 && (
             <CollapsibleTrigger asChild>
               <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
-                <span>{isOpen ? "Ver menos" : `Ver mais ${remainingTasks.length} tarefa${remainingTasks.length > 1 ? 's' : ''}`}</span>
+                <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded text-[10px] font-semibold">+{remainingTasks.length}</span>}
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>
