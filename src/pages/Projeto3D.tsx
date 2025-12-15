@@ -1,4 +1,4 @@
-import { ArrowLeft, Download, ExternalLink, FileText, Box } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, FileText, Box, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import bwildLogo from "@/assets/bwild-logo.png";
@@ -6,7 +6,9 @@ import PDFViewer from "@/components/PDFViewer";
 
 const Projeto3D = () => {
   const pdfUrl = "/documents/projeto-3d.pdf";
+  const videoUrl = "/videos/projeto-3d-tour.mov";
   const hasDocument = true;
+  const hasVideo = true;
 
   const handleDownload = () => {
     const link = document.createElement("a");
@@ -59,15 +61,47 @@ const Projeto3D = () => {
       </div>
 
       {/* Content */}
-      {hasDocument ? (
-        <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-hidden">
-          <div className="max-w-5xl mx-auto h-full">
-            <div className="h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)]">
-              <PDFViewer url={pdfUrl} title="Projeto 3D" />
+      <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* Video Player Section */}
+          {hasVideo && (
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
+                <Play className="w-4 h-4 text-white" />
+                <h2 className="font-semibold text-sm text-white">Tour Virtual 3D</h2>
+              </div>
+              <div className="aspect-video bg-black">
+                <video
+                  controls
+                  playsInline
+                  className="w-full h-full object-contain"
+                  poster=""
+                >
+                  <source src={videoUrl} type="video/quicktime" />
+                  <source src={videoUrl} type="video/mp4" />
+                  Seu navegador não suporta reprodução de vídeo.
+                </video>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* PDF Section */}
+          {hasDocument && (
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
+                <FileText className="w-4 h-4 text-white" />
+                <h2 className="font-semibold text-sm text-white">Projeto 3D - PDF</h2>
+              </div>
+              <div className="h-[500px] sm:h-[600px]">
+                <PDFViewer url={pdfUrl} title="Projeto 3D" />
+              </div>
+            </div>
+          )}
         </div>
-      ) : (
+      </div>
+
+      {/* Empty State */}
+      {!hasDocument && !hasVideo && (
         <div className="flex-1 p-4 md:p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-card rounded-xl border border-border p-6 md:p-8">
