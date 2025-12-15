@@ -66,6 +66,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "formalization_acknowledgements_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations_public_customer"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "formalization_acknowledgements_party_id_fkey"
             columns: ["party_id"]
             isOneToOne: false
@@ -116,6 +123,13 @@ export type Database = {
             referencedRelation: "formalizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "formalization_attachments_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations_public_customer"
+            referencedColumns: ["id"]
+          },
         ]
       }
       formalization_events: {
@@ -149,6 +163,13 @@ export type Database = {
             columns: ["formalization_id"]
             isOneToOne: false
             referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formalization_events_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations_public_customer"
             referencedColumns: ["id"]
           },
         ]
@@ -187,6 +208,13 @@ export type Database = {
             columns: ["formalization_id"]
             isOneToOne: false
             referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formalization_evidence_links_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations_public_customer"
             referencedColumns: ["id"]
           },
         ]
@@ -231,6 +259,13 @@ export type Database = {
             columns: ["formalization_id"]
             isOneToOne: false
             referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formalization_parties_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations_public_customer"
             referencedColumns: ["id"]
           },
         ]
@@ -295,15 +330,133 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          customer_org_id: string
+          display_name: string | null
+          email: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_org_id: string
+          display_name?: string | null
+          email?: string | null
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_org_id?: string
+          display_name?: string | null
+          email?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      formalizations_public_customer: {
+        Row: {
+          acknowledgements: Json | null
+          attachments: Json | null
+          body_md: string | null
+          created_at: string | null
+          customer_org_id: string | null
+          data: Json | null
+          events: Json | null
+          evidence_links: Json | null
+          id: string | null
+          last_activity_at: string | null
+          locked_at: string | null
+          locked_hash: string | null
+          parties: Json | null
+          parties_signed: number | null
+          parties_total: number | null
+          project_id: string | null
+          status: Database["public"]["Enums"]["formalization_status"] | null
+          summary: string | null
+          title: string | null
+          type: Database["public"]["Enums"]["formalization_type"] | null
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          acknowledgements?: never
+          attachments?: never
+          body_md?: string | null
+          created_at?: string | null
+          customer_org_id?: string | null
+          data?: Json | null
+          events?: never
+          evidence_links?: never
+          id?: string | null
+          last_activity_at?: string | null
+          locked_at?: string | null
+          locked_hash?: string | null
+          parties?: never
+          parties_signed?: never
+          parties_total?: never
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["formalization_status"] | null
+          summary?: string | null
+          title?: string | null
+          type?: Database["public"]["Enums"]["formalization_type"] | null
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          acknowledgements?: never
+          attachments?: never
+          body_md?: string | null
+          created_at?: string | null
+          customer_org_id?: string | null
+          data?: Json | null
+          events?: never
+          evidence_links?: never
+          id?: string | null
+          last_activity_at?: string | null
+          locked_at?: string | null
+          locked_hash?: string | null
+          parties?: never
+          parties_signed?: never
+          parties_total?: never
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["formalization_status"] | null
+          summary?: string | null
+          title?: string | null
+          type?: Database["public"]["Enums"]["formalization_type"] | null
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       compute_formalization_hash: {
         Args: { p_formalization_id: string }
         Returns: string
       }
+      get_user_org_id: { Args: { p_user_id: string }; Returns: string }
+      get_user_profile: {
+        Args: { p_user_id: string }
+        Returns: {
+          customer_org_id: string
+          role: string
+        }[]
+      }
+      user_belongs_to_org: {
+        Args: { p_org_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      user_is_admin: { Args: { p_user_id: string }; Returns: boolean }
+      user_is_staff_or_above: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
       evidence_link_kind:
