@@ -17,36 +17,48 @@ const calculatePlannedProgress = (
   weekEndDate: Date,
   projectStartDate: Date
 ): number => {
-  const totalActivities = activities.length;
-  let plannedComplete = 0;
+  // Check if any activity has weight defined
+  const hasWeights = activities.some(a => (a as any).weight !== undefined);
   
-  activities.forEach(activity => {
+  // Calculate total weight (should be 100, but normalize if not)
+  const totalWeight = hasWeights 
+    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    : activities.length;
+  
+  const completedWeight = activities.reduce((sum, activity) => {
     const plannedEnd = new Date(activity.plannedEnd);
     if (isBefore(plannedEnd, weekEndDate) || plannedEnd.getTime() === weekEndDate.getTime()) {
-      plannedComplete++;
+      return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
     }
-  });
+    return sum;
+  }, 0);
   
-  return Math.round((plannedComplete / totalActivities) * 100);
+  return Math.round((completedWeight / totalWeight) * 100);
 };
 
 const calculateActualProgress = (
   activities: Activity[],
   weekEndDate: Date
 ): number => {
-  const totalActivities = activities.length;
-  let actualComplete = 0;
+  // Check if any activity has weight defined
+  const hasWeights = activities.some(a => (a as any).weight !== undefined);
   
-  activities.forEach(activity => {
+  // Calculate total weight (should be 100, but normalize if not)
+  const totalWeight = hasWeights 
+    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    : activities.length;
+  
+  const completedWeight = activities.reduce((sum, activity) => {
     if (activity.actualEnd) {
       const actualEnd = new Date(activity.actualEnd);
       if (isBefore(actualEnd, weekEndDate) || actualEnd.getTime() === weekEndDate.getTime()) {
-        actualComplete++;
+        return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
       }
     }
-  });
+    return sum;
+  }, 0);
   
-  return Math.round((actualComplete / totalActivities) * 100);
+  return Math.round((completedWeight / totalWeight) * 100);
 };
 
 export interface ExtendedWeeklyReport extends WeeklyReport {
