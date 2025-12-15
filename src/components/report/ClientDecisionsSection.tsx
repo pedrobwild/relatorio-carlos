@@ -14,8 +14,15 @@ interface ClientDecisionsSectionProps {
   decisions: ClientDecision[];
 }
 
-const DecisionItem = ({ decision }: { decision: ClientDecision }) => (
-  <div className="p-4 sm:p-5 space-y-2">
+const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecision; animationDelay?: number }) => (
+  <div 
+    className="p-4 sm:p-5 space-y-2"
+    style={{ 
+      animationDelay: `${animationDelay}ms`,
+      animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
+      opacity: animationDelay > 0 ? 0 : 1
+    }}
+  >
     <div className="flex items-start justify-between gap-3">
       <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{decision.description}</p>
       <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs shrink-0">
@@ -72,9 +79,9 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
           <div className="divide-y divide-border">
             <DecisionItem decision={firstDecision} />
             
-            <CollapsibleContent className="animate-accordion-down divide-y divide-border">
-              {remainingDecisions.map((decision) => (
-                <DecisionItem key={decision.id} decision={decision} />
+            <CollapsibleContent className="divide-y divide-border overflow-hidden">
+              {remainingDecisions.map((decision, index) => (
+                <DecisionItem key={decision.id} decision={decision} animationDelay={isOpen ? (index + 1) * 50 : 0} />
               ))}
             </CollapsibleContent>
           </div>

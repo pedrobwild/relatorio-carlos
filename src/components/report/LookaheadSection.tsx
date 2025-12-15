@@ -25,8 +25,15 @@ const getRiskBadge = (risk: LookaheadTask["risk"]) => {
   }
 };
 
-const TaskItem = ({ task }: { task: LookaheadTask }) => (
-  <div className="p-4 sm:p-5 space-y-2">
+const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animationDelay?: number }) => (
+  <div 
+    className="p-4 sm:p-5 space-y-2"
+    style={{ 
+      animationDelay: `${animationDelay}ms`,
+      animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
+      opacity: animationDelay > 0 ? 0 : 1
+    }}
+  >
     <div className="flex items-start justify-between gap-3">
       <div className="flex-1">
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
@@ -79,9 +86,9 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
           <div className="divide-y divide-border">
             {firstTask && <TaskItem task={firstTask} />}
             
-            <CollapsibleContent className="animate-accordion-down divide-y divide-border">
-              {remainingTasks.map((task) => (
-                <TaskItem key={task.id} task={task} />
+            <CollapsibleContent className="divide-y divide-border overflow-hidden">
+              {remainingTasks.map((task, index) => (
+                <TaskItem key={task.id} task={task} animationDelay={isOpen ? (index + 1) * 50 : 0} />
               ))}
             </CollapsibleContent>
           </div>
