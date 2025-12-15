@@ -61,7 +61,7 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         }}
       >
         <div className="flex items-center">
-          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${statusConfig.className}`}>
+          <span className={`text-tiny font-semibold px-1.5 py-0.5 rounded ${statusConfig.className}`}>
             {statusConfig.label}
           </span>
         </div>
@@ -172,10 +172,10 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
 
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
                 {photos[selectedPhotoIndex].caption && (
-                  <p className="text-white text-sm font-medium">{photos[selectedPhotoIndex].caption}</p>
+                  <p className="text-white text-caption font-medium">{photos[selectedPhotoIndex].caption}</p>
                 )}
                 {photos.length > 1 && (
-                  <p className="text-white/70 text-xs mt-1">
+                  <p className="text-white/70 text-tiny mt-1">
                     {selectedPhotoIndex + 1} / {photos.length}
                   </p>
                 )}
@@ -224,9 +224,9 @@ const IncidentsSection = ({ incidents }: IncidentsSectionProps) => {
           
           {remainingIncidents.length > 0 && (
             <CollapsibleTrigger asChild>
-              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingIncidents.length}</span>}
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingIncidents.length}</span>}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>

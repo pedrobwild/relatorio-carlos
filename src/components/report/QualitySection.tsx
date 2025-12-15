@@ -51,7 +51,7 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
         </div>
         <div className="flex items-center gap-1.5">
           {item.nonConformities.length > 0 && (
-            <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-[10px]">
+            <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-tiny">
               {item.nonConformities.length} NC
             </Badge>
           )}
@@ -65,14 +65,14 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
       </DialogHeader>
       <div className="mt-2 space-y-3">
         <div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">Itens do Checklist</p>
+          <p className="text-tiny text-muted-foreground uppercase tracking-wide mb-1.5">Itens do Checklist</p>
           <ul className="space-y-1">
             {item.items.map((checkItem, idx) => (
               <li key={idx} className="flex items-center justify-between p-1.5 rounded bg-secondary/50">
-                <span className="text-xs text-foreground">{checkItem.name}</span>
+                <span className="text-caption text-foreground">{checkItem.name}</span>
                 <Badge 
                   variant="outline" 
-                  className={`text-[10px] ${
+                  className={`text-tiny ${
                     checkItem.result === "aprovado" 
                       ? "bg-success/10 text-success border-success/20" 
                       : checkItem.result === "reprovado"
@@ -89,15 +89,15 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
         
         {item.nonConformities.length > 0 && (
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">Não Conformidades</p>
+            <p className="text-tiny text-muted-foreground uppercase tracking-wide mb-1.5">Não Conformidades</p>
             <ul className="space-y-1.5">
               {item.nonConformities.map((nc) => (
                 <li key={nc.id} className="p-2 rounded bg-destructive/5 border border-destructive/20">
                   <div className="flex items-start gap-1.5">
                     <XCircle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs text-foreground">{nc.description}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-caption text-foreground">{nc.description}</p>
+                      <p className="text-tiny text-muted-foreground mt-0.5">
                         Responsável: {nc.responsible} • Correção: {format(new Date(nc.correctionDate), "dd/MM", { locale: ptBR })}
                       </p>
                     </div>
@@ -151,9 +151,9 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
             
             {remainingChecklists.length > 0 && (
               <CollapsibleTrigger asChild>
-                <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+                <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                   <span>{isChecklistOpen ? "Ver menos" : "Ver mais"}</span>
-                  {!isChecklistOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingChecklists.length}</span>}
+                  {!isChecklistOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingChecklists.length}</span>}
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isChecklistOpen ? "rotate-180" : ""}`} />
                 </button>
               </CollapsibleTrigger>
@@ -174,8 +174,8 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
               {allPendingItems.map((item) => (
                 <li key={item.id} className="flex items-center gap-2 p-1.5 rounded bg-secondary/50">
                   <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
-                  <span className="text-xs text-foreground flex-1">{item.description}</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-caption text-foreground flex-1">{item.description}</span>
+                  <span className="text-tiny text-muted-foreground">
                     até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
                   </span>
                 </li>
@@ -190,8 +190,8 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
                   {firstPendingItems.map((item) => (
                     <li key={item.id} className="flex items-center gap-2 p-1.5 rounded bg-secondary/50">
                       <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
-                      <span className="text-xs text-foreground flex-1">{item.description}</span>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-caption text-foreground flex-1">{item.description}</span>
+                      <span className="text-tiny text-muted-foreground">
                         até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
                       </span>
                     </li>
@@ -209,8 +209,8 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
                         }}
                       >
                         <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
-                        <span className="text-xs text-foreground flex-1">{item.description}</span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-caption text-foreground flex-1">{item.description}</span>
+                        <span className="text-tiny text-muted-foreground">
                           até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
                         </span>
                       </li>
@@ -221,9 +221,9 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
               
               {remainingPendingItems.length > 0 && (
                 <CollapsibleTrigger asChild>
-                  <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+                  <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                     <span>{isPendingOpen ? "Ver menos" : "Ver mais"}</span>
-                    {!isPendingOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingPendingItems.length}</span>}
+                    {!isPendingOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingPendingItems.length}</span>}
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isPendingOpen ? "rotate-180" : ""}`} />
                   </button>
                 </CollapsibleTrigger>
