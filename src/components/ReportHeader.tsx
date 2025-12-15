@@ -362,55 +362,54 @@ const ReportHeader = ({
       {/* Mobile Layout */}
       <div className="md:hidden">
         {/* Status Banner */}
-        <div className={`px-3 py-2 flex items-center justify-between ${
+        <div className={`px-2.5 py-1.5 flex items-center justify-between ${
           projectMetrics.isOnTrack 
             ? 'bg-emerald-500/15' 
             : 'bg-amber-500/15'
         }`}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {projectMetrics.isOnTrack ? (
-              <TrendingUp className={`w-4 h-4 ${projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'}`} />
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
             ) : (
-              <TrendingDown className="w-4 h-4 text-amber-600" />
+              <TrendingDown className="w-3.5 h-3.5 text-amber-600" />
             )}
-            <span className={`text-sm font-semibold ${
+            <span className={`text-xs font-semibold ${
               projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
             }`}>
-              {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção ao Prazo'}
+              {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
             </span>
           </div>
           {projectMetrics.progressDiff !== 0 && (
-            <span className={`text-xs font-bold ${
+            <span className={`text-[10px] font-bold ${
               projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
             }`}>
-              {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}% vs previsto
+              {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
             </span>
           )}
         </div>
 
         {/* Project Info + Schedule Metrics - Unified Card */}
-        <div className="p-3 border-b border-border">
+        <div className="p-2.5 border-b border-border">
           {/* Project Header */}
-          <div className="mb-3">
-            <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">Projeto</p>
-            <h1 className="text-base font-bold text-foreground leading-tight">
+          <div className="mb-2">
+            <h1 className="text-sm font-bold text-foreground leading-tight">
               {projectName} – {unitName}
             </h1>
             {clientName && (
-              <p className="text-xs text-muted-foreground mt-0.5">Cliente: {clientName}</p>
+              <p className="text-[10px] text-muted-foreground">Cliente: {clientName}</p>
             )}
           </div>
 
-          {/* Current Activity */}
-          <div className="bg-secondary/30 rounded-lg p-2.5 mb-3">
-            <p className="text-sm font-semibold text-foreground">
+          {/* Current Activity + Progress */}
+          <div className="bg-secondary/30 rounded-lg p-2 mb-2">
+            <p className="text-xs font-semibold text-foreground line-clamp-1">
               {projectMetrics.currentActivity}
             </p>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="text-xs text-muted-foreground">
-                {projectMetrics.completedActivities}/{projectMetrics.totalActivities} etapas
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-[10px] text-muted-foreground">
+                {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
               </span>
-              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+              <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full ${
                     projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
@@ -418,118 +417,107 @@ const ReportHeader = ({
                   style={{ width: `${projectMetrics.actualProgress}%` }}
                 />
               </div>
-              <span className="text-xs font-bold text-foreground">{projectMetrics.actualProgress}%</span>
+              <span className="text-[10px] font-bold text-foreground">{projectMetrics.actualProgress}%</span>
             </div>
           </div>
 
-          {/* Dates Row */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="bg-secondary/30 rounded-lg p-2.5">
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
-                <Calendar className="w-3 h-3" />
-                Início
-              </div>
-              <p className="text-sm font-bold text-foreground">{formatDateFull(startDate)}</p>
+          {/* Dates + Timeline - Compact Row */}
+          <div className="flex items-center gap-2 text-[10px] mb-2">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-2.5 h-2.5 text-muted-foreground" />
+              <span className="text-muted-foreground">Início:</span>
+              <span className="font-semibold text-foreground">{formatDateFull(startDate)}</span>
             </div>
-            <div className="bg-secondary/30 rounded-lg p-2.5">
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
-                <CheckCircle2 className="w-3 h-3" />
-                Término
-              </div>
-              <p className="text-sm font-bold text-foreground">{formatDateFull(endDate)}</p>
+            <span className="text-muted-foreground">→</span>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Término:</span>
+              <span className="font-semibold text-foreground">{formatDateFull(endDate)}</span>
             </div>
           </div>
 
-          {/* Timeline Progress Bar */}
+          {/* Timeline Progress Bar - Compact */}
           <div>
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-medium text-muted-foreground">Cronograma</span>
-              <span className="text-xs text-muted-foreground">
-                {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
+            <div className="flex items-center justify-between text-[10px] mb-1">
+              <span className="text-muted-foreground">
+                {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
+              </span>
+              <span className="text-muted-foreground">
+                Restam {projectMetrics.remainingWorkingDays}
               </span>
             </div>
-            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
               <div 
                 className="h-full rounded-full bg-primary/70 transition-all duration-500"
                 style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
-              <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
-              <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
-            </div>
           </div>
         </div>
 
         {/* Quick Links */}
-        <div className="p-3 border-b border-border">
-          <div className="grid grid-cols-5 gap-1">
+        <div className="px-2.5 py-2 border-b border-border">
+          <div className="grid grid-cols-5 gap-0.5">
             {quickLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className="flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all"
+                className="flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all"
                 aria-label={`Acessar ${link.label}`}
               >
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary">
-                  <link.icon className="w-3.5 h-3.5" />
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary">
+                  <link.icon className="w-3 h-3" />
                 </div>
-                <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
+                <span className="text-[9px] font-medium leading-tight text-center">{link.label}</span>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Team Contacts */}
-        <div className="p-3">
-          <p className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-2">Equipe</p>
-          <div className="space-y-1.5">
+        {/* Team Contacts - Horizontal Scroll */}
+        <div className="px-2.5 py-2">
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
             {teamContacts.map((contact) => (
-              <div key={contact.role}>
-                <button
-                  onClick={() => toggleContact(contact.role)}
-                  className="w-full flex items-center gap-2 p-2 rounded-lg bg-secondary/30 hover:bg-accent/50 active:scale-[0.99] transition-all text-left"
-                  aria-label={`Ver contato de ${contact.name}`}
-                >
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 shrink-0">
-                    <User className="w-3 h-3 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground">{contact.role}</p>
-                    <p className="text-xs text-muted-foreground truncate">{contact.name}</p>
-                  </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {expandedContact === contact.role && (
-                  <div className="mt-1 ml-9 bg-card border border-border rounded-lg p-2 animate-fade-in">
-                    <div className="space-y-1">
-                      <a 
-                        href={`mailto:${contact.email}`}
-                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Mail className="w-3 h-3" />
-                        <span>{contact.email}</span>
-                      </a>
-                      <a 
-                        href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Phone className="w-3 h-3" />
-                        <span>{contact.phone}</span>
-                      </a>
-                      {contact.crea && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
-                          <span className="font-medium">CREA:</span>
-                          <span>{contact.crea}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <button
+                key={contact.role}
+                onClick={() => toggleContact(contact.role)}
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-secondary/30 hover:bg-accent/50 active:scale-[0.98] transition-all shrink-0"
+                aria-label={`Ver contato de ${contact.name}`}
+              >
+                <User className="w-3 h-3 text-primary shrink-0" />
+                <span className="text-[10px] font-medium text-foreground whitespace-nowrap">{contact.name}</span>
+                <ChevronDown className={`w-2.5 h-2.5 text-muted-foreground transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
+              </button>
             ))}
           </div>
+          
+          {teamContacts.map((contact) => (
+            expandedContact === contact.role && (
+              <div key={`expanded-${contact.role}`} className="mt-1.5 bg-card border border-border rounded-lg p-2 animate-fade-in">
+                <p className="text-[10px] font-semibold text-foreground mb-1">{contact.role}</p>
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  <a 
+                    href={`mailto:${contact.email}`}
+                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                  >
+                    <Mail className="w-2.5 h-2.5" />
+                    <span>{contact.email}</span>
+                  </a>
+                  <a 
+                    href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                  >
+                    <Phone className="w-2.5 h-2.5" />
+                    <span>{contact.phone}</span>
+                  </a>
+                  {contact.crea && (
+                    <span className="text-[10px] text-muted-foreground">
+                      CREA: {contact.crea}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )
+          ))}
         </div>
       </div>
     </header>
