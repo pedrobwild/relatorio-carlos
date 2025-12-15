@@ -42,10 +42,15 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const firstPhotos = photos.slice(0, 4);
   const remainingPhotos = photos.slice(4);
 
-  const PhotoItem = ({ photo, index }: { photo: GalleryPhoto; index: number }) => (
+  const PhotoItem = ({ photo, index, animationDelay = 0 }: { photo: GalleryPhoto; index: number; animationDelay?: number }) => (
     <button
       onClick={() => setSelectedIndex(index)}
       className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-muted min-h-0"
+      style={{ 
+        animationDelay: `${animationDelay}ms`,
+        animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
+        opacity: animationDelay > 0 ? 0 : 1
+      }}
     >
       <img
         src={photo.url}
@@ -85,10 +90,10 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 <PhotoItem key={photo.id} photo={photo} index={index} />
               ))}
               
-              <CollapsibleContent className="col-span-2 animate-accordion-down">
+              <CollapsibleContent className="col-span-2 overflow-hidden">
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {remainingPhotos.map((photo, index) => (
-                    <PhotoItem key={photo.id} photo={photo} index={firstPhotos.length + index} />
+                    <PhotoItem key={photo.id} photo={photo} index={firstPhotos.length + index} animationDelay={isOpen ? (index + 1) * 50 : 0} />
                   ))}
                 </div>
               </CollapsibleContent>

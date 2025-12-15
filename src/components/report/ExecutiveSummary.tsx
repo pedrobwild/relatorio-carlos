@@ -42,10 +42,18 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                 {firstParagraph}
               </p>
               
-              <CollapsibleContent className="animate-accordion-down">
+              <CollapsibleContent className="overflow-hidden">
                 <div className="space-y-3 mt-3">
                   {remainingParagraphs.map((paragraph, index) => (
-                    <p key={index} className="text-xs text-foreground/80 leading-relaxed text-justify">
+                    <p 
+                      key={index} 
+                      className="text-xs text-foreground/80 leading-relaxed text-justify"
+                      style={{ 
+                        animationDelay: `${(index + 1) * 50}ms`,
+                        animation: isOpen ? 'fade-in 0.3s ease-out forwards' : undefined,
+                        opacity: isOpen ? 0 : 1
+                      }}
+                    >
                       {paragraph}
                     </p>
                   ))}
@@ -81,8 +89,16 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                   </div>
                   {item.subItems && item.subItems.length > 0 && (
                     <ul className="ml-5 sm:ml-6 space-y-1 border-l-2 border-border pl-3">
-                      {item.subItems.map((subItem) => (
-                        <li key={subItem.id} className="text-[11px] sm:text-xs text-foreground/70 leading-relaxed">
+                      {item.subItems.map((subItem, subIndex) => (
+                        <li 
+                          key={subItem.id} 
+                          className="text-[11px] sm:text-xs text-foreground/70 leading-relaxed"
+                          style={{ 
+                            animationDelay: `${(subIndex + 1) * 30}ms`,
+                            animation: 'fade-in 0.3s ease-out forwards',
+                            opacity: 0
+                          }}
+                        >
                           {subItem.description}
                         </li>
                       ))}

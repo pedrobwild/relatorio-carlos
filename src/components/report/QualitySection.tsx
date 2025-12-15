@@ -33,12 +33,17 @@ const getSeverityColor = (severity: PendingItem["severity"]) => {
   }
 };
 
-const ChecklistItem = ({ item, index }: { item: WeeklyReportQualityItem; index: number }) => (
+const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReportQualityItem; index: number; animationDelay?: number }) => (
   <Dialog>
     <DialogTrigger asChild>
       <Button
         variant="ghost"
         className="w-full justify-between h-auto p-3 sm:p-4 rounded-none hover:bg-secondary/50"
+        style={{ 
+          animationDelay: `${animationDelay}ms`,
+          animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
+          opacity: animationDelay > 0 ? 0 : 1
+        }}
       >
         <div className="flex items-center gap-2.5">
           <CheckSquare className="w-3.5 h-3.5 text-success" />
@@ -142,9 +147,9 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
             <div className="divide-y divide-border">
               {firstChecklist && <ChecklistItem item={firstChecklist} index={0} />}
               
-              <CollapsibleContent className="animate-accordion-down divide-y divide-border">
+              <CollapsibleContent className="divide-y divide-border overflow-hidden">
                 {remainingChecklists.map((item, index) => (
-                  <ChecklistItem key={index + 1} item={item} index={index + 1} />
+                  <ChecklistItem key={index + 1} item={item} index={index + 1} animationDelay={isChecklistOpen ? (index + 1) * 50 : 0} />
                 ))}
               </CollapsibleContent>
             </div>
@@ -198,9 +203,17 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
                     </li>
                   ))}
                   
-                  <CollapsibleContent className="animate-accordion-down space-y-1.5">
-                    {remainingPendingItems.map((item) => (
-                      <li key={item.id} className="flex items-center gap-2.5 p-2 rounded bg-secondary/50">
+                  <CollapsibleContent className="space-y-1.5 overflow-hidden">
+                    {remainingPendingItems.map((item, index) => (
+                      <li 
+                        key={item.id} 
+                        className="flex items-center gap-2.5 p-2 rounded bg-secondary/50"
+                        style={{ 
+                          animationDelay: `${(index + 1) * 50}ms`,
+                          animation: isPendingOpen ? 'fade-in 0.3s ease-out forwards' : undefined,
+                          opacity: isPendingOpen ? 0 : 1
+                        }}
+                      >
                         <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
                         <span className="text-xs text-foreground flex-1">{item.description}</span>
                         <span className="text-xs text-muted-foreground">

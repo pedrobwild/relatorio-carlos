@@ -14,8 +14,15 @@ interface RisksIssuesSectionProps {
   issues: RiskIssue[];
 }
 
-const RiskItem = ({ issue }: { issue: RiskIssue }) => (
-  <div className="p-4 sm:p-5 space-y-2.5">
+const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDelay?: number }) => (
+  <div 
+    className="p-4 sm:p-5 space-y-2.5"
+    style={{ 
+      animationDelay: `${animationDelay}ms`,
+      animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
+      opacity: animationDelay > 0 ? 0 : 1
+    }}
+  >
     <div className="flex items-start justify-between gap-3">
       <div className="flex-1">
         <div className="flex items-start gap-2">
@@ -67,9 +74,9 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
             <div className="divide-y divide-border">
               {firstIssue && <RiskItem issue={firstIssue} />}
               
-              <CollapsibleContent className="animate-accordion-down divide-y divide-border">
-                {remainingIssues.map((issue) => (
-                  <RiskItem key={issue.id} issue={issue} />
+              <CollapsibleContent className="divide-y divide-border overflow-hidden">
+                {remainingIssues.map((issue, index) => (
+                  <RiskItem key={issue.id} issue={issue} animationDelay={isOpen ? (index + 1) * 50 : 0} />
                 ))}
               </CollapsibleContent>
             </div>
