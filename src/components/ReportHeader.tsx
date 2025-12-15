@@ -388,20 +388,80 @@ const ReportHeader = ({
           )}
         </div>
 
-        {/* Project Info */}
+        {/* Project Info + Schedule Metrics - Unified Card */}
         <div className="p-3 border-b border-border">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Projeto</p>
+          {/* Project Header */}
+          <div className="mb-3">
+            <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">Projeto</p>
+            <h1 className="text-base font-bold text-foreground leading-tight">
+              {projectName} – {unitName}
+            </h1>
+            {clientName && (
+              <p className="text-xs text-muted-foreground mt-0.5">Cliente: {clientName}</p>
+            )}
           </div>
-          <h1 className="text-base font-bold text-foreground leading-tight">
-            {projectName} – {unitName}
-          </h1>
-          {clientName && (
-            <p className="text-xs text-muted-foreground mt-0.5">Cliente: {clientName}</p>
-          )}
+
+          {/* Current Activity */}
+          <div className="bg-secondary/30 rounded-lg p-2.5 mb-3">
+            <p className="text-sm font-semibold text-foreground">
+              {projectMetrics.currentActivity}
+            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-xs text-muted-foreground">
+                {projectMetrics.completedActivities}/{projectMetrics.totalActivities} etapas
+              </span>
+              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full ${
+                    projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}
+                  style={{ width: `${projectMetrics.actualProgress}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-foreground">{projectMetrics.actualProgress}%</span>
+            </div>
+          </div>
+
+          {/* Dates Row */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="bg-secondary/30 rounded-lg p-2.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
+                <Calendar className="w-3 h-3" />
+                Início
+              </div>
+              <p className="text-sm font-bold text-foreground">{formatDateFull(startDate)}</p>
+            </div>
+            <div className="bg-secondary/30 rounded-lg p-2.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
+                <CheckCircle2 className="w-3 h-3" />
+                Término
+              </div>
+              <p className="text-sm font-bold text-foreground">{formatDateFull(endDate)}</p>
+            </div>
+          </div>
+
+          {/* Timeline Progress Bar */}
+          <div>
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="font-medium text-muted-foreground">Cronograma</span>
+              <span className="text-xs text-muted-foreground">
+                {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
+              </span>
+            </div>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full bg-primary/70 transition-all duration-500"
+                style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+              <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
+              <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
+            </div>
+          </div>
         </div>
 
-        {/* Quick Links - Now between Project and Current Activity */}
+        {/* Quick Links */}
         <div className="p-3 border-b border-border">
           <div className="grid grid-cols-5 gap-1">
             {quickLinks.map((link) => (
@@ -417,65 +477,6 @@ const ReportHeader = ({
                 <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
               </Link>
             ))}
-          </div>
-        </div>
-
-        {/* Current Activity */}
-        <div className="p-3 bg-secondary/30 border-b border-border">
-          <p className="text-sm font-semibold text-foreground">
-            {projectMetrics.currentActivity}
-          </p>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="text-xs text-muted-foreground">
-              {projectMetrics.completedActivities}/{projectMetrics.totalActivities} etapas
-            </span>
-            <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div 
-                className={`h-full rounded-full ${
-                  projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
-                }`}
-                style={{ width: `${projectMetrics.actualProgress}%` }}
-              />
-            </div>
-            <span className="text-xs font-bold text-foreground">{projectMetrics.actualProgress}%</span>
-          </div>
-        </div>
-
-        {/* Key Metrics Grid */}
-        <div className="p-3 grid grid-cols-2 gap-2 border-b border-border">
-          <div className="bg-secondary/30 rounded-lg p-2.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
-              <Calendar className="w-3 h-3" />
-              Início
-            </div>
-            <p className="text-sm font-bold text-foreground">{formatDateFull(startDate)}</p>
-          </div>
-          <div className="bg-secondary/30 rounded-lg p-2.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase mb-1">
-              <CheckCircle2 className="w-3 h-3" />
-              Término
-            </div>
-            <p className="text-sm font-bold text-foreground">{formatDateFull(endDate)}</p>
-          </div>
-        </div>
-
-        {/* Timeline Progress Bar - Mobile */}
-        <div className="px-3 pb-3">
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="font-medium text-muted-foreground">Cronograma</span>
-            <span className="text-xs text-muted-foreground">
-              {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
-            </span>
-          </div>
-          <div className="h-2 bg-secondary rounded-full overflow-hidden">
-            <div 
-              className="h-full rounded-full bg-primary/70 transition-all duration-500"
-              style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
-            <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
-            <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
           </div>
         </div>
 
