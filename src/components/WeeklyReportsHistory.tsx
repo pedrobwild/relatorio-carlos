@@ -243,7 +243,7 @@ const WeeklyReportsHistory = ({
             </ResponsiveContainer>
           </div>
           
-          <div className="flex items-center justify-center gap-6 mt-3 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-6 mt-3 text-caption text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-sm bg-emerald-500/40" />
               <span>Adiantado</span>
@@ -278,8 +278,8 @@ const WeeklyReportsHistory = ({
                   "flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center",
                   isLatest ? "bg-primary text-primary-foreground" : "bg-muted"
                 )}>
-                  <span className="text-[10px] uppercase font-medium opacity-80">Sem</span>
-                  <span className="text-xl font-bold">{report.weekNumber}</span>
+                  <span className="text-tiny uppercase font-medium opacity-80">Sem</span>
+                  <span className="text-h1 font-bold">{report.weekNumber}</span>
                 </div>
                 
                 {/* Content */}
@@ -287,12 +287,12 @@ const WeeklyReportsHistory = ({
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
-                      <span className="text-xs md:text-sm">
+                      <span className="text-caption">
                         {formatDateRange(report.startDate, report.endDate)}
                       </span>
                     </div>
                     {isLatest && (
-                      <span className="bg-primary/10 text-primary text-[10px] font-medium px-2 py-0.5 rounded-full">
+                      <span className="bg-primary/10 text-primary text-tiny font-medium px-2 py-0.5 rounded-full">
                         Atual
                       </span>
                     )}
@@ -300,7 +300,7 @@ const WeeklyReportsHistory = ({
                   
                   {/* Progress Bar */}
                   <div className="mb-2">
-                    <div className="flex items-center justify-between text-xs mb-1">
+                    <div className="flex items-center justify-between text-caption mb-1">
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">Progresso</span>
                         {report.variance !== 0 && (
@@ -333,7 +333,7 @@ const WeeklyReportsHistory = ({
                   
                   {/* Current Activity/Phase */}
                   {report.currentActivityName && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       <span className="truncate">Etapa: {report.currentActivityName}</span>
                     </div>

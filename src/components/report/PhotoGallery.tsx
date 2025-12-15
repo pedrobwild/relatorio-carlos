@@ -58,7 +58,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-1.5">
-        <p className="text-[10px] font-medium text-white line-clamp-2">{photo.caption}</p>
+        <p className="text-tiny font-medium text-white line-clamp-2">{photo.caption}</p>
       </div>
     </button>
   );
@@ -99,9 +99,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
           
           {remainingPhotos.length > 0 && (
             <CollapsibleTrigger asChild>
-              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingPhotos.length}</span>}
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingPhotos.length}</span>}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>
@@ -158,8 +158,8 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                <p className="text-white text-sm font-medium">{photos[selectedIndex].caption}</p>
-                <p className="text-white/70 text-xs">
+                <p className="text-white text-caption font-medium">{photos[selectedIndex].caption}</p>
+                <p className="text-white/70 text-tiny">
                   {photos[selectedIndex].area} • {photos[selectedIndex].category} • {format(new Date(photos[selectedIndex].date), "dd/MM/yyyy", { locale: ptBR })}
                 </p>
               </div>

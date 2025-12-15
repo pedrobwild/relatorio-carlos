@@ -129,8 +129,8 @@ const ProgressEvolutionChart = ({
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Evolução do Desvio</h3>
-        <div className="flex items-center gap-3 text-[10px] sm:text-xs">
+        <h3 className="text-h2 text-white">Evolução do Desvio</h3>
+        <div className="flex items-center gap-3 text-tiny">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
             <span className="text-white/70">Adiantado</span>
