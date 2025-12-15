@@ -141,7 +141,7 @@ const Financeiro = () => {
             <div className="flex items-center gap-2.5">
               <img src={bwildLogo} alt="Bwild" className="h-5 w-auto" />
               <span className="text-muted-foreground/30">|</span>
-              <h1 className="font-semibold text-foreground">Financeiro</h1>
+              <h1 className="text-h2">Financeiro</h1>
             </div>
           </div>
         </div>
@@ -150,26 +150,26 @@ const Financeiro = () => {
         <div className="flex-1 max-w-2xl mx-auto w-full">
           {/* Summary Section - Clean and minimal */}
           <div className="px-4 py-6 border-b border-border">
-            <p className="text-xs text-muted-foreground mb-1">Valor total do contrato</p>
-            <p className="text-3xl font-bold text-foreground tracking-tight mb-6">
+            <p className="text-caption mb-1">Valor total do contrato</p>
+            <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight mb-6">
               {formatCurrency(totalValue)}
             </p>
 
             {/* Two-column summary */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Pago</p>
-                <p className="text-xl font-semibold text-foreground">{formatCurrency(paidAmount)}</p>
+                <p className="text-caption mb-1">Pago</p>
+                <p className="text-h2">{formatCurrency(paidAmount)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">A pagar</p>
-                <p className="text-xl font-semibold text-foreground">{formatCurrency(remainingAmount)}</p>
+                <p className="text-caption mb-1">A pagar</p>
+                <p className="text-h2">{formatCurrency(remainingAmount)}</p>
               </div>
             </div>
 
             {/* Progress indicator */}
             <div className="mt-6">
-              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+              <div className="flex items-center justify-between text-caption mb-2">
                 <span>{paidCount} de {installments.length} parcelas pagas</span>
                 <span>{((paidAmount / totalValue) * 100).toFixed(0)}%</span>
               </div>
@@ -196,17 +196,17 @@ const Financeiro = () => {
                     {/* Left side - Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-foreground text-sm truncate">
+                        <p className="text-body font-medium truncate">
                           {installment.stage}
                         </p>
                         {installment.isForecast && (
-                          <span className="shrink-0 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          <span className="shrink-0 text-tiny bg-muted px-1.5 py-0.5 rounded">
                             previsão
                           </span>
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-caption">
                         {installment.status === "paid" ? (
                           <>
                             <Check className="w-3.5 h-3.5 text-foreground" />
@@ -221,7 +221,7 @@ const Financeiro = () => {
                       </div>
 
                       {daysLabel && (
-                        <p className={`text-xs mt-1 font-medium ${daysLabel.color}`}>
+                        <p className={`text-caption mt-1 font-medium ${daysLabel.color}`}>
                           {daysLabel.text}
                         </p>
                       )}
@@ -229,12 +229,12 @@ const Financeiro = () => {
 
                     {/* Right side - Value and Action */}
                     <div className="text-right shrink-0">
-                      <p className="font-semibold text-foreground tabular-nums">
+                      <p className="text-h3 tabular-nums">
                         {formatCurrency(installment.amount)}
                       </p>
                       
                       {installment.status === "paid" ? (
-                        <span className="text-xs text-muted-foreground">Quitado</span>
+                        <span className="text-caption">Quitado</span>
                       ) : (
                         <Button
                           variant="ghost"
@@ -254,7 +254,7 @@ const Financeiro = () => {
 
           {/* Info footer */}
           <div className="px-4 py-4 text-center">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-caption">
               Última atualização: {formatDate(reportDate)}
             </p>
           </div>

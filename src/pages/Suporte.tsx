@@ -118,7 +118,7 @@ const Suporte = () => {
             <div className="flex items-center gap-2.5">
               <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
               <span className="text-muted-foreground/40">|</span>
-              <h1 className="font-semibold text-base text-foreground">Formalizações</h1>
+              <h1 className="text-h2">Formalizações</h1>
             </div>
           </div>
           <Button size="sm" className="gap-2">
@@ -139,7 +139,7 @@ const Suporte = () => {
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                   <span className="text-2xl font-bold text-green-700 dark:text-green-400">{signedCount}</span>
                 </div>
-                <span className="text-xs text-green-600 dark:text-green-500 mt-1">Assinadas</span>
+                <span className="text-caption mt-1">Assinadas</span>
               </CardContent>
             </Card>
             <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900">
@@ -148,7 +148,7 @@ const Suporte = () => {
                   <Clock className="w-5 h-5 text-amber-600" />
                   <span className="text-2xl font-bold text-amber-700 dark:text-amber-400">{pendingCount}</span>
                 </div>
-                <span className="text-xs text-amber-600 dark:text-amber-500 mt-1">Pendentes</span>
+                <span className="text-caption mt-1">Pendentes</span>
               </CardContent>
             </Card>
             <Card className="bg-muted/50 border-border">
@@ -157,7 +157,7 @@ const Suporte = () => {
                   <FileText className="w-5 h-5 text-muted-foreground" />
                   <span className="text-2xl font-bold text-foreground">{draftCount}</span>
                 </div>
-                <span className="text-xs text-muted-foreground mt-1">Rascunhos</span>
+                <span className="text-caption mt-1">Rascunhos</span>
               </CardContent>
             </Card>
           </div>
@@ -194,8 +194,8 @@ const Suporte = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-foreground truncate">{formalization.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">{formalization.summary}</p>
+                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
+                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
                           </div>
                           <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                         </div>
@@ -207,11 +207,11 @@ const Suporte = () => {
                           <Badge variant="outline" className="text-xs">
                             {FORMALIZATION_TYPE_LABELS[formalization.type]}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-tiny">
                             {formatDate(formalization.created_at)}
                           </span>
                           {formalization.status !== "draft" && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <span className="text-tiny flex items-center gap-1">
                               <FileSignature className="w-3 h-3" />
                               {formalization.parties_signed}/{formalization.parties_total}
                             </span>
@@ -233,8 +233,8 @@ const Suporte = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-foreground truncate">{formalization.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">{formalization.summary}</p>
+                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
+                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
                           </div>
                           <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                         </div>
@@ -243,7 +243,7 @@ const Suporte = () => {
                             {getStatusIcon(formalization.status)}
                             <span>{FORMALIZATION_STATUS_LABELS[formalization.status]}</span>
                           </Badge>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span className="text-tiny flex items-center gap-1">
                             <FileSignature className="w-3 h-3" />
                             {formalization.parties_signed}/{formalization.parties_total}
                           </span>
@@ -264,8 +264,8 @@ const Suporte = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-foreground truncate">{formalization.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">{formalization.summary}</p>
+                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
+                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
                           </div>
                           <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                         </div>
@@ -274,7 +274,7 @@ const Suporte = () => {
                             {getStatusIcon(formalization.status)}
                             <span>{FORMALIZATION_STATUS_LABELS[formalization.status]}</span>
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-tiny">
                             Assinado em {formatDate(formalization.locked_at!)}
                           </span>
                         </div>
@@ -294,8 +294,8 @@ const Suporte = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-foreground truncate">{formalization.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">{formalization.summary}</p>
+                            <h3 className="text-body font-medium truncate">{formalization.title}</h3>
+                            <p className="text-caption line-clamp-1 mt-0.5">{formalization.summary}</p>
                           </div>
                           <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                         </div>
@@ -304,7 +304,7 @@ const Suporte = () => {
                             {getStatusIcon(formalization.status)}
                             <span>{FORMALIZATION_STATUS_LABELS[formalization.status]}</span>
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-tiny">
                             Criado em {formatDate(formalization.created_at)}
                           </span>
                         </div>
@@ -319,12 +319,12 @@ const Suporte = () => {
           {/* Info Card */}
           <Card className="bg-primary/5 border-primary/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="text-h3 flex items-center gap-2">
                 <FileSignature className="w-4 h-4 text-primary" />
                 Sobre Formalizações
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground space-y-2">
+            <CardContent className="text-body text-muted-foreground space-y-2">
               <p>
                 Formalizações são documentos que registram acordos, atas de reunião e alterações de escopo 
                 com comprovação de ciência de ambas as partes.
