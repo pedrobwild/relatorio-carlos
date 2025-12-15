@@ -166,7 +166,9 @@ const ReportHeader = ({
                 <>
                   <TrendingDown className="w-4 h-4" />
                   <span>Atenção ao Prazo</span>
-                  <span className="text-xs opacity-80">-{projectMetrics.variancePercentage}%</span>
+                  {parseInt(projectMetrics.variancePercentage) > 0 && (
+                    <span className="text-xs opacity-80">-{projectMetrics.variancePercentage}%</span>
+                  )}
                 </>
               )}
             </div>
@@ -354,11 +356,13 @@ const ReportHeader = ({
               {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção ao Prazo'}
             </span>
           </div>
-          <span className={`text-xs font-bold ${
-            projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
-          }`}>
-            {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}% vs previsto
-          </span>
+          {projectMetrics.progressDiff !== 0 && (
+            <span className={`text-xs font-bold ${
+              projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+            }`}>
+              {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}% vs previsto
+            </span>
+          )}
         </div>
 
         {/* Project Info */}
@@ -376,7 +380,6 @@ const ReportHeader = ({
 
         {/* Quick Links - Now between Project and Current Activity */}
         <div className="p-3 border-b border-border">
-          <p className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-2">Menu</p>
           <div className="grid grid-cols-5 gap-1">
             {quickLinks.map((link) => (
               <Link
@@ -396,10 +399,6 @@ const ReportHeader = ({
 
         {/* Current Activity */}
         <div className="p-3 bg-secondary/30 border-b border-border">
-          <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            <ActivityIcon className="w-3 h-3" />
-            Etapa Atual
-          </div>
           <p className="text-sm font-semibold text-foreground">
             {projectMetrics.currentActivity}
           </p>
