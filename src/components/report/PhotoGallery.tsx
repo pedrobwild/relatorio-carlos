@@ -2,12 +2,17 @@ import { useState } from "react";
 import { GalleryPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
@@ -17,6 +22,7 @@ interface PhotoGalleryProps {
 
 const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
 
   const handlePrevious = () => {
     if (selectedIndex !== null && selectedIndex > 0) {
@@ -32,6 +38,27 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
 
   if (photos.length === 0) return null;
 
+  // Show first 4 photos on mobile, rest are collapsible
+  const firstPhotos = photos.slice(0, 4);
+  const remainingPhotos = photos.slice(4);
+
+  const PhotoItem = ({ photo, index }: { photo: GalleryPhoto; index: number }) => (
+    <button
+      onClick={() => setSelectedIndex(index)}
+      className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-muted min-h-0"
+    >
+      <img
+        src={photo.url}
+        alt={photo.caption}
+        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-2">
+        <p className="text-xs font-medium text-white line-clamp-2">{photo.caption}</p>
+      </div>
+    </button>
+  );
+
   return (
     <div className="bg-card rounded-lg border border-border">
       <div className="p-4 sm:p-5 border-b border-border">
@@ -40,26 +67,43 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
         </h3>
       </div>
       
-      <div className="p-3 sm:p-4">
+      {/* Desktop: Always show all photos */}
+      <div className="hidden sm:block p-3 sm:p-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
           {photos.map((photo, index) => (
-            <button
-              key={photo.id}
-              onClick={() => setSelectedIndex(index)}
-              className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-muted min-h-0"
-            >
-              <img
-                src={photo.url}
-                alt={photo.caption}
-                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-2">
-                <p className="text-xs font-medium text-white line-clamp-2">{photo.caption}</p>
-              </div>
-            </button>
+            <PhotoItem key={photo.id} photo={photo} index={index} />
           ))}
         </div>
+      </div>
+
+      {/* Mobile: Collapsible content */}
+      <div className="sm:hidden">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="p-3">
+            <div className="grid grid-cols-2 gap-2">
+              {firstPhotos.map((photo, index) => (
+                <PhotoItem key={photo.id} photo={photo} index={index} />
+              ))}
+              
+              <CollapsibleContent className="col-span-2 animate-accordion-down">
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {remainingPhotos.map((photo, index) => (
+                    <PhotoItem key={photo.id} photo={photo} index={firstPhotos.length + index} />
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </div>
+          </div>
+          
+          {remainingPhotos.length > 0 && (
+            <CollapsibleTrigger asChild>
+              <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
+                <span>{isOpen ? "Ver menos" : `Ver mais ${remainingPhotos.length} foto${remainingPhotos.length > 1 ? 's' : ''}`}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+              </button>
+            </CollapsibleTrigger>
+          )}
+        </Collapsible>
       </div>
 
       {/* Lightbox Modal */}
