@@ -173,11 +173,23 @@ const ReportHeader = ({
               {/* Pendências CTA */}
               <Link
                 to="/pendencias"
-                className="flex items-center gap-2 px-3 py-2 rounded-full bg-rose-500/15 text-rose-600 hover:bg-rose-500/25 transition-colors font-semibold text-sm"
+                className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors font-semibold text-sm ${
+                  pendenciasStats.overdueCount > 0 
+                    ? 'bg-rose-500/15 text-rose-600 hover:bg-rose-500/25' 
+                    : pendenciasStats.urgentCount > 0
+                      ? 'bg-amber-500/15 text-amber-600 hover:bg-amber-500/25'
+                      : 'bg-secondary text-muted-foreground hover:bg-accent'
+                }`}
               >
                 <Bell className="w-4 h-4" />
                 <span>Pendências</span>
-                <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold">
+                <span className={`flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-white text-xs font-bold ${
+                  pendenciasStats.overdueCount > 0 
+                    ? 'bg-rose-500' 
+                    : pendenciasStats.urgentCount > 0
+                      ? 'bg-amber-500'
+                      : 'bg-muted-foreground'
+                }`}>
                   {pendenciasStats.total}
                 </span>
               </Link>
@@ -426,11 +438,23 @@ const ReportHeader = ({
           {/* Pendências CTA */}
           <Link
             to="/pendencias"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-600 hover:bg-rose-500/25 transition-colors"
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-colors ${
+              pendenciasStats.overdueCount > 0 
+                ? 'bg-rose-500/15 text-rose-600 hover:bg-rose-500/25' 
+                : pendenciasStats.urgentCount > 0
+                  ? 'bg-amber-500/15 text-amber-600 hover:bg-amber-500/25'
+                  : 'bg-secondary text-muted-foreground hover:bg-accent'
+            }`}
           >
             <Bell className="w-3.5 h-3.5" />
             <span className="text-xs font-semibold">Pendências</span>
-            <span className="flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold">
+            <span className={`flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-white text-[10px] font-bold ${
+              pendenciasStats.overdueCount > 0 
+                ? 'bg-rose-500' 
+                : pendenciasStats.urgentCount > 0
+                  ? 'bg-amber-500'
+                  : 'bg-muted-foreground'
+            }`}>
               {pendenciasStats.total}
             </span>
           </Link>
