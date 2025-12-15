@@ -210,7 +210,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 8, right: 4, left: -12, bottom: 0 }}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
             >
               <CartesianGrid 
                 strokeDasharray="3 3" 
@@ -236,7 +236,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 tickFormatter={(value) => `${value}%`}
                 domain={[0, 100]}
                 ticks={[0, 25, 50, 75, 100]}
-                width={32}
+                width={38}
               />
               <Tooltip 
                 content={<CustomTooltip />} 
