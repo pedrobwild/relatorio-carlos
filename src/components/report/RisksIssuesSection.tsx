@@ -27,7 +27,7 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
       <div className="flex-1">
         <div className="flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-          <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{issue.title}</p>
+          <p className="text-sm sm:text-base font-medium text-foreground leading-relaxed">{issue.title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5 mt-1.5 ml-5.5">
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
