@@ -35,28 +35,42 @@ const generateWeeklyProgressData = (
   const startDate = new Date(projectStartDate);
   const data: WeekData[] = [];
   
+  // Check if any activity has weight defined
+  const hasWeights = activities.some(a => (a as any).weight !== undefined);
+  
+  // Calculate total weight (should be 100, but normalize if not)
+  const totalWeight = hasWeights 
+    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    : activities.length;
+  
   let weekNumber = 1;
   let weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
   
   while (weekNumber <= currentWeekNumber) {
     const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
     
-    // Calculate actual progress (realizado)
-    const completedActivities = activities.filter(activity => {
-      if (!activity.actualEnd) return false;
+    // Calculate actual progress (realizado) using weights
+    const realizadoSum = activities.reduce((sum, activity) => {
+      if (!activity.actualEnd) return sum;
       const actualEndDate = new Date(activity.actualEnd);
-      return isBefore(actualEndDate, weekEnd) || actualEndDate.getTime() === weekEnd.getTime();
-    });
+      if (isBefore(actualEndDate, weekEnd) || actualEndDate.getTime() === weekEnd.getTime()) {
+        return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
+      }
+      return sum;
+    }, 0);
     
-    const realizado = Math.round((completedActivities.length / activities.length) * 100);
+    const realizado = Math.round((realizadoSum / totalWeight) * 100);
     
-    // Calculate planned progress (previsto)
-    const plannedCompletedActivities = activities.filter(activity => {
+    // Calculate planned progress (previsto) using weights
+    const previstoSum = activities.reduce((sum, activity) => {
       const plannedEndDate = new Date(activity.plannedEnd);
-      return isBefore(plannedEndDate, weekEnd) || plannedEndDate.getTime() === weekEnd.getTime();
-    });
+      if (isBefore(plannedEndDate, weekEnd) || plannedEndDate.getTime() === weekEnd.getTime()) {
+        return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
+      }
+      return sum;
+    }, 0);
     
-    const previsto = Math.round((plannedCompletedActivities.length / activities.length) * 100);
+    const previsto = Math.round((previstoSum / totalWeight) * 100);
     
     data.push({
       week: `S${weekNumber}`,

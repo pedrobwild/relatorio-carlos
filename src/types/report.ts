@@ -4,6 +4,7 @@ export interface Activity {
   plannedEnd: string;
   actualStart: string;
   actualEnd: string;
+  weight?: number; // Peso da atividade no progresso total (0-100). Se não definido, usa cálculo proporcional por duração.
 }
 
 export interface SCurveDataPoint {

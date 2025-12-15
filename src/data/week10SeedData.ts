@@ -21,8 +21,8 @@ export const week10SeedData: WeeklyReportData = {
   preparedBy: "Eng. Pedro Henrique",
   
   kpis: {
-    physicalPlanned: 60,
-    physicalActual: 60,
+    physicalPlanned: 93,
+    physicalActual: 93,
     scheduleVarianceDays: 0,
   },
   
@@ -35,6 +35,8 @@ export const week10SeedData: WeeklyReportData = {
   
   executiveSummary: "Concluída a instalação de todos os módulos de marcenaria previstos no Projeto Executivo, com 100% de conformidade na vistoria técnica.\n\nA vistoria é composta por 48 critérios de aceitação, considerados essenciais pela Bwild.\n\nEm resumo: gavetões com movimento suave, portas com abertura/fechamento sem ruídos e alinhamento consistente.\n\nAcabamento de alta qualidade, durabilidade garantida, ausência de riscos, lascas ou danos aparentes nos módulos e frentes.",
   
+  // Pesos refletem proporção real do trabalho (soma = 100%)
+  // Marcenaria concluída = 93% da obra pronta, restante = 7% em 5 dias
   activities: [
     {
       activityId: "1",
@@ -46,6 +48,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "concluído",
       varianceDays: -1,
       percentComplete: 100,
+      weight: 5, // 5% do projeto
     },
     {
       activityId: "2",
@@ -57,6 +60,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "concluído",
       varianceDays: 1,
       percentComplete: 100,
+      weight: 15, // 15% do projeto
     },
     {
       activityId: "3",
@@ -68,6 +72,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "concluído",
       varianceDays: 0,
       percentComplete: 100,
+      weight: 20, // 20% do projeto
     },
     {
       activityId: "4",
@@ -79,6 +84,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "concluído",
       varianceDays: 2,
       percentComplete: 100,
+      weight: 10, // 10% do projeto
     },
     {
       activityId: "5",
@@ -90,6 +96,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "concluído",
       varianceDays: 0,
       percentComplete: 100,
+      weight: 10, // 10% do projeto
     },
     {
       activityId: "6",
@@ -101,6 +108,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "concluído",
       varianceDays: 0,
       percentComplete: 100,
+      weight: 33, // 33% do projeto - maior etapa
     },
     {
       activityId: "7",
@@ -111,6 +119,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "em andamento",
       varianceDays: 0,
       percentComplete: 30,
+      weight: 3, // 3% do projeto
     },
     {
       activityId: "8",
@@ -120,6 +129,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "pendente",
       varianceDays: 0,
       percentComplete: 0,
+      weight: 2, // 2% do projeto
     },
     {
       activityId: "9",
@@ -129,6 +139,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "pendente",
       varianceDays: 0,
       percentComplete: 0,
+      weight: 1, // 1% do projeto
     },
     {
       activityId: "10",
@@ -138,6 +149,7 @@ export const week10SeedData: WeeklyReportData = {
       status: "pendente",
       varianceDays: 0,
       percentComplete: 0,
+      weight: 1, // 1% do projeto
     },
   ],
   

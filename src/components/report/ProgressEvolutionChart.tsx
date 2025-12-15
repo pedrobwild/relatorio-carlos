@@ -19,34 +19,40 @@ interface ProgressEvolutionChartProps {
   projectStartDate?: string;
 }
 
-// Calculate progress at a given date based on completed activities only
+// Calculate progress at a given date based on completed activities with weighted progress
 const calculateProgressAtDate = (
   activities: WeeklyReportActivitySnapshot[],
   targetDate: Date,
   useActual: boolean
 ): number => {
-  const totalActivities = activities.length;
-  if (totalActivities === 0) return 0;
+  if (activities.length === 0) return 0;
 
-  let completedCount = 0;
+  // Check if any activity has weight defined
+  const hasWeights = activities.some(a => a.weight !== undefined);
+  
+  // Calculate total weight (should be 100, but normalize if not)
+  const totalWeight = hasWeights 
+    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
+    : activities.length;
 
-  activities.forEach((activity) => {
+  const completedWeight = activities.reduce((sum, activity) => {
     if (useActual) {
-      // Calculate actual progress - count only completed activities
+      // Calculate actual progress - sum weights of completed activities
       const actualEnd = activity.actualEnd ? new Date(activity.actualEnd) : null;
       if (actualEnd && actualEnd <= targetDate) {
-        completedCount++;
+        return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
     } else {
-      // Calculate planned progress - count activities that should be done by this date
+      // Calculate planned progress - sum weights of activities that should be done by this date
       const plannedEnd = new Date(activity.plannedEnd);
       if (plannedEnd <= targetDate) {
-        completedCount++;
+        return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
     }
-  });
+    return sum;
+  }, 0);
 
-  return Math.round((completedCount / totalActivities) * 100);
+  return Math.round((completedWeight / totalWeight) * 100);
 };
 
 // Generate weekly progress data based on activities
