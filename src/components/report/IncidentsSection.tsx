@@ -200,8 +200,8 @@ const IncidentsSection = ({ incidents }: IncidentsSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
-        <h3 className="text-xs sm:text-sm font-semibold text-white">Intercorrências de Obra</h3>
+      <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
+        <h3 className="text-sm sm:text-base font-semibold text-white">Intercorrências de Obra</h3>
       </div>
       
       <div className="hidden sm:block divide-y divide-border">
