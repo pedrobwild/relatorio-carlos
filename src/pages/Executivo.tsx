@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Download, ExternalLink, FileText, Award, Ruler, ClipboardList } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, FileText, Award, Ruler, ClipboardList, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -86,6 +86,24 @@ const Executivo = () => {
       {hasDocument ? (
         <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
           <div className="max-w-5xl mx-auto w-full flex flex-col gap-3">
+            {/* Tacit Approval Notice */}
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0 mt-0.5">
+                  <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-h3 text-amber-800 dark:text-amber-200 mb-1">Aprovação Tácita</h3>
+                  <p className="text-caption text-amber-700 dark:text-amber-300">
+                    Este projeto executivo foi considerado <strong>aprovado tacitamente</strong> em 25/06/2025, 
+                    pois não houve manifestação do cliente dentro do prazo de 5 dias úteis estipulado em contrato 
+                    (prazo expirado em 24/06/2025). Conforme cláusula contratual, a ausência de resposta no prazo 
+                    estabelecido configura aprovação automática do documento.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* PDF Viewer */}
             <div>
               <PDFViewer url={pdfUrl} title="Projeto Executivo" />
