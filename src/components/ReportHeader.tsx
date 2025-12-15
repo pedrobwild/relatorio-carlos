@@ -4,10 +4,19 @@ import bwildLogo from "@/assets/bwild-logo.png";
 import { 
   FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink, Bell
+  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle
 } from "lucide-react";
 import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface ReportHeaderProps {
   projectName: string;
@@ -60,11 +69,23 @@ const ReportHeader = ({
   activities,
 }: ReportHeaderProps) => {
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
+  const [showDateChangeAlert, setShowDateChangeAlert] = useState(false);
+
+  // Date change info (hardcoded for now, could come from props or API)
+  const dateChangeInfo = {
+    originalDate: "2025-09-14",
+    newDate: "2025-09-17",
+    reason: "Atraso no pagamento da parcela de 45 dias",
+    contractClause: "5.1.2"
+  };
+
+  // Use modified end date if applicable
+  const effectiveEndDate = endDate === dateChangeInfo.originalDate ? dateChangeInfo.newDate : endDate;
 
   // Calculate project metrics
   const projectMetrics = useMemo(() => {
     const start = new Date(startDate + "T00:00:00");
-    const end = new Date(endDate + "T00:00:00");
+    const end = new Date(effectiveEndDate + "T00:00:00");
     const report = new Date(reportDate + "T00:00:00");
 
     const totalWorkingDays = calculateWorkingDays(start, end);
@@ -125,7 +146,7 @@ const ReportHeader = ({
       completedActivities,
       totalActivities
     };
-  }, [startDate, endDate, reportDate, activities]);
+  }, [startDate, effectiveEndDate, reportDate, activities]);
 
   const quickLinks = [
     { icon: FileText, label: "Contrato", href: "/contrato" },
@@ -249,13 +270,26 @@ const ReportHeader = ({
             </div>
 
             {/* End Date */}
-            <div className="bg-card rounded-lg p-3 border border-border">
+            <button 
+              onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
+              className={`bg-card rounded-lg p-3 border text-left transition-all ${
+                endDate === dateChangeInfo.originalDate 
+                  ? 'border-amber-500/50 hover:border-amber-500 cursor-pointer' 
+                  : 'border-border cursor-default'
+              }`}
+            >
               <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Previsão Término
+                {endDate === dateChangeInfo.originalDate && (
+                  <span className="flex items-center gap-0.5 text-[9px] text-amber-600 bg-amber-500/15 px-1.5 py-0.5 rounded-full font-semibold">
+                    <AlertCircle className="w-2.5 h-2.5" />
+                    Alterado
+                  </span>
+                )}
               </div>
-              <p className="text-h3">{formatDateFull(endDate)}</p>
-            </div>
+              <p className="text-h3">{formatDateFull(effectiveEndDate)}</p>
+            </button>
 
             {/* Total Working Days */}
             <div className="bg-card rounded-lg p-3 border border-border">
@@ -472,9 +506,17 @@ const ReportHeader = ({
                 <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
               )}
             </div>
-            <div className="text-right shrink-0">
-              <p className="text-tiny">{formatDateFull(startDate)} → {formatDateFull(endDate)}</p>
-            </div>
+            <button 
+              onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
+              className="text-right shrink-0 flex items-center gap-1.5"
+            >
+              <p className="text-tiny">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
+              {endDate === dateChangeInfo.originalDate && (
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-500/20">
+                  <AlertCircle className="w-3 h-3 text-amber-600" />
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Timeline Progress Bar - First */}
@@ -590,6 +632,46 @@ const ReportHeader = ({
           ))}
         </div>
       </div>
+
+      {/* Date Change Alert Dialog */}
+      <AlertDialog open={showDateChangeAlert} onOpenChange={setShowDateChangeAlert}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertCircle className="w-5 h-5" />
+              Prazo Final Alterado
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 text-left">
+              <p>
+                A data prevista de término foi alterada de{" "}
+                <span className="font-semibold line-through text-muted-foreground">
+                  {formatDateFull(dateChangeInfo.originalDate)}
+                </span>{" "}
+                para{" "}
+                <span className="font-semibold text-foreground">
+                  {formatDateFull(dateChangeInfo.newDate)}
+                </span>
+                .
+              </p>
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
+                  Motivo:
+                </p>
+                <p className="text-sm text-foreground">
+                  {dateChangeInfo.reason}, de acordo com a{" "}
+                  <span className="font-semibold">
+                    cláusula {dateChangeInfo.contractClause}
+                  </span>{" "}
+                  do contrato.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Entendi</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 };
