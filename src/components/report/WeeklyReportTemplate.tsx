@@ -5,6 +5,7 @@ import LookaheadSection from "./LookaheadSection";
 import RisksIssuesSection from "./RisksIssuesSection";
 import QualitySection from "./QualitySection";
 import ClientDecisionsSection from "./ClientDecisionsSection";
+import IncidentsSection from "./IncidentsSection";
 import PhotoGallery from "./PhotoGallery";
 import ReportFooter from "./ReportFooter";
 interface WeeklyReportTemplateProps {
@@ -32,6 +33,11 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
       {/* Risks, Issues, Action Plans */}
       <section>
         <RisksIssuesSection issues={data.risksAndIssues} />
+      </section>
+
+      {/* Incidents */}
+      <section>
+        <IncidentsSection incidents={data.incidents} />
       </section>
 
       {/* Client Decisions */}
