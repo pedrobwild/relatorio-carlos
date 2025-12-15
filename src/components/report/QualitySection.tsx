@@ -115,8 +115,8 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
 );
 
 const QualitySection = ({ qualityItems }: QualitySectionProps) => {
-  const [isChecklistOpen, setIsChecklistOpen] = useState(true);
-  const [isPendingOpen, setIsPendingOpen] = useState(true);
+  const [isChecklistOpen, setIsChecklistOpen] = useState(false);
+  const [isPendingOpen, setIsPendingOpen] = useState(false);
 
   // Flatten all pending items
   const allPendingItems = qualityItems.flatMap(q => q.pendingItems);
