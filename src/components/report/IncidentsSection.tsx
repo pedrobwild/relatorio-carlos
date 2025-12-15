@@ -68,13 +68,13 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         </div>
 
         {/* Datas */}
-        <div className="space-y-0.5 text-sm sm:text-base text-foreground/80">
-          <p><span className="font-semibold">Data da ocorrência:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
-          <p><span className="font-semibold">Previsão para resolução:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
+        <div className="space-y-1.5 text-sm sm:text-base text-foreground/80">
+          <p className="leading-relaxed"><span className="font-semibold">Data da ocorrência:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
+          <p className="leading-relaxed"><span className="font-semibold">Previsão para resolução:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
         </div>
 
         {/* Ocorrência */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <div className="flex items-start gap-2">
             <AlertOctagon className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
             <p className="text-sm font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
@@ -117,19 +117,19 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         )}
 
         {/* Causa */}
-        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
+        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-2">
           <p className="text-sm font-bold text-foreground">Causa</p>
           <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.cause}</p>
         </div>
 
         {/* Ação */}
-        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
+        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-2">
           <p className="text-sm font-bold text-foreground">Ação</p>
           <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.action}</p>
         </div>
 
         {/* Impacto */}
-        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
+        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-2">
           <p className="text-sm font-bold text-foreground">Impacto</p>
           <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.impact}</p>
         </div>

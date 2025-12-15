@@ -27,7 +27,7 @@ const getRiskBadge = (risk: LookaheadTask["risk"]) => {
 
 const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animationDelay?: number }) => (
   <div 
-    className="p-4 sm:p-5 space-y-2"
+    className="p-4 sm:p-5 space-y-3"
     style={{ 
       animationDelay: `${animationDelay}ms`,
       animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -36,7 +36,7 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
   >
     <div className="flex items-start justify-between gap-3">
       <div className="flex-1">
-        <div className="flex flex-wrap items-center gap-2 mb-1.5">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
             {format(new Date(task.date), "dd/MM", { locale: ptBR })}
           </span>
@@ -46,7 +46,7 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
       </div>
     </div>
     
-    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-x-3 sm:gap-y-1 text-sm text-foreground/70">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-3 sm:gap-y-1.5 text-sm text-foreground/70">
       <div className="flex items-start gap-1.5">
         <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
         <span className="leading-relaxed"><span className="font-medium">Pré-requisito:</span> {task.prerequisites}</span>
