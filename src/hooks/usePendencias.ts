@@ -58,7 +58,7 @@ export const pendingItemsData: PendingItem[] = [
   {
     id: "inv-1",
     type: "invoice",
-    title: "Parcela 6 - Marcenaria",
+    title: "Parcela 6 - 45 dias após início da obra",
     description: "Vencimento original: 05/09/2025",
     createdDate: "2025-08-25",
     dueDate: "2025-09-05",
@@ -69,7 +69,7 @@ export const pendingItemsData: PendingItem[] = [
   {
     id: "inv-2",
     type: "invoice",
-    title: "Parcela 7 - Instalações e acabamentos",
+    title: "Parcela 7 - 60 dias após início da obra",
     description: "Próximo vencimento",
     createdDate: "2025-09-01",
     dueDate: "2025-09-12",
