@@ -81,7 +81,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
             <h3 className="text-sm sm:text-base font-semibold text-white">Entregáveis concluídos na semana</h3>
           </div>
           <div className="p-4 sm:p-5">
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {data.deliverablesCompleted.map((item) => (
                 <li key={item.id} className="space-y-1.5">
                   <div className="flex items-start gap-2 text-sm sm:text-base text-foreground font-medium">

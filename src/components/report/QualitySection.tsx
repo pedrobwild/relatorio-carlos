@@ -63,11 +63,11 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
       <DialogHeader>
         <DialogTitle className="text-sm sm:text-base font-semibold">{item.checklistName}</DialogTitle>
       </DialogHeader>
-      <div className="mt-3 space-y-3">
+      <div className="mt-3 space-y-4">
         {/* Checklist Items */}
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Itens do Checklist</p>
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {item.items.map((checkItem, idx) => (
               <li key={idx} className="flex items-center justify-between p-2 rounded bg-secondary/50">
                 <span className="text-xs sm:text-sm text-foreground">{checkItem.name}</span>
@@ -92,7 +92,7 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
         {item.nonConformities.length > 0 && (
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Não Conformidades</p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {item.nonConformities.map((nc) => (
                 <li key={nc.id} className="p-2.5 rounded bg-destructive/5 border border-destructive/20">
                   <div className="flex items-start gap-2">

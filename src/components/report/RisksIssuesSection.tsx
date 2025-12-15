@@ -16,7 +16,7 @@ interface RisksIssuesSectionProps {
 
 const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDelay?: number }) => (
   <div 
-    className="p-4 sm:p-5 space-y-2.5"
+    className="p-4 sm:p-5 space-y-3"
     style={{ 
       animationDelay: `${animationDelay}ms`,
       animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -29,7 +29,7 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
           <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
           <p className="text-sm sm:text-base font-medium text-foreground leading-relaxed">{issue.title}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5 mt-1.5 ml-5.5">
+        <div className="flex flex-wrap items-center gap-2.5 mt-2 ml-5.5">
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
             {format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}
           </span>
@@ -37,9 +37,9 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
       </div>
     </div>
     
-    <div className="bg-secondary rounded-lg p-2.5 sm:p-3">
-      <p className="text-sm font-bold text-foreground mb-1">Plano de Ação</p>
-      <div className="text-sm sm:text-base text-foreground/80 leading-relaxed space-y-1">
+    <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-2">
+      <p className="text-sm font-bold text-foreground">Plano de Ação</p>
+      <div className="text-sm sm:text-base text-foreground/80 leading-relaxed space-y-1.5">
         {issue.actionPlan.split('\n').map((line, idx) => (
           <p key={idx}>{idx + 1}) {line.trim()}</p>
         ))}
