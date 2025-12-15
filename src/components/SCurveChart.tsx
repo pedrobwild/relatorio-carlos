@@ -39,11 +39,66 @@ const formatDisplayDate = (dateStr: string, baseYear?: number): string => {
   return `${day}/${month}`;
 };
 
+// Find activity in progress at a given date
+const findActivityAtDate = (activities: Activity[], dateStr: string): string | null => {
+  const currentDate = parseDate(dateStr);
+  if (!currentDate) return null;
+  
+  // First, try to find activity based on actual dates (more accurate)
+  for (const activity of activities) {
+    const actualStart = parseDate(activity.actualStart);
+    const actualEnd = parseDate(activity.actualEnd);
+    
+    // If activity has actual data, check if date falls within actual execution
+    if (actualStart && actualEnd) {
+      if (currentDate >= actualStart && currentDate <= actualEnd) {
+        return activity.description;
+      }
+    } else if (actualStart && !actualEnd) {
+      // Activity started but not finished - still in progress
+      if (currentDate >= actualStart) {
+        return activity.description;
+      }
+    }
+  }
+  
+  // Fallback to planned dates
+  for (const activity of activities) {
+    const plannedStart = parseDate(activity.plannedStart);
+    const plannedEnd = parseDate(activity.plannedEnd);
+    
+    if (plannedStart && plannedEnd) {
+      if (currentDate >= plannedStart && currentDate <= plannedEnd) {
+        return activity.description;
+      }
+    }
+  }
+  
+  // If no activity found, find the last completed one
+  const sortedActivities = [...activities]
+    .filter(a => a.plannedEnd)
+    .sort((a, b) => {
+      const dateA = parseDate(a.plannedEnd);
+      const dateB = parseDate(b.plannedEnd);
+      if (!dateA || !dateB) return 0;
+      return dateA.getTime() - dateB.getTime();
+    });
+  
+  for (const activity of sortedActivities) {
+    const plannedEnd = parseDate(activity.plannedEnd);
+    if (plannedEnd && currentDate >= plannedEnd) {
+      return activity.description;
+    }
+  }
+  
+  return null;
+};
+
 // Generate S-Curve data from activities using weighted progress with temporal scale
 const generateChartData = (activities: Activity[], reportDate?: string) => {
   if (activities.length === 0) {
     return { 
-      data: [{ date: "Início", previsto: 0, realizado: null, timestamp: 0 }],
+      data: [{ date: "Início", previsto: 0, realizado: null, timestamp: 0, activity: null }],
       milestones: { start: 0, end: 0, today: 0, half: 0 }
     };
   }
@@ -133,13 +188,22 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     today: todayTimestamp,
     half: halfTimestamp
   };
+
+  // Build a reverse lookup from date string to ISO date for activity finding
+  const dateToIso: { [key: string]: string } = {};
+  sortedDates.forEach(isoDate => {
+    dateToIso[formatDisplayDate(isoDate, baseYear)] = isoDate;
+  });
   
   const data = sortedDates.map(date => {
     const currentDate = parseDate(date);
-    if (!currentDate || !firstDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null, timestamp: 0 };
+    if (!currentDate || !firstDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null, timestamp: 0, activity: null };
     
     // Calculate timestamp as days from start for proper X-axis scaling
     const daysSinceStart = Math.floor((currentDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Find activity at this date
+    const activityAtDate = findActivityAtDate(activities, date);
     
     // Calculate planned progress using weights
     const plannedProgress = activities.reduce((sum, a) => {
@@ -178,6 +242,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       timestamp: daysSinceStart,
       previsto: Math.round((plannedProgress / totalWeight) * 100),
       realizado: actualProgress !== null ? Math.round((actualProgress / totalWeight) * 100) : null,
+      activity: activityAtDate,
     };
   });
 
@@ -208,30 +273,49 @@ interface CustomTooltipProps {
     value: number;
     dataKey: string;
     color: string;
+    payload?: {
+      activity?: string | null;
+    };
   }>;
   label?: string;
 }
 
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
+    const activity = payload[0]?.payload?.activity;
+    
     return (
-      <div className="bg-card border border-border rounded-lg shadow-xl p-2.5 sm:p-3 min-w-[120px] sm:min-w-[140px] z-50">
-        <p className="text-xs sm:text-sm font-semibold text-foreground mb-1.5 sm:mb-2 pb-1.5 sm:pb-2 border-b border-border">
+      <div className="bg-card border border-border rounded-xl shadow-xl p-3 sm:p-3.5 min-w-[160px] sm:min-w-[200px] z-50">
+        <p className="text-sm sm:text-base font-bold text-foreground mb-2">
           {label}
         </p>
-        <div className="space-y-1 sm:space-y-1.5">
+        
+        {/* Activity in progress at this date */}
+        {activity && (
+          <div className="mb-2.5 pb-2.5 border-b border-border">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+              Etapa em execução
+            </p>
+            <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">
+              {activity}
+            </p>
+          </div>
+        )}
+        
+        {/* Progress values */}
+        <div className="space-y-1.5">
           {payload.map((entry, index) => (
-            <div key={index} className="flex items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-1.5 sm:gap-2">
+            <div key={index} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
                 <span 
-                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0" 
+                  className="w-2.5 h-2.5 rounded-full shrink-0" 
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="text-[10px] sm:text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {entry.dataKey === "previsto" ? "Previsto" : "Realizado"}
                 </span>
               </div>
-              <span className="text-xs sm:text-sm font-bold text-foreground">
+              <span className="text-sm font-bold text-foreground">
                 {entry.value}%
               </span>
             </div>
