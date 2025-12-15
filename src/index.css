@@ -149,35 +149,35 @@
     line-height: 1.15;
   }
 
-  /* Typography Scale - Standardized hierarchy (30% larger for readability) */
-  /* H1: Page titles - 20px mobile / 24px desktop */
+  /* Typography Scale - Balanced for mobile and desktop */
+  /* H1: Page titles - 18px mobile / 20px desktop */
   .text-h1 {
-    @apply text-xl md:text-2xl font-bold text-foreground;
+    @apply text-lg md:text-xl font-bold text-foreground;
   }
   
-  /* H2: Section titles - 18px mobile / 20px desktop */
+  /* H2: Section titles - 15px mobile / 16px desktop */
   .text-h2 {
-    @apply text-lg md:text-xl font-semibold text-foreground;
+    @apply text-[15px] md:text-base font-semibold text-foreground;
   }
   
-  /* H3: Subsection/card titles - 16px mobile / 18px desktop */
+  /* H3: Subsection/card titles - 14px mobile / 15px desktop */
   .text-h3 {
-    @apply text-base md:text-lg font-semibold text-foreground;
+    @apply text-sm md:text-[15px] font-semibold text-foreground;
   }
   
-  /* Body: Regular content - 16px mobile / 18px desktop */
+  /* Body: Regular content - 14px mobile / 15px desktop */
   .text-body {
-    @apply text-base md:text-lg text-foreground;
+    @apply text-sm md:text-[15px] text-foreground;
   }
   
-  /* Caption: Labels, metadata - 14px mobile / 16px desktop */
+  /* Caption: Labels, metadata - 13px mobile / 14px desktop */
   .text-caption {
-    @apply text-sm md:text-base text-muted-foreground;
+    @apply text-[13px] md:text-sm text-muted-foreground;
   }
   
-  /* Tiny: Smallest text - 12px mobile / 14px desktop */
+  /* Tiny: Smallest text - 11px mobile / 12px desktop */
   .text-tiny {
-    @apply text-xs md:text-sm text-muted-foreground;
+    @apply text-[11px] md:text-xs text-muted-foreground;
   }
 
   /* Improve touch targets for mobile - only apply to interactive elements that need it */
