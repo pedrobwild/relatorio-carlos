@@ -9,7 +9,6 @@ import Contrato from "./pages/Contrato";
 import Projeto3D from "./pages/Projeto3D";
 import Executivo from "./pages/Executivo";
 import Financeiro from "./pages/Financeiro";
-import Suporte from "./pages/Suporte";
 import Formalizacoes from "./pages/Formalizacoes";
 import FormalizacaoNova from "./pages/FormalizacaoNova";
 import FormalizacaoDetalhe from "./pages/FormalizacaoDetalhe";
@@ -30,7 +29,6 @@ const App = () => (
           <Route path="/projeto-3d" element={<Projeto3D />} />
           <Route path="/executivo" element={<Executivo />} />
           <Route path="/financeiro" element={<Financeiro />} />
-          <Route path="/suporte" element={<Suporte />} />
           <Route path="/formalizacoes" element={<Formalizacoes />} />
           <Route path="/formalizacoes/nova" element={<FormalizacaoNova />} />
           <Route path="/formalizacoes/:id" element={<FormalizacaoDetalhe />} />
