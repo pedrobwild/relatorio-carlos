@@ -508,7 +508,31 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
                 dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 2.5 }}
-                activeDot={{ r: 4, fill: "hsl(var(--primary))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                activeDot={(props: any) => {
+                  const { cx, cy } = props;
+                  return (
+                    <g>
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={12}
+                        fill="hsl(var(--primary))"
+                        opacity={0.15}
+                        className="animate-ping"
+                        style={{ transformOrigin: `${cx}px ${cy}px` }}
+                      />
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={6}
+                        fill="hsl(var(--primary))"
+                        stroke="hsl(var(--card))"
+                        strokeWidth={2}
+                        className="drop-shadow-lg"
+                      />
+                    </g>
+                  );
+                }}
               />
               <Line
                 type="monotone"
@@ -531,7 +555,31 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                     />
                   );
                 }}
-                activeDot={{ r: 4, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                activeDot={(props: any) => {
+                  const { cx, cy } = props;
+                  return (
+                    <g>
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={12}
+                        fill="hsl(var(--success))"
+                        opacity={0.15}
+                        className="animate-ping"
+                        style={{ transformOrigin: `${cx}px ${cy}px` }}
+                      />
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={6}
+                        fill="hsl(var(--success))"
+                        stroke="hsl(var(--card))"
+                        strokeWidth={2}
+                        className="drop-shadow-lg"
+                      />
+                    </g>
+                  );
+                }}
               />
             </LineChart>
           </ResponsiveContainer>
