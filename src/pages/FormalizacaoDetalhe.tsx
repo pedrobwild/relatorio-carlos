@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { useFormalizacao, useAcknowledge } from '@/hooks/useFormalizacoes';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import bwildLogo from '@/assets/bwild-logo.png';
+import ReactMarkdown from 'react-markdown';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
@@ -20,7 +21,6 @@ import {
   type FormalizationEventType 
 } from '@/types/formalization';
 import { FormalizacaoEvidence } from '@/components/formalizacao/FormalizacaoEvidence';
-
 const getStatusBadgeVariant = (status: FormalizationStatus): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case 'signed':
@@ -285,45 +285,97 @@ export default function FormalizacaoDetalhe() {
             {/* Content */}
             <Card>
               <CardContent className="p-6">
-                <div 
-                  className="prose prose-sm dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: formalizacao.body_md?.replace(/\n/g, '<br>') || '' }}
-                />
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground">
+                  <ReactMarkdown>{formalizacao.body_md || ''}</ReactMarkdown>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Signatures */}
+            {/* Parties involved */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Assinaturas</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Partes Envolvidas
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {parties.map((party: any) => {
-                  const ack = acknowledgements.find((a: any) => a.party_id === party.id);
-                  return (
-                    <div key={party.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        {ack ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-amber-600" />
-                        )}
-                        <div>
-                          <p className="font-medium">{party.display_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {party.role_label || (party.party_type === 'customer' ? 'Cliente' : 'Empresa')}
-                          </p>
+              <CardContent className="space-y-3">
+                {parties.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-4 text-center">
+                    <p>Nenhuma parte cadastrada.</p>
+                    <p className="text-xs mt-1">As partes serão adicionadas quando a formalização for enviada para assinatura.</p>
+                  </div>
+                ) : (
+                  parties.map((party: any) => {
+                    const ack = acknowledgements.find((a: any) => a.party_id === party.id);
+                    const isSigned = !!ack;
+                    return (
+                      <div 
+                        key={party.id} 
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          isSigned 
+                            ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-900/50' 
+                            : 'bg-muted/50 border-border'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {isSigned ? (
+                            <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            </div>
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">{party.display_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {party.role_label || (party.party_type === 'customer' ? 'Cliente' : 'Empresa')}
+                              {party.email && ` · ${party.email}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {isSigned ? (
+                            <div>
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                                Assinado
+                              </Badge>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {formatDate(ack.acknowledged_at)}
+                              </p>
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                              Pendente
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                      {ack && (
-                        <div className="text-right text-sm text-muted-foreground">
-                          <p>Assinado em</p>
-                          <p>{formatDate(ack.acknowledged_at)}</p>
-                        </div>
-                      )}
+                    );
+                  })
+                )}
+                
+                {/* Signature progress */}
+                {parties.length > 0 && (
+                  <div className="pt-3 border-t mt-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Progresso de assinaturas</span>
+                      <span className="font-medium">
+                        {formalizacao.parties_signed ?? 0}/{formalizacao.parties_total ?? parties.length}
+                      </span>
                     </div>
-                  );
-                })}
+                    <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${((formalizacao.parties_signed ?? 0) / ((formalizacao.parties_total ?? parties.length) || 1)) * 100}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
