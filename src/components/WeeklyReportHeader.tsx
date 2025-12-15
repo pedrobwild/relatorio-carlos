@@ -75,24 +75,24 @@ const WeeklyReportHeader = ({
 
       {/* Top row: Week badge, date range */}
       <div className="flex flex-wrap items-center gap-2.5 mb-2">
-        <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap">
+        <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-h3 whitespace-nowrap">
           Semana {weeklyReport.weekNumber}
         </span>
-        <span className="text-muted-foreground text-sm">
+        <span className="text-caption">
           {dateRange}
         </span>
       </div>
 
       {/* Current phase */}
-      <p className="text-foreground text-sm font-medium mb-3">
+      <p className="text-body font-medium mb-3">
         Etapa: Marcenaria
       </p>
 
       {/* Progress bar */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-sm text-muted-foreground">Progresso da obra</span>
-          <span className="text-sm font-bold text-primary">{weeklyReport.completionPercentage}%</span>
+          <span className="text-caption">Progresso da obra</span>
+          <span className="text-h3">{weeklyReport.completionPercentage}%</span>
         </div>
         <Progress value={weeklyReport.completionPercentage} className="h-2" />
       </div>

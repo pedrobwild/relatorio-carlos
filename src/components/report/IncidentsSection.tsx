@@ -66,7 +66,7 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
           </span>
         </div>
 
-        <div className="space-y-1 text-xs text-foreground/80">
+        <div className="space-y-1 text-caption">
           <p className="leading-snug"><span className="font-semibold">Data:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
           <p className="leading-snug"><span className="font-semibold">Previsão:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
         </div>
@@ -74,19 +74,19 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         <div className="space-y-1">
           <div className="flex items-start gap-1.5">
             <AlertOctagon className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
-            <p className="text-[10px] font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
+            <p className="text-tiny font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
           </div>
-          <p className="text-xs text-foreground/80 leading-snug ml-4">{incident.occurrence}</p>
+          <p className="text-caption leading-snug ml-4">{incident.occurrence}</p>
         </div>
 
         {photos.length > 0 && (
           <div className="space-y-1">
             <div className="flex items-center gap-1.5">
               <Camera className="w-3 h-3 text-muted-foreground" />
-              <p className="text-[10px] font-bold text-foreground uppercase tracking-wide">
+              <p className="text-tiny font-bold text-foreground uppercase tracking-wide">
                 Fotos
               </p>
-              <span className="text-[10px] text-muted-foreground">({photos.length})</span>
+              <span className="text-tiny">({photos.length})</span>
             </div>
             <div className="grid grid-cols-3 gap-1.5 ml-4">
               {photos.map((photo, index) => (
@@ -107,18 +107,18 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         )}
 
         <div className="bg-secondary rounded-lg p-2 space-y-1">
-          <p className="text-[10px] font-bold text-foreground">Causa</p>
-          <p className="text-xs text-foreground/80 leading-snug">{incident.cause}</p>
+          <p className="text-tiny font-bold text-foreground">Causa</p>
+          <p className="text-caption leading-snug">{incident.cause}</p>
         </div>
 
         <div className="bg-secondary rounded-lg p-2 space-y-1">
-          <p className="text-[10px] font-bold text-foreground">Ação</p>
-          <p className="text-xs text-foreground/80 leading-snug">{incident.action}</p>
+          <p className="text-tiny font-bold text-foreground">Ação</p>
+          <p className="text-caption leading-snug">{incident.action}</p>
         </div>
 
         <div className="bg-secondary rounded-lg p-2 space-y-1">
-          <p className="text-[10px] font-bold text-foreground">Impacto</p>
-          <p className="text-xs text-foreground/80 leading-snug">{incident.impact}</p>
+          <p className="text-tiny font-bold text-foreground">Impacto</p>
+          <p className="text-caption leading-snug">{incident.impact}</p>
         </div>
       </div>
 
@@ -201,7 +201,7 @@ const IncidentsSection = ({ incidents }: IncidentsSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Intercorrências de Obra</h3>
+        <h3 className="text-h2 text-white">Intercorrências de Obra</h3>
       </div>
       
       <div className="hidden sm:block divide-y divide-border">

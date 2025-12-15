@@ -26,7 +26,7 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
       <div className="flex-1">
         <div className="flex items-start gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
-          <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{issue.title}</p>
+          <p className="text-body font-medium text-foreground leading-snug">{issue.title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 mt-1 ml-5">
           <span className="text-[10px] font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
@@ -37,8 +37,8 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
     </div>
     
     <div className="bg-secondary rounded-lg p-2 space-y-1">
-      <p className="text-xs font-bold text-foreground">Plano de Ação</p>
-      <div className="text-xs text-foreground/80 leading-snug space-y-0.5">
+      <p className="text-caption font-bold text-foreground">Plano de Ação</p>
+      <div className="text-caption text-foreground/80 leading-snug space-y-0.5">
         {issue.actionPlan.split('\n').map((line, idx) => (
           <p key={idx}>{idx + 1}) {line.trim()}</p>
         ))}
@@ -56,7 +56,7 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Gestão de Riscos</h3>
+        <h3 className="text-h2 text-white">Gestão de Riscos</h3>
       </div>
       
       {/* Desktop: Always show all */}
