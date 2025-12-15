@@ -187,4 +187,53 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Hover lift effect for cards */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+
+  /* Hover glow effect */
+  .hover-glow {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-glow:hover {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
+  }
+
+  /* Hover scale effect */
+  .hover-scale {
+    @apply transition-transform duration-200 ease-out;
+  }
+  .hover-scale:hover {
+    @apply scale-[1.02];
+  }
+
+  /* Button press effect */
+  .btn-press {
+    @apply transition-transform duration-150 ease-out;
+  }
+  .btn-press:active {
+    @apply scale-[0.97];
+  }
+
+  /* Card hover with border glow */
+  .card-hover {
+    @apply transition-all duration-300 ease-out border-transparent;
+  }
+  .card-hover:hover {
+    @apply border-primary/20 shadow-lg;
+    box-shadow: 0 10px 40px -10px hsl(var(--primary) / 0.15);
+  }
+
+  /* Smooth icon hover */
+  .icon-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+  .icon-hover:hover {
+    @apply text-primary scale-110;
+  }
 }
