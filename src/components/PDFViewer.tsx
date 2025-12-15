@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -18,6 +18,11 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  
+  // Swipe handling
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const minSwipeDistance = 50;
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -53,6 +58,34 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
 
   const resetZoom = () => {
     setScale(1);
+  };
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const distance = touchStartX.current - touchEndX.current;
+    const isSwipe = Math.abs(distance) > minSwipeDistance;
+
+    if (isSwipe && scale === 1) {
+      if (distance > 0) {
+        // Swipe left -> next page
+        goToNextPage();
+      } else {
+        // Swipe right -> previous page
+        goToPrevPage();
+      }
+    }
+    
+    // Reset
+    touchStartX.current = 0;
+    touchEndX.current = 0;
   };
 
   // Calculate page width based on container and scale
@@ -116,11 +149,14 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
         </div>
       </div>
 
-      {/* PDF Document */}
+      {/* PDF Document with Swipe */}
       <div
         ref={containerRef}
         className="flex-1 overflow-auto touch-pan-x touch-pan-y"
         style={{ WebkitOverflowScrolling: "touch" }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="flex justify-center p-4 min-h-full">
           <Document
@@ -156,26 +192,29 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
         </div>
       </div>
 
-      {/* Mobile Navigation - Bottom */}
-      <div className="sm:hidden flex items-center justify-center gap-4 px-3 py-3 bg-card border-t border-border">
-        <Button
-          variant="outline"
-          onClick={goToPrevPage}
-          disabled={pageNumber <= 1}
-          className="h-12 flex-1 max-w-32 touch-manipulation"
-        >
-          <ChevronLeft className="w-5 h-5 mr-1" />
-          Anterior
-        </Button>
-        <Button
-          variant="outline"
-          onClick={goToNextPage}
-          disabled={pageNumber >= numPages}
-          className="h-12 flex-1 max-w-32 touch-manipulation"
-        >
-          Próxima
-          <ChevronRight className="w-5 h-5 ml-1" />
-        </Button>
+      {/* Mobile Navigation - Bottom with swipe hint */}
+      <div className="sm:hidden flex flex-col items-center gap-2 px-3 py-3 bg-card border-t border-border">
+        <p className="text-xs text-muted-foreground">Deslize para navegar entre páginas</p>
+        <div className="flex items-center justify-center gap-4 w-full">
+          <Button
+            variant="outline"
+            onClick={goToPrevPage}
+            disabled={pageNumber <= 1}
+            className="h-12 flex-1 max-w-32 touch-manipulation"
+          >
+            <ChevronLeft className="w-5 h-5 mr-1" />
+            Anterior
+          </Button>
+          <Button
+            variant="outline"
+            onClick={goToNextPage}
+            disabled={pageNumber >= numPages}
+            className="h-12 flex-1 max-w-32 touch-manipulation"
+          >
+            Próxima
+            <ChevronRight className="w-5 h-5 ml-1" />
+          </Button>
+        </div>
       </div>
     </div>
   );
