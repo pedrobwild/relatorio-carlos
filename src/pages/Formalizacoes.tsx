@@ -97,24 +97,29 @@ export default function Formalizacoes() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => navigate('/')}
                 aria-label="Voltar para o início"
-                className="rounded-full"
+                className="rounded-full shrink-0 h-8 w-8"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
-              <span className="text-muted-foreground">|</span>
-              <h1 className="text-lg font-semibold">Formalizações</h1>
+              <img src={bwildLogo} alt="Bwild" className="h-6 shrink-0" />
+              <span className="text-muted-foreground/50 shrink-0">|</span>
+              <h1 className="text-base font-semibold truncate">Formalizações</h1>
             </div>
-            <Button onClick={() => navigate('/formalizacoes/nova')} aria-label="Criar nova formalização">
-              <Plus className="h-4 w-4 mr-2" />
-              Nova
+            <Button 
+              size="sm"
+              onClick={() => navigate('/formalizacoes/nova')} 
+              aria-label="Criar nova formalização"
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Nova</span>
             </Button>
           </div>
         </div>
