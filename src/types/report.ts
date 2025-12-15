@@ -19,6 +19,17 @@ export interface WeeklyReport {
   completionPercentage: number;
 }
 
+export interface ReportIncident {
+  id: string;
+  occurrence: string;
+  occurrenceDate: string;
+  cause: string;
+  action: string;
+  impact: string;
+  status: 'aberto' | 'em andamento' | 'resolvido';
+  expectedResolutionDate: string;
+}
+
 export interface ReportData {
   projectName: string;
   unitName: string;
@@ -27,4 +38,5 @@ export interface ReportData {
   endDate: string;
   reportDate: string; // Data de geração do relatório
   activities: Activity[];
+  incidents?: ReportIncident[];
 }
