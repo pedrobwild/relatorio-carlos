@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
+import VideoPlayer from "@/components/VideoPlayer";
 
 const Projeto3D = () => {
   const pdfUrl = "/documents/projeto-3d.pdf";
@@ -70,18 +71,7 @@ const Projeto3D = () => {
                 <Play className="w-4 h-4 text-white" />
                 <h2 className="font-semibold text-sm text-white">Tour Virtual 3D</h2>
               </div>
-              <div className="aspect-video bg-black">
-                <video
-                  controls
-                  playsInline
-                  className="w-full h-full object-contain"
-                  poster=""
-                >
-                  <source src={videoUrl} type="video/quicktime" />
-                  <source src={videoUrl} type="video/mp4" />
-                  Seu navegador não suporta reprodução de vídeo.
-                </video>
-              </div>
+              <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
             </div>
           )}
 
