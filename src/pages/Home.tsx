@@ -105,10 +105,11 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
-      {/* Subtle decorative elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-accent/20 to-primary/10 relative overflow-hidden">
+      {/* Subtle decorative elements - using Bwild purple tones */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-primary/10 via-accent/5 to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-radial from-primary/8 via-accent/3 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       
       {/* Header */}
       <header className="p-4 md:p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm relative z-10">
