@@ -1,65 +1,106 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ChevronRight, FileText, Users, Package, RefreshCw } from 'lucide-react';
 import { FORMALIZATION_TYPE_LABELS, type FormalizationType } from '@/types/formalization';
 
 interface TemplateSelectorProps {
   onSelect: (type: FormalizationType) => void;
 }
 
-const templates: { type: FormalizationType; icon: string; description: string }[] = [
+const templates: { 
+  type: FormalizationType; 
+  icon: React.ReactNode; 
+  emoji: string;
+  description: string;
+  tags: string[];
+}[] = [
   {
     type: 'budget_item_swap',
-    icon: '💰',
+    icon: <RefreshCw className="h-5 w-5" />,
+    emoji: '💰',
     description: 'Registra a troca de um item do orçamento por outro, documentando valores e motivos.',
+    tags: ['Orçamento', 'Troca'],
   },
   {
     type: 'meeting_minutes',
-    icon: '📝',
+    icon: <FileText className="h-5 w-5" />,
+    emoji: '📝',
     description: 'Documenta decisões e discussões de reuniões com registro de participantes e tópicos.',
+    tags: ['Reunião', 'Ata'],
   },
   {
     type: 'exception_custody',
-    icon: '📦',
+    icon: <Package className="h-5 w-5" />,
+    emoji: '📦',
     description: 'Formaliza a custódia temporária de itens, incluindo estado, local e responsabilidades.',
+    tags: ['Custódia', 'Item'],
   },
 ];
 
 export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-6">
-        <h2 className="text-h2">Escolha o tipo de formalização</h2>
-        <p className="text-caption mt-1">
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 mb-4">
+          <FileText className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="text-xl font-semibold">Escolha o tipo</h2>
+        <p className="text-sm text-muted-foreground mt-1">
           Selecione o template que melhor se encaixa na situação
         </p>
       </div>
 
-      <div className="grid gap-4">
-        {templates.map((template) => (
+      <div className="grid gap-3">
+        {templates.map((template, index) => (
           <Card 
             key={template.type}
-            className="cursor-pointer hover:border-primary hover:bg-accent/50 transition-colors"
+            className="cursor-pointer group hover:border-primary hover:shadow-md transition-all duration-200 overflow-hidden animate-fade-in opacity-0"
+            style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
             onClick={() => onSelect(template.type)}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && onSelect(template.type)}
             aria-label={`Selecionar ${FORMALIZATION_TYPE_LABELS[template.type]}`}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl" role="img" aria-hidden="true">
-                  {template.icon}
-                </span>
-                <CardTitle className="text-h3">
-                  {FORMALIZATION_TYPE_LABELS[template.type]}
-                </CardTitle>
+            <CardContent className="p-0">
+              <div className="flex items-center gap-4 p-4">
+                {/* Icon */}
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 group-hover:scale-110 transition-all">
+                  <span className="text-2xl" role="img" aria-hidden="true">
+                    {template.emoji}
+                  </span>
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {FORMALIZATION_TYPE_LABELS[template.type]}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {template.description}
+                  </p>
+                  <div className="flex gap-1.5 mt-2">
+                    {template.tags.map(tag => (
+                      <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Arrow */}
+                <ChevronRight className="h-5 w-5 text-muted-foreground/50 shrink-0 group-hover:text-primary group-hover:translate-x-1 transition-all" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-caption">{template.description}</CardDescription>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <p className="text-xs text-center text-muted-foreground">
+        Mais templates em breve
+      </p>
     </div>
   );
 }

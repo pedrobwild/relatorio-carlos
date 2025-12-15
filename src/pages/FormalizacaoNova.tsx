@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, FileText, Users, Send } from 'lucide-react';
+import { ArrowLeft, Check, FileText, Users, Send, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { TemplateSelector } from '@/components/formalizacao/TemplateSelector';
@@ -32,11 +31,11 @@ interface FormData {
   }>;
 }
 
-const STEPS: { key: WizardStep; label: string; icon: React.ReactNode }[] = [
-  { key: 'template', label: 'Template', icon: <FileText className="h-4 w-4" /> },
-  { key: 'form', label: 'Dados', icon: <FileText className="h-4 w-4" /> },
-  { key: 'parties', label: 'Partes', icon: <Users className="h-4 w-4" /> },
-  { key: 'review', label: 'Revisar', icon: <Send className="h-4 w-4" /> },
+const STEPS: { key: WizardStep; label: string; shortLabel: string; icon: React.ReactNode }[] = [
+  { key: 'template', label: 'Template', shortLabel: '1', icon: <FileText className="h-4 w-4" /> },
+  { key: 'form', label: 'Dados', shortLabel: '2', icon: <FileText className="h-4 w-4" /> },
+  { key: 'parties', label: 'Partes', shortLabel: '3', icon: <Users className="h-4 w-4" /> },
+  { key: 'review', label: 'Revisar', shortLabel: '4', icon: <Send className="h-4 w-4" /> },
 ];
 
 export default function FormalizacaoNova() {
@@ -165,55 +164,98 @@ export default function FormalizacaoNova() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleBack}
-              aria-label="Voltar"
-              className="rounded-full"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <img src={bwildLogo} alt="Bwild" className="h-8" />
-            <span className="text-muted-foreground">|</span>
-            <h1 className="text-lg font-semibold">Nova Formalização</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleBack}
+                aria-label="Voltar"
+                className="rounded-full h-9 w-9 hover:bg-primary/10"
+              >
+                {currentStepIndex === 0 ? (
+                  <ArrowLeft className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5" />
+                )}
+              </Button>
+              <img src={bwildLogo} alt="Bwild" className="h-6" />
+              <span className="text-muted-foreground/30">|</span>
+              <h1 className="text-sm font-medium">Nova Formalização</h1>
+            </div>
+            
+            {/* Step indicator for mobile */}
+            <span className="text-xs text-muted-foreground sm:hidden">
+              Passo {currentStepIndex + 1} de {STEPS.length}
+            </span>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-3xl">
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            {STEPS.map((step, index) => (
-              <div 
-                key={step.key}
-                className={`flex items-center gap-2 text-sm ${
-                  index <= currentStepIndex ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  index <= currentStepIndex ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                }`}>
-                  {step.icon}
+      {/* Progress indicator */}
+      <div className="bg-muted/30 border-b">
+        <div className="container mx-auto px-4 py-4">
+          {/* Desktop stepper */}
+          <div className="hidden sm:flex items-center justify-between max-w-2xl mx-auto">
+            {STEPS.map((step, index) => {
+              const isCompleted = index < currentStepIndex;
+              const isCurrent = index === currentStepIndex;
+              
+              return (
+                <div key={step.key} className="flex items-center">
+                  <div className="flex flex-col items-center">
+                    <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                      ${isCompleted ? 'bg-primary text-primary-foreground' : ''}
+                      ${isCurrent ? 'bg-primary text-primary-foreground ring-4 ring-primary/20' : ''}
+                      ${!isCompleted && !isCurrent ? 'bg-muted text-muted-foreground' : ''}
+                    `}>
+                      {isCompleted ? (
+                        <Check className="h-5 w-5" />
+                      ) : (
+                        step.icon
+                      )}
+                    </div>
+                    <span className={`text-xs mt-2 font-medium ${isCurrent ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < STEPS.length - 1 && (
+                    <div className={`w-16 h-0.5 mx-2 transition-colors ${index < currentStepIndex ? 'bg-primary' : 'bg-muted'}`} />
+                  )}
                 </div>
-                <span className="hidden sm:inline">{step.label}</span>
-                {index < STEPS.length - 1 && (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground mx-2" />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <Progress value={progress} className="h-2" aria-label={`Progresso: ${Math.round(progress)}%`} />
+          
+          {/* Mobile progress bar */}
+          <div className="sm:hidden space-y-2">
+            <div className="flex justify-between">
+              {STEPS.map((step, index) => (
+                <div 
+                  key={step.key}
+                  className={`flex-1 mx-0.5 h-1.5 rounded-full transition-colors ${
+                    index <= currentStepIndex ? 'bg-primary' : 'bg-muted'
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              {STEPS[currentStepIndex].label}
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* Step content */}
-        {renderStepContent()}
+      {/* Step content */}
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl">
+        <div className="animate-fade-in">
+          {renderStepContent()}
+        </div>
       </main>
     </div>
   );

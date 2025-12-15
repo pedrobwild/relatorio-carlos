@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus } from 'lucide-react';
+import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useFormalizacao, useAcknowledge, useSendForSignature } from '@/hooks/useFormalizacoes';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -166,7 +167,13 @@ export default function FormalizacaoDetalhe() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Carregando...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="h-12 w-12 rounded-full border-4 border-primary/20" />
+            <div className="absolute inset-0 h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          </div>
+          <p className="text-sm text-muted-foreground">Carregando formalização...</p>
+        </div>
       </div>
     );
   }
@@ -174,45 +181,65 @@ export default function FormalizacaoDetalhe() {
   if (!formalizacao) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Formalização não encontrada</p>
-          <Button onClick={() => navigate('/formalizacoes')}>Voltar</Button>
-        </div>
+        <Card className="max-w-sm mx-4">
+          <CardContent className="p-8 text-center">
+            <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+            <h2 className="font-semibold text-lg mb-2">Não encontrada</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Esta formalização não existe ou você não tem acesso.
+            </p>
+            <Button onClick={() => navigate('/formalizacoes')} className="w-full">
+              Voltar para lista
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 sm:pb-6">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => navigate('/formalizacoes')}
                 aria-label="Voltar para lista"
-                className="rounded-full"
+                className="rounded-full h-9 w-9 shrink-0 hover:bg-primary/10"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
+              <img src={bwildLogo} alt="Bwild" className="h-6 shrink-0" />
+              <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+              <span className="text-sm font-medium truncate hidden sm:inline">
+                {formalizacao.title}
+              </span>
             </div>
-            <Button 
-              variant="outline" 
-              aria-label="Baixar PDF"
-              onClick={handleDownloadPdf}
-              disabled={downloadingPdf}
-            >
-              {downloadingPdf ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              {downloadingPdf ? 'Gerando...' : 'Baixar PDF'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                aria-label="Baixar PDF"
+                onClick={handleDownloadPdf}
+                disabled={downloadingPdf}
+                className="h-9"
+              >
+                {downloadingPdf ? (
+                  <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 sm:mr-2" />
+                )}
+                <span className="hidden sm:inline">
+                  {downloadingPdf ? 'Gerando...' : 'PDF'}
+                </span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -340,18 +367,18 @@ export default function FormalizacaoDetalhe() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="conteudo">
-              <FileText className="h-4 w-4 mr-2" />
-              Conteúdo
+          <TabsList className="grid w-full grid-cols-3 h-11">
+            <TabsTrigger value="conteudo" className="gap-1.5 text-sm">
+              <FileText className="h-4 w-4" />
+              <span className="hidden xs:inline">Conteúdo</span>
             </TabsTrigger>
-            <TabsTrigger value="evidencias">
-              <Link2 className="h-4 w-4 mr-2" />
-              Evidências
+            <TabsTrigger value="evidencias" className="gap-1.5 text-sm">
+              <Link2 className="h-4 w-4" />
+              <span className="hidden xs:inline">Evidências</span>
             </TabsTrigger>
-            <TabsTrigger value="auditoria">
-              <History className="h-4 w-4 mr-2" />
-              Auditoria
+            <TabsTrigger value="auditoria" className="gap-1.5 text-sm">
+              <History className="h-4 w-4" />
+              <span className="hidden xs:inline">Auditoria</span>
             </TabsTrigger>
           </TabsList>
 
@@ -525,6 +552,34 @@ export default function FormalizacaoDetalhe() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Mobile floating action bar for pending signatures */}
+      {formalizacao.status === 'pending_signatures' && pendingCustomerParty && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t shadow-lg sm:hidden animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Ciência pendente</p>
+              <p className="text-xs text-muted-foreground truncate">Leia e confirme sua ciência</p>
+            </div>
+            <Button 
+              onClick={() => {
+                setAcknowledged(true);
+                handleAcknowledge();
+              }}
+              disabled={acknowledge.isPending}
+              size="sm"
+              className="shrink-0"
+            >
+              {acknowledge.isPending ? (
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 mr-1.5" />
+              )}
+              Dar ciência
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
