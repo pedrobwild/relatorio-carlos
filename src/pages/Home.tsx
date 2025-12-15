@@ -105,9 +105,13 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
+      {/* Subtle decorative elements */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      
       {/* Header */}
-      <header className="p-4 md:p-6 border-b border-border bg-card/50">
+      <header className="p-4 md:p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm relative z-10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
@@ -120,7 +124,7 @@ const Home = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
+      <main className="flex-1 flex items-center justify-center p-4 md:p-8 relative z-10">
         <div className="max-w-2xl w-full text-center space-y-8">
           {/* Hero Section */}
           <div className="space-y-6">
