@@ -12,6 +12,7 @@ import Financeiro from "./pages/Financeiro";
 import Formalizacoes from "./pages/Formalizacoes";
 import FormalizacaoNova from "./pages/FormalizacaoNova";
 import FormalizacaoDetalhe from "./pages/FormalizacaoDetalhe";
+import VerificarAssinatura from "./pages/VerificarAssinatura";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/formalizacoes" element={<Formalizacoes />} />
           <Route path="/formalizacoes/nova" element={<FormalizacaoNova />} />
           <Route path="/formalizacoes/:id" element={<FormalizacaoDetalhe />} />
+          <Route path="/verificar/:hash" element={<VerificarAssinatura />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
