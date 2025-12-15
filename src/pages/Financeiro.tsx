@@ -324,7 +324,107 @@ const Financeiro = () => {
             </CardContent>
           </Card>
 
-          {/* Financial Evolution Chart */}
+          {/* Payment Timeline */}
+          <Card className="bg-card border-border overflow-hidden">
+            <CardHeader className="bg-primary-dark py-3 px-4">
+              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Timeline de Pagamentos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-4 sm:left-6 top-0 bottom-0 w-0.5 bg-border" />
+                
+                {/* Timeline items */}
+                <div className="space-y-6">
+                  {installments.map((installment, index) => {
+                    const isPaid = installment.status === "paid";
+                    const isPending = installment.status === "pending";
+                    const isLast = index === installments.length - 1;
+                    
+                    return (
+                      <div key={installment.id} className="relative flex gap-4 sm:gap-6">
+                        {/* Timeline dot */}
+                        <div className={`relative z-10 flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 shrink-0 ${
+                          isPaid 
+                            ? "bg-emerald-500 border-emerald-500" 
+                            : isPending 
+                              ? installment.urgency === "overdue" || installment.urgency === "urgent"
+                                ? "bg-red-500/10 border-red-500"
+                                : installment.urgency === "approaching"
+                                  ? "bg-amber-500/10 border-amber-500"
+                                  : "bg-background border-muted-foreground/30"
+                              : "bg-background border-muted-foreground/20"
+                        }`}>
+                          {isPaid ? (
+                            <Check className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                          ) : isPending ? (
+                            installment.urgency === "overdue" || installment.urgency === "urgent" ? (
+                              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                            ) : (
+                              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                            )
+                          ) : (
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground">{index + 1}</span>
+                          )}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className={`flex-1 pb-6 ${isLast ? "pb-0" : ""}`}>
+                          <div className={`p-3 sm:p-4 rounded-lg border ${
+                            isPaid 
+                              ? "bg-emerald-500/5 border-emerald-200" 
+                              : installment.urgency === "overdue" || installment.urgency === "urgent"
+                                ? "bg-red-500/5 border-red-200"
+                                : installment.urgency === "approaching"
+                                  ? "bg-amber-500/5 border-amber-200"
+                                  : "bg-muted/30 border-border"
+                          }`}>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                              <div className="flex-1">
+                                <p className="font-medium text-foreground text-sm sm:text-base">
+                                  {installment.stage}
+                                  {installment.isForecast && (
+                                    <span className="text-[10px] text-muted-foreground italic ml-1">(previsão)</span>
+                                  )}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs sm:text-sm text-muted-foreground">
+                                  <span>Venc: {formatDate(installment.dueDate)}</span>
+                                  {isPaid && installment.paidDate && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="text-emerald-600 font-medium">
+                                        Pago em {formatDate(installment.paidDate)}
+                                      </span>
+                                    </>
+                                  )}
+                                  {!isPaid && getDaysUntilDueLabel(installment)}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <p className="font-bold text-foreground text-base sm:text-lg">
+                                  {formatCurrency(installment.amount)}
+                                </p>
+                                <div className="hidden sm:block">
+                                  {getStatusBadge(installment)}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="sm:hidden mt-2">
+                              {getStatusBadge(installment)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="bg-card border-border overflow-hidden">
             <CardHeader className="bg-primary-dark py-3 px-4">
               <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
