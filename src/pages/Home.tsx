@@ -121,10 +121,10 @@ const Home = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="max-w-2xl w-full text-center space-y-8 animate-fade-in">
+        <div className="max-w-2xl w-full text-center space-y-8">
           {/* Hero Section */}
           <div className="space-y-6">
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-3 animate-fade-in">
               <img 
                 src={bwildLogo} 
                 alt="Bwild Logo" 
@@ -134,21 +134,21 @@ const Home = () => {
                 Portal do Cliente
               </h1>
             </div>
-            <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
+            <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards]">
               Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado.
             </p>
           </div>
 
           {/* Features */}
           <div className="grid gap-4 md:grid-cols-3 text-left">
-            <div className="p-4 rounded-xl bg-card border border-border">
+            <div className="p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:200ms] opacity-0 [animation-fill-mode:forwards]">
               <Building2 className="w-8 h-8 text-primary mb-3" />
               <h3 className="font-semibold text-foreground mb-1">Dados do Projeto</h3>
               <p className="text-sm text-muted-foreground">
                 Registre informações do empreendimento e cliente.
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-card border border-border">
+            <div className="p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:300ms] opacity-0 [animation-fill-mode:forwards]">
               <svg className="w-8 h-8 text-primary mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 3v18h18" />
                 <path d="M7 16c3-4 5-8 10-11" />
@@ -158,7 +158,7 @@ const Home = () => {
                 Visualize o progresso previsto vs realizado.
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-card border border-border">
+            <div className="p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:400ms] opacity-0 [animation-fill-mode:forwards]">
               <svg className="w-8 h-8 text-primary mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -173,7 +173,7 @@ const Home = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in [animation-delay:500ms] opacity-0 [animation-fill-mode:forwards]">
             <Button
               size="lg"
               className="gradient-primary text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105"
@@ -185,7 +185,7 @@ const Home = () => {
             <Button
               size="lg"
               variant="outline"
-              className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/5 transition-all"
+              className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/5 transition-all hover:scale-105"
               onClick={handleViewSample}
             >
               <Eye className="w-5 h-5 mr-2" />
