@@ -105,83 +105,80 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-accent/20 to-primary/10 relative overflow-hidden">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-background via-accent/20 to-primary/10 relative overflow-hidden">
       {/* Subtle decorative elements - using Bwild purple tones */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-primary/10 via-accent/5 to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-radial from-primary/8 via-accent/3 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-gradient-radial from-primary/10 via-accent/5 to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-gradient-radial from-primary/8 via-accent/3 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
       
       {/* Header */}
       <header className="p-4 md:p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm relative z-10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img 
-              src={bwildLogo} 
-              alt="Bwild Logo" 
-              className="h-8 md:h-10 w-auto"
-            />
-          </div>
+        <div className="max-w-7xl mx-auto flex items-center justify-center md:justify-start">
+          <img 
+            src={bwildLogo} 
+            alt="Bwild Logo" 
+            className="h-7 md:h-10 w-auto"
+          />
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8 relative z-10">
-        <div className="max-w-2xl w-full text-center space-y-8">
+      <main className="flex-1 flex items-center justify-center p-5 md:p-8 relative z-10">
+        <div className="max-w-2xl w-full text-center space-y-6 md:space-y-8">
           {/* Hero Section */}
-          <div className="space-y-6">
-            <div className="flex flex-col items-center gap-3 animate-fade-in">
+          <div className="space-y-4 md:space-y-6">
+            <div className="flex flex-col items-center gap-2 md:gap-3 animate-fade-in">
               <img 
                 src={bwildLogo} 
                 alt="Bwild Logo" 
-                className="h-8 md:h-10 w-auto"
+                className="h-7 md:h-10 w-auto"
               />
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
                 Portal do Cliente
               </h1>
             </div>
-            <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards]">
+            <p className="text-muted-foreground text-base md:text-lg max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards] px-2">
               Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado.
             </p>
           </div>
 
-          {/* Features */}
-          <div className="grid gap-4 md:grid-cols-3 text-left">
-            <div className="p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:200ms] opacity-0 [animation-fill-mode:forwards]">
-              <Building2 className="w-8 h-8 text-primary mb-3" />
-              <h3 className="font-semibold text-foreground mb-1">Dados do Projeto</h3>
-              <p className="text-sm text-muted-foreground">
+          {/* Features - Horizontal scroll on mobile */}
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-4 scrollbar-hide snap-x snap-mandatory">
+            <div className="min-w-[200px] md:min-w-0 p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:200ms] opacity-0 [animation-fill-mode:forwards] snap-start">
+              <Building2 className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3" />
+              <h3 className="font-semibold text-foreground text-sm md:text-base mb-1">Dados do Projeto</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Registre informações do empreendimento e cliente.
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:300ms] opacity-0 [animation-fill-mode:forwards]">
-              <svg className="w-8 h-8 text-primary mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="min-w-[200px] md:min-w-0 p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:300ms] opacity-0 [animation-fill-mode:forwards] snap-start">
+              <svg className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 3v18h18" />
                 <path d="M7 16c3-4 5-8 10-11" />
               </svg>
-              <h3 className="font-semibold text-foreground mb-1">Curva S</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-foreground text-sm md:text-base mb-1">Curva S</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Visualize o progresso previsto vs realizado.
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:400ms] opacity-0 [animation-fill-mode:forwards]">
-              <svg className="w-8 h-8 text-primary mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="min-w-[200px] md:min-w-0 p-4 rounded-xl bg-card border border-border hover-scale animate-fade-in [animation-delay:400ms] opacity-0 [animation-fill-mode:forwards] snap-start">
+              <svg className="w-7 h-7 md:w-8 md:h-8 text-primary mb-2 md:mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              <h3 className="font-semibold text-foreground mb-1">Cronograma</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-foreground text-sm md:text-base mb-1">Cronograma</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Acompanhe atividades e identifique atrasos.
               </p>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in [animation-delay:500ms] opacity-0 [animation-fill-mode:forwards]">
+          <div className="flex flex-col gap-3 md:flex-row md:gap-4 justify-center animate-fade-in [animation-delay:500ms] opacity-0 [animation-fill-mode:forwards] px-2 md:px-0">
             <Button
               size="lg"
-              className="gradient-primary text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              className="gradient-primary text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full md:w-auto"
               onClick={() => setIsModalOpen(true)}
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -190,7 +187,7 @@ const Home = () => {
             <Button
               size="lg"
               variant="outline"
-              className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/5 transition-all hover:scale-105"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 border-primary/30 hover:bg-primary/5 transition-all hover:scale-105 w-full md:w-auto"
               onClick={handleViewSample}
             >
               <Eye className="w-5 h-5 mr-2" />
@@ -201,7 +198,7 @@ const Home = () => {
       </main>
 
       {/* Footer */}
-      <footer className="p-4 text-center text-sm text-muted-foreground border-t border-border">
+      <footer className="p-4 text-center text-xs md:text-sm text-muted-foreground border-t border-border/50 bg-card/20 backdrop-blur-sm">
         © {new Date().getFullYear()} Bwild. Todos os direitos reservados.
       </footer>
 

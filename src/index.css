@@ -149,8 +149,19 @@
     line-height: 1.3;
   }
 
-  /* Improve touch targets for mobile */
-  button, a, [role="button"] {
+  /* Improve touch targets for mobile - only apply to interactive elements that need it */
+  button:not(.min-h-auto), 
+  [role="button"]:not(.min-h-auto) {
+    min-height: 44px;
+  }
+  
+  /* Exclude small inline elements from min-width */
+  a {
+    min-height: auto;
+    min-width: auto;
+  }
+  
+  a.touch-target {
     min-height: 44px;
     min-width: 44px;
   }
