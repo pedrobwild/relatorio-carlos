@@ -497,7 +497,7 @@ const ReportHeader = ({
               >
                 <User className="w-4 h-4 text-primary" />
                 <span className="text-[9px] font-medium text-foreground text-center leading-tight">
-                  {contact.name.split(' ')[0]}
+                  {contact.role}
                 </span>
                 <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
               </button>
