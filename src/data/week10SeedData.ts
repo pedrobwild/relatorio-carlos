@@ -204,7 +204,7 @@ export const week10SeedData: WeeklyReportData = {
       id: "1",
       date: "2025-09-09",
       description: "Instalar cooktop Fischer 4 bocas (vitrocerâmico) + coifa Tramontina 60cm (modelo Vetro)",
-      prerequisites: "Confirmação de entrega pelo fornecedor + liberação da administração do condomínio para furação de duto + elevador reservado das 8h às 12h",
+      prerequisites: "Confirmação de entrega pelo fornecedor + liberação da administração do condomínio para furação de duto",
       responsible: "Equipe de instalação - Técnico João",
       risk: "médio",
       riskReason: "Dificuldade para contornar a restrição em relação a instalação da coifa que não constava no memorial descritivo do condomínio.",
