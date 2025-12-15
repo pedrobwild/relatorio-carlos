@@ -5,7 +5,6 @@ import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
 
 const Executivo = () => {
-  // TODO: Update with actual PDF path when uploaded
   const pdfUrl = "/documents/projeto-executivo.pdf";
   const hasDocument = true;
 
@@ -25,21 +24,18 @@ const Executivo = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/relatorio">
-              <Button variant="ghost" size="icon" className="shrink-0 h-10 w-10">
-                <ArrowLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
+                <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <img src={bwildLogo} alt="Bwild" className="h-6 sm:h-7 w-auto" />
-              <div className="h-5 w-px bg-border/60 hidden sm:block" />
-              <div className="flex items-center gap-2">
-                <Ruler className="w-5 h-5 text-primary hidden sm:block" />
-                <h1 className="font-bold text-base sm:text-lg text-foreground">Projeto Executivo</h1>
-              </div>
+            <div className="flex items-center gap-2.5">
+              <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+              <span className="text-muted-foreground/40">|</span>
+              <h1 className="font-semibold text-base text-foreground">Projeto Executivo</h1>
             </div>
           </div>
           {hasDocument && (
@@ -48,14 +44,14 @@ const Executivo = () => {
                 variant="ghost"
                 size="icon"
                 onClick={handleOpenInNewTab}
-                className="h-10 w-10 sm:hidden"
+                className="h-9 w-9 rounded-full sm:hidden hover:bg-primary/10"
                 title="Abrir em nova aba"
               >
-                <ExternalLink className="w-5 h-5" />
+                <ExternalLink className="w-4 h-4" />
               </Button>
-              <Button onClick={handleDownload} className="gap-2 h-10">
+              <Button onClick={handleDownload} size="sm" className="gap-2 h-9">
                 <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Download PDF</span>
+                <span className="hidden sm:inline">Download</span>
               </Button>
             </div>
           )}
