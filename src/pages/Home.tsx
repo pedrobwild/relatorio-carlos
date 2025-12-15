@@ -123,16 +123,18 @@ const Home = () => {
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="max-w-2xl w-full text-center space-y-8 animate-fade-in">
           {/* Hero Section */}
-          <div className="space-y-4">
-          <img 
-            src={bwildLogo} 
-            alt="Bwild Logo" 
-            className="h-10 md:h-12 w-auto mb-4"
-          />
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-            Portal do Cliente
-          </h1>
-            <p className="text-muted-foreground text-lg max-w-md mx-auto">
+          <div className="space-y-6">
+            <div className="flex flex-col items-center gap-3">
+              <img 
+                src={bwildLogo} 
+                alt="Bwild Logo" 
+                className="h-8 md:h-10 w-auto"
+              />
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
+                Portal do Cliente
+              </h1>
+            </div>
+            <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
               Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado.
             </p>
           </div>
