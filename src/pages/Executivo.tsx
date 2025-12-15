@@ -101,15 +101,15 @@ const Executivo = () => {
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                    <DialogHeader className="p-4 border-b border-border flex-shrink-0">
-                      <div className="flex items-center justify-between">
-                        <DialogTitle className="flex items-center gap-2">
-                          <Award className="w-5 h-5 text-primary" />
-                          ART - Anotação de Responsabilidade Técnica
+                    <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
+                      <div className="flex items-center justify-between gap-4">
+                        <DialogTitle className="flex items-center gap-2 text-base">
+                          <Award className="w-5 h-5 text-primary shrink-0" />
+                          <span className="truncate">ART - Responsabilidade Técnica</span>
                         </DialogTitle>
-                        <Button onClick={handleDownloadArt} size="sm" variant="outline" className="gap-2">
+                        <Button onClick={handleDownloadArt} size="sm" variant="outline" className="gap-2 shrink-0">
                           <Download className="w-4 h-4" />
-                          Download
+                          <span className="hidden sm:inline">Download</span>
                         </Button>
                       </div>
                     </DialogHeader>
