@@ -148,6 +148,35 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     parties_signed: 2,
     parties_total: 2,
   },
+  {
+    id: "f6a7b8c9-d0e1-2345-f012-456789012345",
+    customer_org_id: null,
+    project_id: null,
+    unit_id: null,
+    type: "exception_custody",
+    title: "Uso Antecipado da Unidade – 12 a 15/08",
+    summary: "Cliente utilizará a unidade antes da entrega oficial, com acréscimo de 3 dias no prazo de entrega.",
+    body_md:
+      "## Termo de Uso Antecipado da Unidade\n\nO cliente **Pedro Alves**, titular da unidade **Hub Brooklyn – 502**, solicita e declara ciência das condições abaixo:\n\n### Período de Uso\n- **Data de início:** 12/08/2025\n- **Data de término:** 15/08/2025\n- **Duração total:** 3 (três) dias\n\n### Condições Acordadas\n\n1. **Acréscimo no prazo de entrega:** Em razão do uso antecipado, serão acrescidos **3 (três) dias úteis** à data de entrega final prevista em contrato.\n\n2. **Isenção de responsabilidade:** A Bwild **não se responsabiliza** por quaisquer danos, avarias, furtos ou ocorrências durante o período de uso antecipado, ficando o cliente como único responsável pela guarda e conservação do imóvel e seus componentes.\n\n3. **Estado do imóvel:** O cliente declara estar ciente de que o imóvel ainda se encontra em fase de acabamento e que poderá haver atividades de obra remanescentes após o período de uso.\n\n4. **Consumo:** Eventuais consumos de água, luz e gás durante o período serão de responsabilidade do cliente.\n\n---\n\nEste termo formaliza a ciência mútua das condições acordadas.",
+    data: {
+      periodo: { inicio: "2025-08-12", fim: "2025-08-15", dias: 3 },
+      acrescimo_prazo_dias: 3,
+      motivo: "Hospedagem do cliente antes da entrega oficial",
+    } as any,
+    status: "pending_signatures",
+    created_at: iso(daysAgo(1)),
+    updated_at: iso(daysAgo(1)),
+    last_activity_at: iso(daysAgo(1)),
+    locked_at: iso(daysAgo(1)),
+    locked_hash: fakeHash("f6a7b8"),
+    acknowledgements: null,
+    attachments: null,
+    events: null,
+    evidence_links: null,
+    parties: null,
+    parties_signed: 0,
+    parties_total: 2,
+  },
 ];
 
 export function getFormalizacaoSeedById(id: string) {
