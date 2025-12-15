@@ -262,7 +262,7 @@ const Financeiro = () => {
       <div className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Financial Summary - Premium Design */}
-          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5">
+          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5 opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             <CardContent className="p-0">
               {/* Main Value Section */}
               <div className="relative overflow-hidden">
@@ -380,7 +380,7 @@ const Financeiro = () => {
           </Card>
 
           {/* Payment Schedule - Premium Timeline Design */}
-          <Card className="border-0 shadow-lg overflow-hidden">
+          <Card className="border-0 shadow-lg overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
             <CardHeader className="bg-gradient-to-r from-primary-dark to-primary py-4 px-5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
@@ -600,7 +600,7 @@ const Financeiro = () => {
           </Card>
 
           {/* Financial Evolution Chart - Premium Design */}
-          <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-card to-card">
+          <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-card to-card opacity-0 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
             <CardHeader className="bg-gradient-to-r from-primary-dark to-primary py-4 px-5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
@@ -757,7 +757,7 @@ const Financeiro = () => {
           </Card>
 
           {/* Info Note */}
-          <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+          <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border opacity-0 animate-fade-in-up" style={{ animationDelay: "400ms" }}>
             <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
             <div className="text-sm text-muted-foreground">
               <p className="font-medium text-foreground mb-1">Informações de Pagamento</p>

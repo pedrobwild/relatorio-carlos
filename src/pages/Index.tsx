@@ -107,7 +107,7 @@ const Index = () => {
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
       <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-4 py-3">
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-1 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
           <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
           <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
         </div>
@@ -116,24 +116,26 @@ const Index = () => {
       <div className="p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Title - Desktop only */}
-          <div className="hidden md:flex items-center gap-4 mb-6">
+          <div className="hidden md:flex items-center gap-4 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
             <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
             <div className="h-6 w-px bg-border/60" />
             <h1 className="text-2xl font-bold text-foreground">Portal do Cliente</h1>
           </div>
 
         <div ref={reportRef}>
-          <ReportHeader
-            projectName={reportData.projectName}
-            unitName={reportData.unitName}
-            clientName={reportData.clientName}
-            startDate={reportData.startDate}
-            endDate={reportData.endDate}
-            reportDate={reportData.reportDate}
-            activities={reportData.activities}
-          />
+          <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+            <ReportHeader
+              projectName={reportData.projectName}
+              unitName={reportData.unitName}
+              clientName={reportData.clientName}
+              startDate={reportData.startDate}
+              endDate={reportData.endDate}
+              reportDate={reportData.reportDate}
+              activities={reportData.activities}
+            />
+          </div>
 
-          <div className="bg-card rounded-xl shadow-card overflow-hidden animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Tabs Navigation */}
               <div className="border-b border-border bg-secondary/30">
