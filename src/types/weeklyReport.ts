@@ -33,6 +33,7 @@ export interface WeeklyReportActivitySnapshot {
   varianceDays: number;
   notes?: string;
   percentComplete: number;
+  weight?: number; // Peso da atividade no progresso total (0-100). Soma de todos deve = 100.
 }
 
 export interface RiskIssue {

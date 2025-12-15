@@ -36,7 +36,7 @@ const formatDisplayDate = (dateStr: string, baseYear?: number): string => {
   return `${day}/${month}`;
 };
 
-// Generate S-Curve data from activities
+// Generate S-Curve data from activities using weighted progress
 const generateChartData = (activities: Activity[], reportDate?: string) => {
   if (activities.length === 0) {
     return [{ date: "Início", previsto: 0, realizado: null }];
@@ -51,6 +51,14 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
   const reportDateParsed = reportDate 
     ? parseDate(reportDate) 
     : new Date();
+
+  // Check if any activity has weight defined
+  const hasWeights = activities.some(a => (a as any).weight !== undefined);
+  
+  // Calculate total weight (should be 100, but normalize if not)
+  const totalWeight = hasWeights 
+    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    : activities.length;
 
   // Collect all unique dates - only planned dates and actual dates that exist
   const plannedDates = new Set<string>();
@@ -72,18 +80,19 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     if (!dateA || !dateB) return 0;
     return dateA.getTime() - dateB.getTime();
   });
-
-  const totalActivities = activities.length;
   
   return sortedDates.map(date => {
     const currentDate = parseDate(date);
     if (!currentDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null };
     
-    // Count planned COMPLETED activities by this date (based on plannedEnd)
-    const plannedCompleted = activities.filter(a => {
+    // Calculate planned progress using weights
+    const plannedProgress = activities.reduce((sum, a) => {
       const plannedEnd = parseDate(a.plannedEnd);
-      return plannedEnd && plannedEnd <= currentDate;
-    }).length;
+      if (plannedEnd && plannedEnd <= currentDate) {
+        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+      }
+      return sum;
+    }, 0);
     
     // Only show "realizado" for dates up to report date AND only if there are actual dates
     const isFutureDate = reportDateParsed && currentDate > reportDateParsed;
@@ -91,24 +100,27 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     // Check if any activity has actual data for this date
     const hasAnyActualData = activities.some(a => a.actualEnd);
     
-    // Count actual COMPLETED activities by this date (based on actualEnd)
-    let actualCompleted: number | null = null;
+    // Calculate actual progress using weights
+    let actualProgress: number | null = null;
     if (!isFutureDate && hasAnyActualData) {
-      const actualCount = activities.filter(a => {
+      const actualSum = activities.reduce((sum, a) => {
         const actualEnd = parseDate(a.actualEnd);
-        return actualEnd && actualEnd <= currentDate;
-      }).length;
+        if (actualEnd && actualEnd <= currentDate) {
+          return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        }
+        return sum;
+      }, 0);
       // Only show realizado if at least one activity has completed by this date
       // or if this date is from actual dates set
-      if (actualCount > 0 || actualDates.has(date)) {
-        actualCompleted = actualCount;
+      if (actualSum > 0 || actualDates.has(date)) {
+        actualProgress = actualSum;
       }
     }
 
     return {
       date: formatDisplayDate(date, baseYear),
-      previsto: Math.round((plannedCompleted / totalActivities) * 100),
-      realizado: actualCompleted !== null ? Math.round((actualCompleted / totalActivities) * 100) : null,
+      previsto: Math.round((plannedProgress / totalWeight) * 100),
+      realizado: actualProgress !== null ? Math.round((actualProgress / totalWeight) * 100) : null,
     };
   });
 };
