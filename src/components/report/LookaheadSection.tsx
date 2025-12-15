@@ -17,46 +17,46 @@ interface LookaheadSectionProps {
 const getRiskBadge = (risk: LookaheadTask["risk"]) => {
   switch (risk) {
     case "baixo":
-      return null; // Don't show badge for low risk
+      return null;
     case "médio":
-      return <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-xs">Risco Mapeado</Badge>;
+      return <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-[10px]">Risco Mapeado</Badge>;
     case "alto":
-      return <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-xs">Risco Mapeado</Badge>;
+      return <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-[10px]">Risco Mapeado</Badge>;
   }
 };
 
 const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animationDelay?: number }) => (
   <div 
-    className="p-4 sm:p-5 space-y-3"
+    className="p-2.5 sm:p-3 space-y-2"
     style={{ 
       animationDelay: `${animationDelay}ms`,
       animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
       opacity: animationDelay > 0 ? 0 : 1
     }}
   >
-    <div className="flex items-start justify-between gap-3">
+    <div className="flex items-start justify-between gap-2">
       <div className="flex-1">
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
+        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+          <span className="text-[10px] font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
             {format(new Date(task.date), "dd/MM", { locale: ptBR })}
           </span>
           {getRiskBadge(task.risk)}
         </div>
-        <p className="text-sm sm:text-base font-medium text-foreground leading-relaxed">{task.description}</p>
+        <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{task.description}</p>
       </div>
     </div>
     
-    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-3 sm:gap-y-1.5 text-sm text-foreground/70">
-      <div className="flex items-start gap-1.5">
-        <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-        <span className="leading-relaxed"><span className="font-medium">Pré-requisito:</span> {task.prerequisites}</span>
+    <div className="flex flex-col gap-1 text-xs text-foreground/70">
+      <div className="flex items-start gap-1">
+        <CheckCircle className="w-3 h-3 shrink-0 mt-0.5" />
+        <span className="leading-snug"><span className="font-medium">Pré-requisito:</span> {task.prerequisites}</span>
       </div>
     </div>
     
     {task.riskReason && (
-      <div className="flex items-start gap-2 text-sm bg-warning/10 p-2.5 rounded-lg">
-        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
-        <span className="leading-relaxed text-foreground">{task.riskReason}</span>
+      <div className="flex items-start gap-1.5 text-xs bg-warning/10 p-2 rounded-lg">
+        <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5 text-warning" />
+        <span className="leading-snug text-foreground">{task.riskReason}</span>
       </div>
     )}
   </div>
@@ -69,8 +69,8 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="p-4 sm:p-5 bg-primary-dark">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Plano da Próxima Semana</h3>
+      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
+        <h3 className="text-xs sm:text-sm font-semibold text-white">Plano da Próxima Semana</h3>
       </div>
       
       {/* Desktop: Always show all tasks */}
@@ -95,10 +95,10 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
           
           {remainingTasks.length > 0 && (
             <CollapsibleTrigger asChild>
-              <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[10px] font-semibold">+{remainingTasks.length}</span>}
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingTasks.length}</span>}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>
           )}

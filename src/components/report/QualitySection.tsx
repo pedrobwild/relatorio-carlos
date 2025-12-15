@@ -38,42 +38,41 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
     <DialogTrigger asChild>
       <Button
         variant="ghost"
-        className="w-full justify-between h-auto p-3 sm:p-4 rounded-none hover:bg-secondary/50"
+        className="w-full justify-between h-auto p-2.5 sm:p-3 rounded-none hover:bg-secondary/50"
         style={{ 
           animationDelay: `${animationDelay}ms`,
           animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
           opacity: animationDelay > 0 ? 0 : 1
         }}
       >
-        <div className="flex items-center gap-2.5">
-          <CheckSquare className="w-3.5 h-3.5 text-success" />
-          <span className="text-xs sm:text-sm font-medium text-foreground">{item.checklistName}</span>
-        </div>
         <div className="flex items-center gap-2">
+          <CheckSquare className="w-3 h-3 text-success" />
+          <span className="text-xs font-medium text-foreground">{item.checklistName}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
           {item.nonConformities.length > 0 && (
-            <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-xs">
+            <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-[10px]">
               {item.nonConformities.length} NC
             </Badge>
           )}
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+          <ChevronRight className="w-3 h-3 text-muted-foreground" />
         </div>
       </Button>
     </DialogTrigger>
     <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle className="text-sm sm:text-base font-semibold">{item.checklistName}</DialogTitle>
+        <DialogTitle className="text-xs sm:text-sm font-semibold">{item.checklistName}</DialogTitle>
       </DialogHeader>
-      <div className="mt-3 space-y-4">
-        {/* Checklist Items */}
+      <div className="mt-2 space-y-3">
         <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Itens do Checklist</p>
-          <ul className="space-y-2">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">Itens do Checklist</p>
+          <ul className="space-y-1">
             {item.items.map((checkItem, idx) => (
-              <li key={idx} className="flex items-center justify-between p-2 rounded bg-secondary/50">
-                <span className="text-xs sm:text-sm text-foreground">{checkItem.name}</span>
+              <li key={idx} className="flex items-center justify-between p-1.5 rounded bg-secondary/50">
+                <span className="text-xs text-foreground">{checkItem.name}</span>
                 <Badge 
                   variant="outline" 
-                  className={`text-xs ${
+                  className={`text-[10px] ${
                     checkItem.result === "aprovado" 
                       ? "bg-success/10 text-success border-success/20" 
                       : checkItem.result === "reprovado"
@@ -88,18 +87,17 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
           </ul>
         </div>
         
-        {/* Non-Conformities */}
         {item.nonConformities.length > 0 && (
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Não Conformidades</p>
-            <ul className="space-y-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">Não Conformidades</p>
+            <ul className="space-y-1.5">
               {item.nonConformities.map((nc) => (
-                <li key={nc.id} className="p-2.5 rounded bg-destructive/5 border border-destructive/20">
-                  <div className="flex items-start gap-2">
-                    <XCircle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                <li key={nc.id} className="p-2 rounded bg-destructive/5 border border-destructive/20">
+                  <div className="flex items-start gap-1.5">
+                    <XCircle className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs sm:text-sm text-foreground">{nc.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-foreground">{nc.description}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
                         Responsável: {nc.responsible} • Correção: {format(new Date(nc.correctionDate), "dd/MM", { locale: ptBR })}
                       </p>
                     </div>
@@ -118,7 +116,6 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
   const [isPendingOpen, setIsPendingOpen] = useState(false);
 
-  // Flatten all pending items
   const allPendingItems = qualityItems.flatMap(q => q.pendingItems);
 
   const firstChecklist = qualityItems[0];
@@ -127,21 +124,19 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
   const remainingPendingItems = allPendingItems.slice(2);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Checklists Executed */}
       <div className="bg-card rounded-lg border border-border overflow-hidden">
-        <div className="p-4 sm:p-5 bg-primary-dark">
-          <h3 className="text-sm sm:text-base font-semibold text-white">Qualidade, Testes e Pendências</h3>
+        <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
+          <h3 className="text-xs sm:text-sm font-semibold text-white">Qualidade, Testes e Pendências</h3>
         </div>
         
-        {/* Desktop: Always show all checklists */}
         <div className="hidden sm:block divide-y divide-border">
           {qualityItems.map((item, index) => (
             <ChecklistItem key={index} item={item} index={index} />
           ))}
         </div>
 
-        {/* Mobile: Collapsible content */}
         <div className="sm:hidden">
           <Collapsible open={isChecklistOpen} onOpenChange={setIsChecklistOpen}>
             <div className="divide-y divide-border">
@@ -156,10 +151,10 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
             
             {remainingChecklists.length > 0 && (
               <CollapsibleTrigger asChild>
-                <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
+                <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
                   <span>{isChecklistOpen ? "Ver menos" : "Ver mais"}</span>
-                  {!isChecklistOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[10px] font-semibold">+{remainingChecklists.length}</span>}
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isChecklistOpen ? "rotate-180" : ""}`} />
+                  {!isChecklistOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingChecklists.length}</span>}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isChecklistOpen ? "rotate-180" : ""}`} />
                 </button>
               </CollapsibleTrigger>
             )}
@@ -167,21 +162,20 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
         </div>
       </div>
 
-      {/* Pending Items (Semáforo) */}
+      {/* Pending Items */}
       {allPendingItems.length > 0 && (
         <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <div className="p-4 sm:p-5 bg-primary-dark">
-            <h3 className="text-sm sm:text-base font-semibold text-white">Pendências para Entrega</h3>
+          <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
+            <h3 className="text-xs sm:text-sm font-semibold text-white">Pendências para Entrega</h3>
           </div>
           
-          {/* Desktop: Always show all items */}
-          <div className="hidden sm:block p-4 sm:p-5">
-            <ul className="space-y-1.5">
+          <div className="hidden sm:block p-2.5 sm:p-3">
+            <ul className="space-y-1">
               {allPendingItems.map((item) => (
-                <li key={item.id} className="flex items-center gap-2.5 p-2 rounded bg-secondary/50">
+                <li key={item.id} className="flex items-center gap-2 p-1.5 rounded bg-secondary/50">
                   <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
-                  <span className="text-xs sm:text-sm text-foreground flex-1">{item.description}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-foreground flex-1">{item.description}</span>
+                  <span className="text-[10px] text-muted-foreground">
                     até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
                   </span>
                 </li>
@@ -189,26 +183,25 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
             </ul>
           </div>
 
-          {/* Mobile: Collapsible content */}
           <div className="sm:hidden">
             <Collapsible open={isPendingOpen} onOpenChange={setIsPendingOpen}>
-              <div className="p-4">
-                <ul className="space-y-1.5">
+              <div className="p-2.5">
+                <ul className="space-y-1">
                   {firstPendingItems.map((item) => (
-                    <li key={item.id} className="flex items-center gap-2.5 p-2 rounded bg-secondary/50">
+                    <li key={item.id} className="flex items-center gap-2 p-1.5 rounded bg-secondary/50">
                       <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
                       <span className="text-xs text-foreground flex-1">{item.description}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground">
                         até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
                       </span>
                     </li>
                   ))}
                   
-                  <CollapsibleContent className="space-y-1.5 overflow-hidden">
+                  <CollapsibleContent className="space-y-1 overflow-hidden">
                     {remainingPendingItems.map((item, index) => (
                       <li 
                         key={item.id} 
-                        className="flex items-center gap-2.5 p-2 rounded bg-secondary/50"
+                        className="flex items-center gap-2 p-1.5 rounded bg-secondary/50"
                         style={{ 
                           animationDelay: `${(index + 1) * 50}ms`,
                           animation: isPendingOpen ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -217,7 +210,7 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
                       >
                         <span className={`w-2 h-2 rounded-full ${getSeverityColor(item.severity)}`} />
                         <span className="text-xs text-foreground flex-1">{item.description}</span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[10px] text-muted-foreground">
                           até {format(new Date(item.dueDate), "dd/MM", { locale: ptBR })}
                         </span>
                       </li>
@@ -228,10 +221,10 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
               
               {remainingPendingItems.length > 0 && (
                 <CollapsibleTrigger asChild>
-                  <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
+                  <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
                     <span>{isPendingOpen ? "Ver menos" : "Ver mais"}</span>
-                    {!isPendingOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[10px] font-semibold">+{remainingPendingItems.length}</span>}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isPendingOpen ? "rotate-180" : ""}`} />
+                    {!isPendingOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingPendingItems.length}</span>}
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isPendingOpen ? "rotate-180" : ""}`} />
                   </button>
                 </CollapsibleTrigger>
               )}

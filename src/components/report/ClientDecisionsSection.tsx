@@ -16,35 +16,35 @@ interface ClientDecisionsSectionProps {
 
 const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecision; animationDelay?: number }) => (
   <div 
-    className="p-4 sm:p-5 space-y-3"
+    className="p-2.5 sm:p-3 space-y-2"
     style={{ 
       animationDelay: `${animationDelay}ms`,
       animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
       opacity: animationDelay > 0 ? 0 : 1
     }}
   >
-    <div className="flex items-start justify-between gap-3">
-      <p className="text-sm sm:text-base font-medium text-foreground leading-relaxed">{decision.description}</p>
-      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-sm shrink-0">
+    <div className="flex items-start justify-between gap-2">
+      <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{decision.description}</p>
+      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-[10px] shrink-0">
         Pendente
       </Badge>
     </div>
     
     {decision.options && decision.options.length > 0 && (
-      <div className="text-sm text-foreground/70 leading-relaxed">
+      <div className="text-xs text-foreground/70 leading-snug">
         <span className="font-medium">Opções: </span>
         {decision.options.join(" | ")}
       </div>
     )}
     
-    <div className="flex flex-col gap-2 text-sm">
-      <div className="flex items-center gap-1.5">
-        <span className="text-sm font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
+    <div className="flex flex-col gap-1 text-xs">
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
           {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}
         </span>
         <span className="text-foreground/70">Prazo para decisão</span>
       </div>
-      <p className="text-destructive text-xs sm:text-sm leading-relaxed">
+      <p className="text-destructive text-[10px] leading-snug">
         <span className="font-medium">Importante:</span> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
       </p>
     </div>
@@ -62,8 +62,8 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="p-4 sm:p-5 bg-primary-dark">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Decisões e Aprovações do Cliente</h3>
+      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
+        <h3 className="text-xs sm:text-sm font-semibold text-white">Decisões e Aprovações do Cliente</h3>
       </div>
       
       {/* Desktop: Always show all */}
@@ -88,10 +88,10 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
           
           {remainingDecisions.length > 0 && (
             <CollapsibleTrigger asChild>
-              <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[10px] font-semibold">+{remainingDecisions.length}</span>}
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingDecisions.length}</span>}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>
           )}

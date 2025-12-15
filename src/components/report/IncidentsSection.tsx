@@ -53,100 +53,85 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
   return (
     <>
       <div 
-        className="p-4 sm:p-5 space-y-3"
+        className="p-2.5 sm:p-3 space-y-2"
         style={{ 
           animationDelay: `${animationDelay}ms`,
           animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
           opacity: animationDelay > 0 ? 0 : 1
         }}
       >
-      {/* Header com Status */}
         <div className="flex items-center">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${statusConfig.className}`}>
+          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${statusConfig.className}`}>
             {statusConfig.label}
           </span>
         </div>
 
-        {/* Datas */}
-        <div className="space-y-1.5 text-sm sm:text-base text-foreground/80">
-          <p className="leading-relaxed"><span className="font-semibold">Data da ocorrência:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
-          <p className="leading-relaxed"><span className="font-semibold">Previsão para resolução:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
+        <div className="space-y-1 text-xs text-foreground/80">
+          <p className="leading-snug"><span className="font-semibold">Data:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
+          <p className="leading-snug"><span className="font-semibold">Previsão:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
         </div>
 
-        {/* Ocorrência */}
-        <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            <AlertOctagon className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-            <p className="text-sm font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
+        <div className="space-y-1">
+          <div className="flex items-start gap-1.5">
+            <AlertOctagon className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
+            <p className="text-[10px] font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
           </div>
-          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed ml-5.5">{incident.occurrence}</p>
+          <p className="text-xs text-foreground/80 leading-snug ml-4">{incident.occurrence}</p>
         </div>
 
-        {/* Photos */}
         {photos.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Camera className="w-4 h-4 text-muted-foreground" />
-              <p className="text-sm font-bold text-foreground uppercase tracking-wide">
-                Registro Fotográfico
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Camera className="w-3 h-3 text-muted-foreground" />
+              <p className="text-[10px] font-bold text-foreground uppercase tracking-wide">
+                Fotos
               </p>
-              <span className="text-sm text-muted-foreground">({photos.length} foto{photos.length > 1 ? 's' : ''})</span>
+              <span className="text-[10px] text-muted-foreground">({photos.length})</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 ml-5.5">
+            <div className="grid grid-cols-3 gap-1.5 ml-4">
               {photos.map((photo, index) => (
                 <button
                   key={photo.id}
                   onClick={() => setSelectedPhotoIndex(index)}
-                  className="relative aspect-video rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors group"
+                  className="relative aspect-video rounded overflow-hidden border border-border hover:border-primary/50 transition-colors group"
                 >
                   <img
                     src={photo.url}
                     alt={photo.caption || "Foto da intercorrência"}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                  {photo.caption && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1.5">
-                      <p className="text-[10px] text-white line-clamp-1">{photo.caption}</p>
-                    </div>
-                  )}
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Causa */}
-        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-2">
-          <p className="text-sm font-bold text-foreground">Causa</p>
-          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.cause}</p>
+        <div className="bg-secondary rounded-lg p-2 space-y-1">
+          <p className="text-[10px] font-bold text-foreground">Causa</p>
+          <p className="text-xs text-foreground/80 leading-snug">{incident.cause}</p>
         </div>
 
-        {/* Ação */}
-        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-2">
-          <p className="text-sm font-bold text-foreground">Ação</p>
-          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.action}</p>
+        <div className="bg-secondary rounded-lg p-2 space-y-1">
+          <p className="text-[10px] font-bold text-foreground">Ação</p>
+          <p className="text-xs text-foreground/80 leading-snug">{incident.action}</p>
         </div>
 
-        {/* Impacto */}
-        <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-2">
-          <p className="text-sm font-bold text-foreground">Impacto</p>
-          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.impact}</p>
+        <div className="bg-secondary rounded-lg p-2 space-y-1">
+          <p className="text-[10px] font-bold text-foreground">Impacto</p>
+          <p className="text-xs text-foreground/80 leading-snug">{incident.impact}</p>
         </div>
       </div>
 
-      {/* Photo Lightbox - Same pattern as PhotoGallery */}
       <Dialog open={selectedPhotoIndex !== null} onOpenChange={() => setSelectedPhotoIndex(null)}>
         <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
           <VisuallyHidden>
             <DialogTitle>
-              {selectedPhotoIndex !== null ? (photos[selectedPhotoIndex]?.caption || "Foto da intercorrência") : "Foto"}
+              {selectedPhotoIndex !== null ? (photos[selectedPhotoIndex]?.caption || "Foto") : "Foto"}
             </DialogTitle>
           </VisuallyHidden>
           
           {selectedPhotoIndex !== null && photos[selectedPhotoIndex] && (
             <div className="relative">
-              {/* Close Button */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -156,7 +141,6 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
                 <X className="w-5 h-5" />
               </Button>
 
-              {/* Navigation */}
               {selectedPhotoIndex > 0 && (
                 <Button
                   variant="ghost"
@@ -178,16 +162,14 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
                 </Button>
               )}
 
-              {/* Image */}
               <div className="flex items-center justify-center min-h-[60vh] p-8">
                 <img
                   src={photos[selectedPhotoIndex].url}
-                  alt={photos[selectedPhotoIndex].caption || "Foto da intercorrência"}
+                  alt={photos[selectedPhotoIndex].caption || "Foto"}
                   className="max-w-full max-h-[70vh] object-contain rounded"
                 />
               </div>
 
-              {/* Caption */}
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
                 {photos[selectedPhotoIndex].caption && (
                   <p className="text-white text-sm font-medium">{photos[selectedPhotoIndex].caption}</p>
@@ -217,43 +199,39 @@ const IncidentsSection = ({ incidents }: IncidentsSectionProps) => {
   const remainingIncidents = incidents.slice(1);
 
   return (
-    <div className="space-y-4">
-      <div className="bg-card rounded-lg border border-border overflow-hidden">
-        <div className="p-4 sm:p-5 bg-primary-dark">
-          <h3 className="text-sm sm:text-base font-semibold text-white">Intercorrências de Obra</h3>
-        </div>
-        
-        {/* Desktop: Always show all */}
-        <div className="hidden sm:block divide-y divide-border">
-          {incidents.map((incident) => (
-            <IncidentItem key={incident.id} incident={incident} />
-          ))}
-        </div>
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary-dark">
+        <h3 className="text-xs sm:text-sm font-semibold text-white">Intercorrências de Obra</h3>
+      </div>
+      
+      <div className="hidden sm:block divide-y divide-border">
+        {incidents.map((incident) => (
+          <IncidentItem key={incident.id} incident={incident} />
+        ))}
+      </div>
 
-        {/* Mobile: Collapsible */}
-        <div className="sm:hidden">
-          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <div className="divide-y divide-border">
-              {firstIncident && <IncidentItem incident={firstIncident} />}
-              
-              <CollapsibleContent className="divide-y divide-border overflow-hidden">
-                {remainingIncidents.map((incident, index) => (
-                  <IncidentItem key={incident.id} incident={incident} animationDelay={isOpen ? (index + 1) * 50 : 0} />
-                ))}
-              </CollapsibleContent>
-            </div>
+      <div className="sm:hidden">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <div className="divide-y divide-border">
+            {firstIncident && <IncidentItem incident={firstIncident} />}
             
-            {remainingIncidents.length > 0 && (
-              <CollapsibleTrigger asChild>
-                <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
-                  <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                  {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[10px] font-semibold">+{remainingIncidents.length}</span>}
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-                </button>
-              </CollapsibleTrigger>
-            )}
-          </Collapsible>
-        </div>
+            <CollapsibleContent className="divide-y divide-border overflow-hidden">
+              {remainingIncidents.map((incident, index) => (
+                <IncidentItem key={incident.id} incident={incident} animationDelay={isOpen ? (index + 1) * 50 : 0} />
+              ))}
+            </CollapsibleContent>
+          </div>
+          
+          {remainingIncidents.length > 0 && (
+            <CollapsibleTrigger asChild>
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+                <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingIncidents.length}</span>}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+              </button>
+            </CollapsibleTrigger>
+          )}
+        </Collapsible>
       </div>
     </div>
   );
