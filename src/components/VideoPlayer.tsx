@@ -48,15 +48,37 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
   };
 
   const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const video = videoRef.current;
+    if (!container) return;
 
-    if (!isFullscreen) {
-      if (containerRef.current.requestFullscreen) {
-        await containerRef.current.requestFullscreen();
+    try {
+      if (!isFullscreen) {
+        // Try container fullscreen first (for custom controls)
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          await (container as any).webkitRequestFullscreen();
+        } else if ((container as any).msRequestFullscreen) {
+          await (container as any).msRequestFullscreen();
+        } else if (video && (video as any).webkitEnterFullscreen) {
+          // iOS Safari fallback - uses native video fullscreen
+          (video as any).webkitEnterFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen();
+        }
       }
-    } else {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
+    } catch (error) {
+      console.log("Fullscreen not supported or blocked:", error);
+      // Fallback: try native video fullscreen
+      if (video && (video as any).webkitEnterFullscreen) {
+        (video as any).webkitEnterFullscreen();
       }
     }
   };
@@ -107,7 +129,12 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
     };
 
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isFs = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isFs);
     };
 
     const handleEnded = () => {
@@ -120,6 +147,8 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
     video.addEventListener("progress", handleProgress);
     video.addEventListener("ended", handleEnded);
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("msfullscreenchange", handleFullscreenChange);
 
     return () => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
@@ -127,6 +156,8 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
       video.removeEventListener("progress", handleProgress);
       video.removeEventListener("ended", handleEnded);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("msfullscreenchange", handleFullscreenChange);
     };
   }, []);
 
