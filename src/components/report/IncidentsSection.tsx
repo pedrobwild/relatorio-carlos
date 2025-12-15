@@ -2,7 +2,7 @@ import { Incident, IncidentPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AlertOctagon, ChevronDown, Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,6 +13,8 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface IncidentsSectionProps {
   incidents: Incident[];
@@ -30,104 +32,22 @@ const getStatusConfig = (status: Incident['status']) => {
   }
 };
 
-interface PhotoLightboxProps {
-  photos: IncidentPhoto[];
-  currentIndex: number;
-  onClose: () => void;
-  onNavigate: (index: number) => void;
-}
-
-const PhotoLightbox = ({ photos, currentIndex, onClose, onNavigate, isOpen }: PhotoLightboxProps & { isOpen: boolean }) => {
-  const currentPhoto = photos[currentIndex];
-  const hasMultiplePhotos = photos.length > 1;
-
-  const handlePrevious = useCallback(() => {
-    onNavigate(currentIndex === 0 ? photos.length - 1 : currentIndex - 1);
-  }, [currentIndex, photos.length, onNavigate]);
-
-  const handleNext = useCallback(() => {
-    onNavigate(currentIndex === photos.length - 1 ? 0 : currentIndex + 1);
-  }, [currentIndex, photos.length, onNavigate]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') handlePrevious();
-    if (e.key === 'ArrowRight') handleNext();
-    if (e.key === 'Escape') onClose();
-  }, [handlePrevious, handleNext, onClose]);
-
-  if (!currentPhoto) return null;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent 
-        className="max-w-4xl p-0 bg-black/95 border-none [&>button]:hidden" 
-        onKeyDown={handleKeyDown}
-      >
-        <DialogTitle className="sr-only">
-          {currentPhoto.caption || "Foto da intercorrência"}
-        </DialogTitle>
-        
-        <div className="relative">
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          {/* Navigation */}
-          {hasMultiplePhotos && currentIndex > 0 && (
-            <button
-              onClick={handlePrevious}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-colors"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-          )}
-          {hasMultiplePhotos && currentIndex < photos.length - 1 && (
-            <button
-              onClick={handleNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-colors"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          )}
-
-          {/* Image */}
-          <div className="flex items-center justify-center min-h-[60vh] p-8">
-            <img
-              src={currentPhoto.url}
-              alt={currentPhoto.caption || "Foto da intercorrência"}
-              className="max-w-full max-h-[70vh] object-contain rounded"
-            />
-          </div>
-
-          {/* Caption */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-            {currentPhoto.caption && (
-              <p className="text-white text-sm font-medium">{currentPhoto.caption}</p>
-            )}
-            {hasMultiplePhotos && (
-              <p className="text-white/70 text-xs mt-1">
-                {currentIndex + 1} / {photos.length}
-              </p>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; animationDelay?: number }) => {
   const statusConfig = getStatusConfig(incident.status);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   
-  const openLightbox = (index: number) => {
-    setCurrentPhotoIndex(index);
-    setLightboxOpen(true);
+  const photos = incident.photos || [];
+  
+  const handlePrevious = () => {
+    if (selectedPhotoIndex !== null && selectedPhotoIndex > 0) {
+      setSelectedPhotoIndex(selectedPhotoIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (selectedPhotoIndex !== null && selectedPhotoIndex < photos.length - 1) {
+      setSelectedPhotoIndex(selectedPhotoIndex + 1);
+    }
   };
   
   return (
@@ -163,20 +83,20 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         </div>
 
         {/* Photos */}
-        {incident.photos && incident.photos.length > 0 && (
+        {photos.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Camera className="w-3.5 h-3.5 text-muted-foreground" />
               <p className="text-xs font-bold text-foreground uppercase tracking-wide">
                 Registro Fotográfico
               </p>
-              <span className="text-xs text-muted-foreground">({incident.photos.length} foto{incident.photos.length > 1 ? 's' : ''})</span>
+              <span className="text-xs text-muted-foreground">({photos.length} foto{photos.length > 1 ? 's' : ''})</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 ml-5.5">
-              {incident.photos.map((photo, index) => (
+              {photos.map((photo, index) => (
                 <button
                   key={photo.id}
-                  onClick={() => openLightbox(index)}
+                  onClick={() => setSelectedPhotoIndex(index)}
                   className="relative aspect-video rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors group"
                 >
                   <img
@@ -215,16 +135,73 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         </div>
       </div>
 
-      {/* Photo Lightbox */}
-      {incident.photos && incident.photos.length > 0 && (
-        <PhotoLightbox
-          photos={incident.photos}
-          currentIndex={currentPhotoIndex}
-          onClose={() => setLightboxOpen(false)}
-          onNavigate={setCurrentPhotoIndex}
-          isOpen={lightboxOpen}
-        />
-      )}
+      {/* Photo Lightbox - Same pattern as PhotoGallery */}
+      <Dialog open={selectedPhotoIndex !== null} onOpenChange={() => setSelectedPhotoIndex(null)}>
+        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
+          <VisuallyHidden>
+            <DialogTitle>
+              {selectedPhotoIndex !== null ? (photos[selectedPhotoIndex]?.caption || "Foto da intercorrência") : "Foto"}
+            </DialogTitle>
+          </VisuallyHidden>
+          
+          {selectedPhotoIndex !== null && photos[selectedPhotoIndex] && (
+            <div className="relative">
+              {/* Close Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-10 text-white hover:bg-white/20"
+                onClick={() => setSelectedPhotoIndex(null)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+
+              {/* Navigation */}
+              {selectedPhotoIndex > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"
+                  onClick={handlePrevious}
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </Button>
+              )}
+              {selectedPhotoIndex < photos.length - 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"
+                  onClick={handleNext}
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </Button>
+              )}
+
+              {/* Image */}
+              <div className="flex items-center justify-center min-h-[60vh] p-8">
+                <img
+                  src={photos[selectedPhotoIndex].url}
+                  alt={photos[selectedPhotoIndex].caption || "Foto da intercorrência"}
+                  className="max-w-full max-h-[70vh] object-contain rounded"
+                />
+              </div>
+
+              {/* Caption */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                {photos[selectedPhotoIndex].caption && (
+                  <p className="text-white text-sm font-medium">{photos[selectedPhotoIndex].caption}</p>
+                )}
+                {photos.length > 1 && (
+                  <p className="text-white/70 text-xs mt-1">
+                    {selectedPhotoIndex + 1} / {photos.length}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
