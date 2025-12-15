@@ -106,20 +106,20 @@ const Index = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-4 py-3">
-        <div className="flex flex-col items-center gap-1 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
-          <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
-          <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
+        <div className="flex flex-col items-center gap-0.5 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
+          <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+          <h1 className="font-bold text-lg text-foreground">Portal do Cliente</h1>
         </div>
       </div>
 
-      <div className="p-4 md:p-6 lg:p-8">
+      <div className="p-3 md:p-4 lg:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Page Title - Desktop only */}
-          <div className="hidden md:flex items-center gap-4 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
-            <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
-            <div className="h-6 w-px bg-border/60" />
-            <h1 className="text-2xl font-bold text-foreground">Portal do Cliente</h1>
+          <div className="hidden md:flex items-center gap-3 mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
+            <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
+            <div className="h-5 w-px bg-border/60" />
+            <h1 className="text-xl font-bold text-foreground">Portal do Cliente</h1>
           </div>
 
         <div ref={reportRef}>
@@ -139,20 +139,20 @@ const Index = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Tabs Navigation */}
               <div className="border-b border-border bg-secondary/30">
-                <div className="px-4 md:px-6">
+                <div className="px-3 md:px-5">
                   <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto">
                     <TabsTrigger
                       value="curvaS"
-                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-4 md:px-6 py-3.5 md:py-4 font-semibold text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
                     >
-                      <BarChart3 className="w-4 h-4 mr-2" />
+                      <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
                       Curva S
                     </TabsTrigger>
                     <TabsTrigger
                       value="relatorio"
-                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-4 md:px-6 py-3.5 md:py-4 font-semibold text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
                     >
-                      <FileText className="w-4 h-4 mr-2" />
+                      <FileText className="w-3.5 h-3.5 mr-1.5" />
                       Relatórios Semanais
                     </TabsTrigger>
                   </TabsList>
@@ -160,7 +160,7 @@ const Index = () => {
               </div>
 
               {/* Tab Content */}
-              <div className="p-4 md:p-6 lg:p-8">
+              <div className="p-3 md:p-4 lg:p-6">
                 <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
                   <SCurveChart activities={reportData.activities} reportDate={reportData.reportDate} />
                   <ScheduleTable activities={reportData.activities} reportDate={reportData.reportDate} />

@@ -14,7 +14,7 @@ interface WeeklyReportTemplateProps {
 
 const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
   return (
-    <div className="space-y-3 animate-fade-in">
+    <div className="space-y-2.5 animate-fade-in">
       {/* Executive Summary */}
       <section>
         <ExecutiveSummary data={data} />
@@ -51,7 +51,7 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
       </section>
 
       {/* Footer */}
-      <section className="pt-2 border-t border-border/50">
+      <section className="pt-1.5 border-t border-border/50">
         <ReportFooter data={data} />
       </section>
     </div>

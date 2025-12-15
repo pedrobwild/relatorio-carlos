@@ -179,18 +179,18 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
   const deviation = lastPoint ? lastPoint.realizado - lastPoint.previsto : 0;
 
   return (
-    <div className="mb-6 md:mb-10">
+    <div className="mb-4 md:mb-6">
       {/* Header with title and description */}
-      <div className="flex flex-col gap-3 mb-4 md:mb-6">
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+      <div className="flex flex-col gap-2 mb-3 md:mb-4">
+        <div className="flex items-start gap-2.5">
+          <div className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <TrendingUp className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-base md:text-xl font-bold text-foreground tracking-tight">
+            <h2 className="text-sm md:text-lg font-bold text-foreground tracking-tight">
               Cronograma Previsto x Realizado
             </h2>
-            <p className="text-xs text-muted-foreground mt-0.5 hidden md:block">
+            <p className="text-[10px] md:text-xs text-muted-foreground hidden md:block">
               Comparação entre o previsto e o realizado ao longo do cronograma
             </p>
           </div>
@@ -198,7 +198,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
         
         {/* Current activity indicator - Plain text */}
         {currentActivity && (
-          <p className="text-xs sm:text-sm font-medium text-foreground md:self-start">
+          <p className="text-[11px] sm:text-xs font-medium text-foreground md:self-start">
             {currentActivity.description}
           </p>
         )}
