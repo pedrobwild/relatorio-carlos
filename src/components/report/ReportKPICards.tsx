@@ -17,7 +17,7 @@ const ReportKPICards = ({ data }: ReportKPICardsProps) => {
   return (
     <div className="space-y-4">
       {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 text-sm text-foreground/70">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 text-caption">
         <div className="flex items-center gap-1.5">
           <Calendar className="w-4 h-4 shrink-0" />
           <span className="font-medium">
@@ -28,7 +28,7 @@ const ReportKPICards = ({ data }: ReportKPICardsProps) => {
           <User className="w-4 h-4 shrink-0" />
           <span>{data.preparedBy}</span>
         </div>
-        <span className="text-foreground/50 text-xs sm:text-sm">
+        <span className="text-tiny">
           Emitido em {format(new Date(data.issuedAt), "dd/MM/yyyy", { locale: ptBR })}
         </span>
       </div>
@@ -38,24 +38,24 @@ const ReportKPICards = ({ data }: ReportKPICardsProps) => {
         {/* Physical Progress */}
         <div className="bg-card rounded-lg p-4 border border-border">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-foreground/60 uppercase tracking-wide">Previsto</span>
-            <span className="text-2xl sm:text-3xl font-bold text-foreground">{data.kpis.physicalPlanned}%</span>
+            <span className="text-tiny font-medium uppercase tracking-wide">Previsto</span>
+            <span className="text-h1">{data.kpis.physicalPlanned}%</span>
           </div>
           <Progress value={data.kpis.physicalPlanned} className="h-2" />
         </div>
 
         <div className="bg-card rounded-lg p-4 border border-border">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-foreground/60 uppercase tracking-wide">Realizado</span>
-            <span className="text-2xl sm:text-3xl font-bold text-primary">{data.kpis.physicalActual}%</span>
+            <span className="text-tiny font-medium uppercase tracking-wide">Realizado</span>
+            <span className="text-h1 text-primary">{data.kpis.physicalActual}%</span>
           </div>
           <Progress value={data.kpis.physicalActual} className="h-2" />
         </div>
 
         {/* Schedule Variance */}
         <div className="bg-card rounded-lg p-4 border border-border">
-          <span className="text-xs font-medium text-foreground/60 uppercase tracking-wide">Cronograma</span>
-          <p className="text-2xl sm:text-3xl font-bold text-foreground">
+          <span className="text-tiny font-medium uppercase tracking-wide">Cronograma</span>
+          <p className="text-h1">
             {data.kpis.scheduleVarianceDays === 0 ? "Em dia" : 
              data.kpis.scheduleVarianceDays > 0 ? `+${data.kpis.scheduleVarianceDays}d` : 
              `${data.kpis.scheduleVarianceDays}d`}
@@ -66,17 +66,17 @@ const ReportKPICards = ({ data }: ReportKPICardsProps) => {
       {/* Next Milestones */}
       <div className="bg-card rounded-lg p-4 border border-border">
         <div className="flex items-center gap-2 mb-3">
-          <Flag className="w-4 h-4 text-foreground/60" />
-          <span className="text-sm font-semibold text-foreground">Próximos Marcos</span>
+          <Flag className="w-4 h-4 text-muted-foreground" />
+          <span className="text-h3">Próximos Marcos</span>
         </div>
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
           {data.nextMilestones.slice(0, 4).map((milestone, index) => (
             <div
               key={index}
-              className="flex items-center justify-between sm:justify-start gap-2 bg-secondary rounded-lg px-3 py-2.5 text-sm"
+              className="flex items-center justify-between sm:justify-start gap-2 bg-secondary rounded-lg px-3 py-2.5"
             >
-              <span className="font-medium text-foreground">{milestone.description}</span>
-              <span className="text-foreground/60 text-xs font-medium">
+              <span className="text-body font-medium">{milestone.description}</span>
+              <span className="text-tiny font-medium">
                 {format(new Date(milestone.dueDate), "dd/MM", { locale: ptBR })}
               </span>
             </div>

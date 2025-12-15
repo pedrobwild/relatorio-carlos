@@ -38,16 +38,16 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
         <div className="sm:hidden">
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             <div className="p-3">
-              <p className="text-xs text-foreground/80 leading-snug text-justify">
+              <p className="text-caption leading-snug text-justify">
                 {firstParagraph}
               </p>
               
               <CollapsibleContent className="overflow-hidden">
                 <div className="space-y-2 mt-2">
                   {remainingParagraphs.map((paragraph, index) => (
-                    <p 
-                      key={index} 
-                      className="text-xs text-foreground/80 leading-snug text-justify"
+                      <p 
+                        key={index} 
+                        className="text-caption leading-snug text-justify"
                       style={{
                         animationDelay: `${(index + 1) * 50}ms`,
                         animation: isOpen ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -63,9 +63,9 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
             
             {remainingParagraphs.length > 0 && (
               <CollapsibleTrigger asChild>
-                <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+                <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                   <span>{isOpen ? "Ver menos" : "Continuar lendo"}</span>
-                  {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingParagraphs.length}</span>}
+                  {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingParagraphs.length}</span>}
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                 </button>
               </CollapsibleTrigger>
@@ -93,8 +93,8 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                       {item.subItems.map((subItem, subIndex) => (
                         <li 
                           key={subItem.id} 
-                          className="text-[10px] sm:text-xs text-foreground/70 leading-snug"
-                          style={{ 
+                          className="text-tiny leading-snug"
+                          style={{
                             animationDelay: `${(subIndex + 1) * 30}ms`,
                             animation: 'fade-in 0.3s ease-out forwards',
                             opacity: 0

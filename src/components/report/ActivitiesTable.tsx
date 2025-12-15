@@ -40,7 +40,7 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="p-4 border-b border-border">
-        <h3 className="text-sm font-medium text-foreground">Cronograma de Atividades</h3>
+        <h3 className="text-h3">Cronograma de Atividades</h3>
       </div>
       
       {/* Desktop Table */}
@@ -58,20 +58,20 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
           <TableBody>
             {activities.map((activity) => (
               <TableRow key={activity.activityId}>
-                <TableCell className="font-medium text-foreground">
+                <TableCell className="text-body font-medium">
                   {activity.description}
                 </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
+                <TableCell className="text-caption">
                   {format(new Date(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(new Date(activity.plannedEnd), "dd/MM", { locale: ptBR })}
                 </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
+                <TableCell className="text-caption">
                   {activity.actualStart 
                     ? `${format(new Date(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(new Date(activity.actualEnd), "dd/MM", { locale: ptBR })}` : " - ..."}`
                     : "-"
                   }
                 </TableCell>
                 <TableCell>{getStatusBadge(activity.status)}</TableCell>
-                <TableCell className="text-right text-sm font-medium">
+                <TableCell className="text-right text-caption font-medium">
                   {getVarianceText(activity.varianceDays)}
                 </TableCell>
               </TableRow>
@@ -85,24 +85,24 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
         {activities.map((activity) => (
           <div key={activity.activityId} className="p-4 space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <span className="font-medium text-foreground text-sm">{activity.description}</span>
+              <span className="text-body font-medium">{activity.description}</span>
               {getStatusBadge(activity.status)}
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+            <div className="grid grid-cols-2 gap-2 text-tiny">
               <div>
-                <span className="block text-muted-foreground/70">Previsto</span>
+                <span className="block text-muted-foreground">Previsto</span>
                 {format(new Date(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(new Date(activity.plannedEnd), "dd/MM", { locale: ptBR })}
               </div>
               <div>
-                <span className="block text-muted-foreground/70">Real</span>
+                <span className="block text-muted-foreground">Real</span>
                 {activity.actualStart 
                   ? `${format(new Date(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(new Date(activity.actualEnd), "dd/MM", { locale: ptBR })}` : ""}`
                   : "-"
                 }
               </div>
             </div>
-            <div className="text-xs">
-              <span className="text-muted-foreground/70">Desvio: </span>
+            <div className="text-tiny">
+              <span className="text-muted-foreground">Desvio: </span>
               {getVarianceText(activity.varianceDays)}
             </div>
           </div>
