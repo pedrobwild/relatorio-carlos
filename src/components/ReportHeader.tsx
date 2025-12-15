@@ -464,44 +464,51 @@ const ReportHeader = ({
           </div>
         </div>
 
-        {/* Team Contacts - Horizontal Scroll */}
+        {/* Team Contacts - Grid Layout */}
         <div className="px-2.5 py-2">
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+          <div className="grid grid-cols-3 gap-1.5">
             {teamContacts.map((contact) => (
               <button
                 key={contact.role}
                 onClick={() => toggleContact(contact.role)}
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-secondary/30 hover:bg-accent/50 active:scale-[0.98] transition-all shrink-0"
+                className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg transition-all ${
+                  expandedContact === contact.role 
+                    ? 'bg-primary/10 border border-primary/30' 
+                    : 'bg-secondary/30 hover:bg-accent/50'
+                }`}
                 aria-label={`Ver contato de ${contact.name}`}
               >
-                <User className="w-3 h-3 text-primary shrink-0" />
-                <span className="text-[10px] font-medium text-foreground whitespace-nowrap">{contact.name}</span>
-                <ChevronDown className={`w-2.5 h-2.5 text-muted-foreground transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
+                <User className="w-4 h-4 text-primary" />
+                <span className="text-[9px] font-medium text-foreground text-center leading-tight">
+                  {contact.name.split(' ')[0]}
+                </span>
+                <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
               </button>
             ))}
           </div>
           
           {teamContacts.map((contact) => (
             expandedContact === contact.role && (
-              <div key={`expanded-${contact.role}`} className="mt-1.5 bg-card border border-border rounded-lg p-2 animate-fade-in">
-                <p className="text-[10px] font-semibold text-foreground mb-1">{contact.role}</p>
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
+              <div key={`expanded-${contact.role}`} className="mt-2 bg-card border border-border rounded-lg p-2.5 animate-fade-in">
+                <p className="text-tiny font-semibold text-foreground mb-1.5">{contact.name}</p>
+                <p className="text-tiny text-muted-foreground mb-2">{contact.role}</p>
+                <div className="flex flex-col gap-1.5">
                   <a 
                     href={`mailto:${contact.email}`}
-                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                    className="flex items-center gap-2 text-tiny text-primary hover:underline"
                   >
-                    <Mail className="w-2.5 h-2.5" />
+                    <Mail className="w-3 h-3" />
                     <span>{contact.email}</span>
                   </a>
                   <a 
                     href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                    className="flex items-center gap-2 text-tiny text-primary hover:underline"
                   >
-                    <Phone className="w-2.5 h-2.5" />
+                    <Phone className="w-3 h-3" />
                     <span>{contact.phone}</span>
                   </a>
                   {contact.crea && (
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-tiny text-muted-foreground">
                       CREA: {contact.crea}
                     </span>
                   )}
