@@ -1,24 +1,67 @@
 import { WeeklyReportData, DeliverableItem } from "@/types/weeklyReport";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface ExecutiveSummaryProps {
   data: WeeklyReportData;
 }
 
 const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const paragraphs = data.executiveSummary.split('\n\n');
+  const firstParagraph = paragraphs[0];
+  const remainingParagraphs = paragraphs.slice(1);
+
   return (
     <div className="space-y-4">
-      {/* Summary Text */}
+      {/* Summary Text - Collapsible on Mobile */}
       <div className="bg-card rounded-lg border border-border">
         <div className="p-4 sm:p-6 border-b border-border">
           <h3 className="text-sm sm:text-base font-semibold text-foreground tracking-tight">Resumo Executivo</h3>
         </div>
-        <div className="p-4 sm:p-6">
+        
+        {/* Desktop: Always show full content */}
+        <div className="hidden sm:block p-4 sm:p-6">
           <div className="text-sm sm:text-base text-foreground/85 leading-relaxed sm:leading-7 text-justify space-y-4">
-            {data.executiveSummary.split('\n\n').map((paragraph, index) => (
+            {paragraphs.map((paragraph, index) => (
               <p key={index} className="first-letter:text-lg first-letter:font-medium first-letter:text-foreground">{paragraph}</p>
             ))}
           </div>
+        </div>
+
+        {/* Mobile: Collapsible content */}
+        <div className="sm:hidden">
+          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <div className="p-4">
+              <p className="text-sm text-foreground/85 leading-relaxed text-justify first-letter:text-lg first-letter:font-medium first-letter:text-foreground">
+                {firstParagraph}
+              </p>
+              
+              <CollapsibleContent className="animate-accordion-down">
+                <div className="space-y-4 mt-4">
+                  {remainingParagraphs.map((paragraph, index) => (
+                    <p key={index} className="text-sm text-foreground/85 leading-relaxed text-justify first-letter:text-lg first-letter:font-medium first-letter:text-foreground">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </div>
+            
+            {remainingParagraphs.length > 0 && (
+              <CollapsibleTrigger asChild>
+                <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
+                  <span>{isOpen ? "Ver menos" : "Continuar lendo"}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                </button>
+              </CollapsibleTrigger>
+            )}
+          </Collapsible>
         </div>
       </div>
 
