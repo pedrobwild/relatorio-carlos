@@ -1,6 +1,5 @@
 import { WeeklyReportData } from "@/types/weeklyReport";
 import ExecutiveSummary from "./ExecutiveSummary";
-import ProgressEvolutionChart from "./ProgressEvolutionChart";
 import LookaheadSection from "./LookaheadSection";
 import RisksIssuesSection from "./RisksIssuesSection";
 import QualitySection from "./QualitySection";
@@ -17,9 +16,6 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
     <div className="space-y-2 animate-fade-in">
       {/* Executive Summary */}
       <ExecutiveSummary data={data} />
-
-      {/* Progress Evolution Chart (S-Curve) */}
-      <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
 
       {/* Lookahead (Next 7 Days) */}
       <LookaheadSection tasks={data.lookaheadTasks} />
