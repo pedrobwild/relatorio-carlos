@@ -276,10 +276,10 @@ const WeeklyReportsHistory = ({
                 {/* Week Badge */}
                 <div className={cn(
                   "flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center",
-                  isLatest ? "bg-primary text-primary-foreground" : "bg-muted"
+                  isLatest ? "bg-primary" : "bg-muted"
                 )}>
-                  <span className="text-tiny uppercase font-medium opacity-80">Sem</span>
-                  <span className="text-h1 font-bold">{report.weekNumber}</span>
+                  <span className={cn("text-tiny uppercase font-medium opacity-80", isLatest ? "text-white" : "text-muted-foreground")}>Sem</span>
+                  <span className={cn("text-h1 font-bold", isLatest ? "text-white" : "text-foreground")}>{report.weekNumber}</span>
                 </div>
                 
                 {/* Content */}
