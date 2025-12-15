@@ -181,13 +181,13 @@ const WeeklyReportsHistory = ({
   }));
 
   return (
-    <div className="animate-fade-in space-y-6" style={{ animationDelay: "0.1s" }}>
+    <div className="animate-fade-in space-y-3" style={{ animationDelay: "0.1s" }}>
       {/* Header Section */}
       <div className="flex items-center justify-between">
-        <h2 className="text-h1">
+        <h2 className="text-h3">
           Histórico de Relatórios
         </h2>
-        <span className="text-caption">
+        <span className="text-tiny">
           {weeklyReports.length} relatórios
         </span>
       </div>
@@ -257,7 +257,7 @@ const WeeklyReportsHistory = ({
       )}
 
       {/* Reports List */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {weeklyReports.map((report, index) => {
           const statusConfig = getStatusConfig(report.status);
           const StatusIcon = statusConfig.icon;
@@ -268,40 +268,40 @@ const WeeklyReportsHistory = ({
               key={report.weekNumber}
               onClick={() => onReportClick?.(report, weeklyReports.length - 1 - index)}
               className={cn(
-                "w-full bg-card border border-border rounded-xl p-4 md:p-5 transition-all duration-200 active:scale-[0.99] group hover:border-primary/30 hover:shadow-md",
-                isLatest && "ring-2 ring-primary/20"
+                "w-full bg-card border border-border rounded-lg p-2.5 transition-all duration-200 active:scale-[0.99] group hover:border-primary/30 hover:shadow-sm",
+                isLatest && "ring-1 ring-primary/20"
               )}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2.5">
                 {/* Week Badge */}
                 <div className={cn(
-                  "flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center",
+                  "flex-shrink-0 w-10 h-10 rounded-lg flex flex-col items-center justify-center",
                   isLatest ? "bg-primary" : "bg-muted"
                 )}>
-                  <span className={cn("text-tiny uppercase font-medium opacity-80", isLatest ? "text-white" : "text-muted-foreground")}>Sem</span>
-                  <span className={cn("text-h1 font-bold", isLatest ? "text-white" : "text-foreground")}>{report.weekNumber}</span>
+                  <span className={cn("text-[8px] uppercase font-medium opacity-80", isLatest ? "text-white" : "text-muted-foreground")}>Sem</span>
+                  <span className={cn("text-body font-bold", isLatest ? "text-white" : "text-foreground")}>{report.weekNumber}</span>
                 </div>
                 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span className="text-caption">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span className="text-tiny">
                         {formatDateRange(report.startDate, report.endDate)}
                       </span>
                     </div>
                     {isLatest && (
-                      <span className="bg-primary/10 text-primary text-tiny font-medium px-2 py-0.5 rounded-full">
+                      <span className="bg-primary/10 text-primary text-[8px] font-medium px-1.5 py-0.5 rounded-full">
                         Atual
                       </span>
                     )}
                   </div>
                   
                   {/* Progress Bar */}
-                  <div className="mb-2">
-                    <div className="flex items-center justify-between text-caption mb-1">
-                      <div className="flex items-center gap-2">
+                  <div className="mb-1">
+                    <div className="flex items-center justify-between text-tiny mb-0.5">
+                      <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground">Progresso</span>
                         {report.variance !== 0 && (
                           <span className={cn(
@@ -314,7 +314,7 @@ const WeeklyReportsHistory = ({
                       </div>
                       <span className="font-medium">{report.completionPercentage}%</span>
                     </div>
-                    <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
                       {/* Planned indicator */}
                       <div 
                         className="absolute top-0 bottom-0 w-0.5 bg-muted-foreground/50 z-10"
@@ -333,15 +333,15 @@ const WeeklyReportsHistory = ({
                   
                   {/* Current Activity/Phase */}
                   {report.currentActivityName && (
-                    <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
-                      <Clock className="h-3 w-3" />
+                    <div className="flex items-center gap-1 text-tiny text-muted-foreground">
+                      <Clock className="h-2.5 w-2.5" />
                       <span className="truncate">Etapa: {report.currentActivityName}</span>
                     </div>
                   )}
                 </div>
                 
                 {/* Arrow */}
-                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
               </div>
             </button>
           );
