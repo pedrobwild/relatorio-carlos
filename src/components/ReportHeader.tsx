@@ -110,14 +110,14 @@ const ReportHeader = ({
             <div key={contact.role} className="relative">
               <button
                 onClick={() => toggleContact(contact.role)}
-                className="flex items-center gap-3 text-sm hover:bg-accent/50 p-2 rounded-lg transition-colors"
+                className="flex items-center gap-3 hover:bg-accent/50 p-2 rounded-lg transition-colors"
               >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent">
+                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-accent">
                   <User className="w-4 h-4 text-accent-foreground" />
                 </div>
                 <div>
-                  <span className="font-medium text-foreground">{contact.role}:</span>{" "}
-                  <span className="text-foreground/70">{contact.name}</span>
+                  <span className="font-semibold text-base text-foreground">{contact.role}:</span>{" "}
+                  <span className="text-base text-foreground/70">{contact.name}</span>
                 </div>
                 <div className="flex items-center gap-1 px-2.5 py-1 rounded-md text-muted-foreground">
                   <span className="text-sm">Contato</span>
@@ -157,11 +157,11 @@ const ReportHeader = ({
         </div>
 
         {/* Row 3: Date Metrics */}
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex items-center gap-6 text-xs">
           {dateMetrics.map((metric) => (
             <span key={metric.label}>
-              <span className="font-medium text-foreground">{metric.label}:</span>{" "}
-              <span className="text-foreground/70">{metric.value}</span>
+              <span className="font-medium text-muted-foreground">{metric.label}:</span>{" "}
+              <span className="text-foreground/60">{metric.value}</span>
             </span>
           ))}
         </div>
@@ -213,8 +213,8 @@ const ReportHeader = ({
                   <User className="w-5 h-5 text-accent-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-foreground/70">{contact.role}</p>
-                  <p className="text-sm font-medium text-foreground truncate">{contact.name}</p>
+                  <p className="text-sm font-semibold text-foreground">{contact.role}</p>
+                  <p className="text-sm text-foreground/70 truncate">{contact.name}</p>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
                   <span className="text-[10px] font-semibold">Contato</span>
@@ -254,11 +254,11 @@ const ReportHeader = ({
         </div>
 
         {/* Date Metrics - Horizontal */}
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-xs">
           {dateMetrics.map((metric) => (
             <div key={metric.label} className="text-center">
-              <p className="text-xs font-medium text-foreground/50 mb-0.5">{metric.label}</p>
-              <p className="font-medium text-foreground">{metric.value}</p>
+              <p className="text-[10px] font-medium text-muted-foreground mb-0.5">{metric.label}</p>
+              <p className="text-xs text-foreground/70">{metric.value}</p>
             </div>
           ))}
         </div>
@@ -296,21 +296,8 @@ const ReportHeader = ({
           </div>
         </div>
 
-        {/* Row 3: Dates - Secondary hierarchy */}
+        {/* Row 3: Team contacts - Secondary hierarchy */}
         <div className="mb-3 pb-3 border-b border-border">
-          <p className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2">Cronograma</p>
-          <div className="grid grid-cols-3 gap-2.5">
-            {dateMetrics.map((metric) => (
-              <div key={metric.label} className="bg-muted/30 rounded-lg px-3 py-2.5 text-center">
-                <p className="text-[10px] font-bold text-foreground uppercase tracking-wide mb-0.5">{metric.label}</p>
-                <p className="text-xs font-medium text-foreground">{metric.value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Row 4: Team contacts - Tertiary hierarchy */}
-        <div>
           <p className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2">Equipe</p>
           <div className="space-y-1.5">
             {teamContacts.map((contact) => (
@@ -323,8 +310,8 @@ const ReportHeader = ({
                     <User className="w-3.5 h-3.5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-medium text-primary/70 uppercase tracking-wide">{contact.role}</p>
-                    <p className="text-xs font-semibold text-foreground">{contact.name}</p>
+                    <p className="text-xs font-semibold text-foreground">{contact.role}</p>
+                    <p className="text-xs text-foreground/70">{contact.name}</p>
                   </div>
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary shrink-0">
                     <span className="text-[10px] font-semibold">Contato</span>
@@ -359,6 +346,19 @@ const ReportHeader = ({
                     </div>
                   </div>
                 )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Row 4: Dates - Tertiary hierarchy */}
+        <div>
+          <p className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2">Cronograma</p>
+          <div className="grid grid-cols-3 gap-2">
+            {dateMetrics.map((metric) => (
+              <div key={metric.label} className="bg-muted/30 rounded-lg px-2 py-2 text-center">
+                <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">{metric.label}</p>
+                <p className="text-[11px] text-foreground/70">{metric.value}</p>
               </div>
             ))}
           </div>
