@@ -487,6 +487,26 @@ const ReportHeader = ({
           </div>
         </div>
 
+        {/* Timeline Progress Bar - Mobile */}
+        <div className="px-3 pb-3">
+          <div className="flex items-center justify-between text-xs mb-1.5">
+            <span className="font-medium text-muted-foreground">Cronograma</span>
+            <span className="text-xs text-muted-foreground">
+              {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
+            </span>
+          </div>
+          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full rounded-full bg-primary/70 transition-all duration-500"
+              style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+            <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
+            <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
+          </div>
+        </div>
+
         {/* Team Contacts */}
         <div className="p-3">
           <p className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-2">Equipe</p>
