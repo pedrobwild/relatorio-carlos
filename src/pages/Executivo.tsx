@@ -100,6 +100,13 @@ const Executivo = () => {
                     (prazo expirado em 24/06/2025). Conforme cláusula contratual, a ausência de resposta no prazo 
                     estabelecido configura aprovação automática do documento.
                   </p>
+                  <Link 
+                    to="/formalizacoes/form-aprovacao-tacita" 
+                    className="inline-flex items-center gap-1.5 mt-2 text-caption text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Ver formalização completa
+                  </Link>
                 </div>
               </div>
             </div>
