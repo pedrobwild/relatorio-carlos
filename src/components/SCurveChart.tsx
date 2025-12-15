@@ -285,7 +285,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     const activity = payload[0]?.payload?.activity;
     
     return (
-      <div className="bg-card border border-border rounded-xl shadow-xl p-3 sm:p-3.5 min-w-[160px] sm:min-w-[200px] z-50">
+      <div className="bg-card border border-border rounded-xl shadow-xl p-3 sm:p-3.5 min-w-[160px] sm:min-w-[200px] z-50 animate-fade-in transition-all duration-200 ease-out">
         <p className="text-sm sm:text-base font-bold text-foreground mb-2">
           {label}
         </p>
@@ -488,7 +488,12 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
               <Tooltip 
                 content={<CustomTooltip />} 
                 cursor={{ stroke: "hsl(var(--primary))", strokeOpacity: 0.2, strokeWidth: 1 }}
-                wrapperStyle={{ zIndex: 50 }}
+                wrapperStyle={{ 
+                  zIndex: 50,
+                  transition: 'transform 150ms ease-out, opacity 150ms ease-out'
+                }}
+                animationDuration={150}
+                animationEasing="ease-out"
               />
               <ReferenceLine 
                 y={50} 
