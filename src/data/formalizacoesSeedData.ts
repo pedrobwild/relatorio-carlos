@@ -202,9 +202,9 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     attachments: null,
     events: createEvents("c3d4e5f6-a7b8-9012-cdef-123456789012", "draft", null) as any,
     evidence_links: null,
-    parties: null,
-    parties_signed: null,
-    parties_total: null,
+    parties: createParties("c3d4e5f6-a7b8-9012-cdef-123456789012", false, false) as any,
+    parties_signed: 0,
+    parties_total: 2,
   },
   {
     id: "d4e5f6a7-b8c9-0123-def0-234567890123",
