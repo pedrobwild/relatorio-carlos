@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Plus, Trash2, Building2, User, Calendar, FileText } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Building2, User, Calendar, FileText, AlertOctagon, ChevronDown, ChevronUp } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,15 +12,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Activity, ReportData } from "@/types/report";
+import { Activity, ReportData, ReportIncident } from "@/types/report";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface CreateReportModalProps {
   open: boolean;
@@ -38,6 +51,8 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
   const [activities, setActivities] = useState<Activity[]>([
     { description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "" }
   ]);
+  const [incidents, setIncidents] = useState<ReportIncident[]>([]);
+  const [incidentsOpen, setIncidentsOpen] = useState(false);
 
   const formatDateForDisplay = (date: Date | undefined) => {
     if (!date) return "";
@@ -63,6 +78,31 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     setActivities(updated);
   };
 
+  const addIncident = () => {
+    const newIncident: ReportIncident = {
+      id: `inc-${Date.now()}`,
+      occurrence: "",
+      occurrenceDate: format(new Date(), "yyyy-MM-dd"),
+      cause: "",
+      action: "",
+      impact: "",
+      status: "aberto",
+      expectedResolutionDate: "",
+    };
+    setIncidents([...incidents, newIncident]);
+    setIncidentsOpen(true);
+  };
+
+  const removeIncident = (index: number) => {
+    setIncidents(incidents.filter((_, i) => i !== index));
+  };
+
+  const updateIncident = (index: number, field: keyof ReportIncident, value: string) => {
+    const updated = [...incidents];
+    updated[index] = { ...updated[index], [field]: value };
+    setIncidents(updated);
+  };
+
   const formatDateToISO = (date: Date | undefined) => {
     if (!date) return "";
     return format(date, "yyyy-MM-dd");
@@ -79,6 +119,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
       endDate: formatDateToISO(endDate),
       reportDate: formatDateToISO(reportDate),
       activities: activities.filter(a => a.description.trim() !== ""),
+      incidents: incidents.filter(i => i.occurrence.trim() !== ""),
     };
 
     onCreateReport(reportData);
@@ -91,6 +132,8 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     setEndDate(undefined);
     setReportDate(new Date());
     setActivities([{ description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "" }]);
+    setIncidents([]);
+    setIncidentsOpen(false);
   };
 
   const isFormValid = projectName && clientName && startDate && endDate && 
@@ -337,6 +380,150 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                 ))}
               </div>
             </div>
+
+            {/* Incidents Section */}
+            <Collapsible open={incidentsOpen} onOpenChange={setIncidentsOpen}>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger asChild>
+                    <button 
+                      type="button"
+                      className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                    >
+                      <AlertOctagon className="w-4 h-4 text-destructive" />
+                      Intercorrências de Obra
+                      {incidents.length > 0 && (
+                        <span className="bg-destructive/10 text-destructive px-1.5 py-0.5 rounded text-xs font-bold">
+                          {incidents.length}
+                        </span>
+                      )}
+                      {incidentsOpen ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+                  </CollapsibleTrigger>
+                  <Button type="button" variant="outline" size="sm" onClick={addIncident}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Adicionar
+                  </Button>
+                </div>
+
+                <CollapsibleContent className="space-y-4">
+                  {incidents.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4 border border-dashed border-border rounded-lg">
+                      Nenhuma intercorrência registrada. Clique em "Adicionar" para registrar.
+                    </p>
+                  ) : (
+                    incidents.map((incident, index) => (
+                      <div
+                        key={incident.id}
+                        className="p-4 border border-destructive/20 rounded-lg bg-destructive/5 space-y-3 animate-fade-in"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-destructive flex items-center gap-1.5">
+                            <AlertOctagon className="w-3.5 h-3.5" />
+                            Intercorrência #{index + 1}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => removeIncident(index)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Status and Dates */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Status</Label>
+                            <Select
+                              value={incident.status}
+                              onValueChange={(value) => updateIncident(index, "status", value)}
+                            >
+                              <SelectTrigger className="text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="aberto">Aberto</SelectItem>
+                                <SelectItem value="em andamento">Em andamento</SelectItem>
+                                <SelectItem value="resolvido">Resolvido</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Data da Ocorrência</Label>
+                            <Input
+                              type="date"
+                              value={incident.occurrenceDate}
+                              onChange={(e) => updateIncident(index, "occurrenceDate", e.target.value)}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Previsão de Resolução</Label>
+                            <Input
+                              type="date"
+                              value={incident.expectedResolutionDate}
+                              onChange={(e) => updateIncident(index, "expectedResolutionDate", e.target.value)}
+                              className="text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Occurrence */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Ocorrência</Label>
+                          <Textarea
+                            placeholder="Descreva o que aconteceu..."
+                            value={incident.occurrence}
+                            onChange={(e) => updateIncident(index, "occurrence", e.target.value)}
+                            className="text-sm min-h-[60px]"
+                          />
+                        </div>
+
+                        {/* Cause */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Causa</Label>
+                          <Textarea
+                            placeholder="Qual foi a causa do problema?"
+                            value={incident.cause}
+                            onChange={(e) => updateIncident(index, "cause", e.target.value)}
+                            className="text-sm min-h-[60px]"
+                          />
+                        </div>
+
+                        {/* Action */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Ação</Label>
+                          <Textarea
+                            placeholder="Quais ações foram tomadas?"
+                            value={incident.action}
+                            onChange={(e) => updateIncident(index, "action", e.target.value)}
+                            className="text-sm min-h-[60px]"
+                          />
+                        </div>
+
+                        {/* Impact */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Impacto</Label>
+                          <Textarea
+                            placeholder="Qual o impacto no projeto?"
+                            value={incident.impact}
+                            onChange={(e) => updateIncident(index, "impact", e.target.value)}
+                            className="text-sm min-h-[60px]"
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
           </form>
         </ScrollArea>
 
