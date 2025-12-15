@@ -141,11 +141,61 @@ export const week10SeedData: WeeklyReportData = {
   ],
   
   deliverablesCompleted: [
-    { id: "1", description: "Armários montados e instalados (cozinha/ambientes previstos)", completed: true },
-    { id: "2", description: "Portas e gavetas ajustadas para abrir/fechar bem", completed: true },
-    { id: "3", description: "Puxadores e ferragens instalados", completed: true },
-    { id: "4", description: "Alinhamento e nivelamento final conferidos", completed: true },
-    { id: "5", description: "Acabamentos e arremates finalizados (laterais/rodapé/encontros)", completed: true },
+    { 
+      id: "1", 
+      description: "Dormitório (suíte) — Cabeceira em marcenaria com LED", 
+      completed: true,
+      subItems: [
+        { id: "1-1", description: "LED funcionando e bem arrematado (sem frestas/irregularidades)" },
+        { id: "1-2", description: "Acabamento íntegro: sem riscos/lascas/danos aparentes" },
+      ]
+    },
+    { 
+      id: "2", 
+      description: "Dormitório — Nichos e prateleiras", 
+      completed: true,
+      subItems: [
+        { id: "2-1", description: "Nivelamento correto (sem \"caimento\" visual)" },
+        { id: "2-2", description: "Encontros e bordas bem acabados (sem rebarbas/lasca)" },
+      ]
+    },
+    { 
+      id: "3", 
+      description: "Home office — Bancada multiuso + prateleira + módulos verticais", 
+      completed: true,
+      subItems: [
+        { id: "3-1", description: "Conjunto alinhado e estável (sem jogo/torção)" },
+        { id: "3-2", description: "Acabamento limpo nas junções e quinas (sem marcas aparentes)" },
+      ]
+    },
+    { 
+      id: "4", 
+      description: "Banheiro social — Gabinete inferior", 
+      completed: true,
+      subItems: [
+        { id: "4-1", description: "Portas/gavetas com movimento suave e sem ruídos" },
+        { id: "4-2", description: "Frentes alinhadas e acabamento sem avarias aparentes" },
+      ]
+    },
+    { 
+      id: "5", 
+      description: "Cozinha — Marcenaria completa (inferiores + organização)", 
+      completed: true,
+      subItems: [
+        { id: "5-1", description: "Gavetas/gavetões com deslizamento suave e fechamento silencioso" },
+        { id: "5-2", description: "Portas com fechamento correto e sem ruídos (folgas uniformes)" },
+        { id: "5-3", description: "Inclui: armários inferiores, gavetas e gavetões, vassoureiro horizontal e módulos complementares" },
+      ]
+    },
+    { 
+      id: "6", 
+      description: "Hall de entrada — Armário multiuso", 
+      completed: true,
+      subItems: [
+        { id: "6-1", description: "Portas alinhadas com fechamento firme (sem bater/pegar)" },
+        { id: "6-2", description: "Superfícies sem riscos/lascas/danos aparentes" },
+      ]
+    },
   ],
   
   lookaheadTasks: [
