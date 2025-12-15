@@ -68,7 +68,7 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         </div>
 
         {/* Datas */}
-        <div className="space-y-0.5 text-xs sm:text-sm text-foreground/80">
+        <div className="space-y-0.5 text-sm sm:text-base text-foreground/80">
           <p><span className="font-semibold">Data da ocorrência:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
           <p><span className="font-semibold">Previsão para resolução:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
         </div>
@@ -76,21 +76,21 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         {/* Ocorrência */}
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
-            <AlertOctagon className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-            <p className="text-xs font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
+            <AlertOctagon className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+            <p className="text-sm font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
           </div>
-          <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed ml-5.5">{incident.occurrence}</p>
+          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed ml-5.5">{incident.occurrence}</p>
         </div>
 
         {/* Photos */}
         {photos.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Camera className="w-3.5 h-3.5 text-muted-foreground" />
-              <p className="text-xs font-bold text-foreground uppercase tracking-wide">
+              <Camera className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm font-bold text-foreground uppercase tracking-wide">
                 Registro Fotográfico
               </p>
-              <span className="text-xs text-muted-foreground">({photos.length} foto{photos.length > 1 ? 's' : ''})</span>
+              <span className="text-sm text-muted-foreground">({photos.length} foto{photos.length > 1 ? 's' : ''})</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 ml-5.5">
               {photos.map((photo, index) => (
@@ -118,20 +118,20 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
 
         {/* Causa */}
         <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
-          <p className="text-xs font-bold text-foreground">Causa</p>
-          <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.cause}</p>
+          <p className="text-sm font-bold text-foreground">Causa</p>
+          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.cause}</p>
         </div>
 
         {/* Ação */}
         <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
-          <p className="text-xs font-bold text-foreground">Ação</p>
-          <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.action}</p>
+          <p className="text-sm font-bold text-foreground">Ação</p>
+          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.action}</p>
         </div>
 
         {/* Impacto */}
         <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
-          <p className="text-xs font-bold text-foreground">Impacto</p>
-          <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.impact}</p>
+          <p className="text-sm font-bold text-foreground">Impacto</p>
+          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">{incident.impact}</p>
         </div>
       </div>
 

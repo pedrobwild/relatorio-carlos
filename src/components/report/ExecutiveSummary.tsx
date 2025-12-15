@@ -27,7 +27,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
         
         {/* Desktop: Always show full content */}
         <div className="hidden sm:block p-4 sm:p-5">
-          <div className="text-xs sm:text-sm text-foreground/80 leading-relaxed text-justify space-y-3">
+          <div className="text-sm sm:text-base text-foreground/80 leading-relaxed text-justify space-y-3">
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -38,7 +38,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
         <div className="sm:hidden">
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             <div className="p-4">
-              <p className="text-xs text-foreground/80 leading-relaxed text-justify">
+              <p className="text-sm text-foreground/80 leading-relaxed text-justify">
                 {firstParagraph}
               </p>
               
@@ -47,8 +47,8 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                   {remainingParagraphs.map((paragraph, index) => (
                     <p 
                       key={index} 
-                      className="text-xs text-foreground/80 leading-relaxed text-justify"
-                      style={{ 
+                      className="text-sm text-foreground/80 leading-relaxed text-justify"
+                      style={{
                         animationDelay: `${(index + 1) * 50}ms`,
                         animation: isOpen ? 'fade-in 0.3s ease-out forwards' : undefined,
                         opacity: isOpen ? 0 : 1
@@ -84,8 +84,8 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
             <ul className="space-y-3">
               {data.deliverablesCompleted.map((item) => (
                 <li key={item.id} className="space-y-1.5">
-                  <div className="flex items-start gap-2 text-xs sm:text-sm text-foreground font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-success shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2 text-sm sm:text-base text-foreground font-medium">
+                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-success shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{item.description}</span>
                   </div>
                   {item.subItems && item.subItems.length > 0 && (
@@ -93,7 +93,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                       {item.subItems.map((subItem, subIndex) => (
                         <li 
                           key={subItem.id} 
-                          className="text-[11px] sm:text-xs text-foreground/70 leading-relaxed"
+                          className="text-xs sm:text-sm text-foreground/70 leading-relaxed"
                           style={{ 
                             animationDelay: `${(subIndex + 1) * 30}ms`,
                             animation: 'fade-in 0.3s ease-out forwards',
