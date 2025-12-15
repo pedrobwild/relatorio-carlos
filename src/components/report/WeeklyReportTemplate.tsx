@@ -14,46 +14,32 @@ interface WeeklyReportTemplateProps {
 
 const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
   return (
-    <div className="space-y-2.5 animate-fade-in">
+    <div className="space-y-2 animate-fade-in">
       {/* Executive Summary */}
-      <section>
-        <ExecutiveSummary data={data} />
-      </section>
+      <ExecutiveSummary data={data} />
 
       {/* Progress Evolution Chart (S-Curve) */}
-      <section>
-        <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
-      </section>
+      <ProgressEvolutionChart activities={data.activities} currentWeek={data.weekNumber} />
 
       {/* Lookahead (Next 7 Days) */}
-      <section>
-        <LookaheadSection tasks={data.lookaheadTasks} />
-      </section>
+      <LookaheadSection tasks={data.lookaheadTasks} />
 
       {/* Risks, Issues, Action Plans */}
-      <section>
-        <RisksIssuesSection issues={data.risksAndIssues} />
-      </section>
+      <RisksIssuesSection issues={data.risksAndIssues} />
 
       {/* Incidents */}
-      <section>
-        <IncidentsSection incidents={data.incidents} />
-      </section>
+      <IncidentsSection incidents={data.incidents} />
 
       {/* Client Decisions */}
-      <section>
-        <ClientDecisionsSection decisions={data.clientDecisions} />
-      </section>
+      <ClientDecisionsSection decisions={data.clientDecisions} />
 
       {/* Photo Gallery */}
-      <section>
-        <PhotoGallery photos={data.gallery} />
-      </section>
+      <PhotoGallery photos={data.gallery} />
 
       {/* Footer */}
-      <section className="pt-1.5 border-t border-border/50">
+      <div className="pt-1 border-t border-border/50">
         <ReportFooter data={data} />
-      </section>
+      </div>
     </div>
   );
 };
