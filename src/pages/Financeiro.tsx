@@ -1,4 +1,4 @@
-import { ArrowLeft, DollarSign, Check, Clock, Calendar, CreditCard, AlertCircle, TrendingUp, AlertTriangle } from "lucide-react";
+import { ArrowLeft, DollarSign, Check, Clock, Calendar, CreditCard, AlertCircle, TrendingUp, AlertTriangle, Download, FileX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -403,16 +403,30 @@ const Financeiro = () => {
                                   {!isPaid && getDaysUntilDueLabel(installment)}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 sm:gap-3">
                                 <p className="font-bold text-foreground text-base sm:text-lg">
                                   {formatCurrency(installment.amount)}
                                 </p>
                                 <div className="hidden sm:block">
                                   {getStatusBadge(installment)}
                                 </div>
+                                {isPaid ? (
+                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50" title="Boleto já pago">
+                                    <FileX className="w-4 h-4 text-muted-foreground/50" />
+                                  </div>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 hover:bg-primary/10"
+                                    title="Baixar boleto"
+                                  >
+                                    <Download className="w-4 h-4 text-primary" />
+                                  </Button>
+                                )}
                               </div>
                             </div>
-                            <div className="sm:hidden mt-2">
+                            <div className="sm:hidden mt-2 flex items-center gap-2">
                               {getStatusBadge(installment)}
                             </div>
                           </div>
@@ -534,6 +548,7 @@ const Financeiro = () => {
                       <TableHead className="font-semibold text-foreground text-right">Valor</TableHead>
                       <TableHead className="font-semibold text-foreground text-center">Vencimento</TableHead>
                       <TableHead className="font-semibold text-foreground text-center">Status</TableHead>
+                      <TableHead className="font-semibold text-foreground text-center">Boleto</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -567,6 +582,24 @@ const Financeiro = () => {
                         <TableCell className="text-center">
                           {getStatusBadge(installment)}
                         </TableCell>
+                        <TableCell className="text-center">
+                          {installment.status === "paid" ? (
+                            <div className="flex items-center justify-center" title="Boleto já pago">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50">
+                                <FileX className="w-4 h-4 text-muted-foreground/50" />
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-primary/10"
+                              title="Baixar boleto"
+                            >
+                              <Download className="w-4 h-4 text-primary" />
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -589,7 +622,23 @@ const Financeiro = () => {
                           )}
                         </p>
                       </div>
-                      {getStatusBadge(installment)}
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(installment)}
+                        {installment.status === "paid" ? (
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50" title="Boleto já pago">
+                            <FileX className="w-4 h-4 text-muted-foreground/50" />
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-primary/10"
+                            title="Baixar boleto"
+                          >
+                            <Download className="w-4 h-4 text-primary" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-0.5">
