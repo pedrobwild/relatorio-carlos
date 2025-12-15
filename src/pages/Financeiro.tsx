@@ -1,25 +1,126 @@
-import { ArrowLeft, Download, DollarSign, ExternalLink, FileText } from "lucide-react";
+import { ArrowLeft, DollarSign, Check, Clock, Calendar, CreditCard, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import bwildLogo from "@/assets/bwild-logo.png";
-import PDFViewer from "@/components/PDFViewer";
+import { addDays, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface PaymentInstallment {
+  id: number;
+  stage: string;
+  amount: number;
+  dueDate: Date;
+  status: "paid" | "pending" | "upcoming";
+  isForecast?: boolean;
+}
 
 const Financeiro = () => {
-  // TODO: Update with actual PDF path when uploaded
-  const pdfUrl = "/documents/financeiro.pdf";
-  const hasDocument = false; // Set to true when document is uploaded
+  // Contract and project dates
+  const contractSignatureDate = new Date(2025, 5, 17); // 17/06/2025
+  const constructionStartDate = new Date(2025, 6, 1); // 01/07/2025
+  const projectEndDate = new Date(2025, 8, 14); // 14/09/2025 (from schedule)
 
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = "Financeiro_Bwild.pdf";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Calculate due dates (adding 2 business days approximation)
+  const addBusinessDays = (date: Date, days: number): Date => {
+    let result = new Date(date);
+    let added = 0;
+    while (added < days) {
+      result = addDays(result, 1);
+      const dayOfWeek = result.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        added++;
+      }
+    }
+    return result;
   };
 
-  const handleOpenInNewTab = () => {
-    window.open(pdfUrl, "_blank");
+  const installments: PaymentInstallment[] = [
+    {
+      id: 1,
+      stage: "Assinatura do Contrato",
+      amount: 11000,
+      dueDate: addBusinessDays(contractSignatureDate, 2),
+      status: "paid",
+    },
+    {
+      id: 2,
+      stage: "Início da Obra",
+      amount: 29333.33,
+      dueDate: addBusinessDays(constructionStartDate, 2),
+      status: "paid",
+    },
+    {
+      id: 3,
+      stage: "25 dias corridos após início da obra",
+      amount: 29333.33,
+      dueDate: addBusinessDays(addDays(constructionStartDate, 25), 2),
+      status: "paid",
+    },
+    {
+      id: 4,
+      stage: "45 dias corridos após início da obra",
+      amount: 29333.34,
+      dueDate: addBusinessDays(addDays(constructionStartDate, 45), 2),
+      status: "pending",
+    },
+    {
+      id: 5,
+      stage: "Assinatura do Termo de Entrega",
+      amount: 11000,
+      dueDate: addBusinessDays(projectEndDate, 2),
+      status: "upcoming",
+      isForecast: true,
+    },
+  ];
+
+  const totalValue = 110000;
+  const paidAmount = installments
+    .filter((i) => i.status === "paid")
+    .reduce((sum, i) => sum + i.amount, 0);
+  const paidPercentage = (paidAmount / totalValue) * 100;
+  const paidCount = installments.filter((i) => i.status === "paid").length;
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
+  const formatDate = (date: Date) => {
+    return format(date, "dd/MM", { locale: ptBR });
+  };
+
+  const getStatusBadge = (status: string, isForecast?: boolean) => {
+    switch (status) {
+      case "paid":
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200 hover:bg-emerald-500/20">
+            <Check className="w-3 h-3 mr-1" />
+            Pago
+          </Badge>
+        );
+      case "pending":
+        return (
+          <Badge className="bg-amber-500/10 text-amber-600 border-amber-200 hover:bg-amber-500/20">
+            <Clock className="w-3 h-3 mr-1" />
+            A vencer
+          </Badge>
+        );
+      case "upcoming":
+        return (
+          <Badge className="bg-slate-500/10 text-slate-600 border-slate-200 hover:bg-slate-500/20">
+            <Calendar className="w-3 h-3 mr-1" />
+            {isForecast ? "Previsão" : "A vencer"}
+          </Badge>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -42,58 +143,171 @@ const Financeiro = () => {
               </div>
             </div>
           </div>
-          {hasDocument && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleOpenInNewTab}
-                className="h-10 w-10 sm:hidden"
-                title="Abrir em nova aba"
-              >
-                <ExternalLink className="w-5 h-5" />
-              </Button>
-              <Button onClick={handleDownload} className="gap-2 h-10">
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Download PDF</span>
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Content */}
-      {hasDocument ? (
-        <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-hidden">
-          <div className="max-w-5xl mx-auto h-full">
-            <div className="h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)]">
-              <PDFViewer url={pdfUrl} title="Financeiro" />
+      <div className="flex-1 p-4 md:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="bg-card border-border">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Valor Total</p>
+                    <p className="text-lg font-bold text-foreground">{formatCurrency(totalValue)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-border">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10">
+                    <Check className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Valor Pago</p>
+                    <p className="text-lg font-bold text-emerald-600">{formatCurrency(paidAmount)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-border">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/10">
+                    <Clock className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Saldo a Pagar</p>
+                    <p className="text-lg font-bold text-amber-600">{formatCurrency(totalValue - paidAmount)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Progress Section */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Progresso de Pagamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {paidCount} de {installments.length} parcelas pagas
+                </span>
+                <span className="font-semibold text-foreground">{paidPercentage.toFixed(0)}%</span>
+              </div>
+              <Progress value={paidPercentage} className="h-3" />
+            </CardContent>
+          </Card>
+
+          {/* Payment Schedule Table */}
+          <Card className="bg-card border-border overflow-hidden">
+            <CardHeader className="bg-primary-dark py-3 px-4">
+              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Fluxo de Pagamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {/* Desktop Table */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-semibold text-foreground">Etapa</TableHead>
+                      <TableHead className="font-semibold text-foreground text-right">Valor</TableHead>
+                      <TableHead className="font-semibold text-foreground text-center">Vencimento</TableHead>
+                      <TableHead className="font-semibold text-foreground text-center">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {installments.map((installment) => (
+                      <TableRow 
+                        key={installment.id}
+                        className={installment.status === "paid" ? "bg-emerald-500/5" : ""}
+                      >
+                        <TableCell className="font-medium text-foreground">
+                          <div className="flex items-center gap-2">
+                            <span>{installment.stage}</span>
+                            {installment.isForecast && (
+                              <span className="text-[10px] text-muted-foreground italic">(previsão)</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-foreground">
+                          {formatCurrency(installment.amount)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-foreground">{formatDate(installment.dueDate)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getStatusBadge(installment.status, installment.isForecast)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="sm:hidden divide-y divide-border">
+                {installments.map((installment) => (
+                  <div 
+                    key={installment.id}
+                    className={`p-4 space-y-3 ${installment.status === "paid" ? "bg-emerald-500/5" : ""}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground text-sm leading-tight">
+                          {installment.stage}
+                          {installment.isForecast && (
+                            <span className="text-[10px] text-muted-foreground italic ml-1">(previsão)</span>
+                          )}
+                        </p>
+                      </div>
+                      {getStatusBadge(installment.status, installment.isForecast)}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Venc: {formatDate(installment.dueDate)}</span>
+                      </div>
+                      <p className="font-bold text-foreground">
+                        {formatCurrency(installment.amount)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Info Note */}
+          <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
+            <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium text-foreground mb-1">Informações de Pagamento</p>
+              <p>Forma de pagamento: Boleto bancário/transferência</p>
+              <p>Prazo de vencimento: 2 dias úteis após a etapa</p>
             </div>
           </div>
         </div>
-      ) : (
-        <div className="flex-1 p-4 md:p-6 lg:p-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-card rounded-xl border border-border p-6 md:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
-                  <DollarSign className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Financeiro</h2>
-                  <p className="text-sm text-muted-foreground">Gestão financeira do projeto</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <p className="text-muted-foreground">Documento em preparação</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">O arquivo será disponibilizado em breve</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
