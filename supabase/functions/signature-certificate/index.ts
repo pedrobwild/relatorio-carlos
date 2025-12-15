@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
+import QRCode from "https://esm.sh/qrcode@1.5.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,22 @@ function parseUserAgent(ua: string | null): { browser: string; os: string; devic
   else if (ua.includes('iPad') || ua.includes('Tablet')) device = 'Tablet';
 
   return { browser, os, device };
+}
+
+async function generateQRCodeDataURL(text: string): Promise<string> {
+  try {
+    return await QRCode.toDataURL(text, {
+      width: 150,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    });
+  } catch (err) {
+    console.error('Error generating QR code:', err);
+    return '';
+  }
 }
 
 serve(async (req) => {
@@ -116,6 +133,13 @@ serve(async (req) => {
     }
 
     console.log(`Found party: ${party.display_name}, acknowledged at: ${ack.acknowledged_at}`);
+
+    // Get the app URL for verification link - use origin from request or fallback
+    const origin = req.headers.get('origin') || 'https://fvblcyzdcqkiihyhfrrw.lovableproject.com';
+    const verificationUrl = `${origin}/verificar/${ack.signature_hash}`;
+    
+    // Generate QR code
+    const qrCodeDataUrl = await generateQRCodeDataURL(verificationUrl);
 
     // Create PDF Certificate
     const doc = new jsPDF({
@@ -270,7 +294,7 @@ serve(async (req) => {
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     const hashNote = 'O hash da assinatura é calculado a partir do hash do documento, ID da parte, timestamp, identificador do usuário, endereço IP e user agent.';
-    const hashNoteLines = doc.splitTextToSize(hashNote, contentWidth);
+    const hashNoteLines = doc.splitTextToSize(hashNote, contentWidth - 45); // Leave space for QR
     doc.text(hashNoteLines, margin, y);
     y += hashNoteLines.length * 4 + 15;
 
@@ -299,14 +323,27 @@ serve(async (req) => {
       'A integridade do documento é garantida por função hash criptográfica SHA-256. Os dados de identificação',
       '(endereço IP, dispositivo, navegador, data e hora) são coletados automaticamente no momento da assinatura',
       'e servem como evidência de autenticidade e não-repúdio.',
-      '',
-      'A verificação da autenticidade deste certificado pode ser realizada através da comparação dos hashes',
-      'criptográficos com os registros armazenados no sistema de origem.',
     ];
 
     for (const line of legalText) {
       doc.text(line, margin, y);
       y += 3.5;
+    }
+
+    // ===== QR CODE =====
+    if (qrCodeDataUrl) {
+      const qrSize = 35;
+      const qrX = pageWidth - margin - qrSize;
+      const qrY = pageHeight - 55;
+      
+      // Add QR code image
+      doc.addImage(qrCodeDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+      
+      // QR code label
+      doc.setFontSize(6);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Escaneie para verificar', qrX + qrSize / 2, qrY + qrSize + 3, { align: 'center' });
+      doc.text('autenticidade online', qrX + qrSize / 2, qrY + qrSize + 6, { align: 'center' });
     }
 
     // ===== FOOTER =====
@@ -319,17 +356,9 @@ serve(async (req) => {
       { align: 'center' }
     );
 
-    // QR-like box (placeholder for future QR code)
-    doc.setDrawColor(200, 200, 200);
-    doc.setFillColor(250, 250, 250);
-    doc.rect(pageWidth - margin - 25, pageHeight - 35, 25, 25, 'FD');
-    doc.setFontSize(5);
-    doc.setTextColor(150, 150, 150);
-    doc.text('Verificação', pageWidth - margin - 12.5, pageHeight - 12, { align: 'center' });
-
     const pdfOutput = doc.output('arraybuffer');
 
-    console.log(`Signature certificate generated for party: ${party.display_name}`);
+    console.log(`Signature certificate with QR code generated for party: ${party.display_name}`);
 
     return new Response(pdfOutput, {
       status: 200,
