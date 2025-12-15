@@ -135,9 +135,9 @@ const ReportHeader = ({
   ];
 
   const teamContacts: TeamContact[] = [
-    { role: "Engenheiro", name: "Lucas Tresmondi", phone: "(99) 99999-9999", email: "lucas@bwild.com.br", crea: "5071459470-SP" },
-    { role: "Arquiteta", name: "Lorena Alves", phone: "(99) 99999-9999", email: "lorena@bwild.com.br" },
-    { role: "Gerente de Relacionamento", name: "Victorya Capponi", phone: "(99) 99999-9999", email: "victorya@bwild.com.br" },
+    { role: "Engenharia", name: "Lucas Tresmondi", phone: "(99) 99999-9999", email: "lucas@bwild.com.br", crea: "5071459470-SP" },
+    { role: "Arquitetura", name: "Lorena Alves", phone: "(99) 99999-9999", email: "lorena@bwild.com.br" },
+    { role: "Relacionamento", name: "Victorya Capponi", phone: "(99) 99999-9999", email: "victorya@bwild.com.br" },
   ];
 
   const toggleContact = (role: string) => {
