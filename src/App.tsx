@@ -10,6 +10,9 @@ import Projeto3D from "./pages/Projeto3D";
 import Executivo from "./pages/Executivo";
 import Financeiro from "./pages/Financeiro";
 import Suporte from "./pages/Suporte";
+import Formalizacoes from "./pages/Formalizacoes";
+import FormalizacaoNova from "./pages/FormalizacaoNova";
+import FormalizacaoDetalhe from "./pages/FormalizacaoDetalhe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +31,9 @@ const App = () => (
           <Route path="/executivo" element={<Executivo />} />
           <Route path="/financeiro" element={<Financeiro />} />
           <Route path="/suporte" element={<Suporte />} />
+          <Route path="/formalizacoes" element={<Formalizacoes />} />
+          <Route path="/formalizacoes/nova" element={<FormalizacaoNova />} />
+          <Route path="/formalizacoes/:id" element={<FormalizacaoDetalhe />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
