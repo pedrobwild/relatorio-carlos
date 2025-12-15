@@ -197,44 +197,51 @@ export default function Formalizacoes() {
                 <Link 
                   key={formalizacao.id} 
                   to={`/formalizacoes/${formalizacao.id}`}
-                  className="block"
+                  className="block group"
                 >
-                  <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+                  <Card className="group-hover:border-primary/30 group-hover:shadow-sm transition-all duration-200">
                     <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl" role="img" aria-label={formalizacao.type || ''}>
-                          {getTypeIcon(formalizacao.type as FormalizationType)}
+                      {/* Header: Type badge + Status */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <Badge variant="outline" className="text-xs font-normal gap-1.5 px-2 py-0.5">
+                          <span role="img" aria-label={formalizacao.type || ''}>
+                            {getTypeIcon(formalizacao.type as FormalizationType)}
+                          </span>
+                          {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
+                        </Badge>
+                        <Badge 
+                          variant={getStatusBadgeVariant(formalizacao.status as FormalizationStatus)}
+                          className="text-xs gap-1"
+                        >
+                          {getStatusIcon(formalizacao.status as FormalizationStatus)}
+                          {FORMALIZATION_STATUS_LABELS[formalizacao.status as FormalizationStatus]}
+                        </Badge>
+                      </div>
+                      
+                      {/* Title */}
+                      <h3 className="font-semibold text-foreground leading-snug mb-1.5">
+                        {formalizacao.title}
+                      </h3>
+                      
+                      {/* Summary */}
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                        {formalizacao.summary}
+                      </p>
+                      
+                      {/* Footer: Date + Signatures */}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
+                        <span>
+                          {formalizacao.locked_at 
+                            ? `Travado ${formatDate(formalizacao.locked_at)}`
+                            : formatDate(formalizacao.created_at)
+                          }
                         </span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-medium truncate">{formalizacao.title}</h3>
-                            <Badge variant={getStatusBadgeVariant(formalizacao.status as FormalizationStatus)}>
-                              {getStatusIcon(formalizacao.status as FormalizationStatus)}
-                              <span className="ml-1">
-                                {FORMALIZATION_STATUS_LABELS[formalizacao.status as FormalizationStatus]}
-                              </span>
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {formalizacao.summary}
-                          </p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span>{FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}</span>
-                            <span>•</span>
-                            <span>
-                              {formalizacao.locked_at 
-                                ? `Travado em ${formatDate(formalizacao.locked_at)}`
-                                : `Criado em ${formatDate(formalizacao.created_at)}`
-                              }
-                            </span>
-                            {formalizacao.parties_signed !== null && formalizacao.parties_total !== null && (
-                              <>
-                                <span>•</span>
-                                <span>{formalizacao.parties_signed}/{formalizacao.parties_total} assinaturas</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                        {formalizacao.parties_signed !== null && formalizacao.parties_total !== null && (
+                          <span className="flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            {formalizacao.parties_signed}/{formalizacao.parties_total}
+                          </span>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
