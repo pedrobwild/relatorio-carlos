@@ -36,10 +36,10 @@ const formatDisplayDate = (dateStr: string, baseYear?: number): string => {
   return `${day}/${month}`;
 };
 
-// Generate S-Curve data from activities using weighted progress
+// Generate S-Curve data from activities using weighted progress with temporal scale
 const generateChartData = (activities: Activity[], reportDate?: string) => {
   if (activities.length === 0) {
-    return [{ date: "Início", previsto: 0, realizado: null }];
+    return [{ date: "Início", previsto: 0, realizado: null, timestamp: 0 }];
   }
 
   // Get base year from first activity
@@ -80,10 +80,16 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     if (!dateA || !dateB) return 0;
     return dateA.getTime() - dateB.getTime();
   });
+
+  // Get first and last dates for reference
+  const firstDate = sortedDates.length > 0 ? parseDate(sortedDates[0]) : null;
   
   return sortedDates.map(date => {
     const currentDate = parseDate(date);
-    if (!currentDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null };
+    if (!currentDate || !firstDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null, timestamp: 0 };
+    
+    // Calculate timestamp as days from start for proper X-axis scaling
+    const daysSinceStart = Math.floor((currentDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
     
     // Calculate planned progress using weights
     const plannedProgress = activities.reduce((sum, a) => {
@@ -119,6 +125,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
 
     return {
       date: formatDisplayDate(date, baseYear),
+      timestamp: daysSinceStart,
       previsto: Math.round((plannedProgress / totalWeight) * 100),
       realizado: actualProgress !== null ? Math.round((actualProgress / totalWeight) * 100) : null,
     };
@@ -231,11 +238,18 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 vertical={false}
               />
               <XAxis
-                dataKey="date"
+                dataKey="timestamp"
+                type="number"
+                scale="linear"
+                domain={['dataMin', 'dataMax']}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
                 tickLine={false}
                 axisLine={{ stroke: "hsl(var(--border))", strokeOpacity: 0.5 }}
-                interval="preserveStartEnd"
+                tickFormatter={(value) => {
+                  const point = chartData.find(d => d.timestamp === value);
+                  return point?.date || '';
+                }}
+                ticks={chartData.map(d => d.timestamp)}
                 angle={-45}
                 textAnchor="end"
                 height={40}
