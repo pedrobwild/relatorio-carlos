@@ -4,7 +4,7 @@ import bwildLogo from "@/assets/bwild-logo.png";
 import { 
   FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink
+  TrendingUp, TrendingDown, ExternalLink, Bell
 } from "lucide-react";
 import { Activity } from "@/types/report";
 
@@ -165,29 +165,44 @@ const ReportHeader = ({
               </div>
             </div>
 
-            {/* Right: Status Badge */}
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
-              projectMetrics.isOnTrack 
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
-                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-            }`}>
-              {projectMetrics.isOnTrack ? (
-                <>
-                  <TrendingUp className="w-4 h-4" />
-                  <span>No Prazo</span>
-                  {projectMetrics.progressDiff > 0 && (
-                    <span className="text-xs opacity-80">+{projectMetrics.variancePercentage}%</span>
-                  )}
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="w-4 h-4" />
-                  <span>Atenção ao Prazo</span>
-                  {parseInt(projectMetrics.variancePercentage) > 0 && (
-                    <span className="text-xs opacity-80">-{projectMetrics.variancePercentage}%</span>
-                  )}
-                </>
-              )}
+            {/* Right: CTA + Status Badge */}
+            <div className="flex items-center gap-3">
+              {/* Pendências CTA */}
+              <Link
+                to="/pendencias"
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-rose-500/15 text-rose-600 hover:bg-rose-500/25 transition-colors font-semibold text-sm"
+              >
+                <Bell className="w-4 h-4" />
+                <span>Pendências</span>
+                <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold">
+                  8
+                </span>
+              </Link>
+
+              {/* Status Badge */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
+                projectMetrics.isOnTrack 
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
+                  : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+              }`}>
+                {projectMetrics.isOnTrack ? (
+                  <>
+                    <TrendingUp className="w-4 h-4" />
+                    <span>No Prazo</span>
+                    {projectMetrics.progressDiff > 0 && (
+                      <span className="text-xs opacity-80">+{projectMetrics.variancePercentage}%</span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <TrendingDown className="w-4 h-4" />
+                    <span>Atenção ao Prazo</span>
+                    {parseInt(projectMetrics.variancePercentage) > 0 && (
+                      <span className="text-xs opacity-80">-{projectMetrics.variancePercentage}%</span>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -378,13 +393,14 @@ const ReportHeader = ({
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        {/* Status Banner */}
-        <div className={`px-2.5 py-1.5 flex items-center justify-between ${
-          projectMetrics.isOnTrack 
-            ? 'bg-emerald-500/15' 
-            : 'bg-amber-500/15'
-        }`}>
-          <div className="flex items-center gap-1.5">
+        {/* Status Banner + Pendências CTA */}
+        <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border">
+          {/* Status */}
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
+            projectMetrics.isOnTrack 
+              ? 'bg-emerald-500/15' 
+              : 'bg-amber-500/15'
+          }`}>
             {projectMetrics.isOnTrack ? (
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
             ) : (
@@ -395,14 +411,26 @@ const ReportHeader = ({
             }`}>
               {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
             </span>
+            {projectMetrics.progressDiff !== 0 && (
+              <span className={`text-[10px] font-bold ${
+                projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+              }`}>
+                {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
+              </span>
+            )}
           </div>
-          {projectMetrics.progressDiff !== 0 && (
-            <span className={`text-[10px] font-bold ${
-              projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
-            }`}>
-              {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
+
+          {/* Pendências CTA */}
+          <Link
+            to="/pendencias"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-600 hover:bg-rose-500/25 transition-colors"
+          >
+            <Bell className="w-3.5 h-3.5" />
+            <span className="text-xs font-semibold">Pendências</span>
+            <span className="flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold">
+              8
             </span>
-          )}
+          </Link>
         </div>
 
         {/* Project Info + Schedule Metrics - Unified Card */}
