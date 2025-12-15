@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Download, ExternalLink, FileText, Award, Ruler } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, FileText, Award, Ruler, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,8 +9,10 @@ import PDFViewer from "@/components/PDFViewer";
 const Executivo = () => {
   const pdfUrl = "/documents/projeto-executivo.pdf";
   const artPdfUrl = "/documents/art-exemplo.pdf";
+  const planoReformaPdfUrl = "/documents/plano-reforma.pdf";
   const hasDocument = true;
   const [artModalOpen, setArtModalOpen] = useState(false);
+  const [planoReformaModalOpen, setPlanoReformaModalOpen] = useState(false);
 
   const handleDownload = () => {
     const link = document.createElement("a");
@@ -25,6 +27,15 @@ const Executivo = () => {
     const link = document.createElement("a");
     link.href = artPdfUrl;
     link.download = "ART_Bwild.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadPlanoReforma = () => {
+    const link = document.createElement("a");
+    link.href = planoReformaPdfUrl;
+    link.download = "Plano_Reforma_Bwild.pdf";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -115,6 +126,47 @@ const Executivo = () => {
                     </DialogHeader>
                     <div className="flex-1 overflow-hidden p-2">
                       <PDFViewer url={artPdfUrl} title="ART" />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Plano de Reforma Section */}
+            <div className="bg-card rounded-lg border border-border p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 shrink-0">
+                    <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm text-foreground truncate">Plano de Reforma</h3>
+                    <p className="text-xs text-muted-foreground">Documento de planejamento da reforma</p>
+                  </div>
+                </div>
+                <Dialog open={planoReformaModalOpen} onOpenChange={setPlanoReformaModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2 shrink-0">
+                      <FileText className="w-4 h-4" />
+                      <span className="hidden sm:inline">Visualizar</span>
+                      <span className="sm:hidden">Ver</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                    <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
+                      <div className="flex items-center justify-between gap-4">
+                        <DialogTitle className="flex items-center gap-2 text-base">
+                          <ClipboardList className="w-5 h-5 text-primary shrink-0" />
+                          <span className="truncate">Plano de Reforma</span>
+                        </DialogTitle>
+                        <Button onClick={handleDownloadPlanoReforma} size="sm" variant="outline" className="gap-2 shrink-0">
+                          <Download className="w-4 h-4" />
+                          <span className="hidden sm:inline">Download</span>
+                        </Button>
+                      </div>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-hidden p-2">
+                      <PDFViewer url={planoReformaPdfUrl} title="Plano de Reforma" />
                     </div>
                   </DialogContent>
                 </Dialog>
