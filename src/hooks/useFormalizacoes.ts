@@ -196,6 +196,17 @@ export function useAddParty() {
   });
 }
 
+async function getClientIp(): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke('get-client-ip');
+    if (error) throw error;
+    return data?.ip || 'unknown';
+  } catch (e) {
+    console.warn('Could not get client IP:', e);
+    return 'unknown';
+  }
+}
+
 export function useAcknowledge() {
   const queryClient = useQueryClient();
 
@@ -211,9 +222,29 @@ export function useAcknowledge() {
     }) => {
       const user = (await supabase.auth.getUser()).data.user;
       
-      // Create hash from signature
+      // Get client IP
+      const clientIp = await getClientIp();
+      
+      // Create timestamp
       const timestamp = new Date().toISOString();
-      const signatureData = `${formalizationId}-${partyId}-${timestamp}-${user?.id}`;
+      
+      // Get formalization locked_hash for signature verification
+      const { data: formalization } = await supabase
+        .from('formalizations')
+        .select('locked_hash')
+        .eq('id', formalizationId)
+        .single();
+      
+      // Create signature hash including document hash for chain of custody
+      const signatureData = [
+        formalization?.locked_hash || formalizationId,
+        partyId,
+        timestamp,
+        user?.id || user?.email,
+        clientIp,
+        navigator.userAgent
+      ].join('|');
+      
       const encoder = new TextEncoder();
       const data = encoder.encode(signatureData);
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -232,18 +263,25 @@ export function useAcknowledge() {
           signature_text: signatureText,
           signature_hash: signatureHash,
           user_agent: navigator.userAgent,
+          ip_address: clientIp,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Add event
+      // Add event with detailed meta
       await supabase.from('formalization_events').insert({
         formalization_id: formalizationId,
         event_type: 'signed_by_party',
         actor_user_id: user?.id,
-        meta: { party_id: partyId, signature_hash: signatureHash },
+        meta: { 
+          party_id: partyId, 
+          signature_hash: signatureHash,
+          ip_address: clientIp,
+          user_agent: navigator.userAgent,
+          email: user?.email,
+        },
       });
 
       return result;
