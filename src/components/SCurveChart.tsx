@@ -373,7 +373,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 strokeOpacity={0.4}
               />
               <Line
-                type="monotone"
+                type="stepAfter"
                 dataKey="previsto"
                 name="previsto"
                 stroke="hsl(var(--primary))"
@@ -382,7 +382,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 activeDot={{ r: 4, fill: "hsl(var(--primary))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
               />
               <Line
-                type="monotone"
+                type="stepAfter"
                 dataKey="realizado"
                 name="realizado"
                 stroke="hsl(var(--success))"
