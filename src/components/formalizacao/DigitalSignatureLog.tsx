@@ -155,22 +155,22 @@ export function DigitalSignatureLog({ formalizationId, signatures, parties, docu
       <CardContent className="space-y-6">
         {/* Document integrity info */}
         {documentHash && (
-          <div className="p-4 bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/50 rounded-lg space-y-2">
-            <div className="flex items-center gap-2">
-              <FileCheck className="h-4 w-4 text-green-600" />
+          <div className="p-3 bg-green-50/50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <FileCheck className="h-4 w-4 text-green-600 shrink-0" />
               <span className="text-sm font-medium text-green-800 dark:text-green-300">
                 Documento íntegro e verificado
               </span>
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-green-700 dark:text-green-400">
-                <span className="font-medium">Hash SHA-256:</span>{' '}
-                <code className="font-mono bg-green-100 dark:bg-green-900/50 px-1 py-0.5 rounded text-[10px] break-all">
+            <div className="space-y-1.5 text-xs text-green-700 dark:text-green-400">
+              <div>
+                <span className="font-medium">Hash SHA-256:</span>
+                <code className="block font-mono bg-green-100 dark:bg-green-900/50 px-2 py-1.5 rounded text-[10px] mt-1 break-all leading-relaxed">
                   {documentHash}
                 </code>
-              </p>
+              </div>
               {lockedAt && (
-                <p className="text-xs text-green-700 dark:text-green-400">
+                <p>
                   <span className="font-medium">Travado em:</span> {formatDateTime(lockedAt).date} às {formatDateTime(lockedAt).time}
                 </p>
               )}
@@ -199,95 +199,92 @@ export function DigitalSignatureLog({ formalizationId, signatures, parties, docu
                   </div>
 
                   {/* Signature card */}
-                  <div className="flex-1 p-4 bg-card border rounded-lg space-y-4">
+                  <div className="flex-1 p-3 sm:p-4 bg-card border rounded-lg space-y-3">
                     {/* Header */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <User className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{party?.display_name || 'Desconhecido'}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {party?.role_label || (party?.party_type === 'customer' ? 'Cliente' : 'Representante Empresa')}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{party?.display_name || 'Desconhecido'}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {party?.role_label || (party?.party_type === 'customer' ? 'Cliente' : 'Representante Empresa')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadCertificate(sig.party_id, party?.display_name || 'assinatura')}
-                          disabled={downloadingPartyId === sig.party_id}
-                          className="h-8 text-xs"
-                        >
-                          {downloadingPartyId === sig.party_id ? (
-                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                          ) : (
-                            <Download className="h-3 w-3 mr-1" />
-                          )}
-                          Certificado
-                        </Button>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800 shrink-0 text-[10px] px-2">
                           Assinado
                         </Badge>
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownloadCertificate(sig.party_id, party?.display_name || 'assinatura')}
+                        disabled={downloadingPartyId === sig.party_id}
+                        className="w-full h-9 text-xs"
+                      >
+                        {downloadingPartyId === sig.party_id ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <Download className="h-3.5 w-3.5 mr-1.5" />
+                        )}
+                        Baixar Certificado
+                      </Button>
                     </div>
 
                     {/* Signature statement */}
                     {sig.signature_text && (
-                      <div className="p-3 bg-muted/50 rounded-md border-l-2 border-primary">
-                        <p className="text-sm italic text-muted-foreground">"{sig.signature_text}"</p>
+                      <div className="p-2.5 bg-muted/50 rounded-md border-l-2 border-primary">
+                        <p className="text-xs sm:text-sm italic text-muted-foreground leading-relaxed">"{sig.signature_text}"</p>
                       </div>
                     )}
 
                     <Separator />
 
                     {/* Technical details */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
                       {/* Date/Time */}
-                      <div className="flex items-start gap-2">
-                        <Clock className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-                        <div>
+                      <div className="flex items-start gap-1.5">
+                        <Clock className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="min-w-0">
                           <p className="font-medium text-foreground">Data e Hora</p>
                           <p className="text-muted-foreground">
                             {dateTime.date} às {dateTime.time}
-                          </p>
-                          <p className="text-muted-foreground/70 text-[10px]">
-                            ISO: {dateTime.iso}
                           </p>
                         </div>
                       </div>
 
                       {/* Email */}
-                      <div className="flex items-start gap-2">
-                        <User className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-                        <div>
+                      <div className="flex items-start gap-1.5">
+                        <User className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="min-w-0">
                           <p className="font-medium text-foreground">E-mail</p>
-                          <p className="text-muted-foreground">
+                          <p className="text-muted-foreground truncate">
                             {sig.acknowledged_by_email || party?.email || 'Não informado'}
                           </p>
                         </div>
                       </div>
 
                       {/* IP Address */}
-                      <div className="flex items-start gap-2">
-                        <Globe className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-                        <div>
-                          <p className="font-medium text-foreground">Endereço IP</p>
-                          <p className="text-muted-foreground font-mono">
+                      <div className="flex items-start gap-1.5">
+                        <Globe className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">IP</p>
+                          <p className="text-muted-foreground font-mono text-[10px]">
                             {sig.ip_address || 'Não capturado'}
                           </p>
                         </div>
                       </div>
 
                       {/* Device */}
-                      <div className="flex items-start gap-2">
-                        <Monitor className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-                        <div>
+                      <div className="flex items-start gap-1.5">
+                        <Monitor className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+                        <div className="min-w-0">
                           <p className="font-medium text-foreground">Dispositivo</p>
-                          <p className="text-muted-foreground">
-                            {deviceInfo.browser} / {deviceInfo.os} / {deviceInfo.device}
+                          <p className="text-muted-foreground truncate">
+                            {deviceInfo.browser} · {deviceInfo.device}
                           </p>
                         </div>
                       </div>
@@ -296,13 +293,13 @@ export function DigitalSignatureLog({ formalizationId, signatures, parties, docu
                     {/* Signature hash */}
                     {sig.signature_hash && (
                       <div className="pt-2 border-t">
-                        <div className="flex items-start gap-2">
-                          <Hash className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                        <div className="flex items-start gap-1.5">
+                          <Hash className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-xs text-foreground">Hash da Assinatura (SHA-256)</p>
-                            <p className="text-[10px] text-muted-foreground font-mono break-all mt-1">
+                            <p className="font-medium text-[11px] text-foreground">Hash da Assinatura</p>
+                            <code className="block text-[9px] text-muted-foreground font-mono break-all mt-0.5 bg-muted/50 px-1.5 py-1 rounded leading-relaxed">
                               {sig.signature_hash}
-                            </p>
+                            </code>
                           </div>
                         </div>
                       </div>
