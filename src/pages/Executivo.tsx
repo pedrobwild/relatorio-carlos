@@ -87,7 +87,7 @@ const Executivo = () => {
         <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
           <div className="max-w-5xl mx-auto w-full flex flex-col gap-3">
             {/* PDF Viewer */}
-            <div className="h-[70vh] sm:h-[75vh]">
+            <div>
               <PDFViewer url={pdfUrl} title="Projeto Executivo" />
             </div>
 
