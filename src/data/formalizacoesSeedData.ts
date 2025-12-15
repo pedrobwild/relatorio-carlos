@@ -16,7 +16,7 @@ const fakeHash = (seed: string) =>
   (seed.repeat(64).slice(0, 64) as string).replace(/[^a-f0-9]/gi, "a");
 
 // Helper to create party objects
-const createParties = (formalizationId: string, customerSigned: boolean, companySigned: boolean) => [
+const createParties = (formalizationId: string, customerSigned: boolean, companySigned: boolean, customerMustSign: boolean = true) => [
   {
     id: `party-customer-${formalizationId.substring(0, 8)}`,
     formalization_id: formalizationId,
@@ -24,7 +24,7 @@ const createParties = (formalizationId: string, customerSigned: boolean, company
     display_name: "Pedro Alves",
     email: "pedro.alves@email.com",
     role_label: "Cliente",
-    must_sign: true,
+    must_sign: customerMustSign,
     user_id: null,
     created_at: iso(daysAgo(10)),
   },
@@ -284,6 +284,124 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     parties: createParties("f6a7b8c9-d0e1-2345-f012-456789012345", false, true) as any,
     parties_signed: 1,
     parties_total: 2,
+  },
+  {
+    id: "g7b8c9d0-e1f2-3456-0123-567890123456",
+    customer_org_id: null,
+    project_id: null,
+    unit_id: null,
+    type: "general",
+    title: "Aprovação Tácita – Projeto Executivo",
+    summary: "Registro formal de aprovação tácita do Projeto Executivo conforme cláusula 10.4 do contrato.",
+    body_md:
+      `## Registro de Aprovação Tácita
+
+### Documento
+**Projeto Executivo** – Hub Brooklyn 502
+
+### Fundamentação Contratual
+Conforme **Cláusula 10.4** do Contrato de Prestação de Serviços de Reforma:
+
+> *"O Cliente terá prazo de 5 (cinco) dias úteis, contados do recebimento do Projeto Executivo, para manifestar-se por escrito sobre eventuais objeções ou solicitações de alteração. Decorrido o prazo sem manifestação, o projeto será considerado tacitamente aprovado."*
+
+### Cronologia
+- **Data de envio do projeto:** 17/06/2025
+- **Prazo para manifestação:** 24/06/2025 (5 dias úteis)
+- **Data de aprovação tácita:** 25/06/2025
+
+### Declaração
+Declaro que o Projeto Executivo foi devidamente enviado ao cliente **Pedro Alves** na data indicada, por meio do Portal do Cliente, e que não houve manifestação dentro do prazo contratual estipulado.
+
+Desta forma, em conformidade com a cláusula contratual supracitada, o documento encontra-se **tacitamente aprovado**, tendo validade para todos os fins de execução da obra.
+
+### Observações
+- Este registro tem caráter unilateral e não requer assinatura do cliente
+- A aprovação tácita possui mesma validade jurídica da aprovação expressa
+- O cliente foi notificado sobre a aprovação tácita em 25/06/2025`,
+    data: {
+      documentType: "Projeto Executivo",
+      clausulaContratual: "10.4",
+      dataEnvio: "2025-06-17",
+      prazoManifestacao: "2025-06-24",
+      dataAprovacao: "2025-06-25",
+      tipoAprovacao: "tacita",
+    } as any,
+    status: "signed",
+    created_at: "2025-06-25T10:00:00.000Z",
+    updated_at: "2025-06-25T10:00:00.000Z",
+    last_activity_at: "2025-06-25T10:00:00.000Z",
+    locked_at: "2025-06-25T10:00:00.000Z",
+    locked_hash: fakeHash("g7b8c9"),
+    acknowledgements: [
+      {
+        id: "ack-company-g7b8c9d0",
+        formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
+        party_id: "party-company-g7b8c9d0",
+        acknowledged: true,
+        acknowledged_at: "2025-06-25T10:00:00.000Z",
+        acknowledged_by_user_id: null,
+        acknowledged_by_email: "lucas@bwild.com.br",
+        signature_text: "Registro e atesto a aprovação tácita do Projeto Executivo conforme cláusula 10.4 do contrato.",
+        signature_hash: fakeHash("ack-company-g7b8c9d0"),
+        ip_address: "189.12.45.67",
+        user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        created_at: "2025-06-25T10:00:00.000Z",
+      }
+    ] as any,
+    attachments: null,
+    events: [
+      {
+        id: "event-created-g7b8c9d0",
+        formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
+        event_type: "created",
+        actor_user_id: null,
+        meta: {},
+        created_at: "2025-06-25T09:30:00.000Z",
+      },
+      {
+        id: "event-sent-g7b8c9d0",
+        formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
+        event_type: "sent_for_signature",
+        actor_user_id: null,
+        meta: {},
+        created_at: "2025-06-25T09:45:00.000Z",
+      },
+      {
+        id: "event-locked-g7b8c9d0",
+        formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
+        event_type: "locked",
+        actor_user_id: null,
+        meta: { locked_hash: fakeHash("g7b8c9") },
+        created_at: "2025-06-25T10:00:00.000Z",
+      }
+    ] as any,
+    evidence_links: null,
+    parties: [
+      {
+        id: "party-customer-g7b8c9d0",
+        formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
+        party_type: "customer",
+        display_name: "Pedro Alves",
+        email: "pedro.alves@email.com",
+        role_label: "Cliente (notificado)",
+        must_sign: false, // Não requer assinatura - aprovação tácita
+        user_id: null,
+        created_at: "2025-06-25T09:30:00.000Z",
+      },
+      {
+        id: "party-company-g7b8c9d0",
+        formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
+        party_type: "company",
+        display_name: "Lucas Mendes",
+        email: "lucas@bwild.com.br",
+        role_label: "Engenheiro Responsável",
+        must_sign: true,
+        user_id: null,
+        created_at: "2025-06-25T09:30:00.000Z",
+      }
+    ] as any,
+    parties_signed: 1,
+    parties_total: 1, // Apenas 1 parte precisa assinar (company)
   },
 ];
 
