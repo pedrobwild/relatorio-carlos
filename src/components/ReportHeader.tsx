@@ -7,6 +7,7 @@ import {
   TrendingUp, TrendingDown, ExternalLink, Bell
 } from "lucide-react";
 import { Activity } from "@/types/report";
+import { usePendencias } from "@/hooks/usePendencias";
 
 interface ReportHeaderProps {
   projectName: string;
@@ -144,6 +145,8 @@ const ReportHeader = ({
     setExpandedContact(expandedContact === role ? null : role);
   };
 
+  const { stats: pendenciasStats } = usePendencias();
+
   return (
     <header className="bg-card rounded-xl border border-border overflow-hidden mb-3 md:mb-4 animate-fade-in">
       {/* Desktop Layout */}
@@ -175,7 +178,7 @@ const ReportHeader = ({
                 <Bell className="w-4 h-4" />
                 <span>Pendências</span>
                 <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold">
-                  8
+                  {pendenciasStats.total}
                 </span>
               </Link>
 
@@ -428,7 +431,7 @@ const ReportHeader = ({
             <Bell className="w-3.5 h-3.5" />
             <span className="text-xs font-semibold">Pendências</span>
             <span className="flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold">
-              8
+              {pendenciasStats.total}
             </span>
           </Link>
         </div>
