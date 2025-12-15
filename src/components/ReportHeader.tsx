@@ -95,7 +95,7 @@ const ReportHeader = ({
               <Link
                 key={link.label}
                 to={link.href}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-base font-medium text-foreground/80 hover:text-foreground hover:bg-accent transition-colors"
               >
                 <link.icon className="w-5 h-5" />
                 {link.label}
@@ -193,7 +193,7 @@ const ReportHeader = ({
             <Link
               key={link.label}
               to={link.href}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-muted-foreground bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-foreground/80 bg-muted/50 hover:bg-accent hover:text-foreground active:scale-95 transition-all whitespace-nowrap"
             >
               <link.icon className="w-4 h-4" />
               {link.label}
@@ -285,12 +285,12 @@ const ReportHeader = ({
               <Link
                 key={link.label}
                 to={link.href}
-                className="flex flex-col items-center justify-center gap-1.5 py-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all min-h-[56px]"
+                className="flex flex-col items-center justify-center gap-1.5 py-2 rounded-lg text-foreground/80 hover:text-primary hover:bg-primary/5 active:scale-95 transition-all min-h-[56px]"
               >
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                   <link.icon className="w-4 h-4" />
                 </div>
-                <span className="text-[10px] font-medium leading-tight text-center">{link.label}</span>
+                <span className="text-[11px] font-medium leading-tight text-center">{link.label}</span>
               </Link>
             ))}
           </div>

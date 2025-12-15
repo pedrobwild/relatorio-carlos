@@ -24,27 +24,27 @@ const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecisi
     }}
   >
     <div className="flex items-start justify-between gap-3">
-      <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{decision.description}</p>
-      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-xs shrink-0">
+      <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{decision.description}</p>
+      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-sm shrink-0">
         Pendente
       </Badge>
     </div>
     
     {decision.options && decision.options.length > 0 && (
-      <div className="text-xs text-foreground/70">
+      <div className="text-sm text-foreground/70">
         <span className="font-medium">Opções: </span>
         {decision.options.join(" | ")}
       </div>
     )}
     
-    <div className="flex flex-col gap-1.5 text-xs">
+    <div className="flex flex-col gap-1.5 text-sm">
       <div className="flex items-center gap-1.5">
-        <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
+        <span className="text-sm font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
           {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}
         </span>
         <span className="text-foreground/70">Prazo para decisão</span>
       </div>
-      <p className="text-destructive text-[10px] sm:text-xs leading-snug">
+      <p className="text-destructive text-xs sm:text-sm leading-snug">
         <span className="font-medium">Importante:</span> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
       </p>
     </div>

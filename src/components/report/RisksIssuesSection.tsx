@@ -26,8 +26,8 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
     <div className="flex items-start justify-between gap-3">
       <div className="flex-1">
         <div className="flex items-start gap-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
-          <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{issue.title}</p>
+          <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+          <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{issue.title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5 mt-1.5 ml-5.5">
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
@@ -38,8 +38,8 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
     </div>
     
     <div className="bg-secondary rounded-lg p-2.5 sm:p-3">
-      <p className="text-xs font-bold text-foreground mb-1">Plano de Ação</p>
-      <div className="text-xs sm:text-sm text-foreground/80 leading-relaxed space-y-1">
+      <p className="text-sm font-bold text-foreground mb-1">Plano de Ação</p>
+      <div className="text-sm sm:text-base text-foreground/80 leading-relaxed space-y-1">
         {issue.actionPlan.split('\n').map((line, idx) => (
           <p key={idx}>{idx + 1}) {line.trim()}</p>
         ))}

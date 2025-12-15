@@ -42,20 +42,20 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
           </span>
           {getRiskBadge(task.risk)}
         </div>
-        <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{task.description}</p>
+        <p className="text-sm sm:text-base font-medium text-foreground leading-snug">{task.description}</p>
       </div>
     </div>
     
-    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-x-3 sm:gap-y-1 text-xs text-foreground/70">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1.5 sm:gap-x-3 sm:gap-y-1 text-sm text-foreground/70">
       <div className="flex items-start gap-1.5">
-        <CheckCircle className="w-3 h-3 shrink-0 mt-0.5" />
+        <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
         <span><span className="font-medium">Pré-requisito:</span> {task.prerequisites}</span>
       </div>
     </div>
     
     {task.riskReason && (
-      <div className="flex items-start gap-2 text-xs bg-warning/10 p-2.5 rounded-lg">
-        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-warning" />
+      <div className="flex items-start gap-2 text-sm bg-warning/10 p-2.5 rounded-lg">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-warning" />
         <span className="leading-relaxed text-foreground">{task.riskReason}</span>
       </div>
     )}
