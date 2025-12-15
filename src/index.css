@@ -149,6 +149,37 @@
     line-height: 1.15;
   }
 
+  /* Typography Scale - Standardized hierarchy */
+  /* H1: Page titles - 16px mobile / 18px desktop */
+  .text-h1 {
+    @apply text-base md:text-lg font-bold text-foreground;
+  }
+  
+  /* H2: Section titles - 14px mobile / 16px desktop */
+  .text-h2 {
+    @apply text-sm md:text-base font-semibold text-foreground;
+  }
+  
+  /* H3: Subsection/card titles - 12px mobile / 14px desktop */
+  .text-h3 {
+    @apply text-xs md:text-sm font-semibold text-foreground;
+  }
+  
+  /* Body: Regular content - 12px mobile / 14px desktop */
+  .text-body {
+    @apply text-xs md:text-sm text-foreground;
+  }
+  
+  /* Caption: Labels, metadata - 10px mobile / 12px desktop */
+  .text-caption {
+    @apply text-[10px] md:text-xs text-muted-foreground;
+  }
+  
+  /* Tiny: Smallest text - 9px mobile / 10px desktop */
+  .text-tiny {
+    @apply text-[9px] md:text-[10px] text-muted-foreground;
+  }
+
   /* Improve touch targets for mobile - only apply to interactive elements that need it */
   button:not(.min-h-auto), 
   [role="button"]:not(.min-h-auto) {

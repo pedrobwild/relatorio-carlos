@@ -184,10 +184,10 @@ const WeeklyReportsHistory = ({
     <div className="animate-fade-in space-y-6" style={{ animationDelay: "0.1s" }}>
       {/* Header Section */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl md:text-2xl font-bold text-foreground">
+        <h2 className="text-h1">
           Histórico de Relatórios
         </h2>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-caption">
           {weeklyReports.length} relatórios
         </span>
       </div>
@@ -197,8 +197,8 @@ const WeeklyReportsHistory = ({
         <div className="hidden sm:block bg-card border border-border rounded-xl p-4 md:p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Evolução do Desvio</h3>
-              <p className="text-xs text-muted-foreground">Realizado vs Previsto por semana</p>
+              <h3 className="text-h3">Evolução do Desvio</h3>
+              <p className="text-caption">Realizado vs Previsto por semana</p>
             </div>
             {latestReport && (
               <div className={cn(

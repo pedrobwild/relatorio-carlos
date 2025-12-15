@@ -139,11 +139,11 @@ const ReportHeader = ({
               <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <div className="h-8 w-px bg-border" />
               <div>
-                <h1 className="text-lg font-bold text-foreground leading-tight">
+                <h1 className="text-h1 leading-tight">
                   {projectName} – {unitName}
                 </h1>
                 {clientName && (
-                  <p className="text-sm text-muted-foreground">Cliente: {clientName}</p>
+                  <p className="text-caption">Cliente: {clientName}</p>
                 )}
               </div>
             </div>
@@ -180,43 +180,43 @@ const ReportHeader = ({
           <div className="grid grid-cols-6 gap-4">
             {/* Current Activity - Spans 2 columns */}
             <div className="col-span-2 bg-card rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <ActivityIcon className="w-3.5 h-3.5" />
                 Etapa Atual
               </div>
-              <p className="text-sm font-semibold text-foreground line-clamp-2">
+              <p className="text-h3 line-clamp-2">
                 {projectMetrics.currentActivity}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-caption mt-1">
                 {projectMetrics.completedActivities} de {projectMetrics.totalActivities} etapas concluídas
               </p>
             </div>
 
             {/* Start Date */}
             <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5" />
                 Início
               </div>
-              <p className="text-base font-bold text-foreground">{formatDateFull(startDate)}</p>
+              <p className="text-h3">{formatDateFull(startDate)}</p>
             </div>
 
             {/* End Date */}
             <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Previsão Término
               </div>
-              <p className="text-base font-bold text-foreground">{formatDateFull(endDate)}</p>
+              <p className="text-h3">{formatDateFull(endDate)}</p>
             </div>
 
             {/* Total Working Days */}
             <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5" />
                 Dias Úteis Totais
               </div>
-              <p className="text-base font-bold text-foreground">{projectMetrics.totalWorkingDays} <span className="text-xs font-normal text-muted-foreground">dias</span></p>
+              <p className="text-h3">{projectMetrics.totalWorkingDays} <span className="text-caption font-normal">dias</span></p>
             </div>
 
             {/* Remaining Working Days */}
@@ -225,7 +225,7 @@ const ReportHeader = ({
                 ? 'bg-amber-500/10 border-amber-500/30' 
                 : 'bg-card border-border'
             }`}>
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 {projectMetrics.remainingWorkingDays <= 7 ? (
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                 ) : (
@@ -233,12 +233,12 @@ const ReportHeader = ({
                 )}
                 Dias Restantes
               </div>
-              <p className={`text-base font-bold ${
+              <p className={`text-h3 ${
                 projectMetrics.remainingWorkingDays <= 7 
                   ? 'text-amber-600 dark:text-amber-400' 
-                  : 'text-foreground'
+                  : ''
               }`}>
-                {projectMetrics.remainingWorkingDays} <span className="text-xs font-normal opacity-70">dias úteis</span>
+                {projectMetrics.remainingWorkingDays} <span className="text-caption font-normal">dias úteis</span>
               </p>
             </div>
           </div>
@@ -248,8 +248,8 @@ const ReportHeader = ({
             {/* Timeline Progress Bar - First */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-xs font-semibold text-foreground">Cronograma</h3>
-                <span className="text-xs text-muted-foreground">
+                <h3 className="text-h3">Cronograma</h3>
+                <span className="text-caption">
                   {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
                 </span>
               </div>
@@ -259,7 +259,7 @@ const ReportHeader = ({
                   style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
                 />
               </div>
-              <p className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+              <p className="flex items-center justify-between text-tiny mt-1">
                 <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
                 <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
               </p>
@@ -268,8 +268,8 @@ const ReportHeader = ({
             {/* Work Progress Bar - Second */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-xs font-semibold text-foreground">Progresso da Obra</h3>
-                <span className="text-xs font-bold text-foreground">{projectMetrics.actualProgress}%</span>
+                <h3 className="text-h3">Progresso da Obra</h3>
+                <span className="text-h3">{projectMetrics.actualProgress}%</span>
               </div>
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div 
@@ -281,7 +281,7 @@ const ReportHeader = ({
                   style={{ width: `${projectMetrics.actualProgress}%` }}
                 />
               </div>
-              <p className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+              <p className="flex items-center justify-between text-tiny mt-1">
                 <span>Previsto até hoje: {projectMetrics.plannedProgress}%</span>
                 <span>Realizado: {projectMetrics.actualProgress}%</span>
               </p>
@@ -392,19 +392,19 @@ const ReportHeader = ({
         <div className="p-2.5 border-b border-border">
           {/* Project Header */}
           <div className="mb-2">
-            <h1 className="text-sm font-bold text-foreground leading-tight">
+            <h1 className="text-h2 leading-tight">
               {projectName} – {unitName}
             </h1>
             {clientName && (
-              <p className="text-[10px] text-muted-foreground">Cliente: {clientName}</p>
+              <p className="text-tiny">Cliente: {clientName}</p>
             )}
           </div>
 
           {/* Timeline Progress Bar - First */}
           <div className="mb-2">
-            <div className="flex items-center justify-between text-[10px] mb-1">
-              <h3 className="font-semibold text-foreground">Cronograma</h3>
-              <span className="text-muted-foreground">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-caption font-semibold text-foreground">Cronograma</h3>
+              <span className="text-tiny">
                 {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis · Restam {projectMetrics.remainingWorkingDays}
               </span>
             </div>
@@ -418,11 +418,11 @@ const ReportHeader = ({
 
           {/* Current Activity + Progress - Second */}
           <div className="bg-secondary/30 rounded-lg p-2">
-            <h3 className="text-xs font-semibold text-foreground line-clamp-1">
+            <h3 className="text-caption font-semibold text-foreground line-clamp-1">
               {projectMetrics.currentActivity}
             </h3>
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-tiny">
                 {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
               </span>
               <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
@@ -433,7 +433,7 @@ const ReportHeader = ({
                   style={{ width: `${projectMetrics.actualProgress}%` }}
                 />
               </div>
-              <span className="text-[10px] font-bold text-foreground">{projectMetrics.actualProgress}%</span>
+              <span className="text-tiny font-bold text-foreground">{projectMetrics.actualProgress}%</span>
             </div>
           </div>
         </div>
