@@ -261,66 +261,121 @@ const Financeiro = () => {
       {/* Content */}
       <div className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="bg-card border-border">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-                    <CreditCard className="w-5 h-5 text-primary" />
+          {/* Financial Summary - Premium Design */}
+          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5">
+            <CardContent className="p-0">
+              {/* Main Value Section */}
+              <div className="relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.08)_0%,transparent_50%)]" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full" />
+                
+                <div className="relative p-6 pb-4">
+                  {/* Total Value - Hero */}
+                  <div className="text-center mb-6">
+                    <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-1">
+                      Valor do Contrato
+                    </p>
+                    <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+                      {formatCurrency(totalValue)}
+                    </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Valor Total</p>
-                    <p className="text-lg font-bold text-foreground">{formatCurrency(totalValue)}</p>
+
+                  {/* Split Values - Paid / Remaining */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    {/* Paid */}
+                    <div className="relative bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/15">
+                          <Check className="w-4 h-4 text-emerald-600" strokeWidth={2.5} />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-widest text-emerald-600/80 font-medium">
+                          Pago
+                        </span>
+                      </div>
+                      <p className="text-xl sm:text-2xl font-bold text-emerald-600 tracking-tight">
+                        {formatCurrency(paidAmount)}
+                      </p>
+                    </div>
+
+                    {/* Remaining */}
+                    <div className="relative bg-amber-500/5 rounded-xl p-4 border border-amber-500/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/15">
+                          <Clock className="w-4 h-4 text-amber-600" strokeWidth={2.5} />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-widest text-amber-600/80 font-medium">
+                          Saldo
+                        </span>
+                      </div>
+                      <p className="text-xl sm:text-2xl font-bold text-amber-600 tracking-tight">
+                        {formatCurrency(totalValue - paidAmount)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10">
-                    <Check className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Valor Pago</p>
-                    <p className="text-lg font-bold text-emerald-600">{formatCurrency(paidAmount)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card border-border">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500/10">
-                    <Clock className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Saldo a Pagar</p>
-                    <p className="text-lg font-bold text-amber-600">{formatCurrency(totalValue - paidAmount)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Progress Section */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Progresso de Pagamento
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {paidCount} de {installments.length} parcelas pagas
-                </span>
-                <span className="font-semibold text-foreground">{paidPercentage.toFixed(0)}%</span>
               </div>
-              <Progress value={paidPercentage} className="h-3" />
+
+              {/* Progress Section - Full Width Bottom */}
+              <div className="bg-muted/30 px-6 py-5 border-t border-border/50">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <span className="text-xs font-medium text-foreground uppercase tracking-wide">
+                      Progresso
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold text-primary">{paidPercentage.toFixed(0)}%</span>
+                    <span className="text-xs text-muted-foreground">concluído</span>
+                  </div>
+                </div>
+                
+                {/* Custom Progress Bar */}
+                <div className="relative h-4 bg-muted rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-primary/80 rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${paidPercentage}%` }}
+                  >
+                    {/* Shimmer effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                  </div>
+                  {/* Milestones */}
+                  <div className="absolute inset-0 flex justify-between px-1">
+                    {[0, 25, 50, 75, 100].map((milestone) => (
+                      <div 
+                        key={milestone}
+                        className={`w-px h-full ${milestone <= paidPercentage ? 'bg-primary-foreground/30' : 'bg-muted-foreground/20'}`}
+                        style={{ marginLeft: milestone === 0 ? '0' : undefined }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Installments Counter */}
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center gap-1.5">
+                    {installments.map((inst, idx) => (
+                      <div 
+                        key={idx}
+                        className={`w-2.5 h-2.5 rounded-full transition-all ${
+                          inst.status === 'paid' 
+                            ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' 
+                            : inst.status === 'pending' 
+                              ? 'bg-amber-400 shadow-sm shadow-amber-400/50'
+                              : 'bg-muted-foreground/30'
+                        }`}
+                        title={inst.stage}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">{paidCount}</span>/{installments.length} parcelas pagas
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
