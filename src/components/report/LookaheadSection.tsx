@@ -37,7 +37,7 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
     <div className="flex items-start justify-between gap-3">
       <div className="flex-1">
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
-          <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded">
+          <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
             {format(new Date(task.date), "dd/MM", { locale: ptBR })}
           </span>
           {getRiskBadge(task.risk)}
@@ -97,7 +97,7 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
             <CollapsibleTrigger asChild>
               <button className="w-full py-3 px-4 border-t border-border flex items-center justify-center gap-2 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded text-[10px] font-semibold">+{remainingTasks.length}</span>}
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[10px] font-semibold">+{remainingTasks.length}</span>}
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>
