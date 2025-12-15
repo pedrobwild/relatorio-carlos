@@ -7,7 +7,7 @@ import PDFViewer from "@/components/PDFViewer";
 const Executivo = () => {
   // TODO: Update with actual PDF path when uploaded
   const pdfUrl = "/documents/projeto-executivo.pdf";
-  const hasDocument = false; // Set to true when document is uploaded
+  const hasDocument = true;
 
   const handleDownload = () => {
     const link = document.createElement("a");
