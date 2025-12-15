@@ -193,11 +193,12 @@ export default function Formalizacoes() {
                 </CardContent>
               </Card>
             ) : (
-              filteredFormalizacoes.map((formalizacao) => (
+              filteredFormalizacoes.map((formalizacao, index) => (
                 <Link 
                   key={formalizacao.id} 
                   to={`/formalizacoes/${formalizacao.id}`}
-                  className="block group"
+                  className="block group animate-fade-in opacity-0"
+                  style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
                 >
                   <Card className="group-hover:border-primary/30 group-hover:shadow-sm transition-all duration-200">
                     <CardContent className="p-4">
