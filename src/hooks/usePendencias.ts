@@ -1,5 +1,7 @@
 import { useMemo } from "react";
-import { parseISO, differenceInDays, addDays } from "date-fns";
+import { parseISO, differenceInDays, addDays, format } from "date-fns";
+import { week10SeedData } from "@/data/week10SeedData";
+import { formalizacoesSeedData } from "@/data/formalizacoesSeedData";
 
 export type PendingType = "decision" | "invoice" | "signature" | "approval_3d" | "approval_exec";
 export type PendingPriority = "alta" | "média" | "baixa";
@@ -30,96 +32,143 @@ export const DEADLINE_BY_TYPE: Record<PendingType, number> = {
 // Demo date - in production this would be new Date()
 export const DEMO_DATE = new Date("2025-09-08");
 
-// Sample data for demo
-export const pendingItemsData: PendingItem[] = [
-  // Client Decisions
-  {
-    id: "dec-1",
-    type: "decision",
-    title: "Posição do suporte articulado de TV 65\"",
-    description: "Definir altura e posição do suporte na parede da sala",
-    createdDate: "2025-09-05",
-    dueDate: "2025-09-09",
-    priority: "alta",
-    impact: "Atraso na instalação elétrica embutida e possível retrabalho no gesso/pintura",
-    options: ["Altura 1,10m centralizado", "Altura 1,10m deslocado 15cm esquerda", "Altura 1,20m centralizado"],
-  },
-  {
-    id: "dec-2",
-    type: "decision",
-    title: "Aprovar torneira alternativa para banheiro social",
-    description: "Modelo Docol Bistro Cromado (original Deca Polo indisponível até 20/09)",
-    createdDate: "2025-09-06",
-    dueDate: "2025-09-10",
-    priority: "média",
-    impact: "Atraso de 12 dias se aguardar modelo original",
-  },
-  // Overdue Invoice
-  {
-    id: "inv-1",
-    type: "invoice",
-    title: "Parcela 6 - 45 dias após início da obra",
-    description: "Vencimento original: 05/09/2025",
-    createdDate: "2025-08-25",
-    dueDate: "2025-09-05",
-    priority: "alta",
-    amount: 28500,
-  },
-  // Upcoming Invoice
-  {
-    id: "inv-2",
-    type: "invoice",
-    title: "Parcela 7 - 60 dias após início da obra",
-    description: "Próximo vencimento",
-    createdDate: "2025-09-01",
-    dueDate: "2025-09-12",
-    priority: "média",
-    amount: 15200,
-  },
-  // Pending Signatures - Aditivo enviado 03/09, prazo 5 dias = vence 08/09
-  {
-    id: "sig-1",
-    type: "signature",
-    title: "Aditivo de Contrato - Julho",
-    description: "Inclusão de marcenaria adicional no hall de entrada",
-    createdDate: "2025-09-03",
-    dueDate: "2025-09-08", // 5 dias após criação
-    priority: "alta",
-    impact: "Pendente de assinatura para formalização do serviço adicional",
-  },
-  // Ata enviada 05/09, prazo 5 dias = vence 10/09
-  {
-    id: "sig-2",
-    type: "signature",
-    title: "Ata de Reunião - Semana 9",
-    description: "Definições sobre instalação de coifa e eletros",
-    createdDate: "2025-09-05",
-    dueDate: "2025-09-10", // 5 dias após criação
-    priority: "baixa",
-  },
-  // 3D Project Approval - enviado 07/09, prazo 2 dias = vence 09/09
-  {
-    id: "3d-1",
-    type: "approval_3d",
-    title: "Aprovação do Projeto 3D - Cozinha",
-    description: "Renderização final com ajustes de iluminação solicitados",
-    createdDate: "2025-09-07",
-    dueDate: "2025-09-09", // 2 dias após criação
-    priority: "média",
-    impact: "Liberação para produção de peças de marcenaria customizadas",
-  },
-  // Executive Project Approval - enviado 04/09, prazo 2 dias = venceu 06/09
-  {
-    id: "exec-1",
-    type: "approval_exec",
-    title: "Aprovação do Projeto Executivo - Elétrica",
-    description: "Planta baixa com pontos elétricos e circuitos dedicados",
-    createdDate: "2025-09-04",
-    dueDate: "2025-09-06", // 2 dias após criação - já venceu
-    priority: "alta",
-    impact: "Execução da instalação elétrica já iniciada - aprovação retroativa necessária",
-  },
-];
+// Helper to add business days
+const addBusinessDays = (date: Date, days: number): Date => {
+  let result = new Date(date);
+  let added = 0;
+  while (added < days) {
+    result = addDays(result, 1);
+    const dayOfWeek = result.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      added++;
+    }
+  }
+  return result;
+};
+
+// Generate pending items from real data sources
+const generatePendingItems = (): PendingItem[] => {
+  const items: PendingItem[] = [];
+
+  // 1. CLIENT DECISIONS from week10SeedData
+  week10SeedData.clientDecisions?.forEach((decision) => {
+    if (decision.status === "pending") {
+      items.push({
+        id: `dec-${decision.id}`,
+        type: "decision",
+        title: decision.description.length > 60 
+          ? decision.description.substring(0, 60) + "..." 
+          : decision.description,
+        description: decision.description,
+        createdDate: week10SeedData.periodStart,
+        dueDate: decision.dueDate,
+        priority: "alta",
+        impact: decision.impactIfDelayed,
+        options: decision.options,
+      });
+    }
+  });
+
+  // 2. INVOICES from Financeiro data (matching Financeiro.tsx logic)
+  const contractSignatureDate = new Date(2025, 5, 17); // 17/06/2025
+  const constructionStartDate = new Date(2025, 6, 1); // 01/07/2025
+  const projectEndDate = new Date(2025, 8, 14); // 14/09/2025
+
+  const installments = [
+    {
+      id: 1,
+      stage: "Assinatura do Contrato",
+      amount: 11000,
+      dueDate: addBusinessDays(contractSignatureDate, 2),
+      status: "paid" as const,
+    },
+    {
+      id: 2,
+      stage: "Início da Obra",
+      amount: 29333.33,
+      dueDate: addBusinessDays(constructionStartDate, 2),
+      status: "paid" as const,
+    },
+    {
+      id: 3,
+      stage: "25 dias corridos após início da obra",
+      amount: 29333.33,
+      dueDate: addBusinessDays(addDays(constructionStartDate, 25), 2),
+      status: "paid" as const,
+    },
+    {
+      id: 4,
+      stage: "45 dias corridos após início da obra",
+      amount: 29333.34,
+      dueDate: addBusinessDays(addDays(constructionStartDate, 45), 2),
+      status: "pending" as const,
+    },
+    {
+      id: 5,
+      stage: "Assinatura do Termo de Entrega",
+      amount: 11000,
+      dueDate: addBusinessDays(projectEndDate, 2),
+      status: "upcoming" as const,
+    },
+  ];
+
+  installments.forEach((inst) => {
+    if (inst.status === "pending" || inst.status === "upcoming") {
+      const daysUntilDue = differenceInDays(inst.dueDate, DEMO_DATE);
+      // Only add if due within 14 days for upcoming, or any pending
+      if (inst.status === "pending" || daysUntilDue <= 14) {
+        items.push({
+          id: `inv-${inst.id}`,
+          type: "invoice",
+          title: `Parcela ${inst.id} - ${inst.stage}`,
+          description: `Vencimento: ${format(inst.dueDate, "dd/MM/yyyy")}`,
+          createdDate: format(addDays(inst.dueDate, -10), "yyyy-MM-dd"),
+          dueDate: format(inst.dueDate, "yyyy-MM-dd"),
+          priority: daysUntilDue < 0 ? "alta" : daysUntilDue <= 5 ? "média" : "baixa",
+          amount: inst.amount,
+        });
+      }
+    }
+  });
+
+  // 3. FORMALIZATION SIGNATURES from formalizacoesSeedData
+  formalizacoesSeedData.forEach((form) => {
+    // Only include if pending_signatures and customer hasn't signed
+    if (form.status === "pending_signatures") {
+      const parties = form.parties as any[] | null;
+      const acknowledgements = form.acknowledgements as any[] | null;
+      
+      // Find customer party
+      const customerParty = parties?.find(p => p.party_type === "customer" && p.must_sign === true);
+      
+      if (customerParty) {
+        // Check if customer has already acknowledged
+        const customerAck = acknowledgements?.find(a => a.party_id === customerParty.id && a.acknowledged);
+        
+        if (!customerAck) {
+          // Customer hasn't signed yet
+          const lockedAt = form.locked_at ? parseISO(form.locked_at) : null;
+          const dueDate = lockedAt ? addBusinessDays(lockedAt, 5) : null;
+          
+          items.push({
+            id: `sig-${form.id?.substring(0, 8)}`,
+            type: "signature",
+            title: form.title || "Formalização",
+            description: form.summary || "",
+            createdDate: form.created_at || "",
+            dueDate: dueDate ? format(dueDate, "yyyy-MM-dd") : form.updated_at?.split("T")[0] || "",
+            priority: "alta",
+            impact: "Pendente de assinatura para formalização",
+          });
+        }
+      }
+    }
+  });
+
+  return items;
+};
+
+export const pendingItemsData: PendingItem[] = generatePendingItems();
 
 export const getStatus = (dueDate: string, referenceDate: Date = DEMO_DATE): PendingStatus => {
   const due = parseISO(dueDate);
