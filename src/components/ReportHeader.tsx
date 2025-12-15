@@ -425,8 +425,8 @@ const ReportHeader = ({
 
           {/* Current Activity + Progress - Second */}
           <div className="bg-secondary/30 rounded-lg p-2">
-            <h3 className="text-xs font-semibold text-foreground line-clamp-1">
-              Etapa atual: {projectMetrics.currentActivity}
+            <h3 className="text-xs text-foreground line-clamp-1">
+              {projectMetrics.currentActivity}
             </h3>
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-tiny">
