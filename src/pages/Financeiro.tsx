@@ -1,10 +1,12 @@
-import { ArrowLeft, DollarSign, Check, Clock, Calendar, CreditCard, AlertCircle } from "lucide-react";
+import { ArrowLeft, DollarSign, Check, Clock, Calendar, CreditCard, AlertCircle, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid, ReferenceLine, ResponsiveContainer } from "recharts";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -23,6 +25,7 @@ const Financeiro = () => {
   const contractSignatureDate = new Date(2025, 5, 17); // 17/06/2025
   const constructionStartDate = new Date(2025, 6, 1); // 01/07/2025
   const projectEndDate = new Date(2025, 8, 14); // 14/09/2025 (from schedule)
+  const reportDate = new Date(2025, 8, 8); // 08/09/2025 (current report date)
 
   // Calculate due dates (adding 2 business days approximation)
   const addBusinessDays = (date: Date, days: number): Date => {
@@ -83,6 +86,47 @@ const Financeiro = () => {
     .reduce((sum, i) => sum + i.amount, 0);
   const paidPercentage = (paidAmount / totalValue) * 100;
   const paidCount = installments.filter((i) => i.status === "paid").length;
+
+  // Generate chart data
+  const generateChartData = () => {
+    const data: { date: string; previsto: number; realizado: number | null; label: string }[] = [];
+    
+    let cumulativePlanned = 0;
+    let cumulativePaid = 0;
+
+    installments.forEach((installment, index) => {
+      cumulativePlanned += installment.amount;
+      
+      // Only show actual payments up to report date
+      if (installment.status === "paid") {
+        cumulativePaid += installment.amount;
+      }
+
+      const isPastReportDate = installment.dueDate > reportDate;
+
+      data.push({
+        date: format(installment.dueDate, "dd/MM"),
+        previsto: Math.round((cumulativePlanned / totalValue) * 100),
+        realizado: isPastReportDate ? null : Math.round((cumulativePaid / totalValue) * 100),
+        label: `Parcela ${index + 1}`,
+      });
+    });
+
+    return data;
+  };
+
+  const chartData = generateChartData();
+
+  const chartConfig = {
+    previsto: {
+      label: "Previsto",
+      color: "hsl(var(--muted-foreground))",
+    },
+    realizado: {
+      label: "Realizado",
+      color: "hsl(var(--primary))",
+    },
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -209,6 +253,98 @@ const Financeiro = () => {
                 <span className="font-semibold text-foreground">{paidPercentage.toFixed(0)}%</span>
               </div>
               <Progress value={paidPercentage} className="h-3" />
+            </CardContent>
+          </Card>
+
+          {/* Financial Evolution Chart */}
+          <Card className="bg-card border-border overflow-hidden">
+            <CardHeader className="bg-primary-dark py-3 px-4">
+              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Evolução Financeira
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-[280px] w-full">
+                <ChartContainer config={chartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={chartData}
+                      margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorPrevisto" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
+                          <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorRealizado" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tickFormatter={(value) => `${value}%`}
+                        domain={[0, 100]}
+                      />
+                      <ChartTooltip
+                        content={
+                          <ChartTooltipContent
+                            formatter={(value, name) => (
+                              <span className="font-medium">
+                                {name === "previsto" ? "Previsto" : "Realizado"}: {value}%
+                              </span>
+                            )}
+                          />
+                        }
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="previsto"
+                        stroke="hsl(var(--muted-foreground))"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        fill="url(#colorPrevisto)"
+                        connectNulls={false}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="realizado"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2.5}
+                        fill="url(#colorRealizado)"
+                        connectNulls={false}
+                      />
+                      <ReferenceLine
+                        y={paidPercentage}
+                        stroke="hsl(var(--primary))"
+                        strokeDasharray="3 3"
+                        strokeOpacity={0.5}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-0.5 bg-muted-foreground" style={{ borderStyle: 'dashed', borderWidth: '1px 0 0 0', borderColor: 'hsl(var(--muted-foreground))' }} />
+                  <span className="text-muted-foreground">Previsto</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-1 rounded-full bg-primary" />
+                  <span className="text-muted-foreground">Realizado</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
