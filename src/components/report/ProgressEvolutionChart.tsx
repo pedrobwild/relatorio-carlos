@@ -127,105 +127,107 @@ const ProgressEvolutionChart = ({
   const data = generateWeeklyProgressData(activities, currentWeek, projectStartDate);
 
   return (
-    <div className="hidden sm:block bg-card rounded-lg border border-border overflow-hidden">
-      <div className="p-4 sm:p-5 bg-primary-dark flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Evolução do Desvio</h3>
-        <div className="flex items-center gap-4 text-xs sm:text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-green-500" />
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h3 className="text-xs sm:text-sm font-semibold text-white">Evolução do Desvio</h3>
+        <div className="flex items-center gap-3 text-[10px] sm:text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
             <span className="text-white/70">Adiantado</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500" />
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
             <span className="text-white/70">Atrasado</span>
           </div>
         </div>
       </div>
-      <div className="p-4 md:p-6">
-      
-      <div className="h-[280px] md:h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart
-            data={data}
-            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-          >
-            <defs>
-              <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05} />
-              </linearGradient>
-              <linearGradient id="negativeGradient" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              stroke="hsl(var(--border))" 
-              vertical={false}
-            />
-            
-            <XAxis
-              dataKey="week"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 500 }}
-              dy={10}
-            />
-            
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 500 }}
-              tickFormatter={(value) => `${value > 0 ? '+' : ''}${value}%`}
-              domain={['auto', 'auto']}
-            />
-            
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              }}
-              labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
-              formatter={(value: number) => [
-                `${value > 0 ? '+' : ''}${value}%`,
-                value >= 0 ? "Adiantado" : "Atrasado",
-              ]}
-            />
-            
-            {/* Reference line at 0 */}
-            <ReferenceLine 
-              y={0} 
-              stroke="hsl(var(--muted-foreground))" 
-              strokeDasharray="4 4"
-              strokeWidth={1}
-            />
-            
-            {/* Deviation bars with dynamic colors */}
-            <Bar dataKey="desvio" radius={[4, 4, 0, 0]}>
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.desvio >= 0 ? "#22c55e" : "#ef4444"}
-                  fillOpacity={0.7}
-                />
-              ))}
-            </Bar>
-            
-            {/* Deviation line with custom dots */}
-            <Line
-              type="monotone"
-              dataKey="desvio"
-              stroke="hsl(var(--foreground))"
-              strokeWidth={2}
-              dot={<CustomDot />}
-              activeDot={<CustomActiveDot />}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
+      <div className="p-2.5 sm:p-4">
+        <div className="h-[180px] sm:h-[220px] md:h-[280px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={data}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="positiveGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="negativeGradient" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                stroke="hsl(var(--border))" 
+                vertical={false}
+              />
+              
+              <XAxis
+                dataKey="week"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                dy={6}
+              />
+              
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                tickFormatter={(value) => `${value > 0 ? '+' : ''}${value}%`}
+                domain={['auto', 'auto']}
+                width={40}
+              />
+              
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  fontSize: "12px",
+                  padding: "8px 12px",
+                }}
+                labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, fontSize: "11px" }}
+                formatter={(value: number) => [
+                  `${value > 0 ? '+' : ''}${value}%`,
+                  value >= 0 ? "Adiantado" : "Atrasado",
+                ]}
+              />
+              
+              {/* Reference line at 0 */}
+              <ReferenceLine 
+                y={0} 
+                stroke="hsl(var(--muted-foreground))" 
+                strokeDasharray="4 4"
+                strokeWidth={1}
+              />
+              
+              {/* Deviation bars with dynamic colors */}
+              <Bar dataKey="desvio" radius={[3, 3, 0, 0]}>
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.desvio >= 0 ? "#22c55e" : "#ef4444"}
+                    fillOpacity={0.7}
+                  />
+                ))}
+              </Bar>
+              
+              {/* Deviation line with custom dots */}
+              <Line
+                type="monotone"
+                dataKey="desvio"
+                stroke="hsl(var(--foreground))"
+                strokeWidth={1.5}
+                dot={<CustomDot />}
+                activeDot={<CustomActiveDot />}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
