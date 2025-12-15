@@ -49,7 +49,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
   const [endDate, setEndDate] = useState<Date>();
   const [reportDate, setReportDate] = useState<Date>(new Date());
   const [activities, setActivities] = useState<Activity[]>([
-    { description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "" }
+    { description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "", weight: 10 }
   ]);
   const [incidents, setIncidents] = useState<ReportIncident[]>([]);
   const [incidentsOpen, setIncidentsOpen] = useState(false);
@@ -62,7 +62,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
   const addActivity = () => {
     setActivities([
       ...activities,
-      { description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "" }
+      { description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "", weight: 10 }
     ]);
   };
 
@@ -72,11 +72,14 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     }
   };
 
-  const updateActivity = (index: number, field: keyof Activity, value: string) => {
+  const updateActivity = (index: number, field: keyof Activity, value: string | number) => {
     const updated = [...activities];
     updated[index] = { ...updated[index], [field]: value };
     setActivities(updated);
   };
+
+  // Calculate total weight of all activities
+  const totalWeight = activities.reduce((sum, a) => sum + (a.weight || 0), 0);
 
   const addIncident = () => {
     const newIncident: ReportIncident = {
@@ -131,7 +134,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     setStartDate(undefined);
     setEndDate(undefined);
     setReportDate(new Date());
-    setActivities([{ description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "" }]);
+    setActivities([{ description: "", plannedStart: "", plannedEnd: "", actualStart: "", actualEnd: "", weight: 10 }]);
     setIncidents([]);
     setIncidentsOpen(false);
   };
@@ -300,9 +303,17 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
             {/* Activities Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-h3 text-muted-foreground uppercase tracking-wider">
-                  Cronograma de Atividades
-                </h3>
+                <div>
+                  <h3 className="text-h3 text-muted-foreground uppercase tracking-wider">
+                    Cronograma de Atividades
+                  </h3>
+                  <p className={cn(
+                    "text-tiny mt-0.5",
+                    totalWeight === 100 ? "text-emerald-600" : "text-amber-600"
+                  )}>
+                    Peso total: {totalWeight}% {totalWeight !== 100 && "(deve somar 100%)"}
+                  </p>
+                </div>
                 <Button type="button" variant="outline" size="sm" onClick={addActivity}>
                   <Plus className="w-4 h-4 mr-1" />
                   Adicionar
@@ -332,11 +343,28 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                       )}
                     </div>
 
-                    <Input
-                      placeholder="Descrição da atividade"
-                      value={activity.description}
-                      onChange={(e) => updateActivity(index, "description", e.target.value)}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Descrição da atividade"
+                        value={activity.description}
+                        onChange={(e) => updateActivity(index, "description", e.target.value)}
+                        className="flex-1"
+                      />
+                      <div className="w-20 shrink-0">
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            min={1}
+                            max={100}
+                            placeholder="Peso"
+                            value={activity.weight || ""}
+                            onChange={(e) => updateActivity(index, "weight", parseInt(e.target.value) || 0)}
+                            className="text-sm pr-6"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-tiny text-muted-foreground">%</span>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       <div className="space-y-1">
