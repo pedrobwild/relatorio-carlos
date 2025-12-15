@@ -245,11 +245,31 @@ const ReportHeader = ({
 
           {/* Progress Bars */}
           <div className="mt-4 space-y-3">
-            {/* Work Progress Bar */}
+            {/* Timeline Progress Bar - First */}
             <div>
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="font-medium text-muted-foreground">Progresso da Obra</span>
-                <span className="font-bold text-foreground">{projectMetrics.actualProgress}%</span>
+              <div className="flex items-center justify-between mb-1.5">
+                <h3 className="text-xs font-semibold text-foreground">Cronograma</h3>
+                <span className="text-xs text-muted-foreground">
+                  {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
+                </span>
+              </div>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
+                <div 
+                  className="h-full rounded-full bg-primary/70 transition-all duration-500"
+                  style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
+                />
+              </div>
+              <p className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+                <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
+                <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
+              </p>
+            </div>
+
+            {/* Work Progress Bar - Second */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <h3 className="text-xs font-semibold text-foreground">Progresso da Obra</h3>
+                <span className="text-xs font-bold text-foreground">{projectMetrics.actualProgress}%</span>
               </div>
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div 
@@ -261,30 +281,10 @@ const ReportHeader = ({
                   style={{ width: `${projectMetrics.actualProgress}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+              <p className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
                 <span>Previsto até hoje: {projectMetrics.plannedProgress}%</span>
                 <span>Realizado: {projectMetrics.actualProgress}%</span>
-              </div>
-            </div>
-
-            {/* Timeline Progress Bar */}
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="font-medium text-muted-foreground">Cronograma</span>
-                <span className="text-xs text-muted-foreground">
-                  {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
-                </span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
-                <div 
-                  className="h-full rounded-full bg-primary/70 transition-all duration-500"
-                  style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
-                <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
-                <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
-              </div>
+              </p>
             </div>
           </div>
         </div>
@@ -400,11 +400,27 @@ const ReportHeader = ({
             )}
           </div>
 
-          {/* Current Activity + Progress */}
-          <div className="bg-secondary/30 rounded-lg p-2 mb-2">
-            <p className="text-xs font-semibold text-foreground line-clamp-1">
+          {/* Timeline Progress Bar - First */}
+          <div className="mb-2">
+            <div className="flex items-center justify-between text-[10px] mb-1">
+              <h3 className="font-semibold text-foreground">Cronograma</h3>
+              <span className="text-muted-foreground">
+                {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis · Restam {projectMetrics.remainingWorkingDays}
+              </span>
+            </div>
+            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full bg-primary/70 transition-all duration-500"
+                style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Current Activity + Progress - Second */}
+          <div className="bg-secondary/30 rounded-lg p-2">
+            <h3 className="text-xs font-semibold text-foreground line-clamp-1">
               {projectMetrics.currentActivity}
-            </p>
+            </h3>
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-[10px] text-muted-foreground">
                 {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
@@ -418,38 +434,6 @@ const ReportHeader = ({
                 />
               </div>
               <span className="text-[10px] font-bold text-foreground">{projectMetrics.actualProgress}%</span>
-            </div>
-          </div>
-
-          {/* Dates + Timeline - Compact Row */}
-          <div className="flex items-center gap-2 text-[10px] mb-2">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-2.5 h-2.5 text-muted-foreground" />
-              <span className="text-muted-foreground">Início:</span>
-              <span className="font-semibold text-foreground">{formatDateFull(startDate)}</span>
-            </div>
-            <span className="text-muted-foreground">→</span>
-            <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">Término:</span>
-              <span className="font-semibold text-foreground">{formatDateFull(endDate)}</span>
-            </div>
-          </div>
-
-          {/* Timeline Progress Bar - Compact */}
-          <div>
-            <div className="flex items-center justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground">
-                {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
-              </span>
-              <span className="text-muted-foreground">
-                Restam {projectMetrics.remainingWorkingDays}
-              </span>
-            </div>
-            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div 
-                className="h-full rounded-full bg-primary/70 transition-all duration-500"
-                style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
-              />
             </div>
           </div>
         </div>
