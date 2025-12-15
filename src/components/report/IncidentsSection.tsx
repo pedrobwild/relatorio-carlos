@@ -1,7 +1,7 @@
 import { Incident, IncidentPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AlertOctagon, Calendar, ChevronDown, Clock, Camera, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { AlertOctagon, ChevronDown, Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useCallback } from "react";
 import {
   Collapsible,
@@ -38,183 +38,80 @@ interface PhotoLightboxProps {
 }
 
 const PhotoLightbox = ({ photos, currentIndex, onClose, onNavigate }: PhotoLightboxProps) => {
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
   const currentPhoto = photos[currentIndex];
   const hasMultiplePhotos = photos.length > 1;
 
-  const handleZoomIn = useCallback(() => {
-    setZoomLevel(prev => Math.min(prev + 0.5, 3));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoomLevel(prev => {
-      const newZoom = Math.max(prev - 0.5, 1);
-      if (newZoom === 1) setPosition({ x: 0, y: 0 });
-      return newZoom;
-    });
-  }, []);
-
   const handlePrevious = useCallback(() => {
-    setZoomLevel(1);
-    setPosition({ x: 0, y: 0 });
     onNavigate(currentIndex === 0 ? photos.length - 1 : currentIndex - 1);
   }, [currentIndex, photos.length, onNavigate]);
 
   const handleNext = useCallback(() => {
-    setZoomLevel(1);
-    setPosition({ x: 0, y: 0 });
     onNavigate(currentIndex === photos.length - 1 ? 0 : currentIndex + 1);
   }, [currentIndex, photos.length, onNavigate]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (zoomLevel > 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging && zoomLevel > 1) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowLeft') handlePrevious();
     if (e.key === 'ArrowRight') handleNext();
     if (e.key === 'Escape') onClose();
-    if (e.key === '+' || e.key === '=') handleZoomIn();
-    if (e.key === '-') handleZoomOut();
-  }, [handlePrevious, handleNext, onClose, handleZoomIn, handleZoomOut]);
+  }, [handlePrevious, handleNext, onClose]);
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/95 flex flex-col"
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 text-white">
-        <div className="flex items-center gap-4">
-          {hasMultiplePhotos && (
-            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
-              {currentIndex + 1} / {photos.length}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleZoomOut}
-            disabled={zoomLevel <= 1}
-            className="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Diminuir zoom"
-          >
-            <ZoomOut className="w-5 h-5" />
-          </button>
-          <span className="text-sm min-w-[3rem] text-center">{Math.round(zoomLevel * 100)}%</span>
-          <button
-            onClick={handleZoomIn}
-            disabled={zoomLevel >= 3}
-            className="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Aumentar zoom"
-          >
-            <ZoomIn className="w-5 h-5" />
-          </button>
-          <div className="w-px h-6 bg-white/30 mx-2" />
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl p-0 bg-black/95 border-none" onKeyDown={handleKeyDown}>
+        <DialogTitle className="sr-only">
+          {currentPhoto.caption || "Foto da intercorrência"}
+        </DialogTitle>
+        
+        <div className="relative">
+          {/* Close Button */}
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/20 transition-colors"
-            title="Fechar"
+            className="absolute top-4 right-4 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
-        </div>
-      </div>
 
-      {/* Image Container */}
-      <div 
-        className="flex-1 relative overflow-hidden flex items-center justify-center"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        style={{ cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
-      >
-        {/* Navigation Arrows */}
-        {hasMultiplePhotos && (
-          <>
+          {/* Navigation */}
+          {hasMultiplePhotos && currentIndex > 0 && (
             <button
               onClick={handlePrevious}
-              className="absolute left-4 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-              title="Foto anterior"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-colors"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
+          )}
+          {hasMultiplePhotos && currentIndex < photos.length - 1 && (
             <button
               onClick={handleNext}
-              className="absolute right-4 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-              title="Próxima foto"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full text-white hover:bg-white/20 transition-colors"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
-          </>
-        )}
+          )}
 
-        {/* Image */}
-        <img
-          src={currentPhoto.url}
-          alt={currentPhoto.caption || "Foto da intercorrência"}
-          className="max-h-[calc(100vh-180px)] max-w-full object-contain transition-transform duration-200"
-          style={{
-            transform: `scale(${zoomLevel}) translate(${position.x / zoomLevel}px, ${position.y / zoomLevel}px)`,
-          }}
-          draggable={false}
-        />
-      </div>
+          {/* Image */}
+          <div className="flex items-center justify-center min-h-[60vh] p-8">
+            <img
+              src={currentPhoto.url}
+              alt={currentPhoto.caption || "Foto da intercorrência"}
+              className="max-w-full max-h-[70vh] object-contain rounded"
+            />
+          </div>
 
-      {/* Footer with Caption */}
-      {currentPhoto.caption && (
-        <div className="p-4 bg-black/80 text-white text-center">
-          <p className="text-sm">{currentPhoto.caption}</p>
+          {/* Caption */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+            {currentPhoto.caption && (
+              <p className="text-white text-sm font-medium">{currentPhoto.caption}</p>
+            )}
+            {hasMultiplePhotos && (
+              <p className="text-white/70 text-xs mt-1">
+                {currentIndex + 1} / {photos.length}
+              </p>
+            )}
+          </div>
         </div>
-      )}
-
-      {/* Thumbnail Navigation */}
-      {hasMultiplePhotos && (
-        <div className="p-4 bg-black/80 flex justify-center gap-2 overflow-x-auto">
-          {photos.map((photo, index) => (
-            <button
-              key={photo.id}
-              onClick={() => {
-                setZoomLevel(1);
-                setPosition({ x: 0, y: 0 });
-                onNavigate(index);
-              }}
-              className={`w-16 h-12 rounded-md overflow-hidden border-2 transition-colors flex-shrink-0 ${
-                index === currentIndex ? 'border-primary' : 'border-transparent hover:border-white/50'
-              }`}
-            >
-              <img
-                src={photo.url}
-                alt={`Thumbnail ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -247,8 +144,8 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
 
         {/* Datas */}
         <div className="space-y-0.5 text-xs sm:text-sm text-foreground/80">
-          <p>Data da ocorrência: {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
-          <p>Previsão para resolução: {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
+          <p><span className="font-semibold">Data da ocorrência:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
+          <p><span className="font-semibold">Previsão para resolução:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
         </div>
 
         {/* Ocorrência */}
@@ -282,9 +179,7 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
                     alt={photo.caption || "Foto da intercorrência"}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <ZoomIn className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                   {photo.caption && (
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1.5">
                       <p className="text-[10px] text-white line-clamp-1">{photo.caption}</p>
