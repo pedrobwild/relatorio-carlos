@@ -15,6 +15,114 @@ const daysAgo = (n: number) => {
 const fakeHash = (seed: string) =>
   (seed.repeat(64).slice(0, 64) as string).replace(/[^a-f0-9]/gi, "a");
 
+// Helper to create party objects
+const createParties = (formalizationId: string, customerSigned: boolean, companySigned: boolean) => [
+  {
+    id: `party-customer-${formalizationId.substring(0, 8)}`,
+    formalization_id: formalizationId,
+    party_type: "customer",
+    display_name: "Pedro Alves",
+    email: "pedro.alves@email.com",
+    role_label: "Cliente",
+    must_sign: true,
+    user_id: null,
+    created_at: iso(daysAgo(10)),
+  },
+  {
+    id: `party-company-${formalizationId.substring(0, 8)}`,
+    formalization_id: formalizationId,
+    party_type: "company",
+    display_name: "Lucas Mendes",
+    email: "lucas@bwild.com.br",
+    role_label: "Engenheiro Responsável",
+    must_sign: true,
+    user_id: null,
+    created_at: iso(daysAgo(10)),
+  },
+];
+
+// Helper to create acknowledgements
+const createAcknowledgements = (
+  formalizationId: string, 
+  customerSigned: boolean, 
+  companySigned: boolean,
+  customerDaysAgo: number = 5,
+  companyDaysAgo: number = 5
+) => {
+  const acks = [];
+  if (customerSigned) {
+    acks.push({
+      id: `ack-customer-${formalizationId.substring(0, 8)}`,
+      formalization_id: formalizationId,
+      party_id: `party-customer-${formalizationId.substring(0, 8)}`,
+      acknowledged: true,
+      acknowledged_at: iso(daysAgo(customerDaysAgo)),
+      acknowledged_by_user_id: null,
+      acknowledged_by_email: "pedro.alves@email.com",
+      signature_text: "Li e estou ciente do conteúdo desta formalização.",
+      signature_hash: fakeHash(`ack-customer-${formalizationId}`),
+      ip_address: "187.45.123.89",
+      user_agent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)",
+      created_at: iso(daysAgo(customerDaysAgo)),
+    });
+  }
+  if (companySigned) {
+    acks.push({
+      id: `ack-company-${formalizationId.substring(0, 8)}`,
+      formalization_id: formalizationId,
+      party_id: `party-company-${formalizationId.substring(0, 8)}`,
+      acknowledged: true,
+      acknowledged_at: iso(daysAgo(companyDaysAgo)),
+      acknowledged_by_user_id: null,
+      acknowledged_by_email: "lucas@bwild.com.br",
+      signature_text: "Li e estou ciente do conteúdo desta formalização.",
+      signature_hash: fakeHash(`ack-company-${formalizationId}`),
+      ip_address: "189.12.45.67",
+      user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      created_at: iso(daysAgo(companyDaysAgo)),
+    });
+  }
+  return acks.length > 0 ? acks : null;
+};
+
+// Helper to create events
+const createEvents = (formalizationId: string, status: string, lockedDaysAgo: number | null) => {
+  const events = [
+    {
+      id: `event-created-${formalizationId.substring(0, 8)}`,
+      formalization_id: formalizationId,
+      event_type: "created",
+      actor_user_id: null,
+      meta: {},
+      created_at: iso(daysAgo(15)),
+    },
+  ];
+  
+  if (status !== 'draft') {
+    events.push({
+      id: `event-sent-${formalizationId.substring(0, 8)}`,
+      formalization_id: formalizationId,
+      event_type: "sent_for_signature",
+      actor_user_id: null,
+      meta: {},
+      created_at: iso(daysAgo(lockedDaysAgo ?? 10)),
+    });
+  }
+  
+  if (lockedDaysAgo !== null) {
+    events.push({
+      id: `event-locked-${formalizationId.substring(0, 8)}`,
+      formalization_id: formalizationId,
+      event_type: "locked",
+      actor_user_id: null,
+      meta: { locked_hash: fakeHash(formalizationId) },
+      created_at: iso(daysAgo(lockedDaysAgo)),
+    });
+  }
+  
+  return events;
+};
+
 export const formalizacoesSeedData: FormalizationPublicRow[] = [
   {
     id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -40,11 +148,11 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(1)),
     locked_at: iso(daysAgo(2)),
     locked_hash: fakeHash("a1b2c3"),
-    acknowledgements: null,
+    acknowledgements: createAcknowledgements("a1b2c3d4-e5f6-7890-abcd-ef1234567890", false, false) as any,
     attachments: null,
-    events: null,
+    events: createEvents("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "pending_signatures", 2) as any,
     evidence_links: null,
-    parties: null,
+    parties: createParties("a1b2c3d4-e5f6-7890-abcd-ef1234567890", false, false) as any,
     parties_signed: 0,
     parties_total: 2,
   },
@@ -57,7 +165,7 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     title: "Ata de Reunião - Definição de Acabamentos",
     summary: "Registro das decisões tomadas na reunião de 05/12/2025 sobre acabamentos finais.",
     body_md:
-      "## Ata de Reunião\n\n**Data:** 05/12/2025\n**Horário:** 14:00 - 15:30\n\n### Decisões\n1. Pintura: Branco Neve (Suvinil)\n2. Metais: Deca Aspen (cromado)\n3. Iluminação: Spots embutidos e pendentes na sala",
+      "## Ata de Reunião\n\n**Data:** 05/12/2025\n**Horário:** 14:00 - 15:30\n\n### Participantes\n- Pedro Alves (Cliente)\n- Lucas Mendes (Engenheiro Bwild)\n- Mariana Costa (Arquiteta)\n\n### Decisões\n1. **Pintura:** Branco Neve (Suvinil) em todos os ambientes\n2. **Metais:** Deca Aspen (cromado) para banheiros e cozinha\n3. **Iluminação:** Spots embutidos na sala e pendentes sobre a mesa de jantar\n\n### Próximos Passos\n- Confirmar disponibilidade de estoque dos metais escolhidos\n- Agendar visita para definição de pontos de iluminação",
     data: { meetingDate: "2025-12-05", decisions: 3 } as any,
     status: "signed",
     created_at: iso(daysAgo(12)),
@@ -65,11 +173,11 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(10)),
     locked_at: iso(daysAgo(10)),
     locked_hash: fakeHash("b2c3d4"),
-    acknowledgements: null,
+    acknowledgements: createAcknowledgements("b2c3d4e5-f6a7-8901-bcde-f12345678901", true, true, 10, 10) as any,
     attachments: null,
-    events: null,
+    events: createEvents("b2c3d4e5-f6a7-8901-bcde-f12345678901", "signed", 10) as any,
     evidence_links: null,
-    parties: null,
+    parties: createParties("b2c3d4e5-f6a7-8901-bcde-f12345678901", true, true) as any,
     parties_signed: 2,
     parties_total: 2,
   },
@@ -82,7 +190,7 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     title: "Termo de Guarda - Chaves do Imóvel",
     summary: "Registro de entrega temporária das chaves ao cliente para visita com designer.",
     body_md:
-      "## Termo de Guarda de Exceção\n\n**Data de Entrega:** 10/12/2025\n**Previsão de Devolução:** 12/12/2025\n\n### Finalidade\nAcesso ao imóvel para visita técnica com designer de interiores.",
+      "## Termo de Guarda de Exceção\n\n**Data de Entrega:** 10/12/2025\n**Previsão de Devolução:** 12/12/2025\n\n### Itens Entregues\n- 3 (três) cópias de chave da porta principal\n- 1 (um) controle de acesso ao edifício\n\n### Finalidade\nAcesso ao imóvel para visita técnica com designer de interiores para projeto de mobiliário.\n\n### Responsabilidades\nO cliente se responsabiliza pela guarda e conservação dos itens durante o período de posse.",
     data: { itemType: "keys", quantity: 3 } as any,
     status: "draft",
     created_at: iso(daysAgo(3)),
@@ -92,7 +200,7 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     locked_hash: null,
     acknowledgements: null,
     attachments: null,
-    events: null,
+    events: createEvents("c3d4e5f6-a7b8-9012-cdef-123456789012", "draft", null) as any,
     evidence_links: null,
     parties: null,
     parties_signed: null,
@@ -107,7 +215,7 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     title: "Alteração de Escopo - Closet Adicional",
     summary: "Inclusão de closet planejado no segundo dormitório conforme nova solicitação.",
     body_md:
-      "## Alteração de Escopo\n\n### Descrição\nInclusão de closet planejado no segundo dormitório.\n\n### Impacto\n- Valor adicional: **R$ 12.800,00**\n- Prazo adicional: **8 dias úteis**",
+      "## Alteração de Escopo\n\n### Descrição\nInclusão de closet planejado no segundo dormitório, conforme solicitação do cliente em reunião de 25/11/2025.\n\n### Especificações\n- Closet linear de 2,50m de largura\n- 2 módulos com portas de correr em MDF branco\n- Iluminação LED interna\n- Gavetas com corrediças telescópicas\n\n### Impacto Financeiro\n- Valor adicional: **R$ 12.800,00**\n\n### Impacto no Prazo\n- Prazo adicional: **8 dias úteis**\n- Nova data prevista de entrega: 22/09/2025",
     data: { additionalCost: 12800, additionalDays: 8 } as any,
     status: "pending_signatures",
     created_at: iso(daysAgo(20)),
@@ -115,11 +223,11 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(5)),
     locked_at: iso(daysAgo(6)),
     locked_hash: fakeHash("d4e5f6"),
-    acknowledgements: null,
+    acknowledgements: createAcknowledgements("d4e5f6a7-b8c9-0123-def0-234567890123", false, true, 0, 5) as any,
     attachments: null,
-    events: null,
+    events: createEvents("d4e5f6a7-b8c9-0123-def0-234567890123", "pending_signatures", 6) as any,
     evidence_links: null,
-    parties: null,
+    parties: createParties("d4e5f6a7-b8c9-0123-def0-234567890123", false, true) as any,
     parties_signed: 1,
     parties_total: 2,
   },
@@ -132,7 +240,7 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     title: "Autorização para Instalação de Ar-Condicionado",
     summary: "Autorização do cliente para execução de infraestrutura de ar-condicionado.",
     body_md:
-      "## Autorização Geral\n\nCliente autoriza execução de infraestrutura para split em 3 ambientes.\n\n**Garantia:** 2 anos para a infraestrutura executada.",
+      "## Autorização Geral\n\nO cliente **Pedro Alves** autoriza a execução de infraestrutura para instalação de ar-condicionado split nos seguintes ambientes:\n\n### Ambientes\n1. Sala de estar/jantar\n2. Suíte master\n3. Dormitório 2\n\n### Especificações Técnicas\n- Tubulação de cobre isolada\n- Dreno com caimento adequado\n- Ponto elétrico exclusivo 220V para cada unidade\n\n### Garantia\n- **2 anos** para a infraestrutura executada pela Bwild\n- Instalação dos equipamentos por conta do cliente",
     data: { subject: "Infraestrutura ar-condicionado", warranty: "2 anos" } as any,
     status: "signed",
     created_at: iso(daysAgo(30)),
@@ -140,11 +248,11 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(28)),
     locked_at: iso(daysAgo(28)),
     locked_hash: fakeHash("e5f6a7"),
-    acknowledgements: null,
+    acknowledgements: createAcknowledgements("e5f6a7b8-c9d0-1234-ef01-345678901234", true, true, 28, 28) as any,
     attachments: null,
-    events: null,
+    events: createEvents("e5f6a7b8-c9d0-1234-ef01-345678901234", "signed", 28) as any,
     evidence_links: null,
-    parties: null,
+    parties: createParties("e5f6a7b8-c9d0-1234-ef01-345678901234", true, true) as any,
     parties_signed: 2,
     parties_total: 2,
   },
@@ -169,12 +277,12 @@ export const formalizacoesSeedData: FormalizationPublicRow[] = [
     last_activity_at: iso(daysAgo(1)),
     locked_at: iso(daysAgo(1)),
     locked_hash: fakeHash("f6a7b8"),
-    acknowledgements: null,
+    acknowledgements: createAcknowledgements("f6a7b8c9-d0e1-2345-f012-456789012345", false, true, 0, 1) as any,
     attachments: null,
-    events: null,
+    events: createEvents("f6a7b8c9-d0e1-2345-f012-456789012345", "pending_signatures", 1) as any,
     evidence_links: null,
-    parties: null,
-    parties_signed: 0,
+    parties: createParties("f6a7b8c9-d0e1-2345-f012-456789012345", false, true) as any,
+    parties_signed: 1,
     parties_total: 2,
   },
 ];
