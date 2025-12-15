@@ -149,7 +149,11 @@
     line-height: 1.15;
   }
 
-  /* Typography Scale - Balanced for mobile and desktop */
+  /* Typography Scale - Balanced for mobile and desktop
+   * RULE: Titles/topics are always larger than content below them
+   * H1 > H2 > H3 > Body/Caption > Tiny
+   */
+  
   /* H1: Page titles - 18px mobile / 20px desktop */
   .text-h1 {
     @apply text-lg md:text-xl font-bold text-foreground;
@@ -160,22 +164,22 @@
     @apply text-[15px] md:text-base font-semibold text-foreground;
   }
   
-  /* H3: Subsection/card titles - 14px mobile / 15px desktop */
+  /* H3: Subsection/card titles, main topics - 14px mobile / 15px desktop */
   .text-h3 {
     @apply text-sm md:text-[15px] font-semibold text-foreground;
   }
   
-  /* Body: Regular content - 14px mobile / 15px desktop */
+  /* Body: Regular content, primary information - 14px mobile / 15px desktop */
   .text-body {
     @apply text-sm md:text-[15px] text-foreground;
   }
   
-  /* Caption: Labels, metadata - 13px mobile / 14px desktop */
+  /* Caption: Secondary information, sub-items - 13px mobile / 14px desktop */
   .text-caption {
     @apply text-[13px] md:text-sm text-muted-foreground;
   }
   
-  /* Tiny: Smallest text - 11px mobile / 12px desktop */
+  /* Tiny: Metadata, badges, timestamps - 11px mobile / 12px desktop */
   .text-tiny {
     @apply text-[11px] md:text-xs text-muted-foreground;
   }

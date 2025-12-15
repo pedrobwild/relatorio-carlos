@@ -93,7 +93,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                       {item.subItems.map((subItem, subIndex) => (
                         <li 
                           key={subItem.id} 
-                          className="text-tiny leading-snug"
+                          className="text-caption leading-snug"
                           style={{
                             animationDelay: `${(subIndex + 1) * 30}ms`,
                             animation: 'fade-in 0.3s ease-out forwards',
