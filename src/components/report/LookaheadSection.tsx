@@ -42,11 +42,11 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
           </span>
           {getRiskBadge(task.risk)}
         </div>
-        <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{task.description}</p>
+        <p className="text-body font-medium text-foreground leading-snug">{task.description}</p>
       </div>
     </div>
     
-    <div className="flex flex-col gap-1 text-xs text-foreground/70">
+    <div className="flex flex-col gap-1 text-caption">
       <div className="flex items-start gap-1">
         <CheckCircle className="w-3 h-3 shrink-0 mt-0.5" />
         <span className="leading-snug"><span className="font-medium">Pré-requisito:</span> {task.prerequisites}</span>
@@ -70,7 +70,7 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Plano da Próxima Semana</h3>
+        <h3 className="text-h2 text-white">Plano da Próxima Semana</h3>
       </div>
       
       {/* Desktop: Always show all tasks */}

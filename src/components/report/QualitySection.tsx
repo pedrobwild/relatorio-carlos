@@ -47,7 +47,7 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
       >
         <div className="flex items-center gap-2">
           <CheckSquare className="w-3 h-3 text-success" />
-          <span className="text-xs font-medium text-foreground">{item.checklistName}</span>
+          <span className="text-caption font-medium text-foreground">{item.checklistName}</span>
         </div>
         <div className="flex items-center gap-1.5">
           {item.nonConformities.length > 0 && (
@@ -61,7 +61,7 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
     </DialogTrigger>
     <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle className="text-xs sm:text-sm font-semibold">{item.checklistName}</DialogTitle>
+        <DialogTitle className="text-h3">{item.checklistName}</DialogTitle>
       </DialogHeader>
       <div className="mt-2 space-y-3">
         <div>
@@ -128,7 +128,7 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
       {/* Checklists Executed */}
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-          <h3 className="text-sm sm:text-base font-semibold text-white">Qualidade, Testes e Pendências</h3>
+          <h3 className="text-h2 text-white">Qualidade, Testes e Pendências</h3>
         </div>
         
         <div className="hidden sm:block divide-y divide-border">
@@ -166,7 +166,7 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
       {allPendingItems.length > 0 && (
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-            <h3 className="text-sm sm:text-base font-semibold text-white">Pendências para Entrega</h3>
+            <h3 className="text-h2 text-white">Pendências para Entrega</h3>
           </div>
           
           <div className="hidden sm:block p-2.5 sm:p-3">

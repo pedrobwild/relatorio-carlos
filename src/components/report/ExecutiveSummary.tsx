@@ -22,12 +22,12 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
       {/* Summary Text - Collapsible on Mobile */}
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-          <h3 className="text-sm sm:text-base font-semibold text-white">Resumo Executivo</h3>
+          <h3 className="text-h2 text-white">Resumo Executivo</h3>
         </div>
         
         {/* Desktop: Always show full content */}
         <div className="hidden sm:block p-3 sm:p-4">
-          <div className="text-xs sm:text-sm text-foreground/80 leading-snug text-justify space-y-2">
+          <div className="text-body text-foreground/80 leading-snug text-justify space-y-2">
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -78,13 +78,13 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
       {data.deliverablesCompleted.length > 0 && (
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-            <h3 className="text-sm sm:text-base font-semibold text-white">Entregáveis concluídos na semana</h3>
+            <h3 className="text-h2 text-white">Entregáveis concluídos na semana</h3>
           </div>
           <div className="p-3 sm:p-4">
             <ul className="space-y-2.5">
               {data.deliverablesCompleted.map((item) => (
                 <li key={item.id} className="space-y-1">
-                  <div className="flex items-start gap-1.5 text-xs sm:text-sm text-foreground font-medium">
+                  <div className="flex items-start gap-1.5 text-body text-foreground font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-success shrink-0 mt-0.5" />
                     <span className="leading-snug">{item.description}</span>
                   </div>

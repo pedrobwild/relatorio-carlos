@@ -24,27 +24,27 @@ const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecisi
     }}
   >
     <div className="flex items-start justify-between gap-2">
-      <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{decision.description}</p>
+      <p className="text-body font-medium text-foreground leading-snug">{decision.description}</p>
       <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-[10px] shrink-0">
         Pendente
       </Badge>
     </div>
     
     {decision.options && decision.options.length > 0 && (
-      <div className="text-xs text-foreground/70 leading-snug">
+      <div className="text-caption leading-snug">
         <span className="font-medium">Opções: </span>
         {decision.options.join(" | ")}
       </div>
     )}
     
-    <div className="flex flex-col gap-1 text-xs">
+    <div className="flex flex-col gap-1">
       <div className="flex items-center gap-1">
-        <span className="text-[10px] font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
+        <span className="text-tiny font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
           {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}
         </span>
-        <span className="text-foreground/70">Prazo para decisão</span>
+        <span className="text-caption">Prazo para decisão</span>
       </div>
-      <p className="text-destructive text-[10px] leading-snug">
+      <p className="text-destructive text-tiny leading-snug">
         <span className="font-medium">Importante:</span> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
       </p>
     </div>
@@ -63,7 +63,7 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-        <h3 className="text-sm sm:text-base font-semibold text-white">Decisões e Aprovações do Cliente</h3>
+        <h3 className="text-h2 text-white">Decisões e Aprovações do Cliente</h3>
       </div>
       
       {/* Desktop: Always show all */}
