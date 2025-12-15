@@ -37,7 +37,7 @@ interface PhotoLightboxProps {
   onNavigate: (index: number) => void;
 }
 
-const PhotoLightbox = ({ photos, currentIndex, onClose, onNavigate }: PhotoLightboxProps) => {
+const PhotoLightbox = ({ photos, currentIndex, onClose, onNavigate, isOpen }: PhotoLightboxProps & { isOpen: boolean }) => {
   const currentPhoto = photos[currentIndex];
   const hasMultiplePhotos = photos.length > 1;
 
@@ -55,9 +55,14 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onNavigate }: PhotoLight
     if (e.key === 'Escape') onClose();
   }, [handlePrevious, handleNext, onClose]);
 
+  if (!currentPhoto) return null;
+
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 bg-black/95 border-none" onKeyDown={handleKeyDown}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent 
+        className="max-w-4xl p-0 bg-black/95 border-none [&>button]:hidden" 
+        onKeyDown={handleKeyDown}
+      >
         <DialogTitle className="sr-only">
           {currentPhoto.caption || "Foto da intercorrência"}
         </DialogTitle>
@@ -211,12 +216,13 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
       </div>
 
       {/* Photo Lightbox */}
-      {lightboxOpen && incident.photos && (
+      {incident.photos && incident.photos.length > 0 && (
         <PhotoLightbox
           photos={incident.photos}
           currentIndex={currentPhotoIndex}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setCurrentPhotoIndex}
+          isOpen={lightboxOpen}
         />
       )}
     </>
