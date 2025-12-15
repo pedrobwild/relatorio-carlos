@@ -20,9 +20,9 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
   return (
     <div className="space-y-4">
       {/* Summary Text - Collapsible on Mobile */}
-      <div className="bg-card rounded-lg border border-border">
-        <div className="p-4 sm:p-5 border-b border-border">
-          <h3 className="text-sm sm:text-base font-semibold text-foreground">Resumo Executivo</h3>
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-4 sm:p-5 bg-primary-dark">
+          <h3 className="text-sm sm:text-base font-semibold text-white">Resumo Executivo</h3>
         </div>
         
         {/* Desktop: Always show full content */}
@@ -76,9 +76,9 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
 
       {/* Deliverables Completed This Week */}
       {data.deliverablesCompleted.length > 0 && (
-        <div className="bg-card rounded-lg border border-border">
-          <div className="p-4 sm:p-5 border-b border-border">
-            <h3 className="text-sm sm:text-base font-semibold text-foreground">Entregáveis concluídos na semana</h3>
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="p-4 sm:p-5 bg-primary-dark">
+            <h3 className="text-sm sm:text-base font-semibold text-white">Entregáveis concluídos na semana</h3>
           </div>
           <div className="p-4 sm:p-5">
             <ul className="space-y-3">

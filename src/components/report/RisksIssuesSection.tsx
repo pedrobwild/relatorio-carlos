@@ -30,7 +30,7 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
           <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{issue.title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5 mt-1.5 ml-5.5">
-          <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+          <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded">
             {format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}
           </span>
         </div>
@@ -56,9 +56,9 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-card rounded-lg border border-border">
-        <div className="p-4 sm:p-5 border-b border-border">
-          <h3 className="text-sm sm:text-base font-semibold text-foreground">Gestão de Riscos</h3>
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-4 sm:p-5 bg-primary-dark">
+          <h3 className="text-sm sm:text-base font-semibold text-white">Gestão de Riscos</h3>
         </div>
         
         {/* Desktop: Always show all */}

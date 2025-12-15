@@ -19,9 +19,9 @@ const getRiskBadge = (risk: LookaheadTask["risk"]) => {
     case "baixo":
       return null; // Don't show badge for low risk
     case "médio":
-      return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">Risco Mapeado</Badge>;
+      return <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-xs">Risco Mapeado</Badge>;
     case "alto":
-      return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">Risco Mapeado</Badge>;
+      return <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-xs">Risco Mapeado</Badge>;
   }
 };
 
@@ -37,7 +37,7 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
     <div className="flex items-start justify-between gap-3">
       <div className="flex-1">
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
-          <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+          <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded">
             {format(new Date(task.date), "dd/MM", { locale: ptBR })}
           </span>
           {getRiskBadge(task.risk)}
@@ -68,9 +68,9 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
   const remainingTasks = tasks.slice(1);
 
   return (
-    <div className="bg-card rounded-lg border border-border">
-      <div className="p-4 sm:p-5 border-b border-border">
-        <h3 className="text-sm sm:text-base font-semibold text-foreground">Plano da Próxima Semana</h3>
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="p-4 sm:p-5 bg-primary-dark">
+        <h3 className="text-sm sm:text-base font-semibold text-white">Plano da Próxima Semana</h3>
       </div>
       
       {/* Desktop: Always show all tasks */}

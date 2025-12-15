@@ -127,17 +127,17 @@ const ProgressEvolutionChart = ({
   const data = generateWeeklyProgressData(activities, currentWeek, projectStartDate);
 
   return (
-    <div className="hidden sm:block bg-card rounded-lg border border-border">
-      <div className="p-4 sm:p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h3 className="text-sm sm:text-base font-semibold text-foreground">Evolução do Desvio</h3>
+    <div className="hidden sm:block bg-card rounded-lg border border-border overflow-hidden">
+      <div className="p-4 sm:p-5 bg-primary-dark flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h3 className="text-sm sm:text-base font-semibold text-white">Evolução do Desvio</h3>
         <div className="flex items-center gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="text-foreground/70">Adiantado</span>
+            <span className="text-white/70">Adiantado</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-foreground/70">Atrasado</span>
+            <span className="text-white/70">Atrasado</span>
           </div>
         </div>
       </div>

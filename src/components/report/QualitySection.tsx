@@ -51,7 +51,7 @@ const ChecklistItem = ({ item, index, animationDelay = 0 }: { item: WeeklyReport
         </div>
         <div className="flex items-center gap-2">
           {item.nonConformities.length > 0 && (
-            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
+            <Badge variant="outline" className="bg-destructive/10 text-foreground border-destructive/20 text-xs">
               {item.nonConformities.length} NC
             </Badge>
           )}
@@ -129,9 +129,9 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
   return (
     <div className="space-y-3">
       {/* Checklists Executed */}
-      <div className="bg-card rounded-lg border border-border">
-        <div className="p-4 sm:p-5 border-b border-border">
-          <h3 className="text-sm sm:text-base font-semibold text-foreground">Qualidade, Testes e Pendências</h3>
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-4 sm:p-5 bg-primary-dark">
+          <h3 className="text-sm sm:text-base font-semibold text-white">Qualidade, Testes e Pendências</h3>
         </div>
         
         {/* Desktop: Always show all checklists */}
@@ -169,9 +169,9 @@ const QualitySection = ({ qualityItems }: QualitySectionProps) => {
 
       {/* Pending Items (Semáforo) */}
       {allPendingItems.length > 0 && (
-        <div className="bg-card rounded-lg border border-border">
-          <div className="p-4 sm:p-5 border-b border-border">
-            <h3 className="text-sm sm:text-base font-semibold text-foreground">Pendências para Entrega</h3>
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="p-4 sm:p-5 bg-primary-dark">
+            <h3 className="text-sm sm:text-base font-semibold text-white">Pendências para Entrega</h3>
           </div>
           
           {/* Desktop: Always show all items */}

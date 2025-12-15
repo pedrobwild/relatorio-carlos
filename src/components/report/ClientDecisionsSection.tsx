@@ -25,7 +25,7 @@ const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecisi
   >
     <div className="flex items-start justify-between gap-3">
       <p className="text-xs sm:text-sm font-medium text-foreground leading-snug">{decision.description}</p>
-      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs shrink-0">
+      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-xs shrink-0">
         Pendente
       </Badge>
     </div>
@@ -39,7 +39,7 @@ const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecisi
     
     <div className="flex flex-col gap-1.5 text-xs">
       <div className="flex items-center gap-1.5">
-        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+        <span className="text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded">
           {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}
         </span>
         <span className="text-foreground/70">Prazo para decisão</span>
@@ -61,9 +61,9 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
   const remainingDecisions = pendingDecisions.slice(1);
 
   return (
-    <div className="bg-card rounded-lg border border-border">
-      <div className="p-4 sm:p-5 border-b border-border">
-        <h3 className="text-sm sm:text-base font-semibold text-foreground">Decisões e Aprovações do Cliente</h3>
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="p-4 sm:p-5 bg-primary-dark">
+        <h3 className="text-sm sm:text-base font-semibold text-white">Decisões e Aprovações do Cliente</h3>
       </div>
       
       {/* Desktop: Always show all */}

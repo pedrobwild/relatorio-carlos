@@ -65,10 +65,10 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   );
 
   return (
-    <div className="bg-card rounded-lg border border-border">
-      <div className="p-4 sm:p-5 border-b border-border">
-        <h3 className="text-sm sm:text-base font-semibold text-foreground">
-          Galeria de Fotos <span className="text-xs font-normal text-foreground/60">({photos.length} fotos)</span>
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="p-4 sm:p-5 bg-primary-dark">
+        <h3 className="text-sm sm:text-base font-semibold text-white">
+          Galeria de Fotos <span className="text-xs font-normal text-white/70">({photos.length} fotos)</span>
         </h3>
       </div>
       
