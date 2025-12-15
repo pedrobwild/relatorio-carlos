@@ -466,6 +466,7 @@ export default function FormalizacaoDetalhe() {
           <TabsContent value="auditoria" className="mt-4 space-y-4">
             {/* Digital Signature Log */}
             <DigitalSignatureLog 
+              formalizationId={id!}
               signatures={acknowledgements}
               parties={parties}
               documentHash={formalizacao.locked_hash}

@@ -1,7 +1,11 @@
-import { Shield, User, Clock, Globe, Monitor, Hash, FileCheck, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, User, Clock, Globe, Monitor, Hash, FileCheck, AlertTriangle, Download, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SignatureData {
   id: string;
@@ -25,6 +29,7 @@ interface PartyData {
 }
 
 interface DigitalSignatureLogProps {
+  formalizationId: string;
   signatures: SignatureData[];
   parties: PartyData[];
   documentHash: string | null;
@@ -69,13 +74,51 @@ const parseUserAgent = (ua: string | null) => {
   return { browser, os, device };
 };
 
-export function DigitalSignatureLog({ signatures, parties, documentHash, lockedAt }: DigitalSignatureLogProps) {
+export function DigitalSignatureLog({ formalizationId, signatures, parties, documentHash, lockedAt }: DigitalSignatureLogProps) {
+  const { toast } = useToast();
+  const [downloadingPartyId, setDownloadingPartyId] = useState<string | null>(null);
+  
   const sortedSignatures = [...signatures].sort(
     (a, b) => new Date(a.acknowledged_at).getTime() - new Date(b.acknowledged_at).getTime()
   );
 
   const getPartyForSignature = (sig: SignatureData) => 
     parties.find(p => p.id === sig.party_id);
+
+  const handleDownloadCertificate = async (partyId: string, partyName: string) => {
+    setDownloadingPartyId(partyId);
+    try {
+      const { data, error } = await supabase.functions.invoke('signature-certificate', {
+        body: { formalization_id: formalizationId, party_id: partyId },
+      });
+
+      if (error) throw error;
+
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificado-assinatura-${partyName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Certificado gerado',
+        description: 'O download do certificado foi iniciado.',
+      });
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o certificado.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingPartyId(null);
+    }
+  };
 
   if (signatures.length === 0) {
     return (
@@ -158,7 +201,7 @@ export function DigitalSignatureLog({ signatures, parties, documentHash, lockedA
                   {/* Signature card */}
                   <div className="flex-1 p-4 bg-card border rounded-lg space-y-4">
                     {/* Header */}
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                           <User className="h-5 w-5 text-primary" />
@@ -170,9 +213,25 @@ export function DigitalSignatureLog({ signatures, parties, documentHash, lockedA
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
-                        Assinado
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadCertificate(sig.party_id, party?.display_name || 'assinatura')}
+                          disabled={downloadingPartyId === sig.party_id}
+                          className="h-8 text-xs"
+                        >
+                          {downloadingPartyId === sig.party_id ? (
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          ) : (
+                            <Download className="h-3 w-3 mr-1" />
+                          )}
+                          Certificado
+                        </Button>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                          Assinado
+                        </Badge>
+                      </div>
                     </div>
 
                     {/* Signature statement */}
