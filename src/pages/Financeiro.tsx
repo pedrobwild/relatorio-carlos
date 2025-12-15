@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, ReferenceLine, ResponsiveContainer } from "recharts";
 import bwildLogo from "@/assets/bwild-logo.png";
@@ -236,6 +237,7 @@ const Financeiro = () => {
   };
 
   return (
+    <TooltipProvider>
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border px-4 py-3">
@@ -411,9 +413,16 @@ const Financeiro = () => {
                                   {getStatusBadge(installment)}
                                 </div>
                                 {isPaid ? (
-                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50" title="Boleto já pago">
-                                    <FileX className="w-4 h-4 text-muted-foreground/50" />
-                                  </div>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50 cursor-not-allowed">
+                                        <FileX className="w-4 h-4 text-muted-foreground/50" />
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p>Boleto indisponível - parcela já quitada</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 ) : (
                                   <Button
                                     variant="ghost"
@@ -584,10 +593,17 @@ const Financeiro = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           {installment.status === "paid" ? (
-                            <div className="flex items-center justify-center" title="Boleto já pago">
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50">
-                                <FileX className="w-4 h-4 text-muted-foreground/50" />
-                              </div>
+                            <div className="flex items-center justify-center">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50 cursor-not-allowed">
+                                    <FileX className="w-4 h-4 text-muted-foreground/50" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p>Boleto indisponível - parcela já quitada</p>
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
                           ) : (
                             <Button
@@ -625,9 +641,16 @@ const Financeiro = () => {
                       <div className="flex items-center gap-2">
                         {getStatusBadge(installment)}
                         {installment.status === "paid" ? (
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50" title="Boleto já pago">
-                            <FileX className="w-4 h-4 text-muted-foreground/50" />
-                          </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50 cursor-not-allowed">
+                                <FileX className="w-4 h-4 text-muted-foreground/50" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Boleto indisponível - parcela já quitada</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ) : (
                           <Button
                             variant="ghost"
@@ -741,6 +764,7 @@ const Financeiro = () => {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 };
 
