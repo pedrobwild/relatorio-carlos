@@ -60,7 +60,7 @@ const ReportHeader = ({
 
   const dateMetrics = [
     { label: "Início", value: "01/07/2025" },
-    { label: "Término", value: "14/09/2025" },
+    { label: "Conclusão", value: "14/09/2025" },
     { label: "Atualização", value: "08/09/2025" },
   ];
 
@@ -160,7 +160,7 @@ const ReportHeader = ({
         <div className="flex items-center gap-6 text-xs">
           {dateMetrics.map((metric) => (
             <span key={metric.label}>
-              <span className="font-medium text-muted-foreground">{metric.label}:</span>{" "}
+              <span className="font-bold text-foreground">{metric.label}:</span>{" "}
               <span className="text-foreground/60">{metric.value}</span>
             </span>
           ))}
@@ -257,7 +257,7 @@ const ReportHeader = ({
         <div className="flex items-center justify-between text-xs">
           {dateMetrics.map((metric) => (
             <div key={metric.label} className="text-center">
-              <p className="text-[10px] font-medium text-muted-foreground mb-0.5">{metric.label}</p>
+              <p className="text-[10px] font-bold text-foreground mb-0.5">{metric.label}</p>
               <p className="text-xs text-foreground/70">{metric.value}</p>
             </div>
           ))}
@@ -357,7 +357,7 @@ const ReportHeader = ({
           <div className="grid grid-cols-3 gap-2">
             {dateMetrics.map((metric) => (
               <div key={metric.label} className="bg-muted/30 rounded-lg px-2 py-2 text-center">
-                <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">{metric.label}</p>
+                <p className="text-[9px] font-bold text-foreground uppercase tracking-wide mb-0.5">{metric.label}</p>
                 <p className="text-[11px] text-foreground/70">{metric.value}</p>
               </div>
             ))}

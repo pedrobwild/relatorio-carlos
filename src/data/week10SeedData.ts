@@ -251,7 +251,7 @@ export const week10SeedData: WeeklyReportData = {
       description: "Transportadora Fast Cargo sinalizou possível atraso na entrega prevista para 09/09 devido a problemas logísticos no CD de Guarulhos.",
       impact: { time: "médio", cost: "baixo", quality: "baixo" },
       severity: "média",
-      actionPlan: "Contato direto com gerente Fast Cargo (Carlos - 11 98765-4321) para priorização\nPlano B: entrega parcial e instalação posterior\nReservar janela de elevador para 10/09 como contingência",
+      actionPlan: "Contato direto com gerente Fast Cargo (Carlos - 11 98765-4321) para priorização\nPlano B: entrega parcial e instalação posterior",
       owner: "Suprimentos - Marina",
       dueDate: "2025-09-09",
       status: "em acompanhamento",
