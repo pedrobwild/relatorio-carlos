@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useFormalizacao, useAcknowledge } from '@/hooks/useFormalizacoes';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { 
   FORMALIZATION_TYPE_LABELS, 
@@ -55,6 +56,7 @@ export default function FormalizacaoDetalhe() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('conteudo');
   const [acknowledged, setAcknowledged] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const { data: formalizacao, isLoading } = useFormalizacao(id);
   const acknowledge = useAcknowledge();
@@ -91,6 +93,44 @@ export default function FormalizacaoDetalhe() {
         description: 'Não foi possível registrar sua ciência. Tente novamente.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!id) return;
+
+    setDownloadingPdf(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('formalization-pdf', {
+        body: { formalization_id: id },
+      });
+
+      if (error) throw error;
+
+      // Create blob and download
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `formalizacao-${id.substring(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'PDF gerado',
+        description: 'O download do PDF foi iniciado.',
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o PDF. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -131,9 +171,18 @@ export default function FormalizacaoDetalhe() {
               </Button>
               <img src={bwildLogo} alt="Bwild" className="h-8" />
             </div>
-            <Button variant="outline" aria-label="Baixar PDF">
-              <Download className="h-4 w-4 mr-2" />
-              Baixar PDF
+            <Button 
+              variant="outline" 
+              aria-label="Baixar PDF"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+            >
+              {downloadingPdf ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              {downloadingPdf ? 'Gerando...' : 'Baixar PDF'}
             </Button>
           </div>
         </div>
