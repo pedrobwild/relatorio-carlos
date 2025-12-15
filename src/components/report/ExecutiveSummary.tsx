@@ -72,11 +72,22 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
             <h3 className="text-sm sm:text-base font-semibold text-foreground">Entregáveis concluídos na semana</h3>
           </div>
           <div className="p-4 sm:p-5">
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {data.deliverablesCompleted.map((item) => (
-                <li key={item.id} className="flex items-start gap-2 text-xs sm:text-sm text-foreground/80">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{item.description}</span>
+                <li key={item.id} className="space-y-1.5">
+                  <div className="flex items-start gap-2 text-xs sm:text-sm text-foreground font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-success shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{item.description}</span>
+                  </div>
+                  {item.subItems && item.subItems.length > 0 && (
+                    <ul className="ml-5 sm:ml-6 space-y-1 border-l-2 border-border pl-3">
+                      {item.subItems.map((subItem) => (
+                        <li key={subItem.id} className="text-[11px] sm:text-xs text-foreground/70 leading-relaxed">
+                          {subItem.description}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

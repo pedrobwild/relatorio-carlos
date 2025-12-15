@@ -91,10 +91,16 @@ export interface LookaheadTask {
   riskReason?: string;
 }
 
+export interface DeliverableSubItem {
+  id: string;
+  description: string;
+}
+
 export interface DeliverableItem {
   id: string;
   description: string;
   completed: boolean;
+  subItems?: DeliverableSubItem[];
 }
 
 export interface GalleryPhoto {
