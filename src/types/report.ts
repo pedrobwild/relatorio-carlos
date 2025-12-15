@@ -19,6 +19,12 @@ export interface WeeklyReport {
   completionPercentage: number;
 }
 
+export interface ReportIncidentPhoto {
+  id: string;
+  url: string;
+  caption?: string;
+}
+
 export interface ReportIncident {
   id: string;
   occurrence: string;
@@ -28,6 +34,7 @@ export interface ReportIncident {
   impact: string;
   status: 'aberto' | 'em andamento' | 'resolvido';
   expectedResolutionDate: string;
+  photos?: ReportIncidentPhoto[];
 }
 
 export interface ReportData {

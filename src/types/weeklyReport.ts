@@ -112,6 +112,12 @@ export interface GalleryPhoto {
   category: string;
 }
 
+export interface IncidentPhoto {
+  id: string;
+  url: string;
+  caption?: string;
+}
+
 export interface Incident {
   id: string;
   occurrence: string;
@@ -121,6 +127,7 @@ export interface Incident {
   impact: string;
   status: 'aberto' | 'em andamento' | 'resolvido';
   expectedResolutionDate: string;
+  photos?: IncidentPhoto[];
 }
 
 export interface WeeklyReportData {
