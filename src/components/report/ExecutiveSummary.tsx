@@ -14,9 +14,11 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
           <h3 className="text-sm sm:text-base font-semibold text-foreground">Resumo Executivo</h3>
         </div>
         <div className="p-4 sm:p-5">
-          <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">
-            {data.executiveSummary}
-          </p>
+          <div className="text-xs sm:text-sm text-foreground/80 leading-relaxed text-justify space-y-3">
+            {data.executiveSummary.split('\n\n').map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
         </div>
       </div>
 
