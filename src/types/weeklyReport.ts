@@ -112,6 +112,15 @@ export interface GalleryPhoto {
   category: string;
 }
 
+export interface Incident {
+  id: string;
+  occurrence: string;
+  occurrenceDate: string;
+  cause: string;
+  action: string;
+  impact: string;
+}
+
 export interface WeeklyReportData {
   projectId: string;
   projectName: string;
@@ -147,6 +156,9 @@ export interface WeeklyReportData {
   
   // Client Decisions
   clientDecisions: ClientDecision[];
+  
+  // Incidents
+  incidents: Incident[];
   
   // Photo Gallery
   gallery: GalleryPhoto[];
