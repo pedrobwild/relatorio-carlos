@@ -3,104 +3,7 @@ import { ArrowLeft, AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler
 import { Badge } from "@/components/ui/badge";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-type PendingType = "decision" | "invoice" | "signature" | "approval_3d" | "approval_exec";
-type PendingPriority = "alta" | "média" | "baixa";
-type PendingStatus = "pendente" | "urgente" | "atrasado";
-
-interface PendingItem {
-  id: string;
-  type: PendingType;
-  title: string;
-  description: string;
-  dueDate: string;
-  priority: PendingPriority;
-  impact?: string;
-  options?: string[];
-  amount?: number;
-}
-
-// Sample data for demo
-const pendingItems: PendingItem[] = [
-  // Client Decisions
-  {
-    id: "dec-1",
-    type: "decision",
-    title: "Posição do suporte articulado de TV 65\"",
-    description: "Definir altura e posição do suporte na parede da sala",
-    dueDate: "2025-09-09",
-    priority: "alta",
-    impact: "Atraso na instalação elétrica embutida e possível retrabalho no gesso/pintura",
-    options: ["Altura 1,10m centralizado", "Altura 1,10m deslocado 15cm esquerda", "Altura 1,20m centralizado"],
-  },
-  {
-    id: "dec-2",
-    type: "decision",
-    title: "Aprovar torneira alternativa para banheiro social",
-    description: "Modelo Docol Bistro Cromado (original Deca Polo indisponível até 20/09)",
-    dueDate: "2025-09-10",
-    priority: "média",
-    impact: "Atraso de 12 dias se aguardar modelo original",
-  },
-  // Overdue Invoice
-  {
-    id: "inv-1",
-    type: "invoice",
-    title: "Parcela 6 - Marcenaria",
-    description: "Vencimento original: 05/09/2025",
-    dueDate: "2025-09-05",
-    priority: "alta",
-    amount: 28500,
-  },
-  // Upcoming Invoice
-  {
-    id: "inv-2",
-    type: "invoice",
-    title: "Parcela 7 - Instalações e acabamentos",
-    description: "Próximo vencimento",
-    dueDate: "2025-09-12",
-    priority: "média",
-    amount: 15200,
-  },
-  // Pending Signatures
-  {
-    id: "sig-1",
-    type: "signature",
-    title: "Aditivo de Contrato - Julho",
-    description: "Inclusão de marcenaria adicional no hall de entrada",
-    dueDate: "2025-09-08",
-    priority: "alta",
-    impact: "Pendente de assinatura para formalização do serviço adicional",
-  },
-  {
-    id: "sig-2",
-    type: "signature",
-    title: "Ata de Reunião - Semana 9",
-    description: "Definições sobre instalação de coifa e eletros",
-    dueDate: "2025-09-10",
-    priority: "baixa",
-  },
-  // 3D Project Approval
-  {
-    id: "3d-1",
-    type: "approval_3d",
-    title: "Aprovação do Projeto 3D - Cozinha",
-    description: "Renderização final com ajustes de iluminação solicitados",
-    dueDate: "2025-09-11",
-    priority: "média",
-    impact: "Liberação para produção de peças de marcenaria customizadas",
-  },
-  // Executive Project Approval
-  {
-    id: "exec-1",
-    type: "approval_exec",
-    title: "Aprovação do Projeto Executivo - Elétrica",
-    description: "Planta baixa com pontos elétricos e circuitos dedicados",
-    dueDate: "2025-09-07",
-    priority: "alta",
-    impact: "Execução da instalação elétrica já iniciada - aprovação retroativa necessária",
-  },
-];
+import { usePendencias, getStatus, DEMO_DATE, PendingType, PendingStatus } from "@/hooks/usePendencias";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {
@@ -147,16 +50,6 @@ const getTypeColor = (type: PendingType) => {
   }
 };
 
-const getStatus = (dueDate: string): PendingStatus => {
-  const today = new Date("2025-09-08"); // Demo date
-  const due = parseISO(dueDate);
-  const diff = differenceInDays(due, today);
-  
-  if (diff < 0) return "atrasado";
-  if (diff <= 2) return "urgente";
-  return "pendente";
-};
-
 const getStatusBadge = (status: PendingStatus) => {
   switch (status) {
     case "atrasado":
@@ -178,21 +71,8 @@ const formatDate = (dateStr: string) => {
 };
 
 const Pendencias = () => {
-  const today = new Date("2025-09-08"); // Demo date
-  
-  // Group and sort pending items
-  const sortedItems = [...pendingItems].sort((a, b) => {
-    const statusOrder = { atrasado: 0, urgente: 1, pendente: 2 };
-    const statusA = getStatus(a.dueDate);
-    const statusB = getStatus(b.dueDate);
-    if (statusOrder[statusA] !== statusOrder[statusB]) {
-      return statusOrder[statusA] - statusOrder[statusB];
-    }
-    return parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime();
-  });
-
-  const overdueCount = sortedItems.filter(item => getStatus(item.dueDate) === "atrasado").length;
-  const urgentCount = sortedItems.filter(item => getStatus(item.dueDate) === "urgente").length;
+  const { sortedItems, stats } = usePendencias();
+  const today = DEMO_DATE;
 
   return (
     <div className="min-h-screen bg-background">
@@ -221,14 +101,14 @@ const Pendencias = () => {
               <AlertTriangle className="w-4 h-4 text-rose-500" />
               <span className="text-caption text-rose-600 font-medium">Atrasados</span>
             </div>
-            <p className="text-h2 font-bold text-rose-600">{overdueCount}</p>
+            <p className="text-h2 font-bold text-rose-600">{stats.overdueCount}</p>
           </div>
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
             <div className="flex items-center gap-2 mb-1">
               <Clock className="w-4 h-4 text-amber-500" />
               <span className="text-caption text-amber-600 font-medium">Urgentes</span>
             </div>
-            <p className="text-h2 font-bold text-amber-600">{urgentCount}</p>
+            <p className="text-h2 font-bold text-amber-600">{stats.urgentCount}</p>
           </div>
         </div>
 
