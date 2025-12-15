@@ -341,6 +341,7 @@ const Financeiro = () => {
                       <TableHead className="font-semibold text-foreground">Etapa</TableHead>
                       <TableHead className="font-semibold text-foreground text-right">Valor</TableHead>
                       <TableHead className="font-semibold text-foreground text-center">Vencimento</TableHead>
+                      <TableHead className="font-semibold text-foreground text-center">Pagamento</TableHead>
                       <TableHead className="font-semibold text-foreground text-center">Status</TableHead>
                       <TableHead className="font-semibold text-foreground text-center">Boleto</TableHead>
                     </TableRow>
@@ -372,6 +373,16 @@ const Financeiro = () => {
                             </div>
                             {getDaysUntilDueLabel(installment)}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {installment.status === "paid" && installment.paidDate ? (
+                            <div className="flex items-center justify-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="font-medium text-emerald-600">{formatDate(installment.paidDate)}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           {getStatusBadge(installment)}
@@ -454,6 +465,12 @@ const Financeiro = () => {
                           <Calendar className="w-3.5 h-3.5" />
                           <span>Venc: {formatDate(installment.dueDate)}</span>
                         </div>
+                        {installment.status === "paid" && installment.paidDate && (
+                          <div className="flex items-center gap-1.5 text-sm">
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="font-medium text-emerald-600">Pago em {formatDate(installment.paidDate)}</span>
+                          </div>
+                        )}
                         {getDaysUntilDueLabel(installment)}
                       </div>
                       <p className="font-bold text-foreground">
