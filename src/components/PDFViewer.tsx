@@ -158,7 +158,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="flex justify-center p-4 min-h-full">
+        <div className="flex justify-center p-4">
           <Document
             file={url}
             onLoadSuccess={onDocumentLoadSuccess}
