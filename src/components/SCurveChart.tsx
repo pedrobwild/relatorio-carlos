@@ -5,7 +5,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
@@ -127,23 +126,23 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card border border-border rounded-lg shadow-lg p-3 min-w-[140px]">
-        <p className="text-sm font-semibold text-foreground mb-2 pb-2 border-b border-border">
+      <div className="bg-card border border-border rounded-lg shadow-xl p-2.5 sm:p-3 min-w-[120px] sm:min-w-[140px] z-50">
+        <p className="text-xs sm:text-sm font-semibold text-foreground mb-1.5 sm:mb-2 pb-1.5 sm:pb-2 border-b border-border">
           {label}
         </p>
-        <div className="space-y-1.5">
+        <div className="space-y-1 sm:space-y-1.5">
           {payload.map((entry, index) => (
-            <div key={index} className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
+            <div key={index} className="flex items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <span 
-                  className="w-2.5 h-2.5 rounded-full" 
+                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0" 
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-[10px] sm:text-xs text-muted-foreground">
                   {entry.dataKey === "previsto" ? "Previsto" : "Realizado"}
                 </span>
               </div>
-              <span className="text-sm font-bold text-foreground">
+              <span className="text-xs sm:text-sm font-bold text-foreground">
                 {entry.value}%
               </span>
             </div>
@@ -154,6 +153,20 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   }
   return null;
 };
+
+// Custom legend component for mobile
+const CustomLegend = () => (
+  <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 pt-3 border-t border-border/30">
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-primary" />
+      <span className="text-xs sm:text-sm font-medium text-muted-foreground">Previsto</span>
+    </div>
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-success" />
+      <span className="text-xs sm:text-sm font-medium text-muted-foreground">Realizado</span>
+    </div>
+  </div>
+);
 
 const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
   const chartData = generateChartData(activities, reportDate);
@@ -192,12 +205,12 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
       </div>
 
       {/* Chart Container */}
-      <div className="bg-secondary/30 rounded-xl p-3 sm:p-4 md:p-6 border border-border/50">
-        <div className="h-[220px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full">
+      <div className="bg-secondary/30 rounded-xl p-2.5 sm:p-4 md:p-6 border border-border/50">
+        <div className="h-[200px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 5, right: 8, left: -5, bottom: 0 }}
+              margin={{ top: 8, right: 4, left: -12, bottom: 0 }}
             >
               <CartesianGrid 
                 strokeDasharray="3 3" 
@@ -207,34 +220,28 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
               />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
                 tickLine={false}
                 axisLine={{ stroke: "hsl(var(--border))", strokeOpacity: 0.5 }}
                 interval="preserveStartEnd"
                 angle={-45}
                 textAnchor="end"
-                height={45}
-                dy={8}
+                height={40}
+                dy={6}
               />
               <YAxis
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `${value}%`}
                 domain={[0, 100]}
-                ticks={[0, 25, 50, 75, 100]}
-                width={32}
+                ticks={[0, 50, 100]}
+                width={28}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ paddingTop: "8px" }}
-                formatter={(value) => (
-                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">
-                    {value === "previsto" ? "Previsto" : "Realizado"}
-                  </span>
-                )}
-                iconType="circle"
-                iconSize={6}
+              <Tooltip 
+                content={<CustomTooltip />} 
+                cursor={{ stroke: "hsl(var(--primary))", strokeOpacity: 0.2, strokeWidth: 1 }}
+                wrapperStyle={{ zIndex: 50 }}
               />
               <ReferenceLine 
                 y={50} 
@@ -248,8 +255,8 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 name="previsto"
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
-                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 3 }}
-                activeDot={{ r: 5, fill: "hsl(var(--primary))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 2.5 }}
+                activeDot={{ r: 4, fill: "hsl(var(--primary))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
               />
               <Line
                 type="monotone"
@@ -265,18 +272,21 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                     <circle
                       cx={cx}
                       cy={cy}
-                      r={isMatch ? 4 : 3}
+                      r={isMatch ? 3.5 : 2.5}
                       fill="hsl(var(--success))"
                       stroke={isMatch ? "hsl(var(--primary))" : "none"}
                       strokeWidth={isMatch ? 2 : 0}
                     />
                   );
                 }}
-                activeDot={{ r: 5, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                activeDot={{ r: 4, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
+        
+        {/* Custom Legend below chart */}
+        <CustomLegend />
       </div>
 
     </div>
