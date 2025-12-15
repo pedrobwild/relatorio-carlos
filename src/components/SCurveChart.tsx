@@ -7,6 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  Brush,
 } from "recharts";
 import { Activity } from "@/types/report";
 import { TrendingUp } from "lucide-react";
@@ -403,6 +404,17 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                   );
                 }}
                 activeDot={{ r: 4, fill: "hsl(var(--success))", stroke: "hsl(var(--card))", strokeWidth: 2 }}
+              />
+              <Brush
+                dataKey="timestamp"
+                height={24}
+                stroke="hsl(var(--primary))"
+                fill="hsl(var(--secondary))"
+                tickFormatter={(value) => {
+                  const point = chartData.find(d => d.timestamp === value);
+                  return point?.date || '';
+                }}
+                travellerWidth={8}
               />
             </LineChart>
           </ResponsiveContainer>
