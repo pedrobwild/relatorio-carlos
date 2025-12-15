@@ -14,16 +14,320 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      formalization_acknowledgements: {
+        Row: {
+          acknowledged: boolean
+          acknowledged_at: string
+          acknowledged_by_email: string | null
+          acknowledged_by_user_id: string | null
+          created_at: string
+          formalization_id: string
+          id: string
+          ip_address: string | null
+          party_id: string
+          signature_hash: string | null
+          signature_text: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          acknowledged?: boolean
+          acknowledged_at?: string
+          acknowledged_by_email?: string | null
+          acknowledged_by_user_id?: string | null
+          created_at?: string
+          formalization_id: string
+          id?: string
+          ip_address?: string | null
+          party_id: string
+          signature_hash?: string | null
+          signature_text?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          acknowledged?: boolean
+          acknowledged_at?: string
+          acknowledged_by_email?: string | null
+          acknowledged_by_user_id?: string | null
+          created_at?: string
+          formalization_id?: string
+          id?: string
+          ip_address?: string | null
+          party_id?: string
+          signature_hash?: string | null
+          signature_text?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formalization_acknowledgements_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formalization_acknowledgements_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "formalization_parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formalization_attachments: {
+        Row: {
+          created_at: string
+          formalization_id: string
+          id: string
+          mime_type: string
+          original_filename: string
+          size_bytes: number
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          formalization_id: string
+          id?: string
+          mime_type: string
+          original_filename: string
+          size_bytes: number
+          storage_bucket?: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          formalization_id?: string
+          id?: string
+          mime_type?: string
+          original_filename?: string
+          size_bytes?: number
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formalization_attachments_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formalization_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_type: Database["public"]["Enums"]["formalization_event_type"]
+          formalization_id: string
+          id: string
+          meta: Json
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: Database["public"]["Enums"]["formalization_event_type"]
+          formalization_id: string
+          id?: string
+          meta?: Json
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["formalization_event_type"]
+          formalization_id?: string
+          id?: string
+          meta?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formalization_events_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formalization_evidence_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          formalization_id: string
+          id: string
+          kind: Database["public"]["Enums"]["evidence_link_kind"]
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          formalization_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["evidence_link_kind"]
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          formalization_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["evidence_link_kind"]
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formalization_evidence_links_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formalization_parties: {
+        Row: {
+          created_at: string
+          display_name: string
+          email: string | null
+          formalization_id: string
+          id: string
+          must_sign: boolean
+          party_type: Database["public"]["Enums"]["party_type"]
+          role_label: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          email?: string | null
+          formalization_id: string
+          id?: string
+          must_sign?: boolean
+          party_type: Database["public"]["Enums"]["party_type"]
+          role_label?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          formalization_id?: string
+          id?: string
+          must_sign?: boolean
+          party_type?: Database["public"]["Enums"]["party_type"]
+          role_label?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formalization_parties_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formalizations: {
+        Row: {
+          body_md: string
+          created_at: string
+          created_by: string
+          customer_org_id: string
+          data: Json
+          id: string
+          last_activity_at: string
+          locked_at: string | null
+          locked_hash: string | null
+          prev_hash: string | null
+          project_id: string | null
+          status: Database["public"]["Enums"]["formalization_status"]
+          summary: string
+          title: string
+          type: Database["public"]["Enums"]["formalization_type"]
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_md: string
+          created_at?: string
+          created_by: string
+          customer_org_id: string
+          data?: Json
+          id?: string
+          last_activity_at?: string
+          locked_at?: string | null
+          locked_hash?: string | null
+          prev_hash?: string | null
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["formalization_status"]
+          summary: string
+          title: string
+          type: Database["public"]["Enums"]["formalization_type"]
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_md?: string
+          created_at?: string
+          created_by?: string
+          customer_org_id?: string
+          data?: Json
+          id?: string
+          last_activity_at?: string
+          locked_at?: string | null
+          locked_hash?: string | null
+          prev_hash?: string | null
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["formalization_status"]
+          summary?: string
+          title?: string
+          type?: Database["public"]["Enums"]["formalization_type"]
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      compute_formalization_hash: {
+        Args: { p_formalization_id: string }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      evidence_link_kind:
+        | "meeting_recording"
+        | "drive_link"
+        | "external_doc"
+        | "other"
+      formalization_event_type:
+        | "created"
+        | "updated"
+        | "sent_for_signature"
+        | "signed_by_party"
+        | "locked"
+        | "voided"
+        | "evidence_added"
+        | "attachment_added"
+      formalization_status: "draft" | "pending_signatures" | "signed" | "voided"
+      formalization_type:
+        | "budget_item_swap"
+        | "meeting_minutes"
+        | "exception_custody"
+        | "scope_change"
+        | "general"
+      party_type: "customer" | "company"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +454,32 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      evidence_link_kind: [
+        "meeting_recording",
+        "drive_link",
+        "external_doc",
+        "other",
+      ],
+      formalization_event_type: [
+        "created",
+        "updated",
+        "sent_for_signature",
+        "signed_by_party",
+        "locked",
+        "voided",
+        "evidence_added",
+        "attachment_added",
+      ],
+      formalization_status: ["draft", "pending_signatures", "signed", "voided"],
+      formalization_type: [
+        "budget_item_swap",
+        "meeting_minutes",
+        "exception_custody",
+        "scope_change",
+        "general",
+      ],
+      party_type: ["customer", "company"],
+    },
   },
 } as const
