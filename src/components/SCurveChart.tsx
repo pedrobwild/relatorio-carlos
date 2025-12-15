@@ -39,7 +39,10 @@ const formatDisplayDate = (dateStr: string, baseYear?: number): string => {
 // Generate S-Curve data from activities using weighted progress with temporal scale
 const generateChartData = (activities: Activity[], reportDate?: string) => {
   if (activities.length === 0) {
-    return [{ date: "Início", previsto: 0, realizado: null, timestamp: 0 }];
+    return { 
+      data: [{ date: "Início", previsto: 0, realizado: null, timestamp: 0 }],
+      milestones: { start: 0, end: 0, today: 0, half: 0 }
+    };
   }
 
   // Get base year from first activity
@@ -83,8 +86,52 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
 
   // Get first and last dates for reference
   const firstDate = sortedDates.length > 0 ? parseDate(sortedDates[0]) : null;
+  const lastPlannedDate = activities.reduce((latest, a) => {
+    const plannedEnd = parseDate(a.plannedEnd);
+    if (plannedEnd && (!latest || plannedEnd > latest)) return plannedEnd;
+    return latest;
+  }, null as Date | null);
   
-  return sortedDates.map(date => {
+  // Calculate milestone timestamps (days from start)
+  const startTimestamp = 0;
+  const endTimestamp = firstDate && lastPlannedDate 
+    ? Math.floor((lastPlannedDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  const todayTimestamp = firstDate && reportDateParsed
+    ? Math.floor((reportDateParsed.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  
+  // Find the date when 50% planned progress is reached
+  let halfTimestamp = 0;
+  let cumulativeWeight = 0;
+  const sortedActivitiesByPlannedEnd = [...activities]
+    .filter(a => a.plannedEnd)
+    .sort((a, b) => {
+      const dateA = parseDate(a.plannedEnd);
+      const dateB = parseDate(b.plannedEnd);
+      if (!dateA || !dateB) return 0;
+      return dateA.getTime() - dateB.getTime();
+    });
+  
+  for (const activity of sortedActivitiesByPlannedEnd) {
+    cumulativeWeight += hasWeights ? ((activity as any).weight || 0) : 1;
+    if ((cumulativeWeight / totalWeight) >= 0.5) {
+      const plannedEnd = parseDate(activity.plannedEnd);
+      if (plannedEnd && firstDate) {
+        halfTimestamp = Math.floor((plannedEnd.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
+      }
+      break;
+    }
+  }
+
+  const milestones = {
+    start: startTimestamp,
+    end: endTimestamp,
+    today: todayTimestamp,
+    half: halfTimestamp
+  };
+  
+  const data = sortedDates.map(date => {
     const currentDate = parseDate(date);
     if (!currentDate || !firstDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null, timestamp: 0 };
     
@@ -130,6 +177,26 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       realizado: actualProgress !== null ? Math.round((actualProgress / totalWeight) * 100) : null,
     };
   });
+
+  return { data, milestones };
+};
+
+// Custom reference line label component
+const ReferenceLabel = ({ viewBox, label, position = 'top' }: { viewBox?: any; label: string; position?: 'top' | 'bottom' }) => {
+  if (!viewBox) return null;
+  const { x } = viewBox;
+  return (
+    <text
+      x={x}
+      y={position === 'top' ? 16 : viewBox.height - 4}
+      fill="hsl(var(--muted-foreground))"
+      fontSize={8}
+      textAnchor="middle"
+      fontWeight={500}
+    >
+      {label}
+    </text>
+  );
 };
 
 interface CustomTooltipProps {
@@ -188,14 +255,14 @@ const CustomLegend = () => (
 );
 
 const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
-  const chartData = generateChartData(activities, reportDate);
+  const { data: chartData, milestones } = generateChartData(activities, reportDate);
   
   // Find current activity in progress (has actualStart but no actualEnd)
   const currentActivity = activities.find(a => a.actualStart && !a.actualEnd);
   
   // Get last data point for comparison
   const lastPoint = chartData[chartData.length - 1];
-  const deviation = lastPoint ? lastPoint.realizado - lastPoint.previsto : 0;
+  const deviation = lastPoint ? (lastPoint.realizado ?? 0) - lastPoint.previsto : 0;
 
   return (
     <div className="mb-3 md:mb-4">
@@ -229,7 +296,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              margin={{ top: 20, right: 8, left: 0, bottom: 0 }}
             >
               <CartesianGrid 
                 strokeDasharray="3 3" 
@@ -254,6 +321,36 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 textAnchor="end"
                 height={40}
                 dy={6}
+              />
+              
+              {/* Reference lines for milestones */}
+              <ReferenceLine
+                x={milestones.start}
+                stroke="hsl(var(--muted-foreground))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.6}
+                label={<ReferenceLabel label="Início" />}
+              />
+              <ReferenceLine
+                x={milestones.half}
+                stroke="hsl(var(--muted-foreground))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.4}
+                label={<ReferenceLabel label="50%" />}
+              />
+              <ReferenceLine
+                x={milestones.today}
+                stroke="hsl(var(--primary))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.8}
+                label={<ReferenceLabel label="Hoje" />}
+              />
+              <ReferenceLine
+                x={milestones.end}
+                stroke="hsl(var(--success))"
+                strokeDasharray="4 4"
+                strokeOpacity={0.6}
+                label={<ReferenceLabel label="Entrega" />}
               />
               <YAxis
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
