@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users } from 'lucide-react';
+import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { useFormalizacao, useAcknowledge } from '@/hooks/useFormalizacoes';
+import { useFormalizacao, useAcknowledge, useSendForSignature } from '@/hooks/useFormalizacoes';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import bwildLogo from '@/assets/bwild-logo.png';
@@ -57,13 +57,18 @@ export default function FormalizacaoDetalhe() {
   const [activeTab, setActiveTab] = useState('conteudo');
   const [acknowledged, setAcknowledged] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [sendingForSignature, setSendingForSignature] = useState(false);
 
-  const { data: formalizacao, isLoading } = useFormalizacao(id);
+  const { data: formalizacao, isLoading, refetch } = useFormalizacao(id);
   const acknowledge = useAcknowledge();
+  const sendForSignature = useSendForSignature();
 
   const parties = (formalizacao?.parties as any[] | null) || [];
   const acknowledgements = (formalizacao?.acknowledgements as any[] | null) || [];
   const events = (formalizacao?.events as any[] | null) || [];
+
+  const isDraft = formalizacao?.status === 'draft';
+  const hasParties = parties.length >= 2;
 
   // Find current user's party (customer) that hasn't signed yet
   const pendingCustomerParty = parties.find(p => 
@@ -71,6 +76,29 @@ export default function FormalizacaoDetalhe() {
     p.must_sign &&
     !acknowledgements.some(a => a.party_id === p.id)
   );
+
+  const handleSendForSignature = async () => {
+    if (!id || !isDraft) return;
+
+    setSendingForSignature(true);
+    try {
+      await sendForSignature.mutateAsync(id);
+      toast({
+        title: 'Enviado para assinatura',
+        description: 'A formalização foi travada e enviada para coleta de assinaturas.',
+      });
+      refetch();
+    } catch (error) {
+      console.error('Error sending for signature:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível enviar para assinatura. Verifique se há partes cadastradas.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingForSignature(false);
+    }
+  };
 
   const handleAcknowledge = async () => {
     if (!pendingCustomerParty || !id) return;
@@ -218,6 +246,51 @@ export default function FormalizacaoDetalhe() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Draft action block - Send for signature */}
+        {isDraft && (
+          <Card className="border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h3 className="font-medium text-blue-900 dark:text-blue-100">
+                      Rascunho
+                    </h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      Este documento ainda está em rascunho e pode ser editado. Para coletar assinaturas, envie-o para as partes envolvidas.
+                    </p>
+                  </div>
+
+                  {!hasParties && (
+                    <div className="flex items-center gap-2 p-3 bg-blue-100/50 dark:bg-blue-900/30 rounded-md">
+                      <UserPlus className="h-4 w-4 text-blue-600" />
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Adicione as partes envolvidas antes de enviar para assinatura.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleSendForSignature}
+                      disabled={!hasParties || sendingForSignature}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {sendingForSignature ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4 mr-2" />
+                      )}
+                      {sendingForSignature ? 'Enviando...' : 'Enviar para assinatura'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Signature block for pending signatures */}
         {formalizacao.status === 'pending_signatures' && pendingCustomerParty && (
