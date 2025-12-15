@@ -137,16 +137,16 @@
     min-height: 100vh;
     min-height: 100dvh; /* Dynamic viewport height for mobile */
     overflow-x: hidden;
-    line-height: 1.5; /* Standardized compact line-height */
+    line-height: 1.4; /* More compact line-height */
   }
 
-  /* Standardized line-height for text elements */
+  /* Compact line-height for text elements */
   p, span, li, td, th, label {
-    line-height: 1.5;
+    line-height: 1.35;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    line-height: 1.3;
+    line-height: 1.2;
   }
 
   /* Improve touch targets for mobile - only apply to interactive elements that need it */

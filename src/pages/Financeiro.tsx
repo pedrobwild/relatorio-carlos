@@ -252,36 +252,6 @@ const Financeiro = () => {
             })}
           </div>
 
-          {/* Payment History Section */}
-          <div className="px-4 py-6 border-t border-border mt-4">
-            <h2 className="font-semibold text-foreground mb-4">Histórico de Pagamentos</h2>
-            
-            <div className="space-y-3">
-              {installments
-                .filter((i) => i.status === "paid")
-                .sort((a, b) => b.paidDate!.getTime() - a.paidDate!.getTime())
-                .map((installment) => (
-                  <div 
-                    key={installment.id}
-                    className="flex items-center justify-between py-3 border-b border-border last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                        <Check className="w-4 h-4 text-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{installment.stage}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(installment.paidDate!)}</p>
-                      </div>
-                    </div>
-                    <p className="font-medium text-foreground tabular-nums">
-                      {formatCurrency(installment.amount)}
-                    </p>
-                  </div>
-                ))}
-            </div>
-          </div>
-
           {/* Info footer */}
           <div className="px-4 py-4 text-center">
             <p className="text-xs text-muted-foreground">
