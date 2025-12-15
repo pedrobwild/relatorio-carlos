@@ -139,11 +139,11 @@ const ReportHeader = ({
               <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <div className="h-8 w-px bg-border" />
               <div>
-                <h1 className="text-h1 leading-tight">
+                <h1 className="text-h3 leading-tight">
                   {projectName} – {unitName}
                 </h1>
                 {clientName && (
-                  <p className="text-caption">Cliente: {clientName}</p>
+                  <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
                 )}
               </div>
             </div>
@@ -393,11 +393,11 @@ const ReportHeader = ({
           {/* Project Header with Dates */}
           <div className="flex items-start justify-between gap-2 mb-3">
             <div>
-              <h1 className="text-h2 leading-tight">
+              <h1 className="text-body font-semibold leading-tight">
                 {projectName} – {unitName}
               </h1>
               {clientName && (
-                <p className="text-caption">Cliente: {clientName}</p>
+                <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
               )}
             </div>
             <div className="text-right shrink-0">
