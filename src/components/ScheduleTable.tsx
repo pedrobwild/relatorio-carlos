@@ -237,26 +237,26 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
   }
 
   return (
-    <div className="mt-4 md:mt-8">
+    <div className="mt-3 md:mt-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <CalendarDays className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+      <div className="flex flex-col gap-2 mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <CalendarDays className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base md:text-xl font-bold text-foreground tracking-tight">
+            <h3 className="text-sm md:text-lg font-bold text-foreground tracking-tight">
               Cronograma
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] md:text-xs text-muted-foreground">
               {stats.total} atividades • {stats.completed} concluídas
             </p>
           </div>
           
           {/* Quick stats badge - inline on mobile */}
           {stats.delayed > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold bg-warning/10 text-warning border border-warning/30 shrink-0">
-              <AlertTriangle className="w-3 h-3" />
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] md:text-xs font-semibold bg-warning/10 text-warning border border-warning/30 shrink-0">
+              <AlertTriangle className="w-2.5 h-2.5 md:w-3 md:h-3" />
               {stats.delayed}
             </span>
           )}
@@ -264,7 +264,7 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
       </div>
 
       {/* Mobile Card View - Optimized for touch */}
-      <div className="md:hidden space-y-2">
+      <div className="md:hidden space-y-1.5">
         {sortedActivities.map((activity, index) => {
           const originalIndex = activities.indexOf(activity);
           const status = getActivityStatus(activity);
@@ -276,33 +276,33 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
           return (
             <div
               key={index}
-              className="bg-card border rounded-xl p-3.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] border-border"
+              className="bg-card border rounded-lg p-2.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] border-border"
               style={{ animationDelay: `${index * 30}ms` }}
             >
               {/* Top row: Number + Status */}
-              <div className="flex items-center justify-between mb-2">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold shrink-0 bg-primary/10 text-primary">
                   {originalIndex + 1}
                 </span>
                 <StatusBadge status={status} />
               </div>
 
               {/* Title - Full width, no truncation */}
-              <p className="text-sm font-semibold leading-snug text-foreground mb-3">
+              <p className="text-xs font-semibold leading-snug text-foreground mb-2">
                 {activity.description}
               </p>
 
               {/* Dates grid */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-muted/40 rounded-lg px-2.5 py-2">
-                  <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Previsto</p>
-                  <p className="text-[11px] font-semibold text-foreground tabular-nums">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-muted/40 rounded-md px-2 py-1.5">
+                  <p className="text-[8px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Previsto</p>
+                  <p className="text-[10px] font-semibold text-foreground tabular-nums">
                     {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
                   </p>
                 </div>
-                <div className="bg-muted/40 rounded-lg px-2.5 py-2">
-                  <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Real</p>
-                  <p className="text-[11px] font-semibold tabular-nums text-foreground">
+                <div className="bg-muted/40 rounded-md px-2 py-1.5">
+                  <p className="text-[8px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Real</p>
+                  <p className="text-[10px] font-semibold tabular-nums text-foreground">
                     {activity.actualStart ? `${formatDate(activity.actualStart, baseYear)} → ${formatDate(activity.actualEnd, baseYear)}` : "—"}
                   </p>
                 </div>
