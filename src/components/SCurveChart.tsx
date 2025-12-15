@@ -10,7 +10,9 @@ import {
   Brush,
 } from "recharts";
 import { Activity } from "@/types/report";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { useState, useRef, useCallback, TouchEvent } from "react";
+import { Button } from "@/components/ui/button";
 
 interface SCurveChartProps {
   activities: Activity[];
@@ -265,6 +267,107 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
   const lastPoint = chartData[chartData.length - 1];
   const deviation = lastPoint ? (lastPoint.realizado ?? 0) - lastPoint.previsto : 0;
 
+  // Zoom state
+  const [zoomDomain, setZoomDomain] = useState<{ start: number; end: number } | null>(null);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const initialPinchDistance = useRef<number | null>(null);
+  const initialZoomDomain = useRef<{ start: number; end: number } | null>(null);
+
+  const minTimestamp = chartData.length > 0 ? chartData[0].timestamp : 0;
+  const maxTimestamp = chartData.length > 0 ? chartData[chartData.length - 1].timestamp : 100;
+
+  // Handle pinch zoom
+  const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialPinchDistance.current = distance;
+      initialZoomDomain.current = zoomDomain || { start: minTimestamp, end: maxTimestamp };
+    }
+  }, [zoomDomain, minTimestamp, maxTimestamp]);
+
+  const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && initialPinchDistance.current && initialZoomDomain.current) {
+      e.preventDefault();
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      
+      const scale = distance / initialPinchDistance.current;
+      const range = initialZoomDomain.current.end - initialZoomDomain.current.start;
+      const center = (initialZoomDomain.current.start + initialZoomDomain.current.end) / 2;
+      
+      // Calculate new range based on pinch scale
+      const newRange = Math.max(range / scale, (maxTimestamp - minTimestamp) * 0.1); // Min 10% of total
+      const clampedRange = Math.min(newRange, maxTimestamp - minTimestamp);
+      
+      let newStart = center - clampedRange / 2;
+      let newEnd = center + clampedRange / 2;
+      
+      // Clamp to bounds
+      if (newStart < minTimestamp) {
+        newStart = minTimestamp;
+        newEnd = newStart + clampedRange;
+      }
+      if (newEnd > maxTimestamp) {
+        newEnd = maxTimestamp;
+        newStart = newEnd - clampedRange;
+      }
+      
+      setZoomDomain({ start: Math.max(newStart, minTimestamp), end: Math.min(newEnd, maxTimestamp) });
+    }
+  }, [minTimestamp, maxTimestamp]);
+
+  const handleTouchEnd = useCallback(() => {
+    initialPinchDistance.current = null;
+    initialZoomDomain.current = null;
+  }, []);
+
+  // Zoom controls
+  const handleZoomIn = useCallback(() => {
+    const current = zoomDomain || { start: minTimestamp, end: maxTimestamp };
+    const range = current.end - current.start;
+    const center = (current.start + current.end) / 2;
+    const newRange = Math.max(range * 0.6, (maxTimestamp - minTimestamp) * 0.1);
+    
+    let newStart = center - newRange / 2;
+    let newEnd = center + newRange / 2;
+    
+    if (newStart < minTimestamp) { newStart = minTimestamp; newEnd = newStart + newRange; }
+    if (newEnd > maxTimestamp) { newEnd = maxTimestamp; newStart = newEnd - newRange; }
+    
+    setZoomDomain({ start: newStart, end: newEnd });
+  }, [zoomDomain, minTimestamp, maxTimestamp]);
+
+  const handleZoomOut = useCallback(() => {
+    const current = zoomDomain || { start: minTimestamp, end: maxTimestamp };
+    const range = current.end - current.start;
+    const center = (current.start + current.end) / 2;
+    const newRange = Math.min(range * 1.5, maxTimestamp - minTimestamp);
+    
+    let newStart = center - newRange / 2;
+    let newEnd = center + newRange / 2;
+    
+    if (newStart < minTimestamp) { newStart = minTimestamp; newEnd = newStart + newRange; }
+    if (newEnd > maxTimestamp) { newEnd = maxTimestamp; newStart = newEnd - newRange; }
+    
+    setZoomDomain({ start: newStart, end: newEnd });
+  }, [zoomDomain, minTimestamp, maxTimestamp]);
+
+  const handleResetZoom = useCallback(() => {
+    setZoomDomain(null);
+  }, []);
+
+  // Filter data for current zoom
+  const visibleData = zoomDomain 
+    ? chartData.filter(d => d.timestamp >= zoomDomain.start && d.timestamp <= zoomDomain.end)
+    : chartData;
+
+  const isZoomed = zoomDomain !== null;
+
   return (
     <div className="mb-3 md:mb-4">
       {/* Header with title and description */}
@@ -281,6 +384,20 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
               Comparação entre o previsto e o realizado ao longo do cronograma
             </p>
           </div>
+          {/* Zoom controls */}
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn}>
+              <ZoomIn className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut}>
+              <ZoomOut className="h-3.5 w-3.5" />
+            </Button>
+            {isZoomed && (
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleResetZoom}>
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
         
         {/* Current activity indicator - Plain text */}
@@ -293,10 +410,16 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
 
       {/* Chart Container */}
       <div className="bg-secondary/30 rounded-xl p-2.5 sm:p-4 md:p-6 border border-border/50">
-        <div className="h-[200px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full">
+        <div 
+          ref={chartContainerRef}
+          className="h-[200px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={chartData}
+              data={visibleData}
               margin={{ top: 20, right: 8, left: 0, bottom: 0 }}
             >
               <CartesianGrid 
@@ -309,7 +432,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 dataKey="timestamp"
                 type="number"
                 scale="linear"
-                domain={['dataMin', 'dataMax']}
+                domain={zoomDomain ? [zoomDomain.start, zoomDomain.end] : ['dataMin', 'dataMax']}
                 tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
                 tickLine={false}
                 axisLine={{ stroke: "hsl(var(--border))", strokeOpacity: 0.5 }}
@@ -317,7 +440,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                   const point = chartData.find(d => d.timestamp === value);
                   return point?.date || '';
                 }}
-                ticks={chartData.map(d => d.timestamp)}
+                ticks={visibleData.map(d => d.timestamp)}
                 angle={-45}
                 textAnchor="end"
                 height={40}
