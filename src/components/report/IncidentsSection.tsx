@@ -238,19 +238,17 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
           opacity: animationDelay > 0 ? 0 : 1
         }}
       >
-        {/* Header com Status */}
-        <div className="flex flex-wrap items-center gap-2">
+      {/* Header com Status */}
+        <div className="flex items-center">
           <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${statusConfig.className}`}>
             {statusConfig.label}
           </span>
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
-            <Calendar className="w-3 h-3" />
-            {format(new Date(incident.occurrenceDate), "dd/MM/yyyy", { locale: ptBR })}
-          </span>
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            Previsão: {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}
-          </span>
+        </div>
+
+        {/* Datas */}
+        <div className="space-y-0.5 text-xs sm:text-sm text-foreground/80">
+          <p>Data da ocorrência: {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
+          <p>Previsão para resolução: {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
         </div>
 
         {/* Ocorrência */}
