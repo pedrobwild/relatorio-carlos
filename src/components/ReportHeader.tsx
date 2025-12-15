@@ -408,9 +408,11 @@ const ReportHeader = ({
           {/* Timeline Progress Bar - First */}
           <div className="mb-2">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-caption font-semibold text-foreground">Cronograma</h3>
               <span className="text-tiny">
-                {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis · Restam {projectMetrics.remainingWorkingDays}
+                {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
+              </span>
+              <span className="text-tiny">
+                Restam {projectMetrics.remainingWorkingDays}
               </span>
             </div>
             <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
