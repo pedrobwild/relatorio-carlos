@@ -262,7 +262,7 @@ const Financeiro = () => {
       <div className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Financial Summary - Premium Design */}
-          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5 opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+          <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-card via-card to-primary/5 opacity-0 animate-fade-in-up hover-lift" style={{ animationDelay: "100ms" }}>
             <CardContent className="p-0">
               {/* Main Value Section */}
               <div className="relative overflow-hidden">
@@ -380,7 +380,7 @@ const Financeiro = () => {
           </Card>
 
           {/* Payment Schedule - Premium Timeline Design */}
-          <Card className="border-0 shadow-lg overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+          <Card className="border-0 shadow-lg overflow-hidden opacity-0 animate-fade-in-up hover-lift" style={{ animationDelay: "200ms" }}>
             <CardHeader className="bg-gradient-to-r from-primary-dark to-primary py-4 px-5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
@@ -600,7 +600,7 @@ const Financeiro = () => {
           </Card>
 
           {/* Financial Evolution Chart - Premium Design */}
-          <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-card to-card opacity-0 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+          <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-card to-card opacity-0 animate-fade-in-up hover-lift" style={{ animationDelay: "300ms" }}>
             <CardHeader className="bg-gradient-to-r from-primary-dark to-primary py-4 px-5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
