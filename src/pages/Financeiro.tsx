@@ -238,22 +238,17 @@ const Financeiro = () => {
     <TooltipProvider>
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/relatorio">
-              <Button variant="ghost" size="icon" className="shrink-0 h-10 w-10">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <img src={bwildLogo} alt="Bwild" className="h-6 sm:h-7 w-auto" />
-              <div className="h-5 w-px bg-border/60 hidden sm:block" />
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-primary hidden sm:block" />
-                <h1 className="font-bold text-base sm:text-lg text-foreground">Financeiro</h1>
-              </div>
-            </div>
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
+          <Link to="/relatorio">
+            <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          </Link>
+          <div className="flex items-center gap-2.5">
+            <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+            <span className="text-muted-foreground/40">|</span>
+            <h1 className="font-semibold text-base text-foreground">Financeiro</h1>
           </div>
         </div>
       </div>
