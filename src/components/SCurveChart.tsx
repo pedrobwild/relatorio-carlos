@@ -275,6 +275,7 @@ interface CustomTooltipProps {
     color: string;
     payload?: {
       activity?: string | null;
+      date?: string;
     };
   }>;
   label?: string;
@@ -283,11 +284,12 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const activity = payload[0]?.payload?.activity;
+    const formattedDate = payload[0]?.payload?.date;
     
     return (
       <div className="bg-card border border-border rounded-xl shadow-xl p-3 sm:p-3.5 min-w-[160px] sm:min-w-[200px] z-50 animate-fade-in transition-all duration-200 ease-out">
         <p className="text-sm sm:text-base font-bold text-foreground mb-2">
-          {label}
+          {formattedDate || label}
         </p>
         
         {/* Activity in progress at this date */}
