@@ -21,6 +21,7 @@ import {
   type FormalizationEventType 
 } from '@/types/formalization';
 import { FormalizacaoEvidence } from '@/components/formalizacao/FormalizacaoEvidence';
+import { DigitalSignatureLog } from '@/components/formalizacao/DigitalSignatureLog';
 const getStatusBadgeVariant = (status: FormalizationStatus): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case 'signed':
@@ -462,10 +463,22 @@ export default function FormalizacaoDetalhe() {
             />
           </TabsContent>
 
-          <TabsContent value="auditoria" className="mt-4">
+          <TabsContent value="auditoria" className="mt-4 space-y-4">
+            {/* Digital Signature Log */}
+            <DigitalSignatureLog 
+              signatures={acknowledgements}
+              parties={parties}
+              documentHash={formalizacao.locked_hash}
+              lockedAt={formalizacao.locked_at}
+            />
+
+            {/* Event History */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Histórico de Eventos</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <History className="h-4 w-4" />
+                  Histórico de Eventos
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {events.length === 0 ? (
@@ -477,13 +490,29 @@ export default function FormalizacaoDetalhe() {
                       .map((event: any) => (
                         <div key={event.id} className="flex items-start gap-3 pb-4 border-b last:border-0">
                           <div className="w-2 h-2 mt-2 rounded-full bg-primary" />
-                          <div>
+                          <div className="flex-1">
                             <p className="font-medium text-sm">
                               {FORMALIZATION_EVENT_TYPE_LABELS[event.event_type as FormalizationEventType]}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                               {formatDate(event.created_at)}
                             </p>
+                            {/* Show signature details in event if available */}
+                            {event.event_type === 'signed_by_party' && event.meta && (
+                              <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                                {event.meta.email && (
+                                  <p>E-mail: {event.meta.email}</p>
+                                )}
+                                {event.meta.ip_address && (
+                                  <p>IP: {event.meta.ip_address}</p>
+                                )}
+                                {event.meta.signature_hash && (
+                                  <p className="font-mono text-[10px] mt-1 break-all">
+                                    Hash: {event.meta.signature_hash}
+                                  </p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))
