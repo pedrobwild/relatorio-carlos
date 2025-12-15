@@ -183,12 +183,11 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
           </div>
         </div>
         
-        {/* Current activity indicator - Full width on mobile */}
+        {/* Current activity indicator - Plain text */}
         {currentActivity && (
-          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold bg-info/10 text-info border border-info/30 md:self-start md:rounded-full md:py-1.5">
-            <span className="w-2 h-2 rounded-full bg-info animate-pulse shrink-0" />
-            <span className="truncate">{currentActivity.description}</span>
-          </div>
+          <p className="text-xs sm:text-sm font-medium text-foreground md:self-start">
+            {currentActivity.description}
+          </p>
         )}
       </div>
 
