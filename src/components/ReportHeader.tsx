@@ -2,9 +2,9 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { 
-  FileText, Box, Ruler, DollarSign, Headphones, User, Phone, Mail, 
+  FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown
+  TrendingUp, TrendingDown, ExternalLink
 } from "lucide-react";
 import { Activity } from "@/types/report";
 
@@ -114,7 +114,7 @@ const ReportHeader = ({
     { icon: Box, label: "Projeto 3D", href: "/projeto-3d" },
     { icon: Ruler, label: "Executivo", href: "/executivo" },
     { icon: DollarSign, label: "Financeiro", href: "/financeiro" },
-    { icon: Headphones, label: "Suporte", href: "/suporte" },
+    { icon: ClipboardSignature, label: "Formalizações", href: "/formalizacoes" },
   ];
 
   const teamContacts: TeamContact[] = [
@@ -446,19 +446,19 @@ const ReportHeader = ({
         </div>
 
         {/* Quick Links */}
-        <div className="px-2.5 py-2 border-b border-border">
-          <div className="grid grid-cols-5 gap-0.5">
+        <div className="px-2.5 py-2.5 border-b border-border bg-secondary/20">
+          <div className="grid grid-cols-5 gap-1">
             {quickLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className="flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 active:scale-95 transition-all"
+                className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-card border border-border shadow-sm hover:border-primary/50 hover:shadow-md active:scale-95 transition-all"
                 aria-label={`Acessar ${link.label}`}
               >
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary">
-                  <link.icon className="w-3 h-3" />
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary">
+                  <link.icon className="w-4 h-4" />
                 </div>
-                <span className="text-[9px] font-medium leading-tight text-center">{link.label}</span>
+                <span className="text-[10px] font-semibold leading-tight text-center text-foreground">{link.label}</span>
               </Link>
             ))}
           </div>
