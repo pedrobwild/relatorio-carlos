@@ -32,7 +32,7 @@ export const week10SeedData: WeeklyReportData = {
     { description: "Conclusão/Entrega", dueDate: "2025-09-14", status: "pending" },
   ],
   
-  executiveSummary: "Semana 10: Concluímos 100% da marcenaria (6 módulos instalados), atingindo 60% do progresso físico total conforme planejado. Realizamos 12 verificações de qualidade com 1 não-conformidade identificada (porta armário superior - correção agendada para 10/09). Iniciamos instalação de eletros com 2 de 5 itens concluídos. Cronograma mantido: entrega prevista para 14/09. Atenção: 1 risco crítico relacionado à janela de elevador do condomínio.",
+  executiveSummary: "Concluída a instalação de todos os módulos de marcenaria previstos no Projeto Executivo, com 100% de conformidade na vistoria técnica.\n\nA vistoria é composta por 48 critérios de aceitação, considerados essenciais pela Bwild.\n\nEm resumo: gavetões com movimento suave, portas com abertura/fechamento sem ruídos e alinhamento consistente.\n\nAcabamento de alta qualidade, durabilidade garantida, ausência de riscos, lascas ou danos aparentes nos módulos e frentes.",
   
   activities: [
     {
