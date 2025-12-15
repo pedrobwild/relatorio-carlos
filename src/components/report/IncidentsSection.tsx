@@ -1,7 +1,7 @@
 import { Incident } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AlertOctagon, ChevronDown } from "lucide-react";
+import { AlertOctagon, Calendar, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import {
   Collapsible,
@@ -24,9 +24,15 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
   >
     {/* Ocorrência */}
     <div className="space-y-1.5">
-      <div className="flex items-start gap-2">
-        <AlertOctagon className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-        <p className="text-xs font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-start gap-2">
+          <AlertOctagon className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+          <p className="text-xs font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
+        </div>
+        <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
+          <Calendar className="w-3 h-3" />
+          {format(new Date(incident.occurrenceDate), "dd/MM/yyyy", { locale: ptBR })}
+        </span>
       </div>
       <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed ml-5.5">{incident.occurrence}</p>
     </div>
