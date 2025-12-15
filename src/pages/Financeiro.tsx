@@ -379,91 +379,119 @@ const Financeiro = () => {
             </CardContent>
           </Card>
 
-          {/* Payment Schedule Table */}
-          <Card className="bg-card border-border overflow-hidden">
-            <CardHeader className="bg-primary-dark py-3 px-4">
-              <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Fluxo de Pagamento
-              </CardTitle>
+          {/* Payment Schedule - Premium Timeline Design */}
+          <Card className="border-0 shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-primary-dark to-primary py-4 px-5">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-primary-foreground flex items-center gap-2">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/15">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  Fluxo de Pagamento
+                </CardTitle>
+                <span className="text-xs text-primary-foreground/70">
+                  {installments.length} parcelas
+                </span>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              {/* Desktop Table */}
+              {/* Desktop Table - Modern */}
               <div className="hidden sm:block">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="font-semibold text-foreground">Etapa</TableHead>
-                      <TableHead className="font-semibold text-foreground text-right">Valor</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center">Vencimento</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center">Pagamento</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center">Status</TableHead>
-                      <TableHead className="font-semibold text-foreground text-center">Boleto</TableHead>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40 border-b-2 border-border">
+                      <TableHead className="font-semibold text-xs uppercase tracking-wide text-muted-foreground py-4">#</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wide text-muted-foreground py-4">Etapa</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wide text-muted-foreground py-4 text-right">Valor</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wide text-muted-foreground py-4 text-center">Vencimento</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wide text-muted-foreground py-4 text-center">Pagamento</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wide text-muted-foreground py-4 text-center">Status</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wide text-muted-foreground py-4 text-center">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {installments.map((installment) => (
+                    {installments.map((installment, index) => (
                       <TableRow 
                         key={installment.id}
-                        className={getRowClassName(installment)}
+                        className={`transition-colors hover:bg-muted/20 ${
+                          installment.status === "paid" 
+                            ? "bg-emerald-500/5" 
+                            : installment.urgency === "overdue"
+                              ? "bg-red-500/10 border-l-4 border-l-red-500"
+                              : installment.urgency === "urgent"
+                                ? "bg-red-500/5 border-l-4 border-l-red-400"
+                                : installment.urgency === "approaching"
+                                  ? "bg-amber-500/5 border-l-4 border-l-amber-400"
+                                  : ""
+                        }`}
                       >
-                        <TableCell className="font-medium text-foreground">
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2">
-                              <span>{installment.stage}</span>
-                              {installment.isForecast && (
-                                <span className="text-[10px] text-muted-foreground italic">(previsão)</span>
-                              )}
-                            </div>
+                        <TableCell className="py-4">
+                          <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                            installment.status === "paid"
+                              ? "bg-emerald-500 text-white"
+                              : installment.urgency === "overdue" || installment.urgency === "urgent"
+                                ? "bg-red-500 text-white"
+                                : installment.urgency === "approaching"
+                                  ? "bg-amber-500 text-white"
+                                  : "bg-muted text-muted-foreground"
+                          }`}>
+                            {index + 1}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-foreground">
-                          {formatCurrency(installment.amount)}
+                        <TableCell className="py-4">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium text-foreground">{installment.stage}</span>
+                            {installment.isForecast && (
+                              <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded w-fit">previsão</span>
+                            )}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                              <span className="text-foreground">{formatDate(installment.dueDate)}</span>
+                        <TableCell className="text-right py-4">
+                          <span className="font-bold text-foreground tabular-nums">
+                            {formatCurrency(installment.amount)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center py-4">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1.5 text-sm">
+                              <span className="font-medium text-foreground">{formatDate(installment.dueDate)}</span>
                             </div>
                             {getDaysUntilDueLabel(installment)}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center py-4">
                           {installment.status === "paid" && installment.paidDate ? (
-                            <div className="flex items-center justify-center gap-1.5">
+                            <div className="inline-flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-full">
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="font-medium text-emerald-600">{formatDate(installment.paidDate)}</span>
+                              <span className="text-sm font-medium text-emerald-600">{formatDate(installment.paidDate)}</span>
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-muted-foreground/50">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center py-4">
                           {getStatusBadge(installment)}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center py-4">
                           {installment.status === "paid" ? (
-                            <div className="flex items-center justify-center">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50 cursor-not-allowed">
-                                    <FileX className="w-4 h-4 text-muted-foreground/50" />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  <p>Boleto indisponível - parcela já quitada</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-muted/50 cursor-not-allowed">
+                                  <FileX className="w-4 h-4 text-muted-foreground/40" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p>Boleto indisponível - parcela já quitada</p>
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
                             <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 hover:bg-primary/10"
-                              title="Baixar boleto"
+                              variant="outline"
+                              size="sm"
+                              className="h-9 px-3 gap-1.5 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
                             >
-                              <Download className="w-4 h-4 text-primary" />
+                              <Download className="w-3.5 h-3.5" />
+                              <span className="text-xs font-medium">Boleto</span>
                             </Button>
                           )}
                         </TableCell>
@@ -473,67 +501,100 @@ const Financeiro = () => {
                 </Table>
               </div>
 
-              {/* Mobile Cards */}
-              <div className="sm:hidden divide-y divide-border">
-                {installments.map((installment) => (
-                  <div 
-                    key={installment.id}
-                    className={`p-4 space-y-3 ${getRowClassName(installment)}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground text-sm leading-tight">
-                          {installment.stage}
-                          {installment.isForecast && (
-                            <span className="text-[10px] text-muted-foreground italic ml-1">(previsão)</span>
+              {/* Mobile Cards - Timeline Style */}
+              <div className="sm:hidden">
+                <div className="relative">
+                  {/* Timeline Line */}
+                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-primary to-muted" />
+                  
+                  <div className="space-y-0">
+                    {installments.map((installment, index) => (
+                      <div 
+                        key={installment.id}
+                        className={`relative pl-14 pr-4 py-5 ${
+                          index !== installments.length - 1 ? 'border-b border-border/50' : ''
+                        } ${
+                          installment.status === "paid" 
+                            ? "bg-emerald-500/5" 
+                            : installment.urgency === "overdue"
+                              ? "bg-red-500/10"
+                              : installment.urgency === "urgent"
+                                ? "bg-red-500/5"
+                                : installment.urgency === "approaching"
+                                  ? "bg-amber-500/5"
+                                  : "bg-card"
+                        }`}
+                      >
+                        {/* Timeline Node */}
+                        <div className={`absolute left-4 top-5 flex items-center justify-center w-5 h-5 rounded-full ring-4 ring-background ${
+                          installment.status === "paid"
+                            ? "bg-emerald-500"
+                            : installment.urgency === "overdue" || installment.urgency === "urgent"
+                              ? "bg-red-500"
+                              : installment.urgency === "approaching"
+                                ? "bg-amber-500"
+                                : "bg-muted-foreground/30"
+                        }`}>
+                          {installment.status === "paid" && (
+                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
                           )}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(installment)}
-                        {installment.status === "paid" ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50 cursor-not-allowed">
-                                <FileX className="w-4 h-4 text-muted-foreground/50" />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              <p>Boleto indisponível - parcela já quitada</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-primary/10"
-                            title="Baixar boleto"
-                          >
-                            <Download className="w-4 h-4 text-primary" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <Calendar className="w-3.5 h-3.5" />
-                          <span>Venc: {formatDate(installment.dueDate)}</span>
                         </div>
-                        {installment.status === "paid" && installment.paidDate && (
-                          <div className="flex items-center gap-1.5 text-sm">
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="font-medium text-emerald-600">Pago em {formatDate(installment.paidDate)}</span>
+
+                        {/* Card Content */}
+                        <div className="space-y-3">
+                          {/* Header Row */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-foreground text-sm leading-tight">
+                                {installment.stage}
+                              </p>
+                              {installment.isForecast && (
+                                <span className="inline-block mt-1 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+                                  previsão
+                                </span>
+                              )}
+                            </div>
+                            {getStatusBadge(installment)}
                           </div>
-                        )}
-                        {getDaysUntilDueLabel(installment)}
+
+                          {/* Value & Dates */}
+                          <div className="flex items-end justify-between gap-3">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Calendar className="w-3 h-3" />
+                                <span>Venc: <span className="font-medium text-foreground">{formatDate(installment.dueDate)}</span></span>
+                              </div>
+                              {installment.status === "paid" && installment.paidDate && (
+                                <div className="flex items-center gap-1.5 text-xs">
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                  <span className="font-medium text-emerald-600">Pago em {formatDate(installment.paidDate)}</span>
+                                </div>
+                              )}
+                              {getDaysUntilDueLabel(installment)}
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-foreground tabular-nums">
+                                {formatCurrency(installment.amount)}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Action Button - Only for pending */}
+                          {installment.status !== "paid" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full h-10 gap-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all mt-2"
+                            >
+                              <Download className="w-4 h-4" />
+                              <span className="font-medium">Baixar Boleto</span>
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <p className="font-bold text-foreground">
-                        {formatCurrency(installment.amount)}
-                      </p>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </CardContent>
           </Card>
