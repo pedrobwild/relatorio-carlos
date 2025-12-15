@@ -109,7 +109,7 @@ const Index = () => {
       <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
         <div className="flex flex-col items-center gap-0.5 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
           <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
-          <h1 className="font-bold text-lg text-foreground">Portal do Cliente</h1>
+          <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
         </div>
       </div>
 
@@ -119,7 +119,7 @@ const Index = () => {
           <div className="hidden md:flex items-center gap-3 mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
             <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
             <div className="h-5 w-px bg-border/60" />
-            <h1 className="text-xl font-bold text-foreground">Portal do Cliente</h1>
+            <h1 className="text-2xl font-bold text-foreground">Portal do Cliente</h1>
           </div>
 
         <div ref={reportRef}>
