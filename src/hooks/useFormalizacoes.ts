@@ -1,11 +1,36 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import {
+  formalizacoesSeedData,
+  getFormalizacaoSeedById,
+} from '@/data/formalizacoesSeedData';
 
 type Formalization = Database['public']['Tables']['formalizations']['Row'];
 type FormalizationInsert = Database['public']['Tables']['formalizations']['Insert'];
 type FormalizationUpdate = Database['public']['Tables']['formalizations']['Update'];
 type FormalizationWithDetails = Database['public']['Views']['formalizations_public_customer']['Row'];
+
+function filterSeed(
+  filters?: {
+    status?: string;
+    type?: string;
+    projectId?: string;
+  }
+) {
+  return formalizacoesSeedData
+    .filter((f) => {
+      if (filters?.status && f.status !== (filters.status as any)) return false;
+      if (filters?.type && f.type !== (filters.type as any)) return false;
+      if (filters?.projectId && f.project_id !== filters.projectId) return false;
+      return true;
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.last_activity_at || b.created_at || '').getTime() -
+        new Date(a.last_activity_at || a.created_at || '').getTime()
+    );
+}
 
 export function useFormalizacoes(filters?: {
   status?: string;
@@ -15,7 +40,7 @@ export function useFormalizacoes(filters?: {
   return useQuery({
     queryKey: ['formalizacoes', filters],
     queryFn: async () => {
-      // Try authenticated view first
+      // 1) Prefer backend view when authenticated/allowed
       let query = supabase
         .from('formalizations_public_customer')
         .select('*')
@@ -32,40 +57,14 @@ export function useFormalizacoes(filters?: {
       }
 
       const { data, error } = await query;
-      
-      // If RLS blocks, try direct table (for demo purposes)
-      if (error || !data || data.length === 0) {
-        let fallbackQuery = supabase
-          .from('formalizations')
-          .select('*')
-          .order('last_activity_at', { ascending: false });
 
-        if (filters?.status) {
-          fallbackQuery = fallbackQuery.eq('status', filters.status as any);
-        }
-        if (filters?.type) {
-          fallbackQuery = fallbackQuery.eq('type', filters.type as any);
-        }
-        if (filters?.projectId) {
-          fallbackQuery = fallbackQuery.eq('project_id', filters.projectId);
-        }
-
-        const { data: fallbackData, error: fallbackError } = await fallbackQuery;
-        if (fallbackError) throw fallbackError;
-        // Map to match view structure for compatibility
-        return (fallbackData || []).map(f => ({
-          ...f,
-          acknowledgements: null,
-          attachments: null,
-          events: null,
-          evidence_links: null,
-          parties: null,
-          parties_signed: 0,
-          parties_total: 0,
-        })) as FormalizationWithDetails[];
+      // If view returns data, use it.
+      if (!error && data && data.length > 0) {
+        return data as FormalizationWithDetails[];
       }
-      
-      return data as FormalizationWithDetails[];
+
+      // 2) If not allowed / empty, show local demo seed so UI always has examples.
+      return filterSeed(filters) as unknown as FormalizationWithDetails[];
     },
   });
 }
@@ -75,15 +74,19 @@ export function useFormalizacao(id: string | undefined) {
     queryKey: ['formalizacao', id],
     queryFn: async () => {
       if (!id) return null;
-      
+
       const { data, error } = await supabase
         .from('formalizations_public_customer')
         .select('*')
         .eq('id', id)
         .maybeSingle();
 
-      if (error) throw error;
-      return data as FormalizationWithDetails | null;
+      if (!error && data) {
+        return data as FormalizationWithDetails;
+      }
+
+      // Fallback demo data
+      return (getFormalizacaoSeedById(id) as unknown as FormalizationWithDetails) ?? null;
     },
     enabled: !!id,
   });
