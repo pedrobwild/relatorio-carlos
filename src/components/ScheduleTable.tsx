@@ -237,26 +237,26 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
   }
 
   return (
-    <div className="mt-3 md:mt-6">
+    <div className="mt-2 md:mt-4">
       {/* Header */}
-      <div className="flex flex-col gap-2 mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <CalendarDays className="w-4 h-4 text-primary" />
+      <div className="flex flex-col gap-1.5 mb-2">
+        <div className="flex items-center gap-2">
+          <div className="shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <CalendarDays className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm md:text-lg font-bold text-foreground tracking-tight">
+            <h3 className="text-xs md:text-base font-bold text-foreground tracking-tight">
               Cronograma
             </h3>
-            <p className="text-[10px] md:text-xs text-muted-foreground">
+            <p className="text-[9px] md:text-xs text-muted-foreground">
               {stats.total} atividades • {stats.completed} concluídas
             </p>
           </div>
           
           {/* Quick stats badge - inline on mobile */}
           {stats.delayed > 0 && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] md:text-xs font-semibold bg-warning/10 text-warning border border-warning/30 shrink-0">
-              <AlertTriangle className="w-2.5 h-2.5 md:w-3 md:h-3" />
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold bg-warning/10 text-warning border border-warning/30 shrink-0">
+              <AlertTriangle className="w-2.5 h-2.5" />
               {stats.delayed}
             </span>
           )}

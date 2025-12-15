@@ -179,18 +179,18 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
   const deviation = lastPoint ? lastPoint.realizado - lastPoint.previsto : 0;
 
   return (
-    <div className="mb-4 md:mb-6">
+    <div className="mb-3 md:mb-4">
       {/* Header with title and description */}
-      <div className="flex flex-col gap-2 mb-3 md:mb-4">
-        <div className="flex items-start gap-2.5">
-          <div className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-primary" />
+      <div className="flex flex-col gap-1.5 mb-2 md:mb-3">
+        <div className="flex items-start gap-2">
+          <div className="shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm md:text-lg font-bold text-foreground tracking-tight">
+            <h2 className="text-xs md:text-base font-bold text-foreground tracking-tight">
               Cronograma Previsto x Realizado
             </h2>
-            <p className="text-[10px] md:text-xs text-muted-foreground hidden md:block">
+            <p className="text-[9px] md:text-xs text-muted-foreground hidden md:block">
               Comparação entre o previsto e o realizado ao longo do cronograma
             </p>
           </div>
@@ -198,7 +198,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
         
         {/* Current activity indicator - Plain text */}
         {currentActivity && (
-          <p className="text-[11px] sm:text-xs font-medium text-foreground md:self-start">
+          <p className="text-[10px] sm:text-xs font-medium text-foreground md:self-start">
             {currentActivity.description}
           </p>
         )}
@@ -230,13 +230,13 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
                 dy={6}
               />
               <YAxis
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 8 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `${value}%`}
                 domain={[0, 100]}
-                ticks={[0, 50, 100]}
-                width={28}
+                ticks={[0, 25, 50, 75, 100]}
+                width={32}
               />
               <Tooltip 
                 content={<CustomTooltip />} 
