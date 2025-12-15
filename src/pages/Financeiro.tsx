@@ -19,6 +19,7 @@ interface PaymentInstallment {
   status: "paid" | "pending" | "upcoming";
   isForecast?: boolean;
   urgency?: "overdue" | "urgent" | "approaching" | "normal";
+  paidDate?: Date;
 }
 
 const Financeiro = () => {
@@ -59,6 +60,7 @@ const Financeiro = () => {
       amount: 11000,
       dueDate: addBusinessDays(contractSignatureDate, 2),
       status: "paid",
+      paidDate: new Date(2025, 5, 18), // 18/06/2025
     },
     {
       id: 2,
@@ -66,6 +68,7 @@ const Financeiro = () => {
       amount: 29333.33,
       dueDate: addBusinessDays(constructionStartDate, 2),
       status: "paid",
+      paidDate: new Date(2025, 6, 2), // 02/07/2025
     },
     {
       id: 3,
@@ -73,6 +76,7 @@ const Financeiro = () => {
       amount: 29333.33,
       dueDate: addBusinessDays(addDays(constructionStartDate, 25), 2),
       status: "paid",
+      paidDate: new Date(2025, 6, 28), // 28/07/2025
     },
     {
       id: 4,
@@ -95,6 +99,8 @@ const Financeiro = () => {
     ...inst,
     urgency: getUrgency(inst.dueDate, inst.status),
   }));
+
+  const paidInstallments = installments.filter((i) => i.status === "paid");
 
   const totalValue = 110000;
   const paidAmount = installments
@@ -502,6 +508,77 @@ const Financeiro = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Payment History */}
+          {paidInstallments.length > 0 && (
+            <Card className="bg-card border-border overflow-hidden">
+              <CardHeader className="bg-emerald-600 py-3 px-4">
+                <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  Histórico de Pagamentos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {/* Desktop */}
+                <div className="hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-emerald-500/5 hover:bg-emerald-500/5">
+                        <TableHead className="font-semibold text-foreground">Etapa</TableHead>
+                        <TableHead className="font-semibold text-foreground text-right">Valor</TableHead>
+                        <TableHead className="font-semibold text-foreground text-center">Vencimento</TableHead>
+                        <TableHead className="font-semibold text-foreground text-center">Data do Pagamento</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paidInstallments.map((installment) => (
+                        <TableRow key={installment.id} className="bg-emerald-500/5">
+                          <TableCell className="font-medium text-foreground">
+                            {installment.stage}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-foreground">
+                            {formatCurrency(installment.amount)}
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {formatDate(installment.dueDate)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="font-medium text-emerald-600">
+                                {installment.paidDate ? formatDate(installment.paidDate) : "-"}
+                              </span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile */}
+                <div className="sm:hidden divide-y divide-border">
+                  {paidInstallments.map((installment) => (
+                    <div key={installment.id} className="p-4 space-y-2 bg-emerald-500/5">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-medium text-foreground text-sm">{installment.stage}</p>
+                        <p className="font-bold text-foreground">{formatCurrency(installment.amount)}</p>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Venc: {formatDate(installment.dueDate)}</span>
+                        <div className="flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="font-medium text-emerald-600">
+                            Pago em {installment.paidDate ? formatDate(installment.paidDate) : "-"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Info Note */}
           <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-lg border border-border">
