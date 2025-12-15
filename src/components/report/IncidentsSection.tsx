@@ -1,7 +1,7 @@
 import { Incident } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { AlertOctagon, Calendar, ChevronDown } from "lucide-react";
+import { AlertOctagon, Calendar, ChevronDown, Clock } from "lucide-react";
 import { useState } from "react";
 import {
   Collapsible,
@@ -13,49 +13,74 @@ interface IncidentsSectionProps {
   incidents: Incident[];
 }
 
-const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; animationDelay?: number }) => (
-  <div 
-    className="p-4 sm:p-5 space-y-3"
-    style={{ 
-      animationDelay: `${animationDelay}ms`,
-      animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
-      opacity: animationDelay > 0 ? 0 : 1
-    }}
-  >
-    {/* Ocorrência */}
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-start gap-2">
-          <AlertOctagon className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-          <p className="text-xs font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
-        </div>
+const getStatusConfig = (status: Incident['status']) => {
+  switch (status) {
+    case 'resolvido':
+      return { label: 'Resolvido', className: 'bg-green-100 text-green-800' };
+    case 'em andamento':
+      return { label: 'Em andamento', className: 'bg-yellow-100 text-yellow-800' };
+    case 'aberto':
+    default:
+      return { label: 'Aberto', className: 'bg-red-100 text-red-800' };
+  }
+};
+
+const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; animationDelay?: number }) => {
+  const statusConfig = getStatusConfig(incident.status);
+  
+  return (
+    <div 
+      className="p-4 sm:p-5 space-y-3"
+      style={{ 
+        animationDelay: `${animationDelay}ms`,
+        animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
+        opacity: animationDelay > 0 ? 0 : 1
+      }}
+    >
+      {/* Header com Status */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${statusConfig.className}`}>
+          {statusConfig.label}
+        </span>
         <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground bg-primary/10 px-2 py-0.5 rounded-md">
           <Calendar className="w-3 h-3" />
           {format(new Date(incident.occurrenceDate), "dd/MM/yyyy", { locale: ptBR })}
         </span>
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="w-3 h-3" />
+          Previsão: {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}
+        </span>
       </div>
-      <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed ml-5.5">{incident.occurrence}</p>
-    </div>
 
-    {/* Causa */}
-    <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
-      <p className="text-xs font-bold text-foreground">Causa</p>
-      <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.cause}</p>
-    </div>
+      {/* Ocorrência */}
+      <div className="space-y-1.5">
+        <div className="flex items-start gap-2">
+          <AlertOctagon className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+          <p className="text-xs font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
+        </div>
+        <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed ml-5.5">{incident.occurrence}</p>
+      </div>
 
-    {/* Ação */}
-    <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
-      <p className="text-xs font-bold text-foreground">Ação</p>
-      <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.action}</p>
-    </div>
+      {/* Causa */}
+      <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
+        <p className="text-xs font-bold text-foreground">Causa</p>
+        <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.cause}</p>
+      </div>
 
-    {/* Impacto */}
-    <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
-      <p className="text-xs font-bold text-foreground">Impacto</p>
-      <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.impact}</p>
+      {/* Ação */}
+      <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
+        <p className="text-xs font-bold text-foreground">Ação</p>
+        <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.action}</p>
+      </div>
+
+      {/* Impacto */}
+      <div className="bg-secondary rounded-lg p-2.5 sm:p-3 space-y-1.5">
+        <p className="text-xs font-bold text-foreground">Impacto</p>
+        <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">{incident.impact}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const IncidentsSection = ({ incidents }: IncidentsSectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
