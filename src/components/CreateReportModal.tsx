@@ -143,11 +143,11 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+          <DialogTitle className="text-h1 flex items-center gap-2">
             <Building2 className="w-5 h-5 text-primary" />
             Criar Novo Relatório
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-caption">
             Preencha os dados do projeto e atividades para gerar o relatório.
           </DialogDescription>
         </DialogHeader>
@@ -156,7 +156,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Project Info Section */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <h3 className="text-h3 text-muted-foreground uppercase tracking-wider">
                 Informações do Projeto
               </h3>
               
@@ -300,7 +300,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
             {/* Activities Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                <h3 className="text-h3 text-muted-foreground uppercase tracking-wider">
                   Cronograma de Atividades
                 </h3>
                 <Button type="button" variant="outline" size="sm" onClick={addActivity}>
@@ -316,7 +316,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                     className="p-4 border border-border rounded-lg bg-muted/30 space-y-3 animate-fade-in"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">
+                      <span className="text-tiny font-medium">
                         Atividade #{index + 1}
                       </span>
                       {activities.length > 1 && (
@@ -340,7 +340,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Início Prev.</Label>
+                        <Label className="text-tiny">Início Prev.</Label>
                         <Input
                           placeholder="DD/MM"
                           value={activity.plannedStart}
@@ -349,7 +349,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fim Prev.</Label>
+                        <Label className="text-tiny">Fim Prev.</Label>
                         <Input
                           placeholder="DD/MM"
                           value={activity.plannedEnd}
@@ -358,7 +358,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Início Real</Label>
+                        <Label className="text-tiny">Início Real</Label>
                         <Input
                           placeholder="DD/MM"
                           value={activity.actualStart}
@@ -367,7 +367,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fim Real</Label>
+                        <Label className="text-tiny">Fim Real</Label>
                         <Input
                           placeholder="DD/MM"
                           value={activity.actualEnd}

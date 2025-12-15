@@ -72,8 +72,8 @@ export function PartiesForm({ onComplete, initialParties }: PartiesFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="text-center mb-6">
-          <h2 className="text-lg font-semibold">Definir Partes</h2>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h2 className="text-h2">Definir Partes</h2>
+          <p className="text-caption mt-1">
             Adicione as pessoas que precisam dar ciência nesta formalização
           </p>
         </div>
@@ -82,8 +82,8 @@ export function PartiesForm({ onComplete, initialParties }: PartiesFormProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base">Cliente</CardTitle>
+              <User className="h-4 w-4 text-primary" />
+              <CardTitle className="text-h3">Cliente</CardTitle>
             </div>
             <Button
               type="button"
@@ -103,7 +103,7 @@ export function PartiesForm({ onComplete, initialParties }: PartiesFormProps) {
               return (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4">
                   <div className="flex justify-between items-start">
-                    <span className="text-sm font-medium">Participante {customerParties.indexOf(field) + 1}</span>
+                    <span className="text-caption font-medium">Participante {customerParties.indexOf(field) + 1}</span>
                     {fields.filter(f => form.watch(`parties.${fields.indexOf(f)}.party_type`) === 'customer').length > 1 && (
                       <Button
                         type="button"
@@ -181,8 +181,8 @@ export function PartiesForm({ onComplete, initialParties }: PartiesFormProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base">Empresa</CardTitle>
+              <Building2 className="h-4 w-4 text-primary" />
+              <CardTitle className="text-h3">Empresa</CardTitle>
             </div>
             <Button
               type="button"
@@ -202,7 +202,7 @@ export function PartiesForm({ onComplete, initialParties }: PartiesFormProps) {
               return (
                 <div key={field.id} className="p-4 border rounded-lg space-y-4">
                   <div className="flex justify-between items-start">
-                    <span className="text-sm font-medium">Representante {companyParties.indexOf(field) + 1}</span>
+                    <span className="text-caption font-medium">Representante {companyParties.indexOf(field) + 1}</span>
                     {fields.filter(f => form.watch(`parties.${fields.indexOf(f)}.party_type`) === 'company').length > 1 && (
                       <Button
                         type="button"

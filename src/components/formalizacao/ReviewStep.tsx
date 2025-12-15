@@ -31,8 +31,8 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-lg font-semibold">Revisar e Enviar</h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <h2 className="text-h2">Revisar e Enviar</h2>
+        <p className="text-caption mt-1">
           Confira as informações antes de enviar para ciência
         </p>
       </div>
@@ -41,19 +41,19 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">{formData.title}</CardTitle>
+            <CardTitle className="text-h3">{formData.title}</CardTitle>
             <Badge variant="outline">
               {FORMALIZATION_TYPE_LABELS[formData.type!]}
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-muted-foreground text-sm">{formData.summary}</p>
+          <p className="text-caption">{formData.summary}</p>
           
           <Separator />
           
           <div 
-            className="prose prose-sm dark:prose-invert max-w-none text-sm"
+            className="prose prose-sm dark:prose-invert max-w-none text-body"
             dangerouslySetInnerHTML={{ __html: formData.body_md.replace(/\n/g, '<br>') }}
           />
         </CardContent>
@@ -62,24 +62,24 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
       {/* Parties */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Partes Envolvidas</CardTitle>
+          <CardTitle className="text-h3">Partes Envolvidas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Customers */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <User className="h-4 w-4 text-primary" />
-              <span className="font-medium text-sm">Cliente</span>
+              <span className="text-body font-medium">Cliente</span>
             </div>
             <div className="space-y-2">
               {customerParties.map((party, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div>
-                    <p className="font-medium text-sm">{party.display_name}</p>
-                    <p className="text-xs text-muted-foreground">{party.email}</p>
+                    <p className="text-body font-medium">{party.display_name}</p>
+                    <p className="text-tiny">{party.email}</p>
                   </div>
                   {party.must_sign && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-tiny">
                       <CheckCircle2 className="h-3 w-3 mr-1" />
                       Assina
                     </Badge>
@@ -95,17 +95,17 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Building2 className="h-4 w-4 text-primary" />
-              <span className="font-medium text-sm">Empresa</span>
+              <span className="text-body font-medium">Empresa</span>
             </div>
             <div className="space-y-2">
               {companyParties.map((party, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div>
-                    <p className="font-medium text-sm">{party.display_name}</p>
-                    <p className="text-xs text-muted-foreground">{party.email}</p>
+                    <p className="text-body font-medium">{party.display_name}</p>
+                    <p className="text-tiny">{party.email}</p>
                   </div>
                   {party.must_sign && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-tiny">
                       <CheckCircle2 className="h-3 w-3 mr-1" />
                       Assina
                     </Badge>
@@ -120,7 +120,7 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
       {/* Info card */}
       <Card className="bg-primary/5 border-primary/20">
         <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-caption">
             <strong className="text-foreground">Importante:</strong> Após enviar para ciência, o conteúdo será travado e não poderá ser alterado. As partes receberão notificação para dar ciência.
           </p>
         </CardContent>

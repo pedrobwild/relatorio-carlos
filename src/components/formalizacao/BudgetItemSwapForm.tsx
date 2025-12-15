@@ -93,7 +93,7 @@ ${values.observations ? `### Observações\n${values.observations}` : ''}`;
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Item Removido</CardTitle>
+            <CardTitle className="text-h3">Item Removido</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -151,7 +151,7 @@ ${values.observations ? `### Observações\n${values.observations}` : ''}`;
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Novo Item</CardTitle>
+            <CardTitle className="text-h3">Novo Item</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField

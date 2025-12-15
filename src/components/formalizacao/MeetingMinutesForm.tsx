@@ -114,7 +114,7 @@ ${values.recordingLink ? `### Link da Gravação\n${values.recordingLink}` : ''}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Data e Hora</CardTitle>
+            <CardTitle className="text-h3">Data e Hora</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <FormField
@@ -148,7 +148,7 @@ ${values.recordingLink ? `### Link da Gravação\n${values.recordingLink}` : ''}
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Participantes</CardTitle>
+            <CardTitle className="text-h3">Participantes</CardTitle>
             <Button
               type="button"
               variant="outline"
@@ -224,7 +224,7 @@ ${values.recordingLink ? `### Link da Gravação\n${values.recordingLink}` : ''}
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Tópicos Sensíveis</CardTitle>
+            <CardTitle className="text-h3">Tópicos Sensíveis</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <FormField

@@ -27,8 +27,8 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h2 className="text-lg font-semibold">Escolha o tipo de formalização</h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <h2 className="text-h2">Escolha o tipo de formalização</h2>
+        <p className="text-caption mt-1">
           Selecione o template que melhor se encaixa na situação
         </p>
       </div>
@@ -46,16 +46,16 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
           >
             <CardHeader className="pb-2">
               <div className="flex items-center gap-3">
-                <span className="text-3xl" role="img" aria-hidden="true">
+                <span className="text-2xl" role="img" aria-hidden="true">
                   {template.icon}
                 </span>
-                <CardTitle className="text-base">
+                <CardTitle className="text-h3">
                   {FORMALIZATION_TYPE_LABELS[template.type]}
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <CardDescription>{template.description}</CardDescription>
+              <CardDescription className="text-caption">{template.description}</CardDescription>
             </CardContent>
           </Card>
         ))}

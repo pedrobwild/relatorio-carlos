@@ -96,7 +96,7 @@ ${values.responsibility}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Identificação do Item</CardTitle>
+            <CardTitle className="text-h3">Identificação do Item</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
