@@ -458,7 +458,7 @@ const ReportHeader = ({
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary">
                   <link.icon className="w-4 h-4" />
                 </div>
-                <span className="text-[10px] font-semibold leading-tight text-center text-foreground">{link.label}</span>
+                <span className="text-[9px] font-semibold leading-tight text-center text-foreground">{link.label}</span>
               </Link>
             ))}
           </div>
