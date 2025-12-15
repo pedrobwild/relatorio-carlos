@@ -8,6 +8,8 @@ import bwildLogo from "@/assets/bwild-logo.png";
 
 // Start date: 01/07/2025, End date: 14/09/2025
 // Report generated on: 08/09/2025 (activity 7 in progress)
+// Pesos refletem proporção real do trabalho (soma = 100%)
+// Marcenaria concluída = 93% da obra pronta, restante = 7% em 5 dias
 const sampleReportData: ReportData = {
   projectName: "Hub Brooklyn",
   unitName: "502",
@@ -22,6 +24,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-07-05",
       actualStart: "2025-07-01",
       actualEnd: "2025-07-04",
+      weight: 5, // 5% do projeto
     },
     {
       description: "Proteções, demolições e infraestrutura",
@@ -29,6 +32,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-07-18",
       actualStart: "2025-07-05",
       actualEnd: "2025-07-19", // +1 dia atrasado
+      weight: 15, // 15% do projeto
     },
     {
       description: "Pisos, revestimentos, bancadas e box",
@@ -36,6 +40,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-08-03",
       actualStart: "2025-07-21",
       actualEnd: "2025-08-03",
+      weight: 20, // 20% do projeto
     },
     {
       description: "Pinturas e metais",
@@ -43,6 +48,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-08-10",
       actualStart: "2025-08-06",
       actualEnd: "2025-08-12", // +2 dias atrasado
+      weight: 10, // 10% do projeto
     },
     {
       description: "Instalações e elétrica",
@@ -50,6 +56,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-08-17",
       actualStart: "2025-08-14",
       actualEnd: "2025-08-17",
+      weight: 10, // 10% do projeto
     },
     {
       description: "Marcenaria",
@@ -57,6 +64,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-09-05",
       actualStart: "2025-08-20",
       actualEnd: "2025-09-05",
+      weight: 33, // 33% do projeto - maior etapa
     },
     {
       description: "Etapa atual: Instalação de mobiliário e eletros",
@@ -64,6 +72,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-09-10",
       actualStart: "2025-09-08",
       actualEnd: "", // Em andamento
+      weight: 3, // 3% do projeto
     },
     {
       description: "Limpeza fina",
@@ -71,6 +80,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-09-11",
       actualStart: "",
       actualEnd: "",
+      weight: 2, // 2% do projeto
     },
     {
       description: "Vistoria de qualidade",
@@ -78,6 +88,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-09-12",
       actualStart: "",
       actualEnd: "",
+      weight: 1, // 1% do projeto
     },
     {
       description: "Conclusão",
@@ -85,6 +96,7 @@ const sampleReportData: ReportData = {
       plannedEnd: "2025-09-14",
       actualStart: "",
       actualEnd: "",
+      weight: 1, // 1% do projeto
     },
   ],
 };

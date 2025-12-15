@@ -70,17 +70,34 @@ const ReportHeader = ({
     const elapsedWorkingDays = calculateWorkingDays(start, report);
     const remainingWorkingDays = calculateWorkingDays(report, end);
 
-    // Calculate completion based on activities
+    // Check if any activity has weight defined
+    const hasWeights = activities.some(a => (a as any).weight !== undefined);
+    
+    // Calculate total weight (should be 100, but normalize if not)
+    const totalWeight = hasWeights 
+      ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+      : activities.length;
+
+    // Calculate completion based on activities using weights
+    const completedWeight = activities.reduce((sum, a) => {
+      if (a.actualEnd) {
+        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+      }
+      return sum;
+    }, 0);
     const completedActivities = activities.filter(a => a.actualEnd).length;
     const totalActivities = activities.length;
-    const actualProgress = totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0;
+    const actualProgress = totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
 
-    // Calculate planned progress (what should be done by reportDate)
-    const plannedCompletedByNow = activities.filter(a => {
+    // Calculate planned progress (what should be done by reportDate) using weights
+    const plannedWeight = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
-      return plannedEnd <= report;
-    }).length;
-    const plannedProgress = totalActivities > 0 ? (plannedCompletedByNow / totalActivities) * 100 : 0;
+      if (plannedEnd <= report) {
+        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+      }
+      return sum;
+    }, 0);
+    const plannedProgress = totalWeight > 0 ? (plannedWeight / totalWeight) * 100 : 0;
 
     // Determine status
     const progressDiff = actualProgress - plannedProgress;
