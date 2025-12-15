@@ -274,7 +274,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
     if (showFullChart) return chartData;
     
     const todayTimestamp = milestones.today;
-    const windowStart = todayTimestamp - 15;
+    const windowStart = todayTimestamp - 30;
     const windowEnd = todayTimestamp + 15;
     
     return chartData.filter(d => d.timestamp >= windowStart && d.timestamp <= windowEnd);
@@ -296,7 +296,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
               Cronograma Previsto x Realizado
             </h2>
             <p className="text-[9px] md:text-xs text-muted-foreground hidden md:block">
-              {showFullChart ? "Visão completa do projeto" : "Janela de 30 dias (±15 dias do hoje)"}
+              {showFullChart ? "Visão completa do projeto" : "Janela de 45 dias (-30 a +15 dias do hoje)"}
             </p>
           </div>
           {/* Toggle full/windowed view */}
