@@ -124,12 +124,14 @@ const Home = () => {
         <div className="max-w-2xl w-full text-center space-y-8 animate-fade-in">
           {/* Hero Section */}
           <div className="space-y-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl gradient-primary shadow-lg mb-4">
-              <FileText className="w-10 h-10 text-primary-foreground" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              Relatório de Obra
-            </h1>
+          <img 
+            src={bwildLogo} 
+            alt="Bwild Logo" 
+            className="h-10 md:h-12 w-auto mb-4"
+          />
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+            Portal do Cliente
+          </h1>
             <p className="text-muted-foreground text-lg max-w-md mx-auto">
               Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado.
             </p>

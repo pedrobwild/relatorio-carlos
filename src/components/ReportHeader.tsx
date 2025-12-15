@@ -50,8 +50,8 @@ const ReportHeader = ({
   ];
 
   const teamContacts: TeamContact[] = [
-    { role: "Engenheiro", name: "Lucas", phone: "(99) 99999-9999", email: "lucas@bwild.com.br", crea: "5071459470-SP" },
-    { role: "Gerente", name: "Victorya", phone: "(99) 99999-9999", email: "victorya@bwild.com.br" },
+    { role: "Engenheiro", name: "Lucas Tresmondi", phone: "(99) 99999-9999", email: "lucas@bwild.com.br", crea: "5071459470-SP" },
+    { role: "Gerente de Relacionamento", name: "Victorya Capponi", phone: "(99) 99999-9999", email: "victorya@bwild.com.br" },
   ];
 
   const toggleContact = (role: string) => {
@@ -279,7 +279,7 @@ const ReportHeader = ({
 
         {/* Row 2: Quick Links - Icon grid */}
         <div className="mb-3 pb-3 border-b border-border">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Menu de Acesso</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Menu de Acesso</p>
           <div className="grid grid-cols-5 gap-1">
             {quickLinks.map((link) => (
               <Link
@@ -298,12 +298,12 @@ const ReportHeader = ({
 
         {/* Row 3: Dates - Secondary hierarchy */}
         <div className="mb-3 pb-3 border-b border-border">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Cronograma</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Cronograma</p>
           <div className="grid grid-cols-3 gap-2">
             {dateMetrics.map((metric) => (
               <div key={metric.label} className="bg-muted/30 rounded-lg px-2 py-1.5 text-center">
-                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">{metric.label}</p>
-                <p className="text-[11px] font-bold text-foreground">{metric.value}</p>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{metric.label}</p>
+                <p className="text-[11px] font-medium text-foreground">{metric.value}</p>
               </div>
             ))}
           </div>
@@ -311,7 +311,7 @@ const ReportHeader = ({
 
         {/* Row 4: Team contacts - Tertiary hierarchy */}
         <div>
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Equipe</p>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Equipe</p>
           <div className="space-y-1.5">
             {teamContacts.map((contact) => (
               <div key={contact.role}>
