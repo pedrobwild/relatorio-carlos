@@ -37,7 +37,7 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
     <div className="flex items-start justify-between gap-2">
       <div className="flex-1">
         <div className="flex flex-wrap items-center gap-1.5 mb-1">
-          <span className="text-[10px] font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
+          <span className="text-tiny font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
             {format(new Date(task.date), "dd/MM", { locale: ptBR })}
           </span>
           {getRiskBadge(task.risk)}
@@ -54,7 +54,7 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
     </div>
     
     {task.riskReason && (
-      <div className="flex items-start gap-1.5 text-xs bg-warning/10 p-2 rounded-lg">
+      <div className="flex items-start gap-1.5 text-tiny bg-warning/10 p-2 rounded-lg">
         <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5 text-warning" />
         <span className="leading-snug text-foreground">{task.riskReason}</span>
       </div>
@@ -95,9 +95,9 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
           
           {remainingTasks.length > 0 && (
             <CollapsibleTrigger asChild>
-              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingTasks.length}</span>}
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingTasks.length}</span>}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>

@@ -25,7 +25,7 @@ const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecisi
   >
     <div className="flex items-start justify-between gap-2">
       <p className="text-body font-medium text-foreground leading-snug">{decision.description}</p>
-      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-[10px] shrink-0">
+      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-tiny shrink-0">
         Pendente
       </Badge>
     </div>
@@ -88,9 +88,9 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
           
           {remainingDecisions.length > 0 && (
             <CollapsibleTrigger asChild>
-              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingDecisions.length}</span>}
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingDecisions.length}</span>}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>

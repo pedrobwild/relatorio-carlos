@@ -29,7 +29,7 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
           <p className="text-body font-medium text-foreground leading-snug">{issue.title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 mt-1 ml-5">
-          <span className="text-[10px] font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
+          <span className="text-tiny font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
             {format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}
           </span>
         </div>
@@ -81,9 +81,9 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
           
           {remainingIssues.length > 0 && (
             <CollapsibleTrigger asChild>
-              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-[10px] font-medium text-primary hover:bg-primary/5 transition-colors">
+              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
                 <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-[9px] font-semibold">+{remainingIssues.length}</span>}
+                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingIssues.length}</span>}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
             </CollapsibleTrigger>
