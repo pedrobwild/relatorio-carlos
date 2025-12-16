@@ -913,6 +913,75 @@ export type Database = {
           },
         ]
       }
+      system_errors: {
+        Row: {
+          created_at: string
+          environment: string | null
+          error_code: string
+          error_message: string
+          error_stack: string | null
+          function_name: string | null
+          id: string
+          metadata: Json | null
+          org_id: string | null
+          project_id: string | null
+          request_body: Json | null
+          request_headers: Json | null
+          request_id: string | null
+          request_method: string | null
+          request_path: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          environment?: string | null
+          error_code: string
+          error_message: string
+          error_stack?: string | null
+          function_name?: string | null
+          id?: string
+          metadata?: Json | null
+          org_id?: string | null
+          project_id?: string | null
+          request_body?: Json | null
+          request_headers?: Json | null
+          request_id?: string | null
+          request_method?: string | null
+          request_path?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          environment?: string | null
+          error_code?: string
+          error_message?: string
+          error_stack?: string | null
+          function_name?: string | null
+          id?: string
+          metadata?: Json | null
+          org_id?: string | null
+          project_id?: string | null
+          request_body?: Json | null
+          request_headers?: Json | null
+          request_id?: string | null
+          request_method?: string | null
+          request_path?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       units: {
         Row: {
           created_at: string
@@ -1139,11 +1208,33 @@ export type Database = {
           },
         ]
       }
+      system_error_stats: {
+        Row: {
+          affected_requests: number | null
+          affected_users: number | null
+          error_code: string | null
+          error_count: number | null
+          hour: string | null
+          source: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_manage_project: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
+      }
+      check_error_rate_alerts: {
+        Args: { p_lookback_hours?: number; p_threshold_per_hour?: number }
+        Returns: {
+          error_code: string
+          error_count: number
+          first_occurrence: string
+          last_occurrence: string
+          sample_message: string
+          source: string
+        }[]
       }
       compute_formalization_hash: {
         Args: { p_formalization_id: string }
@@ -1287,6 +1378,23 @@ export type Database = {
           _payload?: Json
           _project_id: string
           _user_agent?: string
+        }
+        Returns: string
+      }
+      log_system_error: {
+        Args: {
+          p_error_code: string
+          p_error_message: string
+          p_error_stack?: string
+          p_function_name?: string
+          p_metadata?: Json
+          p_org_id?: string
+          p_project_id?: string
+          p_request_id?: string
+          p_request_method?: string
+          p_request_path?: string
+          p_source: string
+          p_user_id?: string
         }
         Returns: string
       }
