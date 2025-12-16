@@ -1,1 +1,16 @@
 project_id = "fvblcyzdcqkiihyhfrrw"
+
+[functions.formalization-pdf]
+verify_jwt = true
+
+[functions.get-client-ip]
+verify_jwt = false
+
+[functions.signature-certificate]
+verify_jwt = false
+
+[functions.verify-signature]
+verify_jwt = false
+
+[functions.document-upload]
+verify_jwt = true
