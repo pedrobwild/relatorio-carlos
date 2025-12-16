@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User } from 'lucide-react';
 import bwildLogo from '@/assets/bwild-logo.png';
 
+type AppRole = 'engineer' | 'admin' | 'customer';
+
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,12 +21,36 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const redirectBasedOnRole = async (userId: string) => {
+    try {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      const role = (roleData?.role as AppRole) || 'customer';
+      
+      if (role === 'engineer' || role === 'admin') {
+        navigate('/gestao', { replace: true });
+      } else {
+        navigate('/minhas-obras', { replace: true });
+      }
+    } catch (err) {
+      // Default to customer route
+      navigate('/minhas-obras', { replace: true });
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
-          navigate('/');
+          // Defer the redirect to avoid Supabase deadlock
+          setTimeout(() => {
+            redirectBasedOnRole(session.user.id);
+          }, 0);
         }
         setCheckingSession(false);
       }
@@ -33,7 +59,7 @@ export default function Auth() {
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate('/');
+        redirectBasedOnRole(session.user.id);
       }
       setCheckingSession(false);
     });
@@ -105,7 +131,7 @@ export default function Auth() {
 
     setLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/auth`;
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -173,9 +199,9 @@ export default function Auth() {
             <img src={bwildLogo} alt="Bwild" className="h-10" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Portal do Cliente</CardTitle>
+            <CardTitle className="text-2xl">Portal Bwild</CardTitle>
             <CardDescription className="mt-2">
-              Acesse sua conta para gerenciar formalizações e acompanhar seu projeto.
+              Acesse sua conta para gerenciar obras e acompanhar projetos.
             </CardDescription>
           </div>
         </CardHeader>
