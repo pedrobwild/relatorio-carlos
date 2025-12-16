@@ -115,14 +115,7 @@ const Index = () => {
 
       <div className="p-3 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">
-          {/* Page Title - Desktop only */}
-          <div className="hidden md:flex items-center gap-3 mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
-            <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
-            <div className="h-5 w-px bg-border/60" />
-            <h1 className="text-2xl font-bold text-foreground">Portal do Cliente</h1>
-          </div>
-
-        <div ref={reportRef}>
+          <div ref={reportRef}>
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             <ReportHeader
               projectName={reportData.projectName}
