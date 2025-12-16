@@ -52,6 +52,15 @@ const formatShortHash = (hash: string | null) => {
   return hash.substring(0, 8) + '...' + hash.substring(hash.length - 8);
 };
 
+// Check if this is seed/demo data (not a valid UUID format from the database)
+const isSeedData = (idToCheck: string | undefined) => {
+  if (!idToCheck) return false;
+  // Valid UUIDs have format: 8-4-4-4-12 hex chars (only 0-9 and a-f)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // Seed data IDs contain non-hex characters like 'g' at the start
+  return !uuidRegex.test(idToCheck) || /[g-z]/i.test(idToCheck.substring(0, 8));
+};
+
 export default function FormalizacaoDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -64,6 +73,8 @@ export default function FormalizacaoDetalhe() {
   const { data: formalizacao, isLoading, refetch } = useFormalizacao(id);
   const acknowledge = useAcknowledge();
   const sendForSignature = useSendForSignature();
+
+  const isDemo = isSeedData(id);
 
   const parties = (formalizacao?.parties as any[] | null) || [];
   const acknowledgements = (formalizacao?.acknowledgements as any[] | null) || [];
@@ -81,6 +92,14 @@ export default function FormalizacaoDetalhe() {
 
   const handleSendForSignature = async () => {
     if (!id || !isDraft) return;
+
+    if (isDemo) {
+      toast({
+        title: 'Dados de demonstração',
+        description: 'Esta funcionalidade não está disponível para dados de exemplo.',
+      });
+      return;
+    }
 
     setSendingForSignature(true);
     try {
@@ -105,6 +124,14 @@ export default function FormalizacaoDetalhe() {
   const handleAcknowledge = async () => {
     if (!pendingCustomerParty || !id) return;
 
+    if (isDemo) {
+      toast({
+        title: 'Dados de demonstração',
+        description: 'A assinatura não está disponível para dados de exemplo.',
+      });
+      return;
+    }
+
     try {
       await acknowledge.mutateAsync({
         formalizationId: id,
@@ -128,6 +155,14 @@ export default function FormalizacaoDetalhe() {
 
   const handleDownloadPdf = async () => {
     if (!id) return;
+
+    if (isDemo) {
+      toast({
+        title: 'Dados de demonstração',
+        description: 'O download de PDF não está disponível para dados de exemplo.',
+      });
+      return;
+    }
 
     setDownloadingPdf(true);
     try {
