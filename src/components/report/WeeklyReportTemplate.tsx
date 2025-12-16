@@ -2,11 +2,12 @@ import { WeeklyReportData } from "@/types/weeklyReport";
 import ExecutiveSummary from "./ExecutiveSummary";
 import LookaheadSection from "./LookaheadSection";
 import RisksIssuesSection from "./RisksIssuesSection";
-import QualitySection from "./QualitySection";
 import ClientDecisionsSection from "./ClientDecisionsSection";
 import IncidentsSection from "./IncidentsSection";
 import PhotoGallery from "./PhotoGallery";
 import ReportFooter from "./ReportFooter";
+import ProgressTimeline from "./ProgressTimeline";
+
 interface WeeklyReportTemplateProps {
   data: WeeklyReportData;
 }
@@ -16,6 +17,11 @@ const WeeklyReportTemplate = ({ data }: WeeklyReportTemplateProps) => {
     <div className="space-y-2 animate-fade-in">
       {/* Executive Summary */}
       <ExecutiveSummary data={data} />
+
+      {/* Progress Timeline by Room */}
+      {data.roomsProgress && data.roomsProgress.length > 0 && (
+        <ProgressTimeline rooms={data.roomsProgress} />
+      )}
 
       {/* Lookahead (Next 7 Days) */}
       <LookaheadSection tasks={data.lookaheadTasks} />
