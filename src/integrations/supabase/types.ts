@@ -330,6 +330,30 @@ export type Database = {
         }
         Relationships: []
       }
+      orgs: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pending_items: {
         Row: {
           action_url: string | null
@@ -579,6 +603,38 @@ export type Database = {
           },
         ]
       }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          role: Database["public"]["Enums"]["project_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: Database["public"]["Enums"]["project_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_payments: {
         Row: {
           amount: number
@@ -633,6 +689,7 @@ export type Database = {
           created_by: string
           id: string
           name: string
+          org_id: string | null
           planned_end_date: string
           planned_start_date: string
           status: string
@@ -648,6 +705,7 @@ export type Database = {
           created_by: string
           id?: string
           name: string
+          org_id?: string | null
           planned_end_date: string
           planned_start_date: string
           status?: string
@@ -663,13 +721,57 @@ export type Database = {
           created_by?: string
           id?: string
           name?: string
+          org_id?: string | null
           planned_end_date?: string
           planned_start_date?: string
           status?: string
           unit_name?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -771,6 +873,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_manage_project: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
       compute_formalization_hash: {
         Args: { p_formalization_id: string }
         Returns: string
@@ -787,6 +893,14 @@ export type Database = {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
+      has_project_role: {
+        Args: {
+          _project_id: string
+          _role: Database["public"]["Enums"]["project_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -794,9 +908,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_project_member: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       user_belongs_to_org: {
         Args: { p_org_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      user_in_org: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       user_is_admin: { Args: { p_user_id: string }; Returns: boolean }
@@ -834,6 +956,7 @@ export type Database = {
         | "decision"
         | "invoice"
         | "extra_purchase"
+      project_role: "owner" | "engineer" | "viewer" | "customer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -996,6 +1119,7 @@ export const Constants = {
         "invoice",
         "extra_purchase",
       ],
+      project_role: ["owner", "engineer", "viewer", "customer"],
     },
   },
 } as const
