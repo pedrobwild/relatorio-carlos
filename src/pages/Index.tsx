@@ -1,7 +1,8 @@
 import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, Loader2, AlertCircle } from "lucide-react";
+import { BarChart3, FileText, Loader2, AlertCircle, Activity } from "lucide-react";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
@@ -277,12 +278,19 @@ const Index = () => {
                         <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
                         Curva S
                       </TabsTrigger>
-                      <TabsTrigger
+                <TabsTrigger
                         value="relatorio"
                         className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
                       >
                         <FileText className="w-3.5 h-3.5 mr-1.5" />
                         Relatórios Semanais
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="atividade"
+                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                      >
+                        <Activity className="w-3.5 h-3.5 mr-1.5" />
+                        Atividade
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -318,6 +326,14 @@ const Index = () => {
                         onReportClick={handleReportClick}
                       />
                     )}
+                  </TabsContent>
+
+                  <TabsContent value="atividade" className="mt-0 focus-visible:outline-none">
+                    <ActivityTimeline 
+                      projectId={project?.id} 
+                      maxItems={30}
+                      showHeader={false}
+                    />
                   </TabsContent>
                 </div>
               </Tabs>
