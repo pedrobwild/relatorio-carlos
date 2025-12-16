@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { parseISO, differenceInDays } from "date-fns";
 import { useAuth } from "./useAuth";
 import { isDemoMode } from "@/config/flags";
+import type { Json } from "@/integrations/supabase/types";
 
 // Database enum mappings
 export type PendingItemType = 
@@ -11,6 +12,7 @@ export type PendingItemType =
   | "signature" 
   | "decision" 
   | "invoice" 
+  | "approval"
   | "extra_purchase";
 
 export type PendingItemStatus = "pending" | "completed" | "cancelled";
@@ -37,6 +39,8 @@ export interface PendingItem {
   status: PendingItemStatus;
   resolvedAt?: string;
   resolvedBy?: string;
+  resolutionNotes?: string;
+  resolutionPayload?: Record<string, unknown>;
 }
 
 // Map database type to UI type
@@ -189,10 +193,12 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
   const resolveMutation = useMutation({
     mutationFn: async ({ 
       itemId, 
-      notes 
+      notes,
+      payload,
     }: { 
       itemId: string; 
       notes?: string;
+      payload?: Record<string, unknown>;
     }) => {
       const { error } = await supabase
         .from("pending_items")
@@ -201,6 +207,7 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
           resolved_at: new Date().toISOString(),
           resolved_by: user?.id,
           resolution_notes: notes,
+          resolution_payload: (payload || {}) as Json,
         })
         .eq("id", itemId);
 
@@ -215,10 +222,12 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
   const cancelMutation = useMutation({
     mutationFn: async ({ 
       itemId, 
-      notes 
+      notes,
+      payload,
     }: { 
       itemId: string; 
       notes?: string;
+      payload?: Record<string, unknown>;
     }) => {
       const { error } = await supabase
         .from("pending_items")
@@ -227,6 +236,7 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
           resolved_at: new Date().toISOString(),
           resolved_by: user?.id,
           resolution_notes: notes,
+          resolution_payload: (payload || {}) as Json,
         })
         .eq("id", itemId);
 
@@ -255,20 +265,20 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
     }) => {
       const { error } = await supabase
         .from("pending_items")
-        .insert({
+        .insert([{
           project_id: newItem.projectId,
           customer_org_id: newItem.customerOrgId,
-          type: mapUiTypeToDbType(newItem.type),
+          type: mapUiTypeToDbType(newItem.type) as "approve_3d" | "approve_executive" | "decision" | "extra_purchase" | "invoice" | "signature",
           title: newItem.title,
           description: newItem.description,
           due_date: newItem.dueDate,
           reference_type: newItem.referenceType,
           reference_id: newItem.referenceId,
-          options: newItem.options,
+          options: newItem.options as Json,
           impact: newItem.impact,
           amount: newItem.amount,
           action_url: newItem.actionUrl,
-        });
+        }]);
 
       if (error) throw error;
     },
