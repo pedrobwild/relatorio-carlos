@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Camera, Check, Clock, Hammer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, Check, Hammer, Box, ArrowLeftRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { cn } from "@/lib/utils";
 import { RoomProgress, TimelinePhoto } from "@/types/weeklyReport";
 
@@ -13,28 +15,39 @@ const PhaseCard = ({
   phase, 
   photo, 
   label, 
-  isActive 
+  isActive,
+  onClick
 }: { 
-  phase: "before" | "during" | "after"; 
+  phase: "render3D" | "before" | "during" | "after"; 
   photo?: TimelinePhoto; 
   label: string;
   isActive: boolean;
+  onClick?: () => void;
 }) => {
   const phaseConfig = {
+    render3D: { 
+      icon: Box, 
+      color: "bg-blue-500/10 text-blue-600",
+      borderColor: "border-blue-500/50",
+      ringColor: "ring-blue-500/50"
+    },
     before: { 
       icon: Camera, 
       color: "bg-muted text-muted-foreground",
-      borderColor: "border-muted-foreground/30"
+      borderColor: "border-muted-foreground/30",
+      ringColor: "ring-muted-foreground/50"
     },
     during: { 
       icon: Hammer, 
       color: "bg-amber-500/10 text-amber-600",
-      borderColor: "border-amber-500/50"
+      borderColor: "border-amber-500/50",
+      ringColor: "ring-amber-500/50"
     },
     after: { 
       icon: Check, 
       color: "bg-emerald-500/10 text-emerald-600",
-      borderColor: "border-emerald-500/50"
+      borderColor: "border-emerald-500/50",
+      ringColor: "ring-emerald-500/50"
     },
   };
   
@@ -56,14 +69,15 @@ const PhaseCard = ({
   }
   
   return (
-    <div className="flex-1 relative group">
+    <button 
+      onClick={onClick}
+      className="flex-1 relative group text-left"
+    >
       <div className={cn(
         "aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all",
         isActive ? config.borderColor : "border-transparent",
-        isActive ? "ring-2 ring-offset-2 ring-offset-background" : "",
-        phase === "after" && isActive ? "ring-emerald-500/50" : "",
-        phase === "during" && isActive ? "ring-amber-500/50" : "",
-        phase === "before" && isActive ? "ring-muted-foreground/50" : ""
+        isActive ? `ring-2 ring-offset-2 ring-offset-background ${config.ringColor}` : "",
+        "hover:opacity-90 cursor-pointer"
       )}>
         <img
           src={photo.url}
@@ -82,11 +96,117 @@ const PhaseCard = ({
           <p className="text-tiny text-white line-clamp-2">{photo.caption}</p>
         </div>
       </div>
-    </div>
+    </button>
+  );
+};
+
+// Comparison Modal Component
+const ComparisonModal = ({ 
+  isOpen, 
+  onClose, 
+  render3D, 
+  realPhoto, 
+  roomName 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  render3D?: TimelinePhoto; 
+  realPhoto?: TimelinePhoto;
+  roomName: string;
+}) => {
+  const [sliderPosition, setSliderPosition] = useState(50);
+  
+  if (!render3D || !realPhoto) return null;
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl p-0 bg-card border-border overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>Comparativo 3D vs Real - {roomName}</DialogTitle>
+        </VisuallyHidden>
+        
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <div>
+            <h3 className="text-h3 font-semibold">{roomName}</h3>
+            <p className="text-tiny text-muted-foreground flex items-center gap-1">
+              <ArrowLeftRight className="w-3 h-3" />
+              Arraste para comparar
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        <div className="relative aspect-video overflow-hidden">
+          {/* Real Photo (Background) */}
+          <img
+            src={realPhoto.url}
+            alt={realPhoto.caption}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          
+          {/* 3D Render (Foreground with clip) */}
+          <div 
+            className="absolute inset-0 overflow-hidden"
+            style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+          >
+            <img
+              src={render3D.url}
+              alt={render3D.caption}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          
+          {/* Slider Line */}
+          <div 
+            className="absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize z-10"
+            style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+          >
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center">
+              <ArrowLeftRight className="w-5 h-5 text-foreground" />
+            </div>
+          </div>
+          
+          {/* Slider Control */}
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={sliderPosition}
+            onChange={(e) => setSliderPosition(Number(e.target.value))}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20"
+          />
+          
+          {/* Labels */}
+          <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-blue-500/90 text-white rounded-full text-tiny font-medium flex items-center gap-1.5">
+            <Box className="w-3.5 h-3.5" />
+            Projeto 3D
+          </div>
+          <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-emerald-500/90 text-white rounded-full text-tiny font-medium flex items-center gap-1.5">
+            <Camera className="w-3.5 h-3.5" />
+            Foto Real
+          </div>
+        </div>
+        
+        <div className="p-4 bg-muted/30 grid grid-cols-2 gap-4 text-tiny">
+          <div>
+            <span className="text-muted-foreground">Projeto 3D:</span>
+            <p className="font-medium">{render3D.caption}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Foto Real:</span>
+            <p className="font-medium">{realPhoto.caption}</p>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
 const RoomCard = ({ room }: { room: RoomProgress }) => {
+  const [showComparison, setShowComparison] = useState(false);
+  
   const statusConfig = {
     "concluído": { label: "Concluído", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
     "em andamento": { label: "Em andamento", color: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
@@ -94,60 +214,99 @@ const RoomCard = ({ room }: { room: RoomProgress }) => {
   };
   
   const config = statusConfig[room.status];
-  
-  // Determine active phase based on status
   const activePhase = room.status === "concluído" ? "after" : 
                       room.status === "em andamento" ? "during" : "before";
   
+  const hasComparison = room.render3D && room.after;
+  
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-        <h4 className="text-body font-semibold">{room.name}</h4>
-        <Badge variant="outline" className={cn("text-tiny", config.color)}>
-          {config.label}
-        </Badge>
-      </div>
-      
-      <div className="p-3">
-        {/* Timeline connector */}
-        <div className="flex items-center gap-1 mb-3">
-          <div className={cn(
-            "flex-1 h-1 rounded-full transition-colors",
-            room.before ? "bg-muted-foreground/50" : "bg-muted"
-          )} />
-          <div className={cn(
-            "flex-1 h-1 rounded-full transition-colors",
-            room.during ? "bg-amber-500/50" : "bg-muted"
-          )} />
-          <div className={cn(
-            "flex-1 h-1 rounded-full transition-colors",
-            room.after ? "bg-emerald-500/50" : "bg-muted"
-          )} />
+    <>
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="px-3 py-2 border-b border-border flex items-center justify-between gap-2">
+          <h4 className="text-body font-semibold truncate">{room.name}</h4>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {hasComparison && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-6 text-tiny gap-1 px-2"
+                onClick={() => setShowComparison(true)}
+              >
+                <ArrowLeftRight className="w-3 h-3" />
+                <span className="hidden sm:inline">3D vs Real</span>
+              </Button>
+            )}
+            <Badge variant="outline" className={cn("text-tiny whitespace-nowrap", config.color)}>
+              {config.label}
+            </Badge>
+          </div>
         </div>
         
-        {/* Photos */}
-        <div className="flex gap-2">
-          <PhaseCard 
-            phase="before" 
-            photo={room.before} 
-            label="Antes"
-            isActive={activePhase === "before"}
-          />
-          <PhaseCard 
-            phase="during" 
-            photo={room.during} 
-            label="Durante"
-            isActive={activePhase === "during"}
-          />
-          <PhaseCard 
-            phase="after" 
-            photo={room.after} 
-            label="Depois"
-            isActive={activePhase === "after"}
-          />
+        <div className="p-3">
+          {/* Timeline connector */}
+          <div className="flex items-center gap-1 mb-3">
+            {room.render3D && (
+              <div className={cn(
+                "flex-1 h-1 rounded-full transition-colors",
+                room.render3D ? "bg-blue-500/50" : "bg-muted"
+              )} />
+            )}
+            <div className={cn(
+              "flex-1 h-1 rounded-full transition-colors",
+              room.before ? "bg-muted-foreground/50" : "bg-muted"
+            )} />
+            <div className={cn(
+              "flex-1 h-1 rounded-full transition-colors",
+              room.during ? "bg-amber-500/50" : "bg-muted"
+            )} />
+            <div className={cn(
+              "flex-1 h-1 rounded-full transition-colors",
+              room.after ? "bg-emerald-500/50" : "bg-muted"
+            )} />
+          </div>
+          
+          {/* Photos */}
+          <div className="flex gap-2">
+            {room.render3D && (
+              <PhaseCard 
+                phase="render3D" 
+                photo={room.render3D} 
+                label="3D"
+                isActive={false}
+                onClick={() => hasComparison && setShowComparison(true)}
+              />
+            )}
+            <PhaseCard 
+              phase="before" 
+              photo={room.before} 
+              label="Antes"
+              isActive={activePhase === "before"}
+            />
+            <PhaseCard 
+              phase="during" 
+              photo={room.during} 
+              label="Durante"
+              isActive={activePhase === "during"}
+            />
+            <PhaseCard 
+              phase="after" 
+              photo={room.after} 
+              label="Depois"
+              isActive={activePhase === "after"}
+              onClick={() => hasComparison && setShowComparison(true)}
+            />
+          </div>
         </div>
       </div>
-    </div>
+      
+      <ComparisonModal
+        isOpen={showComparison}
+        onClose={() => setShowComparison(false)}
+        render3D={room.render3D}
+        realPhoto={room.after}
+        roomName={room.name}
+      />
+    </>
   );
 };
 

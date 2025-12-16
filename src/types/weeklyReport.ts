@@ -141,6 +141,7 @@ export interface RoomProgress {
   id: string;
   name: string;
   status: "concluído" | "em andamento" | "pendente";
+  render3D?: TimelinePhoto; // Foto do projeto 3D renderizado
   before?: TimelinePhoto;
   during?: TimelinePhoto;
   after?: TimelinePhoto;

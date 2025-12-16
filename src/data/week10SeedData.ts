@@ -477,6 +477,11 @@ export const week10SeedData: WeeklyReportData = {
       id: "room-1",
       name: "Dormitório Suíte",
       status: "concluído",
+      render3D: {
+        url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop",
+        caption: "Projeto 3D - Dormitório com cabeceira LED e nichos",
+        date: "2025-06-15",
+      },
       before: {
         url: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
         caption: "Ambiente antes da reforma - paredes originais",
@@ -497,8 +502,13 @@ export const week10SeedData: WeeklyReportData = {
       id: "room-2",
       name: "Cozinha",
       status: "concluído",
-      before: {
+      render3D: {
         url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
+        caption: "Projeto 3D - Cozinha planejada com ilha",
+        date: "2025-06-15",
+      },
+      before: {
+        url: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop",
         caption: "Cozinha original do apartamento",
         date: "2025-07-01",
       },
@@ -517,8 +527,13 @@ export const week10SeedData: WeeklyReportData = {
       id: "room-3",
       name: "Banheiro Social",
       status: "concluído",
-      before: {
+      render3D: {
         url: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop",
+        caption: "Projeto 3D - Banheiro com gabinete suspenso",
+        date: "2025-06-15",
+      },
+      before: {
+        url: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop",
         caption: "Banheiro antes da reforma",
         date: "2025-07-01",
       },
@@ -537,8 +552,13 @@ export const week10SeedData: WeeklyReportData = {
       id: "room-4",
       name: "Hall de Entrada",
       status: "concluído",
-      before: {
+      render3D: {
         url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
+        caption: "Projeto 3D - Hall com armário multiuso",
+        date: "2025-06-15",
+      },
+      before: {
+        url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&h=300&fit=crop",
         caption: "Hall original sem mobiliário",
         date: "2025-07-01",
       },
@@ -557,6 +577,11 @@ export const week10SeedData: WeeklyReportData = {
       id: "room-5",
       name: "Sala de Estar",
       status: "em andamento",
+      render3D: {
+        url: "https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=400&h=300&fit=crop",
+        caption: "Projeto 3D - Sala com painel de TV",
+        date: "2025-06-15",
+      },
       before: {
         url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
         caption: "Sala original do apartamento",
@@ -572,6 +597,11 @@ export const week10SeedData: WeeklyReportData = {
       id: "room-6",
       name: "Área de Serviço",
       status: "pendente",
+      render3D: {
+        url: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400&h=300&fit=crop",
+        caption: "Projeto 3D - Área de serviço planejada",
+        date: "2025-06-15",
+      },
       before: {
         url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
         caption: "Área de serviço original",
