@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, FileText, Building2, Eye, LogIn, LogOut, User } from "lucide-react";
+import { Plus, FileText, Building2, Eye, LogIn, LogOut, User, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreateReportModal from "@/components/CreateReportModal";
 import { ReportData } from "@/types/report";
 import { useAuth } from "@/hooks/useAuth";
+import { isDemoMode } from "@/config/flags";
 import bwildLogo from "@/assets/bwild-logo.png";
 
-// Start date: 01/07/2025, End date: 14/09/2025
-// Report generated on: 08/09/2025 (activity 7 in progress)
-// Pesos refletem proporção real do trabalho (soma = 100%)
-// Marcenaria concluída = 93% da obra pronta, restante = 7% em 5 dias
+// Demo data - only used when isDemoMode is true
 const sampleReportData: ReportData = {
   projectName: "Hub Brooklyn",
   unitName: "502",
@@ -19,86 +17,16 @@ const sampleReportData: ReportData = {
   endDate: "2025-09-14",
   reportDate: "2025-09-08",
   activities: [
-    {
-      description: "Preparação e Mobilização",
-      plannedStart: "2025-07-01",
-      plannedEnd: "2025-07-05",
-      actualStart: "2025-07-01",
-      actualEnd: "2025-07-04",
-      weight: 5, // 5% do projeto
-    },
-    {
-      description: "Proteções, demolições e infraestrutura",
-      plannedStart: "2025-07-07",
-      plannedEnd: "2025-07-18",
-      actualStart: "2025-07-05",
-      actualEnd: "2025-07-19", // +1 dia atrasado
-      weight: 15, // 15% do projeto
-    },
-    {
-      description: "Pisos, revestimentos, bancadas e box",
-      plannedStart: "2025-07-21",
-      plannedEnd: "2025-08-03",
-      actualStart: "2025-07-21",
-      actualEnd: "2025-08-03",
-      weight: 20, // 20% do projeto
-    },
-    {
-      description: "Pinturas e metais",
-      plannedStart: "2025-08-04",
-      plannedEnd: "2025-08-10",
-      actualStart: "2025-08-06",
-      actualEnd: "2025-08-12", // +2 dias atrasado
-      weight: 10, // 10% do projeto
-    },
-    {
-      description: "Instalações e elétrica",
-      plannedStart: "2025-08-11",
-      plannedEnd: "2025-08-17",
-      actualStart: "2025-08-14",
-      actualEnd: "2025-08-17",
-      weight: 10, // 10% do projeto
-    },
-    {
-      description: "Marcenaria",
-      plannedStart: "2025-08-20",
-      plannedEnd: "2025-09-05",
-      actualStart: "2025-08-20",
-      actualEnd: "2025-09-05",
-      weight: 33, // 33% do projeto - maior etapa
-    },
-    {
-      description: "Etapa atual: Instalação de mobiliário e eletros",
-      plannedStart: "2025-09-08",
-      plannedEnd: "2025-09-10",
-      actualStart: "2025-09-08",
-      actualEnd: "", // Em andamento
-      weight: 3, // 3% do projeto
-    },
-    {
-      description: "Limpeza fina",
-      plannedStart: "2025-09-11",
-      plannedEnd: "2025-09-11",
-      actualStart: "",
-      actualEnd: "",
-      weight: 2, // 2% do projeto
-    },
-    {
-      description: "Vistoria de qualidade",
-      plannedStart: "2025-09-12",
-      plannedEnd: "2025-09-12",
-      actualStart: "",
-      actualEnd: "",
-      weight: 1, // 1% do projeto
-    },
-    {
-      description: "Conclusão",
-      plannedStart: "2025-09-14",
-      plannedEnd: "2025-09-14",
-      actualStart: "",
-      actualEnd: "",
-      weight: 1, // 1% do projeto
-    },
+    { description: "Preparação e Mobilização", plannedStart: "2025-07-01", plannedEnd: "2025-07-05", actualStart: "2025-07-01", actualEnd: "2025-07-04", weight: 5 },
+    { description: "Proteções, demolições e infraestrutura", plannedStart: "2025-07-07", plannedEnd: "2025-07-18", actualStart: "2025-07-05", actualEnd: "2025-07-19", weight: 15 },
+    { description: "Pisos, revestimentos, bancadas e box", plannedStart: "2025-07-21", plannedEnd: "2025-08-03", actualStart: "2025-07-21", actualEnd: "2025-08-03", weight: 20 },
+    { description: "Pinturas e metais", plannedStart: "2025-08-04", plannedEnd: "2025-08-10", actualStart: "2025-08-06", actualEnd: "2025-08-12", weight: 10 },
+    { description: "Instalações e elétrica", plannedStart: "2025-08-11", plannedEnd: "2025-08-17", actualStart: "2025-08-14", actualEnd: "2025-08-17", weight: 10 },
+    { description: "Marcenaria", plannedStart: "2025-08-20", plannedEnd: "2025-09-05", actualStart: "2025-08-20", actualEnd: "2025-09-05", weight: 33 },
+    { description: "Etapa atual: Instalação de mobiliário e eletros", plannedStart: "2025-09-08", plannedEnd: "2025-09-10", actualStart: "2025-09-08", actualEnd: "", weight: 3 },
+    { description: "Limpeza fina", plannedStart: "2025-09-11", plannedEnd: "2025-09-11", actualStart: "", actualEnd: "", weight: 2 },
+    { description: "Vistoria de qualidade", plannedStart: "2025-09-12", plannedEnd: "2025-09-12", actualStart: "", actualEnd: "", weight: 1 },
+    { description: "Conclusão", plannedStart: "2025-09-14", plannedEnd: "2025-09-14", actualStart: "", actualEnd: "", weight: 1 },
   ],
 };
 
@@ -114,6 +42,9 @@ const Home = () => {
   };
 
   const handleViewSample = () => {
+    if (!isDemoMode) {
+      return; // Should not be callable in production
+    }
     sessionStorage.setItem("currentReport", JSON.stringify(sampleReportData));
     navigate("/relatorio");
   };
@@ -175,7 +106,10 @@ const Home = () => {
               </h1>
             </div>
             <p className="text-body text-muted-foreground max-w-md mx-auto leading-relaxed animate-fade-in [animation-delay:100ms] opacity-0 [animation-fill-mode:forwards] px-2">
-              Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado.
+              {isDemoMode 
+                ? "Crie relatórios profissionais de acompanhamento de obra com curva S e cronograma detalhado."
+                : "Acompanhe suas obras com transparência e profissionalismo."
+              }
             </p>
           </div>
 
@@ -212,26 +146,44 @@ const Home = () => {
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col gap-3 md:flex-row md:gap-4 justify-center animate-fade-in [animation-delay:500ms] opacity-0 [animation-fill-mode:forwards] px-2 md:px-0">
-            <Button
-              size="lg"
-              className="gradient-primary text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full md:w-auto"
-              onClick={() => setIsModalOpen(true)}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Criar Novo Relatório
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 border-primary/30 hover:bg-primary/5 transition-all hover:scale-105 w-full md:w-auto"
-              onClick={handleViewSample}
-            >
-              <Eye className="w-5 h-5 mr-2" />
-              Ver Exemplo
-            </Button>
-          </div>
+          {/* CTA Buttons - Only show demo buttons in demo mode */}
+          {isDemoMode ? (
+            <div className="flex flex-col gap-3 md:flex-row md:gap-4 justify-center animate-fade-in [animation-delay:500ms] opacity-0 [animation-fill-mode:forwards] px-2 md:px-0">
+              <Button
+                size="lg"
+                className="gradient-primary text-base md:text-lg px-6 md:px-8 py-5 md:py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full md:w-auto"
+                onClick={() => setIsModalOpen(true)}
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Criar Novo Relatório
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 border-primary/30 hover:bg-primary/5 transition-all hover:scale-105 w-full md:w-auto"
+                onClick={handleViewSample}
+              >
+                <Eye className="w-5 h-5 mr-2" />
+                Ver Exemplo
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-4 animate-fade-in [animation-delay:500ms] opacity-0 [animation-fill-mode:forwards] px-2 md:px-0">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <AlertCircle className="h-5 w-5" />
+                <p className="text-body">
+                  Acesse suas obras pelo menu de navegação ou entre em contato com seu engenheiro.
+                </p>
+              </div>
+              {isAuthenticated && (
+                <Link to="/minhas-obras">
+                  <Button size="lg" className="gradient-primary">
+                    Ver Minhas Obras
+                  </Button>
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
@@ -240,12 +192,14 @@ const Home = () => {
         © {new Date().getFullYear()} Bwild. Todos os direitos reservados.
       </footer>
 
-      {/* Create Report Modal */}
-      <CreateReportModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onCreateReport={handleCreateReport}
-      />
+      {/* Create Report Modal - Only in demo mode */}
+      {isDemoMode && (
+        <CreateReportModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          onCreateReport={handleCreateReport}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { isDemoMode } from '@/config/flags';
 import {
   formalizacoesSeedData,
   getFormalizacaoSeedById,
@@ -63,8 +64,19 @@ export function useFormalizacoes(filters?: {
         return data as FormalizationWithDetails[];
       }
 
-      // 2) If not allowed / empty, show local demo seed so UI always has examples.
-      return filterSeed(filters) as unknown as FormalizationWithDetails[];
+      // If there's an error, throw it (let React Query handle it)
+      if (error) {
+        throw error;
+      }
+
+      // 2) If empty result:
+      // - In demo mode: show local demo seed so UI always has examples.
+      // - In production: return empty array (UI should handle empty state)
+      if (isDemoMode) {
+        return filterSeed(filters) as unknown as FormalizationWithDetails[];
+      }
+
+      return [] as FormalizationWithDetails[];
     },
   });
 }
@@ -85,8 +97,18 @@ export function useFormalizacao(id: string | undefined) {
         return data as FormalizationWithDetails;
       }
 
-      // Fallback demo data
-      return (getFormalizacaoSeedById(id) as unknown as FormalizationWithDetails) ?? null;
+      // If there's an actual error (not just "not found"), throw it
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      // Fallback to demo data only in demo mode
+      if (isDemoMode) {
+        return (getFormalizacaoSeedById(id) as unknown as FormalizationWithDetails) ?? null;
+      }
+
+      // In production, return null for "not found"
+      return null;
     },
     enabled: !!id,
   });
