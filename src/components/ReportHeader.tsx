@@ -245,9 +245,9 @@ const ReportHeader = ({
 
         {/* Main Metrics Section */}
         <div className="p-4 pb-3 bg-secondary/20">
-          <div className="grid grid-cols-6 gap-4">
-            {/* Current Activity - Spans 2 columns */}
-            <div className="col-span-2 bg-card rounded-lg p-3 border border-border">
+          <div className="grid grid-cols-6 xl:grid-cols-8 gap-4">
+            {/* Current Activity - Spans 2 columns on md, 3 on xl */}
+            <div className="col-span-2 xl:col-span-3 bg-card rounded-lg p-3 border border-border">
               <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <ActivityIcon className="w-3.5 h-3.5" />
                 Etapa Atual
@@ -322,11 +322,31 @@ const ReportHeader = ({
                 {projectMetrics.remainingWorkingDays} <span className="text-caption font-normal">dias úteis</span>
               </p>
             </div>
+
+            {/* Extra metrics for wider screens */}
+            <div className="hidden xl:flex xl:col-span-2 items-center gap-4">
+              {/* Planned Progress */}
+              <div className="flex-1 bg-card rounded-lg p-3 border border-border">
+                <div className="text-caption uppercase tracking-wide mb-1.5">Previsto</div>
+                <p className="text-h3">{projectMetrics.plannedProgress}%</p>
+              </div>
+              {/* Actual Progress */}
+              <div className={`flex-1 rounded-lg p-3 border ${
+                projectMetrics.isOnTrack 
+                  ? 'bg-emerald-500/10 border-emerald-500/30' 
+                  : 'bg-amber-500/10 border-amber-500/30'
+              }`}>
+                <div className="text-caption uppercase tracking-wide mb-1.5">Realizado</div>
+                <p className={`text-h3 ${
+                  projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+                }`}>{projectMetrics.actualProgress}%</p>
+              </div>
+            </div>
           </div>
 
-          {/* Progress Bars */}
-          <div className="mt-4 space-y-3">
-            {/* Timeline Progress Bar - First */}
+          {/* Progress Bars - Side by side on xl */}
+          <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {/* Timeline Progress Bar */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <h3 className="text-h3">Cronograma</h3>
@@ -346,8 +366,8 @@ const ReportHeader = ({
               </p>
             </div>
 
-            {/* Work Progress Bar - Second */}
-            <div>
+            {/* Work Progress Bar */}
+            <div className="xl:hidden">
               <div className="flex items-center justify-between mb-1.5">
                 <h3 className="text-h3">Progresso da Obra</h3>
                 <span className="text-h3">{projectMetrics.actualProgress}%</span>
@@ -366,6 +386,41 @@ const ReportHeader = ({
                 <span>Previsto até hoje: {projectMetrics.plannedProgress}%</span>
                 <span>Realizado: {projectMetrics.actualProgress}%</span>
               </p>
+            </div>
+
+            {/* Comparative Progress Bar - XL only */}
+            <div className="hidden xl:block">
+              <div className="flex items-center justify-between mb-1.5">
+                <h3 className="text-h3">Progresso da Obra</h3>
+                <div className="flex items-center gap-4 text-caption">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-primary/50"></span>
+                    Previsto: {projectMetrics.plannedProgress}%
+                  </span>
+                  <span className={`flex items-center gap-1.5 font-semibold ${
+                    projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${
+                      projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
+                    }`}></span>
+                    Realizado: {projectMetrics.actualProgress}%
+                  </span>
+                </div>
+              </div>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
+                {/* Planned line */}
+                <div 
+                  className="absolute top-0 h-full bg-primary/30 rounded-full"
+                  style={{ width: `${projectMetrics.plannedProgress}%` }}
+                />
+                {/* Actual progress */}
+                <div 
+                  className={`absolute top-0 h-full rounded-full transition-all duration-500 ${
+                    projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}
+                  style={{ width: `${projectMetrics.actualProgress}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
