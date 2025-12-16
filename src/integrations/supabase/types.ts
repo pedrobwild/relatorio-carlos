@@ -327,6 +327,57 @@ export type Database = {
           },
         ]
       }
+      formalization_versions: {
+        Row: {
+          body_md: string
+          created_at: string
+          created_by: string
+          data: Json
+          formalization_id: string
+          id: string
+          summary: string
+          title: string
+          version_number: number
+        }
+        Insert: {
+          body_md: string
+          created_at?: string
+          created_by: string
+          data?: Json
+          formalization_id: string
+          id?: string
+          summary: string
+          title: string
+          version_number?: number
+        }
+        Update: {
+          body_md?: string
+          created_at?: string
+          created_by?: string
+          data?: Json
+          formalization_id?: string
+          id?: string
+          summary?: string
+          title?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formalization_versions_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formalization_versions_formalization_id_fkey"
+            columns: ["formalization_id"]
+            isOneToOne: false
+            referencedRelation: "formalizations_public_customer"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formalizations: {
         Row: {
           body_md: string
