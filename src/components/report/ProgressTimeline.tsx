@@ -569,15 +569,25 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Haptic feedback helper
+  const triggerHaptic = useCallback((pattern: number | number[] = 10) => {
+    if ('vibrate' in navigator) {
+      navigator.vibrate(pattern);
+    }
+  }, []);
+  
   const handlePrevious = useCallback(() => {
+    triggerHaptic(10);
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : rooms.length - 1));
-  }, [rooms.length]);
+  }, [rooms.length, triggerHaptic]);
   
   const handleNext = useCallback(() => {
+    triggerHaptic(10);
     setCurrentIndex((prev) => (prev < rooms.length - 1 ? prev + 1 : 0));
-  }, [rooms.length]);
+  }, [rooms.length, triggerHaptic]);
   
   const openComparison = (room: RoomProgress) => {
+    triggerHaptic(15);
     setSelectedRoom(room);
     setShowComparison(true);
   };
