@@ -10,6 +10,8 @@ import PDFViewer from "@/components/PDFViewer";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
+import { useUserRole } from "@/hooks/useUserRole";
+import { DocumentUpload } from "@/components/DocumentUpload";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -170,7 +172,8 @@ const Documentos = () => {
   const { projectId } = useParams();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { paths } = useProjectNavigation();
-  const { documents, loading, error, getLatestByCategory, getVersionHistory } = useDocuments(projectId);
+  const { documents, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
+  const { isStaff } = useUserRole();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
 
@@ -219,6 +222,9 @@ const Documentos = () => {
               <h1 className="text-h2">Documentos</h1>
             </div>
           </div>
+          {isStaff && projectId && (
+            <DocumentUpload projectId={projectId} onSuccess={refetch} />
+          )}
         </div>
       </div>
 
@@ -229,7 +235,14 @@ const Documentos = () => {
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
               <p className="text-body text-muted-foreground">Nenhum documento disponível</p>
-              <p className="text-caption mt-1">Os documentos serão disponibilizados em breve</p>
+              <p className="text-caption mt-1">
+                {isStaff ? "Envie o primeiro documento do projeto" : "Os documentos serão disponibilizados em breve"}
+              </p>
+              {isStaff && projectId && (
+                <div className="mt-6">
+                  <DocumentUpload projectId={projectId} onSuccess={refetch} />
+                </div>
+              )}
             </div>
           ) : (
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
