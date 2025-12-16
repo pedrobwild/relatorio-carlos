@@ -2,12 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute, StaffRoute, CustomerRoute } from "@/components/ProtectedRoute";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+
 
 // Public pages
 import Auth from "./pages/Auth";
@@ -39,25 +39,8 @@ const ProjectPage = ({ children }: { children: React.ReactNode }) => (
   <ProjectProvider>{children}</ProjectProvider>
 );
 
-// Auth page with redirect if already authenticated
+// Auth page - Auth.tsx handles its own redirect logic based on role
 const AuthPage = () => {
-  const { isAuthenticated, loading } = useAuth();
-  const location = useLocation();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-  
-  // If already authenticated, redirect to home or the page they came from
-  if (isAuthenticated) {
-    const from = (location.state as { from?: string })?.from || '/';
-    return <Navigate to={from} replace />;
-  }
-  
   return <Auth />;
 };
 
