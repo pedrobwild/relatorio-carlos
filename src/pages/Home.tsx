@@ -139,11 +139,6 @@ const Home = () => {
           {/* Hero Section */}
           <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col items-center gap-2 md:gap-3 animate-fade-in">
-              <img 
-                src={bwildLogo} 
-                alt="Bwild Logo" 
-                className="h-7 md:h-10 w-auto"
-              />
               <h1 className="text-h1 text-3xl md:text-5xl tracking-tight">
                 Portal do Cliente
               </h1>
