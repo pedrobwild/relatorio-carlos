@@ -210,7 +210,7 @@ export default function GestaoObras() {
               <ProjectCard
                 key={project.id}
                 project={project}
-                onClick={() => navigate(`/gestao/obra/${project.id}`)}
+                onClick={() => navigate(`/obra/${project.id}`)}
               />
             ))}
           </div>

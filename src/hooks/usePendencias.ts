@@ -12,7 +12,6 @@ export type PendingItemType =
   | "signature" 
   | "decision" 
   | "invoice" 
-  | "approval"
   | "extra_purchase";
 
 export type PendingItemStatus = "pending" | "completed" | "cancelled";
