@@ -85,116 +85,236 @@ const Executivo = () => {
       {/* Content */}
       {hasDocument ? (
         <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
-          <div className="max-w-5xl mx-auto w-full flex flex-col gap-3">
-            {/* Tacit Approval Notice */}
-            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0 mt-0.5">
-                  <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <div className="max-w-7xl mx-auto w-full">
+            {/* Desktop: Two-column layout */}
+            <div className="hidden lg:grid lg:grid-cols-[1fr_340px] lg:gap-6">
+              {/* Left: Main PDF */}
+              <div className="space-y-4">
+                {/* Tacit Approval Notice */}
+                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0">
+                      <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-h3 text-amber-800 dark:text-amber-200 mb-1">Aprovação Tácita</h3>
+                      <p className="text-caption text-amber-700 dark:text-amber-300">
+                        Este projeto executivo foi considerado <strong>aprovado tacitamente</strong> em 25/06/2025, 
+                        pois não houve manifestação do cliente dentro do prazo de 5 dias úteis estipulado em contrato.
+                      </p>
+                      <Link 
+                        to="/formalizacoes/form-aprovacao-tacita" 
+                        className="inline-flex items-center gap-1.5 mt-2 text-caption text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        Ver formalização completa
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-h3 text-amber-800 dark:text-amber-200 mb-1">Aprovação Tácita</h3>
-                  <p className="text-caption text-amber-700 dark:text-amber-300">
-                    Este projeto executivo foi considerado <strong>aprovado tacitamente</strong> em 25/06/2025, 
-                    pois não houve manifestação do cliente dentro do prazo de 5 dias úteis estipulado em contrato 
-                    (prazo expirado em 24/06/2025). Conforme cláusula contratual, a ausência de resposta no prazo 
-                    estabelecido configura aprovação automática do documento.
+
+                {/* PDF Viewer */}
+                <div className="h-[calc(100vh-260px)]">
+                  <PDFViewer url={pdfUrl} title="Projeto Executivo" />
+                </div>
+              </div>
+
+              {/* Right: Sidebar with related documents */}
+              <div className="space-y-4 sticky top-20 h-fit">
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <h2 className="text-h2 mb-4">Documentos Relacionados</h2>
+                  <div className="space-y-3">
+                    {/* ART */}
+                    <Dialog open={artModalOpen} onOpenChange={setArtModalOpen}>
+                      <DialogTrigger asChild>
+                        <div className="bg-secondary/50 border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 shrink-0">
+                              <Award className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-body font-medium">ART</h3>
+                              <p className="text-caption text-muted-foreground">Responsabilidade Técnica</p>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                        <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
+                          <div className="flex items-center justify-between gap-4">
+                            <DialogTitle className="flex items-center gap-2 text-base">
+                              <Award className="w-5 h-5 text-primary shrink-0" />
+                              <span className="truncate">ART - Responsabilidade Técnica</span>
+                            </DialogTitle>
+                            <Button onClick={handleDownloadArt} size="sm" variant="outline" className="gap-2 shrink-0">
+                              <Download className="w-4 h-4" />
+                              Download
+                            </Button>
+                          </div>
+                        </DialogHeader>
+                        <div className="flex-1 overflow-hidden p-2">
+                          <PDFViewer url={artPdfUrl} title="ART" />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Plano de Reforma */}
+                    <Dialog open={planoReformaModalOpen} onOpenChange={setPlanoReformaModalOpen}>
+                      <DialogTrigger asChild>
+                        <div className="bg-secondary/50 border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 shrink-0">
+                              <ClipboardList className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-body font-medium">Plano de Reforma</h3>
+                              <p className="text-caption text-muted-foreground">Planejamento da reforma</p>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                        <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
+                          <div className="flex items-center justify-between gap-4">
+                            <DialogTitle className="flex items-center gap-2 text-base">
+                              <ClipboardList className="w-5 h-5 text-primary shrink-0" />
+                              <span className="truncate">Plano de Reforma</span>
+                            </DialogTitle>
+                            <Button onClick={handleDownloadPlanoReforma} size="sm" variant="outline" className="gap-2 shrink-0">
+                              <Download className="w-4 h-4" />
+                              Download
+                            </Button>
+                          </div>
+                        </DialogHeader>
+                        <div className="flex-1 overflow-hidden p-2">
+                          <PDFViewer url={planoReformaPdfUrl} title="Plano de Reforma" />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+
+                {/* Quick Info */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                  <p className="text-caption text-foreground/80">
+                    <strong>Dica:</strong> Clique em um documento para visualizá-lo ou fazer download.
                   </p>
-                  <Link 
-                    to="/formalizacoes/form-aprovacao-tacita" 
-                    className="inline-flex items-center gap-1.5 mt-2 text-caption text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2"
-                  >
-                    <FileText className="w-3.5 h-3.5" />
-                    Ver formalização completa
-                  </Link>
                 </div>
               </div>
             </div>
 
-            {/* PDF Viewer */}
-            <div>
-              <PDFViewer url={pdfUrl} title="Projeto Executivo" />
-            </div>
-
-            {/* ART Section */}
-            <div className="bg-card rounded-lg border border-border p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 shrink-0">
-                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            {/* Mobile/Tablet: Stack layout - Original */}
+            <div className="lg:hidden flex flex-col gap-3">
+              {/* Tacit Approval Notice */}
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-h3 truncate">ART - Anotação de Responsabilidade Técnica</h3>
-                    <p className="text-caption">Documento de responsabilidade técnica</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-h3 text-amber-800 dark:text-amber-200 mb-1">Aprovação Tácita</h3>
+                    <p className="text-caption text-amber-700 dark:text-amber-300">
+                      Este projeto executivo foi considerado <strong>aprovado tacitamente</strong> em 25/06/2025, 
+                      pois não houve manifestação do cliente dentro do prazo de 5 dias úteis estipulado em contrato 
+                      (prazo expirado em 24/06/2025). Conforme cláusula contratual, a ausência de resposta no prazo 
+                      estabelecido configura aprovação automática do documento.
+                    </p>
+                    <Link 
+                      to="/formalizacoes/form-aprovacao-tacita" 
+                      className="inline-flex items-center gap-1.5 mt-2 text-caption text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Ver formalização completa
+                    </Link>
                   </div>
                 </div>
-                <Dialog open={artModalOpen} onOpenChange={setArtModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2 shrink-0">
-                      <FileText className="w-4 h-4" />
-                      <span className="hidden sm:inline">Visualizar</span>
-                      <span className="sm:hidden">Ver</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                    <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
-                      <div className="flex items-center justify-between gap-4">
-                        <DialogTitle className="flex items-center gap-2 text-base">
-                          <Award className="w-5 h-5 text-primary shrink-0" />
-                          <span className="truncate">ART - Responsabilidade Técnica</span>
-                        </DialogTitle>
-                        <Button onClick={handleDownloadArt} size="sm" variant="outline" className="gap-2 shrink-0">
-                          <Download className="w-4 h-4" />
-                          <span className="hidden sm:inline">Download</span>
-                        </Button>
-                      </div>
-                    </DialogHeader>
-                    <div className="flex-1 overflow-hidden p-2">
-                      <PDFViewer url={artPdfUrl} title="ART" />
-                    </div>
-                  </DialogContent>
-                </Dialog>
               </div>
-            </div>
 
-            {/* Plano de Reforma Section */}
-            <div className="bg-card rounded-lg border border-border p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 shrink-0">
-                    <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-h3 truncate">Plano de Reforma</h3>
-                    <p className="text-caption">Documento de planejamento da reforma</p>
-                  </div>
-                </div>
-                <Dialog open={planoReformaModalOpen} onOpenChange={setPlanoReformaModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2 shrink-0">
-                      <FileText className="w-4 h-4" />
-                      <span className="hidden sm:inline">Visualizar</span>
-                      <span className="sm:hidden">Ver</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-                    <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
-                      <div className="flex items-center justify-between gap-4">
-                        <DialogTitle className="flex items-center gap-2 text-base">
-                          <ClipboardList className="w-5 h-5 text-primary shrink-0" />
-                          <span className="truncate">Plano de Reforma</span>
-                        </DialogTitle>
-                        <Button onClick={handleDownloadPlanoReforma} size="sm" variant="outline" className="gap-2 shrink-0">
-                          <Download className="w-4 h-4" />
-                          <span className="hidden sm:inline">Download</span>
-                        </Button>
-                      </div>
-                    </DialogHeader>
-                    <div className="flex-1 overflow-hidden p-2">
-                      <PDFViewer url={planoReformaPdfUrl} title="Plano de Reforma" />
+              {/* PDF Viewer */}
+              <div>
+                <PDFViewer url={pdfUrl} title="Projeto Executivo" />
+              </div>
+
+              {/* ART Section */}
+              <div className="bg-card rounded-lg border border-border p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 shrink-0">
+                      <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     </div>
-                  </DialogContent>
-                </Dialog>
+                    <div className="min-w-0">
+                      <h3 className="text-h3 truncate">ART - Anotação de Responsabilidade Técnica</h3>
+                      <p className="text-caption">Documento de responsabilidade técnica</p>
+                    </div>
+                  </div>
+                  <Dialog open={artModalOpen} onOpenChange={setArtModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2 shrink-0">
+                        <FileText className="w-4 h-4" />
+                        <span className="hidden sm:inline">Visualizar</span>
+                        <span className="sm:hidden">Ver</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                      <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
+                        <div className="flex items-center justify-between gap-4">
+                          <DialogTitle className="flex items-center gap-2 text-base">
+                            <Award className="w-5 h-5 text-primary shrink-0" />
+                            <span className="truncate">ART - Responsabilidade Técnica</span>
+                          </DialogTitle>
+                          <Button onClick={handleDownloadArt} size="sm" variant="outline" className="gap-2 shrink-0">
+                            <Download className="w-4 h-4" />
+                            <span className="hidden sm:inline">Download</span>
+                          </Button>
+                        </div>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-hidden p-2">
+                        <PDFViewer url={artPdfUrl} title="ART" />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+
+              {/* Plano de Reforma Section */}
+              <div className="bg-card rounded-lg border border-border p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 shrink-0">
+                      <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-h3 truncate">Plano de Reforma</h3>
+                      <p className="text-caption">Documento de planejamento da reforma</p>
+                    </div>
+                  </div>
+                  <Dialog open={planoReformaModalOpen} onOpenChange={setPlanoReformaModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2 shrink-0">
+                        <FileText className="w-4 h-4" />
+                        <span className="hidden sm:inline">Visualizar</span>
+                        <span className="sm:hidden">Ver</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                      <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
+                        <div className="flex items-center justify-between gap-4">
+                          <DialogTitle className="flex items-center gap-2 text-base">
+                            <ClipboardList className="w-5 h-5 text-primary shrink-0" />
+                            <span className="truncate">Plano de Reforma</span>
+                          </DialogTitle>
+                          <Button onClick={handleDownloadPlanoReforma} size="sm" variant="outline" className="gap-2 shrink-0">
+                            <Download className="w-4 h-4" />
+                            <span className="hidden sm:inline">Download</span>
+                          </Button>
+                        </div>
+                      </DialogHeader>
+                      <div className="flex-1 overflow-hidden p-2">
+                        <PDFViewer url={planoReformaPdfUrl} title="Plano de Reforma" />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </div>
           </div>
