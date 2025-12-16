@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, DEMO_DATE, PendingType, PendingStatus, DEADLINE_BY_TYPE } from "@/hooks/usePendencias";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {
@@ -72,6 +73,7 @@ const formatDate = (dateStr: string) => {
 
 const Pendencias = () => {
   const { sortedItems, stats } = usePendencias();
+  const { paths } = useProjectNavigation();
   const today = DEMO_DATE;
 
   return (
@@ -81,11 +83,10 @@ const Pendencias = () => {
         <div className="flex items-center justify-between px-3 py-2.5 max-w-6xl mx-auto">
           <div className="flex items-center gap-2">
             <Link
-              to="/relatorio"
+              to={paths.relatorio}
               className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary hover:bg-accent transition-colors"
               aria-label="Voltar ao relatório"
             >
-              <ArrowLeft className="w-4 h-4" />
             </Link>
             <span className="text-muted-foreground/50">|</span>
             <h1 className="text-body font-semibold">Pendências</h1>

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -148,12 +149,14 @@ const ReportHeader = ({
     };
   }, [startDate, effectiveEndDate, reportDate, activities]);
 
+  const { paths } = useProjectNavigation();
+
   const quickLinks = [
-    { icon: FileText, label: "Contrato", href: "/contrato" },
-    { icon: Box, label: "Projeto 3D", href: "/projeto-3d" },
-    { icon: Ruler, label: "Executivo", href: "/executivo" },
-    { icon: DollarSign, label: "Financeiro", href: "/financeiro" },
-    { icon: ClipboardSignature, label: "Formalizações", href: "/formalizacoes" },
+    { icon: FileText, label: "Contrato", href: paths.contrato },
+    { icon: Box, label: "Projeto 3D", href: paths.projeto3D },
+    { icon: Ruler, label: "Executivo", href: paths.executivo },
+    { icon: DollarSign, label: "Financeiro", href: paths.financeiro },
+    { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes },
   ];
 
   const teamContacts: TeamContact[] = [
@@ -193,7 +196,7 @@ const ReportHeader = ({
             <div className="flex items-center gap-3">
               {/* Pendências CTA */}
               <Link
-                to="/pendencias"
+                to={paths.pendencias}
                 className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors font-semibold text-sm ${
                   pendenciasStats.overdueCount > 0 
                     ? 'bg-rose-500/15 text-rose-600 hover:bg-rose-500/25' 

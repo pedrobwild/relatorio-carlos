@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 
 const Executivo = () => {
+  const { paths } = useProjectNavigation();
   const pdfUrl = "/documents/projeto-executivo.pdf";
   const artPdfUrl = "/documents/art-exemplo.pdf";
   const planoReformaPdfUrl = "/documents/plano-reforma.pdf";
@@ -51,7 +53,7 @@ const Executivo = () => {
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/relatorio">
+            <Link to={paths.relatorio}>
               <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
                 <ArrowLeft className="w-4 h-4" />
               </Button>

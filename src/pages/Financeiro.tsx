@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import bwildLogo from "@/assets/bwild-logo.png";
 import { addDays, format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 
 interface PaymentInstallment {
   id: number;
@@ -127,6 +128,7 @@ const Financeiro = () => {
     if (days <= 5) return { text: `Vence em ${days} dias`, color: "text-amber-600" };
     return null;
   };
+  const { paths } = useProjectNavigation();
 
   return (
     <TooltipProvider>
@@ -134,7 +136,7 @@ const Financeiro = () => {
         {/* Header - Clean banking style */}
         <div className="sticky top-0 z-50 bg-background border-b border-border">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-            <Link to="/relatorio">
+            <Link to={paths.relatorio}>
               <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full min-h-auto">
                 <ArrowLeft className="w-5 h-5" />
               </Button>

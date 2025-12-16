@@ -1,9 +1,11 @@
-import { ArrowLeft, Download, ExternalLink, FileText, Calendar, X } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, FileText, Calendar, X, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
+import { useProject } from "@/contexts/ProjectContext";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 
 interface Aditivo {
   id: string;
@@ -14,23 +16,15 @@ interface Aditivo {
 }
 
 const Contrato = () => {
+  const { project, loading, error } = useProject();
+  const { paths } = useProjectNavigation();
+  
+  // TODO: Load from project documents in database
   const mainContractUrl = "/documents/contrato-bwild.pdf";
   
   const aditivos: Aditivo[] = [
-    {
-      id: "julho",
-      title: "Aditivo ao Contrato",
-      month: "Julho",
-      year: "2025",
-      pdfUrl: "/documents/aditivo-julho.pdf"
-    },
-    {
-      id: "novembro",
-      title: "Aditivo ao Contrato",
-      month: "Novembro",
-      year: "2025",
-      pdfUrl: "/documents/aditivo-novembro.pdf"
-    }
+    { id: "julho", title: "Aditivo ao Contrato", month: "Julho", year: "2025", pdfUrl: "/documents/aditivo-julho.pdf" },
+    { id: "novembro", title: "Aditivo ao Contrato", month: "Novembro", year: "2025", pdfUrl: "/documents/aditivo-novembro.pdf" }
   ];
 
   const handleDownload = (url: string, filename: string) => {
@@ -46,13 +40,32 @@ const Contrato = () => {
     window.open(url, "_blank");
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Link to="/minhas-obras" className="text-primary underline">Voltar</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/relatorio">
+            <Link to={paths.relatorio}>
               <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
@@ -86,12 +99,10 @@ const Contrato = () => {
         <div className="max-w-6xl mx-auto">
           {/* Desktop: Two-column layout */}
           <div className="hidden lg:grid lg:grid-cols-[1fr_320px] lg:gap-6 h-[calc(100vh-100px)]">
-            {/* Left: Main PDF */}
             <div className="h-full">
               <PDFViewer url={mainContractUrl} title="Contrato de Prestação de Serviços" />
             </div>
 
-            {/* Right: Sidebar with Aditivos */}
             <div className="space-y-4">
               <div className="bg-card border border-border rounded-lg p-4">
                 <h2 className="text-h2 mb-4">Aditivos</h2>
@@ -125,11 +136,7 @@ const Contrato = () => {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button
-                                onClick={() => handleDownload(aditivo.pdfUrl, `Aditivo_${aditivo.month}_${aditivo.year}.pdf`)}
-                                size="sm"
-                                className="gap-2"
-                              >
+                              <Button onClick={() => handleDownload(aditivo.pdfUrl, `Aditivo_${aditivo.month}_${aditivo.year}.pdf`)} size="sm" className="gap-2">
                                 <Download className="w-4 h-4" />
                                 Download
                               </Button>
@@ -150,7 +157,6 @@ const Contrato = () => {
                 </div>
               </div>
 
-              {/* Quick Info */}
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                 <p className="text-caption text-foreground/80">
                   <strong>Dica:</strong> Clique em um aditivo para visualizar o documento completo.
@@ -159,13 +165,12 @@ const Contrato = () => {
             </div>
           </div>
 
-          {/* Mobile/Tablet Layout - Original */}
+          {/* Mobile/Tablet Layout */}
           <div className="lg:hidden">
             <div className="h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)]">
               <PDFViewer url={mainContractUrl} title="Contrato de Prestação de Serviços" />
             </div>
 
-            {/* Aditivos Section */}
             <div className="mt-6 space-y-4">
               <h2 className="text-h2">Aditivos</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -198,11 +203,7 @@ const Contrato = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button
-                              onClick={() => handleDownload(aditivo.pdfUrl, `Aditivo_${aditivo.month}_${aditivo.year}.pdf`)}
-                              size="sm"
-                              className="gap-2"
-                            >
+                            <Button onClick={() => handleDownload(aditivo.pdfUrl, `Aditivo_${aditivo.month}_${aditivo.year}.pdf`)} size="sm" className="gap-2">
                               <Download className="w-4 h-4" />
                               Download
                             </Button>
