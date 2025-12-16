@@ -66,6 +66,13 @@ export type Database = {
             foreignKeyName: "domain_events_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "domain_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -441,6 +448,13 @@ export type Database = {
             foreignKeyName: "formalizations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "formalizations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -539,6 +553,13 @@ export type Database = {
             foreignKeyName: "pending_items_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "pending_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -609,6 +630,13 @@ export type Database = {
           project_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_customers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "project_customers_project_id_fkey"
             columns: ["project_id"]
@@ -685,6 +713,13 @@ export type Database = {
             foreignKeyName: "project_documents_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -717,6 +752,13 @@ export type Database = {
             foreignKeyName: "project_engineers_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_engineers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -745,6 +787,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "project_members_project_id_fkey"
             columns: ["project_id"]
@@ -789,6 +838,13 @@ export type Database = {
           project_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "project_payments_project_id_fkey"
             columns: ["project_id"]
@@ -883,6 +939,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "units_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "units_project_id_fkey"
             columns: ["project_id"]
@@ -993,7 +1056,85 @@ export type Database = {
             foreignKeyName: "formalizations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "formalizations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_dashboard_summary: {
+        Row: {
+          actual_end_date: string | null
+          actual_start_date: string | null
+          contract_value: number | null
+          documents_count: number | null
+          formalizations_count: number | null
+          last_activity_at: string | null
+          name: string | null
+          org_id: string | null
+          overdue_count: number | null
+          paid_amount: number | null
+          pending_count: number | null
+          pending_documents_count: number | null
+          pending_signatures_count: number | null
+          planned_end_date: string | null
+          planned_start_date: string | null
+          project_id: string | null
+          status: string | null
+          total_payments: number | null
+        }
+        Insert: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          contract_value?: number | null
+          documents_count?: never
+          formalizations_count?: never
+          last_activity_at?: never
+          name?: string | null
+          org_id?: string | null
+          overdue_count?: never
+          paid_amount?: never
+          pending_count?: never
+          pending_documents_count?: never
+          pending_signatures_count?: never
+          planned_end_date?: string | null
+          planned_start_date?: string | null
+          project_id?: string | null
+          status?: string | null
+          total_payments?: never
+        }
+        Update: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          contract_value?: number | null
+          documents_count?: never
+          formalizations_count?: never
+          last_activity_at?: never
+          name?: string | null
+          org_id?: string | null
+          overdue_count?: never
+          paid_amount?: never
+          pending_count?: never
+          pending_documents_count?: never
+          pending_signatures_count?: never
+          planned_end_date?: string | null
+          planned_start_date?: string | null
+          project_id?: string | null
+          status?: string | null
+          total_payments?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
         ]
@@ -1008,12 +1149,108 @@ export type Database = {
         Args: { p_formalization_id: string }
         Returns: string
       }
+      get_formalization_complete: {
+        Args: { p_formalization_id: string }
+        Returns: {
+          acknowledgements: Json
+          attachments: Json
+          body_md: string
+          created_at: string
+          created_by: string
+          creator_name: string
+          customer_org_id: string
+          data: Json
+          evidence_links: Json
+          id: string
+          locked_at: string
+          locked_hash: string
+          parties: Json
+          project_id: string
+          project_name: string
+          recent_events: Json
+          signed_parties: number
+          status: string
+          summary: string
+          title: string
+          total_parties: number
+          type: string
+          unit_id: string
+          updated_at: string
+        }[]
+      }
+      get_pending_items_with_context: {
+        Args: { p_include_completed?: boolean; p_project_id?: string }
+        Returns: {
+          action_url: string
+          amount: number
+          created_at: string
+          customer_org_id: string
+          days_overdue: number
+          description: string
+          due_date: string
+          id: string
+          impact: string
+          options: Json
+          project_id: string
+          project_name: string
+          reference_id: string
+          reference_status: string
+          reference_title: string
+          reference_type: string
+          resolution_notes: string
+          resolved_at: string
+          resolved_by: string
+          resolver_name: string
+          status: string
+          title: string
+          type: string
+          urgency_level: string
+        }[]
+      }
+      get_project_activity_timeline: {
+        Args: { p_limit?: number; p_offset?: number; p_project_id: string }
+        Returns: {
+          actor_email: string
+          actor_name: string
+          actor_user_id: string
+          created_at: string
+          entity_id: string
+          entity_title: string
+          entity_type: string
+          event_type: string
+          id: string
+          ip_address: string
+          payload: Json
+        }[]
+      }
       get_user_org_id: { Args: { p_user_id: string }; Returns: string }
       get_user_profile: {
         Args: { p_user_id: string }
         Returns: {
           customer_org_id: string
           role: string
+        }[]
+      }
+      get_user_projects_summary: {
+        Args: never
+        Returns: {
+          actual_end_date: string
+          actual_start_date: string
+          contract_value: number
+          id: string
+          last_activity_at: string
+          name: string
+          org_id: string
+          org_name: string
+          overdue_count: number
+          pending_count: number
+          pending_documents: number
+          planned_end_date: string
+          planned_start_date: string
+          progress_percentage: number
+          status: string
+          unsigned_formalizations: number
+          user_role: string
         }[]
       }
       has_project_access: {
