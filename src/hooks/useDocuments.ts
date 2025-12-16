@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 export const DOCUMENT_CATEGORIES = {
   contrato: { label: 'Contrato', icon: 'FileText' },
@@ -131,6 +132,34 @@ export function useDocuments(projectId: string | undefined) {
       .sort((a, b) => b.version - a.version);
   };
 
+  const approveDocument = useCallback(async (documentId: string) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para aprovar documentos');
+      return false;
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('project_documents')
+        .update({
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: user.id,
+        })
+        .eq('id', documentId);
+
+      if (updateError) throw updateError;
+
+      toast.success('Documento aprovado com sucesso');
+      refetch();
+      return true;
+    } catch (err: any) {
+      console.error('Error approving document:', err);
+      toast.error('Erro ao aprovar documento: ' + err.message);
+      return false;
+    }
+  }, [user, refetch]);
+
   return {
     documents,
     loading,
@@ -138,6 +167,7 @@ export function useDocuments(projectId: string | undefined) {
     getDocumentsByCategory,
     getLatestByCategory,
     getVersionHistory,
+    approveDocument,
     refetch,
   };
 }
