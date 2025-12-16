@@ -74,9 +74,19 @@ const parseUserAgent = (ua: string | null) => {
   return { browser, os, device };
 };
 
+// Check if this is seed/demo data (not a valid UUID format from the database)
+const isSeedData = (id: string) => {
+  // Valid UUIDs have format: 8-4-4-4-12 hex chars
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // Seed data IDs contain non-hex characters like 'g' at the start
+  return !uuidRegex.test(id) || id.startsWith('g') || id.startsWith('party-');
+};
+
 export function DigitalSignatureLog({ formalizationId, signatures, parties, documentHash, lockedAt }: DigitalSignatureLogProps) {
   const { toast } = useToast();
   const [downloadingPartyId, setDownloadingPartyId] = useState<string | null>(null);
+  
+  const isDemo = isSeedData(formalizationId);
   
   const sortedSignatures = [...signatures].sort(
     (a, b) => new Date(a.acknowledged_at).getTime() - new Date(b.acknowledged_at).getTime()
@@ -86,6 +96,15 @@ export function DigitalSignatureLog({ formalizationId, signatures, parties, docu
     parties.find(p => p.id === sig.party_id);
 
   const handleDownloadCertificate = async (partyId: string, partyName: string) => {
+    if (isDemo) {
+      toast({
+        title: 'Dados de demonstração',
+        description: 'Certificados não estão disponíveis para dados de exemplo.',
+        variant: 'default',
+      });
+      return;
+    }
+    
     setDownloadingPartyId(partyId);
     try {
       const { data, error } = await supabase.functions.invoke('signature-certificate', {
