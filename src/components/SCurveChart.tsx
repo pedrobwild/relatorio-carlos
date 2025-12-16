@@ -366,8 +366,14 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
     return chartData.filter(d => d.timestamp >= windowStart && d.timestamp <= windowEnd);
   }, [chartData, milestones.today, showFullChart]);
 
-  // Check if windowed view is different from full view
-  const hasMoreData = chartData.length > windowedData.length;
+  // Check if there's more data than what fits in the 30-day window (calculated once, not based on current view)
+  const hasMoreData = useMemo(() => {
+    const todayTimestamp = milestones.today;
+    const windowStart = todayTimestamp - 30;
+    const windowEnd = todayTimestamp + 15;
+    const windowedLength = chartData.filter(d => d.timestamp >= windowStart && d.timestamp <= windowEnd).length;
+    return chartData.length > windowedLength;
+  }, [chartData, milestones.today]);
 
   return (
     <div className="mb-3 md:mb-4">
