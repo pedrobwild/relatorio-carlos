@@ -9,6 +9,7 @@ export const EVENT_TYPES = {
   
   // Formalizations
   FORMALIZATION_CREATED: 'formalization.created',
+  FORMALIZATION_UPDATED: 'formalization.updated',
   FORMALIZATION_SENT: 'formalization.sent',
   FORMALIZATION_SIGNED: 'formalization.signed',
   FORMALIZATION_VOIDED: 'formalization.voided',
