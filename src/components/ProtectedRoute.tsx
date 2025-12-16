@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole, AppRole } from '@/hooks/useUserRole';
 
@@ -16,6 +16,7 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
+  const location = useLocation();
 
   // Show nothing while loading
   if (authLoading || roleLoading) {
@@ -26,9 +27,9 @@ export function ProtectedRoute({
     );
   }
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated, preserving the original destination
   if (!isAuthenticated) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to={redirectTo} state={{ from: location.pathname }} replace />;
   }
 
   // Check role if specified

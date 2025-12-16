@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { parseISO, differenceInDays } from "date-fns";
 import { useAuth } from "./useAuth";
+import { isDemoMode } from "@/config/flags";
 
 // Database enum mappings
 export type PendingItemType = 
@@ -100,6 +101,47 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
   const { data: pendingItems = [], isLoading, error } = useQuery({
     queryKey: ["pending-items", projectId, includeCompleted],
     queryFn: async () => {
+      // TODO: In production, this will query the backend
+      // For now, return empty array when not in demo mode
+      if (!isDemoMode) {
+        let query = supabase
+          .from("pending_items")
+          .select("*")
+          .order("due_date", { ascending: true });
+
+        if (projectId) {
+          query = query.eq("project_id", projectId);
+        }
+
+        if (!includeCompleted) {
+          query = query.eq("status", "pending");
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        return (data || []).map((item): PendingItem => ({
+          id: item.id,
+          type: mapDbTypeToUiType(item.type as PendingItemType),
+          title: item.title,
+          description: item.description || "",
+          dueDate: item.due_date || "",
+          createdDate: item.created_at,
+          priority: calculatePriority(item.due_date),
+          impact: item.impact || undefined,
+          options: item.options as string[] | undefined,
+          amount: item.amount ? Number(item.amount) : undefined,
+          actionUrl: item.action_url || undefined,
+          referenceType: item.reference_type || undefined,
+          referenceId: item.reference_id || undefined,
+          status: item.status as PendingItemStatus,
+          resolvedAt: item.resolved_at || undefined,
+          resolvedBy: item.resolved_by || undefined,
+        }));
+      }
+
+      // Demo mode: query database but return empty on error
       let query = supabase
         .from("pending_items")
         .select("*")
@@ -115,7 +157,11 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      // In demo mode, silently return empty array on error
+      if (error) {
+        console.warn('Pending items query failed (demo mode):', error.message);
+        return [];
+      }
 
       return (data || []).map((item): PendingItem => ({
         id: item.id,

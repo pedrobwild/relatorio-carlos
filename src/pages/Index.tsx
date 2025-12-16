@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, Loader2 } from "lucide-react";
+import { BarChart3, FileText, Loader2, AlertCircle } from "lucide-react";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
@@ -13,6 +13,7 @@ import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport } from "@/types/report";
 import { week10SeedData } from "@/data/week10SeedData";
 import { useProject } from "@/contexts/ProjectContext";
+import { isDemoMode } from "@/config/flags";
 import bwildLogo from "@/assets/bwild-logo.png";
 
 // Demo data for projects without real data yet
@@ -46,9 +47,41 @@ const Index = () => {
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // For now, use demo data - will be replaced with real project data
-  const reportData: ReportData = useMemo(() => {
+  // TODO: In production, activities will be loaded from the database
+  // For now, we use demo data structure
+  
+  // Use real project data if available, demo data only in demo mode
+  const reportData: ReportData | null = useMemo(() => {
     if (project) {
+      // Project exists - use project info with demo activities for now
+      // TODO: Load real activities from database when available
+      if (isDemoMode) {
+        return {
+          projectName: project.name,
+          unitName: project.unit_name || '',
+          clientName: '', // TODO: Load from project_customers
+          startDate: project.planned_start_date,
+          endDate: project.planned_end_date,
+          reportDate: new Date().toISOString().split('T')[0],
+          activities: demoReportData.activities,
+        };
+      }
+      
+      // Project exists but no activity data yet
+      if (isDemoMode) {
+        // In demo mode, show demo activities with project info
+        return {
+          projectName: project.name,
+          unitName: project.unit_name || '',
+          clientName: project.customer_name || '',
+          startDate: project.planned_start_date,
+          endDate: project.planned_end_date,
+          reportDate: new Date().toISOString().split('T')[0],
+          activities: demoReportData.activities, // Use demo activities
+        };
+      }
+      
+      // In production with no activities, return minimal data
       return {
         projectName: project.name,
         unitName: project.unit_name || '',
@@ -56,13 +89,20 @@ const Index = () => {
         startDate: project.planned_start_date,
         endDate: project.planned_end_date,
         reportDate: new Date().toISOString().split('T')[0],
-        activities: demoReportData.activities, // TODO: Load from database
+        activities: [],
       };
     }
-    return demoReportData;
+    
+    // No project at all
+    if (isDemoMode) {
+      return demoReportData;
+    }
+    
+    return null;
   }, [project]);
 
   const allWeeklyReports = useMemo(() => {
+    if (!reportData || reportData.activities.length === 0) return [];
     return generateWeeklyReports(reportData.startDate, reportData.reportDate, reportData.activities);
   }, [reportData]);
 
@@ -143,6 +183,63 @@ const Index = () => {
     );
   }
 
+  // No data available state (production mode without demo data)
+  if (!reportData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Dados ainda não disponíveis</h2>
+          <p className="text-muted-foreground mb-4">
+            Os dados desta obra ainda não foram carregados. Entre em contato com seu engenheiro responsável.
+          </p>
+          <button onClick={() => navigate(-1)} className="text-primary underline">
+            Voltar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty activities state (production mode with project but no activities)
+  if (reportData.activities.length === 0) {
+    return (
+      <div className="min-h-screen min-h-[100dvh] pb-safe">
+        {/* Fixed Mobile Header */}
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
+          <div className="flex flex-col items-center gap-0.5">
+            <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+            <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
+          </div>
+        </div>
+
+        <div className="p-3 md:p-4 lg:p-6 xl:p-8">
+          <div className="max-w-[1600px] mx-auto">
+            {/* Basic project header */}
+            <div className="bg-card rounded-xl shadow-card p-6 mb-6">
+              <h2 className="text-xl font-bold mb-2">{reportData.projectName} {reportData.unitName && `– ${reportData.unitName}`}</h2>
+              <p className="text-muted-foreground">{reportData.clientName}</p>
+              <div className="mt-4 flex gap-4 text-sm text-muted-foreground">
+                <span>Início: {new Date(reportData.startDate).toLocaleDateString('pt-BR')}</span>
+                <span>Término: {new Date(reportData.endDate).toLocaleDateString('pt-BR')}</span>
+              </div>
+            </div>
+
+            {/* Empty state message */}
+            <div className="bg-card rounded-xl shadow-card p-8 text-center">
+              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Cronograma em preparação</h3>
+              <p className="text-muted-foreground">
+                O cronograma de atividades desta obra ainda está sendo preparado.
+                Você receberá uma notificação quando os dados estiverem disponíveis.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
@@ -211,7 +308,7 @@ const Index = () => {
                           hasPrevious={selectedWeekIndex > 0}
                           hasNext={selectedWeekIndex < reportsChronological.length - 1}
                         />
-                        <WeeklyReportTemplate data={week10SeedData} />
+                        <WeeklyReportTemplate data={isDemoMode ? week10SeedData : week10SeedData /* TODO: Load real data */} />
                       </>
                     ) : (
                       <WeeklyReportsHistory
