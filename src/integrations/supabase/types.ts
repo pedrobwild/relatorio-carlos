@@ -360,6 +360,242 @@ export type Database = {
         }
         Relationships: []
       }
+      project_customers: {
+        Row: {
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          customer_user_id: string | null
+          id: string
+          invitation_accepted_at: string | null
+          invitation_sent_at: string | null
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          id?: string
+          invitation_accepted_at?: string | null
+          invitation_sent_at?: string | null
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          id?: string
+          invitation_accepted_at?: string | null
+          invitation_sent_at?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_customers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          id: string
+          mime_type: string | null
+          name: string
+          project_id: string
+          size_bytes: number | null
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          id?: string
+          mime_type?: string | null
+          name: string
+          project_id: string
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          id?: string
+          mime_type?: string | null
+          name?: string
+          project_id?: string
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_engineers: {
+        Row: {
+          created_at: string
+          engineer_user_id: string
+          id: string
+          is_primary: boolean
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          engineer_user_id: string
+          id?: string
+          is_primary?: boolean
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          engineer_user_id?: string
+          id?: string
+          is_primary?: boolean
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_engineers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          installment_number: number
+          paid_at: string | null
+          payment_proof_path: string | null
+          project_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          installment_number: number
+          paid_at?: string | null
+          payment_proof_path?: string | null
+          project_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          installment_number?: number
+          paid_at?: string | null
+          payment_proof_path?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          actual_end_date: string | null
+          actual_start_date: string | null
+          address: string | null
+          contract_value: number | null
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          planned_end_date: string
+          planned_start_date: string
+          status: string
+          unit_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          address?: string | null
+          contract_value?: number | null
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          planned_end_date: string
+          planned_start_date: string
+          status?: string
+          unit_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          address?: string | null
+          contract_value?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          planned_end_date?: string
+          planned_start_date?: string
+          status?: string
+          unit_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       formalizations_public_customer: {
@@ -451,6 +687,18 @@ export type Database = {
           role: string
         }[]
       }
+      has_project_access: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       user_belongs_to_org: {
         Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
@@ -459,6 +707,7 @@ export type Database = {
       user_is_staff_or_above: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
+      app_role: "engineer" | "admin" | "customer"
       evidence_link_kind:
         | "meeting_recording"
         | "drive_link"
@@ -608,6 +857,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["engineer", "admin", "customer"],
       evidence_link_kind: [
         "meeting_recording",
         "drive_link",
