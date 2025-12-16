@@ -34,6 +34,7 @@ export interface ProjectDocument {
   approved_at: string | null;
   approved_by: string | null;
   parent_document_id: string | null;
+  checksum: string | null;
   created_at: string;
   url?: string;
 }
