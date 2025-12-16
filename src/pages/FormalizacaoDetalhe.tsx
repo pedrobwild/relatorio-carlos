@@ -52,13 +52,16 @@ const formatShortHash = (hash: string | null) => {
   return hash.substring(0, 8) + '...' + hash.substring(hash.length - 8);
 };
 
-// Check if this is seed/demo data (not a valid UUID format from the database)
-const isSeedData = (idToCheck: string | undefined) => {
-  if (!idToCheck) return false;
-  // Valid UUIDs have format: 8-4-4-4-12 hex chars (only 0-9 and a-f)
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  // Seed data IDs contain non-hex characters like 'g' at the start
-  return !uuidRegex.test(idToCheck) || /[g-z]/i.test(idToCheck.substring(0, 8));
+// Check if this is seed/demo data (not actual database data)
+// Seed data has null customer_org_id and specific ID patterns
+const isSeedData = (formalization: any) => {
+  if (!formalization) return false;
+  // Seed data has null customer_org_id
+  if (formalization.customer_org_id === null) return true;
+  // Also check for non-hex characters in ID (like 'g' at start)
+  const id = formalization.id;
+  if (id && /[g-z]/i.test(id.substring(0, 8))) return true;
+  return false;
 };
 
 export default function FormalizacaoDetalhe() {
@@ -74,7 +77,7 @@ export default function FormalizacaoDetalhe() {
   const acknowledge = useAcknowledge();
   const sendForSignature = useSendForSignature();
 
-  const isDemo = isSeedData(id);
+  const isDemo = isSeedData(formalizacao);
 
   const parties = (formalizacao?.parties as any[] | null) || [];
   const acknowledgements = (formalizacao?.acknowledgements as any[] | null) || [];
