@@ -12,6 +12,7 @@ import { PartiesForm } from '@/components/formalizacao/PartiesForm';
 import { ReviewStep } from '@/components/formalizacao/ReviewStep';
 import { useCreateFormalizacao, useAddParty, useSendForSignature } from '@/hooks/useFormalizacoes';
 import { useToast } from '@/hooks/use-toast';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import type { FormalizationType } from '@/types/formalization';
 
 type WizardStep = 'template' | 'form' | 'parties' | 'review';
@@ -40,6 +41,7 @@ const STEPS: { key: WizardStep; label: string; shortLabel: string; icon: React.R
 
 export default function FormalizacaoNova() {
   const navigate = useNavigate();
+  const { paths } = useProjectNavigation();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<WizardStep>('template');
   const [formData, setFormData] = useState<FormData>({
@@ -78,7 +80,7 @@ export default function FormalizacaoNova() {
     if (prevIndex >= 0) {
       setCurrentStep(STEPS[prevIndex].key);
     } else {
-      navigate('/formalizacoes');
+      navigate(paths.formalizacoes);
     }
   };
 

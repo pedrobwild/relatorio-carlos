@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
 import VideoPlayer from "@/components/VideoPlayer";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 
 const Projeto3D = () => {
+  const { paths } = useProjectNavigation();
   const pdfUrl = "/documents/projeto-3d.pdf";
   const videoUrl = "/videos/projeto-3d-tour.mov";
   const hasDocument = true;
@@ -30,7 +32,7 @@ const Projeto3D = () => {
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/relatorio">
+            <Link to={paths.relatorio}>
               <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
                 <ArrowLeft className="w-4 h-4" />
               </Button>

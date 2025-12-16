@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import bwildLogo from '@/assets/bwild-logo.png';
 import ReactMarkdown from 'react-markdown';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
@@ -67,6 +68,7 @@ const isSeedData = (formalization: any) => {
 export default function FormalizacaoDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { paths } = useProjectNavigation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('conteudo');
   const [acknowledged, setAcknowledged] = useState(false);

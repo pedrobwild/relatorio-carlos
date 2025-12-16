@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useFormalizacoes } from '@/hooks/useFormalizacoes';
 import { CreateTestFormalizacao } from '@/components/CreateTestFormalizacao';
 import bwildLogo from '@/assets/bwild-logo.png';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
@@ -92,6 +93,7 @@ function FormalizacaoSkeleton() {
 
 export default function Formalizacoes() {
   const navigate = useNavigate();
+  const { paths } = useProjectNavigation();
   const [activeTab, setActiveTab] = useState('pendentes');
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -125,8 +127,8 @@ export default function Formalizacoes() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => navigate('/')}
-                aria-label="Voltar para o início"
+                onClick={() => navigate(paths.relatorio)}
+                aria-label="Voltar para o relatório"
                 className="rounded-full shrink-0 h-9 w-9 hover:bg-primary/10 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />

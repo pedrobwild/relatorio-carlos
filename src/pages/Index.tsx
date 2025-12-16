@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BarChart3, FileText, Loader2 } from "lucide-react";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
@@ -13,35 +12,63 @@ import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport } from "@/types/report";
 import { week10SeedData } from "@/data/week10SeedData";
+import { useProject } from "@/contexts/ProjectContext";
 import bwildLogo from "@/assets/bwild-logo.png";
+
+// Demo data for projects without real data yet
+const demoReportData: ReportData = {
+  projectName: "Hub Brooklyn",
+  unitName: "502",
+  clientName: "Pedro Alves",
+  startDate: "2025-07-01",
+  endDate: "2025-09-14",
+  reportDate: "2025-09-08",
+  activities: [
+    { description: "Preparação e Mobilização", plannedStart: "2025-07-01", plannedEnd: "2025-07-05", actualStart: "2025-07-01", actualEnd: "2025-07-04", weight: 5 },
+    { description: "Proteções, demolições e infraestrutura", plannedStart: "2025-07-07", plannedEnd: "2025-07-18", actualStart: "2025-07-05", actualEnd: "2025-07-19", weight: 15 },
+    { description: "Pisos, revestimentos, bancadas e box", plannedStart: "2025-07-21", plannedEnd: "2025-08-03", actualStart: "2025-07-21", actualEnd: "2025-08-03", weight: 20 },
+    { description: "Pinturas e metais", plannedStart: "2025-08-04", plannedEnd: "2025-08-10", actualStart: "2025-08-06", actualEnd: "2025-08-12", weight: 10 },
+    { description: "Instalações e elétrica", plannedStart: "2025-08-11", plannedEnd: "2025-08-17", actualStart: "2025-08-14", actualEnd: "2025-08-17", weight: 10 },
+    { description: "Marcenaria", plannedStart: "2025-08-20", plannedEnd: "2025-09-05", actualStart: "2025-08-20", actualEnd: "2025-09-05", weight: 33 },
+    { description: "Etapa atual: Instalação de mobiliário e eletros", plannedStart: "2025-09-08", plannedEnd: "2025-09-10", actualStart: "2025-09-08", actualEnd: "", weight: 3 },
+    { description: "Limpeza fina", plannedStart: "2025-09-11", plannedEnd: "2025-09-11", actualStart: "", actualEnd: "", weight: 2 },
+    { description: "Vistoria de qualidade", plannedStart: "2025-09-12", plannedEnd: "2025-09-12", actualStart: "", actualEnd: "", weight: 1 },
+    { description: "Conclusão", plannedStart: "2025-09-14", plannedEnd: "2025-09-14", actualStart: "", actualEnd: "", weight: 1 },
+  ],
+};
 
 const Index = () => {
   const navigate = useNavigate();
+  const { project, loading: projectLoading, error: projectError } = useProject();
   const [activeTab, setActiveTab] = useState("curvaS");
   const [isExporting, setIsExporting] = useState(false);
-  const [reportData, setReportData] = useState<ReportData | null>(null);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
   const reportRef = useRef<HTMLDivElement>(null);
 
+  // For now, use demo data - will be replaced with real project data
+  const reportData: ReportData = useMemo(() => {
+    if (project) {
+      return {
+        projectName: project.name,
+        unitName: project.unit_name || '',
+        clientName: project.customer_name || '',
+        startDate: project.planned_start_date,
+        endDate: project.planned_end_date,
+        reportDate: new Date().toISOString().split('T')[0],
+        activities: demoReportData.activities, // TODO: Load from database
+      };
+    }
+    return demoReportData;
+  }, [project]);
+
   const allWeeklyReports = useMemo(() => {
-    if (!reportData) return [];
     return generateWeeklyReports(reportData.startDate, reportData.reportDate, reportData.activities);
   }, [reportData]);
 
-  // Get reports in chronological order (oldest first) for navigation
   const reportsChronological = useMemo(() => {
     return [...allWeeklyReports].reverse();
   }, [allWeeklyReports]);
-
-  useEffect(() => {
-    const storedData = sessionStorage.getItem("currentReport");
-    if (storedData) {
-      setReportData(JSON.parse(storedData));
-    } else {
-      navigate("/");
-    }
-  }, [navigate]);
 
   const handleExportPDF = async () => {
     if (!reportRef.current) return;
@@ -55,11 +82,7 @@ const Index = () => {
         margin: [10, 10, 10, 10],
         filename: `Relatorio_Obra_${new Date().toISOString().split('T')[0]}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-        },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
@@ -99,8 +122,25 @@ const Index = () => {
     }
   };
 
-  if (!reportData) {
-    return null;
+  if (projectLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (projectError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">{projectError}</p>
+          <button onClick={() => navigate(-1)} className="text-primary underline">
+            Voltar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -116,82 +156,76 @@ const Index = () => {
       <div className="p-3 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">
           <div ref={reportRef}>
-          <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-            <ReportHeader
-              projectName={reportData.projectName}
-              unitName={reportData.unitName}
-              clientName={reportData.clientName}
-              startDate={reportData.startDate}
-              endDate={reportData.endDate}
-              reportDate={reportData.reportDate}
-              activities={reportData.activities}
-            />
-          </div>
+            <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+              <ReportHeader
+                projectName={reportData.projectName}
+                unitName={reportData.unitName}
+                clientName={reportData.clientName}
+                startDate={reportData.startDate}
+                endDate={reportData.endDate}
+                reportDate={reportData.reportDate}
+                activities={reportData.activities}
+              />
+            </div>
 
-          <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              {/* Tabs Navigation */}
-              <div className="border-b border-border bg-secondary/30">
-                <div className="px-3 md:px-5">
-                  <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto">
-                    <TabsTrigger
-                      value="curvaS"
-                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
-                    >
-                      <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
-                      Curva S
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="relatorio"
-                      className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
-                    >
-                      <FileText className="w-3.5 h-3.5 mr-1.5" />
-                      Relatórios Semanais
-                    </TabsTrigger>
-                  </TabsList>
+            <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="border-b border-border bg-secondary/30">
+                  <div className="px-3 md:px-5">
+                    <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto">
+                      <TabsTrigger
+                        value="curvaS"
+                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                      >
+                        <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+                        Curva S
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="relatorio"
+                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                      >
+                        <FileText className="w-3.5 h-3.5 mr-1.5" />
+                        Relatórios Semanais
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
                 </div>
-              </div>
 
-              {/* Tab Content */}
-              <div className="p-3 md:p-4 lg:p-6">
-                <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
-                  <SCurveChart activities={reportData.activities} reportDate={reportData.reportDate} />
-                  <ScheduleTable activities={reportData.activities} reportDate={reportData.reportDate} />
-                </TabsContent>
+                <div className="p-3 md:p-4 lg:p-6">
+                  <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
+                    <SCurveChart activities={reportData.activities} reportDate={reportData.reportDate} />
+                    <ScheduleTable activities={reportData.activities} reportDate={reportData.reportDate} />
+                  </TabsContent>
 
-                <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
-                  {selectedWeeklyReport ? (
-                    <>
-                      {/* Weekly Report Header with Navigation */}
-                      <WeeklyReportHeader
-                        weeklyReport={selectedWeeklyReport}
+                  <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
+                    {selectedWeeklyReport ? (
+                      <>
+                        <WeeklyReportHeader
+                          weeklyReport={selectedWeeklyReport}
+                          activities={reportData.activities}
+                          onPreviousWeek={handlePreviousWeek}
+                          onNextWeek={handleNextWeek}
+                          onBackToList={handleBackToList}
+                          onExportPDF={handleExportPDF}
+                          isExporting={isExporting}
+                          hasPrevious={selectedWeekIndex > 0}
+                          hasNext={selectedWeekIndex < reportsChronological.length - 1}
+                        />
+                        <WeeklyReportTemplate data={week10SeedData} />
+                      </>
+                    ) : (
+                      <WeeklyReportsHistory
+                        projectStartDate={reportData.startDate}
+                        reportDate={reportData.reportDate}
                         activities={reportData.activities}
-                        onPreviousWeek={handlePreviousWeek}
-                        onNextWeek={handleNextWeek}
-                        onBackToList={handleBackToList}
-                        onExportPDF={handleExportPDF}
-                        isExporting={isExporting}
-                        hasPrevious={selectedWeekIndex > 0}
-                        hasNext={selectedWeekIndex < reportsChronological.length - 1}
+                        onReportClick={handleReportClick}
                       />
-                      
-                      {/* Week 10 Seed Data Template (for demo purposes) */}
-                      <WeeklyReportTemplate data={week10SeedData} />
-                    </>
-                  ) : (
-                    /* Weekly Reports History List */
-                    <WeeklyReportsHistory
-                      projectStartDate={reportData.startDate}
-                      reportDate={reportData.reportDate}
-                      activities={reportData.activities}
-                      onReportClick={handleReportClick}
-                    />
-                  )}
-                </TabsContent>
-              </div>
-            </Tabs>
+                    )}
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </div>
