@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, FileText, Building2, Eye } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Plus, FileText, Building2, Eye, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreateReportModal from "@/components/CreateReportModal";
 import { ReportData } from "@/types/report";
+import { useAuth } from "@/hooks/useAuth";
 import bwildLogo from "@/assets/bwild-logo.png";
 
 // Start date: 01/07/2025, End date: 14/09/2025
@@ -104,6 +105,7 @@ const sampleReportData: ReportData = {
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, loading, signOut, isAuthenticated } = useAuth();
 
   const handleCreateReport = (data: ReportData) => {
     sessionStorage.setItem("currentReport", JSON.stringify(data));
@@ -116,6 +118,10 @@ const Home = () => {
     navigate("/relatorio");
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-background via-accent/20 to-primary/10 relative overflow-hidden">
       {/* Subtle decorative elements - using Bwild purple tones */}
@@ -124,12 +130,37 @@ const Home = () => {
       
       {/* Header */}
       <header className="p-4 md:p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm relative z-10">
-        <div className="max-w-7xl mx-auto flex items-center justify-center md:justify-start">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <img 
             src={bwildLogo} 
             alt="Bwild Logo" 
             className="h-7 md:h-10 w-auto"
           />
+          
+          {/* Auth section */}
+          <div className="flex items-center gap-3">
+            {loading ? (
+              <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
+            ) : isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span>{user?.email?.split('@')[0]}</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Sair</span>
+                </Button>
+              </div>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  <LogIn className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Entrar</span>
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
