@@ -2,12 +2,94 @@ import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Check if error is an auth/permission error
+// Map of error codes/messages to user-friendly Portuguese messages
+const errorMessages: Record<string, string> = {
+  // Network errors
+  'failed to fetch': 'Não foi possível conectar ao servidor. Verifique sua conexão.',
+  'network error': 'Erro de conexão. Verifique sua internet.',
+  'networkerror': 'Erro de conexão. Verifique sua internet.',
+  'timeout': 'A operação demorou muito. Tente novamente.',
+  'aborted': 'A operação foi cancelada.',
+  
+  // Auth errors
+  'jwt expired': 'Sua sessão expirou. Faça login novamente.',
+  'jwt malformed': 'Sessão inválida. Faça login novamente.',
+  'invalid jwt': 'Sessão inválida. Faça login novamente.',
+  'not authenticated': 'Você precisa estar logado para esta ação.',
+  'unauthorized': 'Você não tem permissão para esta ação.',
+  '401': 'Sessão expirada. Faça login novamente.',
+  '403': 'Você não tem permissão para acessar este recurso.',
+  
+  // Database errors
+  'unique_violation': 'Este registro já existe.',
+  'foreign_key_violation': 'Esta operação não é permitida devido a dados relacionados.',
+  'check_violation': 'Os dados informados não são válidos.',
+  'not_null_violation': 'Preencha todos os campos obrigatórios.',
+  '23505': 'Este registro já existe no sistema.',
+  '23503': 'Operação não permitida: dados relacionados existentes.',
+  '23514': 'Os dados informados não atendem aos requisitos.',
+  '23502': 'Campo obrigatório não preenchido.',
+  
+  // RLS errors
+  'row-level security': 'Você não tem permissão para acessar estes dados.',
+  'new row violates row-level security': 'Você não tem permissão para criar este registro.',
+  'rls': 'Acesso negado. Verifique suas permissões.',
+  
+  // Storage errors
+  'bucket not found': 'Erro de armazenamento. Contate o suporte.',
+  'object not found': 'Arquivo não encontrado.',
+  'payload too large': 'Arquivo muito grande. Reduza o tamanho e tente novamente.',
+  '413': 'Arquivo muito grande para upload.',
+  
+  // Rate limiting
+  'rate limit': 'Muitas tentativas. Aguarde um momento.',
+  '429': 'Muitas requisições. Aguarde um momento.',
+  
+  // Server errors
+  '500': 'Erro interno do servidor. Tente novamente.',
+  '502': 'Servidor temporariamente indisponível.',
+  '503': 'Serviço indisponível. Tente novamente em alguns minutos.',
+  '504': 'Tempo de resposta excedido. Tente novamente.',
+  
+  // Generic
+  'pgrst': 'Erro ao processar sua solicitação.',
+};
+
+// Get user-friendly message from error
+function getUserFriendlyMessage(error: unknown): string {
+  const errorString = String(error).toLowerCase();
+  
+  // Check each known error pattern
+  for (const [pattern, message] of Object.entries(errorMessages)) {
+    if (errorString.includes(pattern.toLowerCase())) {
+      return message;
+    }
+  }
+  
+  // Extract Supabase/PostgreSQL error message if available
+  if (error && typeof error === 'object') {
+    const err = error as { message?: string; code?: string; details?: string; hint?: string };
+    
+    // Check error code first
+    if (err.code && errorMessages[err.code]) {
+      return errorMessages[err.code];
+    }
+    
+    // If it has a readable message and it's not too technical
+    if (err.message && !err.message.includes('PGRST') && err.message.length < 100) {
+      return err.message;
+    }
+  }
+  
+  return 'Ocorreu um erro inesperado. Tente novamente.';
+}
+
+// Check if error is an auth/permission error requiring logout
 function isAuthError(error: unknown): boolean {
   if (!error) return false;
   
   const errorMessage = String(error).toLowerCase();
-  const authKeywords = ['unauthorized', '401', '403', 'jwt', 'token', 'permission', 'auth'];
+  const authKeywords = ['jwt expired', 'jwt malformed', 'invalid jwt', 'not authenticated'];
   
   return authKeywords.some(keyword => errorMessage.includes(keyword));
 }
@@ -28,15 +110,8 @@ function handleError(error: unknown, context?: string) {
     return;
   }
   
-  // Show user-friendly error message
-  const message = error instanceof Error ? error.message : 'Ocorreu um erro inesperado';
-  
-  // Avoid showing technical/internal errors to users
-  if (message.includes('fetch') || message.includes('network')) {
-    toast.error('Erro de conexão. Verifique sua internet.');
-  } else if (!message.includes('Missing or invalid environment')) {
-    toast.error(message);
-  }
+  const userMessage = getUserFriendlyMessage(error);
+  toast.error(userMessage);
 }
 
 export const queryClient = new QueryClient({
@@ -56,16 +131,12 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      // Disable automatic refetching to keep UX stable
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
-      // Retry once on failure
       retry: 1,
-      // Consider data stale after 5 minutes
       staleTime: 5 * 60 * 1000,
     },
     mutations: {
-      // Don't retry mutations automatically
       retry: false,
     },
   },
