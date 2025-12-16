@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History } from "lucide-react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { DocumentUpload } from "@/components/DocumentUpload";
+import { DocumentVersionUpload } from "@/components/DocumentVersionUpload";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -30,10 +31,14 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
 
 const DocumentCard = ({ 
   doc, 
-  onViewHistory 
+  onViewHistory,
+  onVersionUploaded,
+  isStaff
 }: { 
   doc: ProjectDocument; 
   onViewHistory: (docId: string) => void;
+  onVersionUploaded: () => void;
+  isStaff: boolean;
 }) => {
   const handleDownload = async () => {
     if (!doc.url) return;
@@ -81,6 +86,15 @@ const DocumentCard = ({
                 <span>v{doc.version}</span>
                 <span>•</span>
                 <span>{format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+                {doc.checksum && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1" title={`SHA256: ${doc.checksum}`}>
+                      <ShieldCheck className="w-3 h-3" />
+                      Verificado
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -99,6 +113,11 @@ const DocumentCard = ({
                 >
                   {doc.status === 'approved' ? 'Aprovado' : 'Pendente'}
                 </Badge>
+                {doc.checksum && (
+                  <span className="text-xs text-muted-foreground font-mono" title={doc.checksum}>
+                    SHA256: {doc.checksum.substring(0, 8)}...
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -111,6 +130,9 @@ const DocumentCard = ({
                 <History className="w-4 h-4" />
                 <span className="hidden sm:inline">Histórico</span>
               </Button>
+              {isStaff && (
+                <DocumentVersionUpload document={doc} onSuccess={onVersionUploaded} />
+              )}
               <Button onClick={handleDownload} size="sm" className="gap-2">
                 <Download className="w-4 h-4" />
                 Download
@@ -142,11 +164,15 @@ const DocumentCard = ({
 const CategorySection = ({ 
   category, 
   documents,
-  onViewHistory
+  onViewHistory,
+  onVersionUploaded,
+  isStaff
 }: { 
   category: DocumentCategory; 
   documents: ProjectDocument[];
   onViewHistory: (docId: string) => void;
+  onVersionUploaded: () => void;
+  isStaff: boolean;
 }) => {
   if (documents.length === 0) return null;
 
@@ -161,7 +187,13 @@ const CategorySection = ({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {documents.map(doc => (
-          <DocumentCard key={doc.id} doc={doc} onViewHistory={onViewHistory} />
+          <DocumentCard 
+            key={doc.id} 
+            doc={doc} 
+            onViewHistory={onViewHistory}
+            onVersionUploaded={onVersionUploaded}
+            isStaff={isStaff}
+          />
         ))}
       </div>
     </div>
@@ -264,6 +296,8 @@ const Documentos = () => {
                     category={cat} 
                     documents={getLatestByCategory(cat)}
                     onViewHistory={handleViewHistory}
+                    onVersionUploaded={refetch}
+                    isStaff={isStaff}
                   />
                 ))}
               </TabsContent>
@@ -272,7 +306,13 @@ const Documentos = () => {
                 <TabsContent key={cat} value={cat} className="mt-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {getLatestByCategory(cat).map(doc => (
-                      <DocumentCard key={doc.id} doc={doc} onViewHistory={handleViewHistory} />
+                      <DocumentCard 
+                        key={doc.id} 
+                        doc={doc} 
+                        onViewHistory={handleViewHistory}
+                        onVersionUploaded={refetch}
+                        isStaff={isStaff}
+                      />
                     ))}
                   </div>
                 </TabsContent>
@@ -297,7 +337,7 @@ const Documentos = () => {
                 key={doc.id} 
                 className={`p-3 rounded-lg border ${index === 0 ? 'border-primary bg-primary/5' : 'border-border'}`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-body font-medium">Versão {doc.version}</span>
@@ -311,9 +351,27 @@ const Documentos = () => {
                     {doc.status === 'approved' ? 'Aprovado' : 'Pendente'}
                   </Badge>
                 </div>
+                {doc.checksum && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono bg-muted/50 rounded px-2 py-1">
+                    <ShieldCheck className="w-3 h-3 text-green-600" />
+                    <span className="truncate" title={doc.checksum}>
+                      SHA256: {doc.checksum}
+                    </span>
+                  </div>
+                )}
+                {doc.description && (
+                  <p className="text-caption text-muted-foreground mt-2 italic">
+                    {doc.description}
+                  </p>
+                )}
               </div>
             ))}
           </div>
+          {isStaff && historyDocs[0] && (
+            <div className="pt-4 border-t">
+              <DocumentVersionUpload document={historyDocs[0]} onSuccess={refetch} />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
