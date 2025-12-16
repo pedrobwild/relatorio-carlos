@@ -1,9 +1,21 @@
-import { useMemo } from "react";
-import { parseISO, differenceInDays, addDays, format } from "date-fns";
-import { week10SeedData } from "@/data/week10SeedData";
-import { formalizacoesSeedData } from "@/data/formalizacoesSeedData";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { parseISO, differenceInDays } from "date-fns";
+import { useAuth } from "./useAuth";
 
-export type PendingType = "decision" | "invoice" | "signature" | "approval_3d" | "approval_exec";
+// Database enum mappings
+export type PendingItemType = 
+  | "approve_3d" 
+  | "approve_executive" 
+  | "signature" 
+  | "decision" 
+  | "invoice" 
+  | "extra_purchase";
+
+export type PendingItemStatus = "pending" | "completed" | "cancelled";
+
+// UI-friendly types (backwards compatible)
+export type PendingType = "decision" | "invoice" | "signature" | "approval_3d" | "approval_exec" | "extra_purchase";
 export type PendingPriority = "alta" | "média" | "baixa";
 export type PendingStatus = "pendente" | "urgente" | "atrasado";
 
@@ -12,165 +24,50 @@ export interface PendingItem {
   type: PendingType;
   title: string;
   description: string;
-  dueDate: string; // Data limite para ação
-  createdDate: string; // Data de criação/envio da pendência
+  dueDate: string;
+  createdDate: string;
   priority: PendingPriority;
   impact?: string;
   options?: string[];
   amount?: number;
+  actionUrl?: string;
+  referenceType?: string;
+  referenceId?: string;
+  status: PendingItemStatus;
+  resolvedAt?: string;
+  resolvedBy?: string;
 }
 
-// Prazos por tipo de pendência (em dias)
-export const DEADLINE_BY_TYPE: Record<PendingType, number> = {
-  decision: 0, // Decisões usam prazo específico do item
-  invoice: 0, // Faturas usam data de vencimento
-  signature: 5, // Aditivos e formalizações: 5 dias
-  approval_3d: 2, // Projeto 3D: 2 dias
-  approval_exec: 2, // Projeto Executivo: 2 dias
-};
-
-// Demo date - in production this would be new Date()
-export const DEMO_DATE = new Date("2025-09-08");
-
-// Helper to add business days
-const addBusinessDays = (date: Date, days: number): Date => {
-  let result = new Date(date);
-  let added = 0;
-  while (added < days) {
-    result = addDays(result, 1);
-    const dayOfWeek = result.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      added++;
-    }
+// Map database type to UI type
+const mapDbTypeToUiType = (dbType: PendingItemType): PendingType => {
+  switch (dbType) {
+    case "approve_3d": return "approval_3d";
+    case "approve_executive": return "approval_exec";
+    default: return dbType as PendingType;
   }
-  return result;
 };
 
-// Generate pending items from real data sources
-const generatePendingItems = (): PendingItem[] => {
-  const items: PendingItem[] = [];
-
-  // 1. CLIENT DECISIONS from week10SeedData
-  week10SeedData.clientDecisions?.forEach((decision) => {
-    if (decision.status === "pending") {
-      items.push({
-        id: `dec-${decision.id}`,
-        type: "decision",
-        title: decision.description.length > 60 
-          ? decision.description.substring(0, 60) + "..." 
-          : decision.description,
-        description: decision.description,
-        createdDate: week10SeedData.periodStart,
-        dueDate: decision.dueDate,
-        priority: "alta",
-        impact: decision.impactIfDelayed,
-        options: decision.options,
-      });
-    }
-  });
-
-  // 2. INVOICES from Financeiro data (matching Financeiro.tsx logic)
-  const contractSignatureDate = new Date(2025, 5, 17); // 17/06/2025
-  const constructionStartDate = new Date(2025, 6, 1); // 01/07/2025
-  const projectEndDate = new Date(2025, 8, 14); // 14/09/2025
-
-  const installments = [
-    {
-      id: 1,
-      stage: "Assinatura do Contrato",
-      amount: 11000,
-      dueDate: addBusinessDays(contractSignatureDate, 2),
-      status: "paid" as const,
-    },
-    {
-      id: 2,
-      stage: "Início da Obra",
-      amount: 29333.33,
-      dueDate: addBusinessDays(constructionStartDate, 2),
-      status: "paid" as const,
-    },
-    {
-      id: 3,
-      stage: "25 dias corridos após início da obra",
-      amount: 29333.33,
-      dueDate: addBusinessDays(addDays(constructionStartDate, 25), 2),
-      status: "paid" as const,
-    },
-    {
-      id: 4,
-      stage: "45 dias corridos após início da obra",
-      amount: 29333.34,
-      dueDate: addBusinessDays(addDays(constructionStartDate, 45), 2),
-      status: "pending" as const,
-    },
-    {
-      id: 5,
-      stage: "Assinatura do Termo de Entrega",
-      amount: 11000,
-      dueDate: addBusinessDays(projectEndDate, 2),
-      status: "upcoming" as const,
-    },
-  ];
-
-  installments.forEach((inst) => {
-    if (inst.status === "pending" || inst.status === "upcoming") {
-      const daysUntilDue = differenceInDays(inst.dueDate, DEMO_DATE);
-      // Only add if due within 14 days for upcoming, or any pending
-      if (inst.status === "pending" || daysUntilDue <= 14) {
-        items.push({
-          id: `inv-${inst.id}`,
-          type: "invoice",
-          title: `Parcela ${inst.id} - ${inst.stage}`,
-          description: `Vencimento: ${format(inst.dueDate, "dd/MM/yyyy")}`,
-          createdDate: format(addDays(inst.dueDate, -10), "yyyy-MM-dd"),
-          dueDate: format(inst.dueDate, "yyyy-MM-dd"),
-          priority: daysUntilDue < 0 ? "alta" : daysUntilDue <= 5 ? "média" : "baixa",
-          amount: inst.amount,
-        });
-      }
-    }
-  });
-
-  // 3. FORMALIZATION SIGNATURES from formalizacoesSeedData
-  formalizacoesSeedData.forEach((form) => {
-    // Only include if pending_signatures and customer hasn't signed
-    if (form.status === "pending_signatures") {
-      const parties = form.parties as any[] | null;
-      const acknowledgements = form.acknowledgements as any[] | null;
-      
-      // Find customer party
-      const customerParty = parties?.find(p => p.party_type === "customer" && p.must_sign === true);
-      
-      if (customerParty) {
-        // Check if customer has already acknowledged
-        const customerAck = acknowledgements?.find(a => a.party_id === customerParty.id && a.acknowledged);
-        
-        if (!customerAck) {
-          // Customer hasn't signed yet
-          const lockedAt = form.locked_at ? parseISO(form.locked_at) : null;
-          const dueDate = lockedAt ? addBusinessDays(lockedAt, 5) : null;
-          
-          items.push({
-            id: `sig-${form.id?.substring(0, 8)}`,
-            type: "signature",
-            title: form.title || "Formalização",
-            description: form.summary || "",
-            createdDate: form.created_at || "",
-            dueDate: dueDate ? format(dueDate, "yyyy-MM-dd") : form.updated_at?.split("T")[0] || "",
-            priority: "alta",
-            impact: "Pendente de assinatura para formalização",
-          });
-        }
-      }
-    }
-  });
-
-  return items;
+// Map UI type to database type
+export const mapUiTypeToDbType = (uiType: PendingType): PendingItemType => {
+  switch (uiType) {
+    case "approval_3d": return "approve_3d";
+    case "approval_exec": return "approve_executive";
+    default: return uiType as PendingItemType;
+  }
 };
 
-export const pendingItemsData: PendingItem[] = generatePendingItems();
+// Calculate priority based on due date
+const calculatePriority = (dueDate: string | null): PendingPriority => {
+  if (!dueDate) return "baixa";
+  const due = parseISO(dueDate);
+  const diff = differenceInDays(due, new Date());
+  if (diff < 0) return "alta";
+  if (diff <= 5) return "média";
+  return "baixa";
+};
 
-export const getStatus = (dueDate: string, referenceDate: Date = DEMO_DATE): PendingStatus => {
+// Get display status based on due date
+export const getStatus = (dueDate: string, referenceDate: Date = new Date()): PendingStatus => {
   const due = parseISO(dueDate);
   const diff = differenceInDays(due, referenceDate);
   
@@ -179,63 +76,206 @@ export const getStatus = (dueDate: string, referenceDate: Date = DEMO_DATE): Pen
   return "pendente";
 };
 
-// Calcula quantos dias está atrasado em relação ao prazo do tipo
-export const getDaysOverdue = (item: PendingItem, referenceDate: Date = DEMO_DATE): number => {
+export const getDaysOverdue = (item: PendingItem, referenceDate: Date = new Date()): number => {
   const due = parseISO(item.dueDate);
   const diff = differenceInDays(referenceDate, due);
   return diff > 0 ? diff : 0;
 };
 
-// Calcula dias restantes até o vencimento
-export const getDaysRemaining = (item: PendingItem, referenceDate: Date = DEMO_DATE): number => {
+export const getDaysRemaining = (item: PendingItem, referenceDate: Date = new Date()): number => {
   const due = parseISO(item.dueDate);
-  const diff = differenceInDays(due, referenceDate);
-  return diff;
+  return differenceInDays(due, referenceDate);
 };
 
-export const usePendencias = () => {
-  const pendingItems = pendingItemsData;
+interface UsePendenciasOptions {
+  projectId?: string;
+  includeCompleted?: boolean;
+}
 
-  const stats = useMemo(() => {
-    const total = pendingItems.length;
-    const overdueCount = pendingItems.filter(item => getStatus(item.dueDate) === "atrasado").length;
-    const urgentCount = pendingItems.filter(item => getStatus(item.dueDate) === "urgente").length;
-    const pendingCount = pendingItems.filter(item => getStatus(item.dueDate) === "pendente").length;
-    
-    // Count by type
-    const byType = {
+export const usePendencias = (options: UsePendenciasOptions = {}) => {
+  const { projectId, includeCompleted = false } = options;
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: pendingItems = [], isLoading, error } = useQuery({
+    queryKey: ["pending-items", projectId, includeCompleted],
+    queryFn: async () => {
+      let query = supabase
+        .from("pending_items")
+        .select("*")
+        .order("due_date", { ascending: true });
+
+      if (projectId) {
+        query = query.eq("project_id", projectId);
+      }
+
+      if (!includeCompleted) {
+        query = query.eq("status", "pending");
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return (data || []).map((item): PendingItem => ({
+        id: item.id,
+        type: mapDbTypeToUiType(item.type as PendingItemType),
+        title: item.title,
+        description: item.description || "",
+        dueDate: item.due_date || "",
+        createdDate: item.created_at,
+        priority: calculatePriority(item.due_date),
+        impact: item.impact || undefined,
+        options: item.options as string[] | undefined,
+        amount: item.amount ? Number(item.amount) : undefined,
+        actionUrl: item.action_url || undefined,
+        referenceType: item.reference_type || undefined,
+        referenceId: item.reference_id || undefined,
+        status: item.status as PendingItemStatus,
+        resolvedAt: item.resolved_at || undefined,
+        resolvedBy: item.resolved_by || undefined,
+      }));
+    },
+    enabled: !!user,
+  });
+
+  // Mutation to resolve a pending item
+  const resolveMutation = useMutation({
+    mutationFn: async ({ 
+      itemId, 
+      notes 
+    }: { 
+      itemId: string; 
+      notes?: string;
+    }) => {
+      const { error } = await supabase
+        .from("pending_items")
+        .update({
+          status: "completed" as const,
+          resolved_at: new Date().toISOString(),
+          resolved_by: user?.id,
+          resolution_notes: notes,
+        })
+        .eq("id", itemId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-items"] });
+    },
+  });
+
+  // Mutation to cancel a pending item
+  const cancelMutation = useMutation({
+    mutationFn: async ({ 
+      itemId, 
+      notes 
+    }: { 
+      itemId: string; 
+      notes?: string;
+    }) => {
+      const { error } = await supabase
+        .from("pending_items")
+        .update({
+          status: "cancelled" as const,
+          resolved_at: new Date().toISOString(),
+          resolved_by: user?.id,
+          resolution_notes: notes,
+        })
+        .eq("id", itemId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-items"] });
+    },
+  });
+
+  // Mutation to create a pending item
+  const createMutation = useMutation({
+    mutationFn: async (newItem: {
+      projectId: string;
+      customerOrgId: string;
+      type: PendingType;
+      title: string;
+      description?: string;
+      dueDate?: string;
+      referenceType?: string;
+      referenceId?: string;
+      options?: string[];
+      impact?: string;
+      amount?: number;
+      actionUrl?: string;
+    }) => {
+      const { error } = await supabase
+        .from("pending_items")
+        .insert({
+          project_id: newItem.projectId,
+          customer_org_id: newItem.customerOrgId,
+          type: mapUiTypeToDbType(newItem.type),
+          title: newItem.title,
+          description: newItem.description,
+          due_date: newItem.dueDate,
+          reference_type: newItem.referenceType,
+          reference_id: newItem.referenceId,
+          options: newItem.options,
+          impact: newItem.impact,
+          amount: newItem.amount,
+          action_url: newItem.actionUrl,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-items"] });
+    },
+  });
+
+  // Calculate stats
+  const stats = {
+    total: pendingItems.length,
+    overdueCount: pendingItems.filter(item => item.dueDate && getStatus(item.dueDate) === "atrasado").length,
+    urgentCount: pendingItems.filter(item => item.dueDate && getStatus(item.dueDate) === "urgente").length,
+    pendingCount: pendingItems.filter(item => item.dueDate && getStatus(item.dueDate) === "pendente").length,
+    byType: {
       decision: pendingItems.filter(item => item.type === "decision").length,
       invoice: pendingItems.filter(item => item.type === "invoice").length,
       signature: pendingItems.filter(item => item.type === "signature").length,
       approval_3d: pendingItems.filter(item => item.type === "approval_3d").length,
       approval_exec: pendingItems.filter(item => item.type === "approval_exec").length,
-    };
+      extra_purchase: pendingItems.filter(item => item.type === "extra_purchase").length,
+    },
+    hasUrgent: pendingItems.some(item => 
+      item.dueDate && (getStatus(item.dueDate) === "atrasado" || getStatus(item.dueDate) === "urgente")
+    ),
+  };
 
-    return {
-      total,
-      overdueCount,
-      urgentCount,
-      pendingCount,
-      byType,
-      hasUrgent: overdueCount > 0 || urgentCount > 0,
-    };
-  }, [pendingItems]);
-
-  const sortedItems = useMemo(() => {
-    return [...pendingItems].sort((a, b) => {
-      const statusOrder = { atrasado: 0, urgente: 1, pendente: 2 };
-      const statusA = getStatus(a.dueDate);
-      const statusB = getStatus(b.dueDate);
-      if (statusOrder[statusA] !== statusOrder[statusB]) {
-        return statusOrder[statusA] - statusOrder[statusB];
-      }
-      return parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime();
-    });
-  }, [pendingItems]);
+  // Sort items by status priority and due date
+  const sortedItems = [...pendingItems].sort((a, b) => {
+    const statusOrder = { atrasado: 0, urgente: 1, pendente: 2 };
+    const statusA = a.dueDate ? getStatus(a.dueDate) : "pendente";
+    const statusB = b.dueDate ? getStatus(b.dueDate) : "pendente";
+    
+    if (statusOrder[statusA] !== statusOrder[statusB]) {
+      return statusOrder[statusA] - statusOrder[statusB];
+    }
+    
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime();
+  });
 
   return {
     pendingItems,
     sortedItems,
     stats,
+    isLoading,
+    error,
+    resolveItem: resolveMutation.mutate,
+    cancelItem: cancelMutation.mutate,
+    createItem: createMutation.mutate,
+    isResolving: resolveMutation.isPending,
+    isCancelling: cancelMutation.isPending,
+    isCreating: createMutation.isPending,
   };
 };

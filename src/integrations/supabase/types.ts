@@ -330,6 +330,77 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_items: {
+        Row: {
+          action_url: string | null
+          amount: number | null
+          created_at: string
+          customer_org_id: string
+          description: string | null
+          due_date: string | null
+          id: string
+          impact: string | null
+          options: Json | null
+          project_id: string
+          reference_id: string | null
+          reference_type: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["pending_item_status"]
+          title: string
+          type: Database["public"]["Enums"]["pending_item_type"]
+        }
+        Insert: {
+          action_url?: string | null
+          amount?: number | null
+          created_at?: string
+          customer_org_id: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impact?: string | null
+          options?: Json | null
+          project_id: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["pending_item_status"]
+          title: string
+          type: Database["public"]["Enums"]["pending_item_type"]
+        }
+        Update: {
+          action_url?: string | null
+          amount?: number | null
+          created_at?: string
+          customer_org_id?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impact?: string | null
+          options?: Json | null
+          project_id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["pending_item_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["pending_item_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -755,6 +826,14 @@ export type Database = {
         | "scope_change"
         | "general"
       party_type: "customer" | "company"
+      pending_item_status: "pending" | "completed" | "cancelled"
+      pending_item_type:
+        | "approve_3d"
+        | "approve_executive"
+        | "signature"
+        | "decision"
+        | "invoice"
+        | "extra_purchase"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -908,6 +987,15 @@ export const Constants = {
         "general",
       ],
       party_type: ["customer", "company"],
+      pending_item_status: ["pending", "completed", "cancelled"],
+      pending_item_type: [
+        "approve_3d",
+        "approve_executive",
+        "signature",
+        "decision",
+        "invoice",
+        "extra_purchase",
+      ],
     },
   },
 } as const

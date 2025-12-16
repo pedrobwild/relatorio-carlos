@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, CheckCircle2, Calendar, ChevronRight } from "lucide-react";
+import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, CheckCircle2, Calendar, ChevronRight, ShoppingCart, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, DEMO_DATE, PendingType, PendingStatus, DEADLINE_BY_TYPE } from "@/hooks/usePendencias";
+import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, PendingType, PendingStatus } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useParams } from "react-router-dom";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {
@@ -18,6 +19,10 @@ const getTypeIcon = (type: PendingType) => {
       return <Palette className="w-4 h-4" />;
     case "approval_exec":
       return <Ruler className="w-4 h-4" />;
+    case "extra_purchase":
+      return <ShoppingCart className="w-4 h-4" />;
+    default:
+      return <Clock className="w-4 h-4" />;
   }
 };
 
@@ -33,6 +38,10 @@ const getTypeLabel = (type: PendingType) => {
       return "Aprovação 3D";
     case "approval_exec":
       return "Aprovação Executivo";
+    case "extra_purchase":
+      return "Compra Extra";
+    default:
+      return "Pendência";
   }
 };
 
@@ -48,6 +57,10 @@ const getTypeColor = (type: PendingType) => {
       return "bg-cyan-500/15 text-cyan-600 border-cyan-500/30";
     case "approval_exec":
       return "bg-indigo-500/15 text-indigo-600 border-indigo-500/30";
+    case "extra_purchase":
+      return "bg-emerald-500/15 text-emerald-600 border-emerald-500/30";
+    default:
+      return "bg-secondary text-muted-foreground border-border";
   }
 };
 
@@ -67,14 +80,36 @@ const formatCurrency = (value: number) => {
 };
 
 const formatDate = (dateStr: string) => {
+  if (!dateStr) return "-";
   const date = parseISO(dateStr);
   return format(date, "dd/MM", { locale: ptBR });
 };
 
 const Pendencias = () => {
-  const { sortedItems, stats } = usePendencias();
+  const { projectId } = useParams();
+  const { sortedItems, stats, isLoading } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
-  const today = DEMO_DATE;
+  const today = new Date();
+
+  // Helper to get action URL
+  const getActionUrl = (item: typeof sortedItems[0]) => {
+    if (item.actionUrl) return item.actionUrl;
+    switch (item.type) {
+      case "invoice": return paths.financeiro;
+      case "signature": return paths.formalizacoes;
+      case "approval_3d": return paths.projeto3D;
+      case "approval_exec": return paths.executivo;
+      default: return paths.relatorio;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,10 +176,9 @@ const Pendencias = () => {
           {/* Right Content */}
           <div className="space-y-3">
             {sortedItems.map((item, index) => {
-              const status = getStatus(item.dueDate);
+              const status = item.dueDate ? getStatus(item.dueDate) : "pendente";
               const daysOverdue = getDaysOverdue(item, today);
               const daysRemaining = getDaysRemaining(item, today);
-              const deadlineDays = DEADLINE_BY_TYPE[item.type];
               
               return (
                 <div 
@@ -208,7 +242,6 @@ const Pendencias = () => {
                             status === "urgente" ? "text-amber-600" : "text-foreground"
                           }`}>
                             Prazo: {formatDate(item.dueDate)}
-                            {deadlineDays > 0 && ` (${deadlineDays}d)`}
                           </span>
                           {status === "atrasado" && (
                             <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
@@ -222,10 +255,7 @@ const Pendencias = () => {
                           )}
                         </div>
                         <Link 
-                          to={item.type === "invoice" ? "/financeiro" : 
-                              item.type === "signature" ? "/formalizacoes" :
-                              item.type === "approval_3d" ? "/projeto-3d" :
-                              item.type === "approval_exec" ? "/executivo" : "/relatorio"}
+                          to={getActionUrl(item)}
                           className="flex items-center gap-1 text-caption text-primary hover:underline font-medium"
                         >
                           Ver detalhes
@@ -279,10 +309,9 @@ const Pendencias = () => {
           {/* Pending Items List */}
           <div className="space-y-2">
             {sortedItems.map((item, index) => {
-              const status = getStatus(item.dueDate);
+              const status = item.dueDate ? getStatus(item.dueDate) : "pendente";
               const daysOverdue = getDaysOverdue(item, today);
               const daysRemaining = getDaysRemaining(item, today);
-              const deadlineDays = DEADLINE_BY_TYPE[item.type];
               
               return (
                 <div 
@@ -345,7 +374,6 @@ const Pendencias = () => {
                         status === "urgente" ? "text-amber-600" : "text-foreground"
                       }`}>
                         Prazo: {formatDate(item.dueDate)}
-                        {deadlineDays > 0 && ` (${deadlineDays}d)`}
                       </span>
                       {status === "atrasado" && (
                         <Badge variant="destructive" className="text-[10px] px-1.5 py-0 ml-1">
@@ -364,10 +392,7 @@ const Pendencias = () => {
                       )}
                     </div>
                     <Link 
-                      to={item.type === "invoice" ? "/financeiro" : 
-                          item.type === "signature" ? "/formalizacoes" :
-                          item.type === "approval_3d" ? "/projeto-3d" :
-                          item.type === "approval_exec" ? "/executivo" : "/relatorio"}
+                      to={getActionUrl(item)}
                       className="flex items-center gap-1 text-caption text-primary hover:underline"
                     >
                       Ver detalhes
