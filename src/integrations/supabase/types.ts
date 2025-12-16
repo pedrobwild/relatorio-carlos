@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      domain_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          org_id: string
+          payload: Json
+          project_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          org_id: string
+          payload?: Json
+          project_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          org_id?: string
+          payload?: Json
+          project_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "domain_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formalization_acknowledgements: {
         Row: {
           acknowledged: boolean
@@ -913,6 +970,19 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      log_domain_event: {
+        Args: {
+          _entity_id: string
+          _entity_type: string
+          _event_type: string
+          _ip_address?: string
+          _org_id: string
+          _payload?: Json
+          _project_id: string
+          _user_agent?: string
+        }
+        Returns: string
+      }
       user_belongs_to_org: {
         Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
