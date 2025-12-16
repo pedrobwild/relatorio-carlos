@@ -566,6 +566,7 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
   const [selectedRoom, setSelectedRoom] = useState<RoomProgress | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -576,15 +577,26 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
     }
   }, []);
   
-  const handlePrevious = useCallback(() => {
+  const navigateTo = useCallback((newIndex: number, direction: 'left' | 'right') => {
     triggerHaptic(10);
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : rooms.length - 1));
-  }, [rooms.length, triggerHaptic]);
+    setSlideDirection(direction);
+    setCurrentIndex(newIndex);
+    
+    // Reset slide direction after animation
+    setTimeout(() => {
+      setSlideDirection(null);
+    }, 300);
+  }, [triggerHaptic]);
+  
+  const handlePrevious = useCallback(() => {
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : rooms.length - 1;
+    navigateTo(newIndex, 'right');
+  }, [currentIndex, rooms.length, navigateTo]);
   
   const handleNext = useCallback(() => {
-    triggerHaptic(10);
-    setCurrentIndex((prev) => (prev < rooms.length - 1 ? prev + 1 : 0));
-  }, [rooms.length, triggerHaptic]);
+    const newIndex = currentIndex < rooms.length - 1 ? currentIndex + 1 : 0;
+    navigateTo(newIndex, 'left');
+  }, [currentIndex, rooms.length, navigateTo]);
   
   const openComparison = (room: RoomProgress) => {
     triggerHaptic(15);
@@ -697,11 +709,15 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
           onTouchEnd={handleTouchEnd}
         >
           <div 
-            className="p-3"
+            key={currentIndex}
+            className={cn(
+              "p-3",
+              !isSwiping && slideDirection === 'left' && "animate-slide-in-from-right",
+              !isSwiping && slideDirection === 'right' && "animate-slide-in-from-left"
+            )}
             style={{
-              transform: `translateX(${swipeOffset * 0.3}px)`,
-              transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
-              opacity: 1 - Math.abs(swipeOffset) / 500
+              transform: isSwiping ? `translateX(${swipeOffset * 0.3}px)` : undefined,
+              opacity: isSwiping ? 1 - Math.abs(swipeOffset) / 500 : undefined
             }}
           >
             <MobileRoomCard 
@@ -724,7 +740,12 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
             {rooms.map((room, index) => (
               <button
                 key={room.id}
-                onClick={() => setCurrentIndex(index)}
+                onClick={() => {
+                  if (index !== currentIndex) {
+                    const direction = index > currentIndex ? 'left' : 'right';
+                    navigateTo(index, direction);
+                  }
+                }}
                 className={cn(
                   "h-2 rounded-full transition-all",
                   index === currentIndex 
