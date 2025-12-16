@@ -564,13 +564,65 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showComparison, setShowComparison] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<RoomProgress | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
-  const handlePrevious = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : rooms.length - 1));
-  const handleNext = () => setCurrentIndex((prev) => (prev < rooms.length - 1 ? prev + 1 : 0));
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : rooms.length - 1));
+  }, [rooms.length]);
+  
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev < rooms.length - 1 ? prev + 1 : 0));
+  }, [rooms.length]);
   
   const openComparison = (room: RoomProgress) => {
     setSelectedRoom(room);
     setShowComparison(true);
+  };
+  
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      time: Date.now()
+    };
+    setIsSwiping(true);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const deltaX = e.touches[0].clientX - touchStartRef.current.x;
+    const deltaY = e.touches[0].clientY - touchStartRef.current.y;
+    
+    // Only track horizontal swipes (ignore vertical scrolling)
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      setSwipeOffset(deltaX);
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    if (!touchStartRef.current) return;
+    
+    const swipeThreshold = 50; // Minimum distance for swipe
+    const swipeVelocityThreshold = 0.3; // Minimum velocity
+    const timeDelta = Date.now() - touchStartRef.current.time;
+    const velocity = Math.abs(swipeOffset) / timeDelta;
+    
+    if (Math.abs(swipeOffset) > swipeThreshold || velocity > swipeVelocityThreshold) {
+      if (swipeOffset > 0) {
+        handlePrevious();
+      } else {
+        handleNext();
+      }
+    }
+    
+    touchStartRef.current = null;
+    setSwipeOffset(0);
+    setIsSwiping(false);
   };
   
   if (rooms.length === 0) return null;
@@ -626,26 +678,50 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
           </div>
         </div>
         
-        {/* Mobile: Single room with tab navigation */}
-        <div className="sm:hidden p-3">
-          <MobileRoomCard 
-            room={rooms[currentIndex]} 
-            onCompare={() => openComparison(rooms[currentIndex])} 
-          />
+        {/* Mobile: Single room with swipe navigation */}
+        <div 
+          ref={containerRef}
+          className="sm:hidden overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div 
+            className="p-3"
+            style={{
+              transform: `translateX(${swipeOffset * 0.3}px)`,
+              transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+              opacity: 1 - Math.abs(swipeOffset) / 500
+            }}
+          >
+            <MobileRoomCard 
+              room={rooms[currentIndex]} 
+              onCompare={() => openComparison(rooms[currentIndex])} 
+            />
+          </div>
+          
+          {/* Swipe hint */}
+          {currentIndex === 0 && (
+            <div className="flex items-center justify-center gap-1 text-tiny text-muted-foreground pb-2 animate-pulse">
+              <ChevronLeft className="w-3 h-3" />
+              <span>Deslize para navegar</span>
+              <ChevronRight className="w-3 h-3" />
+            </div>
+          )}
           
           {/* Room dots indicator */}
-          <div className="flex justify-center gap-1.5 mt-3">
+          <div className="flex justify-center gap-1.5 pb-3">
             {rooms.map((room, index) => (
               <button
                 key={room.id}
                 onClick={() => setCurrentIndex(index)}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-all",
+                  "h-2 rounded-full transition-all",
                   index === currentIndex 
-                    ? "bg-primary w-4" 
+                    ? "bg-primary w-6" 
                     : room.status === "concluído" 
-                      ? "bg-emerald-500/50" 
-                      : "bg-muted-foreground/30"
+                      ? "bg-emerald-500/50 w-2" 
+                      : "bg-muted-foreground/30 w-2"
                 )}
               />
             ))}
