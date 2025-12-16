@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ import {
 } from '@/types/formalization';
 import { FormalizacaoEvidence } from '@/components/formalizacao/FormalizacaoEvidence';
 import { DigitalSignatureLog } from '@/components/formalizacao/DigitalSignatureLog';
+import { VersionHistory } from '@/components/formalizacao/VersionHistory';
 const getStatusBadgeVariant = (status: FormalizationStatus): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case 'signed':
@@ -531,6 +532,14 @@ export default function FormalizacaoDetalhe() {
           </TabsContent>
 
           <TabsContent value="auditoria" className="mt-4 space-y-4">
+            {/* Version History */}
+            <VersionHistory
+              formalizationId={id!}
+              currentTitle={formalizacao.title}
+              currentSummary={formalizacao.summary}
+              currentBodyMd={formalizacao.body_md || ''}
+            />
+
             {/* Digital Signature Log */}
             <DigitalSignatureLog 
               formalizationId={id!}
