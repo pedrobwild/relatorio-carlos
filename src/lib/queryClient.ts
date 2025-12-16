@@ -55,6 +55,26 @@ const errorMessages: Record<string, string> = {
   'pgrst': 'Erro ao processar sua solicitação.',
 };
 
+// Network error patterns for retry detection
+const networkErrorPatterns = [
+  'failed to fetch',
+  'network error',
+  'networkerror',
+  'timeout',
+  'aborted',
+  'net::err',
+  'econnrefused',
+  'enotfound',
+  'etimedout',
+];
+
+// Check if error is a network error (retryable)
+function isNetworkError(error: unknown): boolean {
+  if (!error) return false;
+  const errorString = String(error).toLowerCase();
+  return networkErrorPatterns.some(pattern => errorString.includes(pattern));
+}
+
 // Get user-friendly message from error
 function getUserFriendlyMessage(error: unknown): string {
   const errorString = String(error).toLowerCase();
@@ -114,6 +134,9 @@ function handleError(error: unknown, context?: string) {
   toast.error(userMessage);
 }
 
+// Mutation retry state tracker
+const mutationRetryState = new Map<string, { toastId?: string | number; attempt: number }>();
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
@@ -125,19 +148,93 @@ export const queryClient = new QueryClient({
     },
   }),
   mutationCache: new MutationCache({
-    onError: (error) => {
+    onError: (error, _variables, _context, mutation) => {
+      const mutationId = mutation.mutationId.toString();
+      const retryState = mutationRetryState.get(mutationId);
+      
+      // Clean up retry state
+      if (retryState?.toastId) {
+        toast.dismiss(retryState.toastId);
+      }
+      mutationRetryState.delete(mutationId);
+      
       handleError(error, 'Mutation error');
+    },
+    onSuccess: (_data, _variables, _context, mutation) => {
+      const mutationId = mutation.mutationId.toString();
+      const retryState = mutationRetryState.get(mutationId);
+      
+      // Show success toast if we recovered from retry
+      if (retryState && retryState.attempt > 0) {
+        if (retryState.toastId) {
+          toast.dismiss(retryState.toastId);
+        }
+        toast.success('Operação concluída após reconexão!');
+      }
+      
+      mutationRetryState.delete(mutationId);
     },
   }),
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      retry: 1,
+      refetchOnReconnect: true,
+      retry: (failureCount, error) => {
+        // Retry network errors up to 3 times
+        if (isNetworkError(error) && failureCount < 3) {
+          return true;
+        }
+        // Don't retry other errors
+        return false;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       staleTime: 5 * 60 * 1000,
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error) => {
+        // Only retry network errors, up to 3 times
+        if (isNetworkError(error) && failureCount < 3) {
+          return true;
+        }
+        return false;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      onMutate: async () => {
+        // This runs before each mutation attempt
+        return { startTime: Date.now() };
+      },
     },
   },
 });
+
+// Override default mutation behavior to show retry feedback
+const originalMutate = queryClient.getMutationCache().build.bind(queryClient.getMutationCache());
+queryClient.getMutationCache().build = (client, options, state) => {
+  const mutation = originalMutate(client, options, state);
+  const originalExecute = mutation.execute.bind(mutation);
+  
+  mutation.execute = async (variables) => {
+    const mutationId = mutation.mutationId.toString();
+    
+    // Track retry attempts
+    const currentState = mutationRetryState.get(mutationId) || { attempt: 0 };
+    
+    try {
+      const result = await originalExecute(variables);
+      return result;
+    } catch (error) {
+      // If it's a network error and we're retrying, show feedback
+      if (isNetworkError(error)) {
+        const newAttempt = currentState.attempt + 1;
+        const toastId = toast.loading(
+          `Reconectando... Tentativa ${newAttempt} de 3`,
+          { id: currentState.toastId }
+        );
+        mutationRetryState.set(mutationId, { toastId, attempt: newAttempt });
+      }
+      throw error;
+    }
+  };
+  
+  return mutation;
+};
