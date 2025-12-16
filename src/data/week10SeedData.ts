@@ -471,4 +471,112 @@ export const week10SeedData: WeeklyReportData = {
       category: "Marcenaria",
     },
   ],
+  
+  roomsProgress: [
+    {
+      id: "room-1",
+      name: "Dormitório Suíte",
+      status: "concluído",
+      before: {
+        url: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
+        caption: "Ambiente antes da reforma - paredes originais",
+        date: "2025-07-01",
+      },
+      during: {
+        url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&h=300&fit=crop",
+        caption: "Instalação de infraestrutura elétrica e gesso",
+        date: "2025-08-15",
+      },
+      after: {
+        url: cabeceiraDormitorio,
+        caption: "Cabeceira com LED e nichos instalados",
+        date: "2025-09-08",
+      },
+    },
+    {
+      id: "room-2",
+      name: "Cozinha",
+      status: "concluído",
+      before: {
+        url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
+        caption: "Cozinha original do apartamento",
+        date: "2025-07-01",
+      },
+      during: {
+        url: "https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=400&h=300&fit=crop",
+        caption: "Instalação de revestimentos e bancada",
+        date: "2025-08-20",
+      },
+      after: {
+        url: moduloCozinha,
+        caption: "Marcenaria completa com gavetões Blum",
+        date: "2025-09-08",
+      },
+    },
+    {
+      id: "room-3",
+      name: "Banheiro Social",
+      status: "concluído",
+      before: {
+        url: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop",
+        caption: "Banheiro antes da reforma",
+        date: "2025-07-01",
+      },
+      during: {
+        url: "https://images.unsplash.com/photo-1585128792020-803d29415281?w=400&h=300&fit=crop",
+        caption: "Impermeabilização e instalação de box",
+        date: "2025-08-10",
+      },
+      after: {
+        url: armarioBanheiro,
+        caption: "Gabinete suspenso com cuba Deca",
+        date: "2025-09-08",
+      },
+    },
+    {
+      id: "room-4",
+      name: "Hall de Entrada",
+      status: "concluído",
+      before: {
+        url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
+        caption: "Hall original sem mobiliário",
+        date: "2025-07-01",
+      },
+      during: {
+        url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&h=300&fit=crop",
+        caption: "Preparação para instalação do armário",
+        date: "2025-08-25",
+      },
+      after: {
+        url: armarioHall,
+        caption: "Armário multiuso com portas espelhadas",
+        date: "2025-09-08",
+      },
+    },
+    {
+      id: "room-5",
+      name: "Sala de Estar",
+      status: "em andamento",
+      before: {
+        url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
+        caption: "Sala original do apartamento",
+        date: "2025-07-01",
+      },
+      during: {
+        url: "https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=400&h=300&fit=crop",
+        caption: "Instalação de painel de TV e iluminação",
+        date: "2025-09-06",
+      },
+    },
+    {
+      id: "room-6",
+      name: "Área de Serviço",
+      status: "pendente",
+      before: {
+        url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
+        caption: "Área de serviço original",
+        date: "2025-07-01",
+      },
+    },
+  ],
 };

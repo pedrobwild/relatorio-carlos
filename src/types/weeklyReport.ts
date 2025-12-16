@@ -131,6 +131,21 @@ export interface Incident {
   photos?: IncidentPhoto[];
 }
 
+export interface TimelinePhoto {
+  url: string;
+  caption: string;
+  date: string;
+}
+
+export interface RoomProgress {
+  id: string;
+  name: string;
+  status: "concluído" | "em andamento" | "pendente";
+  before?: TimelinePhoto;
+  during?: TimelinePhoto;
+  after?: TimelinePhoto;
+}
+
 export interface WeeklyReportData {
   projectId: string;
   projectName: string;
@@ -172,4 +187,7 @@ export interface WeeklyReportData {
   
   // Photo Gallery
   gallery: GalleryPhoto[];
+  
+  // Room Progress Timeline
+  roomsProgress?: RoomProgress[];
 }
