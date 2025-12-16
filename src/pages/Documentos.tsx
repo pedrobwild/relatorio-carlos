@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
 import { useProject } from "@/contexts/ProjectContext";
@@ -33,12 +34,16 @@ const DocumentCard = ({
   doc, 
   onViewHistory,
   onVersionUploaded,
-  isStaff
+  onApprove,
+  isStaff,
+  isApproving,
 }: { 
   doc: ProjectDocument; 
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
+  onApprove: (docId: string) => Promise<boolean>;
   isStaff: boolean;
+  isApproving: boolean;
 }) => {
   const handleDownload = async () => {
     if (!doc.url) return;
@@ -130,6 +135,30 @@ const DocumentCard = ({
                 <History className="w-4 h-4" />
                 <span className="hidden sm:inline">Histórico</span>
               </Button>
+              {isStaff && doc.status === 'pending' && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2" disabled={isApproving}>
+                      <CheckCheck className="w-4 h-4" />
+                      <span className="hidden sm:inline">Aprovar</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Aprovar documento?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Você está prestes a aprovar "{doc.name}". Esta ação marcará o documento como aprovado e resolverá automaticamente quaisquer pendências relacionadas.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onApprove(doc.id)}>
+                        Aprovar documento
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               {isStaff && (
                 <DocumentVersionUpload document={doc} onSuccess={onVersionUploaded} />
               )}
@@ -166,13 +195,17 @@ const CategorySection = ({
   documents,
   onViewHistory,
   onVersionUploaded,
-  isStaff
+  onApprove,
+  isStaff,
+  isApproving,
 }: { 
   category: DocumentCategory; 
   documents: ProjectDocument[];
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
+  onApprove: (docId: string) => Promise<boolean>;
   isStaff: boolean;
+  isApproving: boolean;
 }) => {
   if (documents.length === 0) return null;
 
@@ -192,7 +225,9 @@ const CategorySection = ({
             doc={doc} 
             onViewHistory={onViewHistory}
             onVersionUploaded={onVersionUploaded}
+            onApprove={onApprove}
             isStaff={isStaff}
+            isApproving={isApproving}
           />
         ))}
       </div>
@@ -204,13 +239,24 @@ const Documentos = () => {
   const { projectId } = useParams();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { paths } = useProjectNavigation();
-  const { documents, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
+  const { documents, loading, error, getLatestByCategory, getVersionHistory, approveDocument, refetch } = useDocuments(projectId);
   const { isStaff } = useUserRole();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
 
   const handleViewHistory = (docId: string) => {
     setHistoryDocId(docId);
+  };
+
+  const handleApprove = async (docId: string) => {
+    setIsApproving(true);
+    try {
+      await approveDocument(docId);
+    } finally {
+      setIsApproving(false);
+    }
+    return true;
   };
 
   const historyDocs = historyDocId ? getVersionHistory(historyDocId) : [];
@@ -297,7 +343,9 @@ const Documentos = () => {
                     documents={getLatestByCategory(cat)}
                     onViewHistory={handleViewHistory}
                     onVersionUploaded={refetch}
+                    onApprove={handleApprove}
                     isStaff={isStaff}
+                    isApproving={isApproving}
                   />
                 ))}
               </TabsContent>
@@ -311,7 +359,9 @@ const Documentos = () => {
                         doc={doc} 
                         onViewHistory={handleViewHistory}
                         onVersionUploaded={refetch}
+                        onApprove={handleApprove}
                         isStaff={isStaff}
+                        isApproving={isApproving}
                       />
                     ))}
                   </div>
