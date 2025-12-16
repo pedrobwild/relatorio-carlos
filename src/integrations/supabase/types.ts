@@ -406,42 +406,67 @@ export type Database = {
       }
       project_documents: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
+          description: string | null
           document_type: string
           id: string
           mime_type: string | null
           name: string
+          parent_document_id: string | null
           project_id: string
           size_bytes: number | null
+          status: string
           storage_bucket: string
           storage_path: string
           uploaded_by: string
+          version: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
+          description?: string | null
           document_type: string
           id?: string
           mime_type?: string | null
           name: string
+          parent_document_id?: string | null
           project_id: string
           size_bytes?: number | null
+          status?: string
           storage_bucket?: string
           storage_path: string
           uploaded_by: string
+          version?: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
+          description?: string | null
           document_type?: string
           id?: string
           mime_type?: string | null
           name?: string
+          parent_document_id?: string | null
           project_id?: string
           size_bytes?: number | null
+          status?: string
           storage_bucket?: string
           storage_path?: string
           uploaded_by?: string
+          version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "project_documents_parent_document_id_fkey"
+            columns: ["parent_document_id"]
+            isOneToOne: false
+            referencedRelation: "project_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_documents_project_id_fkey"
             columns: ["project_id"]

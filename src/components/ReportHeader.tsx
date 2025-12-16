@@ -4,7 +4,7 @@ import bwildLogo from "@/assets/bwild-logo.png";
 import { 
   FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle
+  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen
 } from "lucide-react";
 import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
@@ -156,6 +156,7 @@ const ReportHeader = ({
     { icon: Box, label: "Projeto 3D", href: paths.projeto3D },
     { icon: Ruler, label: "Executivo", href: paths.executivo },
     { icon: DollarSign, label: "Financeiro", href: paths.financeiro },
+    { icon: FolderOpen, label: "Documentos", href: paths.documentos },
     { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes },
   ];
 
@@ -619,7 +620,7 @@ const ReportHeader = ({
 
         {/* Quick Links */}
         <div className="px-2.5 py-2.5 border-b border-border bg-secondary/20">
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-6 gap-1">
             {quickLinks.map((link) => (
               <Link
                 key={link.label}

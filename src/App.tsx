@@ -26,6 +26,7 @@ import Projeto3D from "./pages/Projeto3D";
 import Executivo from "./pages/Executivo";
 import Financeiro from "./pages/Financeiro";
 import Pendencias from "./pages/Pendencias";
+import Documentos from "./pages/Documentos";
 import Formalizacoes from "./pages/Formalizacoes";
 import FormalizacaoNova from "./pages/FormalizacaoNova";
 import FormalizacaoDetalhe from "./pages/FormalizacaoDetalhe";
@@ -63,6 +64,7 @@ const App = () => (
           <Route path="/obra/:projectId/executivo" element={<ProtectedRoute><ProjectPage><Executivo /></ProjectPage></ProtectedRoute>} />
           <Route path="/obra/:projectId/financeiro" element={<ProtectedRoute><ProjectPage><Financeiro /></ProjectPage></ProtectedRoute>} />
           <Route path="/obra/:projectId/pendencias" element={<ProtectedRoute><ProjectPage><Pendencias /></ProjectPage></ProtectedRoute>} />
+          <Route path="/obra/:projectId/documentos" element={<ProtectedRoute><ProjectPage><Documentos /></ProjectPage></ProtectedRoute>} />
           <Route path="/obra/:projectId/formalizacoes" element={<ProtectedRoute><ProjectPage><Formalizacoes /></ProjectPage></ProtectedRoute>} />
           <Route path="/obra/:projectId/formalizacoes/nova" element={<StaffRoute><ProjectPage><FormalizacaoNova /></ProjectPage></StaffRoute>} />
           <Route path="/obra/:projectId/formalizacoes/:id" element={<ProtectedRoute><ProjectPage><FormalizacaoDetalhe /></ProjectPage></ProtectedRoute>} />
