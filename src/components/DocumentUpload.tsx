@@ -105,56 +105,54 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
     setUploading(true);
 
     try {
-      // Generate unique file path
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${projectId}/${formData.document_type}/${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
+      // Get auth session for authorization header
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
 
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from("project-documents")
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      // Create form data for edge function
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('projectId', projectId);
+      uploadFormData.append('documentType', formData.document_type);
+      uploadFormData.append('name', formData.name.trim());
+      if (formData.description?.trim()) {
+        uploadFormData.append('description', formData.description.trim());
+      }
 
-      if (uploadError) throw uploadError;
+      // Upload via edge function (computes SHA256 checksum server-side)
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/document-upload`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: uploadFormData,
+        }
+      );
 
-      // Create database record
-      const { error: dbError } = await supabase
-        .from("project_documents")
-        .insert({
-          project_id: projectId,
-          name: formData.name.trim(),
-          description: formData.description?.trim() || null,
-          document_type: formData.document_type,
-          storage_path: fileName,
-          storage_bucket: "project-documents",
-          mime_type: file.type,
-          size_bytes: file.size,
-          uploaded_by: user.id,
-          version: 1,
-          status: "pending",
-        });
+      const result = await response.json();
 
-      if (dbError) {
-        // Rollback: delete uploaded file
-        await supabase.storage.from("project-documents").remove([fileName]);
-        throw dbError;
+      if (!response.ok) {
+        throw new Error(result.error || 'Falha no upload');
       }
 
       toast({
         title: "Documento enviado",
-        description: "O documento foi adicionado com sucesso",
+        description: `Documento verificado (checksum: ${result.document?.checksum?.substring(0, 8)}...)`,
       });
 
       resetForm();
       setOpen(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível enviar o documento";
       toast({
         title: "Erro ao enviar",
-        description: error.message || "Não foi possível enviar o documento",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
