@@ -18,6 +18,7 @@ export function useProjectNavigation() {
       executivo: getProjectPath('/executivo'),
       financeiro: getProjectPath('/financeiro'),
       pendencias: getProjectPath('/pendencias'),
+      documentos: getProjectPath('/documentos'),
       formalizacoes: getProjectPath('/formalizacoes'),
       formalizacoesNova: getProjectPath('/formalizacoes/nova'),
     }

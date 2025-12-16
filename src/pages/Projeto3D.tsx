@@ -1,30 +1,68 @@
-import { ArrowLeft, Download, ExternalLink, FileText, Box, Play } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Download, ExternalLink, FileText, Box, Play, Loader2 } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import bwildLogo from "@/assets/bwild-logo.png";
 import PDFViewer from "@/components/PDFViewer";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useProject } from "@/contexts/ProjectContext";
+import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
 
 const Projeto3D = () => {
+  const { projectId } = useParams();
   const { paths } = useProjectNavigation();
-  const pdfUrl = "/documents/projeto-3d.pdf";
+  const { project, loading: projectLoading, error: projectError } = useProject();
+  const { documents, loading: docsLoading, getLatestByCategory } = useDocuments(projectId);
+  
+  const projeto3dDoc = getLatestByCategory('projeto_3d')[0];
+  
+  const loading = projectLoading || docsLoading;
+  
+  // TODO: Load video from storage as well
   const videoUrl = "/videos/projeto-3d-tour.mov";
-  const hasDocument = true;
   const hasVideo = true;
 
-  const handleDownload = () => {
+  const handleDownload = async (doc: ProjectDocument) => {
+    if (!doc.url) return;
+    
+    const response = await fetch(doc.url);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = "Projeto_3D_Bwild.pdf";
+    link.href = url;
+    link.download = doc.name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
-  const handleOpenInNewTab = () => {
-    window.open(pdfUrl, "_blank");
+  const handleOpenInNewTab = (doc: ProjectDocument) => {
+    if (doc.url) {
+      window.open(doc.url, "_blank");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (projectError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">{projectError}</p>
+          <Link to="/minhas-obras" className="text-primary underline">Voltar</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const hasDocument = !!projeto3dDoc?.url;
 
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
@@ -48,13 +86,13 @@ const Projeto3D = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleOpenInNewTab}
+                onClick={() => handleOpenInNewTab(projeto3dDoc)}
                 className="h-9 w-9 rounded-full sm:hidden hover:bg-primary/10"
                 title="Abrir em nova aba"
               >
                 <ExternalLink className="w-4 h-4" />
               </Button>
-              <Button onClick={handleDownload} size="sm" className="gap-2 h-9">
+              <Button onClick={() => handleDownload(projeto3dDoc)} size="sm" className="gap-2 h-9">
                 <Download className="w-4 h-4" />
                 <span className="hidden sm:inline">Download</span>
               </Button>
@@ -66,86 +104,71 @@ const Projeto3D = () => {
       {/* Content */}
       <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
         <div className="max-w-7xl mx-auto">
-          {/* Desktop: Two-column layout */}
-          <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6">
-            {/* Left: Video */}
-            {hasVideo && (
-              <div className="bg-card rounded-xl border border-border overflow-hidden h-fit">
-                <div className="flex items-center gap-2 p-3 border-b border-border bg-primary-dark">
-                  <Play className="w-4 h-4 text-white" />
-                  <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
-                </div>
-                <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
-              </div>
-            )}
+          {!hasDocument && !hasVideo ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Box className="w-16 h-16 text-muted-foreground/30 mb-4" />
+              <p className="text-body text-muted-foreground">Projeto 3D não disponível</p>
+              <p className="text-caption mt-1">O documento será disponibilizado em breve</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop: Two-column layout */}
+              <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6">
+                {/* Left: Video */}
+                {hasVideo && (
+                  <div className="bg-card rounded-xl border border-border overflow-hidden h-fit">
+                    <div className="flex items-center gap-2 p-3 border-b border-border bg-primary-dark">
+                      <Play className="w-4 h-4 text-white" />
+                      <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
+                    </div>
+                    <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
+                  </div>
+                )}
 
-            {/* Right: PDF */}
-            {hasDocument && (
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center gap-2 p-3 border-b border-border bg-primary-dark">
-                  <FileText className="w-4 h-4 text-white" />
-                  <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
-                </div>
-                <div className="h-[600px]">
-                  <PDFViewer url={pdfUrl} title="Projeto 3D" />
-                </div>
+                {/* Right: PDF */}
+                {hasDocument && (
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-2 p-3 border-b border-border bg-primary-dark">
+                      <FileText className="w-4 h-4 text-white" />
+                      <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
+                    </div>
+                    <div className="h-[600px]">
+                      <PDFViewer url={projeto3dDoc.url!} title="Projeto 3D" />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Mobile/Tablet: Stack layout - Original */}
-          <div className="lg:hidden space-y-6">
-            {/* Video Player Section */}
-            {hasVideo && (
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
-                  <Play className="w-4 h-4 text-white" />
-                  <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
-                </div>
-                <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
-              </div>
-            )}
+              {/* Mobile/Tablet: Stack layout */}
+              <div className="lg:hidden space-y-6">
+                {/* Video Player Section */}
+                {hasVideo && (
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
+                      <Play className="w-4 h-4 text-white" />
+                      <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
+                    </div>
+                    <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
+                  </div>
+                )}
 
-            {/* PDF Section */}
-            {hasDocument && (
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
-                  <FileText className="w-4 h-4 text-white" />
-                  <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
-                </div>
-                <div className="h-[500px] sm:h-[600px]">
-                  <PDFViewer url={pdfUrl} title="Projeto 3D" />
-                </div>
+                {/* PDF Section */}
+                {hasDocument && (
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
+                      <FileText className="w-4 h-4 text-white" />
+                      <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
+                    </div>
+                    <div className="h-[500px] sm:h-[600px]">
+                      <PDFViewer url={projeto3dDoc.url!} title="Projeto 3D" />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
-
-      {/* Empty State */}
-      {!hasDocument && !hasVideo && (
-        <div className="flex-1 p-4 md:p-6 lg:p-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-card rounded-xl border border-border p-6 md:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
-                  <Box className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-h2">Projeto 3D</h2>
-                  <p className="text-caption">Visualização tridimensional do projeto</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <p className="text-body text-muted-foreground">Documento em preparação</p>
-                <p className="text-caption mt-1">O arquivo será disponibilizado em breve</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
