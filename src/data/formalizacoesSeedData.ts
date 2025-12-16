@@ -15,10 +15,18 @@ const daysAgo = (n: number) => {
 const fakeHash = (seed: string) =>
   (seed.repeat(64).slice(0, 64) as string).replace(/[^a-f0-9]/gi, "a");
 
+// Generate deterministic UUID from seed (for demo data consistency)
+const seedUuid = (prefix: string, formalizationId: string) => {
+  // Create a valid UUID v4 format using the formalization ID's first 8 chars
+  const base = formalizationId.substring(0, 8).replace(/[^a-f0-9]/gi, "0");
+  const prefixCode = prefix === "customer" ? "c000" : prefix === "company" ? "d000" : prefix === "ack-c" ? "e000" : prefix === "ack-d" ? "f000" : prefix === "evt" ? "a000" : "b000";
+  return `${base}-${prefixCode}-4000-8000-000000000000`;
+};
+
 // Helper to create party objects
 const createParties = (formalizationId: string, customerSigned: boolean, companySigned: boolean, customerMustSign: boolean = true) => [
   {
-    id: `party-customer-${formalizationId.substring(0, 8)}`,
+    id: seedUuid("customer", formalizationId),
     formalization_id: formalizationId,
     party_type: "customer",
     display_name: "Pedro Alves",
@@ -29,7 +37,7 @@ const createParties = (formalizationId: string, customerSigned: boolean, company
     created_at: iso(daysAgo(10)),
   },
   {
-    id: `party-company-${formalizationId.substring(0, 8)}`,
+    id: seedUuid("company", formalizationId),
     formalization_id: formalizationId,
     party_type: "company",
     display_name: "Lucas Mendes",
@@ -52,9 +60,9 @@ const createAcknowledgements = (
   const acks = [];
   if (customerSigned) {
     acks.push({
-      id: `ack-customer-${formalizationId.substring(0, 8)}`,
+      id: seedUuid("ack-c", formalizationId),
       formalization_id: formalizationId,
-      party_id: `party-customer-${formalizationId.substring(0, 8)}`,
+      party_id: seedUuid("customer", formalizationId),
       acknowledged: true,
       acknowledged_at: iso(daysAgo(customerDaysAgo)),
       acknowledged_by_user_id: null,
@@ -68,9 +76,9 @@ const createAcknowledgements = (
   }
   if (companySigned) {
     acks.push({
-      id: `ack-company-${formalizationId.substring(0, 8)}`,
+      id: seedUuid("ack-d", formalizationId),
       formalization_id: formalizationId,
-      party_id: `party-company-${formalizationId.substring(0, 8)}`,
+      party_id: seedUuid("company", formalizationId),
       acknowledged: true,
       acknowledged_at: iso(daysAgo(companyDaysAgo)),
       acknowledged_by_user_id: null,
@@ -87,9 +95,10 @@ const createAcknowledgements = (
 
 // Helper to create events
 const createEvents = (formalizationId: string, status: string, lockedDaysAgo: number | null) => {
+  const base = formalizationId.substring(0, 8).replace(/[^a-f0-9]/gi, "0");
   const events = [
     {
-      id: `event-created-${formalizationId.substring(0, 8)}`,
+      id: `${base}-0001-4000-8000-000000000000`,
       formalization_id: formalizationId,
       event_type: "created",
       actor_user_id: null,
@@ -100,7 +109,7 @@ const createEvents = (formalizationId: string, status: string, lockedDaysAgo: nu
   
   if (status !== 'draft') {
     events.push({
-      id: `event-sent-${formalizationId.substring(0, 8)}`,
+      id: `${base}-0002-4000-8000-000000000000`,
       formalization_id: formalizationId,
       event_type: "sent_for_signature",
       actor_user_id: null,
@@ -111,7 +120,7 @@ const createEvents = (formalizationId: string, status: string, lockedDaysAgo: nu
   
   if (lockedDaysAgo !== null) {
     events.push({
-      id: `event-locked-${formalizationId.substring(0, 8)}`,
+      id: `${base}-0003-4000-8000-000000000000`,
       formalization_id: formalizationId,
       event_type: "locked",
       actor_user_id: null,
@@ -334,9 +343,9 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
     locked_hash: fakeHash("g7b8c9"),
     acknowledgements: [
       {
-        id: "ack-company-g7b8c9d0",
+        id: seedUuid("ack-d", "g7b8c9d0-e1f2-3456-0123-567890123456"),
         formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
-        party_id: "party-company-g7b8c9d0",
+        party_id: seedUuid("company", "g7b8c9d0-e1f2-3456-0123-567890123456"),
         acknowledged: true,
         acknowledged_at: "2025-06-25T10:00:00.000Z",
         acknowledged_by_user_id: null,
@@ -351,7 +360,7 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
     attachments: null,
     events: [
       {
-        id: "event-created-g7b8c9d0",
+        id: "07b8c9d0-0001-4000-8000-000000000000",
         formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
         event_type: "created",
         actor_user_id: null,
@@ -359,7 +368,7 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
         created_at: "2025-06-25T09:30:00.000Z",
       },
       {
-        id: "event-sent-g7b8c9d0",
+        id: "07b8c9d0-0002-4000-8000-000000000000",
         formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
         event_type: "sent_for_signature",
         actor_user_id: null,
@@ -367,7 +376,7 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
         created_at: "2025-06-25T09:45:00.000Z",
       },
       {
-        id: "event-locked-g7b8c9d0",
+        id: "07b8c9d0-0003-4000-8000-000000000000",
         formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
         event_type: "locked",
         actor_user_id: null,
@@ -378,7 +387,7 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
     evidence_links: null,
     parties: [
       {
-        id: "party-customer-g7b8c9d0",
+        id: seedUuid("customer", "g7b8c9d0-e1f2-3456-0123-567890123456"),
         formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
         party_type: "customer",
         display_name: "Pedro Alves",
@@ -389,7 +398,7 @@ Desta forma, em conformidade com a cláusula contratual supracitada, o documento
         created_at: "2025-06-25T09:30:00.000Z",
       },
       {
-        id: "party-company-g7b8c9d0",
+        id: seedUuid("company", "g7b8c9d0-e1f2-3456-0123-567890123456"),
         formalization_id: "g7b8c9d0-e1f2-3456-0123-567890123456",
         party_type: "company",
         display_name: "Lucas Mendes",
