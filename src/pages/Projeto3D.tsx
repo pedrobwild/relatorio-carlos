@@ -63,30 +63,60 @@ const Projeto3D = () => {
 
       {/* Content */}
       <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
-        <div className="max-w-5xl mx-auto space-y-6">
-          {/* Video Player Section */}
-          {hasVideo && (
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
-                <Play className="w-4 h-4 text-white" />
-                <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
+        <div className="max-w-7xl mx-auto">
+          {/* Desktop: Two-column layout */}
+          <div className="hidden lg:grid lg:grid-cols-2 lg:gap-6">
+            {/* Left: Video */}
+            {hasVideo && (
+              <div className="bg-card rounded-xl border border-border overflow-hidden h-fit">
+                <div className="flex items-center gap-2 p-3 border-b border-border bg-primary-dark">
+                  <Play className="w-4 h-4 text-white" />
+                  <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
+                </div>
+                <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
               </div>
-              <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
-            </div>
-          )}
+            )}
 
-          {/* PDF Section */}
-          {hasDocument && (
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
-                <FileText className="w-4 h-4 text-white" />
-                <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
+            {/* Right: PDF */}
+            {hasDocument && (
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="flex items-center gap-2 p-3 border-b border-border bg-primary-dark">
+                  <FileText className="w-4 h-4 text-white" />
+                  <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
+                </div>
+                <div className="h-[600px]">
+                  <PDFViewer url={pdfUrl} title="Projeto 3D" />
+                </div>
               </div>
-              <div className="h-[500px] sm:h-[600px]">
-                <PDFViewer url={pdfUrl} title="Projeto 3D" />
+            )}
+          </div>
+
+          {/* Mobile/Tablet: Stack layout - Original */}
+          <div className="lg:hidden space-y-6">
+            {/* Video Player Section */}
+            {hasVideo && (
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
+                  <Play className="w-4 h-4 text-white" />
+                  <h2 className="text-h3 text-white">Tour Virtual 3D</h2>
+                </div>
+                <VideoPlayer src={videoUrl} title="Tour Virtual 3D" />
               </div>
-            </div>
-          )}
+            )}
+
+            {/* PDF Section */}
+            {hasDocument && (
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="flex items-center gap-2 p-3 sm:p-4 border-b border-border bg-primary-dark">
+                  <FileText className="w-4 h-4 text-white" />
+                  <h2 className="text-h3 text-white">Projeto 3D - PDF</h2>
+                </div>
+                <div className="h-[500px] sm:h-[600px]">
+                  <PDFViewer url={pdfUrl} title="Projeto 3D" />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
