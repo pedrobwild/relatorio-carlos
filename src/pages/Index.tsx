@@ -113,8 +113,8 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="p-3 md:p-4 lg:p-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="p-3 md:p-4 lg:p-6 xl:p-8">
+        <div className="max-w-[1600px] mx-auto">
           {/* Page Title - Desktop only */}
           <div className="hidden md:flex items-center gap-3 mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
             <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
