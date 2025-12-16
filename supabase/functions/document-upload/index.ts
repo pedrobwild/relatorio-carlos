@@ -6,27 +6,71 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const FUNCTION_NAME = 'document-upload';
+
 async function computeSHA256(data: ArrayBuffer): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+async function logError(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabaseAdmin: any,
+  errorCode: string,
+  errorMessage: string,
+  context: {
+    requestId: string;
+    userId?: string;
+    projectId?: string;
+    errorStack?: string;
+    requestPath?: string;
+    requestMethod?: string;
+    metadata?: Record<string, unknown>;
+  }
+) {
+  try {
+    await supabaseAdmin.rpc('log_system_error', {
+      p_error_code: errorCode,
+      p_error_message: errorMessage,
+      p_source: 'edge_function',
+      p_function_name: FUNCTION_NAME,
+      p_request_id: context.requestId,
+      p_user_id: context.userId || null,
+      p_project_id: context.projectId || null,
+      p_error_stack: context.errorStack || null,
+      p_request_path: context.requestPath || null,
+      p_request_method: context.requestMethod || null,
+      p_metadata: context.metadata || {},
+    });
+  } catch (logError) {
+    console.error('Failed to log error to system_errors:', logError);
+  }
+}
+
 serve(async (req) => {
+  const requestId = crypto.randomUUID();
+  const requestPath = new URL(req.url).pathname;
+  const requestMethod = req.method;
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+  let userId: string | undefined;
+  let projectId: string | undefined;
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
     // Get authorization header for user context
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'Authorization required' }),
+        JSON.stringify({ error: 'Authorization required', requestId }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -36,24 +80,22 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Create admin client for service operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
     // Get user from token
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
-      console.error('Auth error:', userError);
+      console.error(`[${requestId}] Auth error:`, userError);
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
+        JSON.stringify({ error: 'Invalid token', requestId }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    userId = user.id;
 
     // Check if user is staff
     const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: user.id });
     if (!isStaff) {
       return new Response(
-        JSON.stringify({ error: 'Only staff can upload documents' }),
+        JSON.stringify({ error: 'Only staff can upload documents', requestId }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -61,14 +103,14 @@ serve(async (req) => {
     // Parse multipart form data
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    const projectId = formData.get('projectId') as string;
+    projectId = formData.get('projectId') as string;
     const documentType = formData.get('documentType') as string;
     const name = formData.get('name') as string;
     const description = formData.get('description') as string | null;
 
     if (!file || !projectId || !documentType || !name) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: file, projectId, documentType, name' }),
+        JSON.stringify({ error: 'Missing required fields: file, projectId, documentType, name', requestId }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -80,7 +122,7 @@ serve(async (req) => {
     });
     if (!hasAccess) {
       return new Response(
-        JSON.stringify({ error: 'No access to this project' }),
+        JSON.stringify({ error: 'No access to this project', requestId }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -89,7 +131,7 @@ serve(async (req) => {
     const fileBuffer = await file.arrayBuffer();
     const checksum = await computeSHA256(fileBuffer);
     
-    console.log(`File: ${file.name}, Size: ${file.size}, Checksum: ${checksum}`);
+    console.log(`[${requestId}] File: ${file.name}, Size: ${file.size}, Checksum: ${checksum}`);
 
     // Generate storage path
     const timestamp = Date.now();
@@ -105,9 +147,13 @@ serve(async (req) => {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      console.error(`[${requestId}] Upload error:`, uploadError);
+      await logError(supabaseAdmin, 'STORAGE_UPLOAD_FAILED', uploadError.message, {
+        requestId, userId, projectId, requestPath, requestMethod,
+        metadata: { documentType, fileName: file.name, fileSize: file.size },
+      });
       return new Response(
-        JSON.stringify({ error: `Upload failed: ${uploadError.message}` }),
+        JSON.stringify({ error: `Upload failed: ${uploadError.message}`, requestId }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -133,11 +179,15 @@ serve(async (req) => {
       .single();
 
     if (dbError) {
-      console.error('DB error:', dbError);
+      console.error(`[${requestId}] DB error:`, dbError);
       // Rollback: delete uploaded file
       await supabaseAdmin.storage.from('project-documents').remove([storagePath]);
+      await logError(supabaseAdmin, 'DB_INSERT_FAILED', dbError.message, {
+        requestId, userId, projectId, requestPath, requestMethod,
+        metadata: { documentType, fileName: file.name },
+      });
       return new Response(
-        JSON.stringify({ error: `Database error: ${dbError.message}` }),
+        JSON.stringify({ error: `Database error: ${dbError.message}`, requestId }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -162,19 +212,20 @@ serve(async (req) => {
             name: name,
             checksum: checksum,
             size_bytes: file.size,
+            request_id: requestId,
           },
         });
       }
     } catch (eventError) {
-      console.error('Failed to log domain event:', eventError);
-      // Don't fail the request for event logging issues
+      console.error(`[${requestId}] Failed to log domain event:`, eventError);
     }
 
-    console.log(`Document uploaded successfully: ${document.id}`);
+    console.log(`[${requestId}] Document uploaded successfully: ${document.id}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
+        requestId,
         document: {
           id: document.id,
           name: document.name,
@@ -186,10 +237,16 @@ serve(async (req) => {
     );
 
   } catch (error: unknown) {
-    console.error('Unexpected error:', error);
+    console.error(`[${requestId}] Unexpected error:`, error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    await logError(supabaseAdmin, 'UNEXPECTED_ERROR', errorMessage, {
+      requestId, userId, projectId, errorStack, requestPath, requestMethod,
+    });
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: errorMessage, requestId }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
