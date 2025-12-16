@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormalizacoes } from '@/hooks/useFormalizacoes';
+import { CreateTestFormalizacao } from '@/components/CreateTestFormalizacao';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { 
   FORMALIZATION_TYPE_LABELS, 
@@ -234,6 +235,9 @@ export default function Formalizacoes() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Test Data Creator */}
+            <CreateTestFormalizacao />
           </div>
 
           {/* Right Content */}
@@ -432,6 +436,9 @@ export default function Formalizacoes() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Test Data Creator - Mobile */}
+          <CreateTestFormalizacao />
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
