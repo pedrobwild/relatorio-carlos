@@ -43,6 +43,9 @@ export function useDocuments(projectId: string | undefined) {
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refetch = () => setRefreshKey(prev => prev + 1);
 
   useEffect(() => {
     if (!projectId || !user) {
@@ -90,7 +93,7 @@ export function useDocuments(projectId: string | undefined) {
     }
 
     fetchDocuments();
-  }, [projectId, user]);
+  }, [projectId, user, refreshKey]);
 
   const getDocumentsByCategory = (category: DocumentCategory) => {
     return documents.filter(doc => doc.document_type === category);
@@ -134,10 +137,6 @@ export function useDocuments(projectId: string | undefined) {
     getDocumentsByCategory,
     getLatestByCategory,
     getVersionHistory,
-    refetch: () => {
-      if (projectId && user) {
-        setLoading(true);
-      }
-    }
+    refetch,
   };
 }
