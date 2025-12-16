@@ -477,6 +477,7 @@ export type Database = {
           reference_id: string | null
           reference_type: string | null
           resolution_notes: string | null
+          resolution_payload: Json | null
           resolved_at: string | null
           resolved_by: string | null
           status: Database["public"]["Enums"]["pending_item_status"]
@@ -497,6 +498,7 @@ export type Database = {
           reference_id?: string | null
           reference_type?: string | null
           resolution_notes?: string | null
+          resolution_payload?: Json | null
           resolved_at?: string | null
           resolved_by?: string | null
           status?: Database["public"]["Enums"]["pending_item_status"]
@@ -517,6 +519,7 @@ export type Database = {
           reference_id?: string | null
           reference_type?: string | null
           resolution_notes?: string | null
+          resolution_payload?: Json | null
           resolved_at?: string | null
           resolved_by?: string | null
           status?: Database["public"]["Enums"]["pending_item_status"]
