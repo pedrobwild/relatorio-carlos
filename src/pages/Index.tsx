@@ -203,6 +203,7 @@ const Index = () => {
   }
 
   // Empty activities state (production mode with project but no activities)
+  // Show project header with quick links but without schedule/charts
   if (reportData.activities.length === 0) {
     return (
       <div className="min-h-screen min-h-[100dvh] pb-safe">
@@ -216,25 +217,16 @@ const Index = () => {
 
         <div className="p-3 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto">
-            {/* Basic project header */}
-            <div className="bg-card rounded-xl shadow-card p-6 mb-6">
-              <h2 className="text-xl font-bold mb-2">{reportData.projectName} {reportData.unitName && `– ${reportData.unitName}`}</h2>
-              <p className="text-muted-foreground">{reportData.clientName}</p>
-              <div className="mt-4 flex gap-4 text-sm text-muted-foreground">
-                <span>Início: {new Date(reportData.startDate).toLocaleDateString('pt-BR')}</span>
-                <span>Término: {new Date(reportData.endDate).toLocaleDateString('pt-BR')}</span>
-              </div>
-            </div>
-
-            {/* Empty state message */}
-            <div className="bg-card rounded-xl shadow-card p-8 text-center">
-              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Cronograma em preparação</h3>
-              <p className="text-muted-foreground">
-                O cronograma de atividades desta obra ainda está sendo preparado.
-                Você receberá uma notificação quando os dados estiverem disponíveis.
-              </p>
-            </div>
+            {/* Full project header with quick links */}
+            <ReportHeader
+              projectName={reportData.projectName}
+              unitName={reportData.unitName}
+              clientName={reportData.clientName}
+              startDate={reportData.startDate}
+              endDate={reportData.endDate}
+              reportDate={reportData.reportDate}
+              activities={reportData.activities}
+            />
           </div>
         </div>
       </div>
