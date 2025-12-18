@@ -47,6 +47,7 @@ describe('AuthRedirect', () => {
       isStaff: false,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     const { container } = render(
@@ -73,6 +74,7 @@ describe('AuthRedirect', () => {
       isStaff: true,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     render(
@@ -102,6 +104,7 @@ describe('AuthRedirect', () => {
       isStaff: false,
       isCustomer: true,
       isAdmin: false,
+      isManager: false,
     });
 
     render(
@@ -131,6 +134,7 @@ describe('AuthRedirect', () => {
       isStaff: false,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     render(
@@ -160,6 +164,7 @@ describe('AuthRedirect', () => {
       isStaff: true,
       isCustomer: false,
       isAdmin: true,
+      isManager: false,
     });
 
     render(

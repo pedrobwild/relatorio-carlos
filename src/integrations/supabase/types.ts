@@ -1410,7 +1410,7 @@ export type Database = {
       user_is_staff_or_above: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "engineer" | "admin" | "customer"
+      app_role: "engineer" | "admin" | "customer" | "manager"
       evidence_link_kind:
         | "meeting_recording"
         | "drive_link"
@@ -1569,7 +1569,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["engineer", "admin", "customer"],
+      app_role: ["engineer", "admin", "customer", "manager"],
       evidence_link_kind: [
         "meeting_recording",
         "drive_link",
