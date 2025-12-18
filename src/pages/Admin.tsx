@@ -1,16 +1,33 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Shield, Search, ChevronDown, Check } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Search, ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -21,6 +38,8 @@ import {
 } from '@/components/ui/table';
 import { useUsers, UserWithRole } from '@/hooks/useUsers';
 import { AppRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import bwildLogo from '@/assets/bwild-logo.png';
@@ -101,9 +120,181 @@ function UserCard({
   );
 }
 
+function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [role, setRole] = useState<AppRole>('customer');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: 'Erro',
+        description: 'Email e senha são obrigatórios',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: 'Erro',
+        description: 'A senha deve ter pelo menos 6 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionData.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            display_name: displayName || email.split('@')[0],
+            role,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao criar usuário');
+      }
+
+      toast({
+        title: 'Usuário criado',
+        description: `${email} foi criado com sucesso`,
+      });
+
+      // Reset form
+      setEmail('');
+      setPassword('');
+      setDisplayName('');
+      setRole('customer');
+      setOpen(false);
+      onUserCreated();
+
+    } catch (err) {
+      console.error('Error creating user:', err);
+      toast({
+        title: 'Erro',
+        description: err instanceof Error ? err.message : 'Não foi possível criar o usuário',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Novo Usuário</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Criar Novo Usuário</DialogTitle>
+          <DialogDescription>
+            Preencha os dados para criar uma nova conta de usuário.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="usuario@exemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha *</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Nome de Exibição</Label>
+              <Input
+                id="displayName"
+                type="text"
+                placeholder="Nome do usuário"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Permissão *</Label>
+              <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="customer">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={roleColors.customer}>Cliente</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="engineer">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={roleColors.engineer}>Engenheiro</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={roleColors.admin}>Administrador</Badge>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Criar Usuário
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Admin() {
   const navigate = useNavigate();
-  const { users, loading, error, updateUserRole } = useUsers();
+  const { users, loading, error, updateUserRole, refetch } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | null>(null);
 
@@ -146,6 +337,7 @@ export default function Admin() {
                 </p>
               </div>
             </div>
+            <CreateUserDialog onUserCreated={refetch} />
           </div>
         </div>
       </header>
