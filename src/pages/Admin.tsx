@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Shield, Search, ChevronDown, Check, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Search, ChevronDown, Check, Plus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,10 +106,12 @@ function RoleSelector({
 
 function UserCard({ 
   user, 
-  onRoleChange 
+  onRoleChange,
+  onDelete,
 }: { 
   user: UserWithRole; 
   onRoleChange: (userId: string, role: AppRole) => void;
+  onDelete: (userId: string) => void;
 }) {
   return (
     <Card>
@@ -113,7 +126,33 @@ function UserCard({
               Desde {format(new Date(user.created_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
             </p>
           </div>
-          <RoleSelector user={user} onRoleChange={onRoleChange} />
+          <div className="flex items-center gap-2">
+            <RoleSelector user={user} onRoleChange={onRoleChange} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Deletar usuário?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. O usuário <strong>{user.email}</strong> será permanentemente removido.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => onDelete(user.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Deletar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -294,7 +333,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
 
 export default function Admin() {
   const navigate = useNavigate();
-  const { users, loading, error, updateUserRole, refetch } = useUsers();
+  const { users, loading, error, updateUserRole, deleteUser, refetch } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | null>(null);
 
@@ -312,6 +351,10 @@ export default function Admin() {
 
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     await updateUserRole(userId, newRole);
+  };
+
+  const handleDelete = async (userId: string) => {
+    await deleteUser(userId);
   };
 
   return (
@@ -433,6 +476,7 @@ export default function Admin() {
                   key={user.id} 
                   user={user} 
                   onRoleChange={handleRoleChange}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>
@@ -445,7 +489,8 @@ export default function Admin() {
                     <TableHead>Usuário</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Data de Cadastro</TableHead>
-                    <TableHead className="text-right">Role</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -458,8 +503,34 @@ export default function Admin() {
                       <TableCell>
                         {format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
                         <RoleSelector user={user} onRoleChange={handleRoleChange} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Deletar usuário?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação não pode ser desfeita. O usuário <strong>{user.email}</strong> será permanentemente removido.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDelete(user.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Deletar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}

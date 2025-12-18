@@ -95,6 +95,48 @@ export function useUsers() {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionData.session?.access_token}`,
+          },
+          body: JSON.stringify({ user_id: userId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao deletar usuário');
+      }
+
+      // Update local state
+      setUsers(prev => prev.filter(user => user.id !== userId));
+
+      toast({
+        title: 'Usuário deletado',
+        description: 'O usuário foi removido com sucesso',
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      toast({
+        title: 'Erro',
+        description: err instanceof Error ? err.message : 'Não foi possível deletar o usuário',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [isAdmin]);
@@ -105,5 +147,6 @@ export function useUsers() {
     error,
     refetch: fetchUsers,
     updateUserRole,
+    deleteUser,
   };
 }
