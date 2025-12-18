@@ -21,6 +21,7 @@ export function useProjectNavigation() {
       documentos: getProjectPath('/documentos'),
       formalizacoes: getProjectPath('/formalizacoes'),
       formalizacoesNova: getProjectPath('/formalizacoes/nova'),
+      cronograma: getProjectPath('/cronograma'),
     }
   };
 }

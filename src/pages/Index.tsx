@@ -1,7 +1,8 @@
 import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, Loader2, AlertCircle, Activity } from "lucide-react";
+import { BarChart3, FileText, Loader2, AlertCircle, Activity, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
@@ -14,6 +15,9 @@ import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport } from "@/types/report";
 import { week10SeedData } from "@/data/week10SeedData";
 import { useProject } from "@/contexts/ProjectContext";
+import { useProjectActivities } from "@/hooks/useProjectActivities";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useUserRole } from "@/hooks/useUserRole";
 import { isDemoMode } from "@/config/flags";
 import bwildLogo from "@/assets/bwild-logo.png";
 
@@ -42,35 +46,32 @@ const demoReportData: ReportData = {
 const Index = () => {
   const navigate = useNavigate();
   const { project, loading: projectLoading, error: projectError } = useProject();
+  const { projectId, paths } = useProjectNavigation();
+  const { isStaff } = useUserRole();
+  const { activities: dbActivities, loading: activitiesLoading } = useProjectActivities(projectId);
   const [activeTab, setActiveTab] = useState("curvaS");
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // TODO: In production, activities will be loaded from the database
-  // For now, we use demo data structure
-  
+  // Convert database activities to report format
+  const formattedActivities = useMemo(() => {
+    return dbActivities.map(act => ({
+      description: act.description,
+      plannedStart: act.planned_start,
+      plannedEnd: act.planned_end,
+      actualStart: act.actual_start || '',
+      actualEnd: act.actual_end || '',
+      weight: act.weight,
+    }));
+  }, [dbActivities]);
+
   // Use real project data if available, demo data only in demo mode
   const reportData: ReportData | null = useMemo(() => {
     if (project) {
-      // Project exists - use project info with demo activities for now
-      // TODO: Load real activities from database when available
-      if (isDemoMode) {
-        return {
-          projectName: project.name,
-          unitName: project.unit_name || '',
-          clientName: '', // TODO: Load from project_customers
-          startDate: project.planned_start_date,
-          endDate: project.planned_end_date,
-          reportDate: new Date().toISOString().split('T')[0],
-          activities: demoReportData.activities,
-        };
-      }
-      
-      // Project exists but no activity data yet
-      if (isDemoMode) {
-        // In demo mode, show demo activities with project info
+      // Use database activities if available
+      if (formattedActivities.length > 0) {
         return {
           projectName: project.name,
           unitName: project.unit_name || '',
@@ -78,11 +79,24 @@ const Index = () => {
           startDate: project.planned_start_date,
           endDate: project.planned_end_date,
           reportDate: new Date().toISOString().split('T')[0],
-          activities: demoReportData.activities, // Use demo activities
+          activities: formattedActivities,
+        };
+      }
+
+      // Demo mode: show demo activities
+      if (isDemoMode) {
+        return {
+          projectName: project.name,
+          unitName: project.unit_name || '',
+          clientName: project.customer_name || '',
+          startDate: project.planned_start_date,
+          endDate: project.planned_end_date,
+          reportDate: new Date().toISOString().split('T')[0],
+          activities: demoReportData.activities,
         };
       }
       
-      // In production with no activities, return minimal data
+      // Production with no activities: return empty
       return {
         projectName: project.name,
         unitName: project.unit_name || '',
@@ -100,7 +114,7 @@ const Index = () => {
     }
     
     return null;
-  }, [project]);
+  }, [project, formattedActivities]);
 
   const allWeeklyReports = useMemo(() => {
     if (!reportData || reportData.activities.length === 0) return [];
@@ -163,7 +177,7 @@ const Index = () => {
     }
   };
 
-  if (projectLoading) {
+  if (projectLoading || activitiesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -216,7 +230,7 @@ const Index = () => {
         </div>
 
         <div className="p-3 md:p-4 lg:p-6 xl:p-8">
-          <div className="max-w-[1600px] mx-auto">
+          <div className="max-w-[1600px] mx-auto space-y-6">
             {/* Full project header with quick links */}
             <ReportHeader
               projectName={reportData.projectName}
@@ -227,6 +241,20 @@ const Index = () => {
               reportDate={reportData.reportDate}
               activities={reportData.activities}
             />
+
+            {/* Staff: Show button to create schedule */}
+            {isStaff && (
+              <div className="bg-card rounded-xl shadow-card p-6 text-center">
+                <h3 className="font-semibold mb-2">Cronograma não cadastrado</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Cadastre as atividades do cronograma para acompanhar o progresso da obra.
+                </p>
+                <Button onClick={() => navigate(paths.cronograma)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Cadastrar Cronograma
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

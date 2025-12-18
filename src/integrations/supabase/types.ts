@@ -595,6 +595,66 @@ export type Database = {
         }
         Relationships: []
       }
+      project_activities: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          planned_end: string
+          planned_start: string
+          project_id: string
+          sort_order: number
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          planned_end: string
+          planned_start: string
+          project_id: string
+          sort_order?: number
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          planned_end?: string
+          planned_start?: string
+          project_id?: string
+          sort_order?: number
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_activities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_activities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_customers: {
         Row: {
           created_at: string
