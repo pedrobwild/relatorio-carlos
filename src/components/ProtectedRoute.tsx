@@ -38,6 +38,7 @@ export function ProtectedRoute({
     if (role === 'customer') {
       return <Navigate to="/minhas-obras" replace />;
     } else {
+      // Staff roles (engineer, manager, admin) go to gestao
       return <Navigate to="/gestao" replace />;
     }
   }
@@ -45,14 +46,25 @@ export function ProtectedRoute({
   return <>{children}</>;
 }
 
+// Staff: engineers, managers, and admins - can manage projects
 export function StaffRoute({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['engineer', 'admin']}>
+    <ProtectedRoute allowedRoles={['engineer', 'manager', 'admin']}>
       {children}
     </ProtectedRoute>
   );
 }
 
+// Manager: managers and admins - can supervise engineers and view all org projects
+export function ManagerRoute({ children }: { children: ReactNode }) {
+  return (
+    <ProtectedRoute allowedRoles={['manager', 'admin']}>
+      {children}
+    </ProtectedRoute>
+  );
+}
+
+// Customer: read-only access to assigned projects
 export function CustomerRoute({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute allowedRoles={['customer']}>
@@ -61,6 +73,7 @@ export function CustomerRoute({ children }: { children: ReactNode }) {
   );
 }
 
+// Admin: full system access including user management
 export function AdminRoute({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute allowedRoles={['admin']}>
