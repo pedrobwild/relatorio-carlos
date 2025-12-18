@@ -60,3 +60,11 @@ export function CustomerRoute({ children }: { children: ReactNode }) {
     </ProtectedRoute>
   );
 }
+
+export function AdminRoute({ children }: { children: ReactNode }) {
+  return (
+    <ProtectedRoute allowedRoles={['admin']}>
+      {children}
+    </ProtectedRoute>
+  );
+}
