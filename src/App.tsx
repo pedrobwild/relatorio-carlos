@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute, StaffRoute, CustomerRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute, StaffRoute, CustomerRoute, AdminRoute } from "@/components/ProtectedRoute";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 // Staff pages
 import GestaoObras from "./pages/GestaoObras";
 import NovaObra from "./pages/NovaObra";
+import Admin from "./pages/Admin";
 
 // Customer pages
 import MinhasObras from "./pages/MinhasObras";
@@ -59,6 +60,9 @@ const App = () => (
             {/* Staff-only routes */}
             <Route path="/gestao" element={<StaffRoute><GestaoObras /></StaffRoute>} />
             <Route path="/gestao/nova-obra" element={<StaffRoute><NovaObra /></StaffRoute>} />
+            
+            {/* Admin-only routes */}
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             
             {/* Customer-only routes */}
             <Route path="/minhas-obras" element={<CustomerRoute><MinhasObras /></CustomerRoute>} />

@@ -1,0 +1,109 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useUserRole, AppRole } from './useUserRole';
+import { toast } from '@/hooks/use-toast';
+
+export interface UserWithRole {
+  id: string;
+  email: string;
+  display_name: string | null;
+  role: AppRole;
+  created_at: string;
+  customer_org_id: string | null;
+}
+
+export function useUsers() {
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { isAdmin } = useUserRole();
+
+  const fetchUsers = async () => {
+    if (!isAdmin) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Fetch profiles with their roles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email, customer_org_id, created_at');
+
+      if (profilesError) throw profilesError;
+
+      // Fetch roles for all users
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Combine profiles with roles
+      const usersWithRoles: UserWithRole[] = (profiles || []).map(profile => {
+        const userRole = roles?.find(r => r.user_id === profile.user_id);
+        return {
+          id: profile.user_id,
+          email: profile.email || '',
+          display_name: profile.display_name,
+          role: (userRole?.role as AppRole) || 'customer',
+          created_at: profile.created_at,
+          customer_org_id: profile.customer_org_id,
+        };
+      });
+
+      setUsers(usersWithRoles);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setError(err instanceof Error ? err.message : 'Erro ao carregar usuários');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateUserRole = async (userId: string, newRole: AppRole) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ role: newRole })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Update local state
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      ));
+
+      toast({
+        title: 'Role atualizada',
+        description: `Usuário atualizado para ${newRole}`,
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error updating role:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a role do usuário',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [isAdmin]);
+
+  return {
+    users,
+    loading,
+    error,
+    refetch: fetchUsers,
+    updateUserRole,
+  };
+}
