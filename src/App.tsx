@@ -34,6 +34,7 @@ import Documentos from "./pages/Documentos";
 import Formalizacoes from "./pages/Formalizacoes";
 import FormalizacaoNova from "./pages/FormalizacaoNova";
 import FormalizacaoDetalhe from "./pages/FormalizacaoDetalhe";
+import Cronograma from "./pages/Cronograma";
 
 // Wrapper component to provide project context
 const ProjectPage = ({ children }: { children: React.ReactNode }) => (
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/obra/:projectId/formalizacoes" element={<ProtectedRoute><ProjectPage><Formalizacoes /></ProjectPage></ProtectedRoute>} />
             <Route path="/obra/:projectId/formalizacoes/nova" element={<StaffRoute><ProjectPage><FormalizacaoNova /></ProjectPage></StaffRoute>} />
             <Route path="/obra/:projectId/formalizacoes/:id" element={<ProtectedRoute><ProjectPage><FormalizacaoDetalhe /></ProjectPage></ProtectedRoute>} />
+            <Route path="/obra/:projectId/cronograma" element={<StaffRoute><ProjectPage><Cronograma /></ProjectPage></StaffRoute>} />
             
             {/* Legacy routes - redirect to appropriate pages */}
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
