@@ -4,11 +4,12 @@ import bwildLogo from "@/assets/bwild-logo.png";
 import { 
   FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen
+  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil
 } from "lucide-react";
 import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -150,6 +151,7 @@ const ReportHeader = ({
   }, [startDate, effectiveEndDate, reportDate, activities]);
 
   const { paths } = useProjectNavigation();
+  const { isStaff } = useUserRole();
 
   const quickLinks = [
     { icon: FileText, label: "Contrato", href: paths.contrato },
@@ -353,7 +355,18 @@ const ReportHeader = ({
             {/* Timeline Progress Bar */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-h3">Cronograma</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-h3">Cronograma</h3>
+                  {isStaff && activities.length > 0 && (
+                    <Link 
+                      to={paths.cronograma} 
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Editar cronograma"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
+                </div>
                 <span className="text-caption">
                   {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
                 </span>
