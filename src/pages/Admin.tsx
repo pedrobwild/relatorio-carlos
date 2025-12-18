@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Shield, Search, ChevronDown, Check, Plus, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Search, ChevronDown, Check, Plus, Loader2, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,14 +104,96 @@ function RoleSelector({
   );
 }
 
+function EditUserDialog({ 
+  user, 
+  onSave 
+}: { 
+  user: UserWithRole; 
+  onSave: (userId: string, data: { display_name?: string; email?: string }) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [displayName, setDisplayName] = useState(user.display_name || '');
+  const [email, setEmail] = useState(user.email);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    const success = await onSave(user.id, {
+      display_name: displayName,
+      email,
+    });
+    
+    if (success) {
+      setOpen(false);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar Usuário</DialogTitle>
+          <DialogDescription>
+            Atualize os dados do usuário {user.email}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-displayName">Nome de Exibição</Label>
+              <Input
+                id="edit-displayName"
+                type="text"
+                placeholder="Nome do usuário"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                placeholder="usuario@exemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UserCard({ 
   user, 
   onRoleChange,
   onDelete,
+  onEdit,
 }: { 
   user: UserWithRole; 
   onRoleChange: (userId: string, role: AppRole) => void;
   onDelete: (userId: string) => void;
+  onEdit: (userId: string, data: { display_name?: string; email?: string }) => Promise<boolean>;
 }) {
   return (
     <Card>
@@ -126,8 +208,9 @@ function UserCard({
               Desde {format(new Date(user.created_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <RoleSelector user={user} onRoleChange={onRoleChange} />
+            <EditUserDialog user={user} onSave={onEdit} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
@@ -333,7 +416,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
 
 export default function Admin() {
   const navigate = useNavigate();
-  const { users, loading, error, updateUserRole, deleteUser, refetch } = useUsers();
+  const { users, loading, error, updateUserRole, updateUserProfile, deleteUser, refetch } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | null>(null);
 
@@ -355,6 +438,10 @@ export default function Admin() {
 
   const handleDelete = async (userId: string) => {
     await deleteUser(userId);
+  };
+
+  const handleEdit = async (userId: string, data: { display_name?: string; email?: string }) => {
+    return await updateUserProfile(userId, data);
   };
 
   return (
@@ -477,6 +564,7 @@ export default function Admin() {
                   user={user} 
                   onRoleChange={handleRoleChange}
                   onDelete={handleDelete}
+                  onEdit={handleEdit}
                 />
               ))}
             </div>
@@ -507,30 +595,33 @@ export default function Admin() {
                         <RoleSelector user={user} onRoleChange={handleRoleChange} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Deletar usuário?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta ação não pode ser desfeita. O usuário <strong>{user.email}</strong> será permanentemente removido.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => handleDelete(user.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Deletar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="flex items-center justify-end gap-1">
+                          <EditUserDialog user={user} onSave={handleEdit} />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Deletar usuário?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação não pode ser desfeita. O usuário <strong>{user.email}</strong> será permanentemente removido.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDelete(user.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Deletar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
