@@ -57,12 +57,14 @@ import bwildLogo from '@/assets/bwild-logo.png';
 
 const roleLabels: Record<AppRole, string> = {
   admin: 'Administrador',
+  manager: 'Gestor de Engenharia',
   engineer: 'Engenheiro',
   customer: 'Cliente',
 };
 
 const roleColors: Record<AppRole, string> = {
   admin: 'bg-red-500/10 text-red-600 border-red-500/20',
+  manager: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
   engineer: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
   customer: 'bg-green-500/10 text-green-600 border-green-500/20',
 };
@@ -74,7 +76,7 @@ function RoleSelector({
   user: UserWithRole; 
   onRoleChange: (userId: string, role: AppRole) => void;
 }) {
-  const roles: AppRole[] = ['admin', 'engineer', 'customer'];
+  const roles: AppRole[] = ['admin', 'manager', 'engineer', 'customer'];
 
   return (
     <DropdownMenu>
@@ -390,6 +392,11 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
                       <Badge variant="outline" className={roleColors.engineer}>Engenheiro</Badge>
                     </div>
                   </SelectItem>
+                  <SelectItem value="manager">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={roleColors.manager}>Gestor de Engenharia</Badge>
+                    </div>
+                  </SelectItem>
                   <SelectItem value="admin">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className={roleColors.admin}>Administrador</Badge>
@@ -429,6 +436,7 @@ export default function Admin() {
   });
 
   const adminCount = users.filter(u => u.role === 'admin').length;
+  const managerCount = users.filter(u => u.role === 'manager').length;
   const engineerCount = users.filter(u => u.role === 'engineer').length;
   const customerCount = users.filter(u => u.role === 'customer').length;
 
@@ -473,8 +481,7 @@ export default function Admin() {
       </header>
 
       <main className="container max-w-6xl mx-auto px-4 py-6">
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           <Card className="p-4">
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Total</p>
             <p className="text-h2 font-bold">{users.length}</p>
@@ -482,6 +489,10 @@ export default function Admin() {
           <Card className="p-4">
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Admins</p>
             <p className="text-h2 font-bold text-red-600">{adminCount}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Gestores</p>
+            <p className="text-h2 font-bold text-purple-600">{managerCount}</p>
           </Card>
           <Card className="p-4">
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Engenheiros</p>
@@ -525,6 +536,13 @@ export default function Admin() {
               onClick={() => setRoleFilter('engineer')}
             >
               Engenheiros
+            </Button>
+            <Button
+              variant={roleFilter === 'manager' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setRoleFilter('manager')}
+            >
+              Gestores
             </Button>
             <Button
               variant={roleFilter === 'customer' ? 'default' : 'outline'}

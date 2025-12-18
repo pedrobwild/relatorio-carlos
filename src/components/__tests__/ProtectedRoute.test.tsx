@@ -39,6 +39,7 @@ describe('ProtectedRoute', () => {
       isStaff: false,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     const { queryByTestId } = render(
@@ -66,6 +67,7 @@ describe('ProtectedRoute', () => {
       isStaff: false,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     const { queryByTestId } = render(
@@ -93,6 +95,7 @@ describe('ProtectedRoute', () => {
       isStaff: false,
       isCustomer: true,
       isAdmin: false,
+      isManager: false,
     });
 
     const { getByTestId } = render(
@@ -120,6 +123,7 @@ describe('ProtectedRoute', () => {
       isStaff: false,
       isCustomer: true,
       isAdmin: false,
+      isManager: false,
     });
 
     const { queryByTestId } = render(
@@ -147,6 +151,7 @@ describe('ProtectedRoute', () => {
       isStaff: true,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     const { queryByTestId } = render(
@@ -176,6 +181,7 @@ describe('StaffRoute', () => {
       isStaff: true,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     const { getByTestId } = render(
@@ -203,6 +209,7 @@ describe('StaffRoute', () => {
       isStaff: true,
       isCustomer: false,
       isAdmin: true,
+      isManager: false,
     });
 
     const { getByTestId } = render(
@@ -232,6 +239,7 @@ describe('CustomerRoute', () => {
       isStaff: false,
       isCustomer: true,
       isAdmin: false,
+      isManager: false,
     });
 
     const { getByTestId } = render(
@@ -259,6 +267,7 @@ describe('CustomerRoute', () => {
       isStaff: true,
       isCustomer: false,
       isAdmin: false,
+      isManager: false,
     });
 
     const { queryByTestId } = render(
