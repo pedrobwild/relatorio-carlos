@@ -95,6 +95,50 @@ export function useUsers() {
     }
   };
 
+  const updateUserProfile = async (userId: string, data: { display_name?: string; email?: string }) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionData.session?.access_token}`,
+          },
+          body: JSON.stringify({ user_id: userId, ...data }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao atualizar usuário');
+      }
+
+      // Update local state
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, ...data } : user
+      ));
+
+      toast({
+        title: 'Usuário atualizado',
+        description: 'Os dados foram atualizados com sucesso',
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error updating user:', err);
+      toast({
+        title: 'Erro',
+        description: err instanceof Error ? err.message : 'Não foi possível atualizar o usuário',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -147,6 +191,7 @@ export function useUsers() {
     error,
     refetch: fetchUsers,
     updateUserRole,
+    updateUserProfile,
     deleteUser,
   };
 }
