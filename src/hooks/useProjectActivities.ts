@@ -16,6 +16,7 @@ export interface ProjectActivity {
   created_at: string;
   updated_at: string;
   created_by: string;
+  predecessor_ids: string[];
 }
 
 export interface ActivityInput {
@@ -26,6 +27,7 @@ export interface ActivityInput {
   actual_end?: string | null;
   weight: number;
   sort_order: number;
+  predecessor_ids?: string[];
 }
 
 export function useProjectActivities(projectId: string | undefined) {
@@ -93,6 +95,7 @@ export function useProjectActivities(projectId: string | undefined) {
           weight: activity.weight,
           sort_order: index,
           created_by: user.id,
+          predecessor_ids: activity.predecessor_ids || [],
         }));
 
         const { error: insertError } = await supabase

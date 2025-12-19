@@ -1,22 +1,34 @@
-import { useMemo, useState } from 'react';
-import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, isWithinInterval, isSameMonth } from 'date-fns';
+import { useMemo, useState, useRef, useCallback } from 'react';
+import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity } from '@/types/report';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut, GripHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 
 interface GanttChartProps {
   activities: Activity[];
   reportDate?: string;
+  onActivityDateChange?: (activityId: string, newPlannedStart: string, newPlannedEnd: string) => void;
+  editable?: boolean;
 }
 
 type ZoomLevel = 'week' | 'month' | 'quarter';
 
-const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
+interface DragState {
+  activityIndex: number;
+  dragType: 'move' | 'resize-start' | 'resize-end';
+  startX: number;
+  originalStart: string;
+  originalEnd: string;
+}
+
+const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = false }: GanttChartProps) => {
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('month');
-  const [scrollOffset, setScrollOffset] = useState(0);
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   const { startDate, endDate, totalDays, months } = useMemo(() => {
     if (activities.length === 0) {
@@ -25,7 +37,7 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
         startDate: today,
         endDate: today,
         totalDays: 30,
-        months: [{ date: today, label: format(today, 'MMM yyyy', { locale: ptBR }) }]
+        months: [{ date: today, label: format(today, 'MMM yyyy', { locale: ptBR }), days: 30 }]
       };
     }
 
@@ -39,7 +51,6 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
     const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
     
-    // Add padding
     const start = startOfMonth(minDate);
     const end = endOfMonth(maxDate);
     
@@ -116,6 +127,129 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
     }
   }, [zoomLevel, totalDays]);
 
+  // Drag handlers
+  const handleDragStart = useCallback((e: React.MouseEvent, activityIndex: number, dragType: DragState['dragType']) => {
+    if (!editable || !onActivityDateChange) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const activity = activities[activityIndex];
+    setDragState({
+      activityIndex,
+      dragType,
+      startX: e.clientX,
+      originalStart: activity.plannedStart,
+      originalEnd: activity.plannedEnd,
+    });
+  }, [editable, onActivityDateChange, activities]);
+
+  const handleDragMove = useCallback((e: React.MouseEvent) => {
+    if (!dragState || !chartRef.current || !onActivityDateChange) return;
+
+    const chartRect = chartRef.current.getBoundingClientRect();
+    const chartWidthPx = chartRect.width;
+    const deltaX = e.clientX - dragState.startX;
+    const deltaDays = Math.round((deltaX / chartWidthPx) * totalDays);
+
+    if (deltaDays === 0) return;
+
+    const activity = activities[dragState.activityIndex];
+    const originalStartDate = new Date(dragState.originalStart + 'T00:00:00');
+    const originalEndDate = new Date(dragState.originalEnd + 'T00:00:00');
+
+    let newStart: Date;
+    let newEnd: Date;
+
+    if (dragState.dragType === 'move') {
+      newStart = addDays(originalStartDate, deltaDays);
+      newEnd = addDays(originalEndDate, deltaDays);
+    } else if (dragState.dragType === 'resize-start') {
+      newStart = addDays(originalStartDate, deltaDays);
+      newEnd = originalEndDate;
+      if (newStart >= newEnd) return;
+    } else {
+      newStart = originalStartDate;
+      newEnd = addDays(originalEndDate, deltaDays);
+      if (newEnd <= newStart) return;
+    }
+
+    const newStartStr = format(newStart, 'yyyy-MM-dd');
+    const newEndStr = format(newEnd, 'yyyy-MM-dd');
+
+    if (activity.id) {
+      onActivityDateChange(activity.id, newStartStr, newEndStr);
+    }
+  }, [dragState, activities, totalDays, onActivityDateChange]);
+
+  const handleDragEnd = useCallback(() => {
+    if (dragState) {
+      toast.success('Datas atualizadas');
+    }
+    setDragState(null);
+  }, [dragState]);
+
+  // Calculate dependency lines
+  const dependencyLines = useMemo(() => {
+    const lines: { fromIndex: number; toIndex: number; fromActivity: Activity; toActivity: Activity }[] = [];
+    
+    activities.forEach((activity, toIndex) => {
+      if (activity.predecessorIds && activity.predecessorIds.length > 0) {
+        activity.predecessorIds.forEach(predId => {
+          const fromIndex = activities.findIndex(a => a.id === predId);
+          if (fromIndex >= 0) {
+            lines.push({
+              fromIndex,
+              toIndex,
+              fromActivity: activities[fromIndex],
+              toActivity: activity,
+            });
+          }
+        });
+      }
+    });
+    
+    return lines;
+  }, [activities]);
+
+  const renderDependencyLines = () => {
+    return dependencyLines.map((line, idx) => {
+      const fromStyle = getBarStyle(line.fromActivity.plannedStart, line.fromActivity.plannedEnd);
+      const toStyle = getBarStyle(line.toActivity.plannedStart, line.toActivity.plannedEnd);
+      
+      const fromLeft = parseFloat(fromStyle.left) + parseFloat(fromStyle.width);
+      const fromTop = line.fromIndex * 48 + 24;
+      const toLeft = parseFloat(toStyle.left);
+      const toTop = line.toIndex * 48 + 12;
+
+      // Create SVG path for dependency arrow
+      const pathD = `M ${fromLeft}% ${fromTop} L ${fromLeft + 1}% ${fromTop} L ${fromLeft + 1}% ${toTop - 6} L ${toLeft - 1}% ${toTop - 6} L ${toLeft - 1}% ${toTop} L ${toLeft}% ${toTop}`;
+
+      return (
+        <svg
+          key={`dep-${idx}`}
+          className="absolute inset-0 pointer-events-none overflow-visible"
+          style={{ zIndex: 5 }}
+        >
+          <path
+            d={pathD}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2"
+            strokeDasharray="4,2"
+            opacity="0.6"
+          />
+          {/* Arrow head */}
+          <polygon
+            points={`${toLeft}%,${toTop} ${toLeft - 0.5}%,${toTop - 4} ${toLeft - 0.5}%,${toTop + 4}`}
+            fill="hsl(var(--primary))"
+            opacity="0.6"
+          />
+        </svg>
+      );
+    });
+  };
+
   if (activities.length === 0) {
     return (
       <div className="bg-card rounded-lg border border-border p-8 text-center">
@@ -126,10 +260,22 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
 
   return (
     <TooltipProvider>
-      <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div 
+        className="bg-card rounded-lg border border-border overflow-hidden"
+        onMouseMove={dragState ? handleDragMove : undefined}
+        onMouseUp={dragState ? handleDragEnd : undefined}
+        onMouseLeave={dragState ? handleDragEnd : undefined}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-          <h3 className="font-semibold text-sm">Gráfico de Gantt</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm">Gráfico de Gantt</h3>
+            {editable && (
+              <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-0.5 rounded">
+                Arraste para editar
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
@@ -154,7 +300,7 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 px-3 py-2 border-b border-border text-xs">
+        <div className="flex items-center gap-4 px-3 py-2 border-b border-border text-xs flex-wrap">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-primary/30 border border-primary" />
             <span className="text-muted-foreground">Previsto</span>
@@ -171,6 +317,12 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
             <div className="w-3 h-3 rounded-sm bg-destructive" />
             <span className="text-muted-foreground">Atrasado</span>
           </div>
+          {dependencyLines.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-0.5 border-t-2 border-dashed border-primary" />
+              <span className="text-muted-foreground">Dependência</span>
+            </div>
+          )}
         </div>
 
         {/* Chart container */}
@@ -188,13 +340,24 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-xs font-medium truncate cursor-default">
+                    <span className="text-xs font-medium truncate cursor-default flex items-center gap-1.5">
+                      <span className="text-primary/60 font-mono text-[10px]">{index + 1}</span>
                       {activity.description}
+                      {activity.predecessorIds && activity.predecessorIds.length > 0 && (
+                        <span className="text-[10px] text-muted-foreground">
+                          ←{activity.predecessorIds.length}
+                        </span>
+                      )}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="right">
                     <p className="font-medium">{activity.description}</p>
                     <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
+                    {activity.predecessorIds && activity.predecessorIds.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Depende de: {activity.predecessorIds.length} atividade(s)
+                      </p>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -203,7 +366,7 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
 
           {/* Timeline area */}
           <div className="flex-1 overflow-x-auto">
-            <div style={{ minWidth: `${chartWidth}%` }}>
+            <div style={{ minWidth: `${chartWidth}%` }} ref={chartRef}>
               {/* Month headers */}
               <div className="h-8 flex border-b border-border bg-muted/20">
                 {months.map((month, idx) => {
@@ -242,6 +405,7 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
                     ? getBarStyle(activity.actualStart!, activity.actualEnd || reportDate || format(new Date(), 'yyyy-MM-dd'))
                     : null;
                   const status = getActivityStatus(activity);
+                  const isDragging = dragState?.activityIndex === index;
 
                   return (
                     <div 
@@ -252,15 +416,46 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div 
-                            className="absolute top-2 h-3 rounded-sm bg-primary/20 border border-primary/40 cursor-pointer hover:bg-primary/30 transition-colors"
+                            className={cn(
+                              "absolute top-2 h-3 rounded-sm bg-primary/20 border border-primary/40 transition-colors group",
+                              editable && "cursor-move hover:bg-primary/30",
+                              isDragging && dragState?.dragType === 'move' && "ring-2 ring-primary"
+                            )}
                             style={plannedStyle}
-                          />
+                            onMouseDown={(e) => handleDragStart(e, index, 'move')}
+                          >
+                            {editable && (
+                              <>
+                                {/* Resize handle - start */}
+                                <div 
+                                  className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-primary/50 rounded-l-sm"
+                                  onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    handleDragStart(e, index, 'resize-start');
+                                  }}
+                                />
+                                {/* Resize handle - end */}
+                                <div 
+                                  className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-primary/50 rounded-r-sm"
+                                  onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                    handleDragStart(e, index, 'resize-end');
+                                  }}
+                                />
+                                {/* Drag indicator */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-50">
+                                  <GripHorizontal className="h-2.5 w-2.5 text-primary" />
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="font-medium">Previsto</p>
                           <p className="text-xs">
                             {format(new Date(activity.plannedStart), 'dd/MM/yyyy')} - {format(new Date(activity.plannedEnd), 'dd/MM/yyyy')}
                           </p>
+                          {editable && <p className="text-xs text-muted-foreground mt-1">Arraste para mover ou redimensionar</p>}
                         </TooltipContent>
                       </Tooltip>
 
@@ -288,6 +483,58 @@ const GanttChart = ({ activities, reportDate }: GanttChartProps) => {
                     </div>
                   );
                 })}
+
+                {/* Dependency lines - rendered as simple indicators for now */}
+                {dependencyLines.length > 0 && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    {dependencyLines.map((line, idx) => {
+                      const fromEnd = getBarStyle(line.fromActivity.plannedStart, line.fromActivity.plannedEnd);
+                      const toStart = getBarStyle(line.toActivity.plannedStart, line.toActivity.plannedEnd);
+                      
+                      const fromX = parseFloat(fromEnd.left) + parseFloat(fromEnd.width);
+                      const toX = parseFloat(toStart.left);
+                      const fromY = line.fromIndex * 48 + 14;
+                      const toY = line.toIndex * 48 + 14;
+
+                      return (
+                        <svg
+                          key={`line-${idx}`}
+                          className="absolute inset-0 w-full h-full overflow-visible"
+                          style={{ zIndex: 5 }}
+                          preserveAspectRatio="none"
+                        >
+                          <line
+                            x1={`${fromX}%`}
+                            y1={fromY}
+                            x2={`${toX}%`}
+                            y2={toY}
+                            stroke="hsl(var(--primary))"
+                            strokeWidth="1.5"
+                            strokeDasharray="4,3"
+                            opacity="0.5"
+                            markerEnd="url(#arrowhead)"
+                          />
+                          <defs>
+                            <marker
+                              id="arrowhead"
+                              markerWidth="6"
+                              markerHeight="6"
+                              refX="5"
+                              refY="3"
+                              orient="auto"
+                            >
+                              <polygon
+                                points="0 0, 6 3, 0 6"
+                                fill="hsl(var(--primary))"
+                                opacity="0.5"
+                              />
+                            </marker>
+                          </defs>
+                        </svg>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

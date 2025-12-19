@@ -605,6 +605,7 @@ export type Database = {
           id: string
           planned_end: string
           planned_start: string
+          predecessor_ids: string[] | null
           project_id: string
           sort_order: number
           updated_at: string
@@ -619,6 +620,7 @@ export type Database = {
           id?: string
           planned_end: string
           planned_start: string
+          predecessor_ids?: string[] | null
           project_id: string
           sort_order?: number
           updated_at?: string
@@ -633,6 +635,7 @@ export type Database = {
           id?: string
           planned_end?: string
           planned_start?: string
+          predecessor_ids?: string[] | null
           project_id?: string
           sort_order?: number
           updated_at?: string
