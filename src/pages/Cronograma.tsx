@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,9 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useProjectActivities, ActivityInput } from '@/hooks/useProjectActivities';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 interface ActivityFormData {
   id: string;
   description: string;
@@ -17,6 +20,7 @@ interface ActivityFormData {
   actualStart: string;
   actualEnd: string;
   weight: string;
+  predecessorIds: string[];
 }
 
 const createEmptyActivity = (): ActivityFormData => ({
@@ -27,6 +31,7 @@ const createEmptyActivity = (): ActivityFormData => ({
   actualStart: '',
   actualEnd: '',
   weight: '0',
+  predecessorIds: [],
 });
 
 const Cronograma = () => {
@@ -50,6 +55,7 @@ const Cronograma = () => {
         actualStart: act.actual_start || '',
         actualEnd: act.actual_end || '',
         weight: act.weight.toString(),
+        predecessorIds: act.predecessor_ids || [],
       }));
       setActivities(formActivities);
     }
@@ -70,10 +76,27 @@ const Cronograma = () => {
     setActivities(activities.filter(act => act.id !== id));
   };
 
-  const handleActivityChange = (id: string, field: keyof ActivityFormData, value: string) => {
+  const handleActivityChange = (id: string, field: keyof ActivityFormData, value: string | string[]) => {
     setActivities(activities.map(act => 
       act.id === id ? { ...act, [field]: value } : act
     ));
+  };
+
+  const togglePredecessor = (activityId: string, predecessorId: string) => {
+    setActivities(activities.map(act => {
+      if (act.id === activityId) {
+        const newPredecessors = act.predecessorIds.includes(predecessorId)
+          ? act.predecessorIds.filter(id => id !== predecessorId)
+          : [...act.predecessorIds, predecessorId];
+        return { ...act, predecessorIds: newPredecessors };
+      }
+      return act;
+    }));
+  };
+
+  const getActivityLabel = (id: string) => {
+    const index = activities.findIndex(a => a.id === id);
+    return index >= 0 ? `${index + 1}. ${activities[index].description || 'Sem descrição'}` : '';
   };
 
   // Validate dates for each activity
@@ -129,6 +152,7 @@ const Cronograma = () => {
       actual_end: act.actualEnd || null,
       weight: parseFloat(act.weight) || 0,
       sort_order: index,
+      predecessor_ids: act.predecessorIds,
     }));
 
     const success = await saveActivities(activityInputs);
@@ -347,6 +371,67 @@ const Cronograma = () => {
                     className="w-32"
                   />
                 </div>
+
+                {/* Predecessors */}
+                {index > 0 && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Link2 className="h-4 w-4" />
+                      Dependências (Predecessoras)
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {activity.predecessorIds.length > 0 && activity.predecessorIds.map(predId => (
+                        <Badge 
+                          key={predId} 
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-destructive/20"
+                          onClick={() => togglePredecessor(activity.id, predId)}
+                        >
+                          {getActivityLabel(predId)}
+                          <span className="ml-1 text-destructive">×</span>
+                        </Badge>
+                      ))}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-7">
+                            <Plus className="h-3 w-3 mr-1" />
+                            Adicionar
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-2" align="start">
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground mb-2">Selecione atividades predecessoras:</p>
+                            {activities.slice(0, index).map((pred, predIndex) => (
+                              <div 
+                                key={pred.id}
+                                className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer"
+                                onClick={() => togglePredecessor(activity.id, pred.id)}
+                              >
+                                <Checkbox 
+                                  checked={activity.predecessorIds.includes(pred.id)}
+                                  onCheckedChange={() => togglePredecessor(activity.id, pred.id)}
+                                />
+                                <span className="text-sm truncate">
+                                  {predIndex + 1}. {pred.description || 'Sem descrição'}
+                                </span>
+                              </div>
+                            ))}
+                            {activities.slice(0, index).length === 0 && (
+                              <p className="text-xs text-muted-foreground text-center py-2">
+                                Nenhuma atividade anterior disponível
+                              </p>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {activity.predecessorIds.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhuma dependência definida. Esta atividade pode iniciar a qualquer momento.
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

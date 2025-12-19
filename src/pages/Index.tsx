@@ -49,7 +49,7 @@ const Index = () => {
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const { isStaff } = useUserRole();
-  const { activities: dbActivities, loading: activitiesLoading } = useProjectActivities(projectId);
+  const { activities: dbActivities, loading: activitiesLoading, updateActivity } = useProjectActivities(projectId);
   const [activeTab, setActiveTab] = useState("curvaS");
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
@@ -59,12 +59,14 @@ const Index = () => {
   // Convert database activities to report format
   const formattedActivities = useMemo(() => {
     return dbActivities.map(act => ({
+      id: act.id,
       description: act.description,
       plannedStart: act.planned_start,
       plannedEnd: act.planned_end,
       actualStart: act.actual_start || '',
       actualEnd: act.actual_end || '',
       weight: act.weight,
+      predecessorIds: act.predecessor_ids || [],
     }));
   }, [dbActivities]);
 
@@ -125,6 +127,15 @@ const Index = () => {
   const reportsChronological = useMemo(() => {
     return [...allWeeklyReports].reverse();
   }, [allWeeklyReports]);
+
+  // Handler for Gantt drag-and-drop date changes
+  const handleActivityDateChange = async (activityId: string, newPlannedStart: string, newPlannedEnd: string) => {
+    if (!isStaff) return;
+    await updateActivity(activityId, { 
+      planned_start: newPlannedStart, 
+      planned_end: newPlannedEnd 
+    });
+  };
 
   const handleExportPDF = async () => {
     if (!reportRef.current) return;
@@ -331,7 +342,12 @@ const Index = () => {
                   </TabsContent>
 
                   <TabsContent value="gantt" className="mt-0 focus-visible:outline-none">
-                    <GanttChart activities={reportData.activities} reportDate={reportData.reportDate} />
+                    <GanttChart 
+                      activities={reportData.activities} 
+                      reportDate={reportData.reportDate}
+                      editable={isStaff && formattedActivities.length > 0}
+                      onActivityDateChange={handleActivityDateChange}
+                    />
                   </TabsContent>
 
                   <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
