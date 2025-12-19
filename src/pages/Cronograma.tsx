@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectActivities, ActivityInput } from '@/hooks/useProjectActivities';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-
+import { toast } from 'sonner';
 interface ActivityFormData {
   id: string;
   description: string;
@@ -76,6 +76,33 @@ const Cronograma = () => {
     ));
   };
 
+  // Validate dates for each activity
+  const dateValidationErrors = useMemo(() => {
+    const errors: Record<string, { plannedDates?: string; actualDates?: string }> = {};
+    
+    activities.forEach(act => {
+      const actErrors: { plannedDates?: string; actualDates?: string } = {};
+      
+      // Validate planned dates
+      if (act.plannedStart && act.plannedEnd && act.plannedEnd < act.plannedStart) {
+        actErrors.plannedDates = 'Término previsto deve ser igual ou posterior ao início';
+      }
+      
+      // Validate actual dates
+      if (act.actualStart && act.actualEnd && act.actualEnd < act.actualStart) {
+        actErrors.actualDates = 'Término real deve ser igual ou posterior ao início';
+      }
+      
+      if (Object.keys(actErrors).length > 0) {
+        errors[act.id] = actErrors;
+      }
+    });
+    
+    return errors;
+  }, [activities]);
+
+  const hasDateErrors = Object.keys(dateValidationErrors).length > 0;
+
   const handleSave = async () => {
     // Validation
     const hasEmptyFields = activities.some(act => 
@@ -83,6 +110,12 @@ const Cronograma = () => {
     );
 
     if (hasEmptyFields) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (hasDateErrors) {
+      toast.error('Corrija os erros de data antes de salvar');
       return;
     }
 
@@ -102,6 +135,7 @@ const Cronograma = () => {
     setSaving(false);
 
     if (success) {
+      toast.success('Cronograma salvo com sucesso');
       navigate(paths.relatorio);
     }
   };
@@ -223,63 +257,79 @@ const Cronograma = () => {
                 </div>
 
                 {/* Planned dates */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor={`ps-${activity.id}`}>Início Previsto *</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id={`ps-${activity.id}`}
-                        type="date"
-                        className="pl-10"
-                        value={activity.plannedStart}
-                        onChange={(e) => handleActivityChange(activity.id, 'plannedStart', e.target.value)}
-                      />
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor={`ps-${activity.id}`}>Início Previsto *</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id={`ps-${activity.id}`}
+                          type="date"
+                          className={`pl-10 ${dateValidationErrors[activity.id]?.plannedDates ? 'border-destructive' : ''}`}
+                          value={activity.plannedStart}
+                          onChange={(e) => handleActivityChange(activity.id, 'plannedStart', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`pe-${activity.id}`}>Término Previsto *</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id={`pe-${activity.id}`}
+                          type="date"
+                          className={`pl-10 ${dateValidationErrors[activity.id]?.plannedDates ? 'border-destructive' : ''}`}
+                          value={activity.plannedEnd}
+                          onChange={(e) => handleActivityChange(activity.id, 'plannedEnd', e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`pe-${activity.id}`}>Término Previsto *</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id={`pe-${activity.id}`}
-                        type="date"
-                        className="pl-10"
-                        value={activity.plannedEnd}
-                        onChange={(e) => handleActivityChange(activity.id, 'plannedEnd', e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  {dateValidationErrors[activity.id]?.plannedDates && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {dateValidationErrors[activity.id].plannedDates}
+                    </p>
+                  )}
                 </div>
 
                 {/* Actual dates */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor={`as-${activity.id}`}>Início Real</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id={`as-${activity.id}`}
-                        type="date"
-                        className="pl-10"
-                        value={activity.actualStart}
-                        onChange={(e) => handleActivityChange(activity.id, 'actualStart', e.target.value)}
-                      />
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor={`as-${activity.id}`}>Início Real</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id={`as-${activity.id}`}
+                          type="date"
+                          className={`pl-10 ${dateValidationErrors[activity.id]?.actualDates ? 'border-destructive' : ''}`}
+                          value={activity.actualStart}
+                          onChange={(e) => handleActivityChange(activity.id, 'actualStart', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`ae-${activity.id}`}>Término Real</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id={`ae-${activity.id}`}
+                          type="date"
+                          className={`pl-10 ${dateValidationErrors[activity.id]?.actualDates ? 'border-destructive' : ''}`}
+                          value={activity.actualEnd}
+                          onChange={(e) => handleActivityChange(activity.id, 'actualEnd', e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`ae-${activity.id}`}>Término Real</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id={`ae-${activity.id}`}
-                        type="date"
-                        className="pl-10"
-                        value={activity.actualEnd}
-                        onChange={(e) => handleActivityChange(activity.id, 'actualEnd', e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  {dateValidationErrors[activity.id]?.actualDates && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {dateValidationErrors[activity.id].actualDates}
+                    </p>
+                  )}
                 </div>
 
                 {/* Weight */}
