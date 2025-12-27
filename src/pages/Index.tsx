@@ -67,6 +67,8 @@ const Index = () => {
       actualEnd: act.actual_end || '',
       weight: act.weight,
       predecessorIds: act.predecessor_ids || [],
+      baselineStart: act.baseline_start,
+      baselineEnd: act.baseline_end,
     }));
   }, [dbActivities]);
 

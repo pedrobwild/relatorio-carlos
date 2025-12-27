@@ -7,6 +7,8 @@ export interface Activity {
   actualEnd: string;
   weight?: number; // Peso da atividade no progresso total (0-100). Se não definido, usa cálculo proporcional por duração.
   predecessorIds?: string[]; // IDs das atividades predecessoras (dependências)
+  baselineStart?: string | null; // Data de início original (baseline)
+  baselineEnd?: string | null; // Data de término original (baseline)
 }
 
 export interface SCurveDataPoint {

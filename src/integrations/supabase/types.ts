@@ -599,6 +599,9 @@ export type Database = {
         Row: {
           actual_end: string | null
           actual_start: string | null
+          baseline_end: string | null
+          baseline_saved_at: string | null
+          baseline_start: string | null
           created_at: string
           created_by: string
           description: string
@@ -614,6 +617,9 @@ export type Database = {
         Insert: {
           actual_end?: string | null
           actual_start?: string | null
+          baseline_end?: string | null
+          baseline_saved_at?: string | null
+          baseline_start?: string | null
           created_at?: string
           created_by: string
           description: string
@@ -629,6 +635,9 @@ export type Database = {
         Update: {
           actual_end?: string | null
           actual_start?: string | null
+          baseline_end?: string | null
+          baseline_saved_at?: string | null
+          baseline_start?: string | null
           created_at?: string
           created_by?: string
           description?: string
