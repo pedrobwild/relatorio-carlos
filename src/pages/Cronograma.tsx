@@ -82,7 +82,39 @@ const Cronograma = () => {
     ));
   };
 
+  // Detect circular dependencies using DFS
+  const wouldCreateCircularDependency = (activityId: string, newPredecessorId: string): boolean => {
+    const visited = new Set<string>();
+    
+    const hasCycle = (currentId: string): boolean => {
+      if (currentId === activityId) return true;
+      if (visited.has(currentId)) return false;
+      
+      visited.add(currentId);
+      const activity = activities.find(a => a.id === currentId);
+      if (!activity) return false;
+      
+      for (const predId of activity.predecessorIds) {
+        if (hasCycle(predId)) return true;
+      }
+      return false;
+    };
+    
+    return hasCycle(newPredecessorId);
+  };
+
   const togglePredecessor = (activityId: string, predecessorId: string) => {
+    const activity = activities.find(a => a.id === activityId);
+    if (!activity) return;
+
+    // If adding a new predecessor, check for circular dependency
+    if (!activity.predecessorIds.includes(predecessorId)) {
+      if (wouldCreateCircularDependency(activityId, predecessorId)) {
+        toast.error('Dependência circular detectada! Esta atividade já depende direta ou indiretamente da atividade selecionada.');
+        return;
+      }
+    }
+
     setActivities(activities.map(act => {
       if (act.id === activityId) {
         const newPredecessors = act.predecessorIds.includes(predecessorId)
