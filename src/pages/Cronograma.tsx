@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ImportScheduleModal } from '@/components/ImportScheduleModal';
 interface ActivityFormData {
   id: string;
   description: string;
@@ -43,6 +44,17 @@ const Cronograma = () => {
   const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
   const [saving, setSaving] = useState(false);
   const [totalWeight, setTotalWeight] = useState(0);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+
+  const handleImportActivities = (importedActivities: ActivityFormData[]) => {
+    if (activities.length === 1 && !activities[0].description.trim()) {
+      // Replace empty default activity
+      setActivities(importedActivities);
+    } else {
+      // Append to existing activities
+      setActivities([...activities, ...importedActivities]);
+    }
+  };
 
   // Load existing activities into form
   useEffect(() => {
@@ -237,14 +249,20 @@ const Cronograma = () => {
               <p className="text-sm text-muted-foreground">{project?.name}</p>
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            Salvar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setImportModalOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importar
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Salvar
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -479,6 +497,12 @@ const Cronograma = () => {
           Adicionar Atividade
         </Button>
       </div>
+
+      <ImportScheduleModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        onImport={handleImportActivities}
+      />
     </div>
   );
 };
