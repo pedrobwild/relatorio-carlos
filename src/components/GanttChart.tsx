@@ -189,20 +189,173 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
     setDragState(null);
   }, [dragState]);
 
+  // Calculate critical path using forward/backward pass
+  const criticalPath = useMemo(() => {
+    if (activities.length === 0) return new Set<string>();
+
+    // Build activity map by id
+    const activityMap = new Map(activities.map(a => [a.id, a]));
+    
+    // Calculate duration for each activity
+    const getDuration = (activity: Activity): number => {
+      const start = new Date(activity.plannedStart + 'T00:00:00');
+      const end = new Date(activity.plannedEnd + 'T00:00:00');
+      return differenceInDays(end, start) + 1;
+    };
+
+    // Forward pass - calculate earliest start/finish
+    const earliestStart = new Map<string, number>();
+    const earliestFinish = new Map<string, number>();
+    
+    // Find activities without predecessors (starting activities)
+    const processed = new Set<string>();
+    const queue: string[] = [];
+    
+    activities.forEach(a => {
+      if (!a.predecessorIds || a.predecessorIds.length === 0) {
+        earliestStart.set(a.id!, 0);
+        earliestFinish.set(a.id!, getDuration(a));
+        processed.add(a.id!);
+        queue.push(a.id!);
+      }
+    });
+
+    // Process remaining activities
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      
+      // Find successors
+      activities.forEach(a => {
+        if (a.predecessorIds?.includes(currentId) && !processed.has(a.id!)) {
+          // Check if all predecessors are processed
+          const allPredecessorsProcessed = a.predecessorIds.every(pid => processed.has(pid));
+          if (allPredecessorsProcessed) {
+            // Earliest start is max of all predecessors' earliest finish
+            const es = Math.max(
+              ...a.predecessorIds.map(pid => earliestFinish.get(pid) || 0)
+            );
+            earliestStart.set(a.id!, es);
+            earliestFinish.set(a.id!, es + getDuration(a));
+            processed.add(a.id!);
+            queue.push(a.id!);
+          }
+        }
+      });
+    }
+
+    // Handle any remaining activities (no predecessors but not yet processed)
+    activities.forEach(a => {
+      if (!processed.has(a.id!)) {
+        earliestStart.set(a.id!, 0);
+        earliestFinish.set(a.id!, getDuration(a));
+      }
+    });
+
+    // Project end time (max of all earliest finish times)
+    const projectEnd = Math.max(...Array.from(earliestFinish.values()));
+
+    // Backward pass - calculate latest start/finish
+    const latestFinish = new Map<string, number>();
+    const latestStart = new Map<string, number>();
+    
+    // Build successor map
+    const successors = new Map<string, string[]>();
+    activities.forEach(a => {
+      successors.set(a.id!, []);
+    });
+    activities.forEach(a => {
+      a.predecessorIds?.forEach(pid => {
+        const succs = successors.get(pid) || [];
+        succs.push(a.id!);
+        successors.set(pid, succs);
+      });
+    });
+
+    // Find activities without successors (ending activities)
+    const processedBack = new Set<string>();
+    const queueBack: string[] = [];
+    
+    activities.forEach(a => {
+      const succs = successors.get(a.id!) || [];
+      if (succs.length === 0) {
+        latestFinish.set(a.id!, projectEnd);
+        latestStart.set(a.id!, projectEnd - getDuration(a));
+        processedBack.add(a.id!);
+        queueBack.push(a.id!);
+      }
+    });
+
+    // Process remaining activities backwards
+    while (queueBack.length > 0) {
+      const currentId = queueBack.shift()!;
+      const current = activityMap.get(currentId);
+      
+      if (current?.predecessorIds) {
+        current.predecessorIds.forEach(predId => {
+          if (!processedBack.has(predId)) {
+            // Check if all successors are processed
+            const predSuccessors = successors.get(predId) || [];
+            const allSuccessorsProcessed = predSuccessors.every(sid => processedBack.has(sid));
+            
+            if (allSuccessorsProcessed) {
+              // Latest finish is min of all successors' latest start
+              const lf = Math.min(
+                ...predSuccessors.map(sid => latestStart.get(sid) || projectEnd)
+              );
+              const pred = activityMap.get(predId);
+              if (pred) {
+                latestFinish.set(predId, lf);
+                latestStart.set(predId, lf - getDuration(pred));
+                processedBack.add(predId);
+                queueBack.push(predId);
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Handle any remaining activities
+    activities.forEach(a => {
+      if (!processedBack.has(a.id!)) {
+        latestFinish.set(a.id!, projectEnd);
+        latestStart.set(a.id!, projectEnd - getDuration(a));
+      }
+    });
+
+    // Calculate slack and identify critical path (slack = 0)
+    const criticalActivities = new Set<string>();
+    
+    activities.forEach(a => {
+      const es = earliestStart.get(a.id!) || 0;
+      const ls = latestStart.get(a.id!) || 0;
+      const slack = ls - es;
+      
+      if (slack === 0) {
+        criticalActivities.add(a.id!);
+      }
+    });
+
+    return criticalActivities;
+  }, [activities]);
+
   // Calculate dependency lines
   const dependencyLines = useMemo(() => {
-    const lines: { fromIndex: number; toIndex: number; fromActivity: Activity; toActivity: Activity }[] = [];
+    const lines: { fromIndex: number; toIndex: number; fromActivity: Activity; toActivity: Activity; isCritical: boolean }[] = [];
     
     activities.forEach((activity, toIndex) => {
       if (activity.predecessorIds && activity.predecessorIds.length > 0) {
         activity.predecessorIds.forEach(predId => {
           const fromIndex = activities.findIndex(a => a.id === predId);
           if (fromIndex >= 0) {
+            // Check if both activities are on critical path
+            const isCritical = criticalPath.has(activity.id!) && criticalPath.has(predId);
             lines.push({
               fromIndex,
               toIndex,
               fromActivity: activities[fromIndex],
               toActivity: activity,
+              isCritical,
             });
           }
         });
@@ -210,7 +363,7 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
     });
     
     return lines;
-  }, [activities]);
+  }, [activities, criticalPath]);
 
   const renderDependencyLines = () => {
     return dependencyLines.map((line, idx) => {
@@ -317,6 +470,12 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
             <div className="w-3 h-3 rounded-sm bg-destructive" />
             <span className="text-muted-foreground">Atrasado</span>
           </div>
+          {criticalPath.size > 0 && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm bg-amber-500 ring-2 ring-amber-500/50" />
+              <span className="text-muted-foreground">Caminho Crítico</span>
+            </div>
+          )}
           {dependencyLines.length > 0 && (
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-0.5 border-t-2 border-dashed border-primary" />
@@ -333,35 +492,56 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
             <div className="h-8 border-b border-border bg-muted/20" />
             
             {/* Activity labels */}
-            {activities.map((activity, index) => (
-              <div 
-                key={index}
-                className="h-12 px-3 flex items-center border-b border-border hover:bg-muted/20 transition-colors"
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-xs font-medium truncate cursor-default flex items-center gap-1.5">
-                      <span className="text-primary/60 font-mono text-[10px]">{index + 1}</span>
-                      {activity.description}
-                      {activity.predecessorIds && activity.predecessorIds.length > 0 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          ←{activity.predecessorIds.length}
+            {activities.map((activity, index) => {
+              const isCritical = criticalPath.has(activity.id!);
+              return (
+                <div 
+                  key={index}
+                  className={cn(
+                    "h-12 px-3 flex items-center border-b border-border hover:bg-muted/20 transition-colors",
+                    isCritical && "bg-amber-500/5"
+                  )}
+                >
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-xs font-medium truncate cursor-default flex items-center gap-1.5">
+                        <span className={cn(
+                          "font-mono text-[10px]",
+                          isCritical ? "text-amber-600 font-bold" : "text-primary/60"
+                        )}>
+                          {index + 1}
                         </span>
+                        {activity.description}
+                        {isCritical && (
+                          <span className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1 rounded">
+                            CC
+                          </span>
+                        )}
+                        {activity.predecessorIds && activity.predecessorIds.length > 0 && (
+                          <span className="text-[10px] text-muted-foreground">
+                            ←{activity.predecessorIds.length}
+                          </span>
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p className="font-medium">{activity.description}</p>
+                      <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
+                      {isCritical && (
+                        <p className="text-xs text-amber-600 font-medium">
+                          ⚠ Caminho Crítico (folga = 0)
+                        </p>
                       )}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p className="font-medium">{activity.description}</p>
-                    <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
-                    {activity.predecessorIds && activity.predecessorIds.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Depende de: {activity.predecessorIds.length} atividade(s)
-                      </p>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            ))}
+                      {activity.predecessorIds && activity.predecessorIds.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Depende de: {activity.predecessorIds.length} atividade(s)
+                        </p>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              );
+            })}
           </div>
 
           {/* Timeline area */}
@@ -406,18 +586,25 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                     : null;
                   const status = getActivityStatus(activity);
                   const isDragging = dragState?.activityIndex === index;
+                  const isCritical = criticalPath.has(activity.id!);
 
                   return (
                     <div 
                       key={index}
-                      className="h-12 relative border-b border-border hover:bg-muted/10 transition-colors"
+                      className={cn(
+                        "h-12 relative border-b border-border hover:bg-muted/10 transition-colors",
+                        isCritical && "bg-amber-500/5"
+                      )}
                     >
                       {/* Planned bar */}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div 
                             className={cn(
-                              "absolute top-2 h-3 rounded-sm bg-primary/20 border border-primary/40 transition-colors group",
+                              "absolute top-2 h-3 rounded-sm transition-colors group",
+                              isCritical 
+                                ? "bg-amber-500/30 border-2 border-amber-500 ring-1 ring-amber-500/30" 
+                                : "bg-primary/20 border border-primary/40",
                               editable && "cursor-move hover:bg-primary/30",
                               isDragging && dragState?.dragType === 'move' && "ring-2 ring-primary"
                             )}
@@ -496,6 +683,9 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                       const fromY = line.fromIndex * 48 + 14;
                       const toY = line.toIndex * 48 + 14;
 
+                      const strokeColor = line.isCritical ? "hsl(var(--chart-4))" : "hsl(var(--primary))";
+                      const markerId = line.isCritical ? `arrowhead-critical-${idx}` : `arrowhead-${idx}`;
+
                       return (
                         <svg
                           key={`line-${idx}`}
@@ -508,15 +698,15 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                             y1={fromY}
                             x2={`${toX}%`}
                             y2={toY}
-                            stroke="hsl(var(--primary))"
-                            strokeWidth="1.5"
-                            strokeDasharray="4,3"
-                            opacity="0.5"
-                            markerEnd="url(#arrowhead)"
+                            stroke={strokeColor}
+                            strokeWidth={line.isCritical ? "2.5" : "1.5"}
+                            strokeDasharray={line.isCritical ? "none" : "4,3"}
+                            opacity={line.isCritical ? "0.8" : "0.5"}
+                            markerEnd={`url(#${markerId})`}
                           />
                           <defs>
                             <marker
-                              id="arrowhead"
+                              id={markerId}
                               markerWidth="6"
                               markerHeight="6"
                               refX="5"
@@ -525,8 +715,8 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                             >
                               <polygon
                                 points="0 0, 6 3, 0 6"
-                                fill="hsl(var(--primary))"
-                                opacity="0.5"
+                                fill={strokeColor}
+                                opacity={line.isCritical ? "0.8" : "0.5"}
                               />
                             </marker>
                           </defs>
