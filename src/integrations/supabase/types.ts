@@ -926,6 +926,100 @@ export type Database = {
           },
         ]
       }
+      project_purchases: {
+        Row: {
+          activity_id: string | null
+          actual_delivery_date: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          estimated_cost: number | null
+          expected_delivery_date: string | null
+          id: string
+          invoice_number: string | null
+          item_name: string
+          lead_time_days: number
+          notes: string | null
+          order_date: string | null
+          project_id: string
+          quantity: number
+          required_by_date: string
+          status: string
+          supplier_contact: string | null
+          supplier_name: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id?: string | null
+          actual_delivery_date?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          estimated_cost?: number | null
+          expected_delivery_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          item_name: string
+          lead_time_days?: number
+          notes?: string | null
+          order_date?: string | null
+          project_id: string
+          quantity?: number
+          required_by_date: string
+          status?: string
+          supplier_contact?: string | null
+          supplier_name?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string | null
+          actual_delivery_date?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          estimated_cost?: number | null
+          expected_delivery_date?: string | null
+          id?: string
+          invoice_number?: string | null
+          item_name?: string
+          lead_time_days?: number
+          notes?: string | null
+          order_date?: string | null
+          project_id?: string
+          quantity?: number
+          required_by_date?: string
+          status?: string
+          supplier_contact?: string | null
+          supplier_name?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_purchases_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_purchases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_purchases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           actual_end_date: string | null
