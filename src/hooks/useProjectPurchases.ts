@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useMemo, useEffect } from 'react';
 
 export type PurchaseStatus = 'pending' | 'ordered' | 'in_transit' | 'delivered' | 'cancelled';
 
@@ -49,7 +50,16 @@ export interface PurchaseInput {
   notes?: string | null;
 }
 
-export function useProjectPurchases(projectId: string | undefined) {
+export type UrgencyLevel = 'overdue' | 'critical' | 'warning' | 'approaching' | 'normal';
+
+export interface AlertThresholds {
+  overdue: ProjectPurchase[];
+  critical: ProjectPurchase[];
+  warning: ProjectPurchase[];
+  approaching: ProjectPurchase[];
+}
+
+export function useProjectPurchases(projectId: string | undefined, showAlerts = false) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -69,6 +79,74 @@ export function useProjectPurchases(projectId: string | undefined) {
     },
     enabled: !!projectId,
   });
+
+  // Calculate today's date at midnight for consistent comparisons
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  // Calculate alert thresholds
+  const alertThresholds: AlertThresholds = useMemo(() => {
+    const pendingPurchases = purchases.filter(p => 
+      p.status === 'pending' || p.status === 'ordered' || p.status === 'in_transit'
+    );
+    
+    const overdue = pendingPurchases.filter(p => {
+      const requiredDate = new Date(p.required_by_date);
+      return requiredDate < today;
+    });
+
+    const critical = pendingPurchases.filter(p => {
+      const requiredDate = new Date(p.required_by_date);
+      const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntil >= 0 && daysUntil <= 3;
+    });
+
+    const warning = pendingPurchases.filter(p => {
+      const requiredDate = new Date(p.required_by_date);
+      const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntil > 3 && daysUntil <= 7;
+    });
+
+    const approaching = pendingPurchases.filter(p => {
+      const requiredDate = new Date(p.required_by_date);
+      const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntil > 7 && daysUntil <= 14;
+    });
+
+    return { overdue, critical, warning, approaching };
+  }, [purchases, today]);
+
+  // Show toast alerts when enabled
+  useEffect(() => {
+    if (!showAlerts || isLoading || purchases.length === 0) return;
+
+    const { overdue, critical, warning } = alertThresholds;
+
+    if (overdue.length > 0) {
+      toast.error(`${overdue.length} item(s) com prazo de compra vencido!`, {
+        description: overdue.map(p => p.item_name).slice(0, 3).join(", ") + (overdue.length > 3 ? "..." : ""),
+        duration: 8000,
+      });
+    }
+
+    if (critical.length > 0) {
+      toast.warning(`${critical.length} item(s) com prazo crítico (≤3 dias)`, {
+        description: critical.map(p => p.item_name).slice(0, 3).join(", ") + (critical.length > 3 ? "..." : ""),
+        duration: 6000,
+      });
+    }
+
+    if (warning.length > 0) {
+      toast.info(`${warning.length} item(s) com prazo próximo (≤7 dias)`, {
+        description: warning.map(p => p.item_name).slice(0, 3).join(", ") + (warning.length > 3 ? "..." : ""),
+        duration: 5000,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAlerts, isLoading, purchases.length > 0]);
 
   const addPurchase = useMutation({
     mutationFn: async (input: PurchaseInput) => {
@@ -181,14 +259,31 @@ export function useProjectPurchases(projectId: string | undefined) {
   const overduePurchases = purchases.filter(p => {
     if (p.status === 'delivered' || p.status === 'cancelled') return false;
     const requiredDate = new Date(p.required_by_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     return requiredDate < today;
   });
 
   const totalEstimatedCost = purchases
     .filter(p => p.status !== 'cancelled')
     .reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+
+  // Helper function to get urgency level for a purchase
+  const getUrgencyLevel = (purchase: ProjectPurchase): UrgencyLevel => {
+    if (purchase.status === 'delivered' || purchase.status === 'cancelled') return 'normal';
+    
+    const requiredDate = new Date(purchase.required_by_date);
+    const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntil < 0) return 'overdue';
+    if (daysUntil <= 3) return 'critical';
+    if (daysUntil <= 7) return 'warning';
+    if (daysUntil <= 14) return 'approaching';
+    return 'normal';
+  };
+
+  const getDaysUntilDeadline = (purchase: ProjectPurchase): number => {
+    const requiredDate = new Date(purchase.required_by_date);
+    return Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
 
   return {
     purchases,
@@ -203,5 +298,8 @@ export function useProjectPurchases(projectId: string | undefined) {
     deliveredPurchases,
     overduePurchases,
     totalEstimatedCost,
+    alertThresholds,
+    getUrgencyLevel,
+    getDaysUntilDeadline,
   };
 }

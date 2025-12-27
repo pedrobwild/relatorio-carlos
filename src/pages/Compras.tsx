@@ -59,8 +59,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
+import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus, UrgencyLevel } from '@/hooks/useProjectPurchases';
 import { useProjectActivities } from '@/hooks/useProjectActivities';
+import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
+import { PurchaseAlertBadge } from '@/components/PurchaseAlertBadge';
 import { cn } from '@/lib/utils';
 
 const statusConfig: Record<PurchaseStatus, { label: string; color: string; icon: React.ElementType }> = {
@@ -98,7 +100,10 @@ export default function Compras() {
     deliveredPurchases,
     overduePurchases,
     totalEstimatedCost,
-  } = useProjectPurchases(projectId);
+    alertThresholds,
+    getUrgencyLevel,
+    getDaysUntilDeadline,
+  } = useProjectPurchases(projectId, true); // Enable toast alerts
   const { activities } = useProjectActivities(projectId);
 
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -263,6 +268,13 @@ export default function Compras() {
             Novo Item
           </Button>
         </div>
+
+        {/* Alerts Panel */}
+        <PurchaseAlertsPanel
+          alertThresholds={alertThresholds}
+          getDaysUntilDeadline={getDaysUntilDeadline}
+          onItemClick={(purchase) => handleOpenDialog(purchase)}
+        />
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
