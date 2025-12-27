@@ -17,6 +17,9 @@ export interface ProjectActivity {
   updated_at: string;
   created_by: string;
   predecessor_ids: string[];
+  baseline_start: string | null;
+  baseline_end: string | null;
+  baseline_saved_at: string | null;
 }
 
 export interface ActivityInput {
@@ -133,6 +136,74 @@ export function useProjectActivities(projectId: string | undefined) {
     }
   };
 
+  const saveBaseline = async () => {
+    if (!projectId) {
+      toast.error('Projeto não encontrado');
+      return false;
+    }
+
+    try {
+      // Update all activities with current planned dates as baseline
+      const { error: updateError } = await supabase
+        .from('project_activities')
+        .update({
+          baseline_start: supabase.rpc ? undefined : undefined, // Placeholder
+          baseline_saved_at: new Date().toISOString(),
+        })
+        .eq('project_id', projectId);
+
+      // Use raw update for each activity to set baseline from planned
+      for (const activity of activities) {
+        await supabase
+          .from('project_activities')
+          .update({
+            baseline_start: activity.planned_start,
+            baseline_end: activity.planned_end,
+            baseline_saved_at: new Date().toISOString(),
+          })
+          .eq('id', activity.id);
+      }
+
+      await fetchActivities();
+      toast.success('Baseline salvo com sucesso!');
+      return true;
+    } catch (err) {
+      console.error('Error saving baseline:', err);
+      toast.error('Erro ao salvar baseline');
+      return false;
+    }
+  };
+
+  const clearBaseline = async () => {
+    if (!projectId) {
+      toast.error('Projeto não encontrado');
+      return false;
+    }
+
+    try {
+      const { error: updateError } = await supabase
+        .from('project_activities')
+        .update({
+          baseline_start: null,
+          baseline_end: null,
+          baseline_saved_at: null,
+        })
+        .eq('project_id', projectId);
+
+      if (updateError) throw updateError;
+
+      await fetchActivities();
+      toast.success('Baseline removido');
+      return true;
+    } catch (err) {
+      console.error('Error clearing baseline:', err);
+      toast.error('Erro ao remover baseline');
+      return false;
+    }
+  };
+
+  const hasBaseline = activities.some(a => a.baseline_saved_at !== null);
+
   return {
     activities,
     loading,
@@ -140,5 +211,8 @@ export function useProjectActivities(projectId: string | undefined) {
     refetch: fetchActivities,
     saveActivities,
     updateActivity,
+    saveBaseline,
+    clearBaseline,
+    hasBaseline,
   };
 }

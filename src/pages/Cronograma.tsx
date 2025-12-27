@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ImportScheduleModal } from '@/components/ImportScheduleModal';
+import { cn } from '@/lib/utils';
 interface ActivityFormData {
   id: string;
   description: string;
@@ -39,12 +40,19 @@ const Cronograma = () => {
   const navigate = useNavigate();
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
-  const { activities: existingActivities, loading: activitiesLoading, saveActivities } = useProjectActivities(projectId);
+  const { activities: existingActivities, loading: activitiesLoading, saveActivities, saveBaseline, clearBaseline, hasBaseline } = useProjectActivities(projectId);
   
   const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
   const [saving, setSaving] = useState(false);
   const [totalWeight, setTotalWeight] = useState(0);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [savingBaseline, setSavingBaseline] = useState(false);
+
+  const handleSaveBaseline = async () => {
+    setSavingBaseline(true);
+    await saveBaseline();
+    setSavingBaseline(false);
+  };
 
   const handleImportActivities = (importedActivities: ActivityFormData[]) => {
     if (activities.length === 1 && !activities[0].description.trim()) {
@@ -250,6 +258,20 @@ const Cronograma = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleSaveBaseline}
+              disabled={savingBaseline || activities.length === 0}
+              title={hasBaseline ? "Atualizar baseline" : "Salvar baseline"}
+            >
+              {savingBaseline ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Bookmark className={cn("w-4 h-4 mr-2", hasBaseline && "fill-current")} />
+              )}
+              {hasBaseline ? 'Atualizar Baseline' : 'Salvar Baseline'}
+            </Button>
             <Button variant="outline" onClick={() => setImportModalOpen(true)}>
               <Upload className="w-4 h-4 mr-2" />
               Importar

@@ -13,6 +13,7 @@ interface GanttChartProps {
   reportDate?: string;
   onActivityDateChange?: (activityId: string, newPlannedStart: string, newPlannedEnd: string) => void;
   editable?: boolean;
+  showBaseline?: boolean;
 }
 
 type ZoomLevel = 'week' | 'month' | 'quarter';
@@ -25,10 +26,13 @@ interface DragState {
   originalEnd: string;
 }
 
-const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = false }: GanttChartProps) => {
+const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = false, showBaseline = true }: GanttChartProps) => {
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('month');
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [baselineVisible, setBaselineVisible] = useState(showBaseline);
   const chartRef = useRef<HTMLDivElement>(null);
+
+  const hasAnyBaseline = activities.some(a => a.baselineStart && a.baselineEnd);
 
   const { startDate, endDate, totalDays, months } = useMemo(() => {
     if (activities.length === 0) {
@@ -454,6 +458,20 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
 
         {/* Legend */}
         <div className="flex items-center gap-4 px-3 py-2 border-b border-border text-xs flex-wrap">
+          {hasAnyBaseline && (
+            <button
+              onClick={() => setBaselineVisible(!baselineVisible)}
+              className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded transition-colors",
+                baselineVisible ? "bg-slate-500/20" : "bg-muted hover:bg-muted/80"
+              )}
+            >
+              <div className="w-3 h-1 bg-slate-400 rounded-full" />
+              <span className={baselineVisible ? "text-foreground" : "text-muted-foreground"}>
+                Baseline {baselineVisible ? '✓' : ''}
+              </span>
+            </button>
+          )}
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-primary/30 border border-primary" />
             <span className="text-muted-foreground">Previsto</span>
@@ -587,6 +605,10 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                   const status = getActivityStatus(activity);
                   const isDragging = dragState?.activityIndex === index;
                   const isCritical = criticalPath.has(activity.id!);
+                  const hasBaseline = activity.baselineStart && activity.baselineEnd;
+                  const baselineStyle = hasBaseline 
+                    ? getBarStyle(activity.baselineStart!, activity.baselineEnd!)
+                    : null;
 
                   return (
                     <div 
@@ -596,7 +618,28 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                         isCritical && "bg-amber-500/5"
                       )}
                     >
-                      {/* Planned bar */}
+                      {/* Baseline bar (shown behind planned bar) */}
+                      {baselineVisible && baselineStyle && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="absolute top-1.5 h-2 rounded-full bg-slate-400/40 border border-slate-400/60"
+                              style={baselineStyle}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="font-medium text-slate-600">Baseline (Original)</p>
+                            <p className="text-xs">
+                              {format(new Date(activity.baselineStart!), 'dd/MM/yyyy')} - {format(new Date(activity.baselineEnd!), 'dd/MM/yyyy')}
+                            </p>
+                            {(activity.baselineStart !== activity.plannedStart || activity.baselineEnd !== activity.plannedEnd) && (
+                              <p className="text-xs text-amber-600 mt-1">
+                                ⚠ Datas alteradas desde o baseline
+                              </p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div 
