@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload, Bookmark } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload, Bookmark, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -258,6 +258,12 @@ const Cronograma = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Link to={`/obra/${projectId}/compras`}>
+              <Button variant="outline" size="sm">
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Compras
+              </Button>
+            </Link>
             <Button 
               variant="outline" 
               size="sm"
