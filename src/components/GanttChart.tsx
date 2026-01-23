@@ -3,7 +3,7 @@ import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth
 import { ptBR } from 'date-fns/locale';
 import { Activity } from '@/types/report';
 import { cn } from '@/lib/utils';
-import { ZoomIn, ZoomOut, GripHorizontal } from 'lucide-react';
+import { ZoomIn, ZoomOut, GripHorizontal, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
@@ -14,6 +14,8 @@ interface GanttChartProps {
   onActivityDateChange?: (activityId: string, newPlannedStart: string, newPlannedEnd: string) => void;
   editable?: boolean;
   showBaseline?: boolean;
+  showFullChart?: boolean;
+  onShowFullChartChange?: (showFull: boolean) => void;
 }
 
 type ZoomLevel = 'week' | 'month' | 'quarter';
@@ -26,11 +28,32 @@ interface DragState {
   originalEnd: string;
 }
 
-const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = false, showBaseline = true }: GanttChartProps) => {
+const GanttChart = ({ 
+  activities, 
+  reportDate, 
+  onActivityDateChange, 
+  editable = false, 
+  showBaseline = true,
+  showFullChart: controlledShowFull,
+  onShowFullChartChange
+}: GanttChartProps) => {
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('month');
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [baselineVisible, setBaselineVisible] = useState(showBaseline);
   const chartRef = useRef<HTMLDivElement>(null);
+  
+  // Controlled or uncontrolled full chart view
+  const [internalShowFull, setInternalShowFull] = useState(false);
+  const showFullChart = controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
+  
+  const handleToggleFullChart = () => {
+    const newValue = !showFullChart;
+    if (onShowFullChartChange) {
+      onShowFullChartChange(newValue);
+    } else {
+      setInternalShowFull(newValue);
+    }
+  };
 
   const hasAnyBaseline = activities.some(a => a.baselineStart && a.baselineEnd);
 
@@ -38,8 +61,9 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
   const GRID_INTERVAL_DAYS = 3;
 
   const { startDate, endDate, totalDays, months, gridLines } = useMemo(() => {
+    const today = reportDate ? new Date(reportDate + 'T00:00:00') : new Date();
+    
     if (activities.length === 0) {
-      const today = new Date();
       return {
         startDate: today,
         endDate: today,
@@ -59,8 +83,26 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
     const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
     
-    const start = startOfMonth(minDate);
-    const end = endOfMonth(maxDate);
+    // Apply 45-day window (-30 to +15 days from today) when not showing full chart
+    let start: Date;
+    let end: Date;
+    
+    if (showFullChart) {
+      start = startOfMonth(minDate);
+      end = endOfMonth(maxDate);
+    } else {
+      // 45-day window matching S-Curve behavior
+      const windowStart = addDays(today, -30);
+      const windowEnd = addDays(today, 15);
+      
+      // Use the intersection of project range and window
+      start = windowStart < minDate ? minDate : windowStart;
+      end = windowEnd > maxDate ? maxDate : windowEnd;
+      
+      // Expand to month boundaries for cleaner display
+      start = startOfMonth(start);
+      end = endOfMonth(end);
+    }
     
     const months = eachMonthOfInterval({ start, end }).map(date => ({
       date,
@@ -86,7 +128,7 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
       months,
       gridLines: gridLinesArray,
     };
-  }, [activities]);
+  }, [activities, reportDate, showFullChart]);
 
   const today = reportDate ? new Date(reportDate + 'T00:00:00') : new Date();
   const todayOffset = differenceInDays(today, startDate);
@@ -450,6 +492,28 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* View toggle button */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-7 text-xs gap-1 px-2"
+              onClick={handleToggleFullChart}
+            >
+              {showFullChart ? (
+                <>
+                  <Minimize2 className="h-3 w-3" />
+                  <span className="hidden sm:inline">45 dias</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-3 w-3" />
+                  <span className="hidden sm:inline">Ver tudo</span>
+                </>
+              )}
+            </Button>
+            
+            <div className="h-4 w-px bg-border" />
+            
             <Button 
               variant="ghost" 
               size="icon" 

@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 interface SCurveChartProps {
   activities: Activity[];
   reportDate?: string; // Data de geração do relatório (YYYY-MM-DD)
+  showFullChart?: boolean;
+  onShowFullChartChange?: (showFull: boolean) => void;
 }
 
 // Parse ISO date string to Date object
@@ -373,7 +375,12 @@ const CustomLegend = () => (
   </div>
 );
 
-const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
+const SCurveChart = ({ 
+  activities, 
+  reportDate,
+  showFullChart: controlledShowFull,
+  onShowFullChartChange 
+}: SCurveChartProps) => {
   const { data: chartData, milestones } = generateChartData(activities, reportDate);
   
   // Find current activity in progress (has actualStart but no actualEnd)
@@ -382,8 +389,18 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
   // Get last data point for comparison
   const lastPoint = chartData[chartData.length - 1];
 
-  // Toggle between 30-day window and full view
-  const [showFullChart, setShowFullChart] = useState(false);
+  // Toggle between 30-day window and full view (controlled or uncontrolled)
+  const [internalShowFull, setInternalShowFull] = useState(false);
+  const showFullChart = controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
+  
+  const handleToggleFullChart = () => {
+    const newValue = !showFullChart;
+    if (onShowFullChartChange) {
+      onShowFullChartChange(newValue);
+    } else {
+      setInternalShowFull(newValue);
+    }
+  };
 
   // Calculate 30-day window around "today" (milestones.today)
   const windowedData = useMemo(() => {
@@ -427,7 +444,7 @@ const SCurveChart = ({ activities, reportDate }: SCurveChartProps) => {
               variant="outline" 
               size="sm" 
               className="h-7 text-[10px] md:text-xs gap-1 px-2"
-              onClick={() => setShowFullChart(!showFullChart)}
+              onClick={handleToggleFullChart}
             >
               {showFullChart ? (
                 <>

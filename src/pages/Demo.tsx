@@ -46,6 +46,7 @@ export default function Demo() {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
+  const [showFullChart, setShowFullChart] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const allWeeklyReports = generateWeeklyReports(
@@ -187,7 +188,12 @@ export default function Demo() {
 
                 <div className="p-3 md:p-4 lg:p-6">
                   <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
-                    <SCurveChart activities={demoReportData.activities} reportDate={demoReportData.reportDate} />
+                    <SCurveChart 
+                      activities={demoReportData.activities} 
+                      reportDate={demoReportData.reportDate}
+                      showFullChart={showFullChart}
+                      onShowFullChartChange={setShowFullChart}
+                    />
                     <ScheduleTable activities={demoReportData.activities} reportDate={demoReportData.reportDate} />
                   </TabsContent>
 
@@ -196,6 +202,8 @@ export default function Demo() {
                       activities={demoReportData.activities} 
                       reportDate={demoReportData.reportDate}
                       editable={false}
+                      showFullChart={showFullChart}
+                      onShowFullChartChange={setShowFullChart}
                     />
                   </TabsContent>
 

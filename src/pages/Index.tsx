@@ -54,6 +54,7 @@ const Index = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
+  const [showFullChart, setShowFullChart] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Convert database activities to report format
@@ -339,7 +340,12 @@ const Index = () => {
 
                 <div className="p-3 md:p-4 lg:p-6">
                   <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
-                    <SCurveChart activities={reportData.activities} reportDate={reportData.reportDate} />
+                    <SCurveChart 
+                      activities={reportData.activities} 
+                      reportDate={reportData.reportDate}
+                      showFullChart={showFullChart}
+                      onShowFullChartChange={setShowFullChart}
+                    />
                     <ScheduleTable activities={reportData.activities} reportDate={reportData.reportDate} />
                   </TabsContent>
 
@@ -349,6 +355,8 @@ const Index = () => {
                       reportDate={reportData.reportDate}
                       editable={isStaff && formattedActivities.length > 0}
                       onActivityDateChange={handleActivityDateChange}
+                      showFullChart={showFullChart}
+                      onShowFullChartChange={setShowFullChart}
                     />
                   </TabsContent>
 
