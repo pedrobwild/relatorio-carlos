@@ -9,12 +9,13 @@ import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import GanttChart from "@/components/GanttChart";
+import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
 import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
 import WeeklyReportsHistory, { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
-import { ReportData, WeeklyReport } from "@/types/report";
+import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
 import { week10SeedData } from "@/data/week10SeedData";
 import bwildLogo from "@/assets/bwild-logo.png";
 
@@ -188,68 +189,84 @@ export default function Demo() {
                 </div>
 
                 <div className="p-3 md:p-4 lg:p-6">
-                  <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
-                    <SCurveChart 
-                      activities={demoReportData.activities} 
-                      reportDate={demoReportData.reportDate}
-                      showFullChart={showFullChart}
-                      onShowFullChartChange={setShowFullChart}
-                    />
-                    <ScheduleTable 
-                      activities={demoReportData.activities} 
-                      reportDate={demoReportData.reportDate}
-                      selectedActivityId={selectedActivityId}
-                      onActivitySelect={setSelectedActivityId}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="gantt" className="mt-0 focus-visible:outline-none">
-                    <GanttChart 
-                      activities={demoReportData.activities} 
-                      reportDate={demoReportData.reportDate}
-                      editable={false}
-                      showFullChart={showFullChart}
-                      onShowFullChartChange={setShowFullChart}
-                      selectedActivityId={selectedActivityId}
-                      onActivitySelect={setSelectedActivityId}
-                    />
-                    <ScheduleTable 
-                      activities={demoReportData.activities} 
-                      reportDate={demoReportData.reportDate}
-                      selectedActivityId={selectedActivityId}
-                      onActivitySelect={setSelectedActivityId}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
-                    {selectedWeeklyReport ? (
-                      <>
-                        <WeeklyReportHeader
-                          weeklyReport={selectedWeeklyReport}
-                          activities={demoReportData.activities}
-                          onPreviousWeek={handlePreviousWeek}
-                          onNextWeek={handleNextWeek}
-                          onBackToList={handleBackToList}
-                          onExportPDF={handleExportPDF}
-                          isExporting={isExporting}
-                          hasPrevious={selectedWeekIndex > 0}
-                          hasNext={selectedWeekIndex < reportsChronological.length - 1}
+                  <div className="flex gap-4">
+                    {/* Main content area */}
+                    <div className={selectedActivityId ? "flex-1 min-w-0" : "w-full"}>
+                      <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
+                        <SCurveChart 
+                          activities={demoReportData.activities} 
+                          reportDate={demoReportData.reportDate}
+                          showFullChart={showFullChart}
+                          onShowFullChartChange={setShowFullChart}
                         />
-                        <WeeklyReportTemplate data={week10SeedData} />
-                      </>
-                    ) : (
-                      <WeeklyReportsHistory
-                        projectStartDate={demoReportData.startDate}
-                        reportDate={demoReportData.reportDate}
-                        activities={demoReportData.activities}
-                        onReportClick={handleReportClick}
-                      />
-                    )}
-                  </TabsContent>
+                        <ScheduleTable 
+                          activities={demoReportData.activities} 
+                          reportDate={demoReportData.reportDate}
+                          selectedActivityId={selectedActivityId}
+                          onActivitySelect={setSelectedActivityId}
+                        />
+                      </TabsContent>
 
-                  <TabsContent value="atividade" className="mt-0 focus-visible:outline-none">
-                    <ActivityTimeline projectId="demo" />
-                  </TabsContent>
+                      <TabsContent value="gantt" className="mt-0 focus-visible:outline-none">
+                        <GanttChart 
+                          activities={demoReportData.activities} 
+                          reportDate={demoReportData.reportDate}
+                          editable={false}
+                          showFullChart={showFullChart}
+                          onShowFullChartChange={setShowFullChart}
+                          selectedActivityId={selectedActivityId}
+                          onActivitySelect={setSelectedActivityId}
+                        />
+                        <ScheduleTable 
+                          activities={demoReportData.activities} 
+                          reportDate={demoReportData.reportDate}
+                          selectedActivityId={selectedActivityId}
+                          onActivitySelect={setSelectedActivityId}
+                        />
+                      </TabsContent>
+
+                      <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
+                        {selectedWeeklyReport ? (
+                          <>
+                            <WeeklyReportHeader
+                              weeklyReport={selectedWeeklyReport}
+                              activities={demoReportData.activities}
+                              onPreviousWeek={handlePreviousWeek}
+                              onNextWeek={handleNextWeek}
+                              onBackToList={handleBackToList}
+                              onExportPDF={handleExportPDF}
+                              isExporting={isExporting}
+                              hasPrevious={selectedWeekIndex > 0}
+                              hasNext={selectedWeekIndex < reportsChronological.length - 1}
+                            />
+                            <WeeklyReportTemplate data={week10SeedData} />
+                          </>
+                        ) : (
+                          <WeeklyReportsHistory
+                            projectStartDate={demoReportData.startDate}
+                            reportDate={demoReportData.reportDate}
+                            activities={demoReportData.activities}
+                            onReportClick={handleReportClick}
+                          />
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="atividade" className="mt-0 focus-visible:outline-none">
+                        <ActivityTimeline projectId="demo" />
+                      </TabsContent>
+                    </div>
+
+                    {/* Activity Details Panel - visible on desktop when activity selected */}
+                    {selectedActivityId && (activeTab === 'curvaS' || activeTab === 'gantt') && (
+                      <div className="hidden lg:block w-80 shrink-0">
+                        <ActivityDetailsPanel
+                          activity={demoReportData.activities.find((a, i) => (a.id || `demo-${i}`) === selectedActivityId) || null}
+                          activities={demoReportData.activities}
+                          onClose={() => setSelectedActivityId(null)}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Tabs>
             </div>
