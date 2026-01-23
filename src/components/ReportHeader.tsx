@@ -157,9 +157,6 @@ const ReportHeader = ({
   const { isStaff } = useUserRole();
 
   const quickLinks = [
-    { icon: FileText, label: "Contrato", href: paths.contrato },
-    { icon: Box, label: "Projeto 3D", href: paths.projeto3D },
-    { icon: Ruler, label: "Executivo", href: paths.executivo },
     { icon: DollarSign, label: "Financeiro", href: paths.financeiro },
     { icon: FolderOpen, label: "Documentos", href: paths.documentos },
     { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes },
