@@ -4,13 +4,15 @@ import bwildLogo from "@/assets/bwild-logo.png";
 import { 
   FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft
+  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft,
+  ChevronsUpDown, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useProjects } from "@/hooks/useProjects";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -20,6 +22,14 @@ import {
   AlertDialogTitle,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ReportHeaderProps {
   projectName: string;
@@ -154,9 +164,19 @@ const ReportHeader = ({
     };
   }, [startDate, effectiveEndDate, reportDate, activities]);
 
-  const { paths } = useProjectNavigation();
+  const { paths, projectId } = useProjectNavigation();
   const { isStaff } = useUserRole();
+  const { projects } = useProjects();
   const navigate = useNavigate();
+
+  // Filter out current project and get other available projects
+  const otherProjects = useMemo(() => {
+    return projects.filter(p => p.id !== projectId);
+  }, [projects, projectId]);
+
+  const handleProjectSwitch = (targetProjectId: string) => {
+    navigate(`/obra/${targetProjectId}/relatorio`);
+  };
 
   const quickLinks = [
     { icon: DollarSign, label: "Financeiro", href: paths.financeiro },
@@ -195,14 +215,50 @@ const ReportHeader = ({
               </Button>
               <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <div className="h-8 w-px bg-border" />
-              <div>
-                <h1 className="text-h3 leading-tight">
-                  {projectName} – {unitName}
-                </h1>
-                {clientName && (
-                  <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
+              
+              {/* Project Selector Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 text-left hover:bg-accent rounded-lg px-2 py-1 transition-colors group">
+                    <div>
+                      <h1 className="text-h3 leading-tight group-hover:text-primary transition-colors">
+                        {projectName} – {unitName}
+                      </h1>
+                      {clientName && (
+                        <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
+                      )}
+                    </div>
+                    {otherProjects.length > 0 && (
+                      <ChevronsUpDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                {otherProjects.length > 0 && (
+                  <DropdownMenuContent align="start" className="w-72">
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Trocar de Obra
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {otherProjects.map((project) => (
+                      <DropdownMenuItem
+                        key={project.id}
+                        onClick={() => handleProjectSwitch(project.id)}
+                        className="flex flex-col items-start gap-0.5 cursor-pointer"
+                      >
+                        <span className="font-medium">
+                          {project.name} {project.unit_name && `– ${project.unit_name}`}
+                        </span>
+                        {project.customer_name && (
+                          <span className="text-xs text-muted-foreground">
+                            Cliente: {project.customer_name}
+                          </span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
                 )}
-              </div>
+              </DropdownMenu>
             </div>
 
             {/* Right: CTA + Status Badge */}
@@ -591,14 +647,49 @@ const ReportHeader = ({
         <div className="p-3 border-b border-border">
           {/* Project Header with Dates */}
           <div className="flex items-start justify-between gap-2 mb-3">
-            <div>
-              <h1 className="text-body font-semibold leading-tight">
-                {projectName} – {unitName}
-              </h1>
-              {clientName && (
-                <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
+            {/* Project Selector for Mobile */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-1.5 py-1 -ml-1.5 transition-colors group">
+                  <div>
+                    <h1 className="text-body font-semibold leading-tight group-hover:text-primary transition-colors">
+                      {projectName} – {unitName}
+                    </h1>
+                    {clientName && (
+                      <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
+                    )}
+                  </div>
+                  {otherProjects.length > 0 && (
+                    <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              {otherProjects.length > 0 && (
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuLabel className="flex items-center gap-2 text-xs">
+                    <Building2 className="h-3.5 w-3.5" />
+                    Trocar de Obra
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {otherProjects.map((project) => (
+                    <DropdownMenuItem
+                      key={project.id}
+                      onClick={() => handleProjectSwitch(project.id)}
+                      className="flex flex-col items-start gap-0.5 cursor-pointer"
+                    >
+                      <span className="font-medium text-sm">
+                        {project.name} {project.unit_name && `– ${project.unit_name}`}
+                      </span>
+                      {project.customer_name && (
+                        <span className="text-xs text-muted-foreground">
+                          Cliente: {project.customer_name}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
               )}
-            </div>
+            </DropdownMenu>
             <button 
               onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
               className="text-right shrink-0 flex items-center gap-1.5"
