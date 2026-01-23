@@ -607,16 +607,32 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                   const isMonthStart = line.date.getDate() <= 3;
                   
                   return (
-                    <div
-                      key={`grid-${idx}`}
-                      className={cn(
-                        "absolute top-0 bottom-0 pointer-events-none",
-                        isMonthStart ? "border-l border-border/60" : 
-                        isWeekStart ? "border-l border-border/30" : 
-                        "border-l border-border/15"
-                      )}
-                      style={{ left: `${percent}%` }}
-                    />
+                    <Tooltip key={`grid-${idx}`}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={cn(
+                            "absolute top-0 bottom-0 w-3 -ml-1.5 cursor-default z-[1]",
+                            "hover:bg-primary/5 transition-colors"
+                          )}
+                          style={{ left: `${percent}%` }}
+                        >
+                          <div
+                            className={cn(
+                              "absolute left-1/2 top-0 bottom-0 w-px",
+                              isMonthStart ? "bg-border/60" : 
+                              isWeekStart ? "bg-border/30" : 
+                              "bg-border/15"
+                            )}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        <p className="font-medium">{format(line.date, 'dd/MM/yyyy')}</p>
+                        <p className="text-muted-foreground capitalize">
+                          {format(line.date, 'EEEE', { locale: ptBR })}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
 
