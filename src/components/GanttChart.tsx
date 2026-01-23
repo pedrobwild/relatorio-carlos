@@ -15,6 +15,35 @@ import {
 } from '@/lib/activityStatus';
 import { mapCronogramaParaGantt, type GanttTask, type CronogramaTabelaRow } from '@/lib/mapCronogramaParaGantt';
 
+function safeParseLocalDate(dateString: string | null | undefined): Date | null {
+  const raw = (dateString ?? '').toString().trim();
+  if (!raw) return null;
+
+  // Accept ISO date
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const d = parseLocalDate(raw);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  // Accept ISO datetime -> use date portion
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const d = parseLocalDate(raw.slice(0, 10));
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  // Accept BR format dd/MM/yyyy
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+    const [dd, mm, yyyy] = raw.split('/');
+    const d = parseLocalDate(`${yyyy}-${mm}-${dd}`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  // Last resort
+  const fallback = new Date(raw);
+  if (Number.isNaN(fallback.getTime())) return null;
+  return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
+}
+
 interface GanttChartProps {
   activities: Activity[];
   reportDate?: string;
@@ -159,23 +188,39 @@ const GanttChart = ({
 
     // Coletar TODAS as datas relevantes de TODAS as atividades
     const allDates: Date[] = [];
+
+    const pushDate = (value?: string | null) => {
+      const d = safeParseLocalDate(value);
+      if (d) allDates.push(d);
+    };
     
     activities.forEach(a => {
       // Sempre incluir datas previstas
-      allDates.push(parseLocalDate(a.plannedStart));
-      allDates.push(parseLocalDate(a.plannedEnd));
+      pushDate(a.plannedStart);
+      pushDate(a.plannedEnd);
       
       // Incluir datas reais se existirem
       if (a.actualStart) {
-        allDates.push(parseLocalDate(a.actualStart));
+        pushDate(a.actualStart);
       }
       if (a.actualEnd) {
-        allDates.push(parseLocalDate(a.actualEnd));
+        pushDate(a.actualEnd);
       }
     });
     
     // Incluir hoje para atividades em andamento
     allDates.push(today);
+
+    // Se alguma data vier inválida, garantir fallback robusto
+    if (allDates.length === 0) {
+      return {
+        startDate: today,
+        endDate: today,
+        totalDays: 30,
+        months: [{ date: today, label: format(today, 'MMM yyyy', { locale: ptBR }), days: 30 }],
+        gridLines: []
+      };
+    }
 
     const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
@@ -207,7 +252,7 @@ const GanttChart = ({
       days: differenceInDays(endOfMonth(date), startOfMonth(date)) + 1,
     }));
 
-    const totalDaysValue = differenceInDays(end, start) + 1;
+    const totalDaysValue = Math.max(1, differenceInDays(end, start) + 1);
 
     // Gerar linhas de grade a cada 3 dias
     const gridLinesArray: { date: Date; offset: number }[] = [];
@@ -233,20 +278,28 @@ const GanttChart = ({
   // Função para calcular posição e largura da barra
   // Retorna valores que podem estar fora de 0-100% (serão clippados visualmente)
   const getBarStyle = useCallback((startStr: string, endStr: string) => {
-    const startD = parseLocalDate(startStr);
-    const endD = parseLocalDate(endStr);
+    const startD = safeParseLocalDate(startStr);
+    const endD = safeParseLocalDate(endStr);
+
+    if (!startD || !endD || !Number.isFinite(totalDays) || totalDays <= 0) {
+      return {
+        left: '0%',
+        width: '0%',
+        isVisible: false,
+      };
+    }
     
     const leftDays = differenceInDays(startD, startDate);
-    const widthDays = differenceInDays(endD, startD) + 1;
+    const widthDays = Math.max(0, differenceInDays(endD, startD) + 1);
     
     const left = (leftDays / totalDays) * 100;
     const width = (widthDays / totalDays) * 100;
     
     // Retornar valores brutos - o clipping visual é feito pelo container
-    return { 
-      left: `${left}%`, 
+    return {
+      left: `${left}%`,
       width: `${Math.max(width, 0.5)}%`,
-      isVisible: (left + width) > 0 && left < 100 // Só é visível se estiver no range
+      isVisible: (left + width) > 0 && left < 100, // Só é visível se estiver no range
     };
   }, [startDate, totalDays]);
 
@@ -635,8 +688,8 @@ const GanttChart = ({
                   // === BARRA DE PREVISTO RESTANTE (tracejada - hoje → término previsto) ===
                   let remainingPlannedStyle: ReturnType<typeof getBarStyle> | null = null;
                   
-                  const plannedEndDate = parseLocalDate(task.plannedEnd);
-                  const plannedStartDate = parseLocalDate(task.plannedStart);
+                  const plannedEndDate = safeParseLocalDate(task.plannedEnd) ?? referenceDate;
+                  const plannedStartDate = safeParseLocalDate(task.plannedStart) ?? referenceDate;
                   
                   if (hasActualEnd) {
                     // CONCLUÍDO: barra verde de inicioReal → terminoReal
@@ -691,7 +744,7 @@ const GanttChart = ({
                           <TooltipTrigger asChild>
                             <div 
                               className="absolute top-1.5 h-2 rounded-full bg-slate-400/40 border border-slate-400/60"
-                              style={baselineStyle}
+                              style={{ left: baselineStyle.left, width: baselineStyle.width }}
                             />
                           </TooltipTrigger>
                           <TooltipContent>
@@ -800,7 +853,7 @@ const GanttChart = ({
                                 "absolute top-6 h-4 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
                                 hasActualEnd ? "bg-success" : "bg-primary"
                               )}
-                              style={actualBarStyle}
+                              style={{ left: actualBarStyle.left, width: actualBarStyle.width }}
                             >
                               {showProgressLabel && (
                                 <span className="text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm text-white">
@@ -824,7 +877,7 @@ const GanttChart = ({
                           <TooltipTrigger asChild>
                             <div 
                               className="absolute top-6 h-4 rounded-sm cursor-pointer bg-destructive"
-                              style={delayBarStyle}
+                              style={{ left: delayBarStyle.left, width: delayBarStyle.width }}
                             />
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="text-xs">
@@ -845,7 +898,7 @@ const GanttChart = ({
                           <TooltipTrigger asChild>
                             <div 
                               className="absolute top-6 h-4 rounded-sm cursor-pointer border-2 border-dashed border-primary/60 bg-primary/10"
-                              style={remainingPlannedStyle}
+                              style={{ left: remainingPlannedStyle.left, width: remainingPlannedStyle.width }}
                             />
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="text-xs">
