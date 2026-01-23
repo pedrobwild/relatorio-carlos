@@ -286,7 +286,7 @@ const ReportHeader = ({
             >
               <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Previsão Término
+                Previsão de Término
                 {endDate === dateChangeInfo.originalDate && (
                   <span className="flex items-center gap-0.5 text-[9px] text-amber-600 bg-amber-500/15 px-1.5 py-0.5 rounded-full font-semibold">
                     <AlertCircle className="w-2.5 h-2.5" />
