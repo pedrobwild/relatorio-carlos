@@ -431,9 +431,19 @@ const SCurveChart = ({
             <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-xs md:text-base font-bold text-foreground tracking-tight">
-              Cronograma Previsto x Realizado
-            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xs md:text-base font-bold text-foreground tracking-tight">
+                Cronograma Previsto x Realizado
+              </h2>
+              {/* Period indicator */}
+              {windowedData.length > 0 && (
+                <span className="text-[10px] md:text-xs text-muted-foreground bg-secondary px-1.5 md:px-2 py-0.5 rounded inline-flex items-center gap-1">
+                  <span>{windowedData[0]?.date}</span>
+                  <span>→</span>
+                  <span>{windowedData[windowedData.length - 1]?.date}</span>
+                </span>
+              )}
+            </div>
             <p className="text-[9px] md:text-xs text-muted-foreground hidden md:block">
               {showFullChart ? "Visão completa do projeto" : "Janela de 45 dias (-30 a +15 dias do hoje)"}
             </p>
