@@ -204,69 +204,6 @@ const WeeklyReportsHistory = ({
         </span>
       </div>
 
-      {/* Variance Evolution Chart - Hidden on mobile */}
-      {weeklyReports.length > 1 && (
-        <div className="hidden sm:block bg-card border border-border rounded-xl p-4 md:p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-h3">Evolução do Desvio</h3>
-              <p className="text-caption">Realizado vs Previsto por semana</p>
-            </div>
-            {latestReport && (
-              <div className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold",
-                latestReport.variance >= 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
-              )}>
-                {latestReport.variance >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {latestReport.variance > 0 ? '+' : ''}{latestReport.variance}%
-              </div>
-            )}
-          </div>
-          
-          <div className="h-32 md:h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis 
-                  dataKey="week" 
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => `S${value}`}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={(value) => `${value > 0 ? '+' : ''}${value}%`}
-                  domain={['dataMin - 5', 'dataMax + 5']}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                <Bar dataKey="variance" radius={[4, 4, 4, 4]}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.variance >= 0 ? "rgb(16, 185, 129)" : "rgb(239, 68, 68)"}
-                      fillOpacity={0.7}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          
-          <div className="flex items-center justify-center gap-6 mt-3 text-caption text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm bg-emerald-500/40" />
-              <span>Adiantado</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm bg-red-500/40" />
-              <span>Atrasado</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Reports List */}
       <div className="space-y-2">
