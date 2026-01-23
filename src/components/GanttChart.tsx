@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
-import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, addDays } from 'date-fns';
+import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, addDays, max, min } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity } from '@/types/report';
 import { cn } from '@/lib/utils';
@@ -8,10 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { 
-  computeEffectiveStatus, 
   parseLocalDate, 
   getTodayLocal,
-  getStatusColorClass,
   getStatusLabel,
   type ActivityStatus 
 } from '@/lib/activityStatus';
@@ -36,6 +34,26 @@ interface DragState {
   originalEnd: string;
 }
 
+/**
+ * REGRAS DE REPRESENTAÇÃO (conforme especificação):
+ * 
+ * 1️⃣ DATAS
+ * - CONCLUÍDA: Início Real → Término Real (barra principal)
+ * - EM ANDAMENTO: Início Real → Hoje (barra principal) + previsto restante (secundária)
+ * - PENDENTE: Início Previsto → Término Previsto
+ * 
+ * 2️⃣ STATUS → COR
+ * - PREVISTO / PENDENTE → Roxo claro
+ * - EM ANDAMENTO → Roxo sólido (progresso proporcional)
+ * - CONCLUÍDO → Verde sólido (100%)
+ * - ATRASADO → Vermelho (se hoje > término previsto e status ≠ concluído)
+ * 
+ * 3️⃣ PROGRESSO
+ * - CONCLUÍDO → 100%
+ * - EM ANDAMENTO → (hoje - início real) / (término previsto - início real)
+ * - PENDENTE → 0%
+ */
+
 const GanttChart = ({ 
   activities, 
   reportDate, 
@@ -50,8 +68,8 @@ const GanttChart = ({
   const [baselineVisible, setBaselineVisible] = useState(showBaseline);
   const chartRef = useRef<HTMLDivElement>(null);
   
-  // Controlled or uncontrolled full chart view
-  const [internalShowFull, setInternalShowFull] = useState(false);
+  // IMPORTANTE: Mostrar TUDO por padrão para não cortar atividades
+  const [internalShowFull, setInternalShowFull] = useState(true);
   const showFullChart = controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
   
   const handleToggleFullChart = () => {
@@ -68,11 +86,70 @@ const GanttChart = ({
   // Interval for grid lines (matching S-Curve's 3-day interval)
   const GRID_INTERVAL_DAYS = 3;
 
-  // Reference date for status calculations
+  // Reference date for status calculations (hoje)
   const referenceDate = useMemo(() => {
     return reportDate ? parseLocalDate(reportDate) : getTodayLocal();
   }, [reportDate]);
 
+  // Calcular status e progresso de cada atividade conforme regras de negócio
+  const computeActivityDisplay = useCallback((activity: Activity) => {
+    const today = referenceDate;
+    const plannedStart = parseLocalDate(activity.plannedStart);
+    const plannedEnd = parseLocalDate(activity.plannedEnd);
+    const hasActualStart = !!activity.actualStart;
+    const hasActualEnd = !!activity.actualEnd;
+    
+    let status: ActivityStatus;
+    let progress: number;
+    let delayDays = 0;
+    let isDelayed = false;
+    
+    // Determinar status baseado nas datas reais
+    if (hasActualEnd) {
+      // CONCLUÍDO: tem término real
+      status = 'completed';
+      progress = 100;
+      
+      // Verificar se foi concluído com atraso
+      const actualEnd = parseLocalDate(activity.actualEnd!);
+      if (actualEnd > plannedEnd) {
+        delayDays = differenceInDays(actualEnd, plannedEnd);
+      }
+    } else if (hasActualStart) {
+      // EM ANDAMENTO: tem início real mas não término
+      const actualStart = parseLocalDate(activity.actualStart!);
+      
+      // Verificar se está atrasado (hoje > término previsto)
+      if (today > plannedEnd) {
+        status = 'delayed';
+        isDelayed = true;
+        delayDays = differenceInDays(today, plannedEnd);
+      } else {
+        status = 'in-progress';
+      }
+      
+      // Calcular progresso: (hoje - início real) / (término previsto - início real)
+      const totalDuration = differenceInDays(plannedEnd, actualStart) + 1;
+      const elapsed = differenceInDays(today, actualStart) + 1;
+      progress = Math.min(99, Math.max(1, Math.round((elapsed / totalDuration) * 100)));
+    } else {
+      // PENDENTE: não iniciada
+      // Verificar se deveria ter iniciado
+      if (today > plannedStart) {
+        status = 'delayed';
+        isDelayed = true;
+        delayDays = differenceInDays(today, plannedStart);
+        progress = 0;
+      } else {
+        status = 'pending';
+        progress = 0;
+      }
+    }
+    
+    return { status, progress, delayDays, isDelayed, hasActualStart, hasActualEnd };
+  }, [referenceDate]);
+
+  // Calcular range do Gantt para cobrir TODAS as atividades
   const { startDate, endDate, totalDays, months, gridLines } = useMemo(() => {
     const today = referenceDate;
     
@@ -86,33 +163,46 @@ const GanttChart = ({
       };
     }
 
-    const allDates = activities.flatMap(a => [
-      parseLocalDate(a.plannedStart),
-      parseLocalDate(a.plannedEnd),
-      ...(a.actualStart ? [parseLocalDate(a.actualStart)] : []),
-      ...(a.actualEnd ? [parseLocalDate(a.actualEnd)] : []),
-    ]);
+    // Coletar TODAS as datas relevantes de TODAS as atividades
+    const allDates: Date[] = [];
+    
+    activities.forEach(a => {
+      // Sempre incluir datas previstas
+      allDates.push(parseLocalDate(a.plannedStart));
+      allDates.push(parseLocalDate(a.plannedEnd));
+      
+      // Incluir datas reais se existirem
+      if (a.actualStart) {
+        allDates.push(parseLocalDate(a.actualStart));
+      }
+      if (a.actualEnd) {
+        allDates.push(parseLocalDate(a.actualEnd));
+      }
+    });
+    
+    // Incluir hoje para atividades em andamento
+    allDates.push(today);
 
     const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
     
-    // Apply 45-day window (-30 to +15 days from today) when not showing full chart
     let start: Date;
     let end: Date;
     
     if (showFullChart) {
+      // Mostrar todo o range do projeto (com margem de 1 mês)
       start = startOfMonth(minDate);
       end = endOfMonth(maxDate);
     } else {
-      // 45-day window matching S-Curve behavior
+      // Janela de 45 dias (-30 a +15 dias de hoje)
       const windowStart = addDays(today, -30);
       const windowEnd = addDays(today, 15);
       
-      // Use the intersection of project range and window
+      // Usar interseção com range do projeto
       start = windowStart < minDate ? minDate : windowStart;
       end = windowEnd > maxDate ? maxDate : windowEnd;
       
-      // Expand to month boundaries for cleaner display
+      // Expandir para limites de mês
       start = startOfMonth(start);
       end = endOfMonth(end);
     }
@@ -125,7 +215,7 @@ const GanttChart = ({
 
     const totalDaysValue = differenceInDays(end, start) + 1;
 
-    // Generate grid lines at regular intervals (every 3 days like S-Curve)
+    // Gerar linhas de grade a cada 3 dias
     const gridLinesArray: { date: Date; offset: number }[] = [];
     let currentDate = start;
     while (currentDate <= end) {
@@ -146,9 +236,11 @@ const GanttChart = ({
   const todayOffset = differenceInDays(referenceDate, startDate);
   const todayPercent = (todayOffset / totalDays) * 100;
 
-  const getBarStyle = (start: string, end: string) => {
-    const startD = parseLocalDate(start);
-    const endD = parseLocalDate(end);
+  // Função para calcular posição e largura da barra
+  // Retorna valores que podem estar fora de 0-100% (serão clippados visualmente)
+  const getBarStyle = useCallback((startStr: string, endStr: string) => {
+    const startD = parseLocalDate(startStr);
+    const endD = parseLocalDate(endStr);
     
     const leftDays = differenceInDays(startD, startDate);
     const widthDays = differenceInDays(endD, startD) + 1;
@@ -156,22 +248,15 @@ const GanttChart = ({
     const left = (leftDays / totalDays) * 100;
     const width = (widthDays / totalDays) * 100;
     
-    return { left: `${left}%`, width: `${Math.max(width, 0.5)}%` };
-  };
+    // Retornar valores brutos - o clipping visual é feito pelo container
+    return { 
+      left: `${left}%`, 
+      width: `${Math.max(width, 0.5)}%`,
+      isVisible: (left + width) > 0 && left < 100 // Só é visível se estiver no range
+    };
+  }, [startDate, totalDays]);
 
-  // Use centralized status computation
-  const getActivityStatusAndProgress = (activity: Activity) => {
-    return computeEffectiveStatus(
-      {
-        plannedStart: activity.plannedStart,
-        plannedEnd: activity.plannedEnd,
-        actualStart: activity.actualStart || null,
-        actualEnd: activity.actualEnd || null,
-      },
-      referenceDate
-    );
-  };
-
+  // Status colors (semantic)
   const statusColors: Record<ActivityStatus, string> = {
     completed: 'bg-green-500',
     'in-progress': 'bg-primary',
@@ -286,44 +371,6 @@ const GanttChart = ({
     
     return lines;
   }, [activities]);
-
-  const renderDependencyLines = () => {
-    return dependencyLines.map((line, idx) => {
-      const fromStyle = getBarStyle(line.fromActivity.plannedStart, line.fromActivity.plannedEnd);
-      const toStyle = getBarStyle(line.toActivity.plannedStart, line.toActivity.plannedEnd);
-      
-      const fromLeft = parseFloat(fromStyle.left) + parseFloat(fromStyle.width);
-      const fromTop = line.fromIndex * 48 + 24;
-      const toLeft = parseFloat(toStyle.left);
-      const toTop = line.toIndex * 48 + 12;
-
-      // Create SVG path for dependency arrow
-      const pathD = `M ${fromLeft}% ${fromTop} L ${fromLeft + 1}% ${fromTop} L ${fromLeft + 1}% ${toTop - 6} L ${toLeft - 1}% ${toTop - 6} L ${toLeft - 1}% ${toTop} L ${toLeft}% ${toTop}`;
-
-      return (
-        <svg
-          key={`dep-${idx}`}
-          className="absolute inset-0 pointer-events-none overflow-visible"
-          style={{ zIndex: 5 }}
-        >
-          <path
-            d={pathD}
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="2"
-            strokeDasharray="4,2"
-            opacity="0.6"
-          />
-          {/* Arrow head */}
-          <polygon
-            points={`${toLeft}%,${toTop} ${toLeft - 0.5}%,${toTop - 4} ${toLeft - 0.5}%,${toTop + 4}`}
-            fill="hsl(var(--primary))"
-            opacity="0.6"
-          />
-        </svg>
-      );
-    });
-  };
 
   if (activities.length === 0) {
     return (
@@ -457,10 +504,10 @@ const GanttChart = ({
             
             {/* Activity labels */}
             {activities.map((activity, index) => {
-              const computed = getActivityStatusAndProgress(activity);
+              const computed = computeActivityDisplay(activity);
               return (
                 <div 
-                  key={index}
+                  key={activity.id || index}
                   className="h-12 px-3 flex items-center border-b border-border hover:bg-muted/20 transition-colors"
                 >
                   <Tooltip>
@@ -482,7 +529,7 @@ const GanttChart = ({
                       <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
                       <p className="text-xs text-muted-foreground">
                         Status: {getStatusLabel(computed.status)}
-                        {computed.isDelayedAuto && computed.delayDays > 0 && ` (${computed.delayDays} dias)`}
+                        {computed.isDelayed && computed.delayDays > 0 && ` (${computed.delayDays} dias)`}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Progresso: {computed.progress}%
@@ -521,7 +568,7 @@ const GanttChart = ({
 
               {/* Activity bars */}
               <div className="relative">
-                {/* Grid lines at 3-day intervals (matching S-Curve) */}
+                {/* Grid lines at 3-day intervals */}
                 {gridLines.map((line, idx) => {
                   const percent = (line.offset / totalDays) * 100;
                   const isWeekStart = line.date.getDay() === 1; // Monday
@@ -570,16 +617,21 @@ const GanttChart = ({
                 )}
 
                 {activities.map((activity, index) => {
-                  const plannedStyle = getBarStyle(activity.plannedStart, activity.plannedEnd);
-                  const hasActual = activity.actualStart;
-                  const actualStyle = hasActual 
-                    ? getBarStyle(activity.actualStart!, activity.actualEnd || reportDate || format(new Date(), 'yyyy-MM-dd'))
-                    : null;
+                  const computed = computeActivityDisplay(activity);
+                  const { status, progress, delayDays, hasActualStart, hasActualEnd } = computed;
                   
-                  // Use centralized status computation
-                  const computed = getActivityStatusAndProgress(activity);
-                  const status = computed.status;
-                  const activityProgress = computed.progress;
+                  // Calcular estilos das barras
+                  const plannedStyle = getBarStyle(activity.plannedStart, activity.plannedEnd);
+                  
+                  // Barra real: depende do status
+                  let actualBarStyle = null;
+                  if (hasActualEnd) {
+                    // CONCLUÍDO: início real → término real
+                    actualBarStyle = getBarStyle(activity.actualStart!, activity.actualEnd!);
+                  } else if (hasActualStart) {
+                    // EM ANDAMENTO: início real → hoje
+                    actualBarStyle = getBarStyle(activity.actualStart!, format(referenceDate, 'yyyy-MM-dd'));
+                  }
                   
                   const isDragging = dragState?.activityIndex === index;
                   const hasBaseline = activity.baselineStart && activity.baselineEnd;
@@ -587,12 +639,12 @@ const GanttChart = ({
                     ? getBarStyle(activity.baselineStart!, activity.baselineEnd!)
                     : null;
 
-                  const showProgressLabel = parseFloat(plannedStyle.width) > 3; // Only show if bar is wide enough
+                  const showProgressLabel = parseFloat(plannedStyle.width) > 3;
 
                   return (
                     <div 
-                      key={index}
-                      className="h-12 relative border-b border-border hover:bg-muted/10 transition-colors"
+                      key={activity.id || index}
+                      className="h-12 relative border-b border-border hover:bg-muted/10 transition-colors overflow-hidden"
                     >
                       {/* Baseline bar (shown behind planned bar) */}
                       {baselineVisible && baselineStyle && (
@@ -606,7 +658,7 @@ const GanttChart = ({
                           <TooltipContent>
                             <p className="font-medium text-slate-600">Baseline (Original)</p>
                             <p className="text-xs">
-                              {format(new Date(activity.baselineStart!), 'dd/MM/yyyy')} - {format(new Date(activity.baselineEnd!), 'dd/MM/yyyy')}
+                              {format(parseLocalDate(activity.baselineStart!), 'dd/MM/yyyy')} - {format(parseLocalDate(activity.baselineEnd!), 'dd/MM/yyyy')}
                             </p>
                             {(activity.baselineStart !== activity.plannedStart || activity.baselineEnd !== activity.plannedEnd) && (
                               <p className="text-xs text-amber-600 mt-1">
@@ -617,26 +669,24 @@ const GanttChart = ({
                         </Tooltip>
                       )}
                       
-                      {/* Planned bar - always visible with stronger styling */}
+                      {/* Planned bar - SEMPRE VISÍVEL (barra de fundo roxo claro) */}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div 
                             className={cn(
                               "absolute top-3 h-5 rounded-sm transition-colors group border-2",
-                              hasActual 
-                                ? "bg-primary/15 border-primary/30" 
-                                : "bg-primary/25 border-primary/50",
+                              "bg-primary/20 border-primary/40",
                               editable && "cursor-move hover:bg-primary/35",
                               isDragging && dragState?.dragType === 'move' && "ring-2 ring-primary"
                             )}
                             style={plannedStyle}
                             onMouseDown={(e) => handleDragStart(e, index, 'move')}
                           >
-                            {/* Show progress label for activities without actual dates */}
-                            {!hasActual && showProgressLabel && (
+                            {/* Mostrar 0% apenas para atividades PENDENTES (sem barra real) */}
+                            {!hasActualStart && showProgressLabel && (
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <span className="text-[10px] font-semibold text-primary/70">
-                                  {activityProgress}%
+                                  0%
                                 </span>
                               </div>
                             )}
@@ -675,25 +725,25 @@ const GanttChart = ({
                               <span>{format(parseLocalDate(activity.plannedStart), 'dd/MM')} → {format(parseLocalDate(activity.plannedEnd), 'dd/MM/yyyy')}</span>
                               <span className="text-muted-foreground">({differenceInDays(parseLocalDate(activity.plannedEnd), parseLocalDate(activity.plannedStart)) + 1} dias)</span>
                             </p>
-                            {hasActual && (
+                            {hasActualStart && (
                               <p className="text-xs flex items-center gap-1.5">
                                 <span className={cn("w-2 h-2 rounded-sm", statusColors[status])} />
                                 <span className="text-muted-foreground">Real:</span>
-                                <span>{format(parseLocalDate(activity.actualStart!), 'dd/MM')} → {activity.actualEnd ? format(parseLocalDate(activity.actualEnd), 'dd/MM/yyyy') : 'em andamento'}</span>
+                                <span>
+                                  {format(parseLocalDate(activity.actualStart!), 'dd/MM')} → {hasActualEnd ? format(parseLocalDate(activity.actualEnd!), 'dd/MM/yyyy') : 'em andamento'}
+                                </span>
                               </p>
                             )}
-                            {computed.delayDays > 0 && (
+                            {delayDays > 0 && (
                               <p className="text-xs text-destructive font-medium flex items-center gap-1">
-                                ⚠ {computed.delayDays} {computed.delayDays === 1 ? 'dia' : 'dias'} de atraso
-                                {computed.isDelayedAuto && <span className="text-muted-foreground font-normal">(automático)</span>}
+                                ⚠ {delayDays} {delayDays === 1 ? 'dia' : 'dias'} de atraso
                               </p>
                             )}
-                            {hasActual && (() => {
+                            {hasActualEnd && (() => {
                               const plannedDuration = differenceInDays(parseLocalDate(activity.plannedEnd), parseLocalDate(activity.plannedStart)) + 1;
-                              const actualEndDate = activity.actualEnd ? parseLocalDate(activity.actualEnd) : referenceDate;
-                              const actualDuration = differenceInDays(actualEndDate, parseLocalDate(activity.actualStart!)) + 1;
+                              const actualDuration = differenceInDays(parseLocalDate(activity.actualEnd!), parseLocalDate(activity.actualStart!)) + 1;
                               const diff = actualDuration - plannedDuration;
-                              if (diff !== 0 && activity.actualEnd) {
+                              if (diff !== 0) {
                                 return (
                                   <p className={cn("text-xs font-medium", diff > 0 ? "text-amber-600" : "text-green-600")}>
                                     {diff > 0 ? `+${diff}` : diff} dias vs previsto
@@ -714,26 +764,26 @@ const GanttChart = ({
                               {getStatusLabel(status)}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {activityProgress}% • Peso: {activity.weight}%
+                              {progress}% • Peso: {activity.weight}%
                             </span>
                           </div>
                           {editable && <p className="text-xs text-muted-foreground mt-1.5 italic">Arraste para mover</p>}
                         </TooltipContent>
                       </Tooltip>
 
-                      {/* Actual bar overlaid on planned bar */}
-                      {hasActual && actualStyle && (
+                      {/* Actual bar - sobrepõe a barra prevista */}
+                      {actualBarStyle && (
                         <div 
                           className={cn(
                             "absolute top-3 h-5 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
                             statusColors[status]
                           )}
-                          style={actualStyle}
+                          style={actualBarStyle}
                         >
                           {/* Progress percentage label inside bar */}
                           {showProgressLabel && (
                             <span className="text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm text-white">
-                              {activityProgress}%
+                              {progress}%
                             </span>
                           )}
                         </div>
