@@ -708,7 +708,7 @@ const GanttChart = ({
                         </Tooltip>
                       )}
                       
-                      {/* BARRA PREVISTO - Sempre visível (roxo claro, linha superior) */}
+                      {/* BARRA PREVISTO - SEMPRE visível (roxo claro, linha superior) */}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div 
@@ -718,7 +718,7 @@ const GanttChart = ({
                               editable && "cursor-move hover:bg-primary/35",
                               isDragging && dragState?.dragType === 'move' && "ring-2 ring-primary"
                             )}
-                            style={plannedStyle}
+                            style={{ left: plannedStyle.left, width: plannedStyle.width }}
                             onMouseDown={(e) => handleDragStart(e, index, 'move')}
                           >
                             {/* Mostrar label "Previsto" para atividades pendentes */}
