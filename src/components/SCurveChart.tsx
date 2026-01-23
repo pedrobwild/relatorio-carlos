@@ -95,6 +95,7 @@ const findActivityAtDate = (activities: Activity[], dateStr: string): string | n
 };
 
 // Generate S-Curve data from activities using weighted progress with temporal scale
+// Now with intermediate points for smoother visualization
 const generateChartData = (activities: Activity[], reportDate?: string) => {
   if (activities.length === 0) {
     return { 
@@ -121,29 +122,68 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
     : activities.length;
 
-  // Collect all unique dates - only planned dates and actual dates that exist
-  const plannedDates = new Set<string>();
-  const actualDates = new Set<string>();
+  // Find project date range
+  let minDate: Date | null = null;
+  let maxDate: Date | null = null;
   
   activities.forEach(a => {
-    if (a.plannedStart) plannedDates.add(a.plannedStart);
-    if (a.plannedEnd) plannedDates.add(a.plannedEnd);
-    if (a.actualStart) actualDates.add(a.actualStart);
-    if (a.actualEnd) actualDates.add(a.actualEnd);
+    const dates = [
+      parseDate(a.plannedStart),
+      parseDate(a.plannedEnd),
+      parseDate(a.actualStart),
+      parseDate(a.actualEnd)
+    ].filter(Boolean) as Date[];
+    
+    dates.forEach(d => {
+      if (!minDate || d < minDate) minDate = d;
+      if (!maxDate || d > maxDate) maxDate = d;
+    });
   });
 
-  // Combine all dates for sorting
-  const allDates = new Set([...plannedDates, ...actualDates]);
+  if (!minDate || !maxDate) {
+    return { 
+      data: [{ date: "Início", previsto: 0, realizado: null, timestamp: 0, activity: null }],
+      milestones: { start: 0, end: 0, today: 0, half: 0 }
+    };
+  }
 
-  const sortedDates = Array.from(allDates).sort((a, b) => {
+  // Generate dates at regular intervals (every 3 days) for smoother curve
+  const INTERVAL_DAYS = 3;
+  const allDates: string[] = [];
+  const currentDate = new Date(minDate);
+  
+  while (currentDate <= maxDate) {
+    const isoDate = currentDate.toISOString().split('T')[0];
+    allDates.push(isoDate);
+    currentDate.setDate(currentDate.getDate() + INTERVAL_DAYS);
+  }
+  
+  // Always include the last date
+  const maxIsoDate = maxDate.toISOString().split('T')[0];
+  if (!allDates.includes(maxIsoDate)) {
+    allDates.push(maxIsoDate);
+  }
+  
+  // Also include key activity dates for precision
+  activities.forEach(a => {
+    [a.plannedStart, a.plannedEnd, a.actualStart, a.actualEnd]
+      .filter(Boolean)
+      .forEach(d => {
+        if (!allDates.includes(d!)) {
+          allDates.push(d!);
+        }
+      });
+  });
+  
+  // Sort all dates
+  allDates.sort((a, b) => {
     const dateA = parseDate(a);
     const dateB = parseDate(b);
     if (!dateA || !dateB) return 0;
     return dateA.getTime() - dateB.getTime();
   });
 
-  // Get first and last dates for reference
-  const firstDate = sortedDates.length > 0 ? parseDate(sortedDates[0]) : null;
+  const firstDate = minDate;
   const lastPlannedDate = activities.reduce((latest, a) => {
     const plannedEnd = parseDate(a.plannedEnd);
     if (plannedEnd && (!latest || plannedEnd > latest)) return plannedEnd;
@@ -188,14 +228,8 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     today: todayTimestamp,
     half: halfTimestamp
   };
-
-  // Build a reverse lookup from date string to ISO date for activity finding
-  const dateToIso: { [key: string]: string } = {};
-  sortedDates.forEach(isoDate => {
-    dateToIso[formatDisplayDate(isoDate, baseYear)] = isoDate;
-  });
   
-  const data = sortedDates.map(date => {
+  const data = allDates.map(date => {
     const currentDate = parseDate(date);
     if (!currentDate || !firstDate) return { date: formatDisplayDate(date, baseYear), previsto: 0, realizado: null, timestamp: 0, activity: null };
     
@@ -205,7 +239,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     // Find activity at this date
     const activityAtDate = findActivityAtDate(activities, date);
     
-    // Calculate planned progress using weights
+    // Calculate planned progress using weights (cumulative at this date)
     const plannedProgress = activities.reduce((sum, a) => {
       const plannedEnd = parseDate(a.plannedEnd);
       if (plannedEnd && plannedEnd <= currentDate) {
@@ -217,7 +251,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     // Only show "realizado" for dates up to report date AND only if there are actual dates
     const isFutureDate = reportDateParsed && currentDate > reportDateParsed;
     
-    // Check if any activity has actual data for this date
+    // Check if any activity has actual data
     const hasAnyActualData = activities.some(a => a.actualEnd);
     
     // Calculate actual progress using weights
@@ -230,11 +264,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
         }
         return sum;
       }, 0);
-      // Only show realizado if at least one activity has completed by this date
-      // or if this date is from actual dates set
-      if (actualSum > 0 || actualDates.has(date)) {
-        actualProgress = actualSum;
-      }
+      actualProgress = actualSum;
     }
 
     return {
