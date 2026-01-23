@@ -284,13 +284,11 @@ const ReportHeader = ({
                   : 'border-border cursor-default'
               }`}
             >
-              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center justify-between gap-2">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate">Previsão de Término</span>
-                </span>
+              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2 min-w-0">
+                <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">Previsão</span>
                 {endDate === dateChangeInfo.originalDate && (
-                  <span className="flex items-center gap-0.5 text-[9px] text-amber-600 bg-amber-500/15 px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-0.5 text-[9px] text-amber-600 bg-amber-500/15 px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 ml-auto">
                     <AlertCircle className="w-2.5 h-2.5" />
                     Alterado
                   </span>
@@ -303,9 +301,9 @@ const ReportHeader = ({
             <div className="bg-card rounded-lg p-3 border border-border">
               <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5" />
-                Dias Úteis Totais
+                Duração Total
               </div>
-              <p className="text-h3">{projectMetrics.totalWorkingDays} <span className="text-caption font-normal">dias</span></p>
+              <p className="text-h3">{projectMetrics.totalWorkingDays} <span className="text-caption font-normal">dias úteis</span></p>
             </div>
 
             {/* Remaining Working Days */}
@@ -320,7 +318,7 @@ const ReportHeader = ({
                 ) : (
                   <Clock className="w-3.5 h-3.5" />
                 )}
-                Dias Restantes
+                Restante
               </div>
               <p className={`text-h3 ${
                 projectMetrics.remainingWorkingDays <= 7 
