@@ -100,6 +100,7 @@ const GanttChart = ({
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('month');
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [baselineVisible, setBaselineVisible] = useState(showBaseline);
+  const [debugMode, setDebugMode] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
   
   // IMPORTANTE: Mostrar TUDO por padrão para não cortar atividades
@@ -537,6 +538,17 @@ const GanttChart = ({
               <span className="text-muted-foreground">Dependência</span>
             </div>
           )}
+          <div className="ml-auto">
+            <button
+              onClick={() => setDebugMode(!debugMode)}
+              className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded transition-colors font-mono text-[10px]",
+                debugMode ? "bg-amber-500/20 text-amber-700" : "bg-muted hover:bg-muted/80 text-muted-foreground"
+              )}
+            >
+              🐛 Debug {debugMode ? 'ON' : 'OFF'}
+            </button>
+          </div>
         </div>
 
         {/* Chart container */}
@@ -601,6 +613,59 @@ const GanttChart = ({
               );
             })}
           </div>
+
+          {/* DEBUG MODE: Column with date/style details */}
+          {debugMode && (
+            <div className="flex-shrink-0 w-72 border-r border-border bg-amber-50/50 overflow-hidden">
+              {/* Debug header */}
+              <div className="h-8 border-b border-border bg-amber-100/50 flex items-center px-2">
+                <span className="text-[10px] font-mono font-bold text-amber-800">
+                  🐛 DEBUG: Datas & Estilos
+                </span>
+              </div>
+              
+              {/* Debug rows */}
+              {ganttTasks.map((task, index) => {
+                const plannedStyle = getBarStyle(task.plannedStart, task.plannedEnd);
+                const actualStyle = task.statusTabela !== 'PENDENTE' 
+                  ? getBarStyle(task.start, task.end)
+                  : null;
+                
+                return (
+                  <div 
+                    key={`debug-${index}`}
+                    className="h-12 px-2 py-1 border-b border-amber-200 text-[9px] font-mono leading-tight overflow-hidden"
+                  >
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <div className="text-amber-700">
+                          <span className="text-amber-500">P:</span> {task.plannedStart} → {task.plannedEnd}
+                        </div>
+                        <div className="text-green-700">
+                          <span className="text-green-500">A:</span> {task.start || '—'} → {task.end || '—'}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-blue-700">
+                          <span className="text-blue-500">L:</span> {plannedStyle.left} 
+                          <span className="text-blue-500 ml-1">W:</span> {plannedStyle.width}
+                        </div>
+                        {actualStyle && (
+                          <div className="text-purple-700">
+                            <span className="text-purple-500">L:</span> {actualStyle.left}
+                            <span className="text-purple-500 ml-1">W:</span> {actualStyle.width}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-[8px] text-muted-foreground mt-0.5">
+                      status={task.statusTabela} | prog={task.progress}% | delay={task.delayDays}d
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Timeline area */}
           <div className="flex-1 overflow-x-auto">
