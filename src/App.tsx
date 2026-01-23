@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import GestaoObras from "./pages/GestaoObras";
 import NovaObra from "./pages/NovaObra";
 import Admin from "./pages/Admin";
+import Demo from "./pages/Demo";
 
 // Customer pages
 import MinhasObras from "./pages/MinhasObras";
@@ -65,6 +66,7 @@ const App = () => (
             
             {/* Admin-only routes */}
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            <Route path="/demo" element={<AdminRoute><Demo /></AdminRoute>} />
             
             {/* Customer-only routes */}
             <Route path="/minhas-obras" element={<CustomerRoute><MinhasObras /></CustomerRoute>} />
