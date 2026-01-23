@@ -486,7 +486,10 @@ const GanttChart = ({
           <div className="flex items-center gap-2 min-w-0">
             <h3 className="font-semibold text-sm shrink-0">Gráfico de Gantt</h3>
             {/* Period indicator */}
-            <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded hidden sm:inline-flex items-center gap-1">
+            <span 
+              key={`${format(startDate, 'yyyyMM')}-${format(endDate, 'yyyyMM')}`}
+              className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded hidden sm:inline-flex items-center gap-1 animate-fade-in"
+            >
               <span className="capitalize">{format(startDate, 'MMM yyyy', { locale: ptBR })}</span>
               <span>→</span>
               <span className="capitalize">{format(endDate, 'MMM yyyy', { locale: ptBR })}</span>
@@ -589,7 +592,10 @@ const GanttChart = ({
         </div>
 
         {/* Chart container */}
-        <div className="flex">
+        <div 
+          key={showFullChart ? 'full' : 'windowed'}
+          className="flex animate-fade-in"
+        >
           {/* Activity names column */}
           <div className="flex-shrink-0 w-48 border-r border-border">
             {/* Month header placeholder */}

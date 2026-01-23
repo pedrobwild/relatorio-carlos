@@ -437,7 +437,10 @@ const SCurveChart = ({
               </h2>
               {/* Period indicator */}
               {windowedData.length > 0 && (
-                <span className="text-[10px] md:text-xs text-muted-foreground bg-secondary px-1.5 md:px-2 py-0.5 rounded inline-flex items-center gap-1">
+                <span 
+                  key={`${windowedData[0]?.date}-${windowedData[windowedData.length - 1]?.date}`}
+                  className="text-[10px] md:text-xs text-muted-foreground bg-secondary px-1.5 md:px-2 py-0.5 rounded inline-flex items-center gap-1 animate-fade-in"
+                >
                   <span>{windowedData[0]?.date}</span>
                   <span>→</span>
                   <span>{windowedData[windowedData.length - 1]?.date}</span>
@@ -480,8 +483,11 @@ const SCurveChart = ({
       </div>
 
       {/* Chart Container */}
-      <div className="bg-secondary/30 rounded-xl p-2.5 sm:p-4 md:p-6 border border-border/50">
-        <div className="h-[200px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full">
+      <div 
+        key={showFullChart ? 'full' : 'windowed'}
+        className="bg-secondary/30 rounded-xl p-2.5 sm:p-4 md:p-6 border border-border/50 animate-fade-in"
+      >
+        <div className="h-[200px] sm:h-[280px] md:h-[360px] lg:h-[400px] w-full transition-all duration-300 ease-out">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={windowedData}
