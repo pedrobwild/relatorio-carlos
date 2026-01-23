@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Filter, Shield, Presentation } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Filter, Shield, Presentation, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,7 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-function ProjectCard({ project, onClick }: { project: Project; onClick: () => void }) {
+function ProjectCard({ project, onClick, onEdit }: { project: Project; onClick: () => void; onEdit: () => void }) {
   const daysRemaining = Math.ceil(
     (new Date(project.planned_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -43,9 +43,22 @@ function ProjectCard({ project, onClick }: { project: Project; onClick: () => vo
               <p className="text-caption text-muted-foreground">{project.unit_name}</p>
             )}
           </div>
-          <Badge variant="outline" className={statusColors[project.status]}>
-            {statusLabels[project.status]}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Badge variant="outline" className={statusColors[project.status]}>
+              {statusLabels[project.status]}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -225,6 +238,7 @@ export default function GestaoObras() {
                 key={project.id}
                 project={project}
                 onClick={() => navigate(`/obra/${project.id}`)}
+                onEdit={() => navigate(`/gestao/obra/${project.id}`)}
               />
             ))}
           </div>
