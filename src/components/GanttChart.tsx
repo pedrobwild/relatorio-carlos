@@ -666,16 +666,15 @@ const GanttChart = ({
                           <TooltipTrigger asChild>
                             <div 
                               className={cn(
-                                "absolute top-6 h-3 rounded-sm cursor-pointer transition-colors flex items-center justify-end overflow-hidden",
-                                statusColors[status],
-                                status === 'in-progress' && "animate-pulse"
+                                "absolute top-6 h-4 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
+                                statusColors[status]
                               )}
                               style={actualStyle}
                             >
-                              {/* Progress percentage label */}
+                              {/* Progress percentage label inside bar */}
                               {showProgressLabel && (
                                 <span className={cn(
-                                  "text-[9px] font-bold px-1 mr-0.5 whitespace-nowrap",
+                                  "text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm",
                                   status === 'completed' ? "text-white" : 
                                   status === 'delayed' ? "text-white" : 
                                   "text-primary-foreground"
@@ -702,13 +701,13 @@ const GanttChart = ({
                         </Tooltip>
                       )}
 
-                      {/* Progress label for pending activities */}
+                      {/* Progress label for pending activities (0%) */}
                       {!hasActual && showProgressLabel && (
                         <div 
-                          className="absolute top-6 h-3 flex items-center"
-                          style={{ left: plannedStyle.left }}
+                          className="absolute top-6 h-4 flex items-center rounded-sm bg-muted/50 border border-muted-foreground/20"
+                          style={{ left: plannedStyle.left, width: plannedStyle.width }}
                         >
-                          <span className="text-[9px] text-muted-foreground font-medium ml-1">
+                          <span className="text-[10px] text-muted-foreground font-medium px-1.5">
                             0%
                           </span>
                         </div>
