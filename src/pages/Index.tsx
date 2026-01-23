@@ -316,13 +316,7 @@ const Index = () => {
                         <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
                         Curva S
                       </TabsTrigger>
-                      <TabsTrigger
-                        value="gantt"
-                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
-                      >
-                        <GanttChartSquare className="w-3.5 h-3.5 mr-1.5" />
-                        Gantt
-                      </TabsTrigger>
+                      {/* Gantt tab hidden temporarily */}
                       <TabsTrigger
                         value="relatorio"
                         className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
@@ -360,24 +354,7 @@ const Index = () => {
                         />
                       </TabsContent>
 
-                      <TabsContent value="gantt" className="mt-0 focus-visible:outline-none">
-                        <GanttChart 
-                          activities={reportData.activities} 
-                          reportDate={reportData.reportDate}
-                          editable={isStaff && formattedActivities.length > 0}
-                          onActivityDateChange={handleActivityDateChange}
-                          showFullChart={showFullChart}
-                          onShowFullChartChange={setShowFullChart}
-                          selectedActivityId={selectedActivityId}
-                          onActivitySelect={setSelectedActivityId}
-                        />
-                        <ScheduleTable 
-                          activities={reportData.activities} 
-                          reportDate={reportData.reportDate}
-                          selectedActivityId={selectedActivityId}
-                          onActivitySelect={setSelectedActivityId}
-                        />
-                      </TabsContent>
+                      {/* Gantt content hidden temporarily */}
 
                       <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
                         {selectedWeeklyReport ? (
