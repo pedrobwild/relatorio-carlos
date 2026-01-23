@@ -666,51 +666,77 @@ const GanttChart = ({
                             )}
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="font-medium">Previsto</p>
-                          <p className="text-xs">
-                            {format(parseLocalDate(activity.plannedStart), 'dd/MM/yyyy')} - {format(parseLocalDate(activity.plannedEnd), 'dd/MM/yyyy')}
-                          </p>
-                          {editable && <p className="text-xs text-muted-foreground mt-1">Arraste para mover ou redimensionar</p>}
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-medium">{activity.description}</p>
+                          <div className="mt-1.5 space-y-1">
+                            <p className="text-xs flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-sm bg-primary/30 border border-primary/50" />
+                              <span className="text-muted-foreground">Previsto:</span>
+                              <span>{format(parseLocalDate(activity.plannedStart), 'dd/MM')} → {format(parseLocalDate(activity.plannedEnd), 'dd/MM/yyyy')}</span>
+                              <span className="text-muted-foreground">({differenceInDays(parseLocalDate(activity.plannedEnd), parseLocalDate(activity.plannedStart)) + 1} dias)</span>
+                            </p>
+                            {hasActual && (
+                              <p className="text-xs flex items-center gap-1.5">
+                                <span className={cn("w-2 h-2 rounded-sm", statusColors[status])} />
+                                <span className="text-muted-foreground">Real:</span>
+                                <span>{format(parseLocalDate(activity.actualStart!), 'dd/MM')} → {activity.actualEnd ? format(parseLocalDate(activity.actualEnd), 'dd/MM/yyyy') : 'em andamento'}</span>
+                              </p>
+                            )}
+                            {computed.delayDays > 0 && (
+                              <p className="text-xs text-destructive font-medium flex items-center gap-1">
+                                ⚠ {computed.delayDays} {computed.delayDays === 1 ? 'dia' : 'dias'} de atraso
+                                {computed.isDelayedAuto && <span className="text-muted-foreground font-normal">(automático)</span>}
+                              </p>
+                            )}
+                            {hasActual && (() => {
+                              const plannedDuration = differenceInDays(parseLocalDate(activity.plannedEnd), parseLocalDate(activity.plannedStart)) + 1;
+                              const actualEndDate = activity.actualEnd ? parseLocalDate(activity.actualEnd) : referenceDate;
+                              const actualDuration = differenceInDays(actualEndDate, parseLocalDate(activity.actualStart!)) + 1;
+                              const diff = actualDuration - plannedDuration;
+                              if (diff !== 0 && activity.actualEnd) {
+                                return (
+                                  <p className={cn("text-xs font-medium", diff > 0 ? "text-amber-600" : "text-green-600")}>
+                                    {diff > 0 ? `+${diff}` : diff} dias vs previsto
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between">
+                            <span className={cn(
+                              "text-xs font-semibold",
+                              status === 'completed' ? "text-green-600" :
+                              status === 'delayed' ? "text-destructive" :
+                              status === 'in-progress' ? "text-primary" :
+                              "text-muted-foreground"
+                            )}>
+                              {getStatusLabel(status)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {activityProgress}% • Peso: {activity.weight}%
+                            </span>
+                          </div>
+                          {editable && <p className="text-xs text-muted-foreground mt-1.5 italic">Arraste para mover</p>}
                         </TooltipContent>
                       </Tooltip>
 
                       {/* Actual bar overlaid on planned bar */}
                       {hasActual && actualStyle && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div 
-                              className={cn(
-                                "absolute top-3 h-5 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
-                                statusColors[status]
-                              )}
-                              style={actualStyle}
-                            >
-                              {/* Progress percentage label inside bar */}
-                              {showProgressLabel && (
-                                <span className={cn(
-                                  "text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm text-white"
-                                )}>
-                                  {activityProgress}%
-                                </span>
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="font-medium">Real</p>
-                            <p className="text-xs">
-                              {format(parseLocalDate(activity.actualStart!), 'dd/MM/yyyy')} - {activity.actualEnd ? format(parseLocalDate(activity.actualEnd), 'dd/MM/yyyy') : 'Em andamento'}
-                            </p>
-                            <p className={cn(
-                              "text-xs font-semibold mt-1",
-                              activityProgress === 100 ? "text-green-600" :
-                              activityProgress >= 50 ? "text-primary" :
-                              "text-muted-foreground"
-                            )}>
-                              Progresso: {activityProgress}%
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <div 
+                          className={cn(
+                            "absolute top-3 h-5 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
+                            statusColors[status]
+                          )}
+                          style={actualStyle}
+                        >
+                          {/* Progress percentage label inside bar */}
+                          {showProgressLabel && (
+                            <span className="text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm text-white">
+                              {activityProgress}%
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   );
