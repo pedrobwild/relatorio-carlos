@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { 
   FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil
+  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
@@ -155,6 +156,7 @@ const ReportHeader = ({
 
   const { paths } = useProjectNavigation();
   const { isStaff } = useUserRole();
+  const navigate = useNavigate();
 
   const quickLinks = [
     { icon: DollarSign, label: "Financeiro", href: paths.financeiro },
@@ -181,8 +183,16 @@ const ReportHeader = ({
         {/* Top Section: Project Info + Status */}
         <div className="p-4 pb-3 border-b border-border">
           <div className="flex items-start justify-between gap-4">
-            {/* Left: Logo + Project */}
+            {/* Left: Back Button + Logo + Project */}
             <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="h-8 w-8"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <div className="h-8 w-px bg-border" />
               <div>
@@ -516,29 +526,40 @@ const ReportHeader = ({
       <div className="md:hidden">
         {/* Status Banner + Pendências CTA */}
         <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border">
-          {/* Status */}
-          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
-            projectMetrics.isOnTrack 
-              ? 'bg-success/15' 
-              : 'bg-warning/15'
-          }`}>
-            {projectMetrics.isOnTrack ? (
-              <TrendingUp className="w-3.5 h-3.5 text-success" />
-            ) : (
-              <TrendingDown className="w-3.5 h-3.5 text-warning" />
-            )}
-            <span className={`text-xs font-semibold ${
-              projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
+          {/* Back Button + Status */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="h-7 w-7"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            {/* Status */}
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
+              projectMetrics.isOnTrack 
+                ? 'bg-success/15' 
+                : 'bg-warning/15'
             }`}>
-              {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
-            </span>
-            {projectMetrics.progressDiff !== 0 && (
-              <span className={`text-[10px] font-bold ${
+              {projectMetrics.isOnTrack ? (
+                <TrendingUp className="w-3.5 h-3.5 text-success" />
+              ) : (
+                <TrendingDown className="w-3.5 h-3.5 text-warning" />
+              )}
+              <span className={`text-xs font-semibold ${
                 projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
               }`}>
-                {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
+                {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
               </span>
-            )}
+              {projectMetrics.progressDiff !== 0 && (
+                <span className={`text-[10px] font-bold ${
+                  projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
+                }`}>
+                  {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Pendências CTA */}
