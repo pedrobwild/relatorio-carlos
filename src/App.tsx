@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 // Staff pages
 import GestaoObras from "./pages/GestaoObras";
 import NovaObra from "./pages/NovaObra";
+import EditarObra from "./pages/EditarObra";
 import Admin from "./pages/Admin";
 import Demo from "./pages/Demo";
 
@@ -63,6 +64,7 @@ const App = () => (
             {/* Staff-only routes */}
             <Route path="/gestao" element={<StaffRoute><GestaoObras /></StaffRoute>} />
             <Route path="/gestao/nova-obra" element={<StaffRoute><NovaObra /></StaffRoute>} />
+            <Route path="/gestao/obra/:projectId" element={<StaffRoute><EditarObra /></StaffRoute>} />
             
             {/* Admin-only routes */}
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />

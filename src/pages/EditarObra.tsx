@@ -1,0 +1,939 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Building2, User, Calendar, DollarSign, Users, Save, Trash2, Plus, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { format } from 'date-fns';
+import bwildLogo from '@/assets/bwild-logo.png';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface Project {
+  id: string;
+  name: string;
+  unit_name: string | null;
+  address: string | null;
+  planned_start_date: string;
+  planned_end_date: string;
+  actual_start_date: string | null;
+  actual_end_date: string | null;
+  contract_value: number | null;
+  status: string;
+}
+
+interface Customer {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string | null;
+  customer_user_id: string | null;
+  invitation_sent_at: string | null;
+  invitation_accepted_at: string | null;
+}
+
+interface Activity {
+  id: string;
+  description: string;
+  planned_start: string;
+  planned_end: string;
+  actual_start: string | null;
+  actual_end: string | null;
+  weight: number;
+  sort_order: number;
+}
+
+interface Payment {
+  id: string;
+  installment_number: number;
+  description: string;
+  amount: number;
+  due_date: string;
+  paid_at: string | null;
+}
+
+interface Engineer {
+  id: string;
+  engineer_user_id: string;
+  is_primary: boolean;
+  display_name?: string;
+  email?: string;
+}
+
+export default function EditarObra() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('geral');
+  
+  // Data states
+  const [project, setProject] = useState<Project | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [engineers, setEngineers] = useState<Engineer[]>([]);
+  
+  // New item forms
+  const [newActivity, setNewActivity] = useState({ description: '', planned_start: '', planned_end: '', weight: '5' });
+  const [newPayment, setNewPayment] = useState({ description: '', amount: '', due_date: '' });
+
+  useEffect(() => {
+    if (projectId) {
+      fetchAllData();
+    }
+  }, [projectId]);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      // Fetch project
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+      
+      if (projectError) throw projectError;
+      setProject(projectData);
+
+      // Fetch customer
+      const { data: customerData } = await supabase
+        .from('project_customers')
+        .select('*')
+        .eq('project_id', projectId)
+        .single();
+      
+      setCustomer(customerData || null);
+
+      // Fetch activities
+      const { data: activitiesData } = await supabase
+        .from('project_activities')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('sort_order', { ascending: true });
+      
+      setActivities(activitiesData || []);
+
+      // Fetch payments
+      const { data: paymentsData } = await supabase
+        .from('project_payments')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('installment_number', { ascending: true });
+      
+      setPayments(paymentsData || []);
+
+      // Fetch engineers with profile info
+      const { data: engineersData } = await supabase
+        .from('project_engineers')
+        .select('*, profiles:engineer_user_id(display_name, email)')
+        .eq('project_id', projectId);
+      
+      setEngineers((engineersData || []).map(e => ({
+        ...e,
+        display_name: (e.profiles as any)?.display_name,
+        email: (e.profiles as any)?.email,
+      })));
+
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      toast({ title: 'Erro ao carregar dados', description: err.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProjectChange = (field: keyof Project, value: string | number | null) => {
+    if (project) {
+      setProject({ ...project, [field]: value });
+    }
+  };
+
+  const handleCustomerChange = (field: keyof Customer, value: string | null) => {
+    if (customer) {
+      setCustomer({ ...customer, [field]: value });
+    }
+  };
+
+  const saveProject = async () => {
+    if (!project) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          name: project.name,
+          unit_name: project.unit_name,
+          address: project.address,
+          planned_start_date: project.planned_start_date,
+          planned_end_date: project.planned_end_date,
+          actual_start_date: project.actual_start_date,
+          actual_end_date: project.actual_end_date,
+          contract_value: project.contract_value,
+          status: project.status,
+        })
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      // Update customer if exists
+      if (customer) {
+        const { error: customerError } = await supabase
+          .from('project_customers')
+          .update({
+            customer_name: customer.customer_name,
+            customer_email: customer.customer_email,
+            customer_phone: customer.customer_phone,
+          })
+          .eq('id', customer.id);
+
+        if (customerError) throw customerError;
+      }
+
+      toast({ title: 'Salvo!', description: 'Dados da obra atualizados.' });
+    } catch (err: any) {
+      console.error('Error saving:', err);
+      toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Activity functions
+  const addActivity = async () => {
+    if (!newActivity.description || !newActivity.planned_start || !newActivity.planned_end) {
+      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const nextOrder = activities.length > 0 ? Math.max(...activities.map(a => a.sort_order)) + 1 : 1;
+      
+      const { data, error } = await supabase
+        .from('project_activities')
+        .insert({
+          project_id: projectId,
+          description: newActivity.description,
+          planned_start: newActivity.planned_start,
+          planned_end: newActivity.planned_end,
+          weight: parseFloat(newActivity.weight) || 5,
+          sort_order: nextOrder,
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setActivities([...activities, data]);
+      setNewActivity({ description: '', planned_start: '', planned_end: '', weight: '5' });
+      toast({ title: 'Atividade adicionada!' });
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const updateActivity = async (id: string, field: string, value: string | number | null) => {
+    try {
+      const { error } = await supabase
+        .from('project_activities')
+        .update({ [field]: value })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setActivities(activities.map(a => a.id === id ? { ...a, [field]: value } : a));
+    } catch (err: any) {
+      toast({ title: 'Erro ao atualizar', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const deleteActivity = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_activities')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setActivities(activities.filter(a => a.id !== id));
+      toast({ title: 'Atividade removida' });
+    } catch (err: any) {
+      toast({ title: 'Erro ao remover', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  // Payment functions
+  const addPayment = async () => {
+    if (!newPayment.description || !newPayment.amount || !newPayment.due_date) {
+      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const nextInstallment = payments.length > 0 ? Math.max(...payments.map(p => p.installment_number)) + 1 : 1;
+      
+      const { data, error } = await supabase
+        .from('project_payments')
+        .insert({
+          project_id: projectId,
+          installment_number: nextInstallment,
+          description: newPayment.description,
+          amount: parseFloat(newPayment.amount),
+          due_date: newPayment.due_date,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setPayments([...payments, data]);
+      setNewPayment({ description: '', amount: '', due_date: '' });
+      toast({ title: 'Parcela adicionada!' });
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const togglePaymentPaid = async (payment: Payment) => {
+    try {
+      const newPaidAt = payment.paid_at ? null : new Date().toISOString();
+      
+      const { error } = await supabase
+        .from('project_payments')
+        .update({ paid_at: newPaidAt })
+        .eq('id', payment.id);
+
+      if (error) throw error;
+      
+      setPayments(payments.map(p => p.id === payment.id ? { ...p, paid_at: newPaidAt } : p));
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const deletePayment = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_payments')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setPayments(payments.filter(p => p.id !== id));
+      toast({ title: 'Parcela removida' });
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Obra não encontrada</p>
+      </div>
+    );
+  }
+
+  const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+  const paidPayments = payments.filter(p => p.paid_at).reduce((sum, p) => sum + p.amount, 0);
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
+        <div className="container max-w-5xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-h3 font-bold">{project.name}</h1>
+                <p className="text-tiny text-muted-foreground">Editar dados da obra</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => navigate(`/obra/${projectId}`)}>
+                Ver Portal
+              </Button>
+              <Button onClick={saveProject} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container max-w-5xl mx-auto px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="geral" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Dados Gerais</span>
+            </TabsTrigger>
+            <TabsTrigger value="atividades" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Atividades</span>
+            </TabsTrigger>
+            <TabsTrigger value="pagamentos" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              <span className="hidden sm:inline">Pagamentos</span>
+            </TabsTrigger>
+            <TabsTrigger value="equipe" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Equipe</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab: Dados Gerais */}
+          <TabsContent value="geral" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-body">
+                  <Building2 className="h-5 w-5" />
+                  Informações do Projeto
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <Label>Nome do Projeto *</Label>
+                    <Input
+                      value={project.name}
+                      onChange={(e) => handleProjectChange('name', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Unidade</Label>
+                    <Input
+                      value={project.unit_name || ''}
+                      onChange={(e) => handleProjectChange('unit_name', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={project.status} onValueChange={(v) => handleProjectChange('status', v)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Em andamento</SelectItem>
+                        <SelectItem value="paused">Pausada</SelectItem>
+                        <SelectItem value="completed">Concluída</SelectItem>
+                        <SelectItem value="cancelled">Cancelada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label>Endereço</Label>
+                    <Input
+                      value={project.address || ''}
+                      onChange={(e) => handleProjectChange('address', e.target.value || null)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-body">
+                  <Calendar className="h-5 w-5" />
+                  Cronograma
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Início Previsto *</Label>
+                    <Input
+                      type="date"
+                      value={project.planned_start_date}
+                      onChange={(e) => handleProjectChange('planned_start_date', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Término Previsto *</Label>
+                    <Input
+                      type="date"
+                      value={project.planned_end_date}
+                      onChange={(e) => handleProjectChange('planned_end_date', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Início Real</Label>
+                    <Input
+                      type="date"
+                      value={project.actual_start_date || ''}
+                      onChange={(e) => handleProjectChange('actual_start_date', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Término Real</Label>
+                    <Input
+                      type="date"
+                      value={project.actual_end_date || ''}
+                      onChange={(e) => handleProjectChange('actual_end_date', e.target.value || null)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-body">
+                  <DollarSign className="h-5 w-5" />
+                  Financeiro
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label>Valor do Contrato (R$)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={project.contract_value || ''}
+                    onChange={(e) => handleProjectChange('contract_value', e.target.value ? parseFloat(e.target.value) : null)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {customer && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-body">
+                    <User className="h-5 w-5" />
+                    Dados do Cliente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <Label>Nome Completo</Label>
+                      <Input
+                        value={customer.customer_name}
+                        onChange={(e) => handleCustomerChange('customer_name', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>E-mail</Label>
+                      <Input
+                        type="email"
+                        value={customer.customer_email}
+                        onChange={(e) => handleCustomerChange('customer_email', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input
+                        value={customer.customer_phone || ''}
+                        onChange={(e) => handleCustomerChange('customer_phone', e.target.value || null)}
+                      />
+                    </div>
+                  </div>
+                  {customer.invitation_accepted_at ? (
+                    <Badge className="bg-green-500/10 text-green-600">
+                      Cadastrado no portal
+                    </Badge>
+                  ) : customer.invitation_sent_at ? (
+                    <Badge variant="outline">
+                      Convite enviado em {format(new Date(customer.invitation_sent_at), 'dd/MM/yyyy')}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-muted-foreground">
+                      Convite não enviado
+                    </Badge>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Tab: Atividades */}
+          <TabsContent value="atividades" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Cronograma de Atividades</CardTitle>
+                <CardDescription>
+                  {activities.length} atividades cadastradas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Add new activity form */}
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-6 p-4 bg-muted/50 rounded-lg">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs">Descrição</Label>
+                    <Input
+                      placeholder="Nome da atividade"
+                      value={newActivity.description}
+                      onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Início</Label>
+                    <Input
+                      type="date"
+                      value={newActivity.planned_start}
+                      onChange={(e) => setNewActivity({ ...newActivity, planned_start: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Término</Label>
+                    <Input
+                      type="date"
+                      value={newActivity.planned_end}
+                      onChange={(e) => setNewActivity({ ...newActivity, planned_end: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button onClick={addActivity} className="w-full">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Activities table */}
+                {activities.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8">#</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead>Início Prev.</TableHead>
+                        <TableHead>Término Prev.</TableHead>
+                        <TableHead>Início Real</TableHead>
+                        <TableHead>Término Real</TableHead>
+                        <TableHead className="w-16">Peso</TableHead>
+                        <TableHead className="w-12"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {activities.map((activity) => (
+                        <TableRow key={activity.id}>
+                          <TableCell className="text-muted-foreground">{activity.sort_order}</TableCell>
+                          <TableCell>
+                            <Input
+                              value={activity.description}
+                              onChange={(e) => updateActivity(activity.id, 'description', e.target.value)}
+                              className="h-8"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={activity.planned_start}
+                              onChange={(e) => updateActivity(activity.id, 'planned_start', e.target.value)}
+                              className="h-8 w-32"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={activity.planned_end}
+                              onChange={(e) => updateActivity(activity.id, 'planned_end', e.target.value)}
+                              className="h-8 w-32"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={activity.actual_start || ''}
+                              onChange={(e) => updateActivity(activity.id, 'actual_start', e.target.value || null)}
+                              className="h-8 w-32"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={activity.actual_end || ''}
+                              onChange={(e) => updateActivity(activity.id, 'actual_end', e.target.value || null)}
+                              className="h-8 w-32"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="100"
+                              value={activity.weight}
+                              onChange={(e) => updateActivity(activity.id, 'weight', parseFloat(e.target.value))}
+                              className="h-8 w-16"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Remover atividade?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteActivity(activity.id)}>
+                                    Remover
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    Nenhuma atividade cadastrada. Adicione a primeira acima.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Pagamentos */}
+          <TabsContent value="pagamentos" className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className="p-4">
+                <p className="text-tiny text-muted-foreground">Valor Total</p>
+                <p className="text-h3 font-bold">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalPayments)}
+                </p>
+              </Card>
+              <Card className="p-4">
+                <p className="text-tiny text-muted-foreground">Pago</p>
+                <p className="text-h3 font-bold text-green-600">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(paidPayments)}
+                </p>
+              </Card>
+              <Card className="p-4">
+                <p className="text-tiny text-muted-foreground">A Receber</p>
+                <p className="text-h3 font-bold text-amber-600">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalPayments - paidPayments)}
+                </p>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Parcelas</CardTitle>
+                <CardDescription>
+                  {payments.length} parcelas cadastradas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Add new payment form */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6 p-4 bg-muted/50 rounded-lg">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs">Descrição</Label>
+                    <Input
+                      placeholder="Ex: Parcela de entrada"
+                      value={newPayment.description}
+                      onChange={(e) => setNewPayment({ ...newPayment, description: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Valor (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0,00"
+                      value={newPayment.amount}
+                      onChange={(e) => setNewPayment({ ...newPayment, amount: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Vencimento</Label>
+                    <Input
+                      type="date"
+                      value={newPayment.due_date}
+                      onChange={(e) => setNewPayment({ ...newPayment, due_date: e.target.value })}
+                    />
+                  </div>
+                  <div className="sm:col-span-4 flex justify-end">
+                    <Button onClick={addPayment}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adicionar Parcela
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Payments table */}
+                {payments.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-16">Parcela</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Vencimento</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-12"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payments.map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell className="font-medium">#{payment.installment_number}</TableCell>
+                          <TableCell>{payment.description}</TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payment.amount)}
+                          </TableCell>
+                          <TableCell>{format(new Date(payment.due_date), 'dd/MM/yyyy')}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant={payment.paid_at ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => togglePaymentPaid(payment)}
+                              className={payment.paid_at ? 'bg-green-600 hover:bg-green-700' : ''}
+                            >
+                              {payment.paid_at ? 'Pago' : 'Marcar pago'}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Remover parcela?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deletePayment(payment.id)}>
+                                    Remover
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    Nenhuma parcela cadastrada. Adicione a primeira acima.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Equipe */}
+          <TabsContent value="equipe" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Engenheiros Responsáveis</CardTitle>
+                <CardDescription>
+                  Equipe técnica atribuída ao projeto
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {engineers.length > 0 ? (
+                  <div className="space-y-3">
+                    {engineers.map((engineer) => (
+                      <div key={engineer.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{engineer.display_name || 'Sem nome'}</p>
+                            <p className="text-sm text-muted-foreground">{engineer.email}</p>
+                          </div>
+                        </div>
+                        {engineer.is_primary && (
+                          <Badge>Principal</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    Nenhum engenheiro atribuído
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {customer && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cliente</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{customer.customer_name}</p>
+                      <p className="text-sm text-muted-foreground">{customer.customer_email}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
