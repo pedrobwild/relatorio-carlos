@@ -625,24 +625,40 @@ const GanttChart = ({
                   const { status, progress, delayDays, hasActualStart, hasActualEnd } = computed;
                   const isSelected = selectedActivityId === activity?.id;
                   
-                  // Calcular estilos das barras usando dados do task (já mapeados corretamente)
+                  // === BARRA DE PREVISTO (sempre visível - roxo claro) ===
                   const plannedStyle = getBarStyle(task.plannedStart, task.plannedEnd);
                   
-                  // Barra real: usa start/end do task (já calculados conforme regras)
+                  // === BARRA REAL (verde para concluído, roxo para em andamento) ===
                   let actualBarStyle: ReturnType<typeof getBarStyle> | null = null;
-                  // Barra de "previsto restante" (hoje → término previsto) para EM ANDAMENTO
+                  // === BARRA DE ATRASO (vermelha - entre término previsto e término real) ===
+                  let delayBarStyle: ReturnType<typeof getBarStyle> | null = null;
+                  // === BARRA DE PREVISTO RESTANTE (tracejada - hoje → término previsto) ===
                   let remainingPlannedStyle: ReturnType<typeof getBarStyle> | null = null;
                   
+                  const plannedEndDate = parseLocalDate(task.plannedEnd);
+                  const plannedStartDate = parseLocalDate(task.plannedStart);
+                  
                   if (hasActualEnd) {
-                    // CONCLUÍDO: usar start/end do task (inicioReal → terminoReal)
-                    actualBarStyle = getBarStyle(task.start, task.end);
-                  } else if (hasActualStart) {
-                    // EM ANDAMENTO: usar start/end do task (inicioReal → hoje)
+                    // CONCLUÍDO: barra verde de inicioReal → terminoReal
                     actualBarStyle = getBarStyle(task.start, task.end);
                     
-                    // Previsto restante: hoje → término previsto (barra secundária tracejada)
-                    // Só mostrar se hoje < término previsto
-                    const plannedEndDate = parseLocalDate(task.plannedEnd);
+                    // Se terminou DEPOIS do previsto, mostrar barra vermelha no trecho de atraso
+                    const actualEndDate = parseLocalDate(task.end);
+                    if (actualEndDate > plannedEndDate) {
+                      // Barra vermelha: término previsto → término real
+                      delayBarStyle = getBarStyle(task.plannedEnd, task.end);
+                    }
+                  } else if (hasActualStart) {
+                    // EM ANDAMENTO: barra roxa de inicioReal → hoje
+                    actualBarStyle = getBarStyle(task.start, task.end);
+                    
+                    // Se está atrasado (hoje > término previsto), mostrar barra vermelha
+                    if (referenceDate > plannedEndDate) {
+                      const todayStr = format(referenceDate, 'yyyy-MM-dd');
+                      delayBarStyle = getBarStyle(task.plannedEnd, todayStr);
+                    }
+                    
+                    // Previsto restante: hoje → término previsto (só se ainda não passou do previsto)
                     if (referenceDate < plannedEndDate) {
                       const todayStr = format(referenceDate, 'yyyy-MM-dd');
                       remainingPlannedStyle = getBarStyle(todayStr, task.plannedEnd);
@@ -692,30 +708,29 @@ const GanttChart = ({
                         </Tooltip>
                       )}
                       
-                      {/* Planned bar - SEMPRE VISÍVEL (barra de fundo roxo claro) */}
+                      {/* BARRA PREVISTO - Sempre visível (roxo claro, linha superior) */}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div 
                             className={cn(
-                              "absolute top-3 h-5 rounded-sm transition-colors group border-2",
-                              "bg-primary/20 border-primary/40",
+                              "absolute top-2 h-3 rounded-sm transition-colors border",
+                              "bg-primary/25 border-primary/50",
                               editable && "cursor-move hover:bg-primary/35",
                               isDragging && dragState?.dragType === 'move' && "ring-2 ring-primary"
                             )}
                             style={plannedStyle}
                             onMouseDown={(e) => handleDragStart(e, index, 'move')}
                           >
-                            {/* Mostrar 0% apenas para atividades PENDENTES (sem barra real) */}
+                            {/* Mostrar label "Previsto" para atividades pendentes */}
                             {!hasActualStart && showProgressLabel && (
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[10px] font-semibold text-primary/70">
-                                  0%
+                                <span className="text-[9px] font-medium text-primary/70">
+                                  Previsto
                                 </span>
                               </div>
                             )}
                             {editable && (
                               <>
-                                {/* Resize handle - start */}
                                 <div 
                                   className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-primary/50 rounded-l-sm"
                                   onMouseDown={(e) => {
@@ -723,7 +738,6 @@ const GanttChart = ({
                                     handleDragStart(e, index, 'resize-start');
                                   }}
                                 />
-                                {/* Resize handle - end */}
                                 <div 
                                   className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-primary/50 rounded-r-sm"
                                   onMouseDown={(e) => {
@@ -731,10 +745,6 @@ const GanttChart = ({
                                     handleDragStart(e, index, 'resize-end');
                                   }}
                                 />
-                                {/* Drag indicator */}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-50">
-                                  <GripHorizontal className="h-2.5 w-2.5 text-primary" />
-                                </div>
                               </>
                             )}
                           </div>
@@ -745,12 +755,12 @@ const GanttChart = ({
                             <p className="text-xs flex items-center gap-1.5">
                               <span className="w-2 h-2 rounded-sm bg-primary/30 border border-primary/50" />
                               <span className="text-muted-foreground">Previsto:</span>
-                              <span>{format(parseLocalDate(task.plannedStart), 'dd/MM')} → {format(parseLocalDate(task.plannedEnd), 'dd/MM/yyyy')}</span>
-                              <span className="text-muted-foreground">({differenceInDays(parseLocalDate(task.plannedEnd), parseLocalDate(task.plannedStart)) + 1} dias)</span>
+                              <span>{format(plannedStartDate, 'dd/MM')} → {format(plannedEndDate, 'dd/MM/yyyy')}</span>
+                              <span className="text-muted-foreground">({differenceInDays(plannedEndDate, plannedStartDate) + 1} dias)</span>
                             </p>
                             {hasActualStart && (
                               <p className="text-xs flex items-center gap-1.5">
-                                <span className={cn("w-2 h-2 rounded-sm", statusColors[status])} />
+                                <span className={cn("w-2 h-2 rounded-sm", hasActualEnd ? "bg-success" : "bg-primary")} />
                                 <span className="text-muted-foreground">Real:</span>
                                 <span>
                                   {format(parseLocalDate(task.start), 'dd/MM')} → {hasActualEnd ? format(parseLocalDate(task.end), 'dd/MM/yyyy') : 'em andamento'}
@@ -762,19 +772,6 @@ const GanttChart = ({
                                 ⚠ {delayDays} {delayDays === 1 ? 'dia' : 'dias'} de atraso
                               </p>
                             )}
-                            {hasActualEnd && (() => {
-                              const plannedDuration = differenceInDays(parseLocalDate(task.plannedEnd), parseLocalDate(task.plannedStart)) + 1;
-                              const actualDuration = differenceInDays(parseLocalDate(task.end), parseLocalDate(task.start)) + 1;
-                              const diff = actualDuration - plannedDuration;
-                              if (diff !== 0) {
-                                return (
-                                  <p className={cn("text-xs font-medium", diff > 0 ? "text-amber-600" : "text-success")}>
-                                    {diff > 0 ? `+${diff}` : diff} dias vs previsto
-                                  </p>
-                                );
-                              }
-                              return null;
-                            })()}
                           </div>
                           <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between">
                             <span className={cn(
@@ -794,37 +791,67 @@ const GanttChart = ({
                         </TooltipContent>
                       </Tooltip>
 
-                       {/* Actual bar - sobrepõe a barra prevista (menor para manter o contorno do previsto visível) */}
+                      {/* BARRA REAL - Verde (concluído) ou Roxo (em andamento), abaixo da prevista */}
                       {actualBarStyle && (
-                        <div 
-                          className={cn(
-                             "absolute top-3.5 h-4 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
-                            statusColors[status]
-                          )}
-                          style={actualBarStyle}
-                        >
-                          {/* Progress percentage label inside bar */}
-                          {showProgressLabel && (
-                            <span className="text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm text-white">
-                              {progress}%
-                            </span>
-                          )}
-                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className={cn(
+                                "absolute top-6 h-4 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
+                                hasActualEnd ? "bg-success" : "bg-primary"
+                              )}
+                              style={actualBarStyle}
+                            >
+                              {showProgressLabel && (
+                                <span className="text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm text-white">
+                                  {progress}%
+                                </span>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            <p className="font-medium">{hasActualEnd ? 'Concluído' : 'Em andamento'}</p>
+                            <p className="text-muted-foreground">
+                              {format(parseLocalDate(task.start), 'dd/MM')} → {hasActualEnd ? format(parseLocalDate(task.end), 'dd/MM/yyyy') : 'hoje'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       
-                      {/* Remaining planned bar (dashed) - hoje → término previsto for in-progress activities */}
+                      {/* BARRA DE ATRASO - Vermelha (entre término previsto e término real/hoje) */}
+                      {delayBarStyle && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="absolute top-6 h-4 rounded-sm cursor-pointer bg-destructive"
+                              style={delayBarStyle}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            <p className="font-medium text-destructive">Atraso</p>
+                            <p className="text-muted-foreground">
+                              {format(plannedEndDate, 'dd/MM')} → {hasActualEnd ? format(parseLocalDate(task.end), 'dd/MM/yyyy') : 'hoje'}
+                            </p>
+                            <p className="text-destructive font-medium">
+                              +{delayDays} {delayDays === 1 ? 'dia' : 'dias'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      
+                      {/* BARRA PREVISTO RESTANTE - Tracejada (hoje → término previsto) */}
                       {remainingPlannedStyle && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div 
-                              className="absolute top-3.5 h-4 rounded-sm cursor-pointer border-2 border-dashed border-primary/60 bg-primary/10"
+                              className="absolute top-6 h-4 rounded-sm cursor-pointer border-2 border-dashed border-primary/60 bg-primary/10"
                               style={remainingPlannedStyle}
                             />
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">
+                          <TooltipContent side="bottom" className="text-xs">
                             <p className="font-medium">Previsto restante</p>
                             <p className="text-muted-foreground">
-                              Hoje → {format(parseLocalDate(task.plannedEnd), 'dd/MM/yyyy')}
+                              Hoje → {format(plannedEndDate, 'dd/MM/yyyy')}
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -885,6 +912,35 @@ const GanttChart = ({
                         </svg>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+              
+              {/* EIXO DE DATAS NA PARTE INFERIOR */}
+              <div className="h-8 flex border-t border-border bg-muted/20 relative">
+                {/* Data de início (extrema esquerda) */}
+                <div className="absolute left-0 top-0 h-full flex items-center pl-2">
+                  <span className="text-xs font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
+                    {format(startDate, 'dd/MM/yyyy')}
+                  </span>
+                </div>
+                
+                {/* Data de fim / entrega (extrema direita) */}
+                <div className="absolute right-0 top-0 h-full flex items-center pr-2">
+                  <span className="text-xs font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
+                    {format(endDate, 'dd/MM/yyyy')}
+                  </span>
+                </div>
+                
+                {/* Marcador de Hoje */}
+                {todayPercent >= 0 && todayPercent <= 100 && (
+                  <div 
+                    className="absolute top-0 h-full flex items-center"
+                    style={{ left: `${todayPercent}%`, transform: 'translateX(-50%)' }}
+                  >
+                    <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1 py-0.5 rounded border border-destructive/30">
+                      {format(referenceDate, 'dd/MM')}
+                    </span>
                   </div>
                 )}
               </div>
