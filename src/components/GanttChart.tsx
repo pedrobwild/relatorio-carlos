@@ -22,6 +22,8 @@ interface GanttChartProps {
   showBaseline?: boolean;
   showFullChart?: boolean;
   onShowFullChartChange?: (showFull: boolean) => void;
+  selectedActivityId?: string | null;
+  onActivitySelect?: (activityId: string | null) => void;
 }
 
 type ZoomLevel = 'week' | 'month' | 'quarter';
@@ -61,7 +63,9 @@ const GanttChart = ({
   editable = false, 
   showBaseline = true,
   showFullChart: controlledShowFull,
-  onShowFullChartChange
+  onShowFullChartChange,
+  selectedActivityId,
+  onActivitySelect
 }: GanttChartProps) => {
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('month');
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -505,10 +509,18 @@ const GanttChart = ({
             {/* Activity labels */}
             {activities.map((activity, index) => {
               const computed = computeActivityDisplay(activity);
+              const isSelected = selectedActivityId === activity.id;
               return (
                 <div 
                   key={activity.id || index}
-                  className="h-12 px-3 flex items-center border-b border-border hover:bg-muted/20 transition-colors"
+                  className={cn(
+                    "h-12 px-3 flex items-center border-b border-border transition-colors",
+                    onActivitySelect && "cursor-pointer",
+                    isSelected 
+                      ? "bg-primary/10 border-l-2 border-l-primary" 
+                      : "hover:bg-muted/20"
+                  )}
+                  onClick={() => onActivitySelect?.(isSelected ? null : activity.id || null)}
                 >
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -619,6 +631,7 @@ const GanttChart = ({
                 {activities.map((activity, index) => {
                   const computed = computeActivityDisplay(activity);
                   const { status, progress, delayDays, hasActualStart, hasActualEnd } = computed;
+                  const isSelected = selectedActivityId === activity.id;
                   
                   // Calcular estilos das barras
                   const plannedStyle = getBarStyle(activity.plannedStart, activity.plannedEnd);
@@ -644,7 +657,14 @@ const GanttChart = ({
                   return (
                     <div 
                       key={activity.id || index}
-                      className="h-12 relative border-b border-border hover:bg-muted/10 transition-colors overflow-hidden"
+                      className={cn(
+                        "h-12 relative border-b border-border transition-colors overflow-hidden",
+                        onActivitySelect && "cursor-pointer",
+                        isSelected 
+                          ? "bg-primary/10 ring-1 ring-inset ring-primary/30" 
+                          : "hover:bg-muted/10"
+                      )}
+                      onClick={() => onActivitySelect?.(isSelected ? null : activity.id || null)}
                     >
                       {/* Baseline bar (shown behind planned bar) */}
                       {baselineVisible && baselineStyle && (

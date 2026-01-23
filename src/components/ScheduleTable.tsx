@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { CheckCircle2, Clock, AlertTriangle, CalendarDays, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Activity } from "@/types/report";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +20,8 @@ import {
 interface ScheduleTableProps {
   activities: Activity[];
   reportDate?: string;
+  selectedActivityId?: string | null;
+  onActivitySelect?: (activityId: string | null) => void;
 }
 
 type Status = "completed" | "delayed" | "on-time" | "in-progress" | "pending";
@@ -163,7 +166,7 @@ const SortableHeader = ({ field, currentField, direction, onSort, children, clas
   );
 };
 
-const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
+const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivitySelect }: ScheduleTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
@@ -275,9 +278,16 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
           
           return (
             <div
-              key={index}
-              className="bg-card border rounded-lg p-2.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98] border-border"
+              key={activity.id || index}
+              className={cn(
+                "bg-card border rounded-lg p-2.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98]",
+                onActivitySelect && "cursor-pointer",
+                selectedActivityId === activity.id 
+                  ? "border-primary ring-2 ring-primary/20" 
+                  : "border-border"
+              )}
               style={{ animationDelay: `${index * 30}ms` }}
+              onClick={() => onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
             >
               {/* Top row: Number + Status */}
               <div className="flex items-center justify-between mb-1.5">
@@ -381,12 +391,17 @@ const ScheduleTable = ({ activities, reportDate }: ScheduleTableProps) => {
                 
                 return (
                   <TableRow
-                    key={index}
-                    className={`transition-colors border-b border-border/50 last:border-b-0 ${
-                      index % 2 === 0 
-                        ? "bg-card hover:bg-accent/30" 
-                        : "bg-secondary/20 hover:bg-accent/30"
-                    }`}
+                    key={activity.id || index}
+                    className={cn(
+                      "transition-colors border-b border-border/50 last:border-b-0",
+                      onActivitySelect && "cursor-pointer",
+                      selectedActivityId === activity.id 
+                        ? "bg-primary/10 hover:bg-primary/15 ring-1 ring-inset ring-primary/30" 
+                        : index % 2 === 0 
+                          ? "bg-card hover:bg-accent/30" 
+                          : "bg-secondary/20 hover:bg-accent/30"
+                    )}
+                    onClick={() => onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
                   >
                     <TableCell className="py-3.5 pl-4 pr-3">
                       <div className="flex items-center gap-2.5">

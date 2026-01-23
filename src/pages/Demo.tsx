@@ -47,6 +47,7 @@ export default function Demo() {
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
   const [showFullChart, setShowFullChart] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const allWeeklyReports = generateWeeklyReports(
@@ -194,7 +195,12 @@ export default function Demo() {
                       showFullChart={showFullChart}
                       onShowFullChartChange={setShowFullChart}
                     />
-                    <ScheduleTable activities={demoReportData.activities} reportDate={demoReportData.reportDate} />
+                    <ScheduleTable 
+                      activities={demoReportData.activities} 
+                      reportDate={demoReportData.reportDate}
+                      selectedActivityId={selectedActivityId}
+                      onActivitySelect={setSelectedActivityId}
+                    />
                   </TabsContent>
 
                   <TabsContent value="gantt" className="mt-0 focus-visible:outline-none">
@@ -204,6 +210,14 @@ export default function Demo() {
                       editable={false}
                       showFullChart={showFullChart}
                       onShowFullChartChange={setShowFullChart}
+                      selectedActivityId={selectedActivityId}
+                      onActivitySelect={setSelectedActivityId}
+                    />
+                    <ScheduleTable 
+                      activities={demoReportData.activities} 
+                      reportDate={demoReportData.reportDate}
+                      selectedActivityId={selectedActivityId}
+                      onActivitySelect={setSelectedActivityId}
                     />
                   </TabsContent>
 

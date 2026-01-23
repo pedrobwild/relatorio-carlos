@@ -55,6 +55,7 @@ const Index = () => {
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
   const [showFullChart, setShowFullChart] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
   // Convert database activities to report format
@@ -346,7 +347,12 @@ const Index = () => {
                       showFullChart={showFullChart}
                       onShowFullChartChange={setShowFullChart}
                     />
-                    <ScheduleTable activities={reportData.activities} reportDate={reportData.reportDate} />
+                    <ScheduleTable 
+                      activities={reportData.activities} 
+                      reportDate={reportData.reportDate}
+                      selectedActivityId={selectedActivityId}
+                      onActivitySelect={setSelectedActivityId}
+                    />
                   </TabsContent>
 
                   <TabsContent value="gantt" className="mt-0 focus-visible:outline-none">
@@ -357,6 +363,14 @@ const Index = () => {
                       onActivityDateChange={handleActivityDateChange}
                       showFullChart={showFullChart}
                       onShowFullChartChange={setShowFullChart}
+                      selectedActivityId={selectedActivityId}
+                      onActivitySelect={setSelectedActivityId}
+                    />
+                    <ScheduleTable 
+                      activities={reportData.activities} 
+                      reportDate={reportData.reportDate}
+                      selectedActivityId={selectedActivityId}
+                      onActivitySelect={setSelectedActivityId}
                     />
                   </TabsContent>
 
