@@ -202,9 +202,9 @@ const ReportHeader = ({
                 to={paths.pendencias}
                 className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors font-semibold text-sm ${
                   pendenciasStats.overdueCount > 0 
-                    ? 'bg-rose-500/15 text-rose-600 hover:bg-rose-500/25' 
+                    ? 'bg-destructive/15 text-destructive hover:bg-destructive/25' 
                     : pendenciasStats.urgentCount > 0
-                      ? 'bg-amber-500/15 text-amber-600 hover:bg-amber-500/25'
+                      ? 'bg-warning/15 text-warning hover:bg-warning/25'
                       : 'bg-secondary text-muted-foreground hover:bg-accent'
                 }`}
               >
@@ -212,9 +212,9 @@ const ReportHeader = ({
                 <span>Pendências</span>
                 <span className={`flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-white text-xs font-bold ${
                   pendenciasStats.overdueCount > 0 
-                    ? 'bg-rose-500' 
+                    ? 'bg-destructive' 
                     : pendenciasStats.urgentCount > 0
-                      ? 'bg-amber-500'
+                      ? 'bg-warning'
                       : 'bg-muted-foreground'
                 }`}>
                   {pendenciasStats.total}
@@ -224,8 +224,8 @@ const ReportHeader = ({
               {/* Status Badge */}
               <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
                 projectMetrics.isOnTrack 
-                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
-                  : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                  ? 'bg-success/15 text-success' 
+                  : 'bg-warning/15 text-warning'
               }`}>
                 {projectMetrics.isOnTrack ? (
                   <>
@@ -280,7 +280,7 @@ const ReportHeader = ({
               onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
               className={`bg-card rounded-lg p-3 border text-left transition-all ${
                 endDate === dateChangeInfo.originalDate 
-                  ? 'border-amber-500/50 hover:border-amber-500 cursor-pointer' 
+                  ? 'border-warning/50 hover:border-warning cursor-pointer' 
                   : 'border-border cursor-default'
               }`}
             >
@@ -288,7 +288,7 @@ const ReportHeader = ({
                 <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
                 <span className="truncate">Previsão</span>
                 {endDate === dateChangeInfo.originalDate && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] text-amber-600 bg-amber-500/15 px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 ml-auto">
+                  <span className="inline-flex items-center gap-0.5 text-[9px] text-warning bg-warning/15 px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 ml-auto">
                     <AlertCircle className="w-2.5 h-2.5" />
                     Alterado
                   </span>
@@ -309,12 +309,12 @@ const ReportHeader = ({
             {/* Remaining Working Days */}
             <div className={`rounded-lg p-3 border ${
               projectMetrics.remainingWorkingDays <= 7 
-                ? 'bg-amber-500/10 border-amber-500/30' 
+                ? 'bg-warning/10 border-warning/30' 
                 : 'bg-card border-border'
             }`}>
               <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 {projectMetrics.remainingWorkingDays <= 7 ? (
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
                 ) : (
                   <Clock className="w-3.5 h-3.5" />
                 )}
@@ -322,7 +322,7 @@ const ReportHeader = ({
               </div>
               <p className={`text-h3 ${
                 projectMetrics.remainingWorkingDays <= 7 
-                  ? 'text-amber-600 dark:text-amber-400' 
+                  ? 'text-warning' 
                   : ''
               }`}>
                 {projectMetrics.remainingWorkingDays} <span className="text-caption font-normal">dias úteis</span>
@@ -339,12 +339,12 @@ const ReportHeader = ({
               {/* Actual Progress */}
               <div className={`flex-1 rounded-lg p-3 border ${
                 projectMetrics.isOnTrack 
-                  ? 'bg-emerald-500/10 border-emerald-500/30' 
-                  : 'bg-amber-500/10 border-amber-500/30'
+                  ? 'bg-success/10 border-success/30' 
+                  : 'bg-warning/10 border-warning/30'
               }`}>
                 <div className="text-caption uppercase tracking-wide mb-1.5">Realizado</div>
                 <p className={`text-h3 ${
-                  projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+                  projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
                 }`}>{projectMetrics.actualProgress}%</p>
               </div>
             </div>
@@ -393,8 +393,8 @@ const ReportHeader = ({
                 <div 
                   className={`h-full rounded-full transition-all duration-500 ${
                     projectMetrics.isOnTrack 
-                      ? 'bg-emerald-500' 
-                      : 'bg-amber-500'
+                      ? 'bg-success' 
+                      : 'bg-warning'
                   }`}
                   style={{ width: `${projectMetrics.actualProgress}%` }}
                 />
@@ -415,10 +415,10 @@ const ReportHeader = ({
                     Previsto: {projectMetrics.plannedProgress}%
                   </span>
                   <span className={`flex items-center gap-1.5 font-semibold ${
-                    projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+                    projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
                   }`}>
                     <span className={`w-2 h-2 rounded-full ${
-                      projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
+                      projectMetrics.isOnTrack ? 'bg-success' : 'bg-warning'
                     }`}></span>
                     Realizado: {projectMetrics.actualProgress}%
                   </span>
@@ -433,7 +433,7 @@ const ReportHeader = ({
                 {/* Actual progress */}
                 <div 
                   className={`absolute top-0 h-full rounded-full transition-all duration-500 ${
-                    projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
+                    projectMetrics.isOnTrack ? 'bg-success' : 'bg-warning'
                   }`}
                   style={{ width: `${projectMetrics.actualProgress}%` }}
                 />
@@ -519,22 +519,22 @@ const ReportHeader = ({
           {/* Status */}
           <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
             projectMetrics.isOnTrack 
-              ? 'bg-emerald-500/15' 
-              : 'bg-amber-500/15'
+              ? 'bg-success/15' 
+              : 'bg-warning/15'
           }`}>
             {projectMetrics.isOnTrack ? (
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+              <TrendingUp className="w-3.5 h-3.5 text-success" />
             ) : (
-              <TrendingDown className="w-3.5 h-3.5 text-amber-600" />
+              <TrendingDown className="w-3.5 h-3.5 text-warning" />
             )}
             <span className={`text-xs font-semibold ${
-              projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+              projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
             }`}>
               {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
             </span>
             {projectMetrics.progressDiff !== 0 && (
               <span className={`text-[10px] font-bold ${
-                projectMetrics.isOnTrack ? 'text-emerald-600' : 'text-amber-600'
+                projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
               }`}>
                 {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
               </span>
@@ -546,9 +546,9 @@ const ReportHeader = ({
             to="/pendencias"
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-colors ${
               pendenciasStats.overdueCount > 0 
-                ? 'bg-rose-500/15 text-rose-600 hover:bg-rose-500/25' 
+                ? 'bg-destructive/15 text-destructive hover:bg-destructive/25' 
                 : pendenciasStats.urgentCount > 0
-                  ? 'bg-amber-500/15 text-amber-600 hover:bg-amber-500/25'
+                  ? 'bg-warning/15 text-warning hover:bg-warning/25'
                   : 'bg-secondary text-muted-foreground hover:bg-accent'
             }`}
           >
@@ -556,9 +556,9 @@ const ReportHeader = ({
             <span className="text-xs font-semibold">Pendências</span>
             <span className={`flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-white text-[10px] font-bold ${
               pendenciasStats.overdueCount > 0 
-                ? 'bg-rose-500' 
+                ? 'bg-destructive' 
                 : pendenciasStats.urgentCount > 0
-                  ? 'bg-amber-500'
+                  ? 'bg-warning'
                   : 'bg-muted-foreground'
             }`}>
               {pendenciasStats.total}
@@ -584,8 +584,8 @@ const ReportHeader = ({
             >
               <p className="text-tiny">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
               {endDate === dateChangeInfo.originalDate && (
-                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-amber-500/20">
-                  <AlertCircle className="w-3 h-3 text-amber-600" />
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-warning/20">
+                  <AlertCircle className="w-3 h-3 text-warning" />
                 </span>
               )}
             </button>
@@ -621,7 +621,7 @@ const ReportHeader = ({
               <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full ${
-                    projectMetrics.isOnTrack ? 'bg-emerald-500' : 'bg-amber-500'
+                    projectMetrics.isOnTrack ? 'bg-success' : 'bg-warning'
                   }`}
                   style={{ width: `${projectMetrics.actualProgress}%` }}
                 />
@@ -709,7 +709,7 @@ const ReportHeader = ({
       <AlertDialog open={showDateChangeAlert} onOpenChange={setShowDateChangeAlert}>
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+            <AlertDialogTitle className="flex items-center gap-2 text-warning">
               <AlertCircle className="w-5 h-5" />
               Prazo Final Alterado
             </AlertDialogTitle>
@@ -725,8 +725,8 @@ const ReportHeader = ({
                 </span>
                 .
               </p>
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
-                <p className="text-sm font-medium text-amber-700 dark:text-amber-400 mb-1">
+              <div className="bg-warning/10 border border-warning/30 rounded-lg p-3">
+                <p className="text-sm font-medium text-warning mb-1">
                   Motivo:
                 </p>
                 <p className="text-sm text-foreground">
