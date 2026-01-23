@@ -638,12 +638,23 @@ const GanttChart = ({
                   
                   // Barra real: depende do status
                   let actualBarStyle = null;
+                  // Barra de "previsto restante" (hoje → término previsto) para EM ANDAMENTO
+                  let remainingPlannedStyle = null;
+                  
                   if (hasActualEnd) {
                     // CONCLUÍDO: início real → término real
                     actualBarStyle = getBarStyle(activity.actualStart!, activity.actualEnd!);
                   } else if (hasActualStart) {
                     // EM ANDAMENTO: início real → hoje
-                    actualBarStyle = getBarStyle(activity.actualStart!, format(referenceDate, 'yyyy-MM-dd'));
+                    const todayStr = format(referenceDate, 'yyyy-MM-dd');
+                    actualBarStyle = getBarStyle(activity.actualStart!, todayStr);
+                    
+                    // Previsto restante: hoje → término previsto (barra secundária tracejada)
+                    // Só mostrar se hoje < término previsto
+                    const plannedEndDate = parseLocalDate(activity.plannedEnd);
+                    if (referenceDate < plannedEndDate) {
+                      remainingPlannedStyle = getBarStyle(todayStr, activity.plannedEnd);
+                    }
                   }
                   
                   const isDragging = dragState?.activityIndex === index;
@@ -807,6 +818,24 @@ const GanttChart = ({
                             </span>
                           )}
                         </div>
+                      )}
+                      
+                      {/* Remaining planned bar (dashed) - hoje → término previsto for in-progress activities */}
+                      {remainingPlannedStyle && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div 
+                              className="absolute top-3.5 h-4 rounded-sm cursor-pointer border-2 border-dashed border-primary/60 bg-primary/10"
+                              style={remainingPlannedStyle}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            <p className="font-medium">Previsto restante</p>
+                            <p className="text-muted-foreground">
+                              Hoje → {format(parseLocalDate(activity.plannedEnd), 'dd/MM/yyyy')}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   );
