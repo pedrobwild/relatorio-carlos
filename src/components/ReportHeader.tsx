@@ -89,10 +89,13 @@ const ReportHeader = ({
     const start = new Date(startDate + "T00:00:00");
     const end = new Date(effectiveEndDate + "T00:00:00");
     const report = new Date(reportDate + "T00:00:00");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const totalWorkingDays = calculateWorkingDays(start, end);
-    const elapsedWorkingDays = calculateWorkingDays(start, report);
-    const remainingWorkingDays = calculateWorkingDays(report, end);
+    const elapsedWorkingDays = calculateWorkingDays(start, today);
+    // Calculate remaining from today, ensuring it doesn't go negative
+    const remainingWorkingDays = today < end ? calculateWorkingDays(today, end) : 0;
 
     // Check if any activity has weight defined
     const hasWeights = activities.some(a => (a as any).weight !== undefined);
