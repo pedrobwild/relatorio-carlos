@@ -262,7 +262,7 @@ const GanttChart = ({
 
   // Status colors (semantic)
   const statusColors: Record<ActivityStatus, string> = {
-    completed: 'bg-green-500',
+    completed: 'bg-success',
     'in-progress': 'bg-primary',
     delayed: 'bg-destructive',
     pending: 'bg-primary/30',
@@ -791,11 +791,11 @@ const GanttChart = ({
                         </TooltipContent>
                       </Tooltip>
 
-                      {/* Actual bar - sobrepõe a barra prevista */}
+                       {/* Actual bar - sobrepõe a barra prevista (menor para manter o contorno do previsto visível) */}
                       {actualBarStyle && (
                         <div 
                           className={cn(
-                            "absolute top-3 h-5 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
+                             "absolute top-3.5 h-4 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
                             statusColors[status]
                           )}
                           style={actualBarStyle}
