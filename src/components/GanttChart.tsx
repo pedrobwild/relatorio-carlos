@@ -617,18 +617,29 @@ const GanttChart = ({
                         </Tooltip>
                       )}
                       
-                      {/* Planned bar - light purple with border */}
+                      {/* Planned bar - always visible with stronger styling */}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div 
                             className={cn(
-                              "absolute top-2 h-3 rounded-sm transition-colors group bg-primary/20 border border-primary/40",
-                              editable && "cursor-move hover:bg-primary/30",
+                              "absolute top-3 h-5 rounded-sm transition-colors group border-2",
+                              hasActual 
+                                ? "bg-primary/15 border-primary/30" 
+                                : "bg-primary/25 border-primary/50",
+                              editable && "cursor-move hover:bg-primary/35",
                               isDragging && dragState?.dragType === 'move' && "ring-2 ring-primary"
                             )}
                             style={plannedStyle}
                             onMouseDown={(e) => handleDragStart(e, index, 'move')}
                           >
+                            {/* Show progress label for activities without actual dates */}
+                            {!hasActual && showProgressLabel && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-[10px] font-semibold text-primary/70">
+                                  {activityProgress}%
+                                </span>
+                              </div>
+                            )}
                             {editable && (
                               <>
                                 {/* Resize handle - start */}
@@ -658,19 +669,19 @@ const GanttChart = ({
                         <TooltipContent>
                           <p className="font-medium">Previsto</p>
                           <p className="text-xs">
-                            {format(new Date(activity.plannedStart), 'dd/MM/yyyy')} - {format(new Date(activity.plannedEnd), 'dd/MM/yyyy')}
+                            {format(parseLocalDate(activity.plannedStart), 'dd/MM/yyyy')} - {format(parseLocalDate(activity.plannedEnd), 'dd/MM/yyyy')}
                           </p>
                           {editable && <p className="text-xs text-muted-foreground mt-1">Arraste para mover ou redimensionar</p>}
                         </TooltipContent>
                       </Tooltip>
 
-                      {/* Actual bar with progress indicator */}
-                      {actualStyle && (
+                      {/* Actual bar overlaid on planned bar */}
+                      {hasActual && actualStyle && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div 
                               className={cn(
-                                "absolute top-6 h-4 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
+                                "absolute top-3 h-5 rounded-sm cursor-pointer transition-colors flex items-center overflow-hidden",
                                 statusColors[status]
                               )}
                               style={actualStyle}
@@ -678,10 +689,7 @@ const GanttChart = ({
                               {/* Progress percentage label inside bar */}
                               {showProgressLabel && (
                                 <span className={cn(
-                                  "text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm",
-                                  status === 'completed' ? "text-white" : 
-                                  status === 'delayed' ? "text-white" : 
-                                  "text-primary-foreground"
+                                  "text-[10px] font-bold px-1.5 whitespace-nowrap drop-shadow-sm text-white"
                                 )}>
                                   {activityProgress}%
                                 </span>
@@ -691,7 +699,7 @@ const GanttChart = ({
                           <TooltipContent>
                             <p className="font-medium">Real</p>
                             <p className="text-xs">
-                              {format(new Date(activity.actualStart!), 'dd/MM/yyyy')} - {activity.actualEnd ? format(new Date(activity.actualEnd), 'dd/MM/yyyy') : 'Em andamento'}
+                              {format(parseLocalDate(activity.actualStart!), 'dd/MM/yyyy')} - {activity.actualEnd ? format(parseLocalDate(activity.actualEnd), 'dd/MM/yyyy') : 'Em andamento'}
                             </p>
                             <p className={cn(
                               "text-xs font-semibold mt-1",
@@ -703,18 +711,6 @@ const GanttChart = ({
                             </p>
                           </TooltipContent>
                         </Tooltip>
-                      )}
-
-                      {/* Progress label for pending activities (0%) */}
-                      {!hasActual && showProgressLabel && (
-                        <div 
-                          className="absolute top-6 h-4 flex items-center rounded-sm bg-muted/50 border border-muted-foreground/20"
-                          style={{ left: plannedStyle.left, width: plannedStyle.width }}
-                        >
-                          <span className="text-[10px] text-muted-foreground font-medium px-1.5">
-                            0%
-                          </span>
-                        </div>
                       )}
                     </div>
                   );
