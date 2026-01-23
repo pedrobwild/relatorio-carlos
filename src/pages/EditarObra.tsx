@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Calendar, DollarSign, Users, Save, Trash2, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, User, Calendar, DollarSign, Users, Save, Trash2, Plus, Loader2, UserPlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import bwildLogo from '@/assets/bwild-logo.png';
+import { useProjectMembers, ProjectRole } from '@/hooks/useProjectMembers';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,6 +86,13 @@ interface Engineer {
   email?: string;
 }
 
+interface AvailableEngineer {
+  user_id: string;
+  display_name: string | null;
+  email: string | null;
+  role: string;
+}
+
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -101,6 +109,12 @@ export default function EditarObra() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [engineers, setEngineers] = useState<Engineer[]>([]);
+  const [availableEngineers, setAvailableEngineers] = useState<AvailableEngineer[]>([]);
+  const [selectedEngineer, setSelectedEngineer] = useState<string>('');
+  const [addingEngineer, setAddingEngineer] = useState(false);
+  
+  // Project members hook
+  const { members, addMember, removeMember, updateRole, isAddingMember, isRemovingMember } = useProjectMembers(projectId);
   
   // New item forms
   const [newActivity, setNewActivity] = useState({ description: '', planned_start: '', planned_end: '', weight: '5' });
@@ -164,11 +178,80 @@ export default function EditarObra() {
         email: (e.profiles as any)?.email,
       })));
 
+      // Fetch available engineers (staff users not already in this project)
+      const { data: staffProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email, role')
+        .in('role', ['admin', 'manager', 'engineer']);
+      
+      const assignedUserIds = new Set((engineersData || []).map(e => e.engineer_user_id));
+      const memberUserIds = new Set(members.map(m => m.user_id));
+      
+      setAvailableEngineers(
+        (staffProfiles || []).filter(p => !assignedUserIds.has(p.user_id) && !memberUserIds.has(p.user_id))
+      );
+
     } catch (err: any) {
       console.error('Error fetching data:', err);
       toast({ title: 'Erro ao carregar dados', description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Refetch available engineers when members change
+  useEffect(() => {
+    if (projectId && !loading) {
+      fetchAvailableEngineers();
+    }
+  }, [members]);
+
+  const fetchAvailableEngineers = async () => {
+    try {
+      const { data: staffProfiles } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email, role')
+        .in('role', ['admin', 'manager', 'engineer']);
+      
+      const memberUserIds = new Set(members.map(m => m.user_id));
+      const engineerUserIds = new Set(engineers.map(e => e.engineer_user_id));
+      
+      setAvailableEngineers(
+        (staffProfiles || []).filter(p => !memberUserIds.has(p.user_id) && !engineerUserIds.has(p.user_id))
+      );
+    } catch (err) {
+      console.error('Error fetching available engineers:', err);
+    }
+  };
+
+  const handleAddMember = async (role: ProjectRole = 'engineer') => {
+    if (!selectedEngineer || !projectId) return;
+    
+    setAddingEngineer(true);
+    try {
+      await addMember({ projectId, userId: selectedEngineer, role });
+      setSelectedEngineer('');
+      await fetchAvailableEngineers();
+    } catch (err) {
+      console.error('Error adding member:', err);
+    } finally {
+      setAddingEngineer(false);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      await removeMember({ memberId });
+    } catch (err) {
+      console.error('Error removing member:', err);
+    }
+  };
+
+  const handleUpdateRole = async (memberId: string, newRole: ProjectRole) => {
+    try {
+      await updateRole({ memberId, role: newRole });
+    } catch (err) {
+      console.error('Error updating role:', err);
     }
   };
 
@@ -878,15 +961,142 @@ export default function EditarObra() {
 
           {/* Tab: Equipe */}
           <TabsContent value="equipe" className="space-y-6">
+            {/* Add Member Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Engenheiros Responsáveis</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Adicionar Membro
+                </CardTitle>
                 <CardDescription>
-                  Equipe técnica atribuída ao projeto
+                  Selecione um engenheiro disponível para adicionar à equipe do projeto
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {engineers.length > 0 ? (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <Select value={selectedEngineer} onValueChange={setSelectedEngineer}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um engenheiro..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableEngineers.length > 0 ? (
+                          availableEngineers.map((eng) => (
+                            <SelectItem key={eng.user_id} value={eng.user_id}>
+                              <div className="flex items-center gap-2">
+                                <span>{eng.display_name || eng.email || 'Sem nome'}</span>
+                                <span className="text-muted-foreground text-xs">({eng.role})</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="_empty" disabled>
+                            Nenhum engenheiro disponível
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    onClick={() => handleAddMember('engineer')} 
+                    disabled={!selectedEngineer || addingEngineer || isAddingMember}
+                  >
+                    {(addingEngineer || isAddingMember) ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    Adicionar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Project Members (from project_members table) */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Membros do Projeto</CardTitle>
+                <CardDescription>
+                  Equipe atribuída ao projeto com suas funções
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {members.length > 0 ? (
+                  <div className="space-y-3">
+                    {members.map((member) => (
+                      <div key={member.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{member.user_name || 'Sem nome'}</p>
+                            <p className="text-sm text-muted-foreground">{member.user_email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Select 
+                            value={member.role} 
+                            onValueChange={(value) => handleUpdateRole(member.id, value as ProjectRole)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="owner">Responsável</SelectItem>
+                              <SelectItem value="engineer">Engenheiro</SelectItem>
+                              <SelectItem value="viewer">Visualizador</SelectItem>
+                              <SelectItem value="customer">Cliente</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                disabled={isRemovingMember}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remover membro?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {member.user_name || member.user_email} será removido do projeto.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleRemoveMember(member.id)}>
+                                  Remover
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    Nenhum membro adicionado. Use o seletor acima para adicionar.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Legacy Engineers (from project_engineers table) */}
+            {engineers.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Engenheiros Legados</CardTitle>
+                  <CardDescription>
+                    Engenheiros atribuídos pelo sistema antigo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-3">
                     {engineers.map((engineer) => (
                       <div key={engineer.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -905,13 +1115,9 @@ export default function EditarObra() {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    Nenhum engenheiro atribuído
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {customer && (
               <Card>
