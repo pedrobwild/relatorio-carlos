@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Filter, Shield } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Filter, Shield, Presentation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -111,10 +111,16 @@ export default function GestaoObras() {
             </div>
             <div className="flex items-center gap-2">
               {isAdmin && (
-                <Button variant="outline" onClick={() => navigate('/admin')}>
-                  <Shield className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Admin</span>
-                </Button>
+                <>
+                  <Button variant="outline" onClick={() => navigate('/demo')}>
+                    <Presentation className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Demo</span>
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/admin')}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Admin</span>
+                  </Button>
+                </>
               )}
               <Button onClick={() => navigate('/gestao/nova-obra')}>
                 <Plus className="h-4 w-4 mr-2" />
