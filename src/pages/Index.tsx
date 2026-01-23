@@ -55,7 +55,8 @@ const Index = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
-  const [showFullChart, setShowFullChart] = useState(false);
+  // Mostrar tudo por padrão para não “cortar” etapas iniciais (ex.: Demolição e preparação)
+  const [showFullChart, setShowFullChart] = useState(true);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
