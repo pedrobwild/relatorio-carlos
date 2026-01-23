@@ -483,10 +483,16 @@ const GanttChart = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm">Gráfico de Gantt</h3>
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="font-semibold text-sm shrink-0">Gráfico de Gantt</h3>
+            {/* Period indicator */}
+            <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded hidden sm:inline-flex items-center gap-1">
+              <span className="capitalize">{format(startDate, 'MMM yyyy', { locale: ptBR })}</span>
+              <span>→</span>
+              <span className="capitalize">{format(endDate, 'MMM yyyy', { locale: ptBR })}</span>
+            </span>
             {editable && (
-              <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-0.5 rounded">
+              <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-0.5 rounded hidden md:inline">
                 Arraste para editar
               </span>
             )}
