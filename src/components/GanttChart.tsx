@@ -662,6 +662,26 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                     ? getBarStyle(activity.baselineStart!, activity.baselineEnd!)
                     : null;
 
+                  // Calculate progress percentage for this activity
+                  const calculateActivityProgress = (): number => {
+                    if (activity.actualEnd) return 100;
+                    if (!activity.actualStart) return 0;
+                    
+                    const plannedStartDate = new Date(activity.plannedStart + 'T00:00:00');
+                    const plannedEndDate = new Date(activity.plannedEnd + 'T00:00:00');
+                    const actualStartDate = new Date(activity.actualStart + 'T00:00:00');
+                    const currentDate = reportDate ? new Date(reportDate + 'T00:00:00') : new Date();
+                    
+                    const totalPlannedDays = differenceInDays(plannedEndDate, plannedStartDate) + 1;
+                    const elapsedDays = differenceInDays(currentDate, actualStartDate) + 1;
+                    
+                    const progress = Math.min(100, Math.max(0, (elapsedDays / totalPlannedDays) * 100));
+                    return Math.round(progress);
+                  };
+
+                  const activityProgress = calculateActivityProgress();
+                  const showProgressLabel = parseFloat(plannedStyle.width) > 3; // Only show if bar is wide enough
+
                   return (
                     <div 
                       key={index}
@@ -741,26 +761,58 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
                         </TooltipContent>
                       </Tooltip>
 
-                      {/* Actual bar */}
+                      {/* Actual bar with progress indicator */}
                       {actualStyle && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div 
                               className={cn(
-                                "absolute top-6 h-3 rounded-sm cursor-pointer transition-colors",
+                                "absolute top-6 h-3 rounded-sm cursor-pointer transition-colors flex items-center justify-end overflow-hidden",
                                 statusColors[status],
                                 status === 'in-progress' && "animate-pulse"
                               )}
                               style={actualStyle}
-                            />
+                            >
+                              {/* Progress percentage label */}
+                              {showProgressLabel && (
+                                <span className={cn(
+                                  "text-[9px] font-bold px-1 mr-0.5 whitespace-nowrap",
+                                  status === 'completed' ? "text-white" : 
+                                  status === 'delayed' ? "text-white" : 
+                                  "text-primary-foreground"
+                                )}>
+                                  {activityProgress}%
+                                </span>
+                              )}
+                            </div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="font-medium">Real</p>
                             <p className="text-xs">
                               {format(new Date(activity.actualStart!), 'dd/MM/yyyy')} - {activity.actualEnd ? format(new Date(activity.actualEnd), 'dd/MM/yyyy') : 'Em andamento'}
                             </p>
+                            <p className={cn(
+                              "text-xs font-semibold mt-1",
+                              activityProgress === 100 ? "text-green-600" :
+                              activityProgress >= 50 ? "text-primary" :
+                              "text-muted-foreground"
+                            )}>
+                              Progresso: {activityProgress}%
+                            </p>
                           </TooltipContent>
                         </Tooltip>
+                      )}
+
+                      {/* Progress label for pending activities */}
+                      {!hasActual && showProgressLabel && (
+                        <div 
+                          className="absolute top-6 h-3 flex items-center"
+                          style={{ left: plannedStyle.left }}
+                        >
+                          <span className="text-[9px] text-muted-foreground font-medium ml-1">
+                            0%
+                          </span>
+                        </div>
                       )}
                     </div>
                   );
