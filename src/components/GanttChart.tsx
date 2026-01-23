@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
-import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, addDays, eachDayOfInterval } from 'date-fns';
+import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity } from '@/types/report';
 import { cn } from '@/lib/utils';
@@ -7,6 +7,14 @@ import { ZoomIn, ZoomOut, GripHorizontal, Maximize2, Minimize2 } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import { 
+  computeEffectiveStatus, 
+  parseLocalDate, 
+  getTodayLocal,
+  getStatusColorClass,
+  getStatusLabel,
+  type ActivityStatus 
+} from '@/lib/activityStatus';
 
 interface GanttChartProps {
   activities: Activity[];
@@ -60,8 +68,13 @@ const GanttChart = ({
   // Interval for grid lines (matching S-Curve's 3-day interval)
   const GRID_INTERVAL_DAYS = 3;
 
+  // Reference date for status calculations
+  const referenceDate = useMemo(() => {
+    return reportDate ? parseLocalDate(reportDate) : getTodayLocal();
+  }, [reportDate]);
+
   const { startDate, endDate, totalDays, months, gridLines } = useMemo(() => {
-    const today = reportDate ? new Date(reportDate + 'T00:00:00') : new Date();
+    const today = referenceDate;
     
     if (activities.length === 0) {
       return {
@@ -74,10 +87,10 @@ const GanttChart = ({
     }
 
     const allDates = activities.flatMap(a => [
-      new Date(a.plannedStart + 'T00:00:00'),
-      new Date(a.plannedEnd + 'T00:00:00'),
-      ...(a.actualStart ? [new Date(a.actualStart + 'T00:00:00')] : []),
-      ...(a.actualEnd ? [new Date(a.actualEnd + 'T00:00:00')] : []),
+      parseLocalDate(a.plannedStart),
+      parseLocalDate(a.plannedEnd),
+      ...(a.actualStart ? [parseLocalDate(a.actualStart)] : []),
+      ...(a.actualEnd ? [parseLocalDate(a.actualEnd)] : []),
     ]);
 
     const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
@@ -128,15 +141,14 @@ const GanttChart = ({
       months,
       gridLines: gridLinesArray,
     };
-  }, [activities, reportDate, showFullChart]);
+  }, [activities, referenceDate, showFullChart]);
 
-  const today = reportDate ? new Date(reportDate + 'T00:00:00') : new Date();
-  const todayOffset = differenceInDays(today, startDate);
+  const todayOffset = differenceInDays(referenceDate, startDate);
   const todayPercent = (todayOffset / totalDays) * 100;
 
   const getBarStyle = (start: string, end: string) => {
-    const startD = new Date(start + 'T00:00:00');
-    const endD = new Date(end + 'T00:00:00');
+    const startD = parseLocalDate(start);
+    const endD = parseLocalDate(end);
     
     const leftDays = differenceInDays(startD, startDate);
     const widthDays = differenceInDays(endD, startD) + 1;
@@ -147,19 +159,20 @@ const GanttChart = ({
     return { left: `${left}%`, width: `${Math.max(width, 0.5)}%` };
   };
 
-  const getActivityStatus = (activity: Activity): 'completed' | 'in-progress' | 'delayed' | 'pending' => {
-    if (activity.actualEnd) return 'completed';
-    if (activity.actualStart) {
-      const plannedEnd = new Date(activity.plannedEnd + 'T00:00:00');
-      if (today > plannedEnd) return 'delayed';
-      return 'in-progress';
-    }
-    const plannedStart = new Date(activity.plannedStart + 'T00:00:00');
-    if (today > plannedStart) return 'delayed';
-    return 'pending';
+  // Use centralized status computation
+  const getActivityStatusAndProgress = (activity: Activity) => {
+    return computeEffectiveStatus(
+      {
+        plannedStart: activity.plannedStart,
+        plannedEnd: activity.plannedEnd,
+        actualStart: activity.actualStart || null,
+        actualEnd: activity.actualEnd || null,
+      },
+      referenceDate
+    );
   };
 
-  const statusColors = {
+  const statusColors: Record<ActivityStatus, string> = {
     completed: 'bg-green-500',
     'in-progress': 'bg-primary',
     delayed: 'bg-destructive',
@@ -444,7 +457,7 @@ const GanttChart = ({
             
             {/* Activity labels */}
             {activities.map((activity, index) => {
-              const status = getActivityStatus(activity);
+              const computed = getActivityStatusAndProgress(activity);
               return (
                 <div 
                   key={index}
@@ -468,7 +481,11 @@ const GanttChart = ({
                       <p className="font-medium">{activity.description}</p>
                       <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
                       <p className="text-xs text-muted-foreground">
-                        Status: {status === 'completed' ? 'Concluído' : status === 'in-progress' ? 'Em andamento' : status === 'delayed' ? 'Atrasado' : 'Previsto'}
+                        Status: {getStatusLabel(computed.status)}
+                        {computed.isDelayedAuto && computed.delayDays > 0 && ` (${computed.delayDays} dias)`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Progresso: {computed.progress}%
                       </p>
                       {activity.predecessorIds && activity.predecessorIds.length > 0 && (
                         <p className="text-xs text-muted-foreground">
@@ -558,31 +575,18 @@ const GanttChart = ({
                   const actualStyle = hasActual 
                     ? getBarStyle(activity.actualStart!, activity.actualEnd || reportDate || format(new Date(), 'yyyy-MM-dd'))
                     : null;
-                  const status = getActivityStatus(activity);
+                  
+                  // Use centralized status computation
+                  const computed = getActivityStatusAndProgress(activity);
+                  const status = computed.status;
+                  const activityProgress = computed.progress;
+                  
                   const isDragging = dragState?.activityIndex === index;
                   const hasBaseline = activity.baselineStart && activity.baselineEnd;
                   const baselineStyle = hasBaseline 
                     ? getBarStyle(activity.baselineStart!, activity.baselineEnd!)
                     : null;
 
-                  // Calculate progress percentage for this activity
-                  const calculateActivityProgress = (): number => {
-                    if (activity.actualEnd) return 100;
-                    if (!activity.actualStart) return 0;
-                    
-                    const plannedStartDate = new Date(activity.plannedStart + 'T00:00:00');
-                    const plannedEndDate = new Date(activity.plannedEnd + 'T00:00:00');
-                    const actualStartDate = new Date(activity.actualStart + 'T00:00:00');
-                    const currentDate = reportDate ? new Date(reportDate + 'T00:00:00') : new Date();
-                    
-                    const totalPlannedDays = differenceInDays(plannedEndDate, plannedStartDate) + 1;
-                    const elapsedDays = differenceInDays(currentDate, actualStartDate) + 1;
-                    
-                    const progress = Math.min(100, Math.max(0, (elapsedDays / totalPlannedDays) * 100));
-                    return Math.round(progress);
-                  };
-
-                  const activityProgress = calculateActivityProgress();
                   const showProgressLabel = parseFloat(plannedStyle.width) > 3; // Only show if bar is wide enough
 
                   return (
