@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
-import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, addDays } from 'date-fns';
+import { format, differenceInDays, eachMonthOfInterval, startOfMonth, endOfMonth, addDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity } from '@/types/report';
 import { cn } from '@/lib/utils';
@@ -34,14 +34,18 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
 
   const hasAnyBaseline = activities.some(a => a.baselineStart && a.baselineEnd);
 
-  const { startDate, endDate, totalDays, months } = useMemo(() => {
+  // Interval for grid lines (matching S-Curve's 3-day interval)
+  const GRID_INTERVAL_DAYS = 3;
+
+  const { startDate, endDate, totalDays, months, gridLines } = useMemo(() => {
     if (activities.length === 0) {
       const today = new Date();
       return {
         startDate: today,
         endDate: today,
         totalDays: 30,
-        months: [{ date: today, label: format(today, 'MMM yyyy', { locale: ptBR }), days: 30 }]
+        months: [{ date: today, label: format(today, 'MMM yyyy', { locale: ptBR }), days: 30 }],
+        gridLines: []
       };
     }
 
@@ -64,11 +68,23 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
       days: differenceInDays(endOfMonth(date), startOfMonth(date)) + 1,
     }));
 
+    const totalDaysValue = differenceInDays(end, start) + 1;
+
+    // Generate grid lines at regular intervals (every 3 days like S-Curve)
+    const gridLinesArray: { date: Date; offset: number }[] = [];
+    let currentDate = start;
+    while (currentDate <= end) {
+      const offset = differenceInDays(currentDate, start);
+      gridLinesArray.push({ date: currentDate, offset });
+      currentDate = addDays(currentDate, GRID_INTERVAL_DAYS);
+    }
+
     return {
       startDate: start,
       endDate: end,
-      totalDays: differenceInDays(end, start) + 1,
+      totalDays: totalDaysValue,
       months,
+      gridLines: gridLinesArray,
     };
   }, [activities]);
 
@@ -584,6 +600,26 @@ const GanttChart = ({ activities, reportDate, onActivityDateChange, editable = f
 
               {/* Activity bars */}
               <div className="relative">
+                {/* Grid lines at 3-day intervals (matching S-Curve) */}
+                {gridLines.map((line, idx) => {
+                  const percent = (line.offset / totalDays) * 100;
+                  const isWeekStart = line.date.getDay() === 1; // Monday
+                  const isMonthStart = line.date.getDate() <= 3;
+                  
+                  return (
+                    <div
+                      key={`grid-${idx}`}
+                      className={cn(
+                        "absolute top-0 bottom-0 pointer-events-none",
+                        isMonthStart ? "border-l border-border/60" : 
+                        isWeekStart ? "border-l border-border/30" : 
+                        "border-l border-border/15"
+                      )}
+                      style={{ left: `${percent}%` }}
+                    />
+                  );
+                })}
+
                 {/* Today marker */}
                 {todayPercent >= 0 && todayPercent <= 100 && (
                   <div 
