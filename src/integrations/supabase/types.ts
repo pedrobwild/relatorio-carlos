@@ -14,6 +14,208 @@ export type Database = {
   }
   public: {
     Tables: {
+      anexos: {
+        Row: {
+          created_at: string
+          entidade_id: string
+          entidade_tipo: Database["public"]["Enums"]["entidade_tipo"]
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          obra_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          entidade_id: string
+          entidade_tipo: Database["public"]["Enums"]["entidade_tipo"]
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          obra_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          entidade_id?: string
+          entidade_tipo?: Database["public"]["Enums"]["entidade_tipo"]
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          obra_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anexos_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atividades: {
+        Row: {
+          created_at: string
+          data_prevista_fim: string | null
+          data_prevista_inicio: string | null
+          data_real_fim: string | null
+          data_real_inicio: string | null
+          dependencias: string[] | null
+          descricao: string | null
+          etapa: string | null
+          id: string
+          obra_id: string
+          prioridade: Database["public"]["Enums"]["atividade_prioridade"]
+          responsavel_user_id: string | null
+          status: Database["public"]["Enums"]["atividade_status"]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_prevista_fim?: string | null
+          data_prevista_inicio?: string | null
+          data_real_fim?: string | null
+          data_real_inicio?: string | null
+          dependencias?: string[] | null
+          descricao?: string | null
+          etapa?: string | null
+          id?: string
+          obra_id: string
+          prioridade?: Database["public"]["Enums"]["atividade_prioridade"]
+          responsavel_user_id?: string | null
+          status?: Database["public"]["Enums"]["atividade_status"]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_prevista_fim?: string | null
+          data_prevista_inicio?: string | null
+          data_real_fim?: string | null
+          data_real_inicio?: string | null
+          dependencias?: string[] | null
+          descricao?: string | null
+          etapa?: string | null
+          id?: string
+          obra_id?: string
+          prioridade?: Database["public"]["Enums"]["atividade_prioridade"]
+          responsavel_user_id?: string | null
+          status?: Database["public"]["Enums"]["atividade_status"]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividades_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividades_responsavel_user_id_fkey"
+            columns: ["responsavel_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auditoria: {
+        Row: {
+          acao: Database["public"]["Enums"]["auditoria_acao"]
+          created_at: string
+          diff: Json | null
+          entidade: string
+          entidade_id: string
+          id: string
+          obra_id: string | null
+          por_user_id: string | null
+        }
+        Insert: {
+          acao: Database["public"]["Enums"]["auditoria_acao"]
+          created_at?: string
+          diff?: Json | null
+          entidade: string
+          entidade_id: string
+          id?: string
+          obra_id?: string | null
+          por_user_id?: string | null
+        }
+        Update: {
+          acao?: Database["public"]["Enums"]["auditoria_acao"]
+          created_at?: string
+          diff?: Json | null
+          entidade?: string
+          entidade_id?: string
+          id?: string
+          obra_id?: string | null
+          por_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auditoria_por_user_id_fkey"
+            columns: ["por_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cronogramas: {
+        Row: {
+          created_at: string
+          data_fim_prevista: string
+          data_inicio: string
+          id: string
+          obra_id: string
+          observacoes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_fim_prevista: string
+          data_inicio: string
+          id?: string
+          obra_id: string
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_fim_prevista?: string
+          data_inicio?: string
+          id?: string
+          obra_id?: string
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cronogramas_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       domain_events: {
         Row: {
           actor_user_id: string | null
@@ -456,6 +658,127 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marcos: {
+        Row: {
+          created_at: string
+          cronograma_id: string
+          data_prevista: string
+          data_real: string | null
+          id: string
+          nome: string
+          status: Database["public"]["Enums"]["marco_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cronograma_id: string
+          data_prevista: string
+          data_real?: string | null
+          id?: string
+          nome: string
+          status?: Database["public"]["Enums"]["marco_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cronograma_id?: string
+          data_prevista?: string
+          data_real?: string | null
+          id?: string
+          nome?: string
+          status?: Database["public"]["Enums"]["marco_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marcos_cronograma_id_fkey"
+            columns: ["cronograma_id"]
+            isOneToOne: false
+            referencedRelation: "cronogramas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      obras: {
+        Row: {
+          codigo_interno: string | null
+          created_at: string
+          id: string
+          nome_da_obra: string
+          status: Database["public"]["Enums"]["obra_status"]
+          updated_at: string
+        }
+        Insert: {
+          codigo_interno?: string | null
+          created_at?: string
+          id?: string
+          nome_da_obra: string
+          status?: Database["public"]["Enums"]["obra_status"]
+          updated_at?: string
+        }
+        Update: {
+          codigo_interno?: string | null
+          created_at?: string
+          id?: string
+          nome_da_obra?: string
+          status?: Database["public"]["Enums"]["obra_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      obras_studio_info: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          created_at: string
+          data_de_recebimento_das_chaves: string | null
+          endereco_completo_do_studio: string | null
+          nome_do_empreendimento: string | null
+          obra_id: string
+          tamanho_do_imovel_m2: number | null
+          tipo_de_locacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          data_de_recebimento_das_chaves?: string | null
+          endereco_completo_do_studio?: string | null
+          nome_do_empreendimento?: string | null
+          obra_id: string
+          tamanho_do_imovel_m2?: number | null
+          tipo_de_locacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          data_de_recebimento_das_chaves?: string | null
+          endereco_completo_do_studio?: string | null
+          nome_do_empreendimento?: string | null
+          obra_id?: string
+          tamanho_do_imovel_m2?: number | null
+          tipo_de_locacao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obras_studio_info_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: true
+            referencedRelation: "obras"
             referencedColumns: ["id"]
           },
         ]
@@ -1190,6 +1513,48 @@ export type Database = {
           },
         ]
       }
+      user_obra_access: {
+        Row: {
+          created_at: string
+          id: string
+          obra_id: string
+          permissoes_especificas: Json | null
+          role_override: Database["public"]["Enums"]["app_role"] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          obra_id: string
+          permissoes_especificas?: Json | null
+          role_override?: Database["public"]["Enums"]["app_role"] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          obra_id?: string
+          permissoes_especificas?: Json | null
+          role_override?: Database["public"]["Enums"]["app_role"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_obra_access_obra_id_fkey"
+            columns: ["obra_id"]
+            isOneToOne: false
+            referencedRelation: "obras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_obra_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1208,6 +1573,45 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      users_profile: {
+        Row: {
+          cargo: string | null
+          created_at: string
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          perfil: Database["public"]["Enums"]["app_role"]
+          status: Database["public"]["Enums"]["user_status"]
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string
+          email: string
+          empresa?: string | null
+          id: string
+          nome: string
+          perfil?: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["user_status"]
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          perfil?: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["user_status"]
+          telefone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1387,6 +1791,8 @@ export type Database = {
       }
     }
     Functions: {
+      can_edit_atividades: { Args: { p_obra_id: string }; Returns: boolean }
+      can_edit_cronograma: { Args: { p_obra_id: string }; Returns: boolean }
       can_manage_project: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
@@ -1406,6 +1812,7 @@ export type Database = {
         Args: { p_formalization_id: string }
         Returns: string
       }
+      get_effective_role: { Args: { p_obra_id: string }; Returns: string }
       get_formalization_complete: {
         Args: { p_formalization_id: string }
         Returns: {
@@ -1510,6 +1917,7 @@ export type Database = {
           user_role: string
         }[]
       }
+      has_obra_access: { Args: { p_obra_id: string }; Returns: boolean }
       has_project_access: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
@@ -1529,11 +1937,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_v2: { Args: never; Returns: boolean }
       is_project_member: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
+      is_read_only: { Args: { p_obra_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_user_active: { Args: never; Returns: boolean }
       log_domain_event: {
         Args: {
           _entity_id: string
@@ -1564,6 +1975,7 @@ export type Database = {
         }
         Returns: string
       }
+      my_profile_role: { Args: never; Returns: string }
       user_belongs_to_org: {
         Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
@@ -1576,7 +1988,22 @@ export type Database = {
       user_is_staff_or_above: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "engineer" | "admin" | "customer" | "manager"
+      app_role:
+        | "engineer"
+        | "admin"
+        | "customer"
+        | "manager"
+        | "suprimentos"
+        | "financeiro"
+        | "gestor"
+      atividade_prioridade: "baixa" | "media" | "alta"
+      atividade_status:
+        | "nao_iniciada"
+        | "em_andamento"
+        | "bloqueada"
+        | "concluida"
+      auditoria_acao: "create" | "update" | "delete"
+      entidade_tipo: "obra" | "atividade" | "marco" | "cronograma"
       evidence_link_kind:
         | "meeting_recording"
         | "drive_link"
@@ -1598,6 +2025,13 @@ export type Database = {
         | "exception_custody"
         | "scope_change"
         | "general"
+      marco_status: "pendente" | "em_andamento" | "concluido" | "atrasado"
+      obra_status:
+        | "planejamento"
+        | "em_andamento"
+        | "pausada"
+        | "finalizada"
+        | "cancelada"
       party_type: "customer" | "company"
       pending_item_status: "pending" | "completed" | "cancelled"
       pending_item_type:
@@ -1608,6 +2042,7 @@ export type Database = {
         | "invoice"
         | "extra_purchase"
       project_role: "owner" | "engineer" | "viewer" | "customer"
+      user_status: "ativo" | "inativo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1735,7 +2170,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["engineer", "admin", "customer", "manager"],
+      app_role: [
+        "engineer",
+        "admin",
+        "customer",
+        "manager",
+        "suprimentos",
+        "financeiro",
+        "gestor",
+      ],
+      atividade_prioridade: ["baixa", "media", "alta"],
+      atividade_status: [
+        "nao_iniciada",
+        "em_andamento",
+        "bloqueada",
+        "concluida",
+      ],
+      auditoria_acao: ["create", "update", "delete"],
+      entidade_tipo: ["obra", "atividade", "marco", "cronograma"],
       evidence_link_kind: [
         "meeting_recording",
         "drive_link",
@@ -1760,6 +2212,14 @@ export const Constants = {
         "scope_change",
         "general",
       ],
+      marco_status: ["pendente", "em_andamento", "concluido", "atrasado"],
+      obra_status: [
+        "planejamento",
+        "em_andamento",
+        "pausada",
+        "finalizada",
+        "cancelada",
+      ],
       party_type: ["customer", "company"],
       pending_item_status: ["pending", "completed", "cancelled"],
       pending_item_type: [
@@ -1771,6 +2231,7 @@ export const Constants = {
         "extra_purchase",
       ],
       project_role: ["owner", "engineer", "viewer", "customer"],
+      user_status: ["ativo", "inativo"],
     },
   },
 } as const
