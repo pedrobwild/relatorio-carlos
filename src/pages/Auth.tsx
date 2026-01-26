@@ -60,10 +60,16 @@ export default function Auth() {
   };
 
   useEffect(() => {
+    // Track if we've already handled initial session to prevent double redirects
+    let hasHandledInitialSession = false;
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (session?.user) {
+        // Only redirect on actual sign-in events, not token refresh
+        // TOKEN_REFRESHED happens when switching tabs and should NOT trigger redirect
+        if (event === 'SIGNED_IN' && session?.user && !hasHandledInitialSession) {
+          hasHandledInitialSession = true;
           // Defer the redirect to avoid Supabase deadlock
           setTimeout(() => {
             redirectBasedOnRole(session.user.id);
@@ -76,6 +82,7 @@ export default function Auth() {
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        hasHandledInitialSession = true;
         redirectBasedOnRole(session.user.id);
       }
       setCheckingSession(false);
