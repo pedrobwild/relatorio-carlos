@@ -1,108 +1,59 @@
-import { ArrowLeft, Check, Clock, Calendar, Download, FileX, ChevronRight } from "lucide-react";
+import { ArrowLeft, Check, Clock, Calendar, Download, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import bwildLogo from "@/assets/bwild-logo.png";
-import { addDays, format, differenceInDays } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
-
-interface PaymentInstallment {
-  id: number;
-  stage: string;
-  amount: number;
-  dueDate: Date;
-  status: "paid" | "pending" | "upcoming";
-  isForecast?: boolean;
-  urgency?: "overdue" | "urgent" | "approaching" | "normal";
-  paidDate?: Date;
-}
+import { useProject } from "@/contexts/ProjectContext";
+import { useProjectPayments, useMarkPaymentPaid, ProjectPayment } from "@/hooks/useProjectPayments";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Financeiro = () => {
-  // Contract and project dates
-  const contractSignatureDate = new Date(2025, 5, 17); // 17/06/2025
-  const constructionStartDate = new Date(2025, 6, 1); // 01/07/2025
-  const projectEndDate = new Date(2025, 8, 14); // 14/09/2025 (from schedule)
-  const reportDate = new Date(2025, 8, 8); // 08/09/2025 (current report date)
+  const { project, loading: projectLoading } = useProject();
+  const { data: payments = [], isLoading: paymentsLoading } = useProjectPayments(project?.id);
+  const { isAdmin, loading: roleLoading } = useUserRole();
+  const markPaidMutation = useMarkPaymentPaid();
+  const { paths } = useProjectNavigation();
 
-  // Calculate due dates (adding 2 business days approximation)
-  const addBusinessDays = (date: Date, days: number): Date => {
-    let result = new Date(date);
-    let added = 0;
-    while (added < days) {
-      result = addDays(result, 1);
-      const dayOfWeek = result.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        added++;
-      }
-    }
-    return result;
+  const today = new Date();
+
+  const getPaymentStatus = (payment: ProjectPayment): "paid" | "pending" | "upcoming" => {
+    if (payment.paid_at) return "paid";
+    const dueDate = new Date(payment.due_date);
+    if (dueDate <= today) return "pending";
+    return "upcoming";
   };
 
-  // Calculate urgency based on days until due
-  const getUrgency = (dueDate: Date, status: string): "overdue" | "urgent" | "approaching" | "normal" => {
-    if (status === "paid") return "normal";
-    const daysUntilDue = differenceInDays(dueDate, reportDate);
+  const getUrgency = (payment: ProjectPayment): "overdue" | "urgent" | "approaching" | "normal" => {
+    if (payment.paid_at) return "normal";
+    const dueDate = new Date(payment.due_date);
+    const daysUntilDue = differenceInDays(dueDate, today);
     if (daysUntilDue < 0) return "overdue";
     if (daysUntilDue <= 2) return "urgent";
     if (daysUntilDue <= 5) return "approaching";
     return "normal";
   };
 
-  const installmentsRaw: Omit<PaymentInstallment, "urgency">[] = [
-    {
-      id: 1,
-      stage: "Assinatura do Contrato",
-      amount: 11000,
-      dueDate: addBusinessDays(contractSignatureDate, 2),
-      status: "paid",
-      paidDate: new Date(2025, 5, 18),
-    },
-    {
-      id: 2,
-      stage: "Início da Obra",
-      amount: 29333.33,
-      dueDate: addBusinessDays(constructionStartDate, 2),
-      status: "paid",
-      paidDate: new Date(2025, 6, 2),
-    },
-    {
-      id: 3,
-      stage: "25 dias corridos após início da obra",
-      amount: 29333.33,
-      dueDate: addBusinessDays(addDays(constructionStartDate, 25), 2),
-      status: "paid",
-      paidDate: new Date(2025, 6, 28),
-    },
-    {
-      id: 4,
-      stage: "45 dias corridos após início da obra",
-      amount: 29333.34,
-      dueDate: addBusinessDays(addDays(constructionStartDate, 45), 2),
-      status: "pending",
-    },
-    {
-      id: 5,
-      stage: "Assinatura do Termo de Entrega",
-      amount: 11000,
-      dueDate: addBusinessDays(projectEndDate, 2),
-      status: "upcoming",
-      isForecast: true,
-    },
-  ];
+  const getDaysLabel = (payment: ProjectPayment) => {
+    if (payment.paid_at) return null;
+    const dueDate = new Date(payment.due_date);
+    const days = differenceInDays(dueDate, today);
+    if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-red-600" };
+    if (days === 0) return { text: "Vence hoje", color: "text-red-600" };
+    if (days === 1) return { text: "Vence amanhã", color: "text-amber-600" };
+    if (days <= 5) return { text: `Vence em ${days} dias`, color: "text-amber-600" };
+    return null;
+  };
 
-  const installments: PaymentInstallment[] = installmentsRaw.map((inst) => ({
-    ...inst,
-    urgency: getUrgency(inst.dueDate, inst.status),
-  }));
-
-  const totalValue = 110000;
-  const paidAmount = installments
-    .filter((i) => i.status === "paid")
-    .reduce((sum, i) => sum + i.amount, 0);
+  const totalValue = project?.contract_value || payments.reduce((sum, p) => sum + p.amount, 0);
+  const paidAmount = payments.filter(p => p.paid_at).reduce((sum, p) => sum + p.amount, 0);
   const remainingAmount = totalValue - paidAmount;
-  const paidCount = installments.filter((i) => i.status === "paid").length;
+  const paidCount = payments.filter(p => p.paid_at).length;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -111,29 +62,58 @@ const Financeiro = () => {
     }).format(value);
   };
 
-  const formatDate = (date: Date) => {
-    return format(date, "dd/MM/yyyy", { locale: ptBR });
+  const formatDate = (date: Date | string) => {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return format(d, "dd/MM/yyyy", { locale: ptBR });
   };
 
-  const formatShortDate = (date: Date) => {
-    return format(date, "dd/MM", { locale: ptBR });
+  const formatShortDate = (date: Date | string) => {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return format(d, "dd/MM", { locale: ptBR });
   };
 
-  const getDaysLabel = (installment: PaymentInstallment) => {
-    if (installment.status === "paid") return null;
-    const days = differenceInDays(installment.dueDate, reportDate);
-    if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-red-600" };
-    if (days === 0) return { text: "Vence hoje", color: "text-red-600" };
-    if (days === 1) return { text: "Vence amanhã", color: "text-amber-600" };
-    if (days <= 5) return { text: `Vence em ${days} dias`, color: "text-amber-600" };
-    return null;
+  const handleTogglePaid = (payment: ProjectPayment) => {
+    markPaidMutation.mutate({
+      paymentId: payment.id,
+      paid: !payment.paid_at,
+    });
   };
-  const { paths } = useProjectNavigation();
+
+  const isLoading = projectLoading || paymentsLoading || roleLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="sticky top-0 z-50 bg-background border-b border-border">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+        </div>
+        <div className="flex-1 max-w-5xl mx-auto w-full p-6">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-48" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Projeto não encontrado</p>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
       <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
-        {/* Header - Clean banking style */}
+        {/* Header */}
         <div className="sticky top-0 z-50 bg-background border-b border-border">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
             <Link to={paths.relatorio}>
@@ -151,238 +131,272 @@ const Financeiro = () => {
 
         {/* Content */}
         <div className="flex-1 max-w-5xl mx-auto w-full">
-          {/* Desktop: Two-column layout */}
-          <div className="hidden md:grid md:grid-cols-[1fr_1.5fr] md:divide-x md:divide-border">
-            {/* Left Column: Summary */}
-            <div className="p-6 sticky top-16 h-fit">
-              <p className="text-caption mb-1">Valor total do contrato</p>
-              <p className="text-3xl font-bold text-foreground tracking-tight mb-6">
-                {formatCurrency(totalValue)}
-              </p>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-600" />
-                    <span className="text-caption font-medium">Pago</span>
-                  </div>
-                  <p className="text-h3 text-emerald-700">{formatCurrency(paidAmount)}</p>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-caption font-medium">A pagar</span>
-                  </div>
-                  <p className="text-h3">{formatCurrency(remainingAmount)}</p>
-                </div>
-              </div>
-
-              {/* Progress */}
-              <div className="p-4 rounded-lg bg-card border border-border">
-                <div className="flex items-center justify-between text-caption mb-2">
-                  <span>{paidCount} de {installments.length} parcelas pagas</span>
-                  <span className="font-semibold">{((paidAmount / totalValue) * 100).toFixed(0)}%</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-foreground rounded-full transition-all duration-500"
-                    style={{ width: `${(paidAmount / totalValue) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              <p className="text-tiny text-center mt-4">
-                Última atualização: {formatDate(reportDate)}
-              </p>
+          {payments.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">Nenhum pagamento cadastrado para esta obra</p>
             </div>
+          ) : (
+            <>
+              {/* Desktop: Two-column layout */}
+              <div className="hidden md:grid md:grid-cols-[1fr_1.5fr] md:divide-x md:divide-border">
+                {/* Left Column: Summary */}
+                <div className="p-6 sticky top-16 h-fit">
+                  <p className="text-caption mb-1">Valor total do contrato</p>
+                  <p className="text-3xl font-bold text-foreground tracking-tight mb-6">
+                    {formatCurrency(totalValue)}
+                  </p>
 
-            {/* Right Column: Installments */}
-            <div className="p-6">
-              <h2 className="text-h2 mb-4">Histórico de Parcelas</h2>
-              <div className="space-y-2">
-                {installments.map((installment) => {
-                  const daysLabel = getDaysLabel(installment);
-                  
-                  return (
-                    <div 
-                      key={installment.id}
-                      className={`p-4 rounded-lg border transition-all hover:shadow-sm ${
-                        installment.status === "paid" 
-                          ? "bg-card border-border" 
-                          : daysLabel?.color.includes("red") 
-                            ? "bg-rose-500/5 border-rose-500/30" 
-                            : daysLabel?.color.includes("amber")
-                              ? "bg-amber-500/5 border-amber-500/30"
-                              : "bg-card border-border"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-body font-medium truncate">
-                              {installment.stage}
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-caption font-medium">Pago</span>
+                      </div>
+                      <p className="text-h3 text-emerald-700">{formatCurrency(paidAmount)}</p>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-caption font-medium">A pagar</span>
+                      </div>
+                      <p className="text-h3">{formatCurrency(remainingAmount)}</p>
+                    </div>
+                  </div>
+
+                  {/* Progress */}
+                  <div className="p-4 rounded-lg bg-card border border-border">
+                    <div className="flex items-center justify-between text-caption mb-2">
+                      <span>{paidCount} de {payments.length} parcelas pagas</span>
+                      <span className="font-semibold">{totalValue > 0 ? ((paidAmount / totalValue) * 100).toFixed(0) : 0}%</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-foreground rounded-full transition-all duration-500"
+                        style={{ width: `${totalValue > 0 ? (paidAmount / totalValue) * 100 : 0}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-tiny text-center mt-4">
+                    Última atualização: {formatDate(today)}
+                  </p>
+                </div>
+
+                {/* Right Column: Installments */}
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-h2">Histórico de Parcelas</h2>
+                    {isAdmin && (
+                      <Badge variant="outline" className="text-xs">
+                        Admin: pode editar
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {payments.map((payment) => {
+                      const daysLabel = getDaysLabel(payment);
+                      const urgency = getUrgency(payment);
+                      
+                      return (
+                        <div 
+                          key={payment.id}
+                          className={`p-4 rounded-lg border transition-all hover:shadow-sm ${
+                            payment.paid_at 
+                              ? "bg-card border-border" 
+                              : urgency === "overdue" || urgency === "urgent"
+                                ? "bg-rose-500/5 border-rose-500/30" 
+                                : urgency === "approaching"
+                                  ? "bg-amber-500/5 border-amber-500/30"
+                                  : "bg-card border-border"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-body font-medium truncate">
+                                  {payment.description}
+                                </p>
+                              </div>
+                              
+                              <div className="flex items-center gap-3 text-caption">
+                                {payment.paid_at ? (
+                                  <span className="flex items-center gap-1.5">
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    Pago em {formatShortDate(payment.paid_at)}
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    Vencimento: {formatDate(payment.due_date)}
+                                  </span>
+                                )}
+                                {daysLabel && (
+                                  <span className={`font-medium ${daysLabel.color}`}>
+                                    {daysLabel.text}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0 flex flex-col items-end gap-2">
+                              <p className="text-h3 tabular-nums">
+                                {formatCurrency(payment.amount)}
+                              </p>
+                              
+                              {isAdmin ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    {payment.paid_at ? "Pago" : "Pendente"}
+                                  </span>
+                                  <Switch
+                                    checked={!!payment.paid_at}
+                                    onCheckedChange={() => handleTogglePaid(payment)}
+                                    disabled={markPaidMutation.isPending}
+                                  />
+                                </div>
+                              ) : payment.paid_at ? (
+                                <Badge variant="secondary" className="text-tiny">Quitado</Badge>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-3 text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30 min-h-auto"
+                                >
+                                  <Download className="w-3.5 h-3.5 mr-1.5" />
+                                  Boleto
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Layout */}
+              <div className="md:hidden">
+                {/* Summary Section */}
+                <div className="px-4 py-6 border-b border-border">
+                  <p className="text-caption mb-1">Valor total do contrato</p>
+                  <p className="text-2xl font-bold text-foreground tracking-tight mb-6">
+                    {formatCurrency(totalValue)}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-caption mb-1">Pago</p>
+                      <p className="text-h2">{formatCurrency(paidAmount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-caption mb-1">A pagar</p>
+                      <p className="text-h2">{formatCurrency(remainingAmount)}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between text-caption mb-2">
+                      <span>{paidCount} de {payments.length} parcelas pagas</span>
+                      <span>{totalValue > 0 ? ((paidAmount / totalValue) * 100).toFixed(0) : 0}%</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-foreground rounded-full transition-all duration-500"
+                        style={{ width: `${totalValue > 0 ? (paidAmount / totalValue) * 100 : 0}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {isAdmin && (
+                    <div className="mt-4">
+                      <Badge variant="outline" className="text-xs">
+                        Admin: pode editar pagamentos
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                {/* Installments List */}
+                <div className="divide-y divide-border">
+                  {payments.map((payment) => {
+                    const daysLabel = getDaysLabel(payment);
+                    
+                    return (
+                      <div 
+                        key={payment.id}
+                        className="px-4 py-4 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-body font-medium truncate mb-1">
+                              {payment.description}
                             </p>
-                            {installment.isForecast && (
-                              <span className="shrink-0 text-tiny bg-muted px-1.5 py-0.5 rounded">
-                                previsão
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-3 text-caption">
-                            {installment.status === "paid" ? (
-                              <span className="flex items-center gap-1.5">
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                Pago em {formatShortDate(installment.paidDate!)}
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                Vencimento: {formatDate(installment.dueDate)}
-                              </span>
-                            )}
+                            
+                            <div className="flex items-center gap-2 text-caption">
+                              {payment.paid_at ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-foreground" />
+                                  <span>Pago em {formatShortDate(payment.paid_at)}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>Vencimento: {formatDate(payment.due_date)}</span>
+                                </>
+                              )}
+                            </div>
+
                             {daysLabel && (
-                              <span className={`font-medium ${daysLabel.color}`}>
+                              <p className={`text-caption mt-1 font-medium ${daysLabel.color}`}>
                                 {daysLabel.text}
-                              </span>
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <p className="text-h3 tabular-nums">
+                              {formatCurrency(payment.amount)}
+                            </p>
+                            
+                            {isAdmin ? (
+                              <div className="flex items-center gap-2 mt-2 justify-end">
+                                <span className="text-xs text-muted-foreground">
+                                  {payment.paid_at ? "Pago" : "Pend."}
+                                </span>
+                                <Switch
+                                  checked={!!payment.paid_at}
+                                  onCheckedChange={() => handleTogglePaid(payment)}
+                                  disabled={markPaidMutation.isPending}
+                                />
+                              </div>
+                            ) : payment.paid_at ? (
+                              <span className="text-caption">Quitado</span>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 mt-1 text-xs text-primary hover:text-primary hover:bg-primary/10 min-h-auto"
+                              >
+                                <Download className="w-3.5 h-3.5 mr-1" />
+                                Boleto
+                              </Button>
                             )}
                           </div>
                         </div>
-
-                        <div className="text-right shrink-0">
-                          <p className="text-h3 tabular-nums mb-1">
-                            {formatCurrency(installment.amount)}
-                          </p>
-                          
-                          {installment.status === "paid" ? (
-                            <Badge variant="secondary" className="text-tiny">Quitado</Badge>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-3 text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30 min-h-auto"
-                            >
-                              <Download className="w-3.5 h-3.5 mr-1.5" />
-                              Boleto
-                            </Button>
-                          )}
-                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Layout - Unchanged */}
-          <div className="md:hidden">
-            {/* Summary Section */}
-            <div className="px-4 py-6 border-b border-border">
-              <p className="text-caption mb-1">Valor total do contrato</p>
-              <p className="text-2xl font-bold text-foreground tracking-tight mb-6">
-                {formatCurrency(totalValue)}
-              </p>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-caption mb-1">Pago</p>
-                  <p className="text-h2">{formatCurrency(paidAmount)}</p>
+                    );
+                  })}
                 </div>
-                <div>
-                  <p className="text-caption mb-1">A pagar</p>
-                  <p className="text-h2">{formatCurrency(remainingAmount)}</p>
+
+                <div className="px-4 py-4 text-center">
+                  <p className="text-caption">
+                    Última atualização: {formatDate(today)}
+                  </p>
                 </div>
               </div>
-
-              <div className="mt-6">
-                <div className="flex items-center justify-between text-caption mb-2">
-                  <span>{paidCount} de {installments.length} parcelas pagas</span>
-                  <span>{((paidAmount / totalValue) * 100).toFixed(0)}%</span>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-foreground rounded-full transition-all duration-500"
-                    style={{ width: `${(paidAmount / totalValue) * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Installments List */}
-            <div className="divide-y divide-border">
-              {installments.map((installment) => {
-                const daysLabel = getDaysLabel(installment);
-                
-                return (
-                  <div 
-                    key={installment.id}
-                    className="px-4 py-4 hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-body font-medium truncate">
-                            {installment.stage}
-                          </p>
-                          {installment.isForecast && (
-                            <span className="shrink-0 text-tiny bg-muted px-1.5 py-0.5 rounded">
-                              previsão
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-caption">
-                          {installment.status === "paid" ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-foreground" />
-                              <span>Pago em {formatShortDate(installment.paidDate!)}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>Vencimento: {formatDate(installment.dueDate)}</span>
-                            </>
-                          )}
-                        </div>
-
-                        {daysLabel && (
-                          <p className={`text-caption mt-1 font-medium ${daysLabel.color}`}>
-                            {daysLabel.text}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        <p className="text-h3 tabular-nums">
-                          {formatCurrency(installment.amount)}
-                        </p>
-                        
-                        {installment.status === "paid" ? (
-                          <span className="text-caption">Quitado</span>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 mt-1 text-xs text-primary hover:text-primary hover:bg-primary/10 min-h-auto"
-                          >
-                            <Download className="w-3.5 h-3.5 mr-1" />
-                            Boleto
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="px-4 py-4 text-center">
-              <p className="text-caption">
-                Última atualização: {formatDate(reportDate)}
-              </p>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </TooltipProvider>
