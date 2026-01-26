@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { WeeklyReportData, LookaheadTask, RiskIssue, ClientDecision, Incident, GalleryPhoto } from "@/types/weeklyReport";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Save, FileText, AlertTriangle, Calendar, Camera, MessageSquare, Video, Image, X } from "lucide-react";
+import { Plus, Trash2, Save, FileText, AlertTriangle, Calendar, Camera, MessageSquare, Video, Image, X, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
@@ -17,11 +20,21 @@ interface WeeklyReportEditorProps {
   isSaving?: boolean;
 }
 
-const WeeklyReportEditor = ({ data, onSave, onCancel, isSaving }: WeeklyReportEditorProps) => {
+const WeeklyReportEditor = ({ data, onSave, onCancel, isSaving: externalIsSaving }: WeeklyReportEditorProps) => {
   const [formData, setFormData] = useState<WeeklyReportData>(data);
 
+  // Auto-save hook - saves automatically after 3 seconds of inactivity
+  const { isSaving: autoSaving, lastSaved, saveNow } = useAutoSave({
+    data: formData,
+    onSave,
+    debounceMs: 3000,
+    enabled: true,
+  });
+
+  const isSaving = externalIsSaving || autoSaving;
+
   const handleSave = () => {
-    onSave(formData);
+    saveNow();
     toast.success("Relatório salvo com sucesso!");
   };
 
@@ -215,9 +228,21 @@ const WeeklyReportEditor = ({ data, onSave, onCancel, isSaving }: WeeklyReportEd
             <FileText className="w-6 h-6" />
             <div>
               <h2 className="text-lg font-bold">Editar Relatório - Semana {formData.weekNumber}</h2>
-              <p className="text-sm text-white/80">
-                Período: {formData.periodStart} a {formData.periodEnd}
-              </p>
+              <div className="flex items-center gap-3 text-sm text-white/80">
+                <span>Período: {formData.periodStart} a {formData.periodEnd}</span>
+                {/* Auto-save status indicator */}
+                {isSaving ? (
+                  <span className="flex items-center gap-1.5 text-white/70">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Salvando...
+                  </span>
+                ) : lastSaved && (
+                  <span className="flex items-center gap-1.5 text-green-300">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Salvo às {format(lastSaved, "HH:mm", { locale: ptBR })}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
