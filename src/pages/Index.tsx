@@ -380,7 +380,8 @@ const Index = () => {
                                 (selectedWeeklyReport as ExtendedWeeklyReport).weekNumber,
                                 format((selectedWeeklyReport as ExtendedWeeklyReport).startDate, "yyyy-MM-dd"),
                                 format((selectedWeeklyReport as ExtendedWeeklyReport).endDate, "yyyy-MM-dd")
-                              )} 
+                              )}
+                              isStaff={isStaff}
                             />
                           </>
                         ) : (
