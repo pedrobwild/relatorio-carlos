@@ -62,25 +62,12 @@ export default function Auth() {
   useEffect(() => {
     // Track if we've already handled initial session to prevent double redirects
     let hasHandledInitialSession = false;
+    let isMounted = true;
 
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // Only redirect on actual sign-in events, not token refresh
-        // TOKEN_REFRESHED happens when switching tabs and should NOT trigger redirect
-        if (event === 'SIGNED_IN' && session?.user && !hasHandledInitialSession) {
-          hasHandledInitialSession = true;
-          // Defer the redirect to avoid Supabase deadlock
-          setTimeout(() => {
-            redirectBasedOnRole(session.user.id);
-          }, 0);
-        }
-        setCheckingSession(false);
-      }
-    );
-
-    // Then check for existing session
+    // Check for existing session first
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      
       if (session?.user) {
         hasHandledInitialSession = true;
         redirectBasedOnRole(session.user.id);
@@ -88,7 +75,35 @@ export default function Auth() {
       setCheckingSession(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Set up auth state listener - only for new sign-in events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!isMounted) return;
+        
+        // ONLY handle explicit SIGNED_IN events from user action
+        // Ignore: TOKEN_REFRESHED, INITIAL_SESSION, USER_UPDATED
+        // These events fire when switching tabs and should NOT cause any state changes
+        if (event === 'SIGNED_IN' && session?.user && !hasHandledInitialSession) {
+          hasHandledInitialSession = true;
+          // Defer the redirect to avoid Supabase deadlock
+          setTimeout(() => {
+            if (isMounted) {
+              redirectBasedOnRole(session.user.id);
+            }
+          }, 0);
+        }
+        
+        // Handle sign out
+        if (event === 'SIGNED_OUT') {
+          setCheckingSession(false);
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const getLoginEmail = (): string => {
