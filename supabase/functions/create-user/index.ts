@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { email, password, display_name, role } = await req.json()
+    const { email, password, display_name, role, cpf } = await req.json()
 
     if (!email || !password || !role) {
       return new Response(
@@ -63,8 +63,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate role
-    const validRoles = ['admin', 'engineer', 'customer']
+    // Validate role - include all valid app_role values
+    const validRoles = ['admin', 'engineer', 'customer', 'manager', 'suprimentos', 'financeiro', 'gestor']
     if (!validRoles.includes(role)) {
       return new Response(
         JSON.stringify({ error: 'Invalid role' }),
@@ -77,6 +77,20 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
+    // Check if user already exists
+    const { data: existingUsers } = await adminClient
+      .from('users_profile')
+      .select('id')
+      .eq('email', email)
+      .limit(1)
+    
+    if (existingUsers && existingUsers.length > 0) {
+      return new Response(
+        JSON.stringify({ error: 'Usuário já existe com este email' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Create the user
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
@@ -85,27 +99,57 @@ Deno.serve(async (req) => {
       user_metadata: {
         display_name: display_name || email.split('@')[0],
         role,
+        cpf: cpf || null,
       }
     })
 
     if (createError) {
       console.error('Error creating user:', createError)
+      
+      // Handle specific error cases
+      if (createError.message?.includes('already been registered')) {
+        return new Response(
+          JSON.stringify({ error: 'Email já cadastrado no sistema' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      
       return new Response(
         JSON.stringify({ error: createError.message }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    if (!newUser.user) {
+      return new Response(
+        JSON.stringify({ error: 'Falha ao criar usuário' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Update user_roles table with correct role (trigger creates with 'customer' by default)
-    if (role !== 'customer' && newUser.user) {
-      const { error: updateError } = await adminClient
+    if (role !== 'customer') {
+      const { error: updateRoleError } = await adminClient
         .from('user_roles')
         .update({ role })
         .eq('user_id', newUser.user.id)
 
-      if (updateError) {
-        console.error('Error updating role:', updateError)
+      if (updateRoleError) {
+        console.error('Error updating user_roles:', updateRoleError)
       }
+    }
+
+    // Update users_profile table with correct role (trigger creates with metadata role)
+    const { error: updateProfileError } = await adminClient
+      .from('users_profile')
+      .update({ 
+        perfil: role,
+        nome: display_name || email.split('@')[0],
+      })
+      .eq('id', newUser.user.id)
+
+    if (updateProfileError) {
+      console.error('Error updating users_profile:', updateProfileError)
     }
 
     return new Response(
