@@ -15,6 +15,8 @@ const ALLOWED_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/zip",
+  "application/x-zip-compressed",
 ];
 
 const MIME_TYPE_LABELS: Record<string, string> = {
@@ -28,6 +30,8 @@ const MIME_TYPE_LABELS: Record<string, string> = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "Word (DOCX)",
   "application/vnd.ms-excel": "Excel (XLS)",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "Excel (XLSX)",
+  "application/zip": "ZIP",
+  "application/x-zip-compressed": "ZIP",
 };
 
 export interface UploadResult {
@@ -80,7 +84,7 @@ export function validateFile(file: File): ValidationResult {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     return {
       valid: false,
-      error: `Tipo de arquivo não permitido: ${file.type}. Tipos aceitos: imagens, PDF, Word, Excel`,
+      error: `Tipo de arquivo não permitido: ${file.type}. Tipos aceitos: imagens, PDF, Word, Excel, ZIP`,
     };
   }
 

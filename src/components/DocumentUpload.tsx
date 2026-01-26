@@ -216,11 +216,11 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
                     type="file"
                     className="hidden"
                     onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip"
                   />
                 </label>
                 <p className="text-caption text-muted-foreground mt-2">
-                  PDF, Word, Excel ou imagens (máx. 50MB)
+                  PDF, Word, Excel, ZIP ou imagens (máx. 50MB)
                 </p>
               </div>
             )}
