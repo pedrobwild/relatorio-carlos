@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormalizacoes } from '@/hooks/useFormalizacoes';
-import { CreateTestFormalizacao } from '@/components/CreateTestFormalizacao';
+import { useUserRole } from '@/hooks/useUserRole';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { 
@@ -94,6 +94,7 @@ function FormalizacaoSkeleton() {
 export default function Formalizacoes() {
   const navigate = useNavigate();
   const { paths } = useProjectNavigation();
+  const { isAdmin } = useUserRole();
   const [activeTab, setActiveTab] = useState('pendentes');
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -137,16 +138,18 @@ export default function Formalizacoes() {
               <span className="text-muted-foreground/30 shrink-0">|</span>
               <h1 className="text-base font-semibold truncate">Formalizações</h1>
             </div>
-            <Button 
-              size="sm"
-              onClick={() => navigate(paths.formalizacoesNova)} 
-              aria-label="Criar nova formalização"
-              className="shrink-0 gap-1.5 shadow-sm hover:shadow-md transition-all"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Nova Formalização</span>
-              <span className="sm:hidden">Nova</span>
-            </Button>
+            {isAdmin && (
+              <Button 
+                size="sm"
+                onClick={() => navigate(paths.formalizacoesNova)} 
+                aria-label="Criar nova formalização"
+                className="shrink-0 gap-1.5 shadow-sm hover:shadow-md transition-all"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Nova Formalização</span>
+                <span className="sm:hidden">Nova</span>
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -237,9 +240,6 @@ export default function Formalizacoes() {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Test Data Creator */}
-            <CreateTestFormalizacao />
           </div>
 
           {/* Right Content */}
@@ -281,7 +281,7 @@ export default function Formalizacoes() {
                       ? 'Você está em dia com todas as formalizações.' 
                       : 'Crie uma nova formalização para começar.'}
                   </p>
-                  {activeTab !== 'pendentes' && (
+                  {activeTab !== 'pendentes' && isAdmin && (
                     <Button 
                       onClick={() => navigate(paths.formalizacoesNova)} 
                       className="mt-4"
@@ -439,9 +439,6 @@ export default function Formalizacoes() {
             </Select>
           </div>
 
-          {/* Test Data Creator - Mobile */}
-          <CreateTestFormalizacao />
-
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3 h-11">
@@ -489,7 +486,7 @@ export default function Formalizacoes() {
                         ? 'Você está em dia com todas as formalizações.' 
                         : 'Crie uma nova formalização para começar.'}
                     </p>
-                    {activeTab !== 'pendentes' && (
+                    {activeTab !== 'pendentes' && isAdmin && (
                       <Button 
                         onClick={() => navigate(paths.formalizacoesNova)} 
                         className="mt-4"
@@ -573,17 +570,19 @@ export default function Formalizacoes() {
         </div>
       </main>
 
-      {/* Floating Action Button (Mobile) */}
-      <div className="fixed bottom-6 right-6 lg:hidden">
-        <Button
-          size="lg"
-          onClick={() => navigate(paths.formalizacoesNova)}
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow p-0"
-          aria-label="Nova formalização"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </div>
+      {/* Floating Action Button (Mobile) - Admin only */}
+      {isAdmin && (
+        <div className="fixed bottom-6 right-6 lg:hidden">
+          <Button
+            size="lg"
+            onClick={() => navigate(paths.formalizacoesNova)}
+            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow p-0"
+            aria-label="Nova formalização"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
