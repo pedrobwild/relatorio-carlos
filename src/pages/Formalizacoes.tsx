@@ -139,7 +139,7 @@ export default function Formalizacoes() {
             </div>
             <Button 
               size="sm"
-              onClick={() => navigate('/formalizacoes/nova')} 
+              onClick={() => navigate(paths.formalizacoesNova)} 
               aria-label="Criar nova formalização"
               className="shrink-0 gap-1.5 shadow-sm hover:shadow-md transition-all"
             >
@@ -283,7 +283,7 @@ export default function Formalizacoes() {
                   </p>
                   {activeTab !== 'pendentes' && (
                     <Button 
-                      onClick={() => navigate('/formalizacoes/nova')} 
+                      onClick={() => navigate(paths.formalizacoesNova)} 
                       className="mt-4"
                       size="sm"
                     >
@@ -491,7 +491,7 @@ export default function Formalizacoes() {
                     </p>
                     {activeTab !== 'pendentes' && (
                       <Button 
-                        onClick={() => navigate('/formalizacoes/nova')} 
+                        onClick={() => navigate(paths.formalizacoesNova)} 
                         className="mt-4"
                         size="sm"
                       >
@@ -577,7 +577,7 @@ export default function Formalizacoes() {
       <div className="fixed bottom-6 right-6 lg:hidden">
         <Button
           size="lg"
-          onClick={() => navigate('/formalizacoes/nova')}
+          onClick={() => navigate(paths.formalizacoesNova)}
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow p-0"
           aria-label="Nova formalização"
         >
