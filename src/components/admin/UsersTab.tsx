@@ -242,21 +242,101 @@ function UserCard({
   );
 }
 
+type IdentifierType = 'email' | 'cpf';
+
+function formatCPF(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+function isValidCPF(cpf: string): boolean {
+  const digits = cpf.replace(/\D/g, '');
+  if (digits.length !== 11) return false;
+  if (/^(\d)\1+$/.test(digits)) return false;
+  
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(digits[i]) * (10 - i);
+  }
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10) remainder = 0;
+  if (remainder !== parseInt(digits[9])) return false;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(digits[i]) * (11 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10) remainder = 0;
+  if (remainder !== parseInt(digits[10])) return false;
+  
+  return true;
+}
+
+function cpfToEmail(cpf: string): string {
+  const digits = cpf.replace(/\D/g, '');
+  return `${digits}@cpf.bwild.com.br`;
+}
+
 function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [identifierType, setIdentifierType] = useState<IdentifierType>('email');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState<AppRole>('customer');
 
+  const handleIdentifierChange = (value: string) => {
+    if (identifierType === 'cpf') {
+      setIdentifier(formatCPF(value));
+    } else {
+      setIdentifier(value);
+    }
+  };
+
+  const getEmailFromIdentifier = (): string => {
+    if (identifierType === 'cpf') {
+      return cpfToEmail(identifier);
+    }
+    return identifier;
+  };
+
+  const validateIdentifier = (): boolean => {
+    if (identifierType === 'cpf') {
+      if (!isValidCPF(identifier)) {
+        toast({
+          title: 'CPF inválido',
+          description: 'Por favor, insira um CPF válido',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    } else {
+      if (!identifier || !identifier.includes('@')) {
+        toast({
+          title: 'Email inválido',
+          description: 'Por favor, insira um email válido',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!validateIdentifier()) return;
+
+    if (!password) {
       toast({
         title: 'Erro',
-        description: 'Email e senha são obrigatórios',
+        description: 'Senha é obrigatória',
         variant: 'destructive',
       });
       return;
@@ -270,6 +350,8 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
       });
       return;
     }
+
+    const email = getEmailFromIdentifier();
 
     setLoading(true);
     try {
@@ -286,8 +368,9 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
           body: JSON.stringify({
             email,
             password,
-            display_name: displayName || email.split('@')[0],
+            display_name: displayName || (identifierType === 'cpf' ? identifier : email.split('@')[0]),
             role,
+            cpf: identifierType === 'cpf' ? identifier.replace(/\D/g, '') : undefined,
           }),
         }
       );
@@ -300,14 +383,17 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
 
       toast({
         title: 'Usuário criado',
-        description: `${email} foi criado com sucesso`,
+        description: identifierType === 'cpf' 
+          ? `Usuário com CPF ${identifier} foi criado com sucesso`
+          : `${email} foi criado com sucesso`,
       });
 
       // Reset form
-      setEmail('');
+      setIdentifier('');
       setPassword('');
       setDisplayName('');
       setRole('customer');
+      setIdentifierType('email');
       setOpen(false);
       onUserCreated();
 
@@ -341,15 +427,40 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label>Tipo de Identificação *</Label>
+              <Select 
+                value={identifierType} 
+                onValueChange={(v) => {
+                  setIdentifierType(v as IdentifierType);
+                  setIdentifier('');
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="cpf">CPF</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="identifier">
+                {identifierType === 'email' ? 'Email' : 'CPF'} *
+              </Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="usuario@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="identifier"
+                type="text"
+                placeholder={identifierType === 'email' ? 'usuario@exemplo.com' : '000.000.000-00'}
+                value={identifier}
+                onChange={(e) => handleIdentifierChange(e.target.value)}
                 required
               />
+              {identifierType === 'cpf' && (
+                <p className="text-xs text-muted-foreground">
+                  O usuário fará login usando o CPF como identificador
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha *</Label>
