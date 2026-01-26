@@ -426,3 +426,53 @@ export function useAcknowledge() {
     },
   });
 }
+
+export function useDeleteFormalizacao() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Get formalization for domain event logging
+      const { data: formalization } = await supabase
+        .from('formalizations')
+        .select('customer_org_id, project_id, title')
+        .eq('id', id)
+        .single();
+
+      // Delete related records first (in order of dependencies)
+      await supabase.from('formalization_acknowledgements').delete().eq('formalization_id', id);
+      await supabase.from('formalization_events').delete().eq('formalization_id', id);
+      await supabase.from('formalization_evidence_links').delete().eq('formalization_id', id);
+      await supabase.from('formalization_attachments').delete().eq('formalization_id', id);
+      await supabase.from('formalization_versions').delete().eq('formalization_id', id);
+      await supabase.from('formalization_parties').delete().eq('formalization_id', id);
+
+      // Delete the formalization itself
+      const { error } = await supabase
+        .from('formalizations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Log domain event
+      if (formalization) {
+        await logDomainEvent({
+          orgId: formalization.customer_org_id,
+          projectId: formalization.project_id,
+          entityType: 'formalization',
+          entityId: id,
+          eventType: 'formalization.deleted',
+          payload: {
+            title: formalization.title,
+          },
+        });
+      }
+
+      return { id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['formalizacoes'] });
+    },
+  });
+}

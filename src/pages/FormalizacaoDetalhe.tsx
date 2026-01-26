@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink, GitBranch } from 'lucide-react';
+import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink, GitBranch, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFormalizacao, useAcknowledge, useSendForSignature } from '@/hooks/useFormalizacoes';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useFormalizacao, useAcknowledge, useSendForSignature, useDeleteFormalizacao } from '@/hooks/useFormalizacoes';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import bwildLogo from '@/assets/bwild-logo.png';
@@ -71,6 +73,7 @@ export default function FormalizacaoDetalhe() {
   const navigate = useNavigate();
   const { paths } = useProjectNavigation();
   const { toast } = useToast();
+  const { isAdmin } = useUserRole();
   const [activeTab, setActiveTab] = useState('conteudo');
   const [acknowledged, setAcknowledged] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
@@ -79,6 +82,7 @@ export default function FormalizacaoDetalhe() {
   const { data: formalizacao, isLoading, refetch } = useFormalizacao(id);
   const acknowledge = useAcknowledge();
   const sendForSignature = useSendForSignature();
+  const deleteFormalizacao = useDeleteFormalizacao();
 
   const isDemo = isSeedData(formalizacao);
 
@@ -280,6 +284,59 @@ export default function FormalizacaoDetalhe() {
                   {downloadingPdf ? 'Gerando...' : 'PDF'}
                 </span>
               </Button>
+              
+              {isAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="h-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      disabled={deleteFormalizacao.isPending}
+                    >
+                      {deleteFormalizacao.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir formalização</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir esta formalização? Esta ação é irreversível e removerá permanentemente o documento, assinaturas e todo o histórico associado.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={async () => {
+                          if (!id) return;
+                          try {
+                            await deleteFormalizacao.mutateAsync(id);
+                            toast({
+                              title: 'Formalização excluída',
+                              description: 'O documento foi removido permanentemente.',
+                            });
+                            navigate('/formalizacoes');
+                          } catch (error) {
+                            console.error('Error deleting formalization:', error);
+                            toast({
+                              title: 'Erro ao excluir',
+                              description: 'Não foi possível excluir a formalização. Tente novamente.',
+                              variant: 'destructive',
+                            });
+                          }
+                        }}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Excluir permanentemente
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           </div>
         </div>
