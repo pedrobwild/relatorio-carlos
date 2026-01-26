@@ -333,65 +333,69 @@ const ReportHeader = ({
             </div>
 
             {/* Start Date */}
-            <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
-                <Calendar className="w-3.5 h-3.5" />
-                Início
+            <div className="bg-card rounded-lg p-3 border border-border flex flex-col">
+              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Início</span>
               </div>
-              <p className="text-h3">{formatDateFull(startDate)}</p>
+              <p className="text-h3 mt-2">{formatDateFull(startDate)}</p>
             </div>
 
             {/* End Date */}
             <button 
               onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
-              className={`bg-card rounded-lg p-3 border text-left transition-all ${
+              className={`bg-card rounded-lg p-3 border text-left transition-all flex flex-col ${
                 endDate === dateChangeInfo.originalDate 
                   ? 'border-warning/50 hover:border-warning cursor-pointer' 
                   : 'border-border cursor-default'
               }`}
             >
-              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2 min-w-0">
+              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">Previsão</span>
+                <span>Previsão</span>
                 {endDate === dateChangeInfo.originalDate && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] text-warning bg-warning/15 px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0 ml-auto">
+                  <span className="inline-flex items-center gap-0.5 text-[9px] text-warning bg-warning/15 px-1.5 py-0.5 rounded-full font-semibold ml-auto">
                     <AlertCircle className="w-2.5 h-2.5" />
                     Alterado
                   </span>
                 )}
               </div>
-              <p className="text-h3">{formatDateFull(effectiveEndDate)}</p>
+              <p className="text-h3 mt-2">{formatDateFull(effectiveEndDate)}</p>
             </button>
 
             {/* Total Working Days */}
-            <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5" />
-                Duração Total
+            <div className="bg-card rounded-lg p-3 border border-border flex flex-col">
+              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Duração</span>
               </div>
-              <p className="text-h3">{projectMetrics.totalWorkingDays} <span className="text-caption font-normal">dias úteis</span></p>
+              <p className="text-h3 mt-2">
+                <span>{projectMetrics.totalWorkingDays}</span>
+                <span className="text-caption font-normal ml-1">dias úteis</span>
+              </p>
             </div>
 
             {/* Remaining Working Days */}
-            <div className={`rounded-lg p-3 border ${
+            <div className={`rounded-lg p-3 border flex flex-col ${
               projectMetrics.remainingWorkingDays <= 7 
                 ? 'bg-warning/10 border-warning/30' 
                 : 'bg-card border-border'
             }`}>
-              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
+              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
                 {projectMetrics.remainingWorkingDays <= 7 ? (
-                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning flex-shrink-0" />
                 ) : (
-                  <Clock className="w-3.5 h-3.5" />
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                 )}
-                Restante
+                <span>Restante</span>
               </div>
-              <p className={`text-h3 ${
+              <p className={`text-h3 mt-2 ${
                 projectMetrics.remainingWorkingDays <= 7 
                   ? 'text-warning' 
                   : ''
               }`}>
-                {projectMetrics.remainingWorkingDays} <span className="text-caption font-normal">dias úteis</span>
+                <span>{projectMetrics.remainingWorkingDays}</span>
+                <span className="text-caption font-normal ml-1">dias úteis</span>
               </p>
             </div>
 
