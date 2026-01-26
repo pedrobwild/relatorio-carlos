@@ -144,13 +144,18 @@ export const generateWeeklyReports = (
     if (variance > 5) status = 'ahead';
     else if (variance < -5) status = 'behind';
 
-    // Find the current activity for this week
-    const currentActivity = activities.find(activity => {
+    // Find the current activity for this week - prioritize activity that starts during the week
+    const overlappingActivities = activities.filter(activity => {
       const plannedStart = new Date(activity.plannedStart);
       const plannedEnd = new Date(activity.plannedEnd);
       return (isBefore(plannedStart, weekEndDate) || plannedStart.getTime() === weekEndDate.getTime()) &&
              (isAfter(plannedEnd, weekStart) || plannedEnd.getTime() === weekStart.getTime());
     });
+    
+    // Sort by planned start date to get the earliest activity that overlaps this week
+    const currentActivity = overlappingActivities.sort((a, b) => {
+      return new Date(a.plannedStart).getTime() - new Date(b.plannedStart).getTime();
+    })[0] || null;
     
     // Check availability for customers
     const { isAvailable, availableAt } = isReportAvailableForCustomer(weekEnd);
