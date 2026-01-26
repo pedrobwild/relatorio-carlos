@@ -172,7 +172,7 @@ export function FormalizacaoEvidence({
               type="file"
               className="hidden"
               onChange={handleFileSelect}
-              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip"
             />
             <Button
               variant="outline"
