@@ -1045,6 +1045,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          checksum: string | null
           created_at: string
           description: string | null
           document_type: string
@@ -1063,6 +1064,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          checksum?: string | null
           created_at?: string
           description?: string | null
           document_type: string
@@ -1081,6 +1083,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          checksum?: string | null
           created_at?: string
           description?: string | null
           document_type?: string
