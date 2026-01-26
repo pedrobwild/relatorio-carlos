@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Clock, Calendar, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Clock, Calendar, Download, Loader2, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,8 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectPayments, useMarkPaymentPaid, ProjectPayment } from "@/hooks/useProjectPayments";
 import { useUserRole } from "@/hooks/useUserRole";
+import { BoletoUploadButton } from "@/components/BoletoUploadButton";
+import { downloadBoleto } from "@/hooks/useBoletoUpload";
 
 const Financeiro = () => {
   const { project, loading: projectLoading } = useProject();
@@ -256,14 +258,36 @@ const Financeiro = () => {
                                 </div>
                               ) : payment.paid_at ? (
                                 <Badge variant="secondary" className="text-tiny">Quitado</Badge>
-                              ) : (
+                              ) : payment.boleto_path ? (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className="h-7 px-3 text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30 min-h-auto"
+                                  onClick={() => downloadBoleto(payment.boleto_path!)}
                                 >
                                   <Download className="w-3.5 h-3.5 mr-1.5" />
                                   Boleto
+                                </Button>
+                              ) : (
+                                <Badge variant="outline" className="text-tiny text-muted-foreground">Aguardando boleto</Badge>
+                              )}
+                              
+                              {isAdmin && !payment.paid_at && (
+                                <BoletoUploadButton
+                                  paymentId={payment.id}
+                                  projectId={project.id}
+                                  boletoPath={payment.boleto_path}
+                                />
+                              )}
+                              
+                              {isAdmin && payment.boleto_path && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground min-h-auto"
+                                  onClick={() => downloadBoleto(payment.boleto_path!)}
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
                                 </Button>
                               )}
                             </div>
@@ -372,15 +396,28 @@ const Financeiro = () => {
                               </div>
                             ) : payment.paid_at ? (
                               <span className="text-caption">Quitado</span>
-                            ) : (
+                            ) : payment.boleto_path ? (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className="h-7 px-2 mt-1 text-xs text-primary hover:text-primary hover:bg-primary/10 min-h-auto"
+                                onClick={() => downloadBoleto(payment.boleto_path!)}
                               >
                                 <Download className="w-3.5 h-3.5 mr-1" />
                                 Boleto
                               </Button>
+                            ) : (
+                              <span className="text-tiny text-muted-foreground">Aguardando boleto</span>
+                            )}
+                            
+                            {isAdmin && !payment.paid_at && (
+                              <div className="mt-1">
+                                <BoletoUploadButton
+                                  paymentId={payment.id}
+                                  projectId={project.id}
+                                  boletoPath={payment.boleto_path}
+                                />
+                              </div>
                             )}
                           </div>
                         </div>

@@ -17,3 +17,15 @@ verify_jwt = true
 
 [functions.document-version-upload]
 verify_jwt = true
+
+[functions.send-payment-reminder]
+verify_jwt = false
+
+[functions.create-user]
+verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.update-user]
+verify_jwt = true

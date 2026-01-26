@@ -12,6 +12,8 @@ export interface ProjectPayment {
   due_date: string;
   paid_at: string | null;
   payment_proof_path: string | null;
+  boleto_path: string | null;
+  notification_sent_at: string | null;
   created_at: string;
 }
 
