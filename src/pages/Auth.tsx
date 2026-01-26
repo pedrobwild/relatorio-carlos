@@ -6,13 +6,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User } from 'lucide-react';
+import { Loader2, Mail, Lock, User, CreditCard } from 'lucide-react';
 import bwildLogo from '@/assets/bwild-logo.png';
 
 type AppRole = 'engineer' | 'admin' | 'customer';
+type LoginIdentifierType = 'email' | 'cpf';
+
+function formatCPF(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+function cpfToEmail(cpf: string): string {
+  const digits = cpf.replace(/\D/g, '');
+  return `${digits}@cpf.bwild.com.br`;
+}
 
 export default function Auth() {
+  const [loginIdentifierType, setLoginIdentifierType] = useState<LoginIdentifierType>('email');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -67,7 +84,54 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const validateForm = () => {
+  const getLoginEmail = (): string => {
+    if (loginIdentifierType === 'cpf') {
+      return cpfToEmail(loginIdentifier);
+    }
+    return loginIdentifier;
+  };
+
+  const handleLoginIdentifierChange = (value: string) => {
+    if (loginIdentifierType === 'cpf') {
+      setLoginIdentifier(formatCPF(value));
+    } else {
+      setLoginIdentifier(value);
+    }
+  };
+
+  const validateLoginForm = () => {
+    if (loginIdentifierType === 'email') {
+      if (!loginIdentifier || !loginIdentifier.includes('@')) {
+        toast({
+          title: 'Email inválido',
+          description: 'Por favor, insira um email válido.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    } else {
+      const digits = loginIdentifier.replace(/\D/g, '');
+      if (digits.length !== 11) {
+        toast({
+          title: 'CPF inválido',
+          description: 'Por favor, insira um CPF válido com 11 dígitos.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+    if (password.length < 6) {
+      toast({
+        title: 'Senha muito curta',
+        description: 'A senha deve ter pelo menos 6 caracteres.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const validateSignupForm = () => {
     if (!email || !email.includes('@')) {
       toast({
         title: 'Email inválido',
@@ -89,12 +153,14 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateLoginForm()) return;
+
+    const loginEmail = getLoginEmail();
 
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: loginEmail,
         password,
       });
 
@@ -102,7 +168,9 @@ export default function Auth() {
         if (error.message.includes('Invalid login credentials')) {
           toast({
             title: 'Credenciais inválidas',
-            description: 'Email ou senha incorretos. Verifique e tente novamente.',
+            description: loginIdentifierType === 'cpf' 
+              ? 'CPF ou senha incorretos. Verifique e tente novamente.'
+              : 'Email ou senha incorretos. Verifique e tente novamente.',
             variant: 'destructive',
           });
         } else {
@@ -127,7 +195,7 @@ export default function Auth() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateSignupForm()) return;
 
     setLoading(true);
     try {
@@ -215,15 +283,39 @@ export default function Auth() {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label>Entrar com</Label>
+                  <Select 
+                    value={loginIdentifierType} 
+                    onValueChange={(v) => {
+                      setLoginIdentifierType(v as LoginIdentifierType);
+                      setLoginIdentifier('');
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-identifier">
+                    {loginIdentifierType === 'email' ? 'Email' : 'CPF'}
+                  </Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    {loginIdentifierType === 'email' ? (
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    )}
                     <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="login-identifier"
+                      type="text"
+                      placeholder={loginIdentifierType === 'email' ? 'seu@email.com' : '000.000.000-00'}
+                      value={loginIdentifier}
+                      onChange={(e) => handleLoginIdentifierChange(e.target.value)}
                       className="pl-10"
                       required
                     />
