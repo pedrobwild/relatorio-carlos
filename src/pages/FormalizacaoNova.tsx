@@ -13,6 +13,9 @@ import { ReviewStep } from '@/components/formalizacao/ReviewStep';
 import { useCreateFormalizacao, useAddParty, useSendForSignature } from '@/hooks/useFormalizacoes';
 import { useToast } from '@/hooks/use-toast';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import type { FormalizationType } from '@/types/formalization';
 
 type WizardStep = 'template' | 'form' | 'parties' | 'review';
@@ -41,8 +44,9 @@ const STEPS: { key: WizardStep; label: string; shortLabel: string; icon: React.R
 
 export default function FormalizacaoNova() {
   const navigate = useNavigate();
-  const { paths } = useProjectNavigation();
+  const { paths, projectId } = useProjectNavigation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<WizardStep>('template');
   const [formData, setFormData] = useState<FormData>({
     type: null,
@@ -51,6 +55,22 @@ export default function FormalizacaoNova() {
     body_md: '',
     data: {},
     parties: [],
+  });
+
+  // Fetch user profile to get customer_org_id
+  const { data: profile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('customer_org_id')
+        .eq('user_id', user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
   });
 
   const createFormalizacao = useCreateFormalizacao();
@@ -85,6 +105,15 @@ export default function FormalizacaoNova() {
   };
 
   const handleSubmit = async (sendNow: boolean) => {
+    if (!user?.id || !profile?.customer_org_id) {
+      toast({
+        title: 'Erro',
+        description: 'Usuário não autenticado ou perfil não encontrado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       // Create the formalization
       const result = await createFormalizacao.mutateAsync({
@@ -94,8 +123,9 @@ export default function FormalizacaoNova() {
         body_md: formData.body_md,
         data: formData.data as any,
         status: 'draft',
-        customer_org_id: '', // Will be set by RLS/trigger
-        created_by: '', // Will be set by RLS/trigger
+        customer_org_id: profile.customer_org_id,
+        created_by: user.id,
+        project_id: projectId || null,
       });
 
       // Add parties
