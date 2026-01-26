@@ -1201,33 +1201,39 @@ export type Database = {
       project_payments: {
         Row: {
           amount: number
+          boleto_path: string | null
           created_at: string
           description: string
           due_date: string
           id: string
           installment_number: number
+          notification_sent_at: string | null
           paid_at: string | null
           payment_proof_path: string | null
           project_id: string
         }
         Insert: {
           amount: number
+          boleto_path?: string | null
           created_at?: string
           description: string
           due_date: string
           id?: string
           installment_number: number
+          notification_sent_at?: string | null
           paid_at?: string | null
           payment_proof_path?: string | null
           project_id: string
         }
         Update: {
           amount?: number
+          boleto_path?: string | null
           created_at?: string
           description?: string
           due_date?: string
           id?: string
           installment_number?: number
+          notification_sent_at?: string | null
           paid_at?: string | null
           payment_proof_path?: string | null
           project_id?: string
