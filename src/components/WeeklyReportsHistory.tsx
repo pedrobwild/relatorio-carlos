@@ -1,7 +1,8 @@
-import { format, addWeeks, startOfWeek, endOfWeek, isBefore, isAfter } from "date-fns";
+import { format, addWeeks, startOfWeek, endOfWeek, isBefore, isAfter, addDays, setHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toZonedTime } from "date-fns-tz";
 import { Activity, WeeklyReport } from "@/types/report";
-import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, CheckCircle2, Clock, AlertTriangle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip, BarChart, Bar, Cell } from "recharts";
 
@@ -10,7 +11,12 @@ interface WeeklyReportsHistoryProps {
   reportDate: string;
   activities: Activity[];
   onReportClick?: (report: WeeklyReport, index: number) => void;
+  isStaff?: boolean; // Staff can see all reports immediately
 }
+
+const BRASILIA_TZ = "America/Sao_Paulo";
+const REPORT_AVAILABLE_HOUR = 20; // 20:00 Brasilia time
+const DAYS_AFTER_WEEK_END = 1; // Available next day at 20:00 (effectively 3 days after week start for a 7-day week)
 
 const calculatePlannedProgress = (
   activities: Activity[],
@@ -66,7 +72,28 @@ export interface ExtendedWeeklyReport extends WeeklyReport {
   status: 'ahead' | 'on-track' | 'behind';
   variance: number;
   currentActivityName: string | null;
+  isAvailableForCustomer: boolean;
+  availableAt: Date;
 }
+
+/**
+ * Check if a report is available for customers to view
+ * Reports become available 1 day after the week ends, at 20:00 Brasilia time
+ */
+const isReportAvailableForCustomer = (weekEndDate: Date): { isAvailable: boolean; availableAt: Date } => {
+  // Report available next day after week ends at 20:00 Brasilia
+  const availableAt = setHours(addDays(weekEndDate, DAYS_AFTER_WEEK_END), REPORT_AVAILABLE_HOUR);
+  
+  // Get current time in Brasilia
+  const now = new Date();
+  const nowInBrasilia = toZonedTime(now, BRASILIA_TZ);
+  const availableInBrasilia = toZonedTime(availableAt, BRASILIA_TZ);
+  
+  return {
+    isAvailable: nowInBrasilia >= availableInBrasilia,
+    availableAt,
+  };
+};
 
 export const generateWeeklyReports = (
   projectStartDate: string,
@@ -78,13 +105,21 @@ export const generateWeeklyReports = (
   const reports: ExtendedWeeklyReport[] = [];
   
   let weekNumber = 1;
-  let weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
+  // Start from the actual project start date, not the start of that week
+  let weekStart = startDate;
   let previousPercentage = 0;
   
   while (isBefore(weekStart, currentReportDate) || weekStart.getTime() === currentReportDate.getTime()) {
-    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-    const weekEndDate = isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd;
+    // For week 1, end is 6 days after project start (to complete 7 days)
+    // For subsequent weeks, use standard Sunday end
+    let weekEnd: Date;
+    if (weekNumber === 1) {
+      weekEnd = addDays(startDate, 6); // First week: 7 days from project start
+    } else {
+      weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    }
     
+    const weekEndDate = isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd;
     
     let completionPercentage = calculateActualProgress(activities, weekEndDate);
     completionPercentage = Math.max(completionPercentage, previousPercentage);
@@ -105,6 +140,9 @@ export const generateWeeklyReports = (
              (isAfter(plannedEnd, weekStart) || plannedEnd.getTime() === weekStart.getTime());
     });
     
+    // Check availability for customers
+    const { isAvailable, availableAt } = isReportAvailableForCustomer(weekEnd);
+    
     reports.push({
       weekNumber,
       startDate: weekStart,
@@ -114,15 +152,23 @@ export const generateWeeklyReports = (
       status,
       variance,
       currentActivityName: currentActivity?.description || null,
+      isAvailableForCustomer: isAvailable,
+      availableAt,
     });
     
-    weekStart = addWeeks(weekStart, 1);
+    // Move to next week
+    if (weekNumber === 1) {
+      weekStart = addDays(weekEnd, 1); // Day after first week ends
+    } else {
+      weekStart = addWeeks(weekStart, 1);
+    }
     weekNumber++;
     
     if (weekNumber > 52) break;
   }
   
-  return reports.reverse();
+  // Return in ascending order (oldest first)
+  return reports;
 };
 
 const formatDateRange = (startDate: Date, endDate: Date): string => {
@@ -181,16 +227,24 @@ const WeeklyReportsHistory = ({
   reportDate,
   activities,
   onReportClick,
+  isStaff = false,
 }: WeeklyReportsHistoryProps) => {
   const weeklyReports = generateWeeklyReports(projectStartDate, reportDate, activities);
-  const latestReport = weeklyReports[0];
+  const latestReport = weeklyReports[weeklyReports.length - 1]; // Latest is now the last one (ascending order)
   
-  // Prepare chart data (chronological order for the chart)
-  const chartData = [...weeklyReports].reverse().map(report => ({
+  // Prepare chart data (already in chronological order)
+  const chartData = weeklyReports.map(report => ({
     week: report.weekNumber,
     variance: report.variance,
     fill: report.variance >= 0 ? "url(#positiveGradient)" : "url(#negativeGradient)",
   }));
+
+  const handleReportClick = (report: ExtendedWeeklyReport, index: number) => {
+    // Staff can always access, customers need to wait
+    if (isStaff || report.isAvailableForCustomer) {
+      onReportClick?.(report, index);
+    }
+  };
 
   return (
     <div className="animate-fade-in space-y-3" style={{ animationDelay: "0.1s" }}>
@@ -210,25 +264,30 @@ const WeeklyReportsHistory = ({
         {weeklyReports.map((report, index) => {
           const statusConfig = getStatusConfig(report.status);
           const StatusIcon = statusConfig.icon;
-          const isLatest = index === 0;
+          const isLatest = index === weeklyReports.length - 1;
+          const canAccess = isStaff || report.isAvailableForCustomer;
           
           return (
             <button
               key={report.weekNumber}
-              onClick={() => onReportClick?.(report, weeklyReports.length - 1 - index)}
+              onClick={() => handleReportClick(report, index)}
+              disabled={!canAccess}
               className={cn(
-                "w-full bg-card border border-border rounded-lg p-2.5 transition-all duration-200 active:scale-[0.99] group hover:border-primary/30 hover:shadow-sm",
-                isLatest && "ring-1 ring-primary/20"
+                "w-full bg-card border border-border rounded-lg p-2.5 transition-all duration-200 group",
+                canAccess 
+                  ? "active:scale-[0.99] hover:border-primary/30 hover:shadow-sm" 
+                  : "opacity-60 cursor-not-allowed",
+                isLatest && canAccess && "ring-1 ring-primary/20"
               )}
             >
               <div className="flex items-center gap-2.5">
                 {/* Week Badge */}
                 <div className={cn(
                   "flex-shrink-0 w-10 h-10 rounded-lg flex flex-col items-center justify-center",
-                  isLatest ? "bg-primary" : "bg-muted"
+                  isLatest && canAccess ? "bg-primary" : "bg-muted"
                 )}>
-                  <span className={cn("text-[8px] uppercase font-medium opacity-80", isLatest ? "text-white" : "text-muted-foreground")}>Sem</span>
-                  <span className={cn("text-body font-bold", isLatest ? "text-white" : "text-foreground")}>{report.weekNumber}</span>
+                  <span className={cn("text-[8px] uppercase font-medium opacity-80", isLatest && canAccess ? "text-white" : "text-muted-foreground")}>Sem</span>
+                  <span className={cn("text-body font-bold", isLatest && canAccess ? "text-white" : "text-foreground")}>{report.weekNumber}</span>
                 </div>
                 
                 {/* Content */}
@@ -240,9 +299,15 @@ const WeeklyReportsHistory = ({
                         {formatDateRange(report.startDate, report.endDate)}
                       </span>
                     </div>
-                    {isLatest && (
+                    {isLatest && canAccess && (
                       <span className="bg-primary/10 text-primary text-[8px] font-medium px-1.5 py-0.5 rounded-full">
                         Atual
+                      </span>
+                    )}
+                    {!canAccess && (
+                      <span className="bg-muted text-muted-foreground text-[8px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                        <Lock className="h-2 w-2" />
+                        Disponível em breve
                       </span>
                     )}
                   </div>
@@ -252,7 +317,7 @@ const WeeklyReportsHistory = ({
                     <div className="flex items-center justify-between text-tiny mb-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground">Progresso</span>
-                        {report.variance !== 0 && (
+                        {canAccess && report.variance !== 0 && (
                           <span className={cn(
                             "font-medium",
                             report.variance > 0 ? "text-emerald-600" : "text-red-600"
@@ -281,7 +346,7 @@ const WeeklyReportsHistory = ({
                   </div>
                   
                   {/* Current Activity/Phase */}
-                  {report.currentActivityName && (
+                  {report.currentActivityName && canAccess && (
                     <div className="flex items-center gap-1 text-tiny text-muted-foreground">
                       <Clock className="h-2.5 w-2.5" />
                       <span className="truncate">Etapa: {report.currentActivityName}</span>
@@ -289,8 +354,12 @@ const WeeklyReportsHistory = ({
                   )}
                 </div>
                 
-                {/* Arrow */}
-                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                {/* Arrow or Lock */}
+                {canAccess ? (
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                ) : (
+                  <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                )}
               </div>
             </button>
           );
