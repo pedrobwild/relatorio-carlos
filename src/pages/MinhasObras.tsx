@@ -1,13 +1,11 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Calendar, ChevronRight, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { Building2, Calendar, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AppHeader } from '@/components/AppHeader';
 import { useProjects, Project } from '@/hooks/useProjects';
-import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import bwildLogo from '@/assets/bwild-logo.png';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -88,38 +86,15 @@ function ProjectCard({ project, onClick }: { project: Project; onClick: () => vo
 export default function MinhasObras() {
   const navigate = useNavigate();
   const { projects, loading, error } = useProjects();
-  const { user, signOut } = useAuth();
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
-  // If only one active project, redirect directly to it
-  const activeProjects = projects.filter(p => p.status === 'active');
-  
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
-              <div>
-                <h1 className="text-h3 font-bold">Portal do Cliente</h1>
-                <p className="text-tiny text-muted-foreground truncate max-w-[200px]">
-                  {user?.email}
-                </p>
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
-          </div>
+      <AppHeader>
+        <div className="ml-2">
+          <h1 className="text-h3 font-bold">Portal do Cliente</h1>
         </div>
-      </header>
+      </AppHeader>
 
       <main className="container max-w-2xl mx-auto px-4 py-6">
         <div className="mb-6">

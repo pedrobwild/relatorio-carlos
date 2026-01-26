@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Filter, Shield, Presentation, Settings } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AppHeader } from '@/components/AppHeader';
 import { useProjects, Project } from '@/hooks/useProjects';
-import { useUserRole } from '@/hooks/useUserRole';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import bwildLogo from '@/assets/bwild-logo.png';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -92,7 +91,6 @@ function ProjectCard({ project, onClick, onEdit }: { project: Project; onClick: 
 export default function GestaoObras() {
   const navigate = useNavigate();
   const { projects, loading, error } = useProjects();
-  const { isAdmin } = useUserRole();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
@@ -110,41 +108,20 @@ export default function GestaoObras() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={bwildLogo} alt="Bwild" className="h-8" />
-              <div>
-                <h1 className="text-h3 font-bold">Gestão de Obras</h1>
-                <p className="text-tiny text-muted-foreground">
-                  {isAdmin ? 'Todas as obras' : 'Minhas obras'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {isAdmin && (
-                <>
-                  <Button variant="outline" onClick={() => navigate('/demo')}>
-                    <Presentation className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Demo</span>
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate('/admin')}>
-                    <Shield className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Admin</span>
-                  </Button>
-                </>
-              )}
-              <Button onClick={() => navigate('/gestao/nova-obra')}>
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Nova Obra</span>
-              </Button>
-            </div>
-          </div>
+      <AppHeader>
+        <div className="ml-2">
+          <h1 className="text-h3 font-bold">Gestão de Obras</h1>
         </div>
-      </header>
+      </AppHeader>
 
       <main className="container max-w-6xl mx-auto px-4 py-6">
+        {/* Action Button */}
+        <div className="flex justify-end mb-6">
+          <Button onClick={() => navigate('/gestao/nova-obra')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Obra
+          </Button>
+        </div>
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <Card className="p-4">

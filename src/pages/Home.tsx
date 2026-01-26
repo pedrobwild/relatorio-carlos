@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, FileText, Building2, Eye, LogIn, LogOut, User, AlertCircle } from "lucide-react";
+import { Plus, FileText, Building2, Eye, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppHeader } from "@/components/AppHeader";
 import CreateReportModal from "@/components/CreateReportModal";
 import { ReportData } from "@/types/report";
 import { useAuth } from "@/hooks/useAuth";
 import { isDemoMode } from "@/config/flags";
-import bwildLogo from "@/assets/bwild-logo.png";
 
 // Demo data - only used when isDemoMode is true
 const sampleReportData: ReportData = {
@@ -33,7 +33,7 @@ const sampleReportData: ReportData = {
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, loading, signOut, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const handleCreateReport = (data: ReportData) => {
     sessionStorage.setItem("currentReport", JSON.stringify(data));
@@ -49,10 +49,6 @@ const Home = () => {
     navigate("/relatorio");
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-background via-accent/20 to-primary/10 relative overflow-hidden">
       {/* Subtle decorative elements - using Bwild purple tones */}
@@ -60,40 +56,7 @@ const Home = () => {
       <div className="absolute bottom-0 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-gradient-radial from-primary/8 via-accent/3 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
       
       {/* Header */}
-      <header className="p-4 md:p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm relative z-10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <img 
-            src={bwildLogo} 
-            alt="Bwild Logo" 
-            className="h-7 md:h-10 w-auto"
-          />
-          
-          {/* Auth section */}
-          <div className="flex items-center gap-3">
-            {loading ? (
-              <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
-            ) : isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  <span>{user?.email?.split('@')[0]}</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Sair</span>
-                </Button>
-              </div>
-            ) : (
-              <Link to="/auth">
-                <Button variant="outline" size="sm">
-                  <LogIn className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Entrar</span>
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-5 md:p-8 relative z-10">
