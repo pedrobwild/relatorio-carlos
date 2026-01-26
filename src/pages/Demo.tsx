@@ -247,6 +247,7 @@ export default function Demo() {
                             reportDate={demoReportData.reportDate}
                             activities={demoReportData.activities}
                             onReportClick={handleReportClick}
+                            isStaff={true}
                           />
                         )}
                       </TabsContent>

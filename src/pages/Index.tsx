@@ -378,6 +378,7 @@ const Index = () => {
                             reportDate={reportData.reportDate}
                             activities={reportData.activities}
                             onReportClick={handleReportClick}
+                            isStaff={isStaff}
                           />
                         )}
                       </TabsContent>
