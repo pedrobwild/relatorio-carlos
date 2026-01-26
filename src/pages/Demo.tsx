@@ -11,13 +11,14 @@ import ScheduleTable from "@/components/ScheduleTable";
 import GanttChart from "@/components/GanttChart";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
 import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
-import WeeklyReportsHistory, { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
+import WeeklyReportsHistory, { generateWeeklyReports, ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
-import { week10SeedData } from "@/data/week10SeedData";
+import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import bwildLogo from "@/assets/bwild-logo.png";
+import { format } from "date-fns";
 
 // Demo data - Hub Brooklyn 502
 const demoReportData: ReportData = {
@@ -239,7 +240,17 @@ export default function Demo() {
                               hasPrevious={selectedWeekIndex > 0}
                               hasNext={selectedWeekIndex < reportsChronological.length - 1}
                             />
-                            <WeeklyReportTemplate data={week10SeedData} />
+                            <WeeklyReportTemplate 
+                              data={createEmptyReportTemplate(
+                                "demo",
+                                demoReportData.projectName,
+                                demoReportData.unitName,
+                                demoReportData.clientName,
+                                (selectedWeeklyReport as ExtendedWeeklyReport).weekNumber,
+                                format((selectedWeeklyReport as ExtendedWeeklyReport).startDate, "yyyy-MM-dd"),
+                                format((selectedWeeklyReport as ExtendedWeeklyReport).endDate, "yyyy-MM-dd")
+                              )} 
+                            />
                           </>
                         ) : (
                           <WeeklyReportsHistory

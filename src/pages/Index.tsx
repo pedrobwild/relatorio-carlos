@@ -10,18 +10,19 @@ import ScheduleTable from "@/components/ScheduleTable";
 import GanttChart from "@/components/GanttChart";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
 import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
-import WeeklyReportsHistory, { generateWeeklyReports } from "@/components/WeeklyReportsHistory";
+import WeeklyReportsHistory, { generateWeeklyReports, ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
-import { week10SeedData } from "@/data/week10SeedData";
+import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
 import { isDemoMode } from "@/config/flags";
 import bwildLogo from "@/assets/bwild-logo.png";
+import { format } from "date-fns";
 
 // Demo data for projects without real data yet
 const demoReportData: ReportData = {
@@ -370,7 +371,17 @@ const Index = () => {
                               hasPrevious={selectedWeekIndex > 0}
                               hasNext={selectedWeekIndex < reportsChronological.length - 1}
                             />
-                            <WeeklyReportTemplate data={isDemoMode ? week10SeedData : week10SeedData /* TODO: Load real data */} />
+                            <WeeklyReportTemplate 
+                              data={createEmptyReportTemplate(
+                                projectId || "",
+                                reportData.projectName,
+                                reportData.unitName,
+                                reportData.clientName,
+                                (selectedWeeklyReport as ExtendedWeeklyReport).weekNumber,
+                                format((selectedWeeklyReport as ExtendedWeeklyReport).startDate, "yyyy-MM-dd"),
+                                format((selectedWeeklyReport as ExtendedWeeklyReport).endDate, "yyyy-MM-dd")
+                              )} 
+                            />
                           </>
                         ) : (
                           <WeeklyReportsHistory
