@@ -8,9 +8,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    // Disable HMR full reload on window focus to prevent refresh on tab switch
+    // Fix HMR disconnects in the preview (HTTPS behind proxy). Without this,
+    // the client can end up polling `https://<host>:/` and reloading when focus returns.
     hmr: {
       overlay: true,
+      // Preview runs on HTTPS; HMR websocket must use wss and the external port.
+      protocol: "wss",
+      clientPort: 443,
     },
     watch: {
       // Don't trigger reload when switching windows
