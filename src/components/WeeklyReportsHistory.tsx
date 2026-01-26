@@ -1,10 +1,9 @@
-import { format, addWeeks, startOfWeek, endOfWeek, isBefore, isAfter, addDays, setHours } from "date-fns";
+import { format, isBefore, isAfter, addDays, setHours, getDay, nextFriday, previousMonday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
 import { Activity, WeeklyReport } from "@/types/report";
-import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, CheckCircle2, Clock, AlertTriangle, Lock } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, Clock, AlertTriangle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Tooltip, BarChart, Bar, Cell } from "recharts";
 
 interface WeeklyReportsHistoryProps {
   projectStartDate: string;
@@ -105,19 +104,32 @@ export const generateWeeklyReports = (
   const reports: ExtendedWeeklyReport[] = [];
   
   let weekNumber = 1;
-  // Start from the actual project start date, not the start of that week
+  // Start from the actual project start date
   let weekStart = startDate;
   let previousPercentage = 0;
   
+  // Helper to get Friday of a given week (or the date itself if it's already Friday)
+  const getFridayOfWeek = (date: Date): Date => {
+    const dayOfWeek = getDay(date); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+    if (dayOfWeek === 5) return date; // Already Friday
+    if (dayOfWeek === 6) return addDays(date, 6); // Saturday -> next Friday
+    if (dayOfWeek === 0) return addDays(date, 5); // Sunday -> next Friday
+    // Mon-Thu: advance to Friday
+    return addDays(date, 5 - dayOfWeek);
+  };
+  
+  // Helper to get next Monday
+  const getNextMonday = (date: Date): Date => {
+    const dayOfWeek = getDay(date);
+    if (dayOfWeek === 0) return addDays(date, 1); // Sunday -> Monday
+    if (dayOfWeek === 1) return date; // Already Monday
+    // Otherwise, go to next Monday
+    return addDays(date, 8 - dayOfWeek);
+  };
+  
   while (isBefore(weekStart, currentReportDate) || weekStart.getTime() === currentReportDate.getTime()) {
-    // For week 1, end is 6 days after project start (to complete 7 days)
-    // For subsequent weeks, use standard Sunday end
-    let weekEnd: Date;
-    if (weekNumber === 1) {
-      weekEnd = addDays(startDate, 6); // First week: 7 days from project start
-    } else {
-      weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-    }
+    // Week ends on Friday
+    let weekEnd = getFridayOfWeek(weekStart);
     
     const weekEndDate = isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd;
     
@@ -156,12 +168,8 @@ export const generateWeeklyReports = (
       availableAt,
     });
     
-    // Move to next week
-    if (weekNumber === 1) {
-      weekStart = addDays(weekEnd, 1); // Day after first week ends
-    } else {
-      weekStart = addWeeks(weekStart, 1);
-    }
+    // Move to next week (next Monday after the current Friday)
+    weekStart = getNextMonday(addDays(weekEnd, 1));
     weekNumber++;
     
     if (weekNumber > 52) break;
