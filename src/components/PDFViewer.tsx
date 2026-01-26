@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -19,7 +19,13 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
   const [scale, setScale] = useState<number>(1);
   const [containerWidth, setContainerWidth] = useState<number>(0);
   
-  // Swipe handling
+  // Pan/drag state
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Swipe handling (for page navigation when not zoomed)
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const minSwipeDistance = 50;
@@ -60,30 +66,77 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
     setScale(1);
   };
 
-  // Swipe handlers
+  // Mouse drag handlers for panning when zoomed
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (scale > 1) {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      if (scrollContainerRef.current) {
+        setScrollStart({
+          x: scrollContainerRef.current.scrollLeft,
+          y: scrollContainerRef.current.scrollTop,
+        });
+      }
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning && scrollContainerRef.current) {
+      const dx = e.clientX - panStart.x;
+      const dy = e.clientY - panStart.y;
+      scrollContainerRef.current.scrollLeft = scrollStart.x - dx;
+      scrollContainerRef.current.scrollTop = scrollStart.y - dy;
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsPanning(false);
+  };
+
+  // Touch handlers for swipe (page nav) and pan (when zoomed)
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    if (scale > 1 && e.touches.length === 1) {
+      setIsPanning(true);
+      setPanStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      if (scrollContainerRef.current) {
+        setScrollStart({
+          x: scrollContainerRef.current.scrollLeft,
+          y: scrollContainerRef.current.scrollTop,
+        });
+      }
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX;
+    if (isPanning && scrollContainerRef.current && scale > 1) {
+      const dx = e.touches[0].clientX - panStart.x;
+      const dy = e.touches[0].clientY - panStart.y;
+      scrollContainerRef.current.scrollLeft = scrollStart.x - dx;
+      scrollContainerRef.current.scrollTop = scrollStart.y - dy;
+    }
   };
 
   const handleTouchEnd = () => {
     const distance = touchStartX.current - touchEndX.current;
     const isSwipe = Math.abs(distance) > minSwipeDistance;
 
+    // Only navigate pages when not zoomed
     if (isSwipe && scale === 1) {
       if (distance > 0) {
-        // Swipe left -> next page
         goToNextPage();
       } else {
-        // Swipe right -> previous page
         goToPrevPage();
       }
     }
     
-    // Reset
+    setIsPanning(false);
     touchStartX.current = 0;
     touchEndX.current = 0;
   };
@@ -92,9 +145,9 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
   const pageWidth = Math.min(containerWidth - 32, 800) * scale;
 
   return (
-    <div className="flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden">
+    <div className="flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full">
       {/* PDF Controls - Top */}
-      <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border">
+      <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border shrink-0">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -146,19 +199,36 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
           >
             <ZoomIn className="w-5 h-5" />
           </Button>
+          {scale > 1 && (
+            <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <Move className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Arraste para navegar</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* PDF Document with Swipe */}
+      {/* PDF Document with Scroll/Pan */}
       <div
-        ref={containerRef}
-        className="flex-1 overflow-auto touch-pan-x touch-pan-y"
-        style={{ WebkitOverflowScrolling: "touch" }}
+        ref={(node) => {
+          containerRef(node);
+          (scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }}
+        className={`flex-1 overflow-auto ${scale > 1 ? 'cursor-grab' : ''} ${isPanning ? 'cursor-grabbing' : ''}`}
+        style={{ 
+          WebkitOverflowScrolling: "touch",
+          maxHeight: "calc(100vh - 200px)",
+          minHeight: "400px",
+        }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="flex justify-center p-4">
+        <div className="flex justify-center p-4" style={{ minWidth: scale > 1 ? `${pageWidth + 32}px` : 'auto' }}>
           <Document
             file={url}
             onLoadSuccess={onDocumentLoadSuccess}
@@ -191,7 +261,6 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
           </Document>
         </div>
       </div>
-
     </div>
   );
 };
