@@ -85,6 +85,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!videoRef.current || !progressRef.current) return;
+    if (!Number.isFinite(videoRef.current.duration) || videoRef.current.duration <= 0) return;
     
     const rect = progressRef.current.getBoundingClientRect();
     const clickPosition = (e.clientX - rect.left) / rect.width;
@@ -111,21 +112,32 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
     if (!video) return;
 
     const handleTimeUpdate = () => {
+      if (!Number.isFinite(video.duration) || video.duration <= 0) {
+        setProgress(0);
+        setCurrentTime(formatTime(video.currentTime));
+        return;
+      }
       const progress = (video.currentTime / video.duration) * 100;
       setProgress(progress);
       setCurrentTime(formatTime(video.currentTime));
     };
 
     const handleLoadedMetadata = () => {
+      if (!Number.isFinite(video.duration) || video.duration <= 0) {
+        setDuration("0:00");
+        return;
+      }
       setDuration(formatTime(video.duration));
     };
 
     const handleProgress = () => {
-      if (video.buffered.length > 0) {
+      if (video.buffered.length > 0 && Number.isFinite(video.duration) && video.duration > 0) {
         const bufferedEnd = video.buffered.end(video.buffered.length - 1);
         const bufferedProgress = (bufferedEnd / video.duration) * 100;
         setBuffered(bufferedProgress);
+        return;
       }
+      setBuffered(0);
     };
 
     const handleFullscreenChange = () => {
