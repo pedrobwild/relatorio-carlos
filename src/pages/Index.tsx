@@ -22,6 +22,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { isDemoMode } from "@/config/flags";
 import { usePageVisibility } from "@/hooks/usePageVisibility";
 import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
+import { useWeeklyReports } from "@/hooks/useWeeklyReports";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { format } from "date-fns";
 
@@ -53,6 +54,12 @@ const Index = () => {
   const { projectId, paths } = useProjectNavigation();
   const { isStaff } = useUserRole();
   const { activities: dbActivities, loading: activitiesLoading, updateActivity } = useProjectActivities(projectId);
+  const {
+    reportDataByWeek,
+    saveReport: saveWeeklyReport,
+    isSaving: isSavingReport,
+    savingWeek,
+  } = useWeeklyReports({ projectId });
 
   // Persistência da UI do portal (aba ativa e semana do relatório) para evitar “voltar pra Curva S”
   // quando o navegador recarrega/remonta a página ao alternar abas.
@@ -453,18 +460,33 @@ const Index = () => {
                               hasPrevious={selectedWeekIndex > 0}
                               hasNext={selectedWeekIndex < reportsChronological.length - 1}
                             />
-                            <WeeklyReportTemplate 
-                              data={createEmptyReportTemplate(
+                            {(() => {
+                              const extendedReport = selectedWeeklyReport as ExtendedWeeklyReport;
+                              const weekNum = extendedReport.weekNumber;
+                              const weekStart = format(extendedReport.startDate, "yyyy-MM-dd");
+                              const weekEnd = format(extendedReport.endDate, "yyyy-MM-dd");
+                              // Se já existe relatório salvo no banco, usa ele; senão template vazio
+                              const storedData = reportDataByWeek.get(weekNum);
+                              const templateData = storedData ?? createEmptyReportTemplate(
                                 projectId || "",
                                 reportData.projectName,
                                 reportData.unitName,
                                 reportData.clientName,
-                                (selectedWeeklyReport as ExtendedWeeklyReport).weekNumber,
-                                format((selectedWeeklyReport as ExtendedWeeklyReport).startDate, "yyyy-MM-dd"),
-                                format((selectedWeeklyReport as ExtendedWeeklyReport).endDate, "yyyy-MM-dd")
-                              )}
-                              isStaff={isStaff}
-                            />
+                                weekNum,
+                                weekStart,
+                                weekEnd
+                              );
+                              return (
+                                <WeeklyReportTemplate
+                                  data={templateData}
+                                  isStaff={isStaff}
+                                  isSaving={isSavingReport && savingWeek === weekNum}
+                                  onSaveReport={(updated) => {
+                                    saveWeeklyReport(weekNum, weekStart, weekEnd, updated);
+                                  }}
+                                />
+                              );
+                            })()}
                           </>
                         ) : (
                           <WeeklyReportsHistory
