@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, FileText, Loader2, AlertCircle, Activity, Plus, GanttChartSquare } from "lucide-react";
@@ -21,6 +21,7 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
 import { isDemoMode } from "@/config/flags";
 import { usePageVisibility } from "@/hooks/usePageVisibility";
+import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { format } from "date-fns";
 
@@ -52,15 +53,33 @@ const Index = () => {
   const { projectId, paths } = useProjectNavigation();
   const { isStaff } = useUserRole();
   const { activities: dbActivities, loading: activitiesLoading, updateActivity } = useProjectActivities(projectId);
-  const [activeTab, setActiveTab] = useState("curvaS");
+
+  // Persistência da UI do portal (aba ativa e semana do relatório) para evitar “voltar pra Curva S”
+  // quando o navegador recarrega/remonta a página ao alternar abas.
+  const viewStateKey = useMemo(
+    () => `portal:view:${projectId ?? "sem-projeto"}`,
+    [projectId]
+  );
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return getPortalViewState(viewStateKey).activeTab ?? "curvaS";
+  });
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
-  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(() => {
+    const idx = getPortalViewState(viewStateKey).weeklyReport?.index;
+    return typeof idx === "number" ? idx : 0;
+  });
   // Mostrar tudo por padrão para não “cortar” etapas iniciais (ex.: Demolição e preparação)
   const [showFullChart, setShowFullChart] = useState(true);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
   const isPageVisible = usePageVisibility();
+
+  // Persiste a aba ativa
+  useEffect(() => {
+    patchPortalViewState(viewStateKey, { activeTab });
+  }, [viewStateKey, activeTab]);
 
   // Convert database activities to report format
   const formattedActivities = useMemo(() => {
@@ -136,6 +155,24 @@ const Index = () => {
     return [...allWeeklyReports].reverse();
   }, [allWeeklyReports]);
 
+  // Restaura a semana aberta após (re)carregar dados
+  const hasRestoredWeeklyRef = useRef(false);
+  useEffect(() => {
+    if (hasRestoredWeeklyRef.current) return;
+    if (reportsChronological.length === 0) return;
+
+    const saved = getPortalViewState(viewStateKey);
+    const open = saved.weeklyReport?.open;
+    const idx = saved.weeklyReport?.index;
+
+    if (activeTab === "relatorio" && open && typeof idx === "number" && reportsChronological[idx]) {
+      setSelectedWeekIndex(idx);
+      setSelectedWeeklyReport(reportsChronological[idx]);
+    }
+
+    hasRestoredWeeklyRef.current = true;
+  }, [activeTab, reportsChronological, viewStateKey]);
+
   // Handler for Gantt drag-and-drop date changes
   const handleActivityDateChange = async (activityId: string, newPlannedStart: string, newPlannedEnd: string) => {
     if (!isStaff) return;
@@ -178,10 +215,15 @@ const Index = () => {
   const handleReportClick = (report: WeeklyReport, index: number) => {
     setSelectedWeeklyReport(report);
     setSelectedWeekIndex(index);
+    patchPortalViewState(viewStateKey, {
+      activeTab: "relatorio",
+      weeklyReport: { open: true, index },
+    });
   };
 
   const handleBackToList = () => {
     setSelectedWeeklyReport(null);
+    patchPortalViewState(viewStateKey, { weeklyReport: { open: false } });
   };
 
   const handlePreviousWeek = () => {
@@ -189,6 +231,7 @@ const Index = () => {
       const newIndex = selectedWeekIndex - 1;
       setSelectedWeekIndex(newIndex);
       setSelectedWeeklyReport(reportsChronological[newIndex]);
+      patchPortalViewState(viewStateKey, { weeklyReport: { open: true, index: newIndex } });
     }
   };
 
@@ -197,6 +240,7 @@ const Index = () => {
       const newIndex = selectedWeekIndex + 1;
       setSelectedWeekIndex(newIndex);
       setSelectedWeeklyReport(reportsChronological[newIndex]);
+      patchPortalViewState(viewStateKey, { weeklyReport: { open: true, index: newIndex } });
     }
   };
 
