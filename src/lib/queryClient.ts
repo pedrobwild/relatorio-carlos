@@ -2,6 +2,26 @@ import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+function softNavigate(to: string, options?: { replace?: boolean }) {
+  if (typeof window === 'undefined') return;
+
+  const replace = options?.replace ?? true;
+  const url = new URL(to, window.location.origin);
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+  if (current === next) return;
+
+  if (replace) {
+    window.history.replaceState({}, '', next);
+  } else {
+    window.history.pushState({}, '', next);
+  }
+
+  // BrowserRouter listens to POP events; pushState/replaceState don't emit them.
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
 // Map of error codes/messages to user-friendly Portuguese messages
 const errorMessages: Record<string, string> = {
   // Network errors
@@ -118,7 +138,7 @@ function isAuthError(error: unknown): boolean {
 async function handleAuthError() {
   toast.error('Sessão expirada. Por favor, faça login novamente.');
   await supabase.auth.signOut();
-  window.location.href = '/auth';
+  softNavigate('/auth', { replace: true });
 }
 
 // Generic error handler
