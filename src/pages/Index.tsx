@@ -76,10 +76,36 @@ const Index = () => {
   const reportRef = useRef<HTMLDivElement>(null);
   const isPageVisible = usePageVisibility();
 
+  // Em alguns cenários (ex.: reload/restore), o projectId pode estar indisponível
+  // no primeiro render e o viewStateKey muda depois. Quando isso acontecer,
+  // re-sincroniza estado da UI a partir do storage do novo key.
+  const hasSyncedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (hasSyncedKeyRef.current === viewStateKey) return;
+    hasSyncedKeyRef.current = viewStateKey;
+
+    const saved = getPortalViewState(viewStateKey);
+    if (saved.activeTab) setActiveTab(saved.activeTab);
+
+    const idx = saved.weeklyReport?.index;
+    if (typeof idx === "number") setSelectedWeekIndex(idx);
+  }, [viewStateKey]);
+
   // Persiste a aba ativa
   useEffect(() => {
     patchPortalViewState(viewStateKey, { activeTab });
   }, [viewStateKey, activeTab]);
+
+  // Persiste o estado do relatório semanal aberto (além dos handlers), para evitar
+  // perda de contexto quando o navegador recarrega/descarta a aba.
+  useEffect(() => {
+    patchPortalViewState(viewStateKey, {
+      weeklyReport: {
+        open: !!selectedWeeklyReport,
+        index: selectedWeekIndex,
+      },
+    });
+  }, [viewStateKey, selectedWeeklyReport, selectedWeekIndex]);
 
   // Convert database activities to report format
   const formattedActivities = useMemo(() => {
@@ -165,13 +191,15 @@ const Index = () => {
     const open = saved.weeklyReport?.open;
     const idx = saved.weeklyReport?.index;
 
-    if (activeTab === "relatorio" && open && typeof idx === "number" && reportsChronological[idx]) {
+    // Se havia um relatório semanal aberto, força a aba “Relatórios” e restaura.
+    if (open && typeof idx === "number" && reportsChronological[idx]) {
+      setActiveTab("relatorio");
       setSelectedWeekIndex(idx);
       setSelectedWeeklyReport(reportsChronological[idx]);
     }
 
     hasRestoredWeeklyRef.current = true;
-  }, [activeTab, reportsChronological, viewStateKey]);
+  }, [reportsChronological, viewStateKey]);
 
   // Handler for Gantt drag-and-drop date changes
   const handleActivityDateChange = async (activityId: string, newPlannedStart: string, newPlannedEnd: string) => {

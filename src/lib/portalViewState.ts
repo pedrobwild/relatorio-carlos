@@ -9,7 +9,10 @@ export type PortalViewState = {
 export function getPortalViewState(key: string): PortalViewState {
   if (typeof window === "undefined") return {};
   try {
-    const raw = window.sessionStorage.getItem(key);
+    // Usamos localStorage (e não sessionStorage) porque alguns navegadores
+    // podem limpar sessionStorage quando a aba é “descartada” (memory saver),
+    // causando perda de estado e retorno para a aba padrão.
+    const raw = window.localStorage.getItem(key);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
@@ -22,7 +25,7 @@ export function getPortalViewState(key: string): PortalViewState {
 export function setPortalViewState(key: string, state: PortalViewState) {
   if (typeof window === "undefined") return;
   try {
-    window.sessionStorage.setItem(key, JSON.stringify(state));
+    window.localStorage.setItem(key, JSON.stringify(state));
   } catch {
     // ignore
   }
