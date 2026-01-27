@@ -8,6 +8,7 @@ import { ProtectedRoute, StaffRoute, CustomerRoute, AdminRoute } from "@/compone
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
+import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 
 // Route-level code splitting: reduz bundle/memória inicial e diminui chance de “tab discard”.
 const Auth = lazy(() => import("./pages/Auth"));
@@ -57,6 +58,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <TabDiscardDetector />
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
