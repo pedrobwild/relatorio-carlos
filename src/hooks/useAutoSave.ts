@@ -36,9 +36,13 @@ export function useAutoSave<T>({
       setIsSaving(true);
       await onSave(data);
       setLastSaved(new Date());
+      // Update the "saved" reference so we don't trigger re-saves
+      previousDataRef.current = JSON.stringify(data);
     } catch (error) {
       console.error('Auto-save failed:', error);
-      toast.error('Erro ao salvar automaticamente');
+      // IMPORTANT: Do NOT update previousDataRef on error
+      // This ensures we'll retry on next change/visibility event
+      toast.error('Erro ao salvar o relatório. Suas alterações foram mantidas, tente novamente.');
     } finally {
       setIsSaving(false);
     }

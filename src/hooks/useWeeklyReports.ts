@@ -87,11 +87,15 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Only invalidate on success - this refreshes the cache with saved data
       queryClient.invalidateQueries({ queryKey });
+      toast.success("Relatório salvo com sucesso!");
     },
     onError: (err) => {
       console.error("Erro ao salvar relatório:", err);
-      toast.error("Erro ao salvar relatório. Tente novamente.");
+      // IMPORTANT: Do NOT invalidate queries on error
+      // This prevents stale/empty data from overwriting local edits
+      toast.error("Erro ao salvar relatório. Suas alterações foram mantidas, tente novamente.");
     },
     onSettled: () => {
       setSavingWeek(null);
