@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { WeeklyReportData } from "@/types/weeklyReport";
 import ExecutiveSummary from "./ExecutiveSummary";
 import LookaheadSection from "./LookaheadSection";
@@ -9,7 +9,7 @@ import PhotoGallery from "./PhotoGallery";
 import ReportFooter from "./ReportFooter";
 import ProgressTimeline from "./ProgressTimeline";
 import WeeklyReportEditor from "./WeeklyReportEditor";
-import { FileText, Clock, Edit } from "lucide-react";
+import { Clock, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface WeeklyReportTemplateProps {
@@ -26,54 +26,29 @@ const WeeklyReportTemplate = ({
   isSaving = false,
 }: WeeklyReportTemplateProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  // Use local state for viewing; only initialize from prop on first mount
-  // Do NOT sync from prop during editing to prevent data loss on save errors
-  const [reportData, setReportData] = useState(data);
-  
-  // Track if we've ever had user edits to protect them
-  const hasLocalEditsRef = useRef(false);
 
   // Check if the report has any content filled in
+  // Use `data` prop directly - this is the source of truth from the database
   const hasContent = 
-    reportData.executiveSummary.length > 0 ||
-    reportData.lookaheadTasks.length > 0 ||
-    reportData.risksAndIssues.length > 0 ||
-    reportData.clientDecisions.length > 0 ||
-    reportData.incidents.length > 0 ||
-    reportData.gallery.length > 0 ||
-    (reportData.roomsProgress && reportData.roomsProgress.length > 0) ||
-    reportData.deliverablesCompleted.length > 0;
+    data.executiveSummary.length > 0 ||
+    data.lookaheadTasks.length > 0 ||
+    data.risksAndIssues.length > 0 ||
+    data.clientDecisions.length > 0 ||
+    data.incidents.length > 0 ||
+    data.gallery.length > 0 ||
+    (data.roomsProgress && data.roomsProgress.length > 0) ||
+    data.deliverablesCompleted.length > 0;
 
-  const handleSave = (updatedData: WeeklyReportData) => {
-    hasLocalEditsRef.current = true;
-    setReportData(updatedData);
+  const handleSave = useCallback((updatedData: WeeklyReportData) => {
     setIsEditing(false);
     onSaveReport?.(updatedData);
-  };
-  
-  // Sync from prop ONLY when data changes from server AND we don't have local edits
-  // This prevents overwriting user data when save fails and query refetches stale data
-  useEffect(() => {
-    // Only sync if the incoming data is substantively different and we haven't edited
-    const incomingHasContent = 
-      data.executiveSummary.length > 0 ||
-      data.lookaheadTasks.length > 0 ||
-      data.risksAndIssues.length > 0 ||
-      data.clientDecisions.length > 0 ||
-      data.incidents.length > 0 ||
-      data.gallery.length > 0;
-    
-    // If server has newer/better data and we haven't made local edits, sync
-    if (incomingHasContent && !hasLocalEditsRef.current) {
-      setReportData(data);
-    }
-  }, [data]);
+  }, [onSaveReport]);
 
   // If editing, show the editor
   if (isEditing) {
     return (
       <WeeklyReportEditor
-        data={reportData}
+        data={data}
         onSave={handleSave}
         onCancel={() => setIsEditing(false)}
         isSaving={isSaving}
@@ -87,7 +62,7 @@ const WeeklyReportTemplate = ({
       <div className="animate-fade-in">
         <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-            <h3 className="text-h2 text-white">Relatório da Semana {reportData.weekNumber}</h3>
+            <h3 className="text-h2 text-white">Relatório da Semana {data.weekNumber}</h3>
           </div>
           <div className="p-6 sm:p-8 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
@@ -124,41 +99,41 @@ const WeeklyReportTemplate = ({
       )}
 
       {/* Executive Summary */}
-      <ExecutiveSummary data={reportData} />
+      <ExecutiveSummary data={data} />
 
       {/* Progress Timeline by Room */}
-      {reportData.roomsProgress && reportData.roomsProgress.length > 0 && (
-        <ProgressTimeline rooms={reportData.roomsProgress} />
+      {data.roomsProgress && data.roomsProgress.length > 0 && (
+        <ProgressTimeline rooms={data.roomsProgress} />
       )}
 
       {/* Lookahead (Next 7 Days) */}
-      {reportData.lookaheadTasks.length > 0 && (
-        <LookaheadSection tasks={reportData.lookaheadTasks} />
+      {data.lookaheadTasks.length > 0 && (
+        <LookaheadSection tasks={data.lookaheadTasks} />
       )}
 
       {/* Risks, Issues, Action Plans */}
-      {reportData.risksAndIssues.length > 0 && (
-        <RisksIssuesSection issues={reportData.risksAndIssues} />
+      {data.risksAndIssues.length > 0 && (
+        <RisksIssuesSection issues={data.risksAndIssues} />
       )}
 
       {/* Incidents */}
-      {reportData.incidents.length > 0 && (
-        <IncidentsSection incidents={reportData.incidents} />
+      {data.incidents.length > 0 && (
+        <IncidentsSection incidents={data.incidents} />
       )}
 
       {/* Client Decisions */}
-      {reportData.clientDecisions.length > 0 && (
-        <ClientDecisionsSection decisions={reportData.clientDecisions} />
+      {data.clientDecisions.length > 0 && (
+        <ClientDecisionsSection decisions={data.clientDecisions} />
       )}
 
       {/* Photo Gallery */}
-      {reportData.gallery.length > 0 && (
-        <PhotoGallery photos={reportData.gallery} />
+      {data.gallery.length > 0 && (
+        <PhotoGallery photos={data.gallery} />
       )}
 
       {/* Footer */}
       <div className="pt-1 border-t border-border/50">
-        <ReportFooter data={reportData} />
+        <ReportFooter data={data} />
       </div>
     </div>
   );
