@@ -1624,6 +1624,63 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_reports: {
+        Row: {
+          available_at: string | null
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+          week_end: string
+          week_number: number
+          week_start: string
+        }
+        Insert: {
+          available_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          id?: string
+          project_id: string
+          updated_at?: string
+          updated_by?: string | null
+          week_end: string
+          week_number: number
+          week_start: string
+        }
+        Update: {
+          available_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          project_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          week_end?: string
+          week_number?: number
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "weekly_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       formalizations_public_customer: {

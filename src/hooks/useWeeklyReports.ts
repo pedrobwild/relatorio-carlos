@@ -1,0 +1,121 @@
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { WeeklyReportData } from "@/types/weeklyReport";
+import { toast } from "sonner";
+import { Json } from "@/integrations/supabase/types";
+
+interface WeeklyReportRow {
+  id: string;
+  project_id: string;
+  week_number: number;
+  week_start: string;
+  week_end: string;
+  available_at: string | null;
+  data: Json;
+  created_by: string | null;
+  created_at: string;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+interface UseWeeklyReportsOptions {
+  projectId: string | undefined;
+}
+
+export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
+  const queryClient = useQueryClient();
+  const [savingWeek, setSavingWeek] = useState<number | null>(null);
+
+  const queryKey = ["weekly-reports", projectId];
+
+  const {
+    data: reports = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from("weekly_reports")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("week_number", { ascending: true });
+
+      if (error) throw error;
+      return (data ?? []) as WeeklyReportRow[];
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
+  // Map week_number -> stored WeeklyReportData
+  const reportDataByWeek = new Map<number, WeeklyReportData>();
+  for (const row of reports) {
+    reportDataByWeek.set(row.week_number, row.data as unknown as WeeklyReportData);
+  }
+
+  const upsertMutation = useMutation({
+    mutationFn: async ({
+      weekNumber,
+      weekStart,
+      weekEnd,
+      data,
+    }: {
+      weekNumber: number;
+      weekStart: string;
+      weekEnd: string;
+      data: WeeklyReportData;
+    }) => {
+      if (!projectId) throw new Error("Projeto não selecionado");
+      setSavingWeek(weekNumber);
+
+      const { error } = await supabase
+        .from("weekly_reports")
+        .upsert(
+          {
+            project_id: projectId,
+            week_number: weekNumber,
+            week_start: weekStart,
+            week_end: weekEnd,
+            data: data as unknown as Json,
+          },
+          { onConflict: "project_id,week_number" }
+        );
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err) => {
+      console.error("Erro ao salvar relatório:", err);
+      toast.error("Erro ao salvar relatório. Tente novamente.");
+    },
+    onSettled: () => {
+      setSavingWeek(null);
+    },
+  });
+
+  const saveReport = useCallback(
+    (
+      weekNumber: number,
+      weekStart: string,
+      weekEnd: string,
+      data: WeeklyReportData
+    ) => {
+      upsertMutation.mutate({ weekNumber, weekStart, weekEnd, data });
+    },
+    [upsertMutation]
+  );
+
+  return {
+    reportDataByWeek,
+    isLoading,
+    error,
+    saveReport,
+    isSaving: upsertMutation.isPending,
+    savingWeek,
+  };
+}

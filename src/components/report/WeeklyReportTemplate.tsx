@@ -16,11 +16,22 @@ interface WeeklyReportTemplateProps {
   data: WeeklyReportData;
   isStaff?: boolean;
   onSaveReport?: (updatedData: WeeklyReportData) => void;
+  isSaving?: boolean;
 }
 
-const WeeklyReportTemplate = ({ data, isStaff = false, onSaveReport }: WeeklyReportTemplateProps) => {
+const WeeklyReportTemplate = ({
+  data,
+  isStaff = false,
+  onSaveReport,
+  isSaving = false,
+}: WeeklyReportTemplateProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  // Sync local state whenever incoming data changes (e.g., fetched from DB)
   const [reportData, setReportData] = useState(data);
+  // Keep local state in sync with prop (DB is source of truth)
+  if (data !== reportData && JSON.stringify(data) !== JSON.stringify(reportData)) {
+    setReportData(data);
+  }
 
   // Check if the report has any content filled in
   const hasContent = 
@@ -46,6 +57,7 @@ const WeeklyReportTemplate = ({ data, isStaff = false, onSaveReport }: WeeklyRep
         data={reportData}
         onSave={handleSave}
         onCancel={() => setIsEditing(false)}
+        isSaving={isSaving}
       />
     );
   }
