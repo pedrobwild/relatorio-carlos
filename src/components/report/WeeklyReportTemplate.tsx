@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { WeeklyReportData } from "@/types/weeklyReport";
 import ExecutiveSummary from "./ExecutiveSummary";
 import LookaheadSection from "./LookaheadSection";
@@ -26,12 +26,12 @@ const WeeklyReportTemplate = ({
   isSaving = false,
 }: WeeklyReportTemplateProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  // Sync local state whenever incoming data changes (e.g., fetched from DB)
+  // Use local state for viewing; only initialize from prop on first mount
+  // Do NOT sync from prop during editing to prevent data loss on save errors
   const [reportData, setReportData] = useState(data);
-  // Keep local state in sync with prop (DB is source of truth)
-  if (data !== reportData && JSON.stringify(data) !== JSON.stringify(reportData)) {
-    setReportData(data);
-  }
+  
+  // Track if we've ever had user edits to protect them
+  const hasLocalEditsRef = useRef(false);
 
   // Check if the report has any content filled in
   const hasContent = 
@@ -45,10 +45,29 @@ const WeeklyReportTemplate = ({
     reportData.deliverablesCompleted.length > 0;
 
   const handleSave = (updatedData: WeeklyReportData) => {
+    hasLocalEditsRef.current = true;
     setReportData(updatedData);
     setIsEditing(false);
     onSaveReport?.(updatedData);
   };
+  
+  // Sync from prop ONLY when data changes from server AND we don't have local edits
+  // This prevents overwriting user data when save fails and query refetches stale data
+  useEffect(() => {
+    // Only sync if the incoming data is substantively different and we haven't edited
+    const incomingHasContent = 
+      data.executiveSummary.length > 0 ||
+      data.lookaheadTasks.length > 0 ||
+      data.risksAndIssues.length > 0 ||
+      data.clientDecisions.length > 0 ||
+      data.incidents.length > 0 ||
+      data.gallery.length > 0;
+    
+    // If server has newer/better data and we haven't made local edits, sync
+    if (incomingHasContent && !hasLocalEditsRef.current) {
+      setReportData(data);
+    }
+  }, [data]);
 
   // If editing, show the editor
   if (isEditing) {
