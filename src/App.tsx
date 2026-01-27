@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,46 +9,47 @@ import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
 
+// Route-level code splitting: reduz bundle/memória inicial e diminui chance de “tab discard”.
+const Auth = lazy(() => import("./pages/Auth"));
+const VerificarAssinatura = lazy(() => import("./pages/VerificarAssinatura"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Public pages
-import Auth from "./pages/Auth";
-import VerificarAssinatura from "./pages/VerificarAssinatura";
-import NotFound from "./pages/NotFound";
+const GestaoObras = lazy(() => import("./pages/GestaoObras"));
+const NovaObra = lazy(() => import("./pages/NovaObra"));
+const EditarObra = lazy(() => import("./pages/EditarObra"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Demo = lazy(() => import("./pages/Demo"));
 
-// Staff pages
-import GestaoObras from "./pages/GestaoObras";
-import NovaObra from "./pages/NovaObra";
-import EditarObra from "./pages/EditarObra";
-import Admin from "./pages/Admin";
-import Demo from "./pages/Demo";
+const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
-// Customer pages
-import MinhasObras from "./pages/MinhasObras";
-
-// Shared pages (accessible by both with project context)
-import Home from "./pages/Home";
-import Index from "./pages/Index";
-import Contrato from "./pages/Contrato";
-import Projeto3D from "./pages/Projeto3D";
-import Executivo from "./pages/Executivo";
-import Financeiro from "./pages/Financeiro";
-import Pendencias from "./pages/Pendencias";
-import Documentos from "./pages/Documentos";
-import Formalizacoes from "./pages/Formalizacoes";
-import FormalizacaoNova from "./pages/FormalizacaoNova";
-import FormalizacaoDetalhe from "./pages/FormalizacaoDetalhe";
-import Cronograma from "./pages/Cronograma";
-import Compras from "./pages/Compras";
+const Home = lazy(() => import("./pages/Home"));
+const Index = lazy(() => import("./pages/Index"));
+const Contrato = lazy(() => import("./pages/Contrato"));
+const Projeto3D = lazy(() => import("./pages/Projeto3D"));
+const Executivo = lazy(() => import("./pages/Executivo"));
+const Financeiro = lazy(() => import("./pages/Financeiro"));
+const Pendencias = lazy(() => import("./pages/Pendencias"));
+const Documentos = lazy(() => import("./pages/Documentos"));
+const Formalizacoes = lazy(() => import("./pages/Formalizacoes"));
+const FormalizacaoNova = lazy(() => import("./pages/FormalizacaoNova"));
+const FormalizacaoDetalhe = lazy(() => import("./pages/FormalizacaoDetalhe"));
+const Cronograma = lazy(() => import("./pages/Cronograma"));
+const Compras = lazy(() => import("./pages/Compras"));
 
 // Wrapper component to provide project context
 const ProjectPage = ({ children }: { children: React.ReactNode }) => (
   <ProjectProvider>{children}</ProjectProvider>
 );
 
-// Auth page - Auth.tsx handles its own redirect logic based on role
-const AuthPage = () => {
-  return <Auth />;
-};
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+  </div>
+);
+
+const withSuspense = (node: React.ReactNode) => (
+  <Suspense fallback={<RouteFallback />}>{node}</Suspense>
+);
 
 const App = () => (
   <ErrorBoundary>
@@ -58,38 +60,129 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/verificar/:hash" element={<VerificarAssinatura />} />
+            <Route path="/auth" element={withSuspense(<Auth />)} />
+            <Route path="/verificar/:hash" element={withSuspense(<VerificarAssinatura />)} />
             
             {/* Staff-only routes */}
-            <Route path="/gestao" element={<StaffRoute><GestaoObras /></StaffRoute>} />
-            <Route path="/gestao/nova-obra" element={<StaffRoute><NovaObra /></StaffRoute>} />
-            <Route path="/gestao/obra/:projectId" element={<StaffRoute><EditarObra /></StaffRoute>} />
+            <Route path="/gestao" element={<StaffRoute>{withSuspense(<GestaoObras />)}</StaffRoute>} />
+            <Route path="/gestao/nova-obra" element={<StaffRoute>{withSuspense(<NovaObra />)}</StaffRoute>} />
+            <Route path="/gestao/obra/:projectId" element={<StaffRoute>{withSuspense(<EditarObra />)}</StaffRoute>} />
             
             {/* Admin-only routes */}
-            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-            <Route path="/demo" element={<AdminRoute><Demo /></AdminRoute>} />
+            <Route path="/admin" element={<AdminRoute>{withSuspense(<Admin />)}</AdminRoute>} />
+            <Route path="/demo" element={<AdminRoute>{withSuspense(<Demo />)}</AdminRoute>} />
             
             {/* Customer-only routes */}
-            <Route path="/minhas-obras" element={<CustomerRoute><MinhasObras /></CustomerRoute>} />
+            <Route path="/minhas-obras" element={<CustomerRoute>{withSuspense(<MinhasObras />)}</CustomerRoute>} />
             
             {/* Project-scoped routes (both staff and customer with project access) */}
-            <Route path="/obra/:projectId" element={<ProtectedRoute><ProjectPage><Index /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/relatorio" element={<ProtectedRoute><ProjectPage><Index /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/contrato" element={<ProtectedRoute><ProjectPage><Contrato /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/projeto-3d" element={<ProtectedRoute><ProjectPage><Projeto3D /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/executivo" element={<ProtectedRoute><ProjectPage><Executivo /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/financeiro" element={<ProtectedRoute><ProjectPage><Financeiro /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/pendencias" element={<ProtectedRoute><ProjectPage><Pendencias /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/documentos" element={<ProtectedRoute><ProjectPage><Documentos /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/formalizacoes" element={<ProtectedRoute><ProjectPage><Formalizacoes /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/formalizacoes/nova" element={<StaffRoute><ProjectPage><FormalizacaoNova /></ProjectPage></StaffRoute>} />
-            <Route path="/obra/:projectId/formalizacoes/:id" element={<ProtectedRoute><ProjectPage><FormalizacaoDetalhe /></ProjectPage></ProtectedRoute>} />
-            <Route path="/obra/:projectId/cronograma" element={<StaffRoute><ProjectPage><Cronograma /></ProjectPage></StaffRoute>} />
-            <Route path="/obra/:projectId/compras" element={<StaffRoute><ProjectPage><Compras /></ProjectPage></StaffRoute>} />
+            <Route
+              path="/obra/:projectId"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Index />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/relatorio"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Index />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/contrato"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Contrato />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/projeto-3d"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Projeto3D />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/executivo"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Executivo />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/financeiro"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Financeiro />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/pendencias"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Pendencias />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/documentos"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Documentos />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/formalizacoes"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<Formalizacoes />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/formalizacoes/nova"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<FormalizacaoNova />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/formalizacoes/:id"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<FormalizacaoDetalhe />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/cronograma"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<Cronograma />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/compras"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<Compras />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
             
             {/* Legacy routes - redirect to appropriate pages */}
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute>{withSuspense(<Home />)}</ProtectedRoute>} />
             <Route path="/relatorio" element={<Navigate to="/minhas-obras" replace />} />
             <Route path="/contrato" element={<Navigate to="/minhas-obras" replace />} />
             <Route path="/projeto-3d" element={<Navigate to="/minhas-obras" replace />} />
@@ -101,7 +194,7 @@ const App = () => (
             <Route path="/formalizacoes/:id" element={<Navigate to="/minhas-obras" replace />} />
             
             {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={withSuspense(<NotFound />)} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
