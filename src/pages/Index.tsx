@@ -13,7 +13,6 @@ import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
 import WeeklyReportsHistory, { generateWeeklyReports, ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { toast } from "sonner";
-import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import { useProject } from "@/contexts/ProjectContext";
@@ -151,6 +150,9 @@ const Index = () => {
     toast.info("Gerando PDF...");
 
     try {
+      // Carrega somente quando necessário (reduz bundle/memória inicial)
+      const { default: html2pdf } = await import("html2pdf.js");
+
       const element = reportRef.current;
       const opt = {
         margin: [10, 10, 10, 10],
