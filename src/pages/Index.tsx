@@ -20,6 +20,7 @@ import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
 import { isDemoMode } from "@/config/flags";
+import { usePageVisibility } from "@/hooks/usePageVisibility";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { format } from "date-fns";
 
@@ -59,6 +60,7 @@ const Index = () => {
   const [showFullChart, setShowFullChart] = useState(true);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
+  const isPageVisible = usePageVisibility();
 
   // Convert database activities to report format
   const formattedActivities = useMemo(() => {
@@ -280,6 +282,12 @@ const Index = () => {
         </div>
       </div>
     );
+  }
+
+  // Quando a aba fica oculta, desmonta a UI pesada (gráficos/tabelas) para reduzir uso de memória
+  // e diminuir a chance do navegador descartar a aba e recarregar a página ao voltar.
+  if (!isPageVisible) {
+    return <div className="min-h-screen min-h-[100dvh] bg-background" />;
   }
 
   return (
