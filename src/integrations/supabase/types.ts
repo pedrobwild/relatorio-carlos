@@ -280,6 +280,106 @@ export type Database = {
           },
         ]
       }
+      files: {
+        Row: {
+          archived_at: string | null
+          bucket: string
+          category: string | null
+          checksum: string | null
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          entity_id: string | null
+          entity_type: string | null
+          expires_at: string | null
+          id: string
+          mime_type: string
+          org_id: string | null
+          original_name: string
+          owner_id: string
+          project_id: string | null
+          retention_days: number | null
+          size_bytes: number
+          status: Database["public"]["Enums"]["file_status"]
+          storage_path: string
+          tags: Json | null
+          updated_at: string
+          visibility: Database["public"]["Enums"]["file_visibility"]
+        }
+        Insert: {
+          archived_at?: string | null
+          bucket: string
+          category?: string | null
+          checksum?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          expires_at?: string | null
+          id?: string
+          mime_type: string
+          org_id?: string | null
+          original_name: string
+          owner_id: string
+          project_id?: string | null
+          retention_days?: number | null
+          size_bytes: number
+          status?: Database["public"]["Enums"]["file_status"]
+          storage_path: string
+          tags?: Json | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["file_visibility"]
+        }
+        Update: {
+          archived_at?: string | null
+          bucket?: string
+          category?: string | null
+          checksum?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          expires_at?: string | null
+          id?: string
+          mime_type?: string
+          org_id?: string | null
+          original_name?: string
+          owner_id?: string
+          project_id?: string | null
+          retention_days?: number | null
+          size_bytes?: number
+          status?: Database["public"]["Enums"]["file_status"]
+          storage_path?: string
+          tags?: Json | null
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["file_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formalization_acknowledgements: {
         Row: {
           acknowledged: boolean
@@ -1683,6 +1783,42 @@ export type Database = {
       }
     }
     Views: {
+      files_summary: {
+        Row: {
+          bucket: string | null
+          category: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string | null
+          mime_type: string | null
+          original_name: string | null
+          owner_id: string | null
+          owner_name: string | null
+          project_id: string | null
+          project_name: string | null
+          size_bytes: number | null
+          status: Database["public"]["Enums"]["file_status"] | null
+          storage_path: string | null
+          visibility: Database["public"]["Enums"]["file_visibility"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formalizations_public_customer: {
         Row: {
           acknowledgements: Json | null
@@ -1876,6 +2012,18 @@ export type Database = {
       }
       compute_formalization_hash: {
         Args: { p_formalization_id: string }
+        Returns: string
+      }
+      find_duplicate_file: {
+        Args: { p_checksum: string; p_owner_id?: string; p_project_id?: string }
+        Returns: {
+          bucket: string
+          id: string
+          storage_path: string
+        }[]
+      }
+      generate_file_storage_path: {
+        Args: { p_filename: string; p_org_id: string; p_project_id: string }
         Returns: string
       }
       get_effective_role: { Args: { p_obra_id: string }; Returns: string }
@@ -2075,6 +2223,8 @@ export type Database = {
         | "drive_link"
         | "external_doc"
         | "other"
+      file_status: "active" | "archived" | "deleted"
+      file_visibility: "private" | "team" | "public"
       formalization_event_type:
         | "created"
         | "updated"
@@ -2260,6 +2410,8 @@ export const Constants = {
         "external_doc",
         "other",
       ],
+      file_status: ["active", "archived", "deleted"],
+      file_visibility: ["private", "team", "public"],
       formalization_event_type: [
         "created",
         "updated",
