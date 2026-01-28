@@ -1,68 +1,72 @@
-# Relatório de Obra - Bwild
+# Portal BWild
 
-Portal de acompanhamento de obras com curva S e cronograma detalhado.
+Portal de gestão de obras com autenticação por roles, documentos, formalizações e relatórios semanais.
+
+## Documentação
+
+- [Arquitetura e Padrões](docs/ARCHITECTURE.md)
+- [Guia de Contribuição](docs/CONTRIBUTING.md)
+
+## Quick Start
+
+```bash
+# Instalar dependências
+npm install
+
+# Executar em desenvolvimento
+npm run dev
+
+# Executar testes
+npm run test
+```
+
+## Stack
+
+| Categoria | Tecnologia |
+|-----------|-----------|
+| Frontend | React 18 + TypeScript + Vite |
+| Styling | Tailwind CSS + shadcn/ui |
+| State | TanStack Query |
+| Backend | Supabase (Postgres + Auth + Storage + Edge Functions) |
+| Routing | React Router v6 |
 
 ## Configuração do Ambiente
 
-### 1. Criar arquivo .env
-
-Copie o arquivo de exemplo e preencha com suas credenciais:
-
-```sh
-cp .env.example .env
-```
-
-Edite o arquivo `.env` com os valores do seu projeto Supabase:
+As variáveis de ambiente são configuradas automaticamente pelo Lovable Cloud:
 
 ```
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sua-anon-key-aqui
-VITE_SUPABASE_PROJECT_ID=seu-project-id
-VITE_DEMO_MODE=false
-```
-
-**Importante:** Nunca commite o arquivo `.env` com credenciais reais.
-
-### 2. Instalar dependências
-
-```sh
-npm install
-```
-
-### 3. Executar em desenvolvimento
-
-```sh
-npm run dev
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
+VITE_SUPABASE_PROJECT_ID
 ```
 
 ## Scripts Disponíveis
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm run dev` | Inicia o servidor de desenvolvimento |
-| `npm run build` | Compila para produção |
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run test` | Executa testes |
 | `npm run lint` | Executa o linter |
-| `npm run typecheck` | Verifica tipos TypeScript |
-| `npm run preview` | Preview da build de produção |
+| `npm run preview` | Preview da build |
 
-## Feature Flags
+## Estrutura Principal
 
-- `VITE_DEMO_MODE`: Quando `true`, habilita dados de demonstração/mock. Em produção, deve ser `false`.
-
-## Tecnologias
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-- Supabase
+```
+src/
+├── components/     # Componentes React
+├── hooks/          # Custom hooks
+├── infra/          # Infraestrutura (repositories, supabase)
+├── pages/          # Páginas/rotas
+└── lib/            # Utilitários
+```
 
 ## Segurança
 
-- Credenciais são gerenciadas via variáveis de ambiente
-- Arquivo `.env` não é versionado
-- Validação de ambiente em runtime via Zod
+- RLS (Row Level Security) em todas as tabelas
+- Autenticação via Supabase Auth
+- Storage com URLs assinadas
+- Validação de MIME type e tamanho de arquivos
 
 ## Deploy
 
@@ -70,5 +74,3 @@ O projeto é deployado via Lovable. Para publicar:
 
 1. Abra o projeto no Lovable
 2. Clique em Share → Publish
-
-Certifique-se de configurar as variáveis de ambiente na plataforma de deploy.

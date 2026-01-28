@@ -11,6 +11,7 @@ export * from './base.repository';
 // Feature repositories
 export * as documentsRepo from './documents.repository';
 export * as projectsRepo from './projects.repository';
+export * as filesRepo from './files.repository';
 
 // Re-export types for convenience
 export type { 
@@ -28,3 +29,12 @@ export type {
   ProjectStatus,
   ProjectSummary,
 } from './projects.repository';
+
+export type {
+  FileMetadata,
+  FileWithUrl,
+  FileStatus,
+  FileVisibility,
+  CreateFileInput,
+  FileFilters,
+} from './files.repository';
