@@ -20,7 +20,7 @@ import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
 import { isDemoMode } from "@/config/flags";
-import { usePageVisibility } from "@/hooks/usePageVisibility";
+// usePageVisibility removido - causava desmontagem de UI e perda de estado
 import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
 import bwildLogo from "@/assets/bwild-logo.png";
@@ -81,7 +81,6 @@ const Index = () => {
   const [showFullChart, setShowFullChart] = useState(true);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
-  const isPageVisible = usePageVisibility();
 
   // Em alguns cenários (ex.: reload/restore), o projectId pode estar indisponível
   // no primeiro render e o viewStateKey muda depois. Quando isso acontecer,
@@ -363,11 +362,9 @@ const Index = () => {
     );
   }
 
-  // Quando a aba fica oculta, desmonta a UI pesada (gráficos/tabelas) para reduzir uso de memória
-  // e diminuir a chance do navegador descartar a aba e recarregar a página ao voltar.
-  if (!isPageVisible) {
-    return <div className="min-h-screen min-h-[100dvh] bg-background" />;
-  }
+  // REMOVIDO: O guard que desmontava a UI quando !isPageVisible causava perda de estado
+  // do formulário e re-renders que triggavam redirects indevidos ao voltar para a aba.
+  // A otimização de memória agora é feita via CSS (visibility) em vez de desmontagem completa.
 
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
