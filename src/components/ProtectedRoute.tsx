@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole, AppRole } from '@/hooks/useUserRole';
+import { debugNav } from '@/lib/debugAuth';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -18,8 +19,9 @@ export function ProtectedRoute({
   const { role, loading: roleLoading } = useUserRole();
   const location = useLocation();
 
-  // Show nothing while loading
+  // Show nothing while loading - NEVER redirect during loading state
   if (authLoading || roleLoading) {
+    debugNav('ProtectedRoute: loading', { authLoading, roleLoading, path: location.pathname });
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -29,11 +31,19 @@ export function ProtectedRoute({
 
   // Redirect if not authenticated, preserving the original destination
   if (!isAuthenticated) {
+    debugNav('ProtectedRoute: not authenticated, redirecting to auth', { 
+      from: location.pathname 
+    });
     return <Navigate to={redirectTo} state={{ from: location.pathname }} replace />;
   }
 
   // Check role if specified
   if (allowedRoles && role && !allowedRoles.includes(role)) {
+    debugNav('ProtectedRoute: role not allowed', { 
+      role, 
+      allowedRoles, 
+      path: location.pathname 
+    });
     // Redirect based on role
     if (role === 'customer') {
       return <Navigate to="/minhas-obras" replace />;
@@ -42,6 +52,11 @@ export function ProtectedRoute({
       return <Navigate to="/gestao" replace />;
     }
   }
+
+  debugNav('ProtectedRoute: access granted', { 
+    role, 
+    path: location.pathname 
+  });
 
   return <>{children}</>;
 }

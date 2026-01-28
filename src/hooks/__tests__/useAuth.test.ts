@@ -18,6 +18,17 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// Mock debug utilities
+vi.mock('@/lib/debugAuth', () => ({
+  debugAuth: vi.fn(),
+  logAuthState: vi.fn(),
+}));
+
+// Mock useUserRole to avoid circular dependency
+vi.mock('@/hooks/useUserRole', () => ({
+  clearRoleCache: vi.fn(),
+}));
+
 describe('useAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
