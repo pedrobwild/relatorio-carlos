@@ -119,6 +119,15 @@
 @layer base {
   * {
     @apply border-border;
+    /* Prevent text selection issues on mobile */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection in inputs and editable areas */
+  input, textarea, [contenteditable="true"], .selectable {
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   html {
@@ -128,6 +137,9 @@
     scroll-behavior: smooth;
     /* Better touch experience */
     -webkit-tap-highlight-color: transparent;
+    /* Prevent font scaling on orientation change */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -138,6 +150,8 @@
     min-height: 100dvh; /* Dynamic viewport height for mobile */
     overflow-x: hidden;
     line-height: 1.3; /* Compact line-height */
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior-y: contain;
   }
 
   /* Compact line-height for text elements */
@@ -184,10 +198,15 @@
     @apply text-[11px] md:text-xs text-muted-foreground;
   }
 
-  /* Improve touch targets for mobile - only apply to interactive elements that need it */
-  button:not(.min-h-auto), 
-  [role="button"]:not(.min-h-auto) {
+  /* Improve touch targets for mobile - Apple's minimum is 44px */
+  button:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8), 
+  [role="button"]:not(.min-h-auto):not(.h-6):not(.h-7):not(.h-8) {
     min-height: 44px;
+  }
+
+  /* Small buttons get smaller touch target */
+  button.h-8, button.h-9 {
+    min-height: 36px;
   }
   
   /* Exclude small inline elements from min-width */
@@ -201,9 +220,29 @@
     min-width: 44px;
   }
 
+  /* Fix inputs on iOS - prevent zoom on focus */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+
+  @media (min-width: 768px) {
+    input, select, textarea {
+      font-size: 14px !important;
+    }
+  }
+
   /* Better focus states for accessibility */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /* Safe area insets for notched devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
