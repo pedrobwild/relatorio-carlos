@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Search, ChevronDown, Check, Plus, Loader2, Trash2, Pencil } from 'lucide-react';
+import { Users, Search, ChevronDown, Check, Plus, Loader2, Trash2, Pencil, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -184,16 +184,117 @@ function EditUserDialog({
   );
 }
 
+function ResetPasswordDialog({ 
+  user, 
+  onReset 
+}: { 
+  user: UserWithRole; 
+  onReset: (userId: string, newPassword: string) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword.length < 6) {
+      toast({
+        title: 'Erro',
+        description: 'A senha deve ter pelo menos 6 caracteres',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: 'Erro',
+        description: 'As senhas não coincidem',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setLoading(true);
+    const success = await onReset(user.id, newPassword);
+    
+    if (success) {
+      setNewPassword('');
+      setConfirmPassword('');
+      setOpen(false);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" title="Redefinir senha">
+          <KeyRound className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Redefinir Senha</DialogTitle>
+          <DialogDescription>
+            Defina uma nova senha para o usuário {user.display_name || user.email}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova Senha</Label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmar Senha</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Digite a senha novamente"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Redefinir Senha
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UserCard({ 
   user, 
   onRoleChange,
   onDelete,
   onEdit,
+  onResetPassword,
 }: { 
   user: UserWithRole; 
   onRoleChange: (userId: string, role: AppRole) => void;
   onDelete: (userId: string) => void;
   onEdit: (userId: string, data: { display_name?: string; email?: string }) => Promise<boolean>;
+  onResetPassword: (userId: string, newPassword: string) => Promise<boolean>;
 }) {
   return (
     <Card>
@@ -211,6 +312,7 @@ function UserCard({
           <div className="flex items-center gap-1">
             <RoleSelector user={user} onRoleChange={onRoleChange} />
             <EditUserDialog user={user} onSave={onEdit} />
+            <ResetPasswordDialog user={user} onReset={onResetPassword} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
@@ -531,7 +633,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
 }
 
 export function UsersTab() {
-  const { users, loading, error, updateUserRole, updateUserProfile, deleteUser, refetch } = useUsers();
+  const { users, loading, error, updateUserRole, updateUserProfile, deleteUser, resetUserPassword, refetch } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | null>(null);
 
@@ -558,6 +660,10 @@ export function UsersTab() {
 
   const handleEdit = async (userId: string, data: { display_name?: string; email?: string }) => {
     return await updateUserProfile(userId, data);
+  };
+
+  const handleResetPassword = async (userId: string, newPassword: string) => {
+    return await resetUserPassword(userId, newPassword);
   };
 
   return (
@@ -671,6 +777,7 @@ export function UsersTab() {
                 onRoleChange={handleRoleChange}
                 onDelete={handleDelete}
                 onEdit={handleEdit}
+                onResetPassword={handleResetPassword}
               />
             ))}
           </div>
@@ -703,6 +810,7 @@ export function UsersTab() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <EditUserDialog user={user} onSave={handleEdit} />
+                        <ResetPasswordDialog user={user} onReset={handleResetPassword} />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
