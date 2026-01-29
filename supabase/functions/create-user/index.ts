@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse request body
-    const { email, password, display_name, role, cpf } = await req.json()
+    const { email, password, display_name, role, cpf, project_ids } = await req.json()
 
     if (!email || !password || !role) {
       return new Response(
@@ -150,6 +150,24 @@ Deno.serve(async (req) => {
 
     if (updateProfileError) {
       console.error('Error updating users_profile:', updateProfileError)
+    }
+
+    // Add user to selected projects as viewer
+    if (project_ids && Array.isArray(project_ids) && project_ids.length > 0) {
+      const projectMemberRecords = project_ids.map((projectId: string) => ({
+        project_id: projectId,
+        user_id: newUser.user!.id,
+        role: 'viewer',
+      }))
+
+      const { error: projectMembersError } = await adminClient
+        .from('project_members')
+        .insert(projectMemberRecords)
+
+      if (projectMembersError) {
+        console.error('Error adding user to projects:', projectMembersError)
+        // Don't fail the request, user was created successfully
+      }
     }
 
     return new Response(

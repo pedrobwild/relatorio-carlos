@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Users, Search, ChevronDown, Check, Plus, Loader2, Trash2, Pencil, KeyRound } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, Search, ChevronDown, Check, Plus, Loader2, Trash2, Pencil, KeyRound, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -383,6 +385,11 @@ function cpfToEmail(cpf: string): string {
   return `${digits}@cpf.bwild.com.br`;
 }
 
+interface ProjectOption {
+  id: string;
+  name: string;
+}
+
 function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -391,6 +398,41 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState<AppRole>('customer');
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+
+  // Fetch projects when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchProjects();
+    }
+  }, [open]);
+
+  const fetchProjects = async () => {
+    setLoadingProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const toggleProject = (projectId: string) => {
+    setSelectedProjects(prev => 
+      prev.includes(projectId) 
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    );
+  };
 
   const handleIdentifierChange = (value: string) => {
     if (identifierType === 'cpf') {
@@ -473,6 +515,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
             display_name: displayName || (identifierType === 'cpf' ? identifier : email.split('@')[0]),
             role,
             cpf: identifierType === 'cpf' ? identifier.replace(/\D/g, '') : undefined,
+            project_ids: selectedProjects,
           }),
         }
       );
@@ -496,6 +539,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
       setDisplayName('');
       setRole('customer');
       setIdentifierType('email');
+      setSelectedProjects([]);
       setOpen(false);
       onUserCreated();
 
@@ -616,6 +660,50 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Project Selection - Show for customer role */}
+            {role === 'customer' && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Obras Vinculadas
+                </Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecione as obras que este usuário poderá visualizar
+                </p>
+                {loadingProjects ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                ) : projects.length === 0 ? (
+                  <p className="text-sm text-muted-foreground p-2 text-center">
+                    Nenhuma obra disponível
+                  </p>
+                ) : (
+                  <ScrollArea className="h-[150px] rounded-md border p-2">
+                    <div className="space-y-2">
+                      {projects.map((project) => (
+                        <label
+                          key={project.id}
+                          className="flex items-start gap-2 p-2 rounded hover:bg-muted cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={selectedProjects.includes(project.id)}
+                            onCheckedChange={() => toggleProject(project.id)}
+                          />
+                          <span className="text-sm leading-tight">{project.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+                {selectedProjects.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedProjects.length} obra(s) selecionada(s)
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
