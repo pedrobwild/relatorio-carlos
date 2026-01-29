@@ -365,11 +365,11 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 const CustomLegend = () => (
   <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 pt-3 border-t border-border/30">
     <div className="flex items-center gap-1.5 sm:gap-2">
-      <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-primary" />
+      <span className="w-6 h-0.5 sm:w-8 bg-primary rounded-full" />
       <span className="text-xs sm:text-sm font-medium text-muted-foreground">Previsto</span>
     </div>
     <div className="flex items-center gap-1.5 sm:gap-2">
-      <span className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-success" />
+      <span className="w-6 sm:w-8 h-0.5 bg-success rounded-full" style={{ backgroundImage: 'repeating-linear-gradient(90deg, hsl(var(--success)) 0px, hsl(var(--success)) 4px, transparent 4px, transparent 6px)' }} />
       <span className="text-xs sm:text-sm font-medium text-muted-foreground">Realizado</span>
     </div>
   </div>
@@ -572,13 +572,15 @@ const SCurveChart = ({
                 strokeDasharray="6 6"
                 strokeOpacity={0.4}
               />
+              {/* Linha de Previsto - renderizada por baixo */}
               <Line
                 type="monotone"
                 dataKey="previsto"
                 name="previsto"
                 stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 2.5 }}
+                strokeWidth={3}
+                strokeOpacity={0.6}
+                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 3 }}
                 activeDot={(props: any) => {
                   const { cx, cy } = props;
                   return (
@@ -605,24 +607,28 @@ const SCurveChart = ({
                   );
                 }}
               />
+              {/* Linha de Realizado - renderizada por cima com stroke tracejado quando sobreposta */}
               <Line
                 type="monotone"
                 dataKey="realizado"
                 name="realizado"
                 stroke="hsl(var(--success))"
                 strokeWidth={2.5}
+                strokeDasharray="8 4"
                 dot={(props: any) => {
                   const { cx, cy, payload } = props;
                   if (payload.realizado === null) return null;
                   const isMatch = payload.previsto === payload.realizado;
+                  // Offset vertical de 4px quando os valores são iguais para melhor visualização
+                  const yOffset = isMatch ? -4 : 0;
                   return (
                     <circle
                       cx={cx}
-                      cy={cy}
-                      r={isMatch ? 3.5 : 2.5}
+                      cy={cy + yOffset}
+                      r={3.5}
                       fill="hsl(var(--success))"
-                      stroke={isMatch ? "hsl(var(--primary))" : "none"}
-                      strokeWidth={isMatch ? 2 : 0}
+                      stroke="hsl(var(--card))"
+                      strokeWidth={1.5}
                     />
                   );
                 }}
