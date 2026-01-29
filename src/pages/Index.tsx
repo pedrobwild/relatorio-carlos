@@ -129,17 +129,31 @@ const Index = () => {
     }));
   }, [dbActivities]);
 
+  // Calculate effective end date from activities (max of planned_end)
+  const calculateEndDateFromActivities = (activities: ActivityType[]): string | null => {
+    if (activities.length === 0) return null;
+    const dates = activities
+      .map(a => a.plannedEnd)
+      .filter(d => d)
+      .map(d => new Date(d + 'T00:00:00').getTime());
+    if (dates.length === 0) return null;
+    const maxDate = new Date(Math.max(...dates));
+    return maxDate.toISOString().split('T')[0];
+  };
+
   // Use real project data if available, demo data only in demo mode
   const reportData: ReportData | null = useMemo(() => {
     if (project) {
       // Use database activities if available
       if (formattedActivities.length > 0) {
+        // Calculate end date from activities (max planned_end), fallback to project date
+        const activitiesEndDate = calculateEndDateFromActivities(formattedActivities);
         return {
           projectName: project.name,
           unitName: project.unit_name || '',
           clientName: project.customer_name || '',
           startDate: project.planned_start_date,
-          endDate: project.planned_end_date,
+          endDate: activitiesEndDate || project.planned_end_date,
           reportDate: new Date().toISOString().split('T')[0],
           activities: formattedActivities,
         };
@@ -147,12 +161,13 @@ const Index = () => {
 
       // Demo mode: show demo activities
       if (isDemoMode) {
+        const demoEndDate = calculateEndDateFromActivities(demoReportData.activities);
         return {
           projectName: project.name,
           unitName: project.unit_name || '',
           clientName: project.customer_name || '',
           startDate: project.planned_start_date,
-          endDate: project.planned_end_date,
+          endDate: demoEndDate || project.planned_end_date,
           reportDate: new Date().toISOString().split('T')[0],
           activities: demoReportData.activities,
         };
