@@ -269,11 +269,20 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       actualProgress = actualSum;
     }
 
+    const previstoValue = Math.round((plannedProgress / totalWeight) * 100);
+    const realizadoValue = actualProgress !== null ? Math.round((actualProgress / totalWeight) * 100) : null;
+    
+    // Add offset to realizado when values are equal to prevent overlap
+    const realizadoDisplay = realizadoValue !== null && realizadoValue === previstoValue
+      ? realizadoValue + 2 // Add 2% visual offset
+      : realizadoValue;
+    
     return {
       date: formatDisplayDate(date, baseYear),
       timestamp: daysSinceStart,
-      previsto: Math.round((plannedProgress / totalWeight) * 100),
-      realizado: actualProgress !== null ? Math.round((actualProgress / totalWeight) * 100) : null,
+      previsto: previstoValue,
+      realizado: realizadoValue, // Keep original for tooltip
+      realizadoDisplay, // Use for line rendering
       activity: activityAtDate,
     };
   });
@@ -605,10 +614,10 @@ const SCurveChart = ({
                   );
                 }}
               />
-              {/* Linha de Realizado - verde sólido e grosso para destaque */}
+              {/* Linha de Realizado - verde sólido com offset para evitar sobreposição */}
               <Line
                 type="monotone"
-                dataKey="realizado"
+                dataKey="realizadoDisplay"
                 name="realizado"
                 stroke="#22c55e"
                 strokeWidth={3.5}
