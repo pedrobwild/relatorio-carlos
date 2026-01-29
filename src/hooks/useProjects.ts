@@ -57,21 +57,39 @@ export function useProjects() {
           customer_email: p.project_customers?.[0]?.customer_email,
         })));
       } else if (isCustomer) {
-        // Customer sees their linked projects
-        const { data, error: fetchError } = await supabase
+        // Customer sees projects via project_members (unified membership table)
+        const { data: memberData, error: memberError } = await supabase
+          .from('project_members')
+          .select(`
+            project:projects (*)
+          `)
+          .eq('user_id', user.id);
+
+        if (memberError) throw memberError;
+        
+        // Also check legacy project_customers table for backwards compatibility
+        const { data: customerData } = await supabase
           .from('project_customers')
           .select(`
             project:projects (*)
           `)
           .eq('customer_user_id', user.id);
 
-        if (fetchError) throw fetchError;
+        // Combine and deduplicate projects from both sources
+        const memberProjects = (memberData || [])
+          .map(pm => pm.project)
+          .filter((p): p is NonNullable<typeof p> => p !== null);
         
-        setProjects((data || [])
+        const customerProjects = (customerData || [])
           .map(pc => pc.project)
-          .filter((p): p is NonNullable<typeof p> => p !== null)
-          .map(p => ({ ...p, status: p.status as Project['status'] }))
+          .filter((p): p is NonNullable<typeof p> => p !== null);
+
+        const allProjects = [...memberProjects, ...customerProjects];
+        const uniqueProjects = allProjects.filter((p, index, self) => 
+          index === self.findIndex(t => t.id === p.id)
         );
+        
+        setProjects(uniqueProjects.map(p => ({ ...p, status: p.status as Project['status'] })));
       }
     } catch (err: any) {
       console.error('Error fetching projects:', err);
