@@ -361,16 +361,16 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null;
 };
 
-// Custom legend component for mobile
+// Custom legend component
 const CustomLegend = () => (
-  <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 pt-3 border-t border-border/30">
-    <div className="flex items-center gap-1.5 sm:gap-2">
-      <span className="w-6 h-0.5 sm:w-8 bg-primary rounded-full" />
-      <span className="text-xs sm:text-sm font-medium text-muted-foreground">Previsto</span>
+  <div className="flex items-center justify-center gap-6 sm:gap-8 mt-3 sm:mt-4 pt-3 border-t border-border/30">
+    <div className="flex items-center gap-2">
+      <span className="w-6 h-0.5 bg-primary opacity-50" style={{ backgroundImage: 'repeating-linear-gradient(90deg, hsl(var(--primary)) 0px, hsl(var(--primary)) 4px, transparent 4px, transparent 6px)' }} />
+      <span className="text-xs sm:text-sm text-muted-foreground">Previsto</span>
     </div>
-    <div className="flex items-center gap-1.5 sm:gap-2">
-      <span className="w-6 sm:w-8 h-0.5 bg-success rounded-full" style={{ backgroundImage: 'repeating-linear-gradient(90deg, hsl(var(--success)) 0px, hsl(var(--success)) 4px, transparent 4px, transparent 6px)' }} />
-      <span className="text-xs sm:text-sm font-medium text-muted-foreground">Realizado</span>
+    <div className="flex items-center gap-2">
+      <span className="w-6 h-1 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+      <span className="text-xs sm:text-sm font-semibold" style={{ color: '#22c55e' }}>Realizado</span>
     </div>
   </div>
 );
@@ -572,15 +572,16 @@ const SCurveChart = ({
                 strokeDasharray="6 6"
                 strokeOpacity={0.4}
               />
-              {/* Linha de Previsto - renderizada por baixo */}
+              {/* Linha de Previsto - roxo claro tracejado */}
               <Line
                 type="monotone"
                 dataKey="previsto"
                 name="previsto"
                 stroke="hsl(var(--primary))"
-                strokeWidth={3}
-                strokeOpacity={0.6}
-                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 3 }}
+                strokeWidth={2}
+                strokeOpacity={0.5}
+                strokeDasharray="6 4"
+                dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 2, opacity: 0.6 }}
                 activeDot={(props: any) => {
                   const { cx, cy } = props;
                   return (
@@ -588,47 +589,40 @@ const SCurveChart = ({
                       <circle
                         cx={cx}
                         cy={cy}
-                        r={12}
+                        r={10}
                         fill="hsl(var(--primary))"
                         opacity={0.15}
-                        className="animate-ping"
-                        style={{ transformOrigin: `${cx}px ${cy}px` }}
                       />
                       <circle
                         cx={cx}
                         cy={cy}
-                        r={6}
+                        r={5}
                         fill="hsl(var(--primary))"
                         stroke="hsl(var(--card))"
                         strokeWidth={2}
-                        className="drop-shadow-lg"
                       />
                     </g>
                   );
                 }}
               />
-              {/* Linha de Realizado - renderizada por cima com stroke tracejado quando sobreposta */}
+              {/* Linha de Realizado - verde sólido e grosso para destaque */}
               <Line
                 type="monotone"
                 dataKey="realizado"
                 name="realizado"
-                stroke="hsl(var(--success))"
-                strokeWidth={2.5}
-                strokeDasharray="8 4"
+                stroke="#22c55e"
+                strokeWidth={3.5}
                 dot={(props: any) => {
                   const { cx, cy, payload } = props;
                   if (payload.realizado === null) return null;
-                  const isMatch = payload.previsto === payload.realizado;
-                  // Offset vertical de 4px quando os valores são iguais para melhor visualização
-                  const yOffset = isMatch ? -4 : 0;
                   return (
                     <circle
                       cx={cx}
-                      cy={cy + yOffset}
-                      r={3.5}
-                      fill="hsl(var(--success))"
-                      stroke="hsl(var(--card))"
-                      strokeWidth={1.5}
+                      cy={cy}
+                      r={4}
+                      fill="#22c55e"
+                      stroke="white"
+                      strokeWidth={2}
                     />
                   );
                 }}
@@ -639,18 +633,16 @@ const SCurveChart = ({
                       <circle
                         cx={cx}
                         cy={cy}
-                        r={12}
-                        fill="hsl(var(--success))"
-                        opacity={0.15}
-                        className="animate-ping"
-                        style={{ transformOrigin: `${cx}px ${cy}px` }}
+                        r={14}
+                        fill="#22c55e"
+                        opacity={0.2}
                       />
                       <circle
                         cx={cx}
                         cy={cy}
-                        r={6}
-                        fill="hsl(var(--success))"
-                        stroke="hsl(var(--card))"
+                        r={7}
+                        fill="#22c55e"
+                        stroke="white"
                         strokeWidth={2}
                         className="drop-shadow-lg"
                       />
