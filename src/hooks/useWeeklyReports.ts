@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { WeeklyReportData } from "@/types/weeklyReport";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
-
+import { useReportImageUpload } from "./useReportImageUpload";
 interface WeeklyReportRow {
   id: string;
   project_id: string;
@@ -26,6 +26,7 @@ interface UseWeeklyReportsOptions {
 export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   const queryClient = useQueryClient();
   const [savingWeek, setSavingWeek] = useState<number | null>(null);
+  const { uploadGalleryPhotos, isUploading } = useReportImageUpload();
 
   const queryKey = ["weekly-reports", projectId];
 
@@ -103,15 +104,43 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   });
 
   const saveReport = useCallback(
-    (
+    async (
       weekNumber: number,
       weekStart: string,
       weekEnd: string,
       data: WeeklyReportData
     ) => {
-      upsertMutation.mutate({ weekNumber, weekStart, weekEnd, data });
+      if (!projectId) {
+        toast.error("Projeto não selecionado");
+        return;
+      }
+
+      setSavingWeek(weekNumber);
+
+      // Upload any blob URLs to permanent storage before saving
+      let dataToSave = data;
+      if (data.gallery && data.gallery.length > 0) {
+        const hasBlobUrls = data.gallery.some((p) => p.url?.startsWith("blob:"));
+        if (hasBlobUrls) {
+          toast.loading("Enviando fotos...", { id: "uploading-photos" });
+          const { success, photos } = await uploadGalleryPhotos(
+            projectId,
+            weekNumber,
+            data.gallery
+          );
+          toast.dismiss("uploading-photos");
+          
+          if (!success) {
+            setSavingWeek(null);
+            return; // Upload failed, don't save with broken URLs
+          }
+          dataToSave = { ...data, gallery: photos };
+        }
+      }
+
+      upsertMutation.mutate({ weekNumber, weekStart, weekEnd, data: dataToSave });
     },
-    [upsertMutation]
+    [projectId, uploadGalleryPhotos, upsertMutation]
   );
 
   return {
@@ -119,7 +148,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
     isLoading,
     error,
     saveReport,
-    isSaving: upsertMutation.isPending,
+    isSaving: upsertMutation.isPending || isUploading,
     savingWeek,
   };
 }
