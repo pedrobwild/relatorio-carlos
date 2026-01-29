@@ -97,23 +97,46 @@ export async function getStaffProjects(): Promise<RepositoryListResult<ProjectWi
 
 /**
  * Fetch projects for a specific customer
+ * Checks both project_members (unified) and project_customers (legacy) tables
  */
 export async function getCustomerProjects(userId: string): Promise<RepositoryListResult<Project>> {
   return executeListQuery(async () => {
-    const { data, error } = await supabase
+    // Fetch from unified membership table
+    const { data: memberData, error: memberError } = await supabase
+      .from('project_members')
+      .select(`
+        project:projects (*)
+      `)
+      .eq('user_id', userId);
+
+    if (memberError) return { data: null, error: memberError };
+
+    // Fetch from legacy project_customers table for backwards compatibility
+    const { data: customerData, error: customerError } = await supabase
       .from('project_customers')
       .select(`
         project:projects (*)
       `)
       .eq('customer_user_id', userId);
 
-    if (error) return { data: null, error };
+    if (customerError) return { data: null, error: customerError };
+
+    // Combine and deduplicate projects from both sources
+    const memberProjects = (memberData ?? [])
+      .map(pm => pm.project)
+      .filter((p): p is NonNullable<typeof p> => p !== null);
+    
+    const customerProjects = (customerData ?? [])
+      .map(pc => pc.project)
+      .filter((p): p is NonNullable<typeof p> => p !== null);
+
+    const allProjects = [...memberProjects, ...customerProjects];
+    const uniqueProjects = allProjects.filter((p, index, self) => 
+      index === self.findIndex(t => t.id === p.id)
+    );
 
     return {
-      data: (data ?? [])
-        .map(pc => pc.project)
-        .filter((p): p is NonNullable<typeof p> => p !== null)
-        .map(p => ({ ...p, status: p.status as ProjectStatus })),
+      data: uniqueProjects.map(p => ({ ...p, status: p.status as ProjectStatus })),
       error: null,
     };
   });
