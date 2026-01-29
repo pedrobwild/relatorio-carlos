@@ -181,6 +181,45 @@ export function useUsers() {
     }
   };
 
+  const resetUserPassword = async (userId: string, newPassword: string) => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-password`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionData.session?.access_token}`,
+          },
+          body: JSON.stringify({ user_id: userId, new_password: newPassword }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao redefinir senha');
+      }
+
+      toast({
+        title: 'Senha redefinida',
+        description: 'A senha do usuário foi alterada com sucesso',
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      toast({
+        title: 'Erro',
+        description: err instanceof Error ? err.message : 'Não foi possível redefinir a senha',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [isAdmin]);
@@ -193,5 +232,6 @@ export function useUsers() {
     updateUserRole,
     updateUserProfile,
     deleteUser,
+    resetUserPassword,
   };
 }
