@@ -33,7 +33,7 @@ export function useProjectsQuery(filters?: { status?: ProjectStatus }) {
 
   return useQuery({
     queryKey: projectKeys.list({ status: filters?.status, userId: user?.id }),
-    queryFn: async () => {
+    queryFn: async (): Promise<projectsRepo.ProjectWithCustomer[]> => {
       if (!user) return [];
 
       if (isStaff) {
@@ -56,7 +56,8 @@ export function useProjectsQuery(filters?: { status?: ProjectStatus }) {
         if (filters?.status) {
           projects = projects.filter((p) => p.status === filters.status);
         }
-        return projects;
+        // Cast to ProjectWithCustomer (customer projects don't have customer_name but interface is compatible)
+        return projects as projectsRepo.ProjectWithCustomer[];
       }
 
       return [];

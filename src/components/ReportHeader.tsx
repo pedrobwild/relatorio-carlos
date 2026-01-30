@@ -12,7 +12,7 @@ import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -166,7 +166,7 @@ const ReportHeader = ({
 
   const { paths, projectId } = useProjectNavigation();
   const { isStaff } = useUserRole();
-  const { projects } = useProjects();
+  const { data: projects = [] } = useProjectsQuery();
   const navigate = useNavigate();
 
   // Filter out current project and get other available projects

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Plus, Search, Calendar, User, Settings, Trash2, Eye, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useProjects, Project } from '@/hooks/useProjects';
+import { useProjectsQuery } from '@/hooks/useProjectsQuery';
+import type { ProjectWithCustomer } from '@/infra/repositories';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -362,7 +363,7 @@ function ObraCard({
   onEdit,
   onDelete,
 }: { 
-  project: Project; 
+  project: ProjectWithCustomer; 
   onView: () => void; 
   onEdit: () => void;
   onDelete: () => void;
@@ -438,21 +439,23 @@ function ObraCard({
 
 export function ObrasTab() {
   const navigate = useNavigate();
-  const { projects, loading, error, refetch } = useProjects();
+  const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  const filteredProjects = projects.filter(p => {
+  const filteredProjects = useMemo(() => projects.filter((p: ProjectWithCustomer) => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || p.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [projects, searchTerm, statusFilter]);
 
-  const activeCount = projects.filter(p => p.status === 'active').length;
-  const completedCount = projects.filter(p => p.status === 'completed').length;
-  const pausedCount = projects.filter(p => p.status === 'paused').length;
+  const { activeCount, completedCount, pausedCount } = useMemo(() => ({
+    activeCount: projects.filter((p: ProjectWithCustomer) => p.status === 'active').length,
+    completedCount: projects.filter((p: ProjectWithCustomer) => p.status === 'completed').length,
+    pausedCount: projects.filter((p: ProjectWithCustomer) => p.status === 'paused').length,
+  }), [projects]);
 
   const handleDelete = async (projectId: string) => {
     try {
@@ -559,7 +562,7 @@ export function ObrasTab() {
         </div>
       ) : error ? (
         <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Erro ao carregar obras: {error}</p>
+          <p className="text-muted-foreground">Erro ao carregar obras: {String(error)}</p>
         </Card>
       ) : filteredProjects.length === 0 ? (
         <Card className="p-8 text-center">

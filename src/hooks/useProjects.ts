@@ -1,8 +1,11 @@
+/**
+ * @deprecated Use useProjectsQuery from '@/hooks/useProjectsQuery' instead.
+ * This hook is kept for backwards compatibility but will be removed in a future version.
+ */
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useUserRole } from './useUserRole';
-
 export interface Project {
   id: string;
   name: string;

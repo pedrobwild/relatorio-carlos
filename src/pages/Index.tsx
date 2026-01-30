@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, FileText, Loader2, AlertCircle, Activity, Plus, GanttChartSquare } from "lucide-react";
@@ -223,15 +223,15 @@ const Index = () => {
   }, [reportsChronological, viewStateKey]);
 
   // Handler for Gantt drag-and-drop date changes
-  const handleActivityDateChange = async (activityId: string, newPlannedStart: string, newPlannedEnd: string) => {
+  const handleActivityDateChange = useCallback(async (activityId: string, newPlannedStart: string, newPlannedEnd: string) => {
     if (!isStaff) return;
     await updateActivity(activityId, { 
       planned_start: newPlannedStart, 
       planned_end: newPlannedEnd 
     });
-  };
+  }, [isStaff, updateActivity]);
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = useCallback(async () => {
     if (!reportRef.current) return;
 
     setIsExporting(true);
@@ -259,39 +259,39 @@ const Index = () => {
     } finally {
       setIsExporting(false);
     }
-  };
+  }, []);
 
-  const handleReportClick = (report: WeeklyReport, index: number) => {
+  const handleReportClick = useCallback((report: WeeklyReport, index: number) => {
     setSelectedWeeklyReport(report);
     setSelectedWeekIndex(index);
     patchPortalViewState(viewStateKey, {
       activeTab: "relatorio",
       weeklyReport: { open: true, index },
     });
-  };
+  }, [viewStateKey]);
 
-  const handleBackToList = () => {
+  const handleBackToList = useCallback(() => {
     setSelectedWeeklyReport(null);
     patchPortalViewState(viewStateKey, { weeklyReport: { open: false } });
-  };
+  }, [viewStateKey]);
 
-  const handlePreviousWeek = () => {
+  const handlePreviousWeek = useCallback(() => {
     if (selectedWeekIndex > 0) {
       const newIndex = selectedWeekIndex - 1;
       setSelectedWeekIndex(newIndex);
       setSelectedWeeklyReport(reportsChronological[newIndex]);
       patchPortalViewState(viewStateKey, { weeklyReport: { open: true, index: newIndex } });
     }
-  };
+  }, [selectedWeekIndex, reportsChronological, viewStateKey]);
 
-  const handleNextWeek = () => {
+  const handleNextWeek = useCallback(() => {
     if (selectedWeekIndex < reportsChronological.length - 1) {
       const newIndex = selectedWeekIndex + 1;
       setSelectedWeekIndex(newIndex);
       setSelectedWeeklyReport(reportsChronological[newIndex]);
       patchPortalViewState(viewStateKey, { weeklyReport: { open: true, index: newIndex } });
     }
-  };
+  }, [selectedWeekIndex, reportsChronological, viewStateKey]);
 
   if (projectLoading || activitiesLoading) {
     return (
