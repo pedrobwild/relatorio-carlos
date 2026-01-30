@@ -1,11 +1,13 @@
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Calendar, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AppHeader } from '@/components/AppHeader';
-import { useProjects, Project } from '@/hooks/useProjects';
+import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { ProjectWithCustomer } from '@/infra/repositories';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -21,17 +23,17 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-function ProjectCard({ project, onClick }: { project: Project; onClick: () => void }) {
-  const daysRemaining = Math.ceil(
-    (new Date(project.planned_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  );
+function ProjectCard({ project, onClick }: { project: ProjectWithCustomer; onClick: () => void }) {
+  const daysRemaining = useMemo(() => Math.ceil(
+    (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  ), [project.planned_end_date]);
 
-  const progress = project.actual_start_date 
-    ? Math.min(100, Math.max(0, 
-        ((new Date().getTime() - new Date(project.actual_start_date || project.planned_start_date).getTime()) / 
-        (new Date(project.planned_end_date).getTime() - new Date(project.actual_start_date || project.planned_start_date).getTime())) * 100
-      ))
-    : 0;
+  const progress = useMemo(() => {
+    if (!project.actual_start_date) return 0;
+    const start = new Date(project.actual_start_date || project.planned_start_date).getTime();
+    const end = new Date(project.planned_end_date).getTime();
+    return Math.min(100, Math.max(0, ((Date.now() - start) / (end - start)) * 100));
+  }, [project.actual_start_date, project.planned_start_date, project.planned_end_date]);
 
   return (
     <Card 
@@ -85,7 +87,12 @@ function ProjectCard({ project, onClick }: { project: Project; onClick: () => vo
 
 export default function MinhasObras() {
   const navigate = useNavigate();
-  const { projects, loading, error } = useProjects();
+  const { data: projects = [], isLoading: loading, error } = useProjectsQuery();
+
+  const handleProjectClick = useCallback((projectId: string) => {
+    sessionStorage.setItem('selectedProjectId', projectId);
+    navigate(`/obra/${projectId}`);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
@@ -112,7 +119,7 @@ export default function MinhasObras() {
           </div>
         ) : error ? (
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground">Erro ao carregar obras: {error}</p>
+            <p className="text-muted-foreground">Erro ao carregar obras: {String(error)}</p>
           </Card>
         ) : projects.length === 0 ? (
           <Card className="p-8 text-center">
@@ -129,11 +136,7 @@ export default function MinhasObras() {
               <ProjectCard
                 key={project.id}
                 project={project}
-                onClick={() => {
-                  // Store project in session and navigate to report
-                  sessionStorage.setItem('selectedProjectId', project.id);
-                  navigate(`/obra/${project.id}`);
-                }}
+                onClick={() => handleProjectClick(project.id)}
               />
             ))}
           </div>

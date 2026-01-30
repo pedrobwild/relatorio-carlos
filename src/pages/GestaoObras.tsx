@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Building2, Calendar, User, Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AppHeader } from '@/components/AppHeader';
-import { useProjects, Project } from '@/hooks/useProjects';
+import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { ProjectWithCustomer } from '@/infra/repositories';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -24,10 +25,10 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-function ProjectCard({ project, onClick, onEdit }: { project: Project; onClick: () => void; onEdit: () => void }) {
-  const daysRemaining = Math.ceil(
-    (new Date(project.planned_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  );
+function ProjectCard({ project, onClick, onEdit }: { project: ProjectWithCustomer; onClick: () => void; onEdit: () => void }) {
+  const daysRemaining = useMemo(() => Math.ceil(
+    (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  ), [project.planned_end_date]);
 
   return (
     <Card 
@@ -90,20 +91,35 @@ function ProjectCard({ project, onClick, onEdit }: { project: Project; onClick: 
 
 export default function GestaoObras() {
   const navigate = useNavigate();
-  const { projects, loading, error } = useProjects();
+  const { data: projects = [], isLoading: loading, error } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  const filteredProjects = projects.filter(p => {
+  const handleProjectClick = useCallback((projectId: string) => {
+    navigate(`/obra/${projectId}`);
+  }, [navigate]);
+
+  const handleProjectEdit = useCallback((projectId: string) => {
+    navigate(`/gestao/obra/${projectId}`);
+  }, [navigate]);
+
+  const filteredProjects = useMemo(() => projects.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || p.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [projects, searchTerm, statusFilter]);
 
-  const activeCount = projects.filter(p => p.status === 'active').length;
-  const completedCount = projects.filter(p => p.status === 'completed').length;
+  const { activeCount, completedCount, thisMonthCount } = useMemo(() => ({
+    activeCount: projects.filter(p => p.status === 'active').length,
+    completedCount: projects.filter(p => p.status === 'completed').length,
+    thisMonthCount: projects.filter(p => {
+      const created = new Date(p.created_at);
+      const now = new Date();
+      return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+    }).length,
+  }), [projects]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,13 +154,7 @@ export default function GestaoObras() {
           </Card>
           <Card className="p-4">
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Este mês</p>
-            <p className="text-h2 font-bold">
-              {projects.filter(p => {
-                const created = new Date(p.created_at);
-                const now = new Date();
-                return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
-              }).length}
-            </p>
+            <p className="text-h2 font-bold">{thisMonthCount}</p>
           </Card>
         </div>
 
@@ -193,7 +203,7 @@ export default function GestaoObras() {
           </div>
         ) : error ? (
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground">Erro ao carregar obras: {error}</p>
+            <p className="text-muted-foreground">Erro ao carregar obras: {String(error)}</p>
           </Card>
         ) : filteredProjects.length === 0 ? (
           <Card className="p-8 text-center">
@@ -214,8 +224,8 @@ export default function GestaoObras() {
               <ProjectCard
                 key={project.id}
                 project={project}
-                onClick={() => navigate(`/obra/${project.id}`)}
-                onEdit={() => navigate(`/gestao/obra/${project.id}`)}
+                onClick={() => handleProjectClick(project.id)}
+                onEdit={() => handleProjectEdit(project.id)}
               />
             ))}
           </div>

@@ -2,8 +2,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Project } from '@/hooks/useProjects';
+import type { ProjectWithCustomer } from '@/infra/repositories';
 
+// Re-export for backwards compatibility
+export type Project = ProjectWithCustomer;
 interface ProjectContextType {
   project: Project | null;
   loading: boolean;
