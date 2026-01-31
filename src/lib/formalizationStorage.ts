@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { FormalizationAttachment } from "@/types/formalization";
 
 const BUCKET_NAME = "formalization-attachments";
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",

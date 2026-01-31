@@ -145,7 +145,7 @@ describe('ALLOWED_MIME_TYPES', () => {
 });
 
 describe('MAX_FILE_SIZE_BYTES', () => {
-  it('equals 50MB', () => {
-    expect(MAX_FILE_SIZE_BYTES).toBe(50 * 1024 * 1024);
+  it('equals 500MB', () => {
+    expect(MAX_FILE_SIZE_BYTES).toBe(500 * 1024 * 1024);
   });
 });
