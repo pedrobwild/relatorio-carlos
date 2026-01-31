@@ -104,9 +104,14 @@ const ReportHeader = ({
     today.setHours(0, 0, 0, 0);
 
     const totalWorkingDays = calculateWorkingDays(start, end);
-    const elapsedWorkingDays = calculateWorkingDays(start, today);
-    // Calculate remaining from today, ensuring it doesn't go negative
-    const remainingWorkingDays = today < end ? calculateWorkingDays(today, end) : 0;
+    
+    // Dias decorridos e restantes só são calculados a partir da data de início oficial
+    const hasStarted = today >= start;
+    const elapsedWorkingDays = hasStarted ? calculateWorkingDays(start, today) : 0;
+    // Calculate remaining from today (if started) or full duration (if not started)
+    const remainingWorkingDays = !hasStarted 
+      ? totalWorkingDays 
+      : (today < end ? calculateWorkingDays(today, end) : 0);
 
     // Check if any activity has weight defined
     const hasWeights = activities.some(a => (a as any).weight !== undefined);
