@@ -24,16 +24,23 @@ const statusLabels: Record<string, string> = {
 };
 
 function ProjectCard({ project, onClick }: { project: ProjectWithCustomer; onClick: () => void }) {
-  const daysRemaining = useMemo(() => Math.ceil(
-    (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  ), [project.planned_end_date]);
+  const startDate = new Date(project.actual_start_date || project.planned_start_date);
+  const endDate = new Date(project.planned_end_date);
+  const now = Date.now();
+  const hasStarted = now >= startDate.getTime();
+
+  // Dias restantes só contam a partir da data de início oficial
+  const daysRemaining = useMemo(() => {
+    if (!hasStarted) return null; // Ainda não começou
+    return Math.ceil((endDate.getTime() - now) / (1000 * 60 * 60 * 24));
+  }, [hasStarted, endDate, now]);
 
   const progress = useMemo(() => {
-    if (!project.actual_start_date) return 0;
-    const start = new Date(project.actual_start_date || project.planned_start_date).getTime();
-    const end = new Date(project.planned_end_date).getTime();
-    return Math.min(100, Math.max(0, ((Date.now() - start) / (end - start)) * 100));
-  }, [project.actual_start_date, project.planned_start_date, project.planned_end_date]);
+    if (!hasStarted) return 0;
+    const total = endDate.getTime() - startDate.getTime();
+    const elapsed = now - startDate.getTime();
+    return Math.min(100, Math.max(0, (elapsed / total) * 100));
+  }, [hasStarted, startDate, endDate, now]);
 
   return (
     <Card 
@@ -76,7 +83,7 @@ function ProjectCard({ project, onClick }: { project: ProjectWithCustomer; onCli
             </div>
             <div className="flex justify-between text-tiny text-muted-foreground">
               <span>{Math.round(progress)}% concluído</span>
-              {daysRemaining > 0 && <span>{daysRemaining} dias restantes</span>}
+              {daysRemaining !== null && daysRemaining > 0 && <span>{daysRemaining} dias restantes</span>}
             </div>
           </>
         )}
