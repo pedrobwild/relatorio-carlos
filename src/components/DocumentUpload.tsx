@@ -43,10 +43,10 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
   };
 
   const handleFileSelect = (selectedFile: File) => {
-    if (selectedFile.size > 50 * 1024 * 1024) {
+    if (selectedFile.size > 500 * 1024 * 1024) {
       toast({
         title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 50MB",
+        description: "O tamanho máximo permitido é 500MB",
         variant: "destructive",
       });
       return;

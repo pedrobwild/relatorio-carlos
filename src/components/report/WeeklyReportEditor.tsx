@@ -205,9 +205,9 @@ const WeeklyReportEditor = ({ data, onSave, onCancel, isSaving: externalIsSaving
       return;
     }
 
-    // Validate file size (max 50MB)
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("Arquivo muito grande. Máximo 50MB.");
+    // Validate file size (max 500MB)
+    if (file.size > 500 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 500MB.");
       return;
     }
 

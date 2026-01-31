@@ -328,7 +328,7 @@ export type UpdateActivityInput = z.infer<typeof updateActivitySchema>;
 // File Upload Schemas
 // ============================================================================
 
-export const MAX_FILE_SIZE_MB = 50;
+export const MAX_FILE_SIZE_MB = 500;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export const ALLOWED_MIME_TYPES = [

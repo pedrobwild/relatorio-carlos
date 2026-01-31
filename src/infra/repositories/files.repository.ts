@@ -111,8 +111,8 @@ export const ALLOWED_MIME_TYPES = [
   'application/x-rar-compressed',
 ];
 
-// Maximum file size: 50MB
-export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+// Maximum file size: 500MB
+export const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
 
 // ============================================================================
 // Validation Functions
