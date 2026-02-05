@@ -23,62 +23,87 @@ export function useAutoSave<T>({
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const previousDataRef = useRef<string>('');
+  const previousSavedDataRef = useRef<string>('');
   const isFirstRender = useRef(true);
+  
+  // Keep refs for latest values to avoid recreating callbacks
+  const dataRef = useRef<T>(data);
+  const onSaveRef = useRef(onSave);
+  const enabledRef = useRef(enabled);
+  
+  // Update refs when values change
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+  
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+  
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
 
-  // Serialize data for comparison
+  // Serialize data for comparison - only used for change detection
   const serializedData = JSON.stringify(data);
 
+  // Stable performSave that reads from refs
   const performSave = useCallback(async () => {
-    if (!enabled) return;
+    if (!enabledRef.current) return;
+    
+    const currentData = dataRef.current;
+    const currentSerialized = JSON.stringify(currentData);
+    
+    // Double-check if data actually changed since last save
+    if (currentSerialized === previousSavedDataRef.current) {
+      return;
+    }
     
     try {
       setIsSaving(true);
-      await onSave(data);
+      await onSaveRef.current(currentData);
       setLastSaved(new Date());
       // Update the "saved" reference so we don't trigger re-saves
-      previousDataRef.current = JSON.stringify(data);
+      previousSavedDataRef.current = currentSerialized;
     } catch (error) {
       console.error('Auto-save failed:', error);
-      // IMPORTANT: Do NOT update previousDataRef on error
+      // IMPORTANT: Do NOT update previousSavedDataRef on error
       // This ensures we'll retry on next change/visibility event
       toast.error('Erro ao salvar o relatório. Suas alterações foram mantidas, tente novamente.');
     } finally {
       setIsSaving(false);
     }
-  }, [data, onSave, enabled]);
+  }, []); // No dependencies - uses refs
 
   // Debounced auto-save effect
   useEffect(() => {
     // Skip first render to avoid saving initial state
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      previousDataRef.current = serializedData;
+      previousSavedDataRef.current = serializedData;
       return;
     }
 
     // Skip if data hasn't changed from last SAVED state
-    if (serializedData === previousDataRef.current) {
+    if (serializedData === previousSavedDataRef.current) {
       return;
-    }
-
-    // DON'T update previousDataRef here - only after successful save!
-    // This was causing premature saves because the ref was updated before debounce finished
-
-    // Clear existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
     }
 
     // Skip if not enabled
     if (!enabled) return;
+
+    // Clear existing timeout - this is the key debounce behavior
+    // Every change resets the timer, so save only happens after user stops editing
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
     // Set new timeout for debounced save
     timeoutRef.current = setTimeout(() => {
       performSave();
     }, debounceMs);
 
-    // Cleanup on unmount or when dependencies change
+    // Cleanup on unmount or when serializedData changes
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -91,7 +116,8 @@ export function useAutoSave<T>({
     if (!enabled) return;
 
     const handleVisibilityChange = () => {
-      if (document.hidden && serializedData !== previousDataRef.current) {
+      const currentSerialized = JSON.stringify(dataRef.current);
+      if (document.hidden && currentSerialized !== previousSavedDataRef.current) {
         // Clear pending timeout and save immediately
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -101,7 +127,8 @@ export function useAutoSave<T>({
     };
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (serializedData !== previousDataRef.current) {
+      const currentSerialized = JSON.stringify(dataRef.current);
+      if (currentSerialized !== previousSavedDataRef.current) {
         e.preventDefault();
         e.returnValue = '';
       }
@@ -114,7 +141,7 @@ export function useAutoSave<T>({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [enabled, serializedData, performSave]);
+  }, [enabled, performSave]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
