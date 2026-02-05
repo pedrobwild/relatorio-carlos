@@ -1,6 +1,6 @@
  import { useState } from 'react';
  import {
-   Circle, ClipboardList, Box, Ruler, FileText, FileCheck, CheckCircle,
+   Circle, ClipboardList, Box, Ruler, FileText, FileCheck, CheckCircle, Calendar,
    Edit2, Check, X, Plus, Trash2, AlertTriangle, Info, ChevronDown, ChevronUp,
  } from 'lucide-react';
  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@
    useAddTodo,
    useDeleteTodo,
  } from '@/hooks/useProjectJourney';
+ import { MeetingScheduler } from './MeetingScheduler';
  
  interface JourneyStageCardProps {
    stage: JourneyStage;
@@ -477,7 +478,20 @@
              </div>
  
              {/* CTA */}
-             {stage.cta_visible && stage.cta_text && (
+             {stage.cta_visible && stage.cta_text && stage.cta_text.toLowerCase().includes('reunião') ? (
+                <div className="pt-2 space-y-2">
+                  <MeetingScheduler
+                    stageId={stage.id}
+                    stageName={stage.name}
+                    projectId={projectId}
+                    isAdmin={isAdmin}
+                    ctaText={stage.cta_text}
+                  />
+                  {stage.microcopy && (
+                    <p className="text-xs text-muted-foreground">{stage.microcopy}</p>
+                  )}
+                </div>
+              ) : stage.cta_visible && stage.cta_text ? (
                <div className="pt-2 space-y-2">
                  <Button className="w-full md:w-auto">
                    {stage.cta_text}
@@ -486,7 +500,7 @@
                    <p className="text-xs text-muted-foreground">{stage.microcopy}</p>
                  )}
                </div>
-             )}
+             ) : null}
            </CardContent>
          </CollapsibleContent>
        </Collapsible>

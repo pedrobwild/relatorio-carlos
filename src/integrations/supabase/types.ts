@@ -846,6 +846,50 @@ export type Database = {
           },
         ]
       }
+      journey_meeting_slots: {
+        Row: {
+          booked_at: string | null
+          booked_by: string | null
+          created_at: string
+          created_by: string | null
+          duration_minutes: number | null
+          id: string
+          is_booked: boolean | null
+          slot_datetime: string
+          stage_id: string
+        }
+        Insert: {
+          booked_at?: string | null
+          booked_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_booked?: boolean | null
+          slot_datetime: string
+          stage_id: string
+        }
+        Update: {
+          booked_at?: string | null
+          booked_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_booked?: boolean | null
+          slot_datetime?: string
+          stage_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_meeting_slots_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "journey_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_stages: {
         Row: {
           created_at: string
