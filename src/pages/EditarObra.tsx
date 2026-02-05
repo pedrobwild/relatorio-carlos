@@ -76,7 +76,7 @@ interface Payment {
   installment_number: number;
   description: string;
   amount: number;
-  due_date: string;
+  due_date: string | null;
   paid_at: string | null;
 }
 
@@ -123,7 +123,7 @@ export default function EditarObra() {
   
   // New item forms
   const [newActivity, setNewActivity] = useState({ description: '', planned_start: '', planned_end: '', weight: '5' });
-  const [newPayment, setNewPayment] = useState({ description: '', amount: '', due_date: '' });
+  const [newPayment, setNewPayment] = useState({ description: '', amount: '', due_date: '', dueDatePending: false });
 
   useEffect(() => {
     if (projectId) {
@@ -384,7 +384,11 @@ export default function EditarObra() {
 
   // Payment functions
   const addPayment = async () => {
-    if (!newPayment.description || !newPayment.amount || !newPayment.due_date) {
+    if (!newPayment.description || !newPayment.amount) {
+      toast({ title: 'Preencha descrição e valor', variant: 'destructive' });
+      return;
+    }
+    if (!newPayment.dueDatePending && !newPayment.due_date) {
       toast({ title: 'Preencha todos os campos', variant: 'destructive' });
       return;
     }
@@ -399,7 +403,7 @@ export default function EditarObra() {
           installment_number: nextInstallment,
           description: newPayment.description,
           amount: parseFloat(newPayment.amount),
-          due_date: newPayment.due_date,
+          due_date: newPayment.dueDatePending ? null : newPayment.due_date,
         })
         .select()
         .single();
@@ -407,10 +411,25 @@ export default function EditarObra() {
       if (error) throw error;
       
       setPayments([...payments, data]);
-      setNewPayment({ description: '', amount: '', due_date: '' });
+      setNewPayment({ description: '', amount: '', due_date: '', dueDatePending: false });
       toast({ title: 'Parcela adicionada!' });
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const updatePayment = async (id: string, field: string, value: string | number | null) => {
+    try {
+      const { error } = await supabase
+        .from('project_payments')
+        .update({ [field]: value })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setPayments(payments.map(p => p.id === id ? { ...p, [field]: value } : p));
+    } catch (err: any) {
+      toast({ title: 'Erro ao atualizar', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -925,11 +944,24 @@ export default function EditarObra() {
                   </div>
                   <div>
                     <Label className="text-xs">Vencimento</Label>
-                    <Input
-                      type="date"
-                      value={newPayment.due_date}
-                      onChange={(e) => setNewPayment({ ...newPayment, due_date: e.target.value })}
-                    />
+                    <div className="space-y-2">
+                      <Input
+                        type="date"
+                        value={newPayment.due_date}
+                        onChange={(e) => setNewPayment({ ...newPayment, due_date: e.target.value, dueDatePending: false })}
+                        disabled={newPayment.dueDatePending}
+                        className={newPayment.dueDatePending ? 'opacity-50' : ''}
+                      />
+                      <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newPayment.dueDatePending}
+                          onChange={(e) => setNewPayment({ ...newPayment, dueDatePending: e.target.checked, due_date: '' })}
+                          className="rounded"
+                        />
+                        Em definição
+                      </label>
+                    </div>
                   </div>
                   <div className="sm:col-span-4 flex justify-end">
                     <Button onClick={addPayment}>
@@ -946,7 +978,7 @@ export default function EditarObra() {
                       <TableRow>
                         <TableHead className="w-16">Parcela</TableHead>
                         <TableHead>Descrição</TableHead>
-                        <TableHead>Valor</TableHead>
+                        <TableHead className="w-28">Valor</TableHead>
                         <TableHead>Vencimento</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="w-12"></TableHead>
@@ -956,17 +988,54 @@ export default function EditarObra() {
                       {payments.map((payment) => (
                         <TableRow key={payment.id}>
                           <TableCell className="font-medium">#{payment.installment_number}</TableCell>
-                          <TableCell>{payment.description}</TableCell>
                           <TableCell>
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payment.amount)}
+                            <Input
+                              value={payment.description}
+                              onChange={(e) => updatePayment(payment.id, 'description', e.target.value)}
+                              className="h-8"
+                            />
                           </TableCell>
-                          <TableCell>{format(new Date(payment.due_date), 'dd/MM/yyyy')}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={payment.amount}
+                              onChange={(e) => updatePayment(payment.id, 'amount', parseFloat(e.target.value))}
+                              className="h-8 w-28"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <Input
+                                type="date"
+                                value={payment.due_date || ''}
+                                onChange={(e) => updatePayment(payment.id, 'due_date', e.target.value || null)}
+                                className="h-8 w-36"
+                                disabled={!payment.due_date && payment.due_date !== ''}
+                              />
+                              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={payment.due_date === null}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      updatePayment(payment.id, 'due_date', null);
+                                    } else {
+                                      updatePayment(payment.id, 'due_date', format(new Date(), 'yyyy-MM-dd'));
+                                    }
+                                  }}
+                                  className="rounded"
+                                />
+                                Em definição
+                              </label>
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <Button
                               variant={payment.paid_at ? 'default' : 'outline'}
                               size="sm"
                               onClick={() => togglePaymentPaid(payment)}
-                              className={payment.paid_at ? 'bg-green-600 hover:bg-green-700' : ''}
+                              className={payment.paid_at ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
                             >
                               {payment.paid_at ? 'Pago' : 'Marcar pago'}
                             </Button>
