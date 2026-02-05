@@ -28,6 +28,7 @@ interface DuplicateProjectModalProps {
 
 interface DuplicationOptions {
   includeActivities: boolean;
+  includeProgress: boolean;
   includePayments: boolean;
   includeJourney: boolean;
 }
@@ -60,6 +61,7 @@ export function DuplicateProjectModal({
   // Options
   const [options, setOptions] = useState<DuplicationOptions>({
     includeActivities: true,
+    includeProgress: false,
     includePayments: false,
     includeJourney: true,
   });
@@ -146,6 +148,12 @@ export function DuplicateProjectModal({
             description: a.description,
             planned_start: a.planned_start,
             planned_end: a.planned_end,
+            // Conditionally include progress data
+            actual_start: options.includeProgress ? a.actual_start : null,
+            actual_end: options.includeProgress ? a.actual_end : null,
+            baseline_start: options.includeProgress ? a.baseline_start : null,
+            baseline_end: options.includeProgress ? a.baseline_end : null,
+            baseline_saved_at: options.includeProgress ? a.baseline_saved_at : null,
             weight: a.weight,
             sort_order: index + 1,
             created_by: user.id,
@@ -409,9 +417,24 @@ export function DuplicateProjectModal({
                   }
                 />
                 <Label htmlFor="opt-activities" className="text-sm cursor-pointer">
-                  Cronograma de atividades (apenas planejado, sem datas reais)
+                  Cronograma de atividades (datas planejadas)
                 </Label>
               </div>
+
+              {options.includeActivities && (
+                <div className="flex items-center gap-2 ml-6">
+                  <Checkbox
+                    id="opt-progress"
+                    checked={options.includeProgress}
+                    onCheckedChange={(checked) =>
+                      setOptions((o) => ({ ...o, includeProgress: !!checked }))
+                    }
+                  />
+                  <Label htmlFor="opt-progress" className="text-sm cursor-pointer text-muted-foreground">
+                    Incluir progresso real (datas de início/término reais)
+                  </Label>
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <Checkbox
