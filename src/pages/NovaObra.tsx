@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,6 +24,8 @@ interface FormData {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  // Project phase
+  is_project_phase: boolean;
 }
 
 export default function NovaObra() {
@@ -42,9 +45,10 @@ export default function NovaObra() {
     customer_name: '',
     customer_email: '',
     customer_phone: '',
+    is_project_phase: false,
   });
 
-  const handleChange = (field: keyof FormData, value: string) => {
+  const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -81,6 +85,7 @@ export default function NovaObra() {
           planned_end_date: formData.planned_end_date,
           contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
           created_by: user.id,
+          is_project_phase: formData.is_project_phase,
         })
         .select()
         .single();
@@ -160,6 +165,23 @@ export default function NovaObra() {
               <CardDescription>Informações básicas do projeto</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Project Phase Toggle */}
+              <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is_project_phase" className="text-sm font-medium">
+                    Obra em fase de projeto
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Ative se a obra ainda está em fase de aprovação (Projeto 3D → Executivo → Liberação)
+                  </p>
+                </div>
+                <Switch
+                  id="is_project_phase"
+                  checked={formData.is_project_phase}
+                  onCheckedChange={(checked) => handleChange('is_project_phase', checked)}
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <Label htmlFor="name">Nome do Projeto *</Label>

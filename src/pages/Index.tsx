@@ -52,7 +52,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { projectId, paths } = useProjectNavigation();
-  const { isStaff } = useUserRole();
+  const { isStaff, isCustomer } = useUserRole();
   const { activities: dbActivities, loading: activitiesLoading, updateActivity } = useProjectActivities(projectId);
   const {
     reportDataByWeek,
@@ -293,7 +293,24 @@ const Index = () => {
     }
   }, [selectedWeekIndex, reportsChronological, viewStateKey]);
 
+  // Redirect customers to journey page if project is in project phase
+  useEffect(() => {
+    if (isCustomer && project?.is_project_phase && projectId) {
+      navigate(`/obra/${projectId}/jornada`, { replace: true });
+    }
+  }, [isCustomer, project?.is_project_phase, projectId, navigate]);
+
+  // Loading state or redirect in progress
   if (projectLoading || activitiesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show loading while redirecting to journey page
+  if (isCustomer && project?.is_project_phase) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

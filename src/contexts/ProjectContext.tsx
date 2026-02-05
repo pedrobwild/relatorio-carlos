@@ -6,11 +6,17 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 
 // Re-export for backwards compatibility
 export type Project = ProjectWithCustomer;
+
+// Extended project type with is_project_phase
+export interface ProjectExtended extends Omit<ProjectWithCustomer, 'is_project_phase'> {
+  is_project_phase?: boolean;
+}
+
 interface ProjectContextType {
-  project: Project | null;
+  project: (Project & { is_project_phase?: boolean }) | null;
   loading: boolean;
   error: string | null;
-  setProject: (project: Project | null) => void;
+  setProject: (project: (Project & { is_project_phase?: boolean }) | null) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -19,7 +25,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<(Project & { is_project_phase?: boolean }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +63,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
             status: data.status as Project['status'],
             customer_name: data.project_customers?.[0]?.customer_name,
             customer_email: data.project_customers?.[0]?.customer_email,
+            is_project_phase: data.is_project_phase,
           });
         }
       } catch (err: any) {
