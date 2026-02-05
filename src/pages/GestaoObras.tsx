@@ -37,9 +37,12 @@ function ProjectCard({
   onEdit: () => void;
   onDuplicate: () => void;
 }) {
-  const daysRemaining = useMemo(() => Math.ceil(
-    (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  ), [project.planned_end_date]);
+  const daysRemaining = useMemo(() => {
+    if (!project.planned_end_date) return null;
+    return Math.ceil(
+      (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
+  }, [project.planned_end_date]);
 
   return (
     <Card 
@@ -93,15 +96,26 @@ function ProjectCard({
           </div>
         )}
         
-        <div className="flex items-center gap-2 text-caption text-muted-foreground">
-          <Calendar className="h-3.5 w-3.5" />
-          <span>
-            {format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
-            {format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
-          </span>
-        </div>
+        {(project.planned_start_date || project.planned_end_date) ? (
+          <div className="flex items-center gap-2 text-caption text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>
+              {project.planned_start_date 
+                ? format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
+                : 'A definir'} - {' '}
+              {project.planned_end_date 
+                ? format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR }) 
+                : 'A definir'}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-caption text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>Datas em definição</span>
+          </div>
+        )}
 
-        {project.status === 'active' && daysRemaining > 0 && (
+        {project.status === 'active' && daysRemaining !== null && daysRemaining > 0 && (
           <div className="pt-2 border-t">
             <p className="text-tiny text-muted-foreground">
               <span className="font-medium text-foreground">{daysRemaining}</span> dias restantes
