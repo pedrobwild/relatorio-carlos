@@ -1,5 +1,6 @@
  import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
  import { supabase } from '@/integrations/supabase/client';
+import type { JourneyCSM } from '@/components/journey/JourneyCSMSection';
  
  export type JourneyStageStatus = 'pending' | 'waiting_action' | 'in_progress' | 'completed';
  
@@ -49,35 +50,39 @@
  export interface ProjectJourneyData {
    hero: JourneyHero | null;
    footer: JourneyFooter | null;
+  csm: JourneyCSM | null;
    stages: JourneyStage[];
  }
  
  async function fetchProjectJourney(projectId: string): Promise<ProjectJourneyData> {
-   // Fetch hero
-   const { data: hero } = await supabase
+  // Fetch hero, footer, and csm in parallel
+  const [heroResult, footerResult, csmResult, stagesResult] = await Promise.all([
+    supabase
      .from('journey_hero')
      .select('*')
      .eq('project_id', projectId)
-     .single();
- 
-   // Fetch footer
-   const { data: footer } = await supabase
+      .single(),
+    supabase
      .from('journey_footer')
      .select('*')
      .eq('project_id', projectId)
-     .single();
- 
-   // Fetch stages with todos
-   const { data: stagesData } = await supabase
+      .single(),
+    supabase
+      .from('journey_csm')
+      .select('*')
+      .eq('project_id', projectId)
+      .single(),
+    supabase
      .from('journey_stages')
      .select('*')
      .eq('project_id', projectId)
-     .order('sort_order', { ascending: true });
+      .order('sort_order', { ascending: true }),
+  ]);
  
    const stages: JourneyStage[] = [];
  
-   if (stagesData) {
-     for (const stage of stagesData) {
+  if (stagesResult.data) {
+    for (const stage of stagesResult.data) {
        const { data: todos } = await supabase
          .from('journey_todos')
          .select('*')
@@ -93,8 +98,9 @@
    }
  
    return {
-     hero: hero as JourneyHero | null,
-     footer: footer as JourneyFooter | null,
+    hero: heroResult.data as JourneyHero | null,
+    footer: footerResult.data as JourneyFooter | null,
+    csm: csmResult.data as JourneyCSM | null,
      stages,
    };
  }
