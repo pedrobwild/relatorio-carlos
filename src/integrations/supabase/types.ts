@@ -1554,7 +1554,7 @@ export type Database = {
           boleto_path: string | null
           created_at: string
           description: string
-          due_date: string
+          due_date: string | null
           id: string
           installment_number: number
           notification_sent_at: string | null
@@ -1567,7 +1567,7 @@ export type Database = {
           boleto_path?: string | null
           created_at?: string
           description: string
-          due_date: string
+          due_date?: string | null
           id?: string
           installment_number: number
           notification_sent_at?: string | null
@@ -1580,7 +1580,7 @@ export type Database = {
           boleto_path?: string | null
           created_at?: string
           description?: string
-          due_date?: string
+          due_date?: string | null
           id?: string
           installment_number?: number
           notification_sent_at?: string | null

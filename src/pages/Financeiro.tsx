@@ -26,6 +26,7 @@ const Financeiro = () => {
 
   const getPaymentStatus = (payment: ProjectPayment): "paid" | "pending" | "upcoming" => {
     if (payment.paid_at) return "paid";
+    if (!payment.due_date) return "pending"; // "Em definição" treated as pending
     const dueDate = new Date(payment.due_date);
     if (dueDate <= today) return "pending";
     return "upcoming";
@@ -33,6 +34,7 @@ const Financeiro = () => {
 
   const getUrgency = (payment: ProjectPayment): "overdue" | "urgent" | "approaching" | "normal" => {
     if (payment.paid_at) return "normal";
+    if (!payment.due_date) return "normal"; // "Em definição" has no urgency
     const dueDate = new Date(payment.due_date);
     const daysUntilDue = differenceInDays(dueDate, today);
     if (daysUntilDue < 0) return "overdue";
@@ -43,6 +45,7 @@ const Financeiro = () => {
 
   const getDaysLabel = (payment: ProjectPayment) => {
     if (payment.paid_at) return null;
+    if (!payment.due_date) return { text: "Em definição", color: "text-muted-foreground" };
     const dueDate = new Date(payment.due_date);
     const days = differenceInDays(dueDate, today);
     if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-red-600" };
@@ -229,7 +232,7 @@ const Financeiro = () => {
                                 ) : (
                                   <span className="flex items-center gap-1.5">
                                     <Calendar className="w-3.5 h-3.5" />
-                                    Vencimento: {formatDate(payment.due_date)}
+                                    Vencimento: {payment.due_date ? formatDate(payment.due_date) : 'Em definição'}
                                   </span>
                                 )}
                                 {daysLabel && (
@@ -366,7 +369,7 @@ const Financeiro = () => {
                               ) : (
                                 <>
                                   <Clock className="w-3.5 h-3.5" />
-                                  <span>Vencimento: {formatDate(payment.due_date)}</span>
+                                  <span>Vencimento: {payment.due_date ? formatDate(payment.due_date) : 'Em definição'}</span>
                                 </>
                               )}
                             </div>

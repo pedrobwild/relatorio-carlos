@@ -9,7 +9,7 @@ export interface ProjectPayment {
   installment_number: number;
   description: string;
   amount: number;
-  due_date: string;
+  due_date: string | null;
   paid_at: string | null;
   payment_proof_path: string | null;
   boleto_path: string | null;
@@ -66,3 +66,40 @@ export function useMarkPaymentPaid() {
     },
   });
 }
+ 
+ export function useUpdatePayment() {
+   const queryClient = useQueryClient();
+ 
+   return useMutation({
+     mutationFn: async ({
+       paymentId,
+       updates,
+     }: {
+       paymentId: string;
+       updates: {
+         description?: string;
+         amount?: number;
+         due_date?: string | null;
+       };
+     }) => {
+       const { error } = await supabase
+         .from("project_payments")
+         .update(updates)
+         .eq("id", paymentId);
+ 
+       if (error) throw error;
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ["project-payments"] });
+       toast.success("Parcela atualizada");
+     },
+     onError: (error: any) => {
+       console.error("Error updating payment:", error);
+       if (error.message?.includes("row-level security")) {
+         toast.error("Apenas administradores podem editar parcelas");
+       } else {
+         toast.error("Erro ao atualizar parcela");
+       }
+     },
+   });
+ }
