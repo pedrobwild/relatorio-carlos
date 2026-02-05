@@ -1,12 +1,13 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Settings } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Settings, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AppHeader } from '@/components/AppHeader';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
+import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { ProjectWithCustomer } from '@/infra/repositories';
@@ -25,7 +26,17 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-function ProjectCard({ project, onClick, onEdit }: { project: ProjectWithCustomer; onClick: () => void; onEdit: () => void }) {
+function ProjectCard({ 
+  project, 
+  onClick, 
+  onEdit,
+  onDuplicate 
+}: { 
+  project: ProjectWithCustomer; 
+  onClick: () => void; 
+  onEdit: () => void;
+  onDuplicate: () => void;
+}) {
   const daysRemaining = useMemo(() => Math.ceil(
     (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   ), [project.planned_end_date]);
@@ -43,11 +54,24 @@ function ProjectCard({ project, onClick, onEdit }: { project: ProjectWithCustome
               <p className="text-caption text-muted-foreground">{project.unit_name}</p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
+              title="Duplicar obra"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate();
+              }}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              title="Editar obra"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit();
@@ -91,9 +115,11 @@ function ProjectCard({ project, onClick, onEdit }: { project: ProjectWithCustome
 
 export default function GestaoObras() {
   const navigate = useNavigate();
-  const { data: projects = [], isLoading: loading, error } = useProjectsQuery();
+  const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectWithCustomer | null>(null);
 
   const handleProjectClick = useCallback((projectId: string) => {
     navigate(`/obra/${projectId}`);
@@ -102,6 +128,11 @@ export default function GestaoObras() {
   const handleProjectEdit = useCallback((projectId: string) => {
     navigate(`/gestao/obra/${projectId}`);
   }, [navigate]);
+
+  const handleDuplicateProject = useCallback((project: ProjectWithCustomer) => {
+    setSelectedProject(project);
+    setDuplicateModalOpen(true);
+  }, []);
 
   const filteredProjects = useMemo(() => projects.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -146,11 +177,11 @@ export default function GestaoObras() {
           </Card>
           <Card className="p-4">
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Em andamento</p>
-            <p className="text-h2 font-bold text-green-600">{activeCount}</p>
+            <p className="text-h2 font-bold text-success">{activeCount}</p>
           </Card>
           <Card className="p-4">
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Concluídas</p>
-            <p className="text-h2 font-bold text-blue-600">{completedCount}</p>
+            <p className="text-h2 font-bold text-primary">{completedCount}</p>
           </Card>
           <Card className="p-4">
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Este mês</p>
@@ -226,11 +257,20 @@ export default function GestaoObras() {
                 project={project}
                 onClick={() => handleProjectClick(project.id)}
                 onEdit={() => handleProjectEdit(project.id)}
+                onDuplicate={() => handleDuplicateProject(project)}
               />
             ))}
           </div>
         )}
       </main>
+
+      {/* Duplicate Modal */}
+      <DuplicateProjectModal
+        project={selectedProject}
+        open={duplicateModalOpen}
+        onOpenChange={setDuplicateModalOpen}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 }
