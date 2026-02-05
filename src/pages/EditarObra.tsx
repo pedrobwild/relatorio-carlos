@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Calendar, DollarSign, Users, Save, Trash2, Plus, Loader2, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, Building2, User, Calendar, DollarSign, Users, Save, Trash2, Plus, Loader2, UserPlus, X, Map } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,12 +44,13 @@ interface Project {
   name: string;
   unit_name: string | null;
   address: string | null;
-  planned_start_date: string;
-  planned_end_date: string;
+  planned_start_date: string | null;
+  planned_end_date: string | null;
   actual_start_date: string | null;
   actual_end_date: string | null;
   contract_value: number | null;
   status: string;
+  is_project_phase: boolean;
 }
 
 interface Customer {
@@ -260,7 +263,7 @@ export default function EditarObra() {
     }
   };
 
-  const handleProjectChange = (field: keyof Project, value: string | number | null) => {
+  const handleProjectChange = (field: keyof Project, value: string | number | boolean | null) => {
     if (project) {
       setProject({ ...project, [field]: value });
     }
@@ -283,12 +286,13 @@ export default function EditarObra() {
           name: project.name,
           unit_name: project.unit_name,
           address: project.address,
-          planned_start_date: project.planned_start_date,
-          planned_end_date: project.planned_end_date,
+          planned_start_date: project.planned_start_date || null,
+          planned_end_date: project.planned_end_date || null,
           actual_start_date: project.actual_start_date,
           actual_end_date: project.actual_end_date,
           contract_value: project.contract_value,
           status: project.status,
+          is_project_phase: project.is_project_phase,
         })
         .eq('id', project.id);
 
@@ -627,30 +631,106 @@ export default function EditarObra() {
               </CardContent>
             </Card>
 
+            {/* Project Phase Toggle */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-body">
+                  <Map className="h-5 w-5" />
+                  Fase do Projeto
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="is_project_phase" className="text-sm font-medium">
+                      Obra em fase de projeto
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Ative se a obra ainda está em fase de aprovação (Projeto 3D → Executivo → Liberação)
+                    </p>
+                  </div>
+                  <Switch
+                    id="is_project_phase"
+                    checked={project.is_project_phase}
+                    onCheckedChange={(checked) => handleProjectChange('is_project_phase', checked)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-body">
                   <Calendar className="h-5 w-5" />
                   Cronograma
                 </CardTitle>
+                {project.is_project_phase && (
+                  <CardDescription>
+                    Obra em fase de projeto. As datas podem ser definidas ou marcadas como "Em definição".
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Início Previsto *</Label>
-                    <Input
-                      type="date"
-                      value={project.planned_start_date}
-                      onChange={(e) => handleProjectChange('planned_start_date', e.target.value)}
-                    />
+                  <div className="space-y-2">
+                    <Label>Início Previsto {!project.is_project_phase && '*'}</Label>
+                    {project.is_project_phase && (
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="start_date_undefined"
+                          checked={!project.planned_start_date}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              handleProjectChange('planned_start_date', null);
+                            }
+                          }}
+                        />
+                        <Label htmlFor="start_date_undefined" className="text-xs text-muted-foreground cursor-pointer">
+                          Em definição
+                        </Label>
+                      </div>
+                    )}
+                    {(!project.is_project_phase || project.planned_start_date) ? (
+                      <Input
+                        type="date"
+                        value={project.planned_start_date || ''}
+                        onChange={(e) => handleProjectChange('planned_start_date', e.target.value || null)}
+                      />
+                    ) : (
+                      <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">
+                        Em definição
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <Label>Término Previsto *</Label>
-                    <Input
-                      type="date"
-                      value={project.planned_end_date}
-                      onChange={(e) => handleProjectChange('planned_end_date', e.target.value)}
-                    />
+                  <div className="space-y-2">
+                    <Label>Término Previsto {!project.is_project_phase && '*'}</Label>
+                    {project.is_project_phase && (
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="end_date_undefined"
+                          checked={!project.planned_end_date}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              handleProjectChange('planned_end_date', null);
+                            }
+                          }}
+                        />
+                        <Label htmlFor="end_date_undefined" className="text-xs text-muted-foreground cursor-pointer">
+                          Em definição
+                        </Label>
+                      </div>
+                    )}
+                    {(!project.is_project_phase || project.planned_end_date) ? (
+                      <Input
+                        type="date"
+                        value={project.planned_end_date || ''}
+                        onChange={(e) => handleProjectChange('planned_end_date', e.target.value || null)}
+                      />
+                    ) : (
+                      <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">
+                        Em definição
+                      </div>
+                    )}
                   </div>
                   <div>
                     <Label>Início Real</Label>
