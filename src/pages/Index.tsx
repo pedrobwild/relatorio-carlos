@@ -293,12 +293,9 @@ const Index = () => {
     }
   }, [selectedWeekIndex, reportsChronological, viewStateKey]);
 
-  // Redirect customers to journey page if project is in project phase
-  useEffect(() => {
-    if (isCustomer && project?.is_project_phase && projectId) {
-      navigate(`/obra/${projectId}/jornada`, { replace: true });
-    }
-  }, [isCustomer, project?.is_project_phase, projectId, navigate]);
+  // Note: We no longer auto-redirect customers to journey page.
+  // The journey is accessible via the highlighted link in ReportHeader.
+  // This allows customers to access schedule, financeiro, documents etc. normally.
 
   // Loading state or redirect in progress
   if (projectLoading || activitiesLoading) {
