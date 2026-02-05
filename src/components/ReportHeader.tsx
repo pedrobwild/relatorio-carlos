@@ -4,7 +4,7 @@ import bwildLogo from "@/assets/bwild-logo.png";
 import { 
   FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft,
+  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft, Map,
   ChevronsUpDown, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -186,6 +186,7 @@ const ReportHeader = ({
   };
 
   const quickLinks = [
+    ...(isProjectPhase ? [{ icon: Map, label: "Jornada", href: paths.jornada }] : []),
     { icon: DollarSign, label: "Financeiro", href: paths.financeiro },
     { icon: FolderOpen, label: "Documentos", href: paths.documentos },
     { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes },
