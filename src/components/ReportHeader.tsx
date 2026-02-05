@@ -39,6 +39,7 @@ interface ReportHeaderProps {
   endDate: string;
   reportDate: string;
   activities: Activity[];
+  isProjectPhase?: boolean;
 }
 
 interface TeamContact {
@@ -80,6 +81,7 @@ const ReportHeader = ({
   endDate,
   reportDate,
   activities,
+  isProjectPhase = false,
 }: ReportHeaderProps) => {
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [showDateChangeAlert, setShowDateChangeAlert] = useState(false);
@@ -189,11 +191,16 @@ const ReportHeader = ({
     { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes },
   ];
 
-  const teamContacts: TeamContact[] = [
+  // Filtrar contatos: em fase de projeto, cliente não vê Engenharia
+  const allTeamContacts: TeamContact[] = [
     { role: "Engenharia", name: "Lucas Tresmondi", phone: "(99) 99999-9999", email: "lucas@bwild.com.br", crea: "5071459470-SP" },
     { role: "Arquitetura", name: "Lorena Alves", phone: "(99) 99999-9999", email: "lorena@bwild.com.br" },
     { role: "Relacionamento", name: "Victorya Capponi", phone: "(99) 99999-9999", email: "victorya@bwild.com.br" },
   ];
+  
+  const teamContacts = isProjectPhase && !isStaff
+    ? allTeamContacts.filter(c => c.role !== "Engenharia")
+    : allTeamContacts;
 
   const toggleContact = (role: string) => {
     setExpandedContact(expandedContact === role ? null : role);
@@ -292,36 +299,46 @@ const ReportHeader = ({
                 </span>
               </Link>
 
-              {/* Status Badge */}
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
-                projectMetrics.isOnTrack 
-                  ? 'bg-success/15 text-success' 
-                  : 'bg-warning/15 text-warning'
-              }`}>
-                {projectMetrics.isOnTrack ? (
-                  <>
-                    <TrendingUp className="w-4 h-4" />
-                    <span>No Prazo</span>
-                    {projectMetrics.progressDiff > 0 && (
-                      <span className="text-xs opacity-80">+{projectMetrics.variancePercentage}%</span>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <TrendingDown className="w-4 h-4" />
-                    <span>Atenção ao Prazo</span>
-                    {parseInt(projectMetrics.variancePercentage) > 0 && (
-                      <span className="text-xs opacity-80">-{projectMetrics.variancePercentage}%</span>
-                    )}
-                  </>
-                )}
-              </div>
+              {/* Status Badge - Oculto em fase de projeto para clientes */}
+              {!(isProjectPhase && !isStaff) && (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
+                  projectMetrics.isOnTrack 
+                    ? 'bg-success/15 text-success' 
+                    : 'bg-warning/15 text-warning'
+                }`}>
+                  {projectMetrics.isOnTrack ? (
+                    <>
+                      <TrendingUp className="w-4 h-4" />
+                      <span>No Prazo</span>
+                      {projectMetrics.progressDiff > 0 && (
+                        <span className="text-xs opacity-80">+{projectMetrics.variancePercentage}%</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown className="w-4 h-4" />
+                      <span>Atenção ao Prazo</span>
+                      {parseInt(projectMetrics.variancePercentage) > 0 && (
+                        <span className="text-xs opacity-80">-{projectMetrics.variancePercentage}%</span>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+              
+              {/* Badge de Fase de Projeto para clientes */}
+              {isProjectPhase && !isStaff && (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm bg-primary/15 text-primary">
+                  <FileText className="w-4 h-4" />
+                  <span>Fase de Projeto</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Main Metrics Section */}
-        <div className="p-4 pb-3 bg-secondary/20">
+        <div className={`p-4 pb-3 bg-secondary/20 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
           <div className="grid grid-cols-6 xl:grid-cols-8 gap-4">
             {/* Current Activity - Spans 2 columns on md, 3 on xl */}
             <div className="col-span-2 xl:col-span-3 bg-card rounded-lg p-3 border border-border">
@@ -426,7 +443,7 @@ const ReportHeader = ({
           </div>
 
           {/* Progress Bars - Side by side on xl */}
-          <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className={`mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
             {/* Timeline Progress Bar */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -601,30 +618,37 @@ const ReportHeader = ({
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            {/* Status */}
-            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
-              projectMetrics.isOnTrack 
-                ? 'bg-success/15' 
-                : 'bg-warning/15'
-            }`}>
-              {projectMetrics.isOnTrack ? (
-                <TrendingUp className="w-3.5 h-3.5 text-success" />
-              ) : (
-                <TrendingDown className="w-3.5 h-3.5 text-warning" />
-              )}
-              <span className={`text-xs font-semibold ${
-                projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
+            {/* Status - Oculto em fase de projeto para clientes */}
+            {isProjectPhase && !isStaff ? (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/15">
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary">Fase de Projeto</span>
+              </div>
+            ) : (
+              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
+                projectMetrics.isOnTrack 
+                  ? 'bg-success/15' 
+                  : 'bg-warning/15'
               }`}>
-                {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
-              </span>
-              {projectMetrics.progressDiff !== 0 && (
-                <span className={`text-[10px] font-bold ${
+                {projectMetrics.isOnTrack ? (
+                  <TrendingUp className="w-3.5 h-3.5 text-success" />
+                ) : (
+                  <TrendingDown className="w-3.5 h-3.5 text-warning" />
+                )}
+                <span className={`text-xs font-semibold ${
                   projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
                 }`}>
-                  {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
+                  {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
                 </span>
-              )}
-            </div>
+                {projectMetrics.progressDiff !== 0 && (
+                  <span className={`text-[10px] font-bold ${
+                    projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
+                  }`}>
+                    {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Pendências CTA */}
@@ -699,21 +723,24 @@ const ReportHeader = ({
                 </DropdownMenuContent>
               )}
             </DropdownMenu>
-            <button 
-              onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
-              className="text-right shrink-0 flex items-center gap-1.5"
-            >
-              <p className="text-tiny">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
-              {endDate === dateChangeInfo.originalDate && (
-                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-warning/20">
-                  <AlertCircle className="w-3 h-3 text-warning" />
-                </span>
-              )}
-            </button>
+            {/* Datas - Ocultas em fase de projeto */}
+            {!(isProjectPhase && !isStaff) && (
+              <button 
+                onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
+                className="text-right shrink-0 flex items-center gap-1.5"
+              >
+                <p className="text-tiny">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
+                {endDate === dateChangeInfo.originalDate && (
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-warning/20">
+                    <AlertCircle className="w-3 h-3 text-warning" />
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Timeline Progress Bar - First */}
-          <div className="mb-2">
+          <div className={`mb-2 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
             <div className="flex items-center justify-between mb-1">
               <span className="text-tiny">
                 {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
@@ -731,7 +758,7 @@ const ReportHeader = ({
           </div>
 
           {/* Current Activity + Progress - Second */}
-          <div className="bg-secondary/30 rounded-lg p-2">
+          <div className={`bg-secondary/30 rounded-lg p-2 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
             <h3 className="text-xs text-foreground line-clamp-1">
               {projectMetrics.currentActivity}
             </h3>

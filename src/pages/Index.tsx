@@ -373,6 +373,7 @@ const Index = () => {
               endDate={reportData.endDate}
               reportDate={reportData.reportDate}
               activities={reportData.activities}
+              isProjectPhase={project?.is_project_phase}
             />
 
             {/* Staff: Show button to create schedule */}
@@ -420,6 +421,7 @@ const Index = () => {
                 endDate={reportData.endDate}
                 reportDate={reportData.reportDate}
                 activities={reportData.activities}
+              isProjectPhase={project?.is_project_phase}
               />
             </div>
 

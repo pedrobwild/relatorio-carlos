@@ -1464,8 +1464,8 @@ export type Database = {
           is_project_phase: boolean
           name: string
           org_id: string | null
-          planned_end_date: string
-          planned_start_date: string
+          planned_end_date: string | null
+          planned_start_date: string | null
           status: string
           unit_name: string | null
           updated_at: string
@@ -1481,8 +1481,8 @@ export type Database = {
           is_project_phase?: boolean
           name: string
           org_id?: string | null
-          planned_end_date: string
-          planned_start_date: string
+          planned_end_date?: string | null
+          planned_start_date?: string | null
           status?: string
           unit_name?: string | null
           updated_at?: string
@@ -1498,8 +1498,8 @@ export type Database = {
           is_project_phase?: boolean
           name?: string
           org_id?: string | null
-          planned_end_date?: string
-          planned_start_date?: string
+          planned_end_date?: string | null
+          planned_start_date?: string | null
           status?: string
           unit_name?: string | null
           updated_at?: string
