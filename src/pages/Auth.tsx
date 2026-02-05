@@ -65,14 +65,29 @@ export default function Auth() {
     let isMounted = true;
 
     // Check for existing session first
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!isMounted) return;
+      
+      // If there's an error (e.g., invalid refresh token), ensure we show the login form
+      if (error) {
+        console.warn('Session check failed:', error.message);
+        // Clear any stale session data
+        supabase.auth.signOut().catch(() => {});
+        setCheckingSession(false);
+        return;
+      }
       
       if (session?.user) {
         hasHandledInitialSession = true;
         redirectBasedOnRole(session.user.id);
       }
       setCheckingSession(false);
+    }).catch((err) => {
+      // Handle any unexpected errors
+      console.warn('Session check error:', err);
+      if (isMounted) {
+        setCheckingSession(false);
+      }
     });
 
     // Set up auth state listener - only for new sign-in events
