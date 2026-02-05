@@ -10,6 +10,7 @@
  import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
  import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
  import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
+import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
  import bwildLogo from '@/assets/bwild-logo.png';
  
  export default function JornadaProjeto() {
@@ -141,6 +142,16 @@
                isAdmin={isAdmin}
              />
  
+              {/* CSM Section */}
+              {journey.csm && (
+                <JourneyCSMSection
+                  csm={journey.csm}
+                  projectId={projectId!}
+                  isAdmin={isAdmin}
+                  onUpdate={() => refetch()}
+                />
+              )}
+
              <Separator />
  
              {/* Mobile Timeline */}
