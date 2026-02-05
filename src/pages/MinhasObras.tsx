@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Calendar, ChevronRight } from 'lucide-react';
+import { Building2, Calendar, ChevronRight, FileCode } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AppHeader } from '@/components/AppHeader';
@@ -23,7 +23,7 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-function ProjectCard({ project, onClick }: { project: ProjectWithCustomer; onClick: () => void }) {
+function ProjectCard({ project, onClick }: { project: ProjectWithCustomer & { is_project_phase?: boolean }; onClick: () => void }) {
   const startDate = new Date(project.actual_start_date || project.planned_start_date);
   const endDate = new Date(project.planned_end_date);
   const now = Date.now();
@@ -61,6 +61,12 @@ function ProjectCard({ project, onClick }: { project: ProjectWithCustomer; onCli
             <Badge variant="outline" className={statusColors[project.status]}>
               {statusLabels[project.status]}
             </Badge>
+            {project.is_project_phase && (
+              <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                <FileCode className="h-3 w-3 mr-1" />
+                Fase de Projeto
+              </Badge>
+            )}
             <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
         </div>
@@ -73,7 +79,7 @@ function ProjectCard({ project, onClick }: { project: ProjectWithCustomer; onCli
           </span>
         </div>
 
-        {project.status === 'active' && (
+        {project.status === 'active' && !project.is_project_phase && (
           <>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-2">
               <div 
