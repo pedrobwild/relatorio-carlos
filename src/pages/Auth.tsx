@@ -202,6 +202,9 @@ export default function Auth() {
       });
 
       if (error) {
+        // Always reset loading state on error
+        setLoading(false);
+        
         if (error.message.includes('Invalid login credentials')) {
           toast({
             title: 'Credenciais inválidas',
@@ -217,16 +220,17 @@ export default function Auth() {
             variant: 'destructive',
           });
         }
+        return; // Exit early on error
       }
+      // On success, keep loading=true until redirect happens via onAuthStateChange
     } catch (error) {
       console.error('Login error:', error);
+      setLoading(false);
       toast({
         title: 'Erro',
         description: 'Ocorreu um erro inesperado. Tente novamente.',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -251,6 +255,9 @@ export default function Auth() {
       });
 
       if (error) {
+        // Reset loading state on error
+        setLoading(false);
+        
         if (error.message.includes('already registered')) {
           toast({
             title: 'Email já cadastrado',
@@ -264,21 +271,23 @@ export default function Auth() {
             variant: 'destructive',
           });
         }
-      } else {
-        toast({
-          title: 'Conta criada com sucesso!',
-          description: 'Você será redirecionado automaticamente.',
-        });
+        return;
       }
+      
+      // On success, reset loading and show toast
+      setLoading(false);
+      toast({
+        title: 'Conta criada com sucesso!',
+        description: 'Você será redirecionado automaticamente.',
+      });
     } catch (error) {
       console.error('Signup error:', error);
+      setLoading(false);
       toast({
         title: 'Erro',
         description: 'Ocorreu um erro inesperado. Tente novamente.',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -349,7 +358,9 @@ export default function Auth() {
                     )}
                     <Input
                       id="login-identifier"
-                      type="text"
+                      type={loginIdentifierType === 'email' ? 'email' : 'text'}
+                      inputMode={loginIdentifierType === 'email' ? 'email' : 'numeric'}
+                      autoComplete={loginIdentifierType === 'email' ? 'email' : 'off'}
                       placeholder={loginIdentifierType === 'email' ? 'seu@email.com' : '000.000.000-00'}
                       value={loginIdentifier}
                       onChange={(e) => handleLoginIdentifierChange(e.target.value)}
@@ -365,6 +376,7 @@ export default function Auth() {
                     <Input
                       id="login-password"
                       type="password"
+                      autoComplete="current-password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -396,6 +408,7 @@ export default function Auth() {
                     <Input
                       id="signup-name"
                       type="text"
+                      autoComplete="name"
                       placeholder="Seu nome"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
@@ -410,6 +423,8 @@ export default function Auth() {
                     <Input
                       id="signup-email"
                       type="email"
+                      autoComplete="email"
+                      inputMode="email"
                       placeholder="seu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -425,6 +440,7 @@ export default function Auth() {
                     <Input
                       id="signup-password"
                       type="password"
+                      autoComplete="new-password"
                       placeholder="Mínimo 6 caracteres"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
