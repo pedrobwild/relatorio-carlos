@@ -36,7 +36,6 @@ const FormalizacaoNova = lazy(() => import("./pages/FormalizacaoNova"));
 const FormalizacaoDetalhe = lazy(() => import("./pages/FormalizacaoDetalhe"));
 const Cronograma = lazy(() => import("./pages/Cronograma"));
 const Compras = lazy(() => import("./pages/Compras"));
-const PortalJornada = lazy(() => import("./pages/PortalJornada"));
  const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
 
 // Wrapper component to provide project context
