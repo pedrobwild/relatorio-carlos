@@ -263,13 +263,13 @@ export function DuplicateProjectModal({
               </div>
 
               {/* Project Phase Toggle */}
-              <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/50">
+              <div className="flex items-center justify-between rounded-lg border-2 border-primary/30 p-4 bg-primary/5">
                 <div className="space-y-0.5">
-                  <Label htmlFor="dup-is-project-phase" className="text-sm">
-                    Obra em fase de projeto
+                  <Label htmlFor="dup-is-project-phase" className="text-sm font-medium">
+                    🏗️ Obra em fase de projeto
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Fase de aprovação (Projeto 3D → Executivo)
+                    Marque se a obra ainda está na fase de aprovação (Projeto 3D → Executivo)
                   </p>
                 </div>
                 <Switch
