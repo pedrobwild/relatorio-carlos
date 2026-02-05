@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+ import { useUserRole } from '@/hooks/useUserRole';
+ import { useDeleteProject } from '@/hooks/useDeleteProject';
 import { format } from 'date-fns';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { useProjectMembers, ProjectRole } from '@/hooks/useProjectMembers';
@@ -98,6 +100,8 @@ export default function EditarObra() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+   const { isAdmin } = useUserRole();
+   const deleteProjectMutation = useDeleteProject();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -112,6 +116,7 @@ export default function EditarObra() {
   const [availableEngineers, setAvailableEngineers] = useState<AvailableEngineer[]>([]);
   const [selectedEngineer, setSelectedEngineer] = useState<string>('');
   const [addingEngineer, setAddingEngineer] = useState(false);
+   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Project members hook
   const { members, addMember, removeMember, updateRole, isAddingMember, isRemovingMember } = useProjectMembers(projectId);
@@ -426,6 +431,17 @@ export default function EditarObra() {
     }
   };
 
+   const handleDeleteProject = async () => {
+     if (!projectId) return;
+     
+     try {
+       await deleteProjectMutation.mutateAsync(projectId);
+       navigate('/gestao');
+     } catch (error) {
+       // Error is handled by the mutation
+     }
+   };
+ 
   const deletePayment = async (id: string) => {
     try {
       const { error } = await supabase
@@ -484,6 +500,38 @@ export default function EditarObra() {
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                 Salvar
               </Button>
+               {isAdmin && (
+                 <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                   <AlertDialogTrigger asChild>
+                     <Button variant="destructive" size="icon">
+                       <Trash2 className="h-4 w-4" />
+                     </Button>
+                   </AlertDialogTrigger>
+                   <AlertDialogContent>
+                     <AlertDialogHeader>
+                       <AlertDialogTitle>Excluir Obra</AlertDialogTitle>
+                       <AlertDialogDescription>
+                         Tem certeza que deseja excluir a obra "{project.name}"? 
+                         Esta ação é irreversível e excluirá todos os dados relacionados 
+                         (atividades, pagamentos, documentos, formalizações, etc).
+                       </AlertDialogDescription>
+                     </AlertDialogHeader>
+                     <AlertDialogFooter>
+                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                       <AlertDialogAction
+                         onClick={handleDeleteProject}
+                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                         disabled={deleteProjectMutation.isPending}
+                       >
+                         {deleteProjectMutation.isPending ? (
+                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                         ) : null}
+                         Excluir Definitivamente
+                       </AlertDialogAction>
+                     </AlertDialogFooter>
+                   </AlertDialogContent>
+                 </AlertDialog>
+               )}
             </div>
           </div>
         </div>
