@@ -762,6 +762,209 @@ export type Database = {
           },
         ]
       }
+      journey_footer: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          text?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_footer_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "journey_footer_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_hero: {
+        Row: {
+          badge_text: string | null
+          created_at: string
+          id: string
+          project_id: string
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          badge_text?: string | null
+          created_at?: string
+          id?: string
+          project_id: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          badge_text?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_hero_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "journey_hero_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_stages: {
+        Row: {
+          created_at: string
+          cta_text: string | null
+          cta_url: string | null
+          cta_visible: boolean
+          dependencies_text: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          microcopy: string | null
+          name: string
+          project_id: string
+          responsible: string | null
+          revision_text: string | null
+          sort_order: number
+          status: Database["public"]["Enums"]["journey_stage_status"]
+          updated_at: string
+          warning_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          cta_visible?: boolean
+          dependencies_text?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          microcopy?: string | null
+          name: string
+          project_id: string
+          responsible?: string | null
+          revision_text?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["journey_stage_status"]
+          updated_at?: string
+          warning_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          cta_text?: string | null
+          cta_url?: string | null
+          cta_visible?: boolean
+          dependencies_text?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          microcopy?: string | null
+          name?: string
+          project_id?: string
+          responsible?: string | null
+          revision_text?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["journey_stage_status"]
+          updated_at?: string
+          warning_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_stages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "journey_stages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journey_todos: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          owner: string
+          sort_order: number
+          stage_id: string
+          text: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          owner: string
+          sort_order?: number
+          stage_id: string
+          text: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          owner?: string
+          sort_order?: number
+          stage_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_todos_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "journey_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marcos: {
         Row: {
           created_at: string
@@ -2154,6 +2357,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      initialize_project_journey: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
       is_admin_v2: { Args: never; Returns: boolean }
       is_project_member: {
         Args: { _project_id: string; _user_id: string }
@@ -2244,6 +2451,11 @@ export type Database = {
         | "exception_custody"
         | "scope_change"
         | "general"
+      journey_stage_status:
+        | "pending"
+        | "waiting_action"
+        | "in_progress"
+        | "completed"
       marco_status: "pendente" | "em_andamento" | "concluido" | "atrasado"
       obra_status:
         | "planejamento"
@@ -2432,6 +2644,12 @@ export const Constants = {
         "exception_custody",
         "scope_change",
         "general",
+      ],
+      journey_stage_status: [
+        "pending",
+        "waiting_action",
+        "in_progress",
+        "completed",
       ],
       marco_status: ["pendente", "em_andamento", "concluido", "atrasado"],
       obra_status: [

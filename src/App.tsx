@@ -37,6 +37,7 @@ const FormalizacaoDetalhe = lazy(() => import("./pages/FormalizacaoDetalhe"));
 const Cronograma = lazy(() => import("./pages/Cronograma"));
 const Compras = lazy(() => import("./pages/Compras"));
 const PortalJornada = lazy(() => import("./pages/PortalJornada"));
+ const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
 
 // Wrapper component to provide project context
 const ProjectPage = ({ children }: { children: React.ReactNode }) => (
@@ -99,7 +100,7 @@ const App = () => (
               path="/obra/:projectId/jornada"
               element={
                 <ProtectedRoute>
-                  <ProjectPage>{withSuspense(<PortalJornada />)}</ProjectPage>
+                   <ProjectPage>{withSuspense(<JornadaProjeto />)}</ProjectPage>
                 </ProtectedRoute>
               }
             />
