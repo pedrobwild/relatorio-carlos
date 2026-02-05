@@ -61,8 +61,14 @@ export default function NovaObra() {
     }
 
     // Validation
-    if (!formData.name || !formData.planned_start_date || !formData.planned_end_date) {
-      toast({ title: 'Erro', description: 'Preencha os campos obrigatórios', variant: 'destructive' });
+    if (!formData.name) {
+      toast({ title: 'Erro', description: 'Nome do projeto é obrigatório', variant: 'destructive' });
+      return;
+    }
+
+    // Datas são obrigatórias apenas quando não está em fase de projeto
+    if (!formData.is_project_phase && (!formData.planned_start_date || !formData.planned_end_date)) {
+      toast({ title: 'Erro', description: 'Datas de início e término são obrigatórias para obras em execução', variant: 'destructive' });
       return;
     }
 
@@ -81,8 +87,8 @@ export default function NovaObra() {
           name: formData.name,
           unit_name: formData.unit_name || null,
           address: formData.address || null,
-          planned_start_date: formData.planned_start_date,
-          planned_end_date: formData.planned_end_date,
+          planned_start_date: formData.planned_start_date || null,
+          planned_end_date: formData.planned_end_date || null,
           contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
           created_by: user.id,
           is_project_phase: formData.is_project_phase,
@@ -225,28 +231,34 @@ export default function NovaObra() {
               <CardDescription>Datas previstas de início e término</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="planned_start_date">Data de Início *</Label>
-                  <Input
-                    id="planned_start_date"
-                    type="date"
-                    value={formData.planned_start_date}
-                    onChange={(e) => handleChange('planned_start_date', e.target.value)}
-                    required
-                  />
+              {formData.is_project_phase ? (
+                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  <p>As datas de início e término serão definidas após a aprovação do projeto.</p>
                 </div>
-                <div>
-                  <Label htmlFor="planned_end_date">Data de Término *</Label>
-                  <Input
-                    id="planned_end_date"
-                    type="date"
-                    value={formData.planned_end_date}
-                    onChange={(e) => handleChange('planned_end_date', e.target.value)}
-                    required
-                  />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="planned_start_date">Data de Início *</Label>
+                    <Input
+                      id="planned_start_date"
+                      type="date"
+                      value={formData.planned_start_date}
+                      onChange={(e) => handleChange('planned_start_date', e.target.value)}
+                      required={!formData.is_project_phase}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="planned_end_date">Data de Término *</Label>
+                    <Input
+                      id="planned_end_date"
+                      type="date"
+                      value={formData.planned_end_date}
+                      onChange={(e) => handleChange('planned_end_date', e.target.value)}
+                      required={!formData.is_project_phase}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 

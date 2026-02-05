@@ -24,8 +24,8 @@ export interface Project {
   name: string;
   unit_name: string | null;
   address: string | null;
-  planned_start_date: string;
-  planned_end_date: string;
+  planned_start_date: string | null;
+  planned_end_date: string | null;
   actual_start_date: string | null;
   actual_end_date: string | null;
   contract_value: number | null;
@@ -34,6 +34,7 @@ export interface Project {
   created_at: string;
   updated_at: string;
   org_id: string | null;
+  is_project_phase?: boolean;
 }
 
 export interface ProjectWithCustomer extends Project {
