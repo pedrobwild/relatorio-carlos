@@ -306,14 +306,8 @@ const Index = () => {
     );
   }
 
-  // Show loading while redirecting to journey page
-  if (isCustomer && project?.is_project_phase) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // Note: Customers in project phase can access this page normally.
+  // The journey page is linked via the header.
 
   if (projectError) {
     return (
