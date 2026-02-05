@@ -89,111 +89,112 @@ import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
      );
    }
  
-   return (
-     <div className="min-h-screen bg-background">
-       {/* Header */}
-       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-         <div className="container max-w-5xl mx-auto px-4 py-4">
-           <div className="flex items-center justify-between">
-             <div className="flex items-center gap-4">
-               <Button
-                 variant="ghost"
-                 size="icon"
-                 onClick={() => navigate(`/obra/${projectId}`)}
-               >
-                 <ArrowLeft className="h-5 w-5" />
-               </Button>
-               <img src={bwildLogo} alt="BWild" className="h-8" />
-             </div>
-             <div className="text-right">
-               <p className="font-medium text-sm">{project.name}</p>
-               {project.unit_name && (
-                 <p className="text-xs text-muted-foreground">{project.unit_name}</p>
-               )}
-             </div>
-           </div>
-         </div>
-       </header>
- 
-       <main className="container max-w-5xl mx-auto px-4 py-8">
-         <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-           {/* Sidebar with Timeline (desktop only) */}
-           <aside className="hidden lg:block">
-             <div className="sticky top-24 space-y-6">
-               <div>
-                 <h2 className="text-sm font-medium text-muted-foreground mb-4">
-                   Etapas da Jornada
-                 </h2>
-                 <JourneyTimeline
-                   stages={journey.stages}
-                   activeStageId={activeStageId}
-                   onStageClick={handleStageClick}
-                 />
-               </div>
-             </div>
-           </aside>
- 
-           {/* Main content */}
-           <div className="space-y-8">
-             {/* Hero */}
-             <JourneyHeroSection
-               hero={journey.hero}
-               projectId={projectId!}
-               isAdmin={isAdmin}
-             />
- 
-              {/* CSM Section */}
-              {journey.csm && (
-                <JourneyCSMSection
-                  csm={journey.csm}
+  return (
+    <div className="min-h-screen min-h-[100dvh] bg-background">
+      {/* Header - Mobile optimized with safe area */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b safe-area-top">
+        <div className="container max-w-5xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(`/obra/${projectId}`)}
+                className="h-11 w-11 shrink-0"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <img src={bwildLogo} alt="BWild" className="h-7 md:h-8" />
+            </div>
+            <div className="text-right min-w-0">
+              <p className="font-medium text-sm truncate">{project.name}</p>
+              {project.unit_name && (
+                <p className="text-xs text-muted-foreground truncate">{project.unit_name}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container max-w-5xl mx-auto px-4 py-5 md:py-8 pb-safe">
+        <div className="grid gap-6 md:gap-8 lg:grid-cols-[280px_1fr]">
+          {/* Sidebar with Timeline (desktop only) */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 space-y-6">
+              <div>
+                <h2 className="text-sm font-medium text-muted-foreground mb-4">
+                  Etapas da Jornada
+                </h2>
+                <JourneyTimeline
+                  stages={journey.stages}
+                  activeStageId={activeStageId}
+                  onStageClick={handleStageClick}
+                />
+              </div>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <div className="space-y-5 md:space-y-8">
+            {/* Hero */}
+            <JourneyHeroSection
+              hero={journey.hero}
+              projectId={projectId!}
+              isAdmin={isAdmin}
+            />
+
+            {/* CSM Section */}
+            {journey.csm && (
+              <JourneyCSMSection
+                csm={journey.csm}
+                projectId={projectId!}
+                isAdmin={isAdmin}
+                onUpdate={() => refetch()}
+              />
+            )}
+
+            <Separator />
+
+            {/* Mobile Timeline */}
+            <div className="lg:hidden">
+              <h2 className="text-sm font-medium text-muted-foreground mb-3">
+                Etapas da Jornada
+              </h2>
+              <JourneyTimeline
+                stages={journey.stages}
+                activeStageId={activeStageId}
+                onStageClick={handleStageClick}
+              />
+              <Separator className="mt-5" />
+            </div>
+
+            {/* Stage Cards */}
+            <div className="space-y-3 md:space-y-4">
+              {journey.stages.map((stage) => (
+                <JourneyStageCard
+                  key={stage.id}
+                  stage={stage}
                   projectId={projectId!}
                   isAdmin={isAdmin}
-                  onUpdate={() => refetch()}
+                  isExpanded={expandedStages.has(stage.id)}
+                  onToggleExpand={() => handleStageClick(stage.id)}
                 />
-              )}
+              ))}
+            </div>
 
-             <Separator />
- 
-             {/* Mobile Timeline */}
-             <div className="lg:hidden">
-               <h2 className="text-sm font-medium text-muted-foreground mb-4">
-                 Etapas da Jornada
-               </h2>
-               <JourneyTimeline
-                 stages={journey.stages}
-                 activeStageId={activeStageId}
-                 onStageClick={handleStageClick}
-               />
-               <Separator className="mt-6" />
-             </div>
- 
-             {/* Stage Cards */}
-             <div className="space-y-4">
-               {journey.stages.map((stage) => (
-                 <JourneyStageCard
-                   key={stage.id}
-                   stage={stage}
-                   projectId={projectId!}
-                   isAdmin={isAdmin}
-                   isExpanded={expandedStages.has(stage.id)}
-                   onToggleExpand={() => handleStageClick(stage.id)}
-                 />
-               ))}
-             </div>
- 
-             <Separator />
- 
-             {/* Footer */}
-             {journey.footer && (
-               <JourneyFooterSection
-                 footer={journey.footer}
-                 projectId={projectId!}
-                 isAdmin={isAdmin}
-               />
-             )}
-           </div>
-         </div>
-       </main>
-     </div>
-   );
- }
+            <Separator />
+
+            {/* Footer */}
+            {journey.footer && (
+              <JourneyFooterSection
+                footer={journey.footer}
+                projectId={projectId!}
+                isAdmin={isAdmin}
+              />
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
