@@ -186,10 +186,10 @@ const ReportHeader = ({
   };
 
   const quickLinks = [
-    ...(isProjectPhase ? [{ icon: Map, label: "Jornada", href: paths.jornada }] : []),
-    { icon: DollarSign, label: "Financeiro", href: paths.financeiro },
-    { icon: FolderOpen, label: "Documentos", href: paths.documentos },
-    { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes },
+    ...(isProjectPhase ? [{ icon: Map, label: "Jornada", href: paths.jornada, highlight: true }] : []),
+    { icon: DollarSign, label: "Financeiro", href: paths.financeiro, highlight: false },
+    { icon: FolderOpen, label: "Documentos", href: paths.documentos, highlight: false },
+    { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes, highlight: false },
   ];
 
   // Filtrar contatos: em fase de projeto, cliente não vê Engenharia
@@ -593,11 +593,21 @@ const ReportHeader = ({
                 <Link
                   key={link.label}
                   to={link.href}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    link.highlight 
+                      ? 'bg-primary/10 text-primary hover:bg-primary/20 ring-1 ring-primary/30' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
                   aria-label={`Acessar ${link.label}`}
                 >
                   <link.icon className="w-3.5 h-3.5" />
                   {link.label}
+                  {link.highlight && (
+                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>
@@ -787,13 +797,27 @@ const ReportHeader = ({
               <Link
                 key={link.label}
                 to={link.href}
-                className="flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-card border border-border shadow-sm hover:border-primary/50 hover:shadow-md active:scale-95 transition-all"
+                className={`relative flex flex-col items-center justify-center gap-1 py-2 rounded-xl shadow-sm active:scale-95 transition-all ${
+                  link.highlight 
+                    ? 'bg-primary/10 border-2 border-primary/50 ring-2 ring-primary/20' 
+                    : 'bg-card border border-border hover:border-primary/50 hover:shadow-md'
+                }`}
                 aria-label={`Acessar ${link.label}`}
               >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary">
+                <div className={`relative flex items-center justify-center w-8 h-8 rounded-full ${
+                  link.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary'
+                }`}>
                   <link.icon className="w-4 h-4" />
+                  {link.highlight && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-foreground/60 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-foreground"></span>
+                    </span>
+                  )}
                 </div>
-                <span className="text-[8px] font-semibold leading-tight text-center text-foreground">{link.label}</span>
+                <span className={`text-[8px] font-semibold leading-tight text-center ${
+                  link.highlight ? 'text-primary' : 'text-foreground'
+                }`}>{link.label}</span>
               </Link>
             ))}
           </div>
