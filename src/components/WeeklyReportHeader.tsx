@@ -85,7 +85,7 @@ const WeeklyReportHeader = ({
 
       {/* Current phase */}
       <p className="text-body font-medium mb-3">
-        Etapa: Marcenaria
+        Etapa: {currentPhase}
       </p>
 
       {/* Progress bar */}
