@@ -57,13 +57,13 @@ export function useAutoSave<T>({
       return;
     }
 
-    // Skip if data hasn't changed
+    // Skip if data hasn't changed from last SAVED state
     if (serializedData === previousDataRef.current) {
       return;
     }
 
-    // Update previous data ref
-    previousDataRef.current = serializedData;
+    // DON'T update previousDataRef here - only after successful save!
+    // This was causing premature saves because the ref was updated before debounce finished
 
     // Clear existing timeout
     if (timeoutRef.current) {
