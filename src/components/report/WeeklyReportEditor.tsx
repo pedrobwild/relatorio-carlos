@@ -206,29 +206,66 @@ const WeeklyReportEditor = ({
     }));
   };
 
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'];
+
+  const validateFile = (file: File): boolean => {
+    if (!validTypes.includes(file.type)) {
+      toast.error(`Formato não suportado: ${file.name}. Use JPG, PNG, WEBP, MP4 ou MOV.`);
+      return false;
+    }
+    if (file.size > 500 * 1024 * 1024) {
+      toast.error(`Arquivo muito grande: ${file.name}. Máximo 500MB.`);
+      return false;
+    }
+    return true;
+  };
+
   const handleFileSelect = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Formato não suportado. Use JPG, PNG, WEBP, MP4 ou MOV.");
-      return;
-    }
-
-    // Validate file size (max 500MB)
-    if (file.size > 500 * 1024 * 1024) {
-      toast.error("Arquivo muito grande. Máximo 500MB.");
-      return;
-    }
+    if (!validateFile(file)) return;
 
     // Create local URL for preview
     const localUrl = URL.createObjectURL(file);
     updateGalleryPhoto(index, "url", localUrl);
     
-    // TODO: In a real implementation, upload to storage and get permanent URL
     toast.success("Arquivo selecionado! O upload será feito ao salvar o relatório.");
+    
+    // Reset input to allow re-selecting the same file
+    event.target.value = "";
+  };
+
+  /**
+   * Handle multiple file upload at once - creates new gallery entries for each file.
+   */
+  const handleBulkFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const validFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      if (validateFile(file)) {
+        validFiles.push(file);
+      }
+    }
+
+    if (validFiles.length === 0) return;
+
+    const newPhotos: GalleryPhoto[] = validFiles.map((file, idx) => ({
+      id: `photo-${Date.now()}-${idx}`,
+      url: URL.createObjectURL(file),
+      caption: "",
+      area: "",
+      date: new Date().toISOString().split('T')[0],
+      category: "progresso",
+    }));
+
+    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...newPhotos] }));
+    toast.success(`${validFiles.length} arquivo(s) adicionado(s)! O upload será feito ao salvar.`);
+    
+    // Reset input to allow re-selecting the same files
+    event.target.value = "";
   };
 
   return (
@@ -751,10 +788,30 @@ const WeeklyReportEditor = ({
                 </CardContent>
               </Card>
             ))}
-            <Button variant="outline" onClick={addGalleryPhoto} className="w-full">
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Foto/Vídeo
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={addGalleryPhoto} className="flex-1">
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Manualmente
+              </Button>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                  multiple
+                  onChange={handleBulkFileSelect}
+                  className="hidden"
+                  id="bulk-file-upload"
+                />
+                <label htmlFor="bulk-file-upload" className="w-full">
+                  <Button variant="default" asChild className="w-full cursor-pointer">
+                    <span>
+                      <Camera className="w-4 h-4 mr-2" />
+                      Enviar Múltiplas Fotos
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
