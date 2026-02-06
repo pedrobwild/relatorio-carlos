@@ -11,6 +11,30 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import bwildLogo from '@/assets/bwild-logo.png';
+import { z } from 'zod';
+
+// Validation schema
+const formSchema = z.object({
+  name: z.string().trim().min(1, 'Nome do projeto é obrigatório').max(200),
+  unit_name: z.string().trim().max(100).optional(),
+  address: z.string().trim().max(300).optional(),
+  planned_start_date: z.string().optional(),
+  planned_end_date: z.string().optional(),
+  contract_value: z.string().optional(),
+  customer_name: z.string().trim().min(1, 'Nome do cliente é obrigatório').max(200),
+  customer_email: z.string().trim().email('E-mail inválido').max(255),
+  customer_phone: z.string().trim().max(20).optional(),
+  is_project_phase: z.boolean(),
+}).refine((data) => {
+  // If not in project phase, dates are required
+  if (!data.is_project_phase) {
+    return !!data.planned_start_date && !!data.planned_end_date;
+  }
+  return true;
+}, {
+  message: 'Datas de início e término são obrigatórias para obras em execução',
+  path: ['planned_start_date'],
+});
 
 interface FormData {
   // Project info
@@ -34,6 +58,7 @@ export default function NovaObra() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -50,6 +75,10 @@ export default function NovaObra() {
 
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when field changes
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,33 +89,31 @@ export default function NovaObra() {
       return;
     }
 
-    // Validation
-    if (!formData.name) {
-      toast({ title: 'Erro', description: 'Nome do projeto é obrigatório', variant: 'destructive' });
-      return;
-    }
-
-    // Datas são obrigatórias apenas quando não está em fase de projeto
-    if (!formData.is_project_phase && (!formData.planned_start_date || !formData.planned_end_date)) {
-      toast({ title: 'Erro', description: 'Datas de início e término são obrigatórias para obras em execução', variant: 'destructive' });
-      return;
-    }
-
-    if (!formData.customer_name || !formData.customer_email) {
-      toast({ title: 'Erro', description: 'Dados do cliente são obrigatórios', variant: 'destructive' });
+    // Validate with Zod
+    const result = formSchema.safeParse(formData);
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.errors.forEach(err => {
+        if (err.path[0]) {
+          newErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(newErrors);
+      toast({ title: 'Erro de validação', description: 'Verifique os campos obrigatórios', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
+    setErrors({});
 
     try {
       // 1. Create project
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
-          name: formData.name,
-          unit_name: formData.unit_name || null,
-          address: formData.address || null,
+          name: formData.name.trim(),
+          unit_name: formData.unit_name.trim() || null,
+          address: formData.address.trim() || null,
           planned_start_date: formData.planned_start_date || null,
           planned_end_date: formData.planned_end_date || null,
           contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
@@ -96,9 +123,12 @@ export default function NovaObra() {
         .select()
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {
+        console.error('Project creation error:', projectError);
+        throw new Error('Falha ao criar projeto: ' + projectError.message);
+      }
 
-      // 2. Add current user as engineer
+      // 2. Add current user as engineer (legacy table for backwards compatibility)
       const { error: engineerError } = await supabase
         .from('project_engineers')
         .insert({
@@ -107,20 +137,51 @@ export default function NovaObra() {
           is_primary: true,
         });
 
-      if (engineerError) throw engineerError;
+      if (engineerError) {
+        console.error('Engineer assignment error:', engineerError);
+        // Don't throw - project is created, just log
+      }
 
-      // 3. Add customer
+      // 3. Add current user to project_members as owner (required for can_manage_project)
+      const { error: memberError } = await supabase
+        .from('project_members')
+        .insert({
+          project_id: project.id,
+          user_id: user.id,
+          role: 'owner',
+        });
+
+      if (memberError) {
+        console.error('Member assignment error:', memberError);
+        // Don't throw - project is created, just log
+      }
+
+      // 4. Add customer
       const { error: customerError } = await supabase
         .from('project_customers')
         .insert({
           project_id: project.id,
-          customer_name: formData.customer_name,
-          customer_email: formData.customer_email,
-          customer_phone: formData.customer_phone || null,
+          customer_name: formData.customer_name.trim(),
+          customer_email: formData.customer_email.trim().toLowerCase(),
+          customer_phone: formData.customer_phone.trim() || null,
           invitation_sent_at: sendInvite ? new Date().toISOString() : null,
         });
 
-      if (customerError) throw customerError;
+      if (customerError) {
+        console.error('Customer creation error:', customerError);
+        // Don't throw - project is created, just log
+      }
+
+      // 5. Initialize project journey if in project phase
+      if (formData.is_project_phase) {
+        const { error: journeyError } = await supabase
+          .rpc('initialize_project_journey', { p_project_id: project.id });
+        
+        if (journeyError) {
+          console.error('Journey initialization error:', journeyError);
+          // Don't throw - project is created, just log
+        }
+      }
 
       toast({ 
         title: 'Obra cadastrada!', 
@@ -130,11 +191,12 @@ export default function NovaObra() {
       });
 
       navigate('/gestao');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating project:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       toast({ 
         title: 'Erro ao cadastrar', 
-        description: err.message, 
+        description: errorMessage, 
         variant: 'destructive' 
       });
     } finally {
@@ -189,15 +251,16 @@ export default function NovaObra() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 space-y-1">
                   <Label htmlFor="name">Nome do Projeto *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => handleChange('name', e.target.value)}
                     placeholder="Ex: Hub Brooklyn"
-                    required
+                    className={errors.name ? 'border-destructive' : ''}
                   />
+                  {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
                 </div>
                 <div>
                   <Label htmlFor="unit_name">Unidade</Label>
@@ -344,17 +407,18 @@ export default function NovaObra() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 space-y-1">
                   <Label htmlFor="customer_name">Nome Completo *</Label>
                   <Input
                     id="customer_name"
                     value={formData.customer_name}
                     onChange={(e) => handleChange('customer_name', e.target.value)}
                     placeholder="Nome do cliente"
-                    required
+                    className={errors.customer_name ? 'border-destructive' : ''}
                   />
+                  {errors.customer_name && <p className="text-xs text-destructive">{errors.customer_name}</p>}
                 </div>
-                <div>
+                <div className="space-y-1">
                   <Label htmlFor="customer_email">E-mail *</Label>
                   <Input
                     id="customer_email"
@@ -362,8 +426,9 @@ export default function NovaObra() {
                     value={formData.customer_email}
                     onChange={(e) => handleChange('customer_email', e.target.value)}
                     placeholder="cliente@email.com"
-                    required
+                    className={errors.customer_email ? 'border-destructive' : ''}
                   />
+                  {errors.customer_email && <p className="text-xs text-destructive">{errors.customer_email}</p>}
                 </div>
                 <div>
                   <Label htmlFor="customer_phone">Telefone</Label>

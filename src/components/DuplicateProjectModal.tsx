@@ -119,22 +119,41 @@ export function DuplicateProjectModal({
 
       if (projectError) throw projectError;
 
-      // 2. Add current user as engineer
-      await supabase.from('project_engineers').insert({
+      // 2. Add current user as engineer (legacy table for backwards compatibility)
+      const { error: engineerError } = await supabase.from('project_engineers').insert({
         project_id: newProject.id,
         engineer_user_id: user.id,
         is_primary: true,
       });
+      
+      if (engineerError) {
+        console.error('Engineer assignment error:', engineerError);
+      }
 
-      // 3. Add customer
-      await supabase.from('project_customers').insert({
+      // 3. Add current user to project_members as owner (required for can_manage_project)
+      const { error: memberError } = await supabase.from('project_members').insert({
+        project_id: newProject.id,
+        user_id: user.id,
+        role: 'owner',
+      });
+      
+      if (memberError) {
+        console.error('Member assignment error:', memberError);
+      }
+
+      // 4. Add customer
+      const { error: customerError } = await supabase.from('project_customers').insert({
         project_id: newProject.id,
         customer_name: customerName.trim(),
-        customer_email: customerEmail.trim(),
+        customer_email: customerEmail.trim().toLowerCase(),
         customer_phone: customerPhone.trim() || null,
       });
+      
+      if (customerError) {
+        console.error('Customer creation error:', customerError);
+      }
 
-      // 4. Copy activities if selected
+      // 5. Copy activities if selected
       if (options.includeActivities) {
         const { data: activities } = await supabase
           .from('project_activities')
@@ -164,7 +183,7 @@ export function DuplicateProjectModal({
         }
       }
 
-      // 5. Copy payments if selected
+      // 6. Copy payments if selected
       if (options.includePayments) {
         const { data: payments } = await supabase
           .from('project_payments')
@@ -185,7 +204,7 @@ export function DuplicateProjectModal({
         }
       }
 
-      // 6. Initialize journey if selected
+      // 7. Initialize journey if selected
       if (options.includeJourney) {
         await supabase.rpc('initialize_project_journey', { p_project_id: newProject.id });
       }
