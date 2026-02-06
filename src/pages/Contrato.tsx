@@ -102,7 +102,7 @@ const Contrato = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-hidden">
+      <div className="flex-1 min-h-0 p-2 sm:p-4 md:p-6 overflow-auto">
         <div className="max-w-6xl mx-auto">
           {!hasContract ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
