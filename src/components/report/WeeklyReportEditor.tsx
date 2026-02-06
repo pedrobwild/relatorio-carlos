@@ -207,14 +207,16 @@ const WeeklyReportEditor = ({
   };
 
   const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'];
+  // Must match bucket limit (50MB)
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
   const validateFile = (file: File): boolean => {
     if (!validTypes.includes(file.type)) {
       toast.error(`Formato não suportado: ${file.name}. Use JPG, PNG, WEBP, MP4 ou MOV.`);
       return false;
     }
-    if (file.size > 500 * 1024 * 1024) {
-      toast.error(`Arquivo muito grande: ${file.name}. Máximo 500MB.`);
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`Arquivo muito grande: ${file.name}. Máximo 50MB.`);
       return false;
     }
     return true;
