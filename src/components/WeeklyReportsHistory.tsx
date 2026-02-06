@@ -23,17 +23,20 @@ const calculatePlannedProgress = (
   projectStartDate: Date
 ): number => {
   // Check if any activity has weight defined
-  const hasWeights = activities.some(a => (a as any).weight !== undefined);
+  const hasWeights = activities.some(a => a.weight !== undefined);
   
   // Calculate total weight (should be 100, but normalize if not)
   const totalWeight = hasWeights 
-    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
     : activities.length;
+  
+  // BUG FIX: Guard against division by zero
+  if (totalWeight === 0) return 0;
   
   const completedWeight = activities.reduce((sum, activity) => {
     const plannedEnd = new Date(activity.plannedEnd);
     if (isBefore(plannedEnd, weekEndDate) || plannedEnd.getTime() === weekEndDate.getTime()) {
-      return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
+      return sum + (hasWeights ? (activity.weight || 0) : 1);
     }
     return sum;
   }, 0);
@@ -46,18 +49,21 @@ const calculateActualProgress = (
   weekEndDate: Date
 ): number => {
   // Check if any activity has weight defined
-  const hasWeights = activities.some(a => (a as any).weight !== undefined);
+  const hasWeights = activities.some(a => a.weight !== undefined);
   
   // Calculate total weight (should be 100, but normalize if not)
   const totalWeight = hasWeights 
-    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
     : activities.length;
+  
+  // BUG FIX: Guard against division by zero
+  if (totalWeight === 0) return 0;
   
   const completedWeight = activities.reduce((sum, activity) => {
     if (activity.actualEnd) {
       const actualEnd = new Date(activity.actualEnd);
       if (isBefore(actualEnd, weekEndDate) || actualEnd.getTime() === weekEndDate.getTime()) {
-        return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
+        return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
     }
     return sum;
@@ -216,8 +222,18 @@ const getStatusConfig = (status: 'ahead' | 'on-track' | 'behind') => {
   }
 };
 
-// Custom tooltip for the variance chart
-const CustomTooltip = ({ active, payload, label }: any) => {
+// BUG FIX: Tipagem adequada para tooltip do Recharts
+interface VarianceTooltipPayload {
+  value: number;
+}
+
+interface VarianceTooltipProps {
+  active?: boolean;
+  payload?: VarianceTooltipPayload[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: VarianceTooltipProps) => {
   if (active && payload && payload.length) {
     const variance = payload[0].value;
     return (
@@ -225,7 +241,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-xs text-muted-foreground mb-1">Semana {label}</p>
         <p className={cn(
           "text-sm font-bold",
-          variance >= 0 ? "text-emerald-600" : "text-red-600"
+          variance >= 0 ? "text-success" : "text-destructive"
         )}>
           {variance > 0 ? '+' : ''}{variance}% vs previsto
         </p>

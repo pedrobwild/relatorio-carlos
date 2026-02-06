@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { User, Building2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { FORMALIZATION_TYPE_LABELS, type FormalizationType } from '@/types/formalization';
+import DOMPurify from 'dompurify';
 
 interface ReviewStepProps {
   formData: {
@@ -27,6 +29,15 @@ interface ReviewStepProps {
 export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps) {
   const customerParties = formData.parties.filter(p => p.party_type === 'customer');
   const companyParties = formData.parties.filter(p => p.party_type === 'company');
+
+  // BUG FIX: Sanitiza HTML para prevenir XSS
+  const sanitizedBody = useMemo(() => {
+    const htmlContent = formData.body_md.replace(/\n/g, '<br>');
+    return DOMPurify.sanitize(htmlContent, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'br', 'p', 'ul', 'ol', 'li', 'a', 'span'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+    });
+  }, [formData.body_md]);
 
   return (
     <div className="space-y-6">
@@ -54,7 +65,7 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
           
           <div 
             className="prose prose-sm dark:prose-invert max-w-none text-body"
-            dangerouslySetInnerHTML={{ __html: formData.body_md.replace(/\n/g, '<br>') }}
+            dangerouslySetInnerHTML={{ __html: sanitizedBody }}
           />
         </CardContent>
       </Card>

@@ -54,56 +54,60 @@ import type { JourneyCSM } from '@/components/journey/JourneyCSMSection';
    stages: JourneyStage[];
  }
  
- async function fetchProjectJourney(projectId: string): Promise<ProjectJourneyData> {
-  // Fetch hero, footer, and csm in parallel
-  const [heroResult, footerResult, csmResult, stagesResult] = await Promise.all([
+async function fetchProjectJourney(projectId: string): Promise<ProjectJourneyData> {
+  // BUG FIX: Fetch todos junto com stages para evitar N+1 queries
+  const [heroResult, footerResult, csmResult, stagesResult, todosResult] = await Promise.all([
     supabase
-     .from('journey_hero')
-     .select('*')
-     .eq('project_id', projectId)
-      .single(),
+      .from('journey_hero')
+      .select('*')
+      .eq('project_id', projectId)
+      .maybeSingle(), // BUG FIX: Use maybeSingle() para evitar erro quando não existe
     supabase
-     .from('journey_footer')
-     .select('*')
-     .eq('project_id', projectId)
-      .single(),
+      .from('journey_footer')
+      .select('*')
+      .eq('project_id', projectId)
+      .maybeSingle(),
     supabase
       .from('journey_csm')
       .select('*')
       .eq('project_id', projectId)
-      .single(),
+      .maybeSingle(),
     supabase
-     .from('journey_stages')
-     .select('*')
-     .eq('project_id', projectId)
+      .from('journey_stages')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('sort_order', { ascending: true }),
+    // Fetch all todos for this project's stages in one query
+    supabase
+      .from('journey_todos')
+      .select('*, journey_stages!inner(project_id)')
+      .eq('journey_stages.project_id', projectId)
       .order('sort_order', { ascending: true }),
   ]);
- 
-   const stages: JourneyStage[] = [];
- 
-  if (stagesResult.data) {
-    for (const stage of stagesResult.data) {
-       const { data: todos } = await supabase
-         .from('journey_todos')
-         .select('*')
-         .eq('stage_id', stage.id)
-         .order('sort_order', { ascending: true });
- 
-       stages.push({
-         ...stage,
-         status: stage.status as JourneyStageStatus,
-         todos: (todos || []) as JourneyTodo[],
-       });
-     }
-   }
- 
-   return {
+
+  // Group todos by stage_id
+  const todosByStage = new Map<string, JourneyTodo[]>();
+  if (todosResult.data) {
+    for (const todo of todosResult.data) {
+      const existing = todosByStage.get(todo.stage_id) || [];
+      existing.push(todo as JourneyTodo);
+      todosByStage.set(todo.stage_id, existing);
+    }
+  }
+
+  const stages: JourneyStage[] = (stagesResult.data || []).map(stage => ({
+    ...stage,
+    status: stage.status as JourneyStageStatus,
+    todos: todosByStage.get(stage.id) || [],
+  }));
+
+  return {
     hero: heroResult.data as JourneyHero | null,
     footer: footerResult.data as JourneyFooter | null,
     csm: csmResult.data as JourneyCSM | null,
-     stages,
-   };
- }
+    stages,
+  };
+}
  
  export function useProjectJourney(projectId: string | undefined) {
    return useQuery({

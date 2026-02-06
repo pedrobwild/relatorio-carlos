@@ -36,12 +36,15 @@ const generateWeeklyProgressData = (
   const data: WeekData[] = [];
   
   // Check if any activity has weight defined
-  const hasWeights = activities.some(a => (a as any).weight !== undefined);
+  const hasWeights = activities.some(a => a.weight !== undefined);
   
   // Calculate total weight (should be 100, but normalize if not)
   const totalWeight = hasWeights 
-    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
     : activities.length;
+  
+  // BUG FIX: Guard against division by zero
+  if (totalWeight === 0) return data;
   
   let weekNumber = 1;
   let weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
@@ -54,7 +57,7 @@ const generateWeeklyProgressData = (
       if (!activity.actualEnd) return sum;
       const actualEndDate = new Date(activity.actualEnd);
       if (isBefore(actualEndDate, weekEnd) || actualEndDate.getTime() === weekEnd.getTime()) {
-        return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
+        return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
       return sum;
     }, 0);
@@ -65,7 +68,7 @@ const generateWeeklyProgressData = (
     const previstoSum = activities.reduce((sum, activity) => {
       const plannedEndDate = new Date(activity.plannedEnd);
       if (isBefore(plannedEndDate, weekEnd) || plannedEndDate.getTime() === weekEnd.getTime()) {
-        return sum + (hasWeights ? ((activity as any).weight || 0) : 1);
+        return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
       return sum;
     }, 0);
@@ -87,7 +90,20 @@ const generateWeeklyProgressData = (
   return data;
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+// BUG FIX: Tipagem adequada para tooltip do Recharts
+interface TooltipPayloadItem {
+  payload: WeekData;
+  value: number;
+  dataKey: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const deviation = data.realizado - data.previsto;
@@ -203,8 +219,8 @@ const WeeklyProgressChart = ({
               stroke="hsl(var(--primary))"
               strokeWidth={2}
               fill="url(#progressGradient)"
-              dot={(props: any) => {
-                const { cx, cy, payload } = props;
+              dot={(props) => {
+                const { cx, cy, payload } = props as { cx: number; cy: number; payload: WeekData };
                 if (payload.isCurrent) {
                   return (
                     <circle
