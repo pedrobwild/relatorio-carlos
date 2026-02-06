@@ -15,27 +15,39 @@ import { ptBR } from "date-fns/locale";
 
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
-  onSave: (updatedData: WeeklyReportData) => void;
+  /** Persiste alterações automaticamente (não deve fechar o editor). */
+  onAutoSave?: (updatedData: WeeklyReportData) => void | Promise<void>;
+  /** Salva explicitamente e fecha o editor (usado no botão "Salvar Relatório"). */
+  onSaveAndClose?: (updatedData: WeeklyReportData) => void;
   onCancel?: () => void;
   isSaving?: boolean;
 }
 
-const WeeklyReportEditor = ({ data, onSave, onCancel, isSaving: externalIsSaving }: WeeklyReportEditorProps) => {
+const WeeklyReportEditor = ({
+  data,
+  onAutoSave,
+  onSaveAndClose,
+  onCancel,
+  isSaving: externalIsSaving,
+}: WeeklyReportEditorProps) => {
   const [formData, setFormData] = useState<WeeklyReportData>(data);
 
   // Auto-save hook - saves automatically after 3 seconds of inactivity
-  const { isSaving: autoSaving, lastSaved, saveNow } = useAutoSave({
+  // IMPORTANT: auto-save must NOT close the editor.
+  const { isSaving: autoSaving, lastSaved } = useAutoSave({
     data: formData,
-    onSave,
+    onSave: async (payload) => {
+      await onAutoSave?.(payload);
+    },
     debounceMs: 3000,
-    enabled: true,
+    enabled: !!onAutoSave,
   });
 
   const isSaving = externalIsSaving || autoSaving;
 
   const handleSave = () => {
-    saveNow();
-    toast.success("Relatório salvo com sucesso!");
+    // Manual save should persist immediately and let the parent decide to close.
+    onSaveAndClose?.(formData);
   };
 
   const updateExecutiveSummary = (value: string) => {
