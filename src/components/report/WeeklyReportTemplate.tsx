@@ -39,17 +39,29 @@ const WeeklyReportTemplate = ({
     (data.roomsProgress && data.roomsProgress.length > 0) ||
     data.deliverablesCompleted.length > 0;
 
-  const handleSave = useCallback((updatedData: WeeklyReportData) => {
-    setIsEditing(false);
-    onSaveReport?.(updatedData);
-  }, [onSaveReport]);
+  const handleAutoSave = useCallback(
+    (updatedData: WeeklyReportData) => {
+      // Auto-save must not change editor state.
+      onSaveReport?.(updatedData);
+    },
+    [onSaveReport]
+  );
+
+  const handleSaveAndClose = useCallback(
+    (updatedData: WeeklyReportData) => {
+      setIsEditing(false);
+      onSaveReport?.(updatedData);
+    },
+    [onSaveReport]
+  );
 
   // If editing, show the editor
   if (isEditing) {
     return (
       <WeeklyReportEditor
         data={data}
-        onSave={handleSave}
+        onAutoSave={handleAutoSave}
+        onSaveAndClose={handleSaveAndClose}
         onCancel={() => setIsEditing(false)}
         isSaving={isSaving}
       />
