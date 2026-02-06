@@ -18,7 +18,12 @@ export function AuthRedirect() {
   const { role, loading: roleLoading, isStaff, isCustomer } = useUserRole();
   
   // Track if we've already done the initial redirect to prevent re-triggers
+  // Also track the user ID to reset on user change (logout/login)
   const hasRedirected = useRef(false);
+  const lastAuthState = useRef<{ isAuthenticated: boolean; role: string | null }>({ 
+    isAuthenticated: false, 
+    role: null 
+  });
 
   useEffect(() => {
     if (authLoading || roleLoading) {
@@ -26,9 +31,24 @@ export function AuthRedirect() {
       return;
     }
     
-    // Prevent multiple redirects
+    // BUG FIX: Reset redirect flag when auth state changes (logout/login with different user)
+    const currentState = { isAuthenticated, role };
+    const hasAuthChanged = 
+      lastAuthState.current.isAuthenticated !== isAuthenticated ||
+      lastAuthState.current.role !== role;
+    
+    if (hasAuthChanged) {
+      debugNav('AuthRedirect: auth state changed, resetting redirect flag', {
+        previous: lastAuthState.current,
+        current: currentState,
+      });
+      hasRedirected.current = false;
+      lastAuthState.current = currentState;
+    }
+    
+    // Prevent multiple redirects for same auth state
     if (hasRedirected.current) {
-      debugNav('AuthRedirect: already redirected, skipping');
+      debugNav('AuthRedirect: already redirected for this auth state, skipping');
       return;
     }
 
