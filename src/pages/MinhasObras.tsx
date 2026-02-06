@@ -24,20 +24,25 @@ const statusLabels: Record<string, string> = {
 };
 
 function ProjectCard({ project, onClick }: { project: ProjectWithCustomer & { is_project_phase?: boolean }; onClick: () => void }) {
-  const startDate = new Date(project.actual_start_date || project.planned_start_date);
-  const endDate = new Date(project.planned_end_date);
+  // BUG FIX: Guard against null dates to prevent Invalid Date crash
+  const rawStartDate = project.actual_start_date || project.planned_start_date;
+  const rawEndDate = project.planned_end_date;
+  
+  const startDate = rawStartDate ? new Date(rawStartDate) : null;
+  const endDate = rawEndDate ? new Date(rawEndDate) : null;
   const now = Date.now();
-  const hasStarted = now >= startDate.getTime();
+  const hasStarted = startDate ? now >= startDate.getTime() : false;
 
   // Dias restantes só contam a partir da data de início oficial
   const daysRemaining = useMemo(() => {
-    if (!hasStarted) return null; // Ainda não começou
+    if (!hasStarted || !endDate) return null; // Ainda não começou ou sem data fim
     return Math.ceil((endDate.getTime() - now) / (1000 * 60 * 60 * 24));
   }, [hasStarted, endDate, now]);
 
   const progress = useMemo(() => {
-    if (!hasStarted) return 0;
+    if (!hasStarted || !startDate || !endDate) return 0;
     const total = endDate.getTime() - startDate.getTime();
+    if (total <= 0) return 0; // Prevent division by zero
     const elapsed = now - startDate.getTime();
     return Math.min(100, Math.max(0, (elapsed / total) * 100));
   }, [hasStarted, startDate, endDate, now]);
@@ -74,8 +79,12 @@ function ProjectCard({ project, onClick }: { project: ProjectWithCustomer & { is
         <div className="flex items-center gap-2 text-caption text-muted-foreground mb-3">
           <Calendar className="h-3.5 w-3.5" />
           <span>
-            {format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
-            {format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
+            {project.planned_start_date 
+              ? format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
+              : 'A definir'} - {' '}
+            {project.planned_end_date 
+              ? format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })
+              : 'A definir'}
           </span>
         </div>
 
