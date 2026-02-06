@@ -22,6 +22,10 @@ vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: vi.fn(),
 }));
 
+vi.mock('@/lib/debugAuth', () => ({
+  debugNav: vi.fn(),
+}));
+
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -178,5 +182,67 @@ describe('AuthRedirect', () => {
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('/gestao', { replace: true });
+  });
+
+  it('should reset redirect flag when role changes (logout/login scenario)', async () => {
+    // First render: staff user
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      loading: false,
+      user: { id: 'user-1', email: 'staff@example.com' } as any,
+      session: {} as any,
+      signOut: vi.fn(),
+    });
+    mockedUseUserRole.mockReturnValue({
+      role: 'engineer',
+      loading: false,
+      isStaff: true,
+      isCustomer: false,
+      isAdmin: false,
+      isManager: false,
+    });
+
+    const { rerender } = render(
+      <MemoryRouter>
+        <AuthRedirect />
+      </MemoryRouter>
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/gestao', { replace: true });
+    mockNavigate.mockClear();
+
+    // Simulate user change: now a customer
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      loading: false,
+      user: { id: 'user-2', email: 'customer@example.com' } as any,
+      session: {} as any,
+      signOut: vi.fn(),
+    });
+    mockedUseUserRole.mockReturnValue({
+      role: 'customer',
+      loading: false,
+      isStaff: false,
+      isCustomer: true,
+      isAdmin: false,
+      isManager: false,
+    });
+
+    rerender(
+      <MemoryRouter>
+        <AuthRedirect />
+      </MemoryRouter>
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // BUG FIX VERIFICATION: Should redirect again because role changed
+    expect(mockNavigate).toHaveBeenCalledWith('/minhas-obras', { replace: true });
   });
 });
