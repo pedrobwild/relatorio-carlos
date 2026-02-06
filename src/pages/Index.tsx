@@ -314,7 +314,17 @@ const Index = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">{projectError}</p>
-          <button onClick={() => navigate(-1)} className="text-primary underline">
+          <button 
+            onClick={() => {
+              // BUG FIX: Previne loop se histórico estiver vazio
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
+              }
+            }} 
+            className="text-primary underline"
+          >
             Voltar
           </button>
         </div>
@@ -332,7 +342,17 @@ const Index = () => {
           <p className="text-muted-foreground mb-4">
             Os dados desta obra ainda não foram carregados. Entre em contato com seu engenheiro responsável.
           </p>
-          <button onClick={() => navigate(-1)} className="text-primary underline">
+          <button 
+            onClick={() => {
+              // BUG FIX: Previne loop se histórico estiver vazio
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
+              }
+            }} 
+            className="text-primary underline"
+          >
             Voltar
           </button>
         </div>
