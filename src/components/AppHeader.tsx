@@ -18,7 +18,8 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    // Use replace to prevent back button returning to authenticated page
+    navigate('/auth', { replace: true });
   };
 
   return (
