@@ -108,7 +108,7 @@ export default function MinhasObras() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background">
+    <div className="min-h-screen min-h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden bg-gradient-to-b from-primary/5 via-background to-background pb-safe"> 
       {/* Header */}
       <AppHeader>
         <div className="ml-2">
