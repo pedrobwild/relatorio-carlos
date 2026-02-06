@@ -110,7 +110,20 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     debugAuth('signOut called');
     clearRoleCache(); // Clear role cache on logout
-    await supabase.auth.signOut();
+    
+    // Immediately clear local state to provide instant feedback
+    setSession(null);
+    setUser(null);
+    lastSessionId.current = null;
+    
+    // Then perform the actual signOut
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      debugAuth('signOut error', { error: error.message });
+      console.error('Error signing out:', error);
+    } else {
+      debugAuth('signOut successful');
+    }
   }, []);
 
   return {
