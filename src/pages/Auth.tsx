@@ -306,7 +306,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-primary/5 via-background to-background flex items-center justify-center p-4 safe-area-top safe-area-bottom">
+    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-primary/5 via-background to-background flex items-center justify-center p-4 safe-area-top safe-area-bottom overflow-y-auto">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
