@@ -64,6 +64,8 @@ export const mapUiTypeToDbType = (uiType: PendingType): PendingItemType => {
 const calculatePriority = (dueDate: string | null): PendingPriority => {
   if (!dueDate) return "baixa";
   const due = parseISO(dueDate);
+  // BUG FIX: Guard against Invalid Date from empty/malformed string
+  if (isNaN(due.getTime())) return "baixa";
   const diff = differenceInDays(due, new Date());
   if (diff < 0) return "alta";
   if (diff <= 5) return "média";
@@ -72,7 +74,10 @@ const calculatePriority = (dueDate: string | null): PendingPriority => {
 
 // Get display status based on due date
 export const getStatus = (dueDate: string, referenceDate: Date = new Date()): PendingStatus => {
+  if (!dueDate) return "pendente";
   const due = parseISO(dueDate);
+  // BUG FIX: Guard against Invalid Date
+  if (isNaN(due.getTime())) return "pendente";
   const diff = differenceInDays(due, referenceDate);
   
   if (diff < 0) return "atrasado";

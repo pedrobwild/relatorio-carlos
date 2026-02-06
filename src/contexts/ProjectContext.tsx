@@ -58,11 +58,16 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           setError('Projeto não encontrado');
           setProject(null);
         } else {
+          // BUG FIX: Safe access to nested array with explicit fallback
+          const customer = Array.isArray(data.project_customers) && data.project_customers.length > 0
+            ? data.project_customers[0]
+            : null;
+          
           setProject({
             ...data,
             status: data.status as Project['status'],
-            customer_name: data.project_customers?.[0]?.customer_name,
-            customer_email: data.project_customers?.[0]?.customer_email,
+            customer_name: customer?.customer_name ?? undefined,
+            customer_email: customer?.customer_email ?? undefined,
             is_project_phase: data.is_project_phase,
           });
         }

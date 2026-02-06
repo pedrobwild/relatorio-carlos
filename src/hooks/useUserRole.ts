@@ -51,8 +51,9 @@ export function useUserRole(): UserRoleState {
       return;
     }
 
-    // Prevent duplicate fetch for same user
-    if (lastFetchedUserId.current === user.id && role !== null) {
+    // Prevent duplicate fetch for same user only if we have role AND cache entry
+    // BUG FIX: Check roleCache explicitly to avoid stale closure issues
+    if (lastFetchedUserId.current === user.id && role !== null && roleCache.has(user.id)) {
       debugAuth('useUserRole: already fetched for this user', { userId: user.id });
       setLoading(false);
       return;

@@ -274,11 +274,11 @@ export default function Auth() {
         return;
       }
       
-      // On success, reset loading and show toast
+      // On success, reset loading and show appropriate toast
       setLoading(false);
       toast({
         title: 'Conta criada com sucesso!',
-        description: 'Você será redirecionado automaticamente.',
+        description: 'Verifique seu email para confirmar o cadastro.',
       });
     } catch (error) {
       console.error('Signup error:', error);
