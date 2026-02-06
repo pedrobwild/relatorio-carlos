@@ -38,7 +38,9 @@ const Home = () => {
   const handleCreateReport = (data: ReportData) => {
     sessionStorage.setItem("currentReport", JSON.stringify(data));
     setIsModalOpen(false);
-    navigate("/relatorio");
+    // BUG FIX: Rota /relatorio é legacy e redireciona para /minhas-obras
+    // Em demo mode, vai para uma obra demo ou mostra mensagem
+    navigate("/minhas-obras");
   };
 
   const handleViewSample = () => {
@@ -46,7 +48,8 @@ const Home = () => {
       return; // Should not be callable in production
     }
     sessionStorage.setItem("currentReport", JSON.stringify(sampleReportData));
-    navigate("/relatorio");
+    // BUG FIX: Rota /relatorio é legacy
+    navigate("/minhas-obras");
   };
 
   return (

@@ -215,13 +215,21 @@ const ReportHeader = ({
       <div className="hidden md:block">
         {/* Top Section: Project Info + Status */}
         <div className="p-4 pb-3 border-b border-border">
-          <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4">
             {/* Left: Back Button + Logo + Project */}
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(-1)}
+                onClick={() => {
+                  // BUG FIX: Previne loop se histórico estiver vazio
+                  // Se veio de outra página, volta. Senão, vai para o dashboard correto.
+                  if (window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
+                  }
+                }}
                 className="h-8 w-8"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -624,7 +632,14 @@ const ReportHeader = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                // BUG FIX: Previne loop se histórico estiver vazio
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
+                }
+              }}
               className="h-7 w-7"
             >
               <ArrowLeft className="h-4 w-4" />
