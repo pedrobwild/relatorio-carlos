@@ -50,7 +50,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-background via-accent/20 to-primary/10 relative overflow-hidden">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-background via-accent/20 to-primary/10 relative overflow-x-hidden">
       {/* Subtle decorative elements - using Bwild purple tones */}
       <div className="absolute top-0 right-0 w-[400px] md:w-[600px] h-[400px] md:h-[600px] bg-gradient-radial from-primary/10 via-accent/5 to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-gradient-radial from-primary/8 via-accent/3 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
