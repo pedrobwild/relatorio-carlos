@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { debugAuth } from '@/lib/debugAuth';
+import { logError, logInfo } from '@/lib/errorLogger';
 
 export type AppRole = 'engineer' | 'admin' | 'customer' | 'manager';
 
@@ -17,6 +18,9 @@ interface UserRoleState {
 // Cache role by user ID to prevent refetches on re-mounts
 const roleCache = new Map<string, AppRole>();
 
+// Track pending fetches to prevent duplicate concurrent requests
+const pendingFetches = new Set<string>();
+
 export function useUserRole(): UserRoleState {
   const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<AppRole | null>(() => {
@@ -28,68 +32,99 @@ export function useUserRole(): UserRoleState {
   });
   const [loading, setLoading] = useState(true);
   
-  // Track last fetched user ID to prevent duplicate fetches
-  const lastFetchedUserId = useRef<string | null>(null);
+  // Use ref to track if component is mounted
+  const isMounted = useRef(true);
+
+  const fetchRole = useCallback(async (userId: string) => {
+    // Prevent duplicate fetches for the same user
+    if (pendingFetches.has(userId)) {
+      debugAuth('useUserRole: fetch already in progress', { userId });
+      return;
+    }
+
+    // Check cache first (double-check in case it was set between renders)
+    if (roleCache.has(userId)) {
+      const cachedRole = roleCache.get(userId)!;
+      debugAuth('useUserRole: using cached role', { userId, role: cachedRole });
+      if (isMounted.current) {
+        setRole(cachedRole);
+        setLoading(false);
+      }
+      return;
+    }
+
+    pendingFetches.add(userId);
+    debugAuth('useUserRole: fetching role', { userId });
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (!isMounted.current) {
+        pendingFetches.delete(userId);
+        return;
+      }
+
+      if (error) {
+        logError('Error fetching user role', error, { 
+          component: 'useUserRole', 
+          userId 
+        });
+        setRole('customer'); // Default to customer
+        roleCache.set(userId, 'customer');
+      } else {
+        const fetchedRole = data.role as AppRole;
+        setRole(fetchedRole);
+        roleCache.set(userId, fetchedRole);
+        logInfo('User role fetched', { userId, role: fetchedRole });
+        debugAuth('useUserRole: role fetched', { userId, role: fetchedRole });
+      }
+    } catch (err) {
+      logError('Unexpected error in useUserRole', err, { 
+        component: 'useUserRole', 
+        userId 
+      });
+      if (isMounted.current) {
+        setRole('customer');
+        roleCache.set(userId, 'customer');
+      }
+    } finally {
+      pendingFetches.delete(userId);
+      if (isMounted.current) {
+        setLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
+    isMounted.current = true;
+    
     if (authLoading) return;
     
     if (!user) {
       setRole(null);
       setLoading(false);
-      lastFetchedUserId.current = null;
       return;
     }
 
-    // Check cache first
+    // Check cache synchronously first
     if (roleCache.has(user.id)) {
       const cachedRole = roleCache.get(user.id)!;
-      debugAuth('useUserRole: using cached role', { userId: user.id, role: cachedRole });
       setRole(cachedRole);
       setLoading(false);
-      lastFetchedUserId.current = user.id;
       return;
     }
 
-    // Prevent duplicate fetch for same user only if we have role AND cache entry
-    // BUG FIX: Check roleCache explicitly to avoid stale closure issues
-    if (lastFetchedUserId.current === user.id && role !== null && roleCache.has(user.id)) {
-      debugAuth('useUserRole: already fetched for this user', { userId: user.id });
-      setLoading(false);
-      return;
-    }
+    // Fetch role if not cached
+    fetchRole(user.id);
 
-    const fetchRole = async () => {
-      debugAuth('useUserRole: fetching role', { userId: user.id });
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching user role:', error);
-          setRole('customer'); // Default to customer
-          roleCache.set(user.id, 'customer');
-        } else {
-          const fetchedRole = data.role as AppRole;
-          setRole(fetchedRole);
-          roleCache.set(user.id, fetchedRole);
-          debugAuth('useUserRole: role fetched', { userId: user.id, role: fetchedRole });
-        }
-      } catch (err) {
-        console.error('Error:', err);
-        setRole('customer');
-        roleCache.set(user.id, 'customer');
-      } finally {
-        lastFetchedUserId.current = user.id;
-        setLoading(false);
-      }
+    return () => {
+      isMounted.current = false;
     };
-
-    fetchRole();
-  }, [user?.id, authLoading]); // Only depend on user.id, not entire user object
+  }, [user?.id, authLoading, fetchRole]);
 
   return {
     role,
@@ -104,4 +139,5 @@ export function useUserRole(): UserRoleState {
 // Export function to clear cache (useful for testing or logout)
 export function clearRoleCache(): void {
   roleCache.clear();
+  pendingFetches.clear();
 }

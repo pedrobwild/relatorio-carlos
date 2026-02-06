@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, CreditCard } from 'lucide-react';
 import bwildLogo from '@/assets/bwild-logo.png';
+import { z } from 'zod';
+import { logError, logInfo } from '@/lib/errorLogger';
 
 type AppRole = 'engineer' | 'admin' | 'customer';
 type LoginIdentifierType = 'email' | 'cpf';
+
+// Validation schemas
+const emailLoginSchema = z.object({
+  email: z.string().trim().min(1, 'Email obrigatório').email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+});
+
+const cpfLoginSchema = z.object({
+  cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
+  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+});
+
+const signupSchema = z.object({
+  email: z.string().trim().min(1, 'Email obrigatório').email('Email inválido').max(255, 'Email muito longo'),
+  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres').max(128, 'Senha muito longa'),
+  displayName: z.string().trim().max(100, 'Nome muito longo').optional(),
+});
 
 function formatCPF(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -136,56 +155,45 @@ export default function Auth() {
     }
   };
 
-  const validateLoginForm = () => {
-    if (loginIdentifierType === 'email') {
-      if (!loginIdentifier || !loginIdentifier.includes('@')) {
+  const validateLoginForm = (): boolean => {
+    try {
+      if (loginIdentifierType === 'email') {
+        emailLoginSchema.parse({ email: loginIdentifier, password });
+      } else {
+        const digits = loginIdentifier.replace(/\D/g, '');
+        cpfLoginSchema.parse({ cpf: digits, password });
+      }
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
         toast({
-          title: 'Email inválido',
-          description: 'Por favor, insira um email válido.',
+          title: 'Dados inválidos',
+          description: firstError.message,
           variant: 'destructive',
         });
-        return false;
+        logInfo('Login validation failed', { field: firstError.path.join('.'), error: firstError.message });
       }
-    } else {
-      const digits = loginIdentifier.replace(/\D/g, '');
-      if (digits.length !== 11) {
-        toast({
-          title: 'CPF inválido',
-          description: 'Por favor, insira um CPF válido com 11 dígitos.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-    }
-    if (password.length < 6) {
-      toast({
-        title: 'Senha muito curta',
-        description: 'A senha deve ter pelo menos 6 caracteres.',
-        variant: 'destructive',
-      });
       return false;
     }
-    return true;
   };
 
-  const validateSignupForm = () => {
-    if (!email || !email.includes('@')) {
-      toast({
-        title: 'Email inválido',
-        description: 'Por favor, insira um email válido.',
-        variant: 'destructive',
-      });
+  const validateSignupForm = (): boolean => {
+    try {
+      signupSchema.parse({ email, password, displayName: displayName || undefined });
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast({
+          title: 'Dados inválidos',
+          description: firstError.message,
+          variant: 'destructive',
+        });
+        logInfo('Signup validation failed', { field: firstError.path.join('.'), error: firstError.message });
+      }
       return false;
     }
-    if (password.length < 6) {
-      toast({
-        title: 'Senha muito curta',
-        description: 'A senha deve ter pelo menos 6 caracteres.',
-        variant: 'destructive',
-      });
-      return false;
-    }
-    return true;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -195,6 +203,8 @@ export default function Auth() {
     const loginEmail = getLoginEmail();
 
     setLoading(true);
+    logInfo('Login attempt', { identifierType: loginIdentifierType });
+    
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
@@ -202,8 +212,12 @@ export default function Auth() {
       });
 
       if (error) {
-        // Always reset loading state on error
         setLoading(false);
+        logError('Login failed', error, { 
+          component: 'Auth', 
+          action: 'login',
+          identifierType: loginIdentifierType 
+        });
         
         if (error.message.includes('Invalid login credentials')) {
           toast({
@@ -213,6 +227,12 @@ export default function Auth() {
               : 'Email ou senha incorretos. Verifique e tente novamente.',
             variant: 'destructive',
           });
+        } else if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: 'Email não verificado',
+            description: 'Verifique seu email antes de fazer login.',
+            variant: 'destructive',
+          });
         } else {
           toast({
             title: 'Erro ao entrar',
@@ -220,11 +240,12 @@ export default function Auth() {
             variant: 'destructive',
           });
         }
-        return; // Exit early on error
+        return;
       }
+      logInfo('Login successful');
       // On success, keep loading=true until redirect happens via onAuthStateChange
     } catch (error) {
-      console.error('Login error:', error);
+      logError('Unexpected login error', error, { component: 'Auth', action: 'login' });
       setLoading(false);
       toast({
         title: 'Erro',
@@ -239,6 +260,8 @@ export default function Auth() {
     if (!validateSignupForm()) return;
 
     setLoading(true);
+    logInfo('Signup attempt', { email: email.substring(0, 3) + '***' }); // Log redacted email
+    
     try {
       const redirectUrl = `${window.location.origin}/auth`;
       
@@ -255,13 +278,19 @@ export default function Auth() {
       });
 
       if (error) {
-        // Reset loading state on error
         setLoading(false);
+        logError('Signup failed', error, { component: 'Auth', action: 'signup' });
         
         if (error.message.includes('already registered')) {
           toast({
             title: 'Email já cadastrado',
             description: 'Este email já está registrado. Tente fazer login.',
+            variant: 'destructive',
+          });
+        } else if (error.message.includes('rate limit')) {
+          toast({
+            title: 'Muitas tentativas',
+            description: 'Aguarde alguns minutos antes de tentar novamente.',
             variant: 'destructive',
           });
         } else {
@@ -274,14 +303,14 @@ export default function Auth() {
         return;
       }
       
-      // On success, reset loading and show appropriate toast
       setLoading(false);
+      logInfo('Signup successful');
       toast({
         title: 'Conta criada com sucesso!',
-        description: 'Verifique seu email para confirmar o cadastro.',
+        description: 'Verifique seu email para confirmar o cadastro antes de fazer login.',
       });
     } catch (error) {
-      console.error('Signup error:', error);
+      logError('Unexpected signup error', error, { component: 'Auth', action: 'signup' });
       setLoading(false);
       toast({
         title: 'Erro',
