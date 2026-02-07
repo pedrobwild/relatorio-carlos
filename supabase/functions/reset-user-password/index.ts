@@ -36,18 +36,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if requesting user is admin
+    // Check if requesting user is admin or engineer (staff access)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { data: roleData, error: roleError } = await adminClient
+    const { data: rolesData, error: roleError } = await adminClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', requestingUser.id)
-      .single();
+      .eq('user_id', requestingUser.id);
 
-    if (roleError || roleData?.role !== 'admin') {
+    const userRoles = (rolesData || []).map(r => r.role);
+    const hasStaffAccess = userRoles.includes('admin') || userRoles.includes('engineer');
+
+    if (roleError || !hasStaffAccess) {
       return new Response(
-        JSON.stringify({ error: 'Only admins can reset user passwords' }),
+        JSON.stringify({ error: 'Staff access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
