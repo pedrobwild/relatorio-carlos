@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProtectedRoute, StaffRoute, CustomerRoute } from '@/components/ProtectedRoute';
+import type { AppRole } from '@/hooks/useUserRole';
 
 // Mock hooks
 vi.mock('@/hooks/useAuth', () => ({
@@ -20,6 +21,19 @@ const mockedUseUserRole = vi.mocked(useUserRole);
 
 const TestComponent = () => <div data-testid="protected-content">Protected Content</div>;
 
+// Helper to create mock role state
+const createMockRoleState = (roles: AppRole[], loading = false) => ({
+  roles,
+  role: roles[0] || null,
+  loading,
+  isStaff: roles.some(r => ['engineer', 'admin', 'manager'].includes(r)),
+  isCustomer: roles.includes('customer'),
+  isAdmin: roles.includes('admin'),
+  isManager: roles.includes('manager'),
+  hasRole: (role: AppRole) => roles.includes(role),
+  hasAnyRole: (checkRoles: AppRole[]) => checkRoles.some(r => roles.includes(r)),
+});
+
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -33,14 +47,7 @@ describe('ProtectedRoute', () => {
       session: null,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: null,
-      loading: true,
-      isStaff: false,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState([], true));
 
     const { queryByTestId } = render(
       <MemoryRouter>
@@ -61,14 +68,7 @@ describe('ProtectedRoute', () => {
       session: null,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: null,
-      loading: false,
-      isStaff: false,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState([]));
 
     const { queryByTestId } = render(
       <MemoryRouter initialEntries={['/protected']}>
@@ -89,14 +89,7 @@ describe('ProtectedRoute', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'customer',
-      loading: false,
-      isStaff: false,
-      isCustomer: true,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
 
     const { getByTestId } = render(
       <MemoryRouter>
@@ -117,14 +110,7 @@ describe('ProtectedRoute', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'customer',
-      loading: false,
-      isStaff: false,
-      isCustomer: true,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
 
     const { queryByTestId } = render(
       <MemoryRouter>
@@ -145,14 +131,7 @@ describe('ProtectedRoute', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'engineer',
-      loading: false,
-      isStaff: true,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['engineer']));
 
     const { queryByTestId } = render(
       <MemoryRouter>
@@ -163,6 +142,50 @@ describe('ProtectedRoute', () => {
     );
 
     expect(queryByTestId('protected-content')).not.toBeInTheDocument();
+  });
+
+  it('should allow access when user has at least one of multiple allowed roles', () => {
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      loading: false,
+      user: { id: 'user-123', email: 'test@example.com' } as any,
+      session: {} as any,
+      signOut: vi.fn(),
+    });
+    // User has both admin and engineer roles
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['admin', 'engineer']));
+
+    const { getByTestId } = render(
+      <MemoryRouter>
+        <ProtectedRoute allowedRoles={['admin']}>
+          <TestComponent />
+        </ProtectedRoute>
+      </MemoryRouter>
+    );
+
+    expect(getByTestId('protected-content')).toBeInTheDocument();
+  });
+
+  it('should allow access when user has multiple roles and one matches', () => {
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      loading: false,
+      user: { id: 'user-123', email: 'test@example.com' } as any,
+      session: {} as any,
+      signOut: vi.fn(),
+    });
+    // User has customer and engineer roles
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer', 'engineer']));
+
+    const { getByTestId } = render(
+      <MemoryRouter>
+        <ProtectedRoute allowedRoles={['engineer', 'manager']}>
+          <TestComponent />
+        </ProtectedRoute>
+      </MemoryRouter>
+    );
+
+    expect(getByTestId('protected-content')).toBeInTheDocument();
   });
 });
 
@@ -175,14 +198,7 @@ describe('StaffRoute', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'engineer',
-      loading: false,
-      isStaff: true,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['engineer']));
 
     const { getByTestId } = render(
       <MemoryRouter>
@@ -203,14 +219,28 @@ describe('StaffRoute', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'admin',
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['admin']));
+
+    const { getByTestId } = render(
+      <MemoryRouter>
+        <StaffRoute>
+          <TestComponent />
+        </StaffRoute>
+      </MemoryRouter>
+    );
+
+    expect(getByTestId('protected-content')).toBeInTheDocument();
+  });
+
+  it('should allow users with multiple roles including staff', () => {
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
       loading: false,
-      isStaff: true,
-      isCustomer: false,
-      isAdmin: true,
-      isManager: false,
+      user: { id: 'user-123', email: 'test@example.com' } as any,
+      session: {} as any,
+      signOut: vi.fn(),
     });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['admin', 'engineer']));
 
     const { getByTestId } = render(
       <MemoryRouter>
@@ -233,14 +263,7 @@ describe('CustomerRoute', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'customer',
-      loading: false,
-      isStaff: false,
-      isCustomer: true,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
 
     const { getByTestId } = render(
       <MemoryRouter>
@@ -261,14 +284,7 @@ describe('CustomerRoute', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'engineer',
-      loading: false,
-      isStaff: true,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['engineer']));
 
     const { queryByTestId } = render(
       <MemoryRouter>

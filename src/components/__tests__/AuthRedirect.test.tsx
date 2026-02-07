@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthRedirect } from '@/components/AuthRedirect';
+import type { AppRole } from '@/hooks/useUserRole';
 
 // Mock hooks
 const mockNavigate = vi.fn();
@@ -32,6 +33,19 @@ import { useUserRole } from '@/hooks/useUserRole';
 const mockedUseAuth = vi.mocked(useAuth);
 const mockedUseUserRole = vi.mocked(useUserRole);
 
+// Helper to create mock role state
+const createMockRoleState = (roles: AppRole[], loading = false) => ({
+  roles,
+  role: roles[0] || null,
+  loading,
+  isStaff: roles.some(r => ['engineer', 'admin', 'manager'].includes(r)),
+  isCustomer: roles.includes('customer'),
+  isAdmin: roles.includes('admin'),
+  isManager: roles.includes('manager'),
+  hasRole: (role: AppRole) => roles.includes(role),
+  hasAnyRole: (checkRoles: AppRole[]) => checkRoles.some(r => roles.includes(r)),
+});
+
 describe('AuthRedirect', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -45,14 +59,7 @@ describe('AuthRedirect', () => {
       session: null,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: null,
-      loading: true,
-      isStaff: false,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState([], true));
 
     const { container } = render(
       <MemoryRouter>
@@ -72,14 +79,7 @@ describe('AuthRedirect', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'engineer',
-      loading: false,
-      isStaff: true,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['engineer']));
 
     render(
       <MemoryRouter>
@@ -102,14 +102,7 @@ describe('AuthRedirect', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'customer',
-      loading: false,
-      isStaff: false,
-      isCustomer: true,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
 
     render(
       <MemoryRouter>
@@ -132,14 +125,7 @@ describe('AuthRedirect', () => {
       session: null,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: null,
-      loading: false,
-      isStaff: false,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState([]));
 
     render(
       <MemoryRouter>
@@ -162,14 +148,30 @@ describe('AuthRedirect', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'admin',
-      loading: false,
-      isStaff: true,
-      isCustomer: false,
-      isAdmin: true,
-      isManager: false,
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['admin']));
+
+    render(
+      <MemoryRouter>
+        <AuthRedirect />
+      </MemoryRouter>
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
     });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/gestao', { replace: true });
+  });
+
+  it('should redirect user with multiple roles (admin+engineer) to /gestao', async () => {
+    mockedUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      loading: false,
+      user: { id: 'multi-role-123', email: 'multi@example.com' } as any,
+      session: {} as any,
+      signOut: vi.fn(),
+    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['admin', 'engineer']));
 
     render(
       <MemoryRouter>
@@ -193,14 +195,7 @@ describe('AuthRedirect', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'engineer',
-      loading: false,
-      isStaff: true,
-      isCustomer: false,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['engineer']));
 
     const { rerender } = render(
       <MemoryRouter>
@@ -223,14 +218,7 @@ describe('AuthRedirect', () => {
       session: {} as any,
       signOut: vi.fn(),
     });
-    mockedUseUserRole.mockReturnValue({
-      role: 'customer',
-      loading: false,
-      isStaff: false,
-      isCustomer: true,
-      isAdmin: false,
-      isManager: false,
-    });
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
 
     rerender(
       <MemoryRouter>

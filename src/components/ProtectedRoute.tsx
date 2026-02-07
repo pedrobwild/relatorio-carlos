@@ -16,7 +16,7 @@ export function ProtectedRoute({
   redirectTo = '/auth'
 }: ProtectedRouteProps) {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { role, loading: roleLoading } = useUserRole();
+  const { roles, hasAnyRole, isStaff, isCustomer, loading: roleLoading } = useUserRole();
   const location = useLocation();
 
   // Show nothing while loading - NEVER redirect during loading state
@@ -37,24 +37,23 @@ export function ProtectedRoute({
     return <Navigate to={redirectTo} state={{ from: location.pathname }} replace />;
   }
 
-  // Check role if specified
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
-    debugNav('ProtectedRoute: role not allowed', { 
-      role, 
+  // Check role if specified - user needs at least ONE of the allowed roles
+  if (allowedRoles && roles.length > 0 && !hasAnyRole(allowedRoles)) {
+    debugNav('ProtectedRoute: no matching role', { 
+      userRoles: roles, 
       allowedRoles, 
       path: location.pathname 
     });
-    // Redirect based on role
-    if (role === 'customer') {
-      return <Navigate to="/minhas-obras" replace />;
-    } else {
-      // Staff roles (engineer, manager, admin) go to gestao
+    // Redirect based on highest priority role
+    if (isStaff) {
       return <Navigate to="/gestao" replace />;
+    } else if (isCustomer) {
+      return <Navigate to="/minhas-obras" replace />;
     }
   }
 
   debugNav('ProtectedRoute: access granted', { 
-    role, 
+    roles, 
     path: location.pathname 
   });
 
