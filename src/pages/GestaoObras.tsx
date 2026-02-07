@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Settings, Copy } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -132,6 +132,7 @@ export default function GestaoObras() {
   const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [engineerFilter, setEngineerFilter] = useState<string | null>(null);
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectWithCustomer | null>(null);
 
@@ -148,13 +149,27 @@ export default function GestaoObras() {
     setDuplicateModalOpen(true);
   }, []);
 
+  // Extract unique engineers for filter buttons
+  const engineers = useMemo(() => {
+    const engineerMap = new Map<string, string>();
+    projects.forEach(p => {
+      if (p.engineer_user_id && p.engineer_name) {
+        engineerMap.set(p.engineer_user_id, p.engineer_name);
+      }
+    });
+    return Array.from(engineerMap.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [projects]);
+
   const filteredProjects = useMemo(() => projects.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }), [projects, searchTerm, statusFilter]);
+    const matchesEngineer = !engineerFilter || p.engineer_user_id === engineerFilter;
+    return matchesSearch && matchesStatus && matchesEngineer;
+  }), [projects, searchTerm, statusFilter, engineerFilter]);
 
   const { activeCount, completedCount, thisMonthCount } = useMemo(() => ({
     activeCount: projects.filter(p => p.status === 'active').length,
@@ -202,6 +217,35 @@ export default function GestaoObras() {
             <p className="text-h2 font-bold">{thisMonthCount}</p>
           </Card>
         </div>
+
+        {/* Engineer Filter */}
+        {engineers.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Filtrar por Engenheiro</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={engineerFilter === null ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setEngineerFilter(null)}
+              >
+                Todos
+              </Button>
+              {engineers.map(engineer => (
+                <Button
+                  key={engineer.id}
+                  variant={engineerFilter === engineer.id ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setEngineerFilter(engineer.id)}
+                >
+                  {engineer.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
