@@ -7,35 +7,39 @@ import { logError, logInfo } from '@/lib/errorLogger';
 export type AppRole = 'engineer' | 'admin' | 'customer' | 'manager';
 
 interface UserRoleState {
+  roles: AppRole[];
+  /** @deprecated Use roles array instead. Returns the first/primary role for backwards compatibility */
   role: AppRole | null;
   loading: boolean;
   isStaff: boolean;
   isAdmin: boolean;
   isCustomer: boolean;
   isManager: boolean;
+  hasRole: (role: AppRole) => boolean;
+  hasAnyRole: (roles: AppRole[]) => boolean;
 }
 
-// Cache role by user ID to prevent refetches on re-mounts
-const roleCache = new Map<string, AppRole>();
+// Cache roles by user ID to prevent refetches on re-mounts
+const roleCache = new Map<string, AppRole[]>();
 
 // Track pending fetches to prevent duplicate concurrent requests
 const pendingFetches = new Set<string>();
 
 export function useUserRole(): UserRoleState {
   const { user, loading: authLoading } = useAuth();
-  const [role, setRole] = useState<AppRole | null>(() => {
+  const [roles, setRoles] = useState<AppRole[]>(() => {
     // Check cache on initial mount
     if (user?.id && roleCache.has(user.id)) {
-      return roleCache.get(user.id) ?? null;
+      return roleCache.get(user.id) ?? [];
     }
-    return null;
+    return [];
   });
   const [loading, setLoading] = useState(true);
   
   // Use ref to track if component is mounted
   const isMounted = useRef(true);
 
-  const fetchRole = useCallback(async (userId: string) => {
+  const fetchRoles = useCallback(async (userId: string) => {
     // Prevent duplicate fetches for the same user
     if (pendingFetches.has(userId)) {
       debugAuth('useUserRole: fetch already in progress', { userId });
@@ -44,24 +48,24 @@ export function useUserRole(): UserRoleState {
 
     // Check cache first (double-check in case it was set between renders)
     if (roleCache.has(userId)) {
-      const cachedRole = roleCache.get(userId)!;
-      debugAuth('useUserRole: using cached role', { userId, role: cachedRole });
+      const cachedRoles = roleCache.get(userId)!;
+      debugAuth('useUserRole: using cached roles', { userId, roles: cachedRoles });
       if (isMounted.current) {
-        setRole(cachedRole);
+        setRoles(cachedRoles);
         setLoading(false);
       }
       return;
     }
 
     pendingFetches.add(userId);
-    debugAuth('useUserRole: fetching role', { userId });
+    debugAuth('useUserRole: fetching roles', { userId });
 
     try {
+      // Fetch ALL roles for the user (not just single)
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .single();
+        .eq('user_id', userId);
 
       if (!isMounted.current) {
         pendingFetches.delete(userId);
@@ -69,18 +73,21 @@ export function useUserRole(): UserRoleState {
       }
 
       if (error) {
-        logError('Error fetching user role', error, { 
+        logError('Error fetching user roles', error, { 
           component: 'useUserRole', 
           userId 
         });
-        setRole('customer'); // Default to customer
-        roleCache.set(userId, 'customer');
+        const defaultRoles: AppRole[] = ['customer'];
+        setRoles(defaultRoles);
+        roleCache.set(userId, defaultRoles);
       } else {
-        const fetchedRole = data.role as AppRole;
-        setRole(fetchedRole);
-        roleCache.set(userId, fetchedRole);
-        logInfo('User role fetched', { userId, role: fetchedRole });
-        debugAuth('useUserRole: role fetched', { userId, role: fetchedRole });
+        const fetchedRoles = (data || []).map(r => r.role as AppRole);
+        // If no roles found, default to customer
+        const finalRoles = fetchedRoles.length > 0 ? fetchedRoles : ['customer'] as AppRole[];
+        setRoles(finalRoles);
+        roleCache.set(userId, finalRoles);
+        logInfo('User roles fetched', { userId, roles: finalRoles });
+        debugAuth('useUserRole: roles fetched', { userId, roles: finalRoles });
       }
     } catch (err) {
       logError('Unexpected error in useUserRole', err, { 
@@ -88,8 +95,9 @@ export function useUserRole(): UserRoleState {
         userId 
       });
       if (isMounted.current) {
-        setRole('customer');
-        roleCache.set(userId, 'customer');
+        const defaultRoles: AppRole[] = ['customer'];
+        setRoles(defaultRoles);
+        roleCache.set(userId, defaultRoles);
       }
     } finally {
       pendingFetches.delete(userId);
@@ -105,34 +113,49 @@ export function useUserRole(): UserRoleState {
     if (authLoading) return;
     
     if (!user) {
-      setRole(null);
+      setRoles([]);
       setLoading(false);
       return;
     }
 
     // Check cache synchronously first
     if (roleCache.has(user.id)) {
-      const cachedRole = roleCache.get(user.id)!;
-      setRole(cachedRole);
+      const cachedRoles = roleCache.get(user.id)!;
+      setRoles(cachedRoles);
       setLoading(false);
       return;
     }
 
-    // Fetch role if not cached
-    fetchRole(user.id);
+    // Fetch roles if not cached
+    fetchRoles(user.id);
 
     return () => {
       isMounted.current = false;
     };
-  }, [user?.id, authLoading, fetchRole]);
+  }, [user?.id, authLoading, fetchRoles]);
+
+  // Helper functions
+  const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
+  const hasAnyRole = useCallback((checkRoles: AppRole[]) => 
+    checkRoles.some(r => roles.includes(r)), [roles]);
+
+  // Compute derived states based on all roles
+  const isAdmin = roles.includes('admin');
+  const isManager = roles.includes('manager');
+  const isStaff = roles.includes('engineer') || isAdmin || isManager;
+  const isCustomer = roles.includes('customer');
 
   return {
-    role,
+    roles,
+    // Backwards compatibility: return first role (prioritize staff roles)
+    role: isAdmin ? 'admin' : isManager ? 'manager' : roles.includes('engineer') ? 'engineer' : roles[0] || null,
     loading: loading || authLoading,
-    isStaff: role === 'engineer' || role === 'admin' || role === 'manager',
-    isAdmin: role === 'admin',
-    isCustomer: role === 'customer',
-    isManager: role === 'manager',
+    isStaff,
+    isAdmin,
+    isCustomer,
+    isManager,
+    hasRole,
+    hasAnyRole,
   };
 }
 
