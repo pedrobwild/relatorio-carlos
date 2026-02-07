@@ -113,6 +113,7 @@ export const ALLOWED_MIME_TYPES = [
 
 // Maximum file size: 500MB
 export const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
+const MIN_FILE_SIZE_BYTES = 1;
 
 // ============================================================================
 // Validation Functions
@@ -122,6 +123,10 @@ export const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
  * Validate file for upload
  */
 export function validateFile(file: File): { valid: boolean; error?: string } {
+  if (file.size < MIN_FILE_SIZE_BYTES) {
+    return { valid: false, error: 'Arquivo vazio não é permitido' };
+  }
+
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return { valid: false, error: `Arquivo muito grande. Máximo permitido: ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB` };
   }
@@ -150,6 +155,62 @@ export function sanitizeFilename(filename: string): string {
     .slice(0, 100);
   
   return sanitized || 'unnamed_file';
+}
+
+// ============================================================================
+// Media Helpers
+// ============================================================================
+
+const MEDIA_MIME_PREFIXES = ['image/', 'video/', 'audio/'];
+
+function isMediaType(mimeType: string): boolean {
+  return MEDIA_MIME_PREFIXES.some(prefix => mimeType.startsWith(prefix));
+}
+
+function getCacheControl(mimeType: string): string {
+  if (isMediaType(mimeType)) {
+    return '31536000';
+  }
+
+  return '3600';
+}
+
+async function computeChecksum(file: File): Promise<string | null> {
+  try {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+  } catch (error) {
+    console.warn('Could not compute file checksum', error);
+    return null;
+  }
+}
+
+async function findDuplicateFile(
+  checksum: string,
+  ownerId: string,
+  projectId?: string
+): Promise<FileMetadata | null> {
+  let query = supabase
+    .from('files')
+    .select('*')
+    .eq('checksum', checksum)
+    .eq('owner_id', ownerId)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (projectId) {
+    query = query.eq('project_id', projectId);
+  }
+
+  const { data, error } = await query;
+
+  if (error || !data || data.length === 0) {
+    return null;
+  }
+
+  return data[0] as FileMetadata;
 }
 
 // ============================================================================
@@ -433,6 +494,24 @@ export async function uploadFile(
   }
 
   try {
+    const checksum = await computeChecksum(file);
+
+    if (checksum) {
+      const duplicate = await findDuplicateFile(
+        checksum,
+        options.ownerId,
+        options.projectId
+      );
+
+      if (duplicate) {
+        const url = await getSignedUrl(duplicate.bucket, duplicate.storage_path);
+        return {
+          data: { ...duplicate, url },
+          error: null,
+        };
+      }
+    }
+
     // Generate storage path
     const storagePath = await generateStoragePath(
       options.orgId ?? null,
@@ -444,7 +523,8 @@ export async function uploadFile(
     const { error: uploadError } = await supabase.storage
       .from(options.bucket)
       .upload(storagePath, file, {
-        cacheControl: '3600',
+        cacheControl: getCacheControl(file.type),
+        contentType: file.type || 'application/octet-stream',
         upsert: false,
       });
 
@@ -470,6 +550,7 @@ export async function uploadFile(
       original_name: file.name,
       mime_type: file.type,
       size_bytes: file.size,
+      checksum: checksum ?? undefined,
       category: options.category,
       entity_type: options.entityType,
       entity_id: options.entityId,
