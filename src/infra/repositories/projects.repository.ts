@@ -40,6 +40,8 @@ export interface Project {
 export interface ProjectWithCustomer extends Project {
   customer_name?: string;
   customer_email?: string;
+  engineer_name?: string;
+  engineer_user_id?: string;
 }
 
 export interface ProjectSummary {
@@ -71,7 +73,8 @@ export interface ProjectSummary {
  */
 export async function getStaffProjects(): Promise<RepositoryListResult<ProjectWithCustomer>> {
   return executeListQuery(async () => {
-    const { data, error } = await supabase
+    // Fetch projects with customers
+    const { data: projectsData, error: projectsError } = await supabase
       .from('projects')
       .select(`
         *,
@@ -82,15 +85,52 @@ export async function getStaffProjects(): Promise<RepositoryListResult<ProjectWi
       `)
       .order('created_at', { ascending: false });
 
-    if (error) return { data: null, error };
+    if (projectsError) return { data: null, error: projectsError };
+
+    // Fetch all project engineers with their profile names
+    const { data: engineersData, error: engineersError } = await supabase
+      .from('project_engineers')
+      .select('project_id, engineer_user_id, is_primary');
+
+    if (engineersError) return { data: null, error: engineersError };
+
+    // Get unique engineer user IDs and fetch their profiles
+    const engineerUserIds = [...new Set(engineersData?.map(e => e.engineer_user_id) ?? [])];
+    
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('user_id, display_name')
+      .in('user_id', engineerUserIds);
+
+    // Create a map of user_id -> display_name
+    const profileMap = new Map(profilesData?.map(p => [p.user_id, p.display_name]) ?? []);
+
+    // Create a map of project_id -> primary engineer info
+    const projectEngineerMap = new Map<string, { engineer_user_id: string; engineer_name: string | null }>();
+    
+    for (const engineer of (engineersData ?? [])) {
+      const existing = projectEngineerMap.get(engineer.project_id);
+      // Only set if we don't have one yet or this one is primary
+      if (!existing || engineer.is_primary) {
+        projectEngineerMap.set(engineer.project_id, {
+          engineer_user_id: engineer.engineer_user_id,
+          engineer_name: profileMap.get(engineer.engineer_user_id) ?? null,
+        });
+      }
+    }
 
     return {
-      data: (data ?? []).map(p => ({
-        ...p,
-        status: p.status as ProjectStatus,
-        customer_name: p.project_customers?.[0]?.customer_name,
-        customer_email: p.project_customers?.[0]?.customer_email,
-      })),
+      data: (projectsData ?? []).map(p => {
+        const engineerInfo = projectEngineerMap.get(p.id);
+        return {
+          ...p,
+          status: p.status as ProjectStatus,
+          customer_name: p.project_customers?.[0]?.customer_name,
+          customer_email: p.project_customers?.[0]?.customer_email,
+          engineer_name: engineerInfo?.engineer_name ?? undefined,
+          engineer_user_id: engineerInfo?.engineer_user_id ?? undefined,
+        };
+      }),
       error: null,
     };
   });
