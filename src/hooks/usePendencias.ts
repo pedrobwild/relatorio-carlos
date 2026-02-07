@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { parseISO, differenceInDays } from "date-fns";
 import { useAuth } from "./useAuth";
@@ -20,6 +21,24 @@ export type PendingItemStatus = "pending" | "completed" | "cancelled";
 export type PendingType = "decision" | "invoice" | "signature" | "approval_3d" | "approval_exec" | "extra_purchase";
 export type PendingPriority = "alta" | "média" | "baixa";
 export type PendingStatus = "pendente" | "urgente" | "atrasado";
+
+type PendingItemRow = {
+  id: string;
+  type: PendingItemType;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  created_at: string;
+  impact: string | null;
+  options: Json | null;
+  amount: number | null;
+  action_url: string | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  status: PendingItemStatus;
+  resolved_at: string | null;
+  resolved_by: string | null;
+};
 
 export interface PendingItem {
   id: string;
@@ -60,6 +79,12 @@ export const mapUiTypeToDbType = (uiType: PendingType): PendingItemType => {
   }
 };
 
+const statusOrder: Record<PendingStatus, number> = {
+  atrasado: 0,
+  urgente: 1,
+  pendente: 2,
+};
+
 // Calculate priority based on due date
 const calculatePriority = (dueDate: string | null): PendingPriority => {
   if (!dueDate) return "baixa";
@@ -96,6 +121,42 @@ export const getDaysRemaining = (item: PendingItem, referenceDate: Date = new Da
   return differenceInDays(due, referenceDate);
 };
 
+const buildPendingItemsQuery = (projectId?: string, includeCompleted?: boolean) => {
+  let query = supabase
+    .from("pending_items")
+    .select("*")
+    .order("due_date", { ascending: true });
+
+  if (projectId) {
+    query = query.eq("project_id", projectId);
+  }
+
+  if (!includeCompleted) {
+    query = query.eq("status", "pending");
+  }
+
+  return query;
+};
+
+const mapDbItemToPendingItem = (item: PendingItemRow): PendingItem => ({
+  id: item.id,
+  type: mapDbTypeToUiType(item.type),
+  title: item.title,
+  description: item.description || "",
+  dueDate: item.due_date || "",
+  createdDate: item.created_at,
+  priority: calculatePriority(item.due_date),
+  impact: item.impact || undefined,
+  options: item.options as string[] | undefined,
+  amount: item.amount ? Number(item.amount) : undefined,
+  actionUrl: item.action_url || undefined,
+  referenceType: item.reference_type || undefined,
+  referenceId: item.reference_id || undefined,
+  status: item.status,
+  resolvedAt: item.resolved_at || undefined,
+  resolvedBy: item.resolved_by || undefined,
+});
+
 interface UsePendenciasOptions {
   projectId?: string;
   includeCompleted?: boolean;
@@ -112,58 +173,15 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
       // TODO: In production, this will query the backend
       // For now, return empty array when not in demo mode
       if (!isDemoMode) {
-        let query = supabase
-          .from("pending_items")
-          .select("*")
-          .order("due_date", { ascending: true });
-
-        if (projectId) {
-          query = query.eq("project_id", projectId);
-        }
-
-        if (!includeCompleted) {
-          query = query.eq("status", "pending");
-        }
-
-        const { data, error } = await query;
+        const { data, error } = await buildPendingItemsQuery(projectId, includeCompleted);
 
         if (error) throw error;
 
-        return (data || []).map((item): PendingItem => ({
-          id: item.id,
-          type: mapDbTypeToUiType(item.type as PendingItemType),
-          title: item.title,
-          description: item.description || "",
-          dueDate: item.due_date || "",
-          createdDate: item.created_at,
-          priority: calculatePriority(item.due_date),
-          impact: item.impact || undefined,
-          options: item.options as string[] | undefined,
-          amount: item.amount ? Number(item.amount) : undefined,
-          actionUrl: item.action_url || undefined,
-          referenceType: item.reference_type || undefined,
-          referenceId: item.reference_id || undefined,
-          status: item.status as PendingItemStatus,
-          resolvedAt: item.resolved_at || undefined,
-          resolvedBy: item.resolved_by || undefined,
-        }));
+        return (data || []).map((item) => mapDbItemToPendingItem(item as PendingItemRow));
       }
 
       // Demo mode: query database but return empty on error
-      let query = supabase
-        .from("pending_items")
-        .select("*")
-        .order("due_date", { ascending: true });
-
-      if (projectId) {
-        query = query.eq("project_id", projectId);
-      }
-
-      if (!includeCompleted) {
-        query = query.eq("status", "pending");
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await buildPendingItemsQuery(projectId, includeCompleted);
 
       // In demo mode, silently return empty array on error
       if (error) {
@@ -171,24 +189,7 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
         return [];
       }
 
-      return (data || []).map((item): PendingItem => ({
-        id: item.id,
-        type: mapDbTypeToUiType(item.type as PendingItemType),
-        title: item.title,
-        description: item.description || "",
-        dueDate: item.due_date || "",
-        createdDate: item.created_at,
-        priority: calculatePriority(item.due_date),
-        impact: item.impact || undefined,
-        options: item.options as string[] | undefined,
-        amount: item.amount ? Number(item.amount) : undefined,
-        actionUrl: item.action_url || undefined,
-        referenceType: item.reference_type || undefined,
-        referenceId: item.reference_id || undefined,
-        status: item.status as PendingItemStatus,
-        resolvedAt: item.resolved_at || undefined,
-        resolvedBy: item.resolved_by || undefined,
-      }));
+      return (data || []).map((item) => mapDbItemToPendingItem(item as PendingItemRow));
     },
     enabled: !!user,
   });
@@ -292,38 +293,56 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
   });
 
   // Calculate stats
-  const stats = {
-    total: pendingItems.length,
-    overdueCount: pendingItems.filter(item => item.dueDate && getStatus(item.dueDate) === "atrasado").length,
-    urgentCount: pendingItems.filter(item => item.dueDate && getStatus(item.dueDate) === "urgente").length,
-    pendingCount: pendingItems.filter(item => item.dueDate && getStatus(item.dueDate) === "pendente").length,
-    byType: {
-      decision: pendingItems.filter(item => item.type === "decision").length,
-      invoice: pendingItems.filter(item => item.type === "invoice").length,
-      signature: pendingItems.filter(item => item.type === "signature").length,
-      approval_3d: pendingItems.filter(item => item.type === "approval_3d").length,
-      approval_exec: pendingItems.filter(item => item.type === "approval_exec").length,
-      extra_purchase: pendingItems.filter(item => item.type === "extra_purchase").length,
-    },
-    hasUrgent: pendingItems.some(item => 
-      item.dueDate && (getStatus(item.dueDate) === "atrasado" || getStatus(item.dueDate) === "urgente")
-    ),
-  };
+  const stats = useMemo(() => {
+    return pendingItems.reduce(
+      (acc, item) => {
+        acc.total += 1;
+
+        if (item.dueDate) {
+          const status = getStatus(item.dueDate);
+          if (status === "atrasado") acc.overdueCount += 1;
+          if (status === "urgente") acc.urgentCount += 1;
+          if (status === "pendente") acc.pendingCount += 1;
+          if (status === "atrasado" || status === "urgente") acc.hasUrgent = true;
+        }
+
+        acc.byType[item.type] += 1;
+
+        return acc;
+      },
+      {
+        total: 0,
+        overdueCount: 0,
+        urgentCount: 0,
+        pendingCount: 0,
+        byType: {
+          decision: 0,
+          invoice: 0,
+          signature: 0,
+          approval_3d: 0,
+          approval_exec: 0,
+          extra_purchase: 0,
+        },
+        hasUrgent: false,
+      },
+    );
+  }, [pendingItems]);
 
   // Sort items by status priority and due date
-  const sortedItems = [...pendingItems].sort((a, b) => {
-    const statusOrder = { atrasado: 0, urgente: 1, pendente: 2 };
-    const statusA = a.dueDate ? getStatus(a.dueDate) : "pendente";
-    const statusB = b.dueDate ? getStatus(b.dueDate) : "pendente";
-    
-    if (statusOrder[statusA] !== statusOrder[statusB]) {
-      return statusOrder[statusA] - statusOrder[statusB];
-    }
-    
-    if (!a.dueDate) return 1;
-    if (!b.dueDate) return -1;
-    return parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime();
-  });
+  const sortedItems = useMemo(() => {
+    return [...pendingItems].sort((a, b) => {
+      const statusA = a.dueDate ? getStatus(a.dueDate) : "pendente";
+      const statusB = b.dueDate ? getStatus(b.dueDate) : "pendente";
+
+      if (statusOrder[statusA] !== statusOrder[statusB]) {
+        return statusOrder[statusA] - statusOrder[statusB];
+      }
+
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime();
+    });
+  }, [pendingItems]);
 
   return {
     pendingItems,
