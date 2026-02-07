@@ -43,6 +43,13 @@ describe('validateFile', () => {
     expect(result.error).toContain('Arquivo muito grande');
   });
 
+  it('rejects empty files', () => {
+    const file = createMockFile('empty.pdf', 'application/pdf', 0);
+    const result = validateFile(file);
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('Arquivo vazio');
+  });
+
   it('rejects files with disallowed MIME types', () => {
     const file = createMockFile('script.exe', 'application/x-executable', 1024);
     const result = validateFile(file);
