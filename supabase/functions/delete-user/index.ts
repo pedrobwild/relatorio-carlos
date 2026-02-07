@@ -41,19 +41,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if requesting user is an admin using service role
+    // Check if requesting user is admin or engineer (staff access)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { data: roleData, error: roleError } = await adminClient
+    const { data: rolesData, error: roleError } = await adminClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', requestingUser.id)
-      .single();
+      .eq('user_id', requestingUser.id);
 
-    if (roleError || roleData?.role !== 'admin') {
-      console.error('User is not admin:', roleError);
+    const userRoles = (rolesData || []).map(r => r.role);
+    const hasStaffAccess = userRoles.includes('admin') || userRoles.includes('engineer');
+
+    if (roleError || !hasStaffAccess) {
+      console.error('User does not have staff access:', roleError);
       return new Response(
-        JSON.stringify({ error: 'Only admins can delete users' }),
+        JSON.stringify({ error: 'Staff access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

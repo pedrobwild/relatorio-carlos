@@ -39,16 +39,18 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if user has admin role
-    const { data: roleData, error: roleError } = await userClient
+    // Check if user has admin or engineer role (staff access)
+    const { data: rolesData, error: roleError } = await userClient
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .single()
 
-    if (roleError || roleData?.role !== 'admin') {
+    const userRoles = (rolesData || []).map(r => r.role)
+    const hasStaffAccess = userRoles.includes('admin') || userRoles.includes('engineer')
+
+    if (roleError || !hasStaffAccess) {
       return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
+        JSON.stringify({ error: 'Staff access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
