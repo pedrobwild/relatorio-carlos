@@ -1,5 +1,6 @@
 import { WeeklyReportActivitySnapshot } from "@/types/weeklyReport";
 import { startOfWeek, addWeeks } from "date-fns";
+import { parseLocalDate } from "@/lib/activityStatus";
 import {
   XAxis,
   YAxis,
@@ -38,13 +39,13 @@ const calculateProgressAtDate = (
   const completedWeight = activities.reduce((sum, activity) => {
     if (useActual) {
       // Calculate actual progress - sum weights of completed activities
-      const actualEnd = activity.actualEnd ? new Date(activity.actualEnd) : null;
+      const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
       if (actualEnd && actualEnd <= targetDate) {
         return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
     } else {
       // Calculate planned progress - sum weights of activities that should be done by this date
-      const plannedEnd = new Date(activity.plannedEnd);
+      const plannedEnd = parseLocalDate(activity.plannedEnd);
       if (plannedEnd <= targetDate) {
         return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
@@ -62,7 +63,7 @@ const generateWeeklyProgressData = (
   projectStartDate: string
 ) => {
   const data = [];
-  const startDate = new Date(projectStartDate);
+  const startDate = parseLocalDate(projectStartDate);
   
   for (let week = 1; week <= currentWeek; week++) {
     // Get the end of each week

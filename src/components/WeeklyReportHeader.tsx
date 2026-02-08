@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Download, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { WeeklyReport, Activity } from "@/types/report";
+import { parseLocalDate } from "@/lib/activityStatus";
 
 interface WeeklyReportHeaderProps {
   weeklyReport: WeeklyReport;
@@ -20,9 +21,9 @@ interface WeeklyReportHeaderProps {
 const getCurrentPhase = (activities: Activity[], weekStart: Date, weekEnd: Date): string => {
   // Find activities that are in progress during this week
   const inProgressActivities = activities.filter((activity) => {
-    const plannedStart = new Date(activity.plannedStart);
-    const plannedEnd = new Date(activity.plannedEnd);
-    const actualEnd = activity.actualEnd ? new Date(activity.actualEnd) : null;
+    const plannedStart = parseLocalDate(activity.plannedStart);
+    const plannedEnd = parseLocalDate(activity.plannedEnd);
+    const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
     
     // Activity is in progress if not yet completed and overlaps with the week
     if (actualEnd && actualEnd <= weekEnd) return false;
@@ -36,7 +37,7 @@ const getCurrentPhase = (activities: Activity[], weekStart: Date, weekEnd: Date)
   // Fallback to last completed activity
   const completedActivities = activities.filter((activity) => {
     if (!activity.actualEnd) return false;
-    return new Date(activity.actualEnd) <= weekEnd;
+    return parseLocalDate(activity.actualEnd) <= weekEnd;
   });
 
   if (completedActivities.length > 0) {

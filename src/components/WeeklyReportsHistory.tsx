@@ -1,7 +1,8 @@
-import { format, isBefore, isAfter, addDays, setHours, getDay, nextFriday, previousMonday } from "date-fns";
+import { format, isBefore, isAfter, addDays, setHours, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
 import { Activity, WeeklyReport } from "@/types/report";
+import { parseLocalDate } from "@/lib/activityStatus";
 import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, Clock, AlertTriangle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +35,7 @@ const calculatePlannedProgress = (
   if (totalWeight === 0) return 0;
   
   const completedWeight = activities.reduce((sum, activity) => {
-    const plannedEnd = new Date(activity.plannedEnd);
+    const plannedEnd = parseLocalDate(activity.plannedEnd);
     if (isBefore(plannedEnd, weekEndDate) || plannedEnd.getTime() === weekEndDate.getTime()) {
       return sum + (hasWeights ? (activity.weight || 0) : 1);
     }
@@ -61,7 +62,7 @@ const calculateActualProgress = (
   
   const completedWeight = activities.reduce((sum, activity) => {
     if (activity.actualEnd) {
-      const actualEnd = new Date(activity.actualEnd);
+      const actualEnd = parseLocalDate(activity.actualEnd);
       if (isBefore(actualEnd, weekEndDate) || actualEnd.getTime() === weekEndDate.getTime()) {
         return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
@@ -105,8 +106,8 @@ export const generateWeeklyReports = (
   reportDate: string,
   activities: Activity[]
 ): ExtendedWeeklyReport[] => {
-  const startDate = new Date(projectStartDate);
-  const currentReportDate = new Date(reportDate);
+  const startDate = parseLocalDate(projectStartDate);
+  const currentReportDate = parseLocalDate(reportDate);
   const reports: ExtendedWeeklyReport[] = [];
   
   let weekNumber = 1;
@@ -152,15 +153,15 @@ export const generateWeeklyReports = (
 
     // Find the current activity for this week - prioritize activity that starts during the week
     const overlappingActivities = activities.filter(activity => {
-      const plannedStart = new Date(activity.plannedStart);
-      const plannedEnd = new Date(activity.plannedEnd);
+      const plannedStart = parseLocalDate(activity.plannedStart);
+      const plannedEnd = parseLocalDate(activity.plannedEnd);
       return (isBefore(plannedStart, weekEndDate) || plannedStart.getTime() === weekEndDate.getTime()) &&
              (isAfter(plannedEnd, weekStart) || plannedEnd.getTime() === weekStart.getTime());
     });
     
     // Sort by planned start date to get the earliest activity that overlaps this week
     const currentActivity = overlappingActivities.sort((a, b) => {
-      return new Date(a.plannedStart).getTime() - new Date(b.plannedStart).getTime();
+      return parseLocalDate(a.plannedStart).getTime() - parseLocalDate(b.plannedStart).getTime();
     })[0] || null;
     
     // Check availability for customers

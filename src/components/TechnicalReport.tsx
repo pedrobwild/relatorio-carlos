@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { WeeklyReport, Activity } from "@/types/report";
 import WeeklyProgressChart from "./WeeklyProgressChart";
+import { parseLocalDate } from "@/lib/activityStatus";
 import {
   Dialog,
   DialogContent,
@@ -30,9 +31,9 @@ const getWeekActivities = (
   const upcoming: Activity[] = [];
 
   activities.forEach((activity) => {
-    const plannedStart = new Date(activity.plannedStart);
-    const plannedEnd = new Date(activity.plannedEnd);
-    const actualEnd = activity.actualEnd ? new Date(activity.actualEnd) : null;
+    const plannedStart = parseLocalDate(activity.plannedStart);
+    const plannedEnd = parseLocalDate(activity.plannedEnd);
+    const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
 
     if (actualEnd && actualEnd <= weekEnd) {
       completed.push(activity);
@@ -175,7 +176,7 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
                   <div>
                     <p className="font-medium text-foreground text-sm">{activity.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Previsto: {new Date(activity.plannedStart).toLocaleDateString('pt-BR')} - {new Date(activity.plannedEnd).toLocaleDateString('pt-BR')}
+                      Previsto: {parseLocalDate(activity.plannedStart).toLocaleDateString('pt-BR')} - {parseLocalDate(activity.plannedEnd).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </li>
@@ -200,7 +201,7 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
                     <p className="font-medium text-foreground text-sm">{activity.description}</p>
                     {activity.actualEnd && (
                       <p className="text-xs text-success mt-1">
-                        Finalizado em {new Date(activity.actualEnd).toLocaleDateString('pt-BR')}
+                        Finalizado em {parseLocalDate(activity.actualEnd).toLocaleDateString('pt-BR')}
                       </p>
                     )}
                   </div>
@@ -230,7 +231,7 @@ const TechnicalReport = ({ weeklyReport, clientName, activities, endDate, projec
                   <div>
                     <p className="font-medium text-foreground text-sm">{activity.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Início previsto: {new Date(activity.plannedStart).toLocaleDateString('pt-BR')}
+                      Início previsto: {parseLocalDate(activity.plannedStart).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </li>
