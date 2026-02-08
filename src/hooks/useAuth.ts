@@ -111,8 +111,10 @@ export function useAuth() {
     debugAuth('signOut called');
     clearRoleCache(); // Clear role cache on logout
 
-    // Prevent ProtectedRoute from redirecting mid-request (which was aborting /logout)
-    setLoading(true);
+    // CRITICAL: We do NOT set loading=true here because:
+    // 1. It would trigger ProtectedRoute to show a spinner
+    // 2. The navigate() call in AppHeader would race with ProtectedRoute's redirect
+    // Instead, we clear state synchronously after the network call
 
     // Attempt server-side sign out first so the SDK can broadcast SIGNED_OUT to all listeners.
     // If this fails, we still perform a guaranteed local cleanup.
@@ -130,6 +132,7 @@ export function useAuth() {
     }
 
     // Guaranteed local cleanup so logout always "sticks"
+    // This runs AFTER the network call completes (or fails)
     const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
     try {
       localStorage.removeItem(authStorageKey);
@@ -139,11 +142,13 @@ export function useAuth() {
       // Ignore storage errors
     }
 
+    // Clear state synchronously - this will trigger re-renders
     setSession(null);
     setUser(null);
     lastSessionId.current = null;
     initialSessionSet.current = false;
-    setLoading(false);
+    
+    debugAuth('signOut cleanup complete, state cleared');
   }, []);
 
   return {
