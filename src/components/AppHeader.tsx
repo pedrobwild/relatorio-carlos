@@ -17,14 +17,18 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
   const { isAdmin, loading: roleLoading } = useUserRole();
 
   const handleSignOut = async () => {
+    // CRITICAL: signOut already cleans up local state and the onAuthStateChange
+    // listener will handle the SIGNED_OUT event. We only navigate AFTER the
+    // entire signOut process completes to prevent ERR_ABORTED on the /logout request.
     try {
       await signOut();
+      // Only navigate after signOut fully completes (state already cleared)
+      navigate('/auth', { replace: true });
     } catch (error) {
-      // Log but don't block navigation - user wants to leave
+      // Even on error, signOut's finally block clears local state, so we can navigate
       console.warn('Sign out error (non-blocking):', error);
+      navigate('/auth', { replace: true });
     }
-    // Navigate after signOut completes (or fails) to prevent request abort
-    navigate('/auth', { replace: true });
   };
 
   return (
