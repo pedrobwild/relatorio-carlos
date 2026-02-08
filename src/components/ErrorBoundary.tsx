@@ -29,11 +29,23 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const { name = 'Unknown' } = this.props;
     
+    // Log detailed error information
     logError('ErrorBoundary caught an error', error, {
       component: `ErrorBoundary[${name}]`,
       correlationId: this.state.errorId,
       componentStack: errorInfo.componentStack,
     });
+    
+    // In DEV, provide additional context
+    if (import.meta.env.DEV) {
+      console.group(`🔴 ErrorBoundary[${name}] caught an error`);
+      console.error('Error:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Component Stack:', errorInfo.componentStack);
+      console.error('Correlation ID:', this.state.errorId);
+      console.groupEnd();
+    }
   }
 
   private handleRetry = () => {

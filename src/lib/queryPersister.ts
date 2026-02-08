@@ -131,9 +131,35 @@ export function createQueryPersister(): Persister | null {
         const data = safeStorage.getItem(STORAGE_KEY);
         if (!data) return undefined;
         
-        return JSON.parse(data) as PersistedClient;
+        const parsed = JSON.parse(data) as PersistedClient;
+        
+        // Validate basic structure to prevent corrupted cache from crashing the app
+        if (!parsed || typeof parsed !== 'object') {
+          console.warn('[QueryPersist] Invalid cache structure, clearing');
+          safeStorage.removeItem(STORAGE_KEY);
+          return undefined;
+        }
+        
+        // Validate required fields exist
+        if (!parsed.clientState || !parsed.timestamp) {
+          console.warn('[QueryPersist] Missing required cache fields, clearing');
+          safeStorage.removeItem(STORAGE_KEY);
+          return undefined;
+        }
+        
+        // Check if cache is too old (more than 24 hours)
+        const maxAge = 24 * 60 * 60 * 1000;
+        if (Date.now() - parsed.timestamp > maxAge) {
+          console.info('[QueryPersist] Cache expired, clearing');
+          safeStorage.removeItem(STORAGE_KEY);
+          return undefined;
+        }
+        
+        return parsed;
       } catch (error) {
-        console.warn('[QueryPersist] Failed to restore client:', error);
+        console.warn('[QueryPersist] Failed to restore client, clearing corrupted cache:', error);
+        // Clear corrupted cache to prevent future errors
+        safeStorage.removeItem(STORAGE_KEY);
         return undefined;
       }
     },

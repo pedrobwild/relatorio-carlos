@@ -77,10 +77,18 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           buster: String(QUERY_CACHE_VERSION),
         }}
         onSuccess={() => {
-          console.info('[QueryPersist] Cache restored from localStorage');
+          if (import.meta.env.DEV) {
+            console.info('[QueryPersist] Cache restored from localStorage');
+          }
         }}
         onError={() => {
           console.warn('[QueryPersist] Failed to restore cache, starting fresh');
+          // Clear corrupted cache to prevent future errors
+          try {
+            localStorage.removeItem(`bwild-query-cache-v${QUERY_CACHE_VERSION}`);
+          } catch {
+            // Ignore cleanup errors
+          }
         }}
       >
         {children}
