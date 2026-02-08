@@ -154,7 +154,7 @@ export default function FormalizacaoNova() {
         });
       }
 
-      navigate(`/formalizacoes/${result.id}`);
+      navigate(projectId ? `/obra/${projectId}/formalizacoes/${result.id}` : `/formalizacoes/${result.id}`);
     } catch (error) {
       console.error('Error creating formalization:', error);
       toast({
