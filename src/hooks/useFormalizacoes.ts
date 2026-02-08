@@ -7,6 +7,8 @@ import {
   getFormalizacaoSeedById,
 } from '@/data/formalizacoesSeedData';
 import { EVENT_TYPES } from './useDomainEvents';
+import { queryKeys, invalidateFormalizacaoQueries } from '@/lib/queryKeys';
+import { QUERY_TIMING } from '@/lib/queryClient';
 
 type Formalization = Database['public']['Tables']['formalizations']['Row'];
 type FormalizationInsert = Database['public']['Tables']['formalizations']['Insert'];
@@ -65,7 +67,9 @@ export function useFormalizacoes(filters?: {
   projectId?: string;
 }) {
   return useQuery({
-    queryKey: ['formalizacoes', filters],
+    queryKey: queryKeys.formalizacoes.list(filters),
+    staleTime: QUERY_TIMING.formalizacoes.staleTime,
+    gcTime: QUERY_TIMING.formalizacoes.gcTime,
     queryFn: async () => {
       let query = supabase
         .from('formalizations_public_customer')
@@ -103,7 +107,8 @@ export function useFormalizacoes(filters?: {
 
 export function useFormalizacao(id: string | undefined) {
   return useQuery({
-    queryKey: ['formalizacao', id],
+    queryKey: queryKeys.formalizacoes.detail(id),
+    staleTime: QUERY_TIMING.formalizacoes.staleTime,
     queryFn: async () => {
       if (!id) return null;
 
