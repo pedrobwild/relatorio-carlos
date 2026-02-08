@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { Activity } from "@/types/report";
 import { addWeeks, startOfWeek, endOfWeek, isBefore } from "date-fns";
+import { parseLocalDate } from "@/lib/activityStatus";
 
 interface WeeklyProgressChartProps {
   activities: Activity[];
@@ -32,7 +33,7 @@ const generateWeeklyProgressData = (
   projectStartDate: string,
   currentWeekNumber: number
 ): WeekData[] => {
-  const startDate = new Date(projectStartDate);
+  const startDate = parseLocalDate(projectStartDate);
   const data: WeekData[] = [];
   
   // Check if any activity has weight defined
@@ -55,7 +56,7 @@ const generateWeeklyProgressData = (
     // Calculate actual progress (realizado) using weights
     const realizadoSum = activities.reduce((sum, activity) => {
       if (!activity.actualEnd) return sum;
-      const actualEndDate = new Date(activity.actualEnd);
+      const actualEndDate = parseLocalDate(activity.actualEnd);
       if (isBefore(actualEndDate, weekEnd) || actualEndDate.getTime() === weekEnd.getTime()) {
         return sum + (hasWeights ? (activity.weight || 0) : 1);
       }
@@ -66,7 +67,7 @@ const generateWeeklyProgressData = (
     
     // Calculate planned progress (previsto) using weights
     const previstoSum = activities.reduce((sum, activity) => {
-      const plannedEndDate = new Date(activity.plannedEnd);
+      const plannedEndDate = parseLocalDate(activity.plannedEnd);
       if (isBefore(plannedEndDate, weekEnd) || plannedEndDate.getTime() === weekEnd.getTime()) {
         return sum + (hasWeights ? (activity.weight || 0) : 1);
       }

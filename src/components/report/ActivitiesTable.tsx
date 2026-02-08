@@ -1,6 +1,7 @@
 import { WeeklyReportActivitySnapshot } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseLocalDate } from "@/lib/activityStatus";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -62,11 +63,11 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
                   {activity.description}
                 </TableCell>
                 <TableCell className="text-caption">
-                  {format(new Date(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(new Date(activity.plannedEnd), "dd/MM", { locale: ptBR })}
+                  {format(parseLocalDate(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(parseLocalDate(activity.plannedEnd), "dd/MM", { locale: ptBR })}
                 </TableCell>
                 <TableCell className="text-caption">
                   {activity.actualStart 
-                    ? `${format(new Date(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(new Date(activity.actualEnd), "dd/MM", { locale: ptBR })}` : " - ..."}`
+                    ? `${format(parseLocalDate(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(parseLocalDate(activity.actualEnd), "dd/MM", { locale: ptBR })}` : " - ..."}`
                     : "-"
                   }
                 </TableCell>
@@ -91,12 +92,12 @@ const ActivitiesTable = ({ activities }: ActivitiesTableProps) => {
             <div className="grid grid-cols-2 gap-2 text-tiny">
               <div>
                 <span className="block text-muted-foreground">Previsto</span>
-                {format(new Date(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(new Date(activity.plannedEnd), "dd/MM", { locale: ptBR })}
+                {format(parseLocalDate(activity.plannedStart), "dd/MM", { locale: ptBR })} - {format(parseLocalDate(activity.plannedEnd), "dd/MM", { locale: ptBR })}
               </div>
               <div>
                 <span className="block text-muted-foreground">Real</span>
                 {activity.actualStart 
-                  ? `${format(new Date(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(new Date(activity.actualEnd), "dd/MM", { locale: ptBR })}` : ""}`
+                  ? `${format(parseLocalDate(activity.actualStart), "dd/MM", { locale: ptBR })}${activity.actualEnd ? ` - ${format(parseLocalDate(activity.actualEnd), "dd/MM", { locale: ptBR })}` : ""}`
                   : "-"
                 }
               </div>
