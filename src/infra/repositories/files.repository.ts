@@ -150,7 +150,7 @@ export function sanitizeFilename(filename: string): string {
   // Remove path traversal and special characters
   const sanitized = filename
     .replace(/\.\./g, '')
-    .replace(/[\/\\]/g, '')
+    .replace(/[/\\]/g, '')
     .replace(/[^a-zA-Z0-9._-]/g, '_')
     .slice(0, 100);
   
