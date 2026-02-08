@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Upload, X, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Upload, X, Loader2, FileText, CheckCircle2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,33 @@ const uploadSchema = z.object({
   document_type: z.string().min(1, "Selecione uma categoria"),
 });
 
+const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
+const ACCEPTED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'application/zip',
+];
+const ACCEPTED_EXTENSIONS = [
+  '.pdf',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.zip',
+];
+
 export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -42,17 +70,49 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
     setErrors({});
   };
 
+  const getFileExtension = (filename: string) => {
+    const match = filename.toLowerCase().match(/\.[^.]+$/);
+    return match ? match[0] : '';
+  };
+
+  const isAllowedFile = (selectedFile: File) => {
+    if (ACCEPTED_MIME_TYPES.includes(selectedFile.type)) {
+      return true;
+    }
+    const extension = getFileExtension(selectedFile.name);
+    return extension ? ACCEPTED_EXTENSIONS.includes(extension) : false;
+  };
+
   const handleFileSelect = (selectedFile: File) => {
-    if (selectedFile.size > 500 * 1024 * 1024) {
+    if (selectedFile.size === 0) {
+      toast({
+        title: "Arquivo vazio",
+        description: "Selecione um arquivo com conteúdo antes de enviar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
       toast({
         title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 500MB",
+        description: "O tamanho máximo permitido é 500MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isAllowedFile(selectedFile)) {
+      toast({
+        title: "Tipo de arquivo não suportado",
+        description: "Envie PDF, Word, Excel, ZIP ou imagens (PNG, JPG, GIF, WEBP).",
         variant: "destructive",
       });
       return;
     }
 
     setFile(selectedFile);
+    setErrors(prev => ({ ...prev, file: "" }));
     if (!formData.name) {
       // Auto-fill name from filename (without extension)
       const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
@@ -196,6 +256,14 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
                   <p className="text-caption text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
+                  <div className="flex gap-1 mt-1">
+                    <Badge variant="outline" className="text-xs">
+                      Tipo: {file.type || "Desconhecido"}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Extensão: {getFileExtension(file.name) || "N/A"}
+                    </Badge>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
@@ -220,11 +288,22 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
                   />
                 </label>
                 <p className="text-caption text-muted-foreground mt-2">
-                  PDF, Word, Excel, ZIP ou imagens (máx. 50MB)
+                  PDF, Word, Excel, ZIP ou imagens (máx. 500MB)
                 </p>
               </div>
             )}
             {errors.file && <p className="text-xs text-destructive mt-2">{errors.file}</p>}
+          </div>
+
+          <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg border border-border/50">
+            <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="text-xs text-muted-foreground">
+              <p className="font-medium mb-1">Boas práticas</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>Prefira nomes claros e objetivos para facilitar buscas.</li>
+                <li>Evite arquivos duplicados: o sistema identifica checksum automaticamente.</li>
+              </ul>
+            </div>
           </div>
 
           {/* Category Select */}
