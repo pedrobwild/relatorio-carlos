@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProtectedRoute, StaffRoute, CustomerRoute } from '@/components/ProtectedRoute';
-import type { AppRole } from '@/hooks/useUserRole';
 
 // Mock hooks
 vi.mock('@/hooks/useAuth', () => ({
@@ -14,7 +13,7 @@ vi.mock('@/hooks/useUserRole', () => ({
 }));
 
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole, type AppRole } from '@/hooks/useUserRole';
 
 const mockedUseAuth = vi.mocked(useAuth);
 const mockedUseUserRole = vi.mocked(useUserRole);

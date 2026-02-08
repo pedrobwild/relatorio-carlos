@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthRedirect } from '@/components/AuthRedirect';
-import type { AppRole } from '@/hooks/useUserRole';
 
 // Mock hooks
 const mockNavigate = vi.fn();
@@ -28,7 +27,7 @@ vi.mock('@/lib/debugAuth', () => ({
 }));
 
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole, type AppRole } from '@/hooks/useUserRole';
 
 const mockedUseAuth = vi.mocked(useAuth);
 const mockedUseUserRole = vi.mocked(useUserRole);
