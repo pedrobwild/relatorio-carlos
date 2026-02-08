@@ -110,20 +110,40 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     debugAuth('signOut called');
     clearRoleCache(); // Clear role cache on logout
-    
-    // Immediately clear local state to provide instant feedback
+
+    // Prevent ProtectedRoute from redirecting mid-request (which was aborting /logout)
+    setLoading(true);
+
+    // Attempt server-side sign out first so the SDK can broadcast SIGNED_OUT to all listeners.
+    // If this fails, we still perform a guaranteed local cleanup.
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        debugAuth('signOut error', { error: error.message });
+      } else {
+        debugAuth('signOut successful');
+      }
+    } catch (error) {
+      debugAuth('signOut threw (will fallback to local cleanup)', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    // Guaranteed local cleanup so logout always "sticks"
+    const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+    try {
+      localStorage.removeItem(authStorageKey);
+      localStorage.removeItem(`${authStorageKey}-code-verifier`);
+      localStorage.removeItem(`${authStorageKey}-user`);
+    } catch {
+      // Ignore storage errors
+    }
+
     setSession(null);
     setUser(null);
     lastSessionId.current = null;
-    
-    // Then perform the actual signOut
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      debugAuth('signOut error', { error: error.message });
-      console.error('Error signing out:', error);
-    } else {
-      debugAuth('signOut successful');
-    }
+    initialSessionSet.current = false;
+    setLoading(false);
   }, []);
 
   return {
