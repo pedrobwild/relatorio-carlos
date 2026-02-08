@@ -286,6 +286,19 @@ export function useSendForSignature() {
         });
       }
 
+      // Send email notifications to parties
+      const portalUrl = window.location.origin;
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-signature-request', {
+          body: { formalizationId: id, portalUrl },
+        });
+        if (emailError) {
+          console.warn('Failed to send signature request emails:', emailError);
+        }
+      } catch (e) {
+        console.warn('Error invoking send-signature-request:', e);
+      }
+
       return result;
     },
     onSuccess: (_, id) => {
