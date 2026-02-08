@@ -153,7 +153,7 @@ export default function MinhasObras() {
             </p>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3" data-testid="obras-list">
             {projects.map((project) => (
               <ProjectCard
                 key={project.id}

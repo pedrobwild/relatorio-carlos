@@ -2,12 +2,15 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logError, generateCorrelationId } from '@/lib/errorLogger';
+import { captureError } from '@/lib/errorMonitoring';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   /** Optional name for this boundary (for logging) */
   name?: string;
+  /** Feature context for error tracking */
+  feature?: 'auth' | 'documents' | 'weekly-reports' | 'cronograma' | 'formalizacoes' | 'export-pdf' | 'general';
 }
 
 interface State {
@@ -27,13 +30,20 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const { name = 'Unknown' } = this.props;
+    const { name = 'Unknown', feature = 'general' } = this.props;
     
-    // Log detailed error information
+    // Log to structured logger
     logError('ErrorBoundary caught an error', error, {
       component: `ErrorBoundary[${name}]`,
       correlationId: this.state.errorId,
       componentStack: errorInfo.componentStack,
+    });
+    
+    // Send to error monitoring
+    captureError(error, {
+      feature,
+      action: 'error_boundary_catch',
+      route: window.location.pathname,
     });
     
     // In DEV, provide additional context

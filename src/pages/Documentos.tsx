@@ -324,7 +324,7 @@ const Documentos = () => {
   const categoriesWithDocs = categories.filter(cat => getLatestByCategory(cat).length > 0);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col" data-testid="documents-page">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">

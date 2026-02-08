@@ -356,7 +356,7 @@ export default function Auth() {
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4" data-testid="login-form">
                 <div className="space-y-2">
                   <Label>Entrar com</Label>
                   <Select 
@@ -366,7 +366,7 @@ export default function Auth() {
                       setLoginIdentifier('');
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger data-testid="login-type-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -387,6 +387,7 @@ export default function Auth() {
                     )}
                     <Input
                       id="login-identifier"
+                      data-testid="login-identifier"
                       type={loginIdentifierType === 'email' ? 'email' : 'text'}
                       inputMode={loginIdentifierType === 'email' ? 'email' : 'numeric'}
                       autoComplete={loginIdentifierType === 'email' ? 'email' : 'off'}
@@ -404,6 +405,7 @@ export default function Auth() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="login-password"
+                      data-testid="login-password"
                       type="password"
                       autoComplete="current-password"
                       placeholder="••••••••"
@@ -415,7 +417,7 @@ export default function Auth() {
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading} data-testid="login-submit">
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -429,13 +431,14 @@ export default function Auth() {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
+              <form onSubmit={handleSignup} className="space-y-4" data-testid="signup-form">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Nome</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="signup-name"
+                      data-testid="signup-name"
                       type="text"
                       autoComplete="name"
                       placeholder="Seu nome"
@@ -451,6 +454,7 @@ export default function Auth() {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="signup-email"
+                      data-testid="signup-email"
                       type="email"
                       autoComplete="email"
                       inputMode="email"
@@ -468,6 +472,7 @@ export default function Auth() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="signup-password"
+                      data-testid="signup-password"
                       type="password"
                       autoComplete="new-password"
                       placeholder="Mínimo 6 caracteres"
@@ -479,7 +484,7 @@ export default function Auth() {
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading} data-testid="signup-submit">
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
