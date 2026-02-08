@@ -77,6 +77,31 @@ export interface ApproveDocumentInput {
   approved_by: string;
 }
 
+export interface DocumentComment {
+  id: string;
+  project_id: string;
+  document_id: string;
+  version: number;
+  user_id: string;
+  comment: string;
+  page_number: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentCommentWithUser extends DocumentComment {
+  user_name?: string;
+  user_email?: string;
+}
+
+export interface CreateCommentInput {
+  project_id: string;
+  document_id: string;
+  version: number;
+  comment: string;
+  page_number?: number;
+}
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -288,4 +313,116 @@ export function getLatestDocumentsByCategory(
   }, [] as ProjectDocument[]);
   
   return latestDocs.length > 0 ? latestDocs : categoryDocs.filter(d => !d.parent_document_id);
+}
+
+// ============================================================================
+// Comment Functions
+// ============================================================================
+
+/**
+ * Get comments for a document version
+ */
+export async function getDocumentComments(
+  documentId: string,
+  version?: number
+): Promise<RepositoryListResult<DocumentCommentWithUser>> {
+  return executeListQuery(async () => {
+    let query = supabase
+      .from('project_document_comments')
+      .select(`
+        *,
+        users_profile:user_id (nome, email)
+      `)
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: true });
+
+    if (version !== undefined) {
+      query = query.eq('version', version);
+    }
+
+    const { data, error } = await query;
+
+    if (error) return { data: null, error };
+
+    return {
+      data: (data ?? []).map((c: any) => ({
+        ...c,
+        user_name: c.users_profile?.nome,
+        user_email: c.users_profile?.email,
+        users_profile: undefined,
+      })),
+      error: null,
+    };
+  });
+}
+
+/**
+ * Add a comment to a document
+ */
+export async function addDocumentComment(
+  input: CreateCommentInput,
+  userId: string
+): Promise<RepositoryResult<DocumentComment>> {
+  return executeQuery(async () => {
+    const { data, error } = await supabase
+      .from('project_document_comments')
+      .insert({
+        project_id: input.project_id,
+        document_id: input.document_id,
+        version: input.version,
+        user_id: userId,
+        comment: input.comment,
+        page_number: input.page_number ?? null,
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  });
+}
+
+/**
+ * Delete a comment
+ */
+export async function deleteDocumentComment(
+  commentId: string
+): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase
+      .from('project_document_comments')
+      .delete()
+      .eq('id', commentId);
+
+    return { data: null, error };
+  });
+}
+
+/**
+ * Get signed URL for a specific document version
+ */
+export async function getSignedUrlForDocument(
+  doc: ProjectDocument
+): Promise<string | null> {
+  const { data } = await supabase.storage
+    .from(doc.storage_bucket)
+    .createSignedUrl(doc.storage_path, SIGNED_URL_EXPIRY_SECONDS);
+
+  return data?.signedUrl ?? null;
+}
+
+/**
+ * Get approver information for a document
+ */
+export async function getApproverInfo(
+  approvedBy: string | null
+): Promise<{ name: string; email: string } | null> {
+  if (!approvedBy) return null;
+
+  const { data } = await supabase
+    .from('users_profile')
+    .select('nome, email')
+    .eq('id', approvedBy)
+    .single();
+
+  return data ? { name: data.nome, email: data.email } : null;
 }

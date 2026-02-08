@@ -1,16 +1,18 @@
-import { useState } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck, Plus } from "lucide-react";
+import { useState, useCallback } from "react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck, Plus, MessageSquare } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import bwildLogo from "@/assets/bwild-logo.png";
-import PDFViewer from "@/components/PDFViewer";
+import { DocumentViewer } from "@/components/DocumentViewer";
+import { DocumentComments } from "@/components/DocumentComments";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
+import { useDocumentComments } from "@/hooks/useDocumentComments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCan } from "@/hooks/useCan";
 import { DocumentUpload } from "@/components/DocumentUpload";
@@ -18,6 +20,7 @@ import { DocumentVersionUpload } from "@/components/DocumentVersionUpload";
 import { EmptyState } from "@/components/EmptyState";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
   contrato: <FileText className="w-5 h-5" />,
@@ -171,9 +174,18 @@ const DocumentCard = ({
             </div>
           </div>
         </DialogHeader>
-        <div className="flex-1 overflow-hidden p-2">
-          {isPdf && doc.url ? (
-            <PDFViewer url={doc.url} title={doc.name} />
+        <div className="flex-1 overflow-hidden">
+          {doc.url ? (
+            <DocumentViewer 
+              url={doc.url} 
+              title={doc.name}
+              mimeType={doc.mime_type}
+              approval={{
+                approved_at: doc.approved_at,
+                approved_by: doc.approved_by,
+              }}
+              className="h-full rounded-none border-0"
+            />
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
