@@ -226,12 +226,12 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
       if (!isOpen) resetForm();
     }}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2" data-testid="document-upload-button">
           <Upload className="w-4 h-4" />
           Enviar Documento
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" data-testid="document-upload-modal">
         <DialogHeader>
           <DialogTitle>Enviar Novo Documento</DialogTitle>
         </DialogHeader>
@@ -313,7 +313,7 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
               value={formData.document_type}
               onValueChange={(value) => setFormData(prev => ({ ...prev, document_type: value }))}
             >
-              <SelectTrigger id="category" className={errors.document_type ? "border-destructive" : ""}>
+              <SelectTrigger id="category" className={errors.document_type ? "border-destructive" : ""} data-testid="document-category-select">
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -332,6 +332,7 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
             <Label htmlFor="name">Nome do Documento *</Label>
             <Input
               id="name"
+              data-testid="document-name-input"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Ex: Contrato de Prestação de Serviços"

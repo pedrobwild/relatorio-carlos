@@ -327,7 +327,7 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
       {/* Desktop Table View */}
       <TooltipProvider>
         <div className="hidden md:block overflow-hidden rounded-xl border border-border shadow-sm">
-          <Table>
+          <Table data-testid="schedule-table">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b-0">
                 <SortableHeader
