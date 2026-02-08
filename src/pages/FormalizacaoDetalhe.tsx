@@ -285,7 +285,7 @@ export default function FormalizacaoDetalhe() {
                 </span>
               </Button>
               
-              {isAdmin && (
+              {isAdmin && formalizacao.status !== 'signed' && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
@@ -305,7 +305,7 @@ export default function FormalizacaoDetalhe() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir formalização</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Tem certeza que deseja excluir esta formalização? Esta ação é irreversível e removerá permanentemente o documento, assinaturas e todo o histórico associado.
+                        Tem certeza que deseja excluir esta formalização? Esta ação é irreversível e removerá permanentemente o documento e todo o histórico associado.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
