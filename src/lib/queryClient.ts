@@ -22,6 +22,68 @@ function softNavigate(to: string, options?: { replace?: boolean }) {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
+// ============================================================================
+// StaleTime / GcTime Configuration per Query Type
+// ============================================================================
+
+/**
+ * Query timing configuration for different data types.
+ * staleTime: how long data is considered fresh (no background refetch)
+ * gcTime: how long unused data stays in cache before garbage collection
+ */
+export const QUERY_TIMING = {
+  // Projects/Documents: less frequently changing, longer cache
+  projects: { staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000 }, // 5min stale, 30min gc
+  documents: { staleTime: 3 * 60 * 1000, gcTime: 20 * 60 * 1000 }, // 3min stale, 20min gc
+  
+  // Activities/Schedule: moderately changing
+  activities: { staleTime: 2 * 60 * 1000, gcTime: 15 * 60 * 1000 }, // 2min stale, 15min gc
+  cronograma: { staleTime: 2 * 60 * 1000, gcTime: 15 * 60 * 1000 },
+  
+  // Formalizations: moderately changing
+  formalizacoes: { staleTime: 2 * 60 * 1000, gcTime: 15 * 60 * 1000 },
+  
+  // Payments/Purchases: financial data, slightly shorter
+  payments: { staleTime: 1 * 60 * 1000, gcTime: 10 * 60 * 1000 }, // 1min stale, 10min gc
+  purchases: { staleTime: 1 * 60 * 1000, gcTime: 10 * 60 * 1000 },
+  
+  // Journey: can be cached longer
+  journey: { staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000 },
+  
+  // Users/Profiles: rarely change
+  users: { staleTime: 10 * 60 * 1000, gcTime: 60 * 60 * 1000 }, // 10min stale, 1hr gc
+  
+  // Default for unspecified queries
+  default: { staleTime: 5 * 60 * 1000, gcTime: 10 * 60 * 1000 },
+} as const;
+
+/**
+ * Get timing config based on query key
+ */
+export function getQueryTiming(queryKey: unknown[]): { staleTime: number; gcTime: number } {
+  if (!Array.isArray(queryKey) || queryKey.length === 0) {
+    return QUERY_TIMING.default;
+  }
+  
+  const firstKey = String(queryKey[0]).toLowerCase();
+  
+  if (firstKey.includes('project')) return QUERY_TIMING.projects;
+  if (firstKey.includes('document')) return QUERY_TIMING.documents;
+  if (firstKey.includes('activit')) return QUERY_TIMING.activities;
+  if (firstKey.includes('cronograma') || firstKey.includes('schedule')) return QUERY_TIMING.cronograma;
+  if (firstKey.includes('formal')) return QUERY_TIMING.formalizacoes;
+  if (firstKey.includes('payment')) return QUERY_TIMING.payments;
+  if (firstKey.includes('purchase') || firstKey.includes('compra')) return QUERY_TIMING.purchases;
+  if (firstKey.includes('journey') || firstKey.includes('jornada')) return QUERY_TIMING.journey;
+  if (firstKey.includes('user') || firstKey.includes('profile')) return QUERY_TIMING.users;
+  
+  return QUERY_TIMING.default;
+}
+
+// ============================================================================
+// Error Messages and Handling
+// ============================================================================
+
 // Map of error codes/messages to user-friendly Portuguese messages
 const errorMessages: Record<string, string> = {
   // Network errors
@@ -88,11 +150,29 @@ const networkErrorPatterns = [
   'etimedout',
 ];
 
+// Auth error codes that should NOT retry
+const authErrorCodes = ['401', '403'];
+
 // Check if error is a network error (retryable)
 function isNetworkError(error: unknown): boolean {
   if (!error) return false;
   const errorString = String(error).toLowerCase();
   return networkErrorPatterns.some(pattern => errorString.includes(pattern));
+}
+
+// Check if error is an auth error (NOT retryable)
+function isAuthErrorCode(error: unknown): boolean {
+  if (!error) return false;
+  const errorString = String(error).toLowerCase();
+  
+  // Check for explicit auth error codes
+  if (authErrorCodes.some(code => errorString.includes(code))) {
+    return true;
+  }
+  
+  // Check for auth-related messages
+  const authKeywords = ['jwt expired', 'jwt malformed', 'invalid jwt', 'not authenticated', 'unauthorized'];
+  return authKeywords.some(keyword => errorString.includes(keyword));
 }
 
 // Get user-friendly message from error
@@ -157,6 +237,10 @@ function handleError(error: unknown, context?: string) {
 // Mutation retry state tracker
 const mutationRetryState = new Map<string, { toastId?: string | number; attempt: number }>();
 
+// ============================================================================
+// Query Client Configuration
+// ============================================================================
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
@@ -200,6 +284,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
       retry: (failureCount, error) => {
+        // Never retry auth errors (401/403)
+        if (isAuthErrorCode(error)) {
+          return false;
+        }
         // Retry network errors up to 3 times
         if (isNetworkError(error) && failureCount < 3) {
           return true;
@@ -208,10 +296,15 @@ export const queryClient = new QueryClient({
         return false;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-      staleTime: 5 * 60 * 1000,
+      staleTime: QUERY_TIMING.default.staleTime,
+      gcTime: QUERY_TIMING.default.gcTime,
     },
     mutations: {
       retry: (failureCount, error) => {
+        // Never retry auth errors
+        if (isAuthErrorCode(error)) {
+          return false;
+        }
         // Only retry network errors, up to 3 times
         if (isNetworkError(error) && failureCount < 3) {
           return true;

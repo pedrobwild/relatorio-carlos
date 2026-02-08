@@ -3,14 +3,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute, StaffRoute, CustomerRoute, AdminRoute } from "@/components/ProtectedRoute";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
+import { createQueryPersister, QUERY_CACHE_VERSION } from "@/lib/queryPersister";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 
-// Route-level code splitting: reduz bundle/memória inicial e diminui chance de “tab discard”.
+// Route-level code splitting: reduz bundle/memória inicial e diminui chance de "tab discard".
 const Auth = lazy(() => import("./pages/Auth"));
 const VerificarAssinatura = lazy(() => import("./pages/VerificarAssinatura"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -36,7 +38,13 @@ const FormalizacaoNova = lazy(() => import("./pages/FormalizacaoNova"));
 const FormalizacaoDetalhe = lazy(() => import("./pages/FormalizacaoDetalhe"));
 const Cronograma = lazy(() => import("./pages/Cronograma"));
 const Compras = lazy(() => import("./pages/Compras"));
- const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
+const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
+
+// Create persister - returns null if localStorage is not available
+const persister = createQueryPersister();
+
+// Cache max age: 24 hours
+const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
 // Wrapper component to provide project context
 const ProjectPage = ({ children }: { children: React.ReactNode }) => (
@@ -53,9 +61,42 @@ const withSuspense = (node: React.ReactNode) => (
   <Suspense fallback={<RouteFallback />}>{node}</Suspense>
 );
 
+/**
+ * Query Provider wrapper that uses PersistQueryClientProvider when 
+ * persistence is available, otherwise falls back to standard QueryClientProvider.
+ */
+const QueryProvider = ({ children }: { children: React.ReactNode }) => {
+  if (persister) {
+    return (
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister,
+          maxAge: CACHE_MAX_AGE,
+          buster: String(QUERY_CACHE_VERSION),
+        }}
+        onSuccess={() => {
+          console.info('[QueryPersist] Cache restored from localStorage');
+        }}
+        onError={() => {
+          console.warn('[QueryPersist] Failed to restore cache, starting fresh');
+        }}
+      >
+        {children}
+      </PersistQueryClientProvider>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
 const App = () => (
   <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -209,7 +250,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
+    </QueryProvider>
   </ErrorBoundary>
 );
 
