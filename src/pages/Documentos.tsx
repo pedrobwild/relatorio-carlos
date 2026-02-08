@@ -267,14 +267,17 @@ const Documentos = () => {
     setHistoryDocId(docId);
   };
 
-  const handleApprove = async (docId: string) => {
+  const handleApprove = async (docId: string): Promise<boolean> => {
     setIsApproving(true);
     try {
-      await approveDocument(docId);
+      const success = await approveDocument(docId);
+      return success;
+    } catch (error) {
+      console.error('[Documentos] Approval failed:', error);
+      return false;
     } finally {
       setIsApproving(false);
     }
-    return true;
   };
 
   const historyDocs = historyDocId ? getVersionHistory(historyDocId) : [];

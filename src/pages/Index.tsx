@@ -232,10 +232,21 @@ const Index = () => {
   // Handler for Gantt drag-and-drop date changes
   const handleActivityDateChange = useCallback(async (activityId: string, newPlannedStart: string, newPlannedEnd: string) => {
     if (!isStaff) return;
-    await updateActivity(activityId, { 
+    
+    // Validate dates before saving
+    if (newPlannedEnd < newPlannedStart) {
+      toast.error('Data de término deve ser igual ou posterior ao início');
+      return;
+    }
+    
+    const success = await updateActivity(activityId, { 
       planned_start: newPlannedStart, 
       planned_end: newPlannedEnd 
     });
+    
+    if (!success) {
+      toast.error('Erro ao atualizar datas. Tente novamente.');
+    }
   }, [isStaff, updateActivity]);
 
   const handleExportPDF = useCallback(async () => {

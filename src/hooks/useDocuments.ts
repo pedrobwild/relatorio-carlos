@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { queryKeys, invalidateDocumentQueries } from '@/lib/queryKeys';
-import { QUERY_TIMING } from '@/lib/queryClient';
 import { documentLogger } from '@/lib/devLogger';
 
 export const DOCUMENT_CATEGORIES = {
@@ -50,6 +49,7 @@ export interface ProjectDocument {
 }
 
 // Fetch documents with signed URLs
+// URLs are valid for 1 hour; we set staleTime to 30min to refresh before expiration
 async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
   const { data, error } = await supabase
     .from('project_documents')
@@ -60,23 +60,41 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
 
   if (error) throw error;
 
-  // Get signed URLs for each document
-  const docsWithUrls = await Promise.all(
+  // Get signed URLs for each document (1 hour expiration)
+  // Using Promise.allSettled to avoid one failed URL breaking the entire fetch
+  const results = await Promise.allSettled(
     (data || []).map(async (doc) => {
-      const { data: urlData } = await supabase.storage
-        .from(doc.storage_bucket)
-        .createSignedUrl(doc.storage_path, 3600); // 1 hour
+      try {
+        const { data: urlData, error: urlError } = await supabase.storage
+          .from(doc.storage_bucket)
+          .createSignedUrl(doc.storage_path, 3600); // 1 hour
 
-      return {
-        ...doc,
-        document_type: doc.document_type as DocumentCategory,
-        status: doc.status as DocumentStatus,
-        url: urlData?.signedUrl || undefined,
-      } as ProjectDocument;
+        if (urlError) {
+          console.warn(`[Documents] Failed to get signed URL for ${doc.name}:`, urlError.message);
+        }
+
+        return {
+          ...doc,
+          document_type: doc.document_type as DocumentCategory,
+          status: doc.status as DocumentStatus,
+          url: urlData?.signedUrl || undefined,
+        } as ProjectDocument;
+      } catch (err) {
+        console.warn(`[Documents] Error fetching URL for ${doc.name}:`, err);
+        return {
+          ...doc,
+          document_type: doc.document_type as DocumentCategory,
+          status: doc.status as DocumentStatus,
+          url: undefined,
+        } as ProjectDocument;
+      }
     })
   );
 
-  return docsWithUrls;
+  // Extract successful results
+  return results
+    .filter((r): r is PromiseFulfilledResult<ProjectDocument> => r.status === 'fulfilled')
+    .map(r => r.value);
 }
 
 export function useDocuments(projectId: string | undefined) {
@@ -93,8 +111,9 @@ export function useDocuments(projectId: string | undefined) {
     queryKey: queryKeys.documents.list(projectId),
     queryFn: () => fetchDocuments(projectId!),
     enabled: !!projectId && !!user,
-    staleTime: QUERY_TIMING.documents.staleTime,
-    gcTime: QUERY_TIMING.documents.gcTime,
+    // Refresh before signed URLs expire (URLs valid for 1 hour, refresh at 30 min)
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
     placeholderData: (previousData) => previousData, // Keep previous data while refetching
   });
 
@@ -262,6 +281,6 @@ export function useDocument(documentId: string | undefined) {
       } as ProjectDocument;
     },
     enabled: !!documentId,
-    staleTime: QUERY_TIMING.documents.staleTime,
+    staleTime: 30 * 60 * 1000, // 30 minutes (match signed URL refresh timing)
   });
 }
