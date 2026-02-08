@@ -17,8 +17,13 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
   const { isAdmin, loading: roleLoading } = useUserRole();
 
   const handleSignOut = async () => {
-    await signOut();
-    // Use replace to prevent back button returning to authenticated page
+    try {
+      await signOut();
+    } catch (error) {
+      // Log but don't block navigation - user wants to leave
+      console.warn('Sign out error (non-blocking):', error);
+    }
+    // Navigate after signOut completes (or fails) to prevent request abort
     navigate('/auth', { replace: true });
   };
 
