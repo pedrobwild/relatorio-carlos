@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { queryKeys, invalidateDocumentQueries } from '@/lib/queryKeys';
 import { QUERY_TIMING } from '@/lib/queryClient';
+import { documentLogger } from '@/lib/devLogger';
 
 export const DOCUMENT_CATEGORIES = {
   contrato: { label: 'Contrato', icon: 'FileText' },
@@ -102,6 +103,9 @@ export function useDocuments(projectId: string | undefined) {
     mutationFn: async (documentId: string) => {
       if (!user) throw new Error('User not authenticated');
       
+      const operationId = `approve-${documentId}`;
+      documentLogger.start(operationId, 'Approving document', { documentId, userId: user.id });
+      
       const { error: updateError } = await supabase
         .from('project_documents')
         .update({
@@ -111,7 +115,12 @@ export function useDocuments(projectId: string | undefined) {
         })
         .eq('id', documentId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        documentLogger.error(operationId, updateError, { documentId });
+        throw updateError;
+      }
+      
+      documentLogger.end(operationId, { level: 'success' });
       return documentId;
     },
     // Optimistic update
