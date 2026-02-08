@@ -119,13 +119,16 @@
 @layer base {
   * {
     @apply border-border;
-    /* Prevent text selection issues on mobile */
+  }
+
+  /* Prevent text selection on interactive elements only, not globally */
+  button, [role="button"], .no-select {
     -webkit-user-select: none;
     user-select: none;
   }
 
-  /* Allow text selection in inputs and editable areas */
-  input, textarea, [contenteditable="true"], .selectable {
+  /* Ensure text selection works in inputs and editable areas */
+  input, textarea, [contenteditable="true"], .selectable, p, span, h1, h2, h3, h4, h5, h6, li, td, th {
     -webkit-user-select: text;
     user-select: text;
   }
