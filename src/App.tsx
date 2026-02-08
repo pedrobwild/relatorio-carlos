@@ -22,6 +22,7 @@ const NovaObra = lazy(() => import("./pages/NovaObra"));
 const EditarObra = lazy(() => import("./pages/EditarObra"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminAuditoria = lazy(() => import("./pages/AdminAuditoria"));
+const AdminHealth = lazy(() => import("./pages/AdminHealth"));
 const Demo = lazy(() => import("./pages/Demo"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
@@ -124,6 +125,7 @@ const App = () => (
             {/* Admin-only routes */}
             <Route path="/admin" element={<AdminRoute>{withSuspense(<Admin />)}</AdminRoute>} />
             <Route path="/admin/auditoria" element={<AdminRoute>{withSuspense(<AdminAuditoria />)}</AdminRoute>} />
+            <Route path="/admin/health" element={<AdminRoute>{withSuspense(<AdminHealth />)}</AdminRoute>} />
             <Route path="/demo" element={<AdminRoute>{withSuspense(<Demo />)}</AdminRoute>} />
             
             {/* Customer-only routes */}

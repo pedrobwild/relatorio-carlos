@@ -10,7 +10,7 @@
  */
 
 export interface ErrorContext {
-  feature?: 'auth' | 'documents' | 'weekly-reports' | 'cronograma' | 'formalizacoes' | 'export-pdf' | 'general';
+  feature?: 'auth' | 'documents' | 'weekly-reports' | 'cronograma' | 'formalizacoes' | 'export-pdf' | 'diagnostics' | 'general';
   projectId?: string;
   userId?: string;
   role?: string;
@@ -180,6 +180,20 @@ export function captureError(
 }
 
 /**
+ * Alias for captureError for consistency with Sentry API
+ */
+export function captureException(
+  error: Error | unknown,
+  options: { feature?: ErrorContext['feature']; action?: string; extra?: Record<string, unknown> } = {}
+): void {
+  captureError(error, {
+    feature: options.feature || 'general',
+    action: options.action,
+    ...options.extra,
+  });
+}
+
+/**
  * Capture a message (non-error event)
  */
 export function captureMessage(
@@ -234,3 +248,4 @@ export const reportErrors = createFeatureErrorCapture('weekly-reports');
 export const cronogramaErrors = createFeatureErrorCapture('cronograma');
 export const formalizacoesErrors = createFeatureErrorCapture('formalizacoes');
 export const pdfErrors = createFeatureErrorCapture('export-pdf');
+export const diagnosticsErrors = createFeatureErrorCapture('diagnostics');
