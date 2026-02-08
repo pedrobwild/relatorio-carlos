@@ -26,6 +26,7 @@ import { isDemoMode } from "@/config/flags";
 // usePageVisibility removido - causava desmontagem de UI e perda de estado
 import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
+import { pdfLogger } from "@/lib/devLogger";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { format } from "date-fns";
 
@@ -240,8 +241,12 @@ const Index = () => {
   const handleExportPDF = useCallback(async () => {
     if (!reportRef.current) return;
 
+    const operationId = 'pdf-export';
+    pdfLogger.start(operationId, 'Starting PDF export');
+    
     setIsExporting(true);
-    toast.info("Gerando PDF...");
+    // Show loading toast that persists
+    const loadingToast = toast.loading("Gerando PDF... Isso pode levar alguns segundos.");
 
     try {
       // Carrega somente quando necessário (reduz bundle/memória inicial)
@@ -258,9 +263,12 @@ const Index = () => {
       };
 
       await html2pdf().set(opt).from(element).save();
+      toast.dismiss(loadingToast);
       toast.success("PDF exportado com sucesso!");
+      pdfLogger.end(operationId, { level: 'success' });
     } catch (error) {
-      console.error("Erro ao exportar PDF:", error);
+      toast.dismiss(loadingToast);
+      pdfLogger.error(operationId, error);
       toast.error("Erro ao gerar PDF. Tente novamente.");
     } finally {
       setIsExporting(false);

@@ -166,7 +166,8 @@ export function useCreateFormalizacao() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['formalizacoes'] });
+      // Use centralized query key for consistency
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
     },
   });
 }
@@ -221,8 +222,9 @@ export function useUpdateFormalizacao() {
       return result;
     },
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['formalizacoes'] });
-      queryClient.invalidateQueries({ queryKey: ['formalizacao', id] });
+      // Use centralized query keys for consistency
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(id) });
     },
   });
 }
@@ -287,8 +289,9 @@ export function useSendForSignature() {
       return result;
     },
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['formalizacoes'] });
-      queryClient.invalidateQueries({ queryKey: ['formalizacao', id] });
+      // Use centralized query keys for consistency
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
     },
   });
 }
@@ -308,7 +311,7 @@ export function useAddParty() {
       return result;
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['formalizacao', result.formalization_id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(result.formalization_id) });
     },
   });
 }
@@ -426,8 +429,8 @@ export function useAcknowledge() {
       return result;
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['formalizacao', result.formalization_id] });
-      queryClient.invalidateQueries({ queryKey: ['formalizacoes'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(result.formalization_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
     },
   });
 }
@@ -477,7 +480,7 @@ export function useDeleteFormalizacao() {
       return { id };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['formalizacoes'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
     },
   });
 }

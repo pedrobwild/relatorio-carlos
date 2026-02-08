@@ -5,6 +5,9 @@ import { WeeklyReportData } from "@/types/weeklyReport";
 import { toast } from "sonner";
 import { Json } from "@/integrations/supabase/types";
 import { useReportImageUpload } from "./useReportImageUpload";
+import { queryKeys } from "@/lib/queryKeys";
+import { reportLogger } from "@/lib/devLogger";
+
 interface WeeklyReportRow {
   id: string;
   project_id: string;
@@ -28,7 +31,8 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
   const [savingWeek, setSavingWeek] = useState<number | null>(null);
   const { uploadGalleryPhotos, isUploading } = useReportImageUpload();
 
-  const queryKey = ["weekly-reports", projectId];
+  // Use centralized query key for consistency
+  const queryKey = queryKeys.weeklyReports.list(projectId);
 
   const {
     data: reports = [],
@@ -70,6 +74,10 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       data: WeeklyReportData;
     }) => {
       if (!projectId) throw new Error("Projeto não selecionado");
+      
+      const operationId = `save-week-${weekNumber}`;
+      reportLogger.start(operationId, `Saving week ${weekNumber}`, { projectId, weekNumber });
+      
       setSavingWeek(weekNumber);
 
       const { error } = await supabase
@@ -85,7 +93,12 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
           { onConflict: "project_id,week_number" }
         );
 
-      if (error) throw error;
+      if (error) {
+        reportLogger.error(operationId, error, { weekNumber });
+        throw error;
+      }
+      
+      reportLogger.end(operationId, { level: 'success', data: { weekNumber } });
     },
     onSuccess: () => {
       // Only invalidate on success - this refreshes the cache with saved data
@@ -93,7 +106,6 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       toast.success("Relatório salvo com sucesso!");
     },
     onError: (err) => {
-      console.error("Erro ao salvar relatório:", err);
       // IMPORTANT: Do NOT invalidate queries on error
       // This prevents stale/empty data from overwriting local edits
       toast.error("Erro ao salvar relatório. Suas alterações foram mantidas, tente novamente.");

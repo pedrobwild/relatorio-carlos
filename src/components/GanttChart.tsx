@@ -14,6 +14,7 @@ import {
   type ActivityStatus 
 } from '@/lib/activityStatus';
 import { mapCronogramaParaGantt, type GanttTask, type CronogramaTabelaRow } from '@/lib/mapCronogramaParaGantt';
+import { ganttLogger } from '@/lib/devLogger';
 
 function safeParseLocalDate(dateString: string | null | undefined): Date | null {
   const raw = (dateString ?? '').toString().trim();
@@ -146,15 +147,16 @@ const GanttChart = ({
 
     const mapped = mapCronogramaParaGantt(rows, referenceDate);
 
-    // ============================================================
-    // DEBUG OBRIGATÓRIO: console.log de id/status/start/end/progress
-    // ============================================================
-    console.group('[GanttChart] Mapeamento de atividades');
-    console.log('Total de atividades:', mapped.length);
-    mapped.forEach((task, idx) => {
-      console.log(`[${idx}] id=${task.id} | status=${task.status} | start=${task.start} | end=${task.end} | progress=${task.progress}%`);
-    });
-    console.groupEnd();
+    // DEV only: log activity mapping for debugging
+    if (import.meta.env.DEV) {
+      ganttLogger.log(`Mapped ${mapped.length} activities`, {
+        sample: mapped.slice(0, 3).map(t => ({
+          id: t.id,
+          status: t.status,
+          progress: t.progress,
+        })),
+      });
+    }
 
     return mapped;
   }, [activities, referenceDate]);
@@ -392,10 +394,15 @@ const GanttChart = ({
 
   const handleDragEnd = useCallback(() => {
     if (dragState) {
+      const activity = activities[dragState.activityIndex];
+      ganttLogger.log('Date change completed', {
+        activityId: activity?.id,
+        from: { start: dragState.originalStart, end: dragState.originalEnd },
+      });
       toast.success('Datas atualizadas');
     }
     setDragState(null);
-  }, [dragState]);
+  }, [dragState, activities]);
 
   // Calculate dependency lines
   const dependencyLines = useMemo(() => {
