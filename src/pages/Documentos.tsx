@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck, Plus, MessageSquare } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -284,8 +285,26 @@ const Documentos = () => {
 
   if (projectLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
+        {/* Header skeleton */}
+        <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+              <div className="flex items-center gap-2.5">
+                <div className="h-6 w-20 bg-muted rounded animate-pulse" />
+                <span className="text-muted-foreground/40">|</span>
+                <div className="h-6 w-24 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Content skeleton */}
+        <div className="flex-1 p-4 md:p-6">
+          <div className="max-w-5xl mx-auto">
+            <ContentSkeleton variant="cards" rows={6} />
+          </div>
+        </div>
       </div>
     );
   }
