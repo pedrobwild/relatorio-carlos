@@ -1,7 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * Documents Hook - TanStack Query Version
+ * 
+ * Migrated from useState/useEffect to useQuery/useMutation pattern.
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { queryKeys, invalidateDocumentQueries } from '@/lib/queryKeys';
+import { QUERY_TIMING } from '@/lib/queryClient';
 
 export const DOCUMENT_CATEGORIES = {
   contrato: { label: 'Contrato', icon: 'FileText' },
@@ -40,63 +48,123 @@ export interface ProjectDocument {
   url?: string;
 }
 
+// Fetch documents with signed URLs
+async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
+  const { data, error } = await supabase
+    .from('project_documents')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('document_type')
+    .order('version', { ascending: false });
+
+  if (error) throw error;
+
+  // Get signed URLs for each document
+  const docsWithUrls = await Promise.all(
+    (data || []).map(async (doc) => {
+      const { data: urlData } = await supabase.storage
+        .from(doc.storage_bucket)
+        .createSignedUrl(doc.storage_path, 3600); // 1 hour
+
+      return {
+        ...doc,
+        document_type: doc.document_type as DocumentCategory,
+        status: doc.status as DocumentStatus,
+        url: urlData?.signedUrl || undefined,
+      } as ProjectDocument;
+    })
+  );
+
+  return docsWithUrls;
+}
+
 export function useDocuments(projectId: string | undefined) {
   const { user } = useAuth();
-  const [documents, setDocuments] = useState<ProjectDocument[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const queryClient = useQueryClient();
 
-  const refetch = () => setRefreshKey(prev => prev + 1);
+  // Main query for documents
+  const { 
+    data: documents = [], 
+    isLoading: loading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: queryKeys.documents.list(projectId),
+    queryFn: () => fetchDocuments(projectId!),
+    enabled: !!projectId && !!user,
+    staleTime: QUERY_TIMING.documents.staleTime,
+    gcTime: QUERY_TIMING.documents.gcTime,
+    placeholderData: (previousData) => previousData, // Keep previous data while refetching
+  });
 
-  useEffect(() => {
-    if (!projectId || !user) {
-      setLoading(false);
-      return;
-    }
+  // Approve document mutation with optimistic update
+  const approveMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      const { error: updateError } = await supabase
+        .from('project_documents')
+        .update({
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: user.id,
+        })
+        .eq('id', documentId);
 
-    async function fetchDocuments() {
-      setLoading(true);
-      setError(null);
+      if (updateError) throw updateError;
+      return documentId;
+    },
+    // Optimistic update
+    onMutate: async (documentId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.documents.list(projectId) });
 
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('project_documents')
-          .select('*')
-          .eq('project_id', projectId)
-          .order('document_type')
-          .order('version', { ascending: false });
+      // Snapshot current value
+      const previousDocuments = queryClient.getQueryData<ProjectDocument[]>(
+        queryKeys.documents.list(projectId)
+      );
 
-        if (fetchError) throw fetchError;
-
-        // Get signed URLs for each document
-        const docsWithUrls = await Promise.all(
-          (data || []).map(async (doc) => {
-            const { data: urlData } = await supabase.storage
-              .from(doc.storage_bucket)
-              .createSignedUrl(doc.storage_path, 3600); // 1 hour
-
-            return {
-              ...doc,
-              document_type: doc.document_type as DocumentCategory,
-              status: doc.status as DocumentStatus,
-              url: urlData?.signedUrl || null,
-            } as ProjectDocument;
-          })
+      // Optimistically update
+      if (previousDocuments) {
+        queryClient.setQueryData<ProjectDocument[]>(
+          queryKeys.documents.list(projectId),
+          previousDocuments.map(doc =>
+            doc.id === documentId
+              ? {
+                  ...doc,
+                  status: 'approved' as DocumentStatus,
+                  approved_at: new Date().toISOString(),
+                  approved_by: user?.id || '',
+                }
+              : doc
+          )
         );
-
-        setDocuments(docsWithUrls);
-      } catch (err: any) {
-        console.error('Error fetching documents:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
       }
-    }
 
-    fetchDocuments();
-  }, [projectId, user, refreshKey]);
+      return { previousDocuments };
+    },
+    onError: (_error, _documentId, context) => {
+      // Rollback on error
+      if (context?.previousDocuments) {
+        queryClient.setQueryData(
+          queryKeys.documents.list(projectId),
+          context.previousDocuments
+        );
+      }
+      toast.error('Erro ao aprovar documento');
+    },
+    onSuccess: () => {
+      toast.success('Documento aprovado com sucesso');
+    },
+    onSettled: () => {
+      // Always refetch after mutation to ensure consistency
+      if (projectId) {
+        invalidateDocumentQueries(projectId);
+      }
+    },
+  });
 
+  // Helper functions
   const getDocumentsByCategory = (category: DocumentCategory) => {
     return documents.filter(doc => doc.document_type === category);
   };
@@ -132,42 +200,59 @@ export function useDocuments(projectId: string | undefined) {
       .sort((a, b) => b.version - a.version);
   };
 
-  const approveDocument = useCallback(async (documentId: string) => {
-    if (!user) {
-      toast.error('Você precisa estar logado para aprovar documentos');
-      return false;
-    }
-
+  const approveDocument = async (documentId: string): Promise<boolean> => {
     try {
-      const { error: updateError } = await supabase
-        .from('project_documents')
-        .update({
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-          approved_by: user.id,
-        })
-        .eq('id', documentId);
-
-      if (updateError) throw updateError;
-
-      toast.success('Documento aprovado com sucesso');
-      refetch();
+      await approveMutation.mutateAsync(documentId);
       return true;
-    } catch (err: any) {
-      console.error('Error approving document:', err);
-      toast.error('Erro ao aprovar documento: ' + err.message);
+    } catch {
       return false;
     }
-  }, [user, refetch]);
+  };
 
   return {
     documents,
     loading,
-    error,
+    error: error ? (error as Error).message : null,
     getDocumentsByCategory,
     getLatestByCategory,
     getVersionHistory,
     approveDocument,
     refetch,
+    isApproving: approveMutation.isPending,
   };
+}
+
+/**
+ * Hook to get a single document by ID with signed URL
+ */
+export function useDocument(documentId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.documents.detail(documentId),
+    queryFn: async () => {
+      if (!documentId) return null;
+      
+      const { data, error } = await supabase
+        .from('project_documents')
+        .select('*')
+        .eq('id', documentId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      // Get signed URL
+      const { data: urlData } = await supabase.storage
+        .from(data.storage_bucket)
+        .createSignedUrl(data.storage_path, 3600);
+
+      return {
+        ...data,
+        document_type: data.document_type as DocumentCategory,
+        status: data.status as DocumentStatus,
+        url: urlData?.signedUrl || undefined,
+      } as ProjectDocument;
+    },
+    enabled: !!documentId,
+    staleTime: QUERY_TIMING.documents.staleTime,
+  });
 }

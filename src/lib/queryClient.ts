@@ -175,8 +175,11 @@ function isAuthErrorCode(error: unknown): boolean {
   return authKeywords.some(keyword => errorString.includes(keyword));
 }
 
-// Get user-friendly message from error
-function getUserFriendlyMessage(error: unknown): string {
+/**
+ * Get user-friendly message from error
+ * Exported for use in custom error handling
+ */
+export function getUserFriendlyMessage(error: unknown): string {
   const errorString = String(error).toLowerCase();
   
   // Check each known error pattern
