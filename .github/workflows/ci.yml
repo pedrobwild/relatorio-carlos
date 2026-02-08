@@ -39,6 +39,10 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_DEMO_MODE: 'false'
+          VITE_GIT_COMMIT: ${{ github.sha }}
+          VITE_GIT_BRANCH: ${{ github.ref_name }}
+          VITE_BUILD_DATE: ${{ github.run_started_at }}
+
 
   e2e:
     runs-on: ubuntu-latest
@@ -68,6 +72,9 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+          VITE_GIT_COMMIT: ${{ github.sha }}
+          VITE_GIT_BRANCH: ${{ github.ref_name }}
+          VITE_BUILD_DATE: ${{ github.run_started_at }}
           TEST_CUSTOMER_EMAIL: ${{ secrets.TEST_CUSTOMER_EMAIL }}
           TEST_CUSTOMER_PASSWORD: ${{ secrets.TEST_CUSTOMER_PASSWORD }}
           TEST_STAFF_EMAIL: ${{ secrets.TEST_STAFF_EMAIL }}
