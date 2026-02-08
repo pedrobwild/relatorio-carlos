@@ -201,9 +201,10 @@ const getEventDescription = (event: DomainEvent): string => {
   switch (event.event_type) {
     case EVENT_TYPES.FORMALIZATION_CREATED:
       return payload.title ? `"${payload.title}"` : 'Nova formalização';
-    case EVENT_TYPES.FORMALIZATION_UPDATED:
+    case EVENT_TYPES.FORMALIZATION_UPDATED: {
       const fields = payload.fields_updated as string[] | undefined;
       return fields?.length ? `Campos: ${fields.join(', ')}` : 'Conteúdo atualizado';
+    }
     case EVENT_TYPES.FORMALIZATION_SENT:
       return payload.title ? `"${payload.title}"` : 'Enviada para coleta de assinaturas';
     case EVENT_TYPES.FORMALIZATION_SIGNED:
