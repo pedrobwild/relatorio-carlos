@@ -295,7 +295,7 @@ export default function Formalizacoes() {
                 {filteredFormalizacoes.map((formalizacao, index) => (
                   <Link 
                     key={formalizacao.id} 
-                    to={`/formalizacoes/${formalizacao.id}`}
+                    to={`${paths.formalizacoes}/${formalizacao.id}`}
                     className="block group animate-fade-in opacity-0"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
                   >
@@ -499,7 +499,7 @@ export default function Formalizacoes() {
                 filteredFormalizacoes.map((formalizacao, index) => (
                   <Link 
                     key={formalizacao.id} 
-                    to={`/formalizacoes/${formalizacao.id}`}
+                    to={`${paths.formalizacoes}/${formalizacao.id}`}
                     className="block group animate-fade-in opacity-0"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
                   >
