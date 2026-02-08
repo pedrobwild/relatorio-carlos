@@ -152,9 +152,8 @@
     min-height: 100vh;
     min-height: 100dvh; /* Dynamic viewport height for mobile */
     overflow-x: hidden;
+    overflow-y: auto !important; /* Ensure vertical scroll always works */
     line-height: 1.3; /* Compact line-height */
-    /* Prevent pull-to-refresh on mobile */
-    overscroll-behavior-y: contain;
   }
 
   /* Compact line-height for text elements */
