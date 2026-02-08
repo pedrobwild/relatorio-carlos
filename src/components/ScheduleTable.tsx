@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -92,7 +92,8 @@ const statusOrder: Record<Status, number> = {
   completed: 4,
 };
 
-const StatusBadge = ({ status }: { status: Status }) => {
+// Memoized to prevent re-renders when parent updates
+const StatusBadge = memo(({ status }: { status: Status }) => {
   const config = {
     completed: {
       icon: CheckCircle2,
@@ -131,7 +132,8 @@ const StatusBadge = ({ status }: { status: Status }) => {
       {label}
     </span>
   );
-};
+});
+StatusBadge.displayName = 'StatusBadge';
 
 interface SortableHeaderProps {
   field: SortField;

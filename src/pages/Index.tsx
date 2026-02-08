@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, FileText, Loader2, AlertCircle, Activity, Plus, GanttChartSquare, Calendar } from "lucide-react";
@@ -7,13 +7,12 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
-import GanttChart from "@/components/GanttChart";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
-import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
 import WeeklyReportsHistory, { generateWeeklyReports, ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { EmptyState } from "@/components/EmptyState";
+import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { toast } from "sonner";
 import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
@@ -27,8 +26,14 @@ import { isDemoMode } from "@/config/flags";
 import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
 import { pdfLogger } from "@/lib/devLogger";
+import { perf } from "@/lib/perf";
+import { prefetchForTab } from "@/lib/prefetch";
 import bwildLogo from "@/assets/bwild-logo.png";
 import { format } from "date-fns";
+
+// Lazy load heavy components to reduce initial bundle
+const GanttChart = lazy(() => import("@/components/GanttChart"));
+const WeeklyReportTemplate = lazy(() => import("@/components/report/WeeklyReportTemplate"));
 
 // Demo data for projects without real data yet
 const demoReportData: ReportData = {
@@ -480,6 +485,8 @@ const Index = () => {
                       <TabsTrigger
                         value="relatorio"
                         className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
+                        onMouseEnter={() => prefetchForTab('relatorio', projectId)}
+                        onFocus={() => prefetchForTab('relatorio', projectId)}
                       >
                         <FileText className="w-3.5 h-3.5 mr-1.5" />
                         Relatórios
@@ -547,14 +554,16 @@ const Index = () => {
                                 weekEnd
                               );
                               return (
-                                <WeeklyReportTemplate
-                                  data={templateData}
-                                  isStaff={isStaff}
-                                  isSaving={isSavingReport && savingWeek === weekNum}
-                                  onSaveReport={(updated) => {
-                                    saveWeeklyReport(weekNum, weekStart, weekEnd, updated);
-                                  }}
-                                />
+                                <Suspense fallback={<ContentSkeleton variant="report" />}>
+                                  <WeeklyReportTemplate
+                                    data={templateData}
+                                    isStaff={isStaff}
+                                    isSaving={isSavingReport && savingWeek === weekNum}
+                                    onSaveReport={(updated) => {
+                                      saveWeeklyReport(weekNum, weekStart, weekEnd, updated);
+                                    }}
+                                  />
+                                </Suspense>
                               );
                             })()}
                           </>
