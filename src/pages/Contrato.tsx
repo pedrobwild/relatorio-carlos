@@ -1,5 +1,5 @@
 import { ArrowLeft, Download, ExternalLink, FileText, Calendar, X, Loader2, FilePlus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import bwildLogo from "@/assets/bwild-logo.png";
@@ -7,7 +7,6 @@ import PDFViewer from "@/components/PDFViewer";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
-import { useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

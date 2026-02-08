@@ -135,7 +135,7 @@ export const generateWeeklyReports = (
   
   while (isBefore(weekStart, currentReportDate) || weekStart.getTime() === currentReportDate.getTime()) {
     // Week ends on Friday
-    let weekEnd = getFridayOfWeek(weekStart);
+    const weekEnd = getFridayOfWeek(weekStart);
     
     const weekEndDate = isAfter(weekEnd, currentReportDate) ? currentReportDate : weekEnd;
     
