@@ -268,6 +268,50 @@ VITE_SUPABASE_PUBLISHABLE_KEY
 VITE_SUPABASE_PROJECT_ID
 ```
 
+Variáveis opcionais (injetar no CI/build):
+
+```bash
+# Build info (para página de diagnóstico)
+VITE_GIT_COMMIT=$(git rev-parse HEAD)
+VITE_GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+VITE_BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+VITE_APP_VERSION=1.0.0-beta
+
+# Error monitoring
+VITE_SENTRY_PROJECT_URL=https://sentry.io/organizations/bwild/projects/portal/
+```
+
+## Monitoramento e Diagnóstico
+
+### Página de Health Check
+
+Acessível em `/admin/health` (apenas admins):
+
+- **Build Info**: commit, branch, versão, ambiente
+- **Service Status**: Auth, DB, Storage, RLS
+- **Performance**: latência, histórico
+- **Tools**: limpar cache, copiar relatório, emitir erro de teste
+
+### Error Monitoring
+
+```typescript
+import { captureError, captureException, createFeatureErrorCapture } from '@/lib/errorMonitoring';
+
+// Captura simples
+captureError(error, { feature: 'documents', action: 'upload' });
+
+// Com extras
+captureException(error, {
+  feature: 'formalizacoes',
+  action: 'sign',
+  extra: { formalizationId: '...' },
+});
+
+// Scoped por feature
+const docErrors = createFeatureErrorCapture('documents');
+docErrors.capture(error, { action: 'delete' });
+```
+
 ## Próximos Passos
 
 1. Migrar hooks legados para TanStack Query pattern

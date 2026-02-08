@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Building2, Shield, Settings, History } from 'lucide-react';
+import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsersTab } from '@/components/admin/UsersTab';
@@ -70,6 +70,26 @@ export default function Admin() {
           <TabsContent value="sistema">
             <div className="space-y-6">
               <FilesCleanupCard />
+              
+              {/* Health & Diagnostics Link */}
+              <div className="border rounded-lg p-4 bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                      <Activity className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Health & Diagnostics</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Status do sistema, latência e ferramentas de debug
+                      </p>
+                    </div>
+                  </div>
+                  <Button onClick={() => navigate('/admin/health')} variant="outline">
+                    Ver Status
+                  </Button>
+                </div>
+              </div>
               
               {/* Auditoria Link */}
               <div className="border rounded-lg p-4 bg-card">
