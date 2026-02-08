@@ -5,7 +5,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { ProjectDocument, DocumentCategory } from '../documents.repository';
 
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => ({
@@ -40,6 +39,8 @@ import {
   DOCUMENT_CATEGORIES,
   getDocumentVersionHistory,
   getLatestDocumentsByCategory,
+  type ProjectDocument,
+  type DocumentCategory,
 } from '../documents.repository';
 
 describe('DOCUMENT_CATEGORIES', () => {
