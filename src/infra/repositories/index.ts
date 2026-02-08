@@ -12,6 +12,7 @@ export * from './base.repository';
 export * as documentsRepo from './documents.repository';
 export * as projectsRepo from './projects.repository';
 export * as filesRepo from './files.repository';
+export * as auditoriaRepo from './auditoria.repository';
 
 // Re-export types for convenience
 export type { 
