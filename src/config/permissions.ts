@@ -15,6 +15,7 @@ export type Feature =
   | 'formalizations:create'
   | 'formalizations:sign'
   | 'formalizations:void'
+  | 'formalizations:delete'
   | 'formalizations:view'
   // Schedule/Activities
   | 'schedule:edit'
@@ -158,6 +159,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'formalizations:create',
     'formalizations:sign',
     'formalizations:void',
+    'formalizations:delete',
     'formalizations:view',
     'schedule:edit',
     'schedule:save_baseline',
