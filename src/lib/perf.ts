@@ -36,7 +36,7 @@ function measure(label: string, startMark: string, options?: { log?: boolean }):
 
   const startTime = marks.get(startMark);
   if (startTime === undefined) {
-    console.warn(`[Perf] Mark \"${startMark}\" not found`);
+    console.warn(`[Perf] Mark "${startMark}" not found`);
     return 0;
   }
 
