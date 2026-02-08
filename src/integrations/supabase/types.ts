@@ -2087,6 +2087,42 @@ export type Database = {
       }
     }
     Views: {
+      files_cleanup_candidates: {
+        Row: {
+          bucket: string | null
+          cleanup_reason: string | null
+          created_at: string | null
+          deleted_at: string | null
+          expires_at: string | null
+          id: string | null
+          retention_days: number | null
+          status: Database["public"]["Enums"]["file_status"] | null
+          storage_path: string | null
+        }
+        Insert: {
+          bucket?: string | null
+          cleanup_reason?: never
+          created_at?: string | null
+          deleted_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          retention_days?: number | null
+          status?: Database["public"]["Enums"]["file_status"] | null
+          storage_path?: string | null
+        }
+        Update: {
+          bucket?: string | null
+          cleanup_reason?: never
+          created_at?: string | null
+          deleted_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          retention_days?: number | null
+          status?: Database["public"]["Enums"]["file_status"] | null
+          storage_path?: string | null
+        }
+        Relationships: []
+      }
       files_summary: {
         Row: {
           bucket: string | null

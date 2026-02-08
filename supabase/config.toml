@@ -29,3 +29,12 @@ verify_jwt = true
 
 [functions.update-user]
 verify_jwt = true
+
+[functions.reset-user-password]
+verify_jwt = true
+
+[functions.send-meeting-notification]
+verify_jwt = true
+
+[functions.files-cleanup]
+verify_jwt = false
