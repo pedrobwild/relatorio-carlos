@@ -136,6 +136,7 @@
   html {
     /* Prevent horizontal scroll on mobile */
     overflow-x: hidden;
+    overflow-y: auto;
     /* Smooth scrolling */
     scroll-behavior: smooth;
     /* Better touch experience */
@@ -154,6 +155,28 @@
     overflow-x: hidden;
     overflow-y: auto !important; /* Ensure vertical scroll always works */
     line-height: 1.3; /* Compact line-height */
+    /* CRITICAL: Prevent nested elements from capturing page scroll */
+    overscroll-behavior-x: none;
+  }
+
+  /* CRITICAL FIX: Allow page scroll over charts
+   * The issue is that Recharts creates an invisible overlay that captures 
+   * scroll/touch events. We need to allow touch scrolling while keeping
+   * hover/click interactions working.
+   */
+  .recharts-wrapper {
+    /* Allow vertical scroll to pass through to page */
+    touch-action: pan-y pinch-zoom;
+  }
+  
+  .recharts-surface {
+    /* Allow touch scroll while maintaining hover effects */
+    touch-action: pan-y pinch-zoom;
+  }
+  
+  /* The transparent overlay that captures mouse events - needs touch passthrough */
+  .recharts-tooltip-wrapper {
+    pointer-events: auto;
   }
 
   /* Compact line-height for text elements */
