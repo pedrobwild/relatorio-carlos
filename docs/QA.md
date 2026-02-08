@@ -55,6 +55,22 @@ TEST_STAFF_PASSWORD=test123456
 TEST_PROJECT_ID=<uuid>
 ```
 
+### GitHub Actions Secrets
+
+For CI, configure these secrets in your repository settings:
+
+| Secret | Description |
+|--------|-------------|
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon key |
+| `VITE_SUPABASE_PROJECT_ID` | Supabase project ID |
+| `PLAYWRIGHT_BASE_URL` | Deployed staging URL for E2E |
+| `TEST_CUSTOMER_EMAIL` | Test customer account email |
+| `TEST_CUSTOMER_PASSWORD` | Test customer account password |
+| `TEST_STAFF_EMAIL` | Test staff account email |
+| `TEST_STAFF_PASSWORD` | Test staff account password |
+| `TEST_PROJECT_ID` | UUID of seeded test project |
+
 ### Playwright Config
 
 See `playwright.config.ts` for full configuration. Key settings:
