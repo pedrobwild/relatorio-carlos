@@ -46,7 +46,7 @@ async function createOrGetUser(config: typeof TEST_USERS.customer) {
   const existing = existingUsers?.users?.find(u => u.email === config.email);
   
   if (existing) {
-    console.log(`✓ User ${config.email} already exists`);
+    console.warn(`✓ User ${config.email} already exists`);
     return existing;
   }
 
@@ -66,7 +66,7 @@ async function createOrGetUser(config: typeof TEST_USERS.customer) {
     return null;
   }
 
-  console.log(`✓ Created user ${config.email}`);
+  console.warn(`✓ Created user ${config.email}`);
   return data.user;
 }
 
@@ -80,7 +80,7 @@ async function ensureUserRole(userId: string, role: string) {
     .single();
 
   if (existing) {
-    console.log(`✓ Role ${role} already assigned`);
+    console.warn(`✓ Role ${role} already assigned`);
     return;
   }
 
@@ -94,7 +94,7 @@ async function ensureUserRole(userId: string, role: string) {
     return;
   }
 
-  console.log(`✓ Assigned role ${role}`);
+  console.warn(`✓ Assigned role ${role}`);
 }
 
 async function createTestProject(customerUserId: string, staffUserId: string) {
@@ -106,7 +106,7 @@ async function createTestProject(customerUserId: string, staffUserId: string) {
     .single();
 
   if (existing) {
-    console.log(`✓ Test project already exists: ${existing.id}`);
+    console.warn(`✓ Test project already exists: ${existing.id}`);
     return existing.id;
   }
 
@@ -132,7 +132,7 @@ async function createTestProject(customerUserId: string, staffUserId: string) {
       return null;
     }
     orgId = newOrg.id;
-    console.log(`✓ Created org: ${orgId}`);
+    console.warn(`✓ Created org: ${orgId}`);
   }
 
   // Create project
@@ -153,7 +153,7 @@ async function createTestProject(customerUserId: string, staffUserId: string) {
     return null;
   }
 
-  console.log(`✓ Created project: ${project.id}`);
+  console.warn(`✓ Created project: ${project.id}`);
 
   // Add customer as project member
   await supabase.from('project_members').insert({
@@ -169,13 +169,13 @@ async function createTestProject(customerUserId: string, staffUserId: string) {
     is_primary: true
   });
 
-  console.log(`✓ Added project members`);
+  console.warn(`✓ Added project members`);
 
   return project.id;
 }
 
 async function main() {
-  console.log('🌱 Starting seed...\n');
+  console.warn('🌱 Starting seed...\n');
 
   // Create test users
   const customerUser = await createOrGetUser(TEST_USERS.customer);
@@ -193,12 +193,12 @@ async function main() {
   // Create test project
   const projectId = await createTestProject(customerUser.id, staffUser.id);
 
-  console.log('\n✅ Seed completed!');
-  console.log('\n📋 Test credentials:');
-  console.log(`   Customer: ${TEST_USERS.customer.email} / ${TEST_USERS.customer.password}`);
-  console.log(`   Staff: ${TEST_USERS.staff.email} / ${TEST_USERS.staff.password}`);
+  console.warn('\n✅ Seed completed!');
+  console.warn('\n📋 Test credentials:');
+  console.warn(`   Customer: ${TEST_USERS.customer.email} / ${TEST_USERS.customer.password}`);
+  console.warn(`   Staff: ${TEST_USERS.staff.email} / ${TEST_USERS.staff.password}`);
   if (projectId) {
-    console.log(`   Test Project ID: ${projectId}`);
+    console.warn(`   Test Project ID: ${projectId}`);
   }
 }
 

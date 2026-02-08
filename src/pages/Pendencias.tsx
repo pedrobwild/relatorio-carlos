@@ -1,11 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, CheckCircle2, Calendar, ChevronRight, ShoppingCart, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, PendingType, PendingStatus } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
-import { useParams } from "react-router-dom";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {

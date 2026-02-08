@@ -47,8 +47,8 @@ function computeDiff(oldText: string, newText: string): { type: 'same' | 'added'
       j++;
     } else {
       // Look ahead to find matches
-      let foundInNew = newWords.indexOf(oldWords[i], j);
-      let foundInOld = oldWords.indexOf(newWords[j], i);
+      const foundInNew = newWords.indexOf(oldWords[i], j);
+      const foundInOld = oldWords.indexOf(newWords[j], i);
       
       if (foundInNew !== -1 && (foundInOld === -1 || foundInNew - j <= foundInOld - i)) {
         // Words were added
