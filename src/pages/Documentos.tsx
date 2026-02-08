@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck } from "lucide-react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck, Plus } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +12,10 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCan } from "@/hooks/useCan";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { DocumentVersionUpload } from "@/components/DocumentVersionUpload";
+import { EmptyState } from "@/components/EmptyState";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -241,9 +243,13 @@ const Documentos = () => {
   const { paths } = useProjectNavigation();
   const { documents, loading, error, getLatestByCategory, getVersionHistory, approveDocument, refetch } = useDocuments(projectId);
   const { isStaff } = useUserRole();
+  const { can } = useCan();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
   const [isApproving, setIsApproving] = useState(false);
+  
+  const canUpload = can('documents:upload');
+  const canApprove = can('documents:approve');
 
   const handleViewHistory = (docId: string) => {
     setHistoryDocId(docId);
@@ -300,7 +306,7 @@ const Documentos = () => {
               <h1 className="text-h2">Documentos</h1>
             </div>
           </div>
-          {isStaff && projectId && (
+          {canUpload && projectId && (
             <DocumentUpload projectId={projectId} onSuccess={refetch} />
           )}
         </div>
@@ -310,18 +316,28 @@ const Documentos = () => {
       <div className="flex-1 p-4 md:p-6">
         <div className="max-w-5xl mx-auto">
           {documents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-              <p className="text-body text-muted-foreground">Nenhum documento disponível</p>
-              <p className="text-caption mt-1">
-                {isStaff ? "Envie o primeiro documento do projeto" : "Os documentos serão disponibilizados em breve"}
-              </p>
-              {isStaff && projectId && (
-                <div className="mt-6">
-                  <DocumentUpload projectId={projectId} onSuccess={refetch} />
-                </div>
+            <EmptyState
+              variant="documents"
+              title="Nenhum documento disponível"
+              description={
+                canUpload
+                  ? "Envie o primeiro documento do projeto para começar."
+                  : "Os documentos serão disponibilizados em breve pela equipe técnica."
+              }
+              action={
+                canUpload && projectId
+                  ? {
+                      label: "Enviar documento",
+                      onClick: () => {}, // DocumentUpload handles its own modal
+                      icon: Plus,
+                    }
+                  : undefined
+              }
+            >
+              {canUpload && projectId && (
+                <DocumentUpload projectId={projectId} onSuccess={refetch} />
               )}
-            </div>
+            </EmptyState>
           ) : (
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
               <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto p-1 bg-muted/50">

@@ -10,6 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormalizacoes } from '@/hooks/useFormalizacoes';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useCan } from '@/hooks/useCan';
+import { EmptyState } from '@/components/EmptyState';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { 
@@ -95,9 +97,12 @@ export default function Formalizacoes() {
   const navigate = useNavigate();
   const { paths } = useProjectNavigation();
   const { isAdmin } = useUserRole();
+  const { can } = useCan();
   const [activeTab, setActiveTab] = useState('pendentes');
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  
+  const canCreate = can('formalizations:create');
 
   const { data: formalizacoes, isLoading } = useFormalizacoes();
 
@@ -138,7 +143,7 @@ export default function Formalizacoes() {
               <span className="text-muted-foreground/30 shrink-0">|</span>
               <h1 className="text-base font-semibold truncate">Formalizações</h1>
             </div>
-            {isAdmin && (
+            {canCreate && (
               <Button 
                 size="sm"
                 onClick={() => navigate(paths.formalizacoesNova)} 
@@ -263,35 +268,27 @@ export default function Formalizacoes() {
               </div>
             ) : filteredFormalizacoes.length === 0 ? (
               <Card className="border-dashed">
-                <CardContent className="p-12 text-center">
-                  <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    {activeTab === 'pendentes' ? (
-                      <Sparkles className="h-8 w-8 text-muted-foreground/50" />
-                    ) : (
-                      <FileText className="h-8 w-8 text-muted-foreground/50" />
-                    )}
-                  </div>
-                  <p className="font-medium text-foreground">
-                    {activeTab === 'pendentes' 
-                      ? 'Nenhuma pendência!' 
-                      : 'Nenhuma formalização encontrada'}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {activeTab === 'pendentes' 
-                      ? 'Você está em dia com todas as formalizações.' 
-                      : 'Crie uma nova formalização para começar.'}
-                  </p>
-                  {activeTab !== 'pendentes' && isAdmin && (
-                    <Button 
-                      onClick={() => navigate(paths.formalizacoesNova)} 
-                      className="mt-4"
-                      size="sm"
-                    >
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Nova formalização
-                    </Button>
-                  )}
-                </CardContent>
+                <EmptyState
+                  variant="formalizations"
+                  title={activeTab === 'pendentes' ? 'Nenhuma pendência!' : 'Nenhuma formalização encontrada'}
+                  description={
+                    activeTab === 'pendentes'
+                      ? 'Você está em dia com todas as formalizações.'
+                      : canCreate
+                        ? 'Crie uma nova formalização para começar.'
+                        : 'As formalizações serão criadas pela equipe técnica.'
+                  }
+                  action={
+                    activeTab !== 'pendentes' && canCreate
+                      ? {
+                          label: 'Nova formalização',
+                          onClick: () => navigate(paths.formalizacoesNova),
+                          icon: Plus,
+                        }
+                      : undefined
+                  }
+                  icon={activeTab === 'pendentes' ? Sparkles : undefined}
+                />
               </Card>
             ) : (
               <div className="grid grid-cols-2 gap-4">

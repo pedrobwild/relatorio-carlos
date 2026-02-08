@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, Loader2, AlertCircle, Activity, Plus, GanttChartSquare } from "lucide-react";
+import { BarChart3, FileText, Loader2, AlertCircle, Activity, Plus, GanttChartSquare, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import ReportHeader from "@/components/ReportHeader";
@@ -12,6 +12,8 @@ import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
 import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
 import WeeklyReportsHistory, { generateWeeklyReports, ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
 import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
@@ -19,6 +21,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useProjectActivities } from "@/hooks/useProjectActivities";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useCan } from "@/hooks/useCan";
 import { isDemoMode } from "@/config/flags";
 // usePageVisibility removido - causava desmontagem de UI e perda de estado
 import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
@@ -53,6 +56,7 @@ const Index = () => {
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const { isStaff, isCustomer } = useUserRole();
+  const { can } = useCan();
   const { activities: dbActivities, loading: activitiesLoading, updateActivity } = useProjectActivities(projectId);
   const {
     reportDataByWeek,
@@ -60,6 +64,8 @@ const Index = () => {
     isSaving: isSavingReport,
     savingWeek,
   } = useWeeklyReports({ projectId });
+  
+  const canEditSchedule = can('schedule:edit');
 
   // Persistência da UI do portal (aba ativa e semana do relatório) para evitar “voltar pra Curva S”
   // quando o navegador recarrega/remonta a página ao alternar abas.
@@ -387,18 +393,21 @@ const Index = () => {
               isProjectPhase={project?.is_project_phase}
             />
 
+            {/* Onboarding for new users */}
+            <OnboardingChecklist projectId={projectId} />
+
             {/* Staff: Show button to create schedule */}
-            {isStaff && (
-              <div className="bg-card rounded-xl shadow-card p-6 text-center">
-                <h3 className="font-semibold mb-2">Cronograma não cadastrado</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Cadastre as atividades do cronograma para acompanhar o progresso da obra.
-                </p>
-                <Button onClick={() => navigate(paths.cronograma)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Cadastrar Cronograma
-                </Button>
-              </div>
+            {canEditSchedule && (
+              <EmptyState
+                variant="schedule"
+                title="Cronograma não cadastrado"
+                description="Cadastre as atividades do cronograma para acompanhar o progresso da obra."
+                action={{
+                  label: "Cadastrar Cronograma",
+                  onClick: () => navigate(paths.cronograma),
+                  icon: Calendar,
+                }}
+              />
             )}
           </div>
         </div>
