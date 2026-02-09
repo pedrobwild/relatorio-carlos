@@ -1811,6 +1811,60 @@ export type Database = {
           },
         ]
       }
+      project_team_contacts: {
+        Row: {
+          crea: string | null
+          created_at: string
+          display_name: string
+          email: string | null
+          id: string
+          phone: string | null
+          photo_url: string | null
+          project_id: string
+          role_type: string
+          updated_at: string
+        }
+        Insert: {
+          crea?: string | null
+          created_at?: string
+          display_name: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          photo_url?: string | null
+          project_id: string
+          role_type: string
+          updated_at?: string
+        }
+        Update: {
+          crea?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          photo_url?: string | null
+          project_id?: string
+          role_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_team_contacts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_team_contacts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           actual_end_date: string | null
