@@ -608,7 +608,7 @@ const ReportHeader = ({
                   </button>
                   
                   {expandedContact === contact.role && (
-                    <div className="absolute top-full left-0 mt-1 z-10 bg-card border border-border rounded-lg shadow-lg p-3 min-w-[240px] animate-fade-in">
+                    <div className="absolute top-full left-0 mt-1 z-50 bg-card border border-border rounded-lg shadow-lg p-3 min-w-[240px] animate-fade-in">
                       {/* Header with photo and edit button */}
                       <div className="flex items-center gap-3 mb-3 pb-2 border-b border-border">
                         <Avatar className="h-12 w-12">
