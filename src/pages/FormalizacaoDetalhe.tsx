@@ -99,7 +99,7 @@ export default function FormalizacaoDetalhe() {
     (p) => p.must_sign && !acknowledgements.some((a) => a.party_id === p.id)
   );
 
-  // Prefer a direct binding (user_id/email). If none exists, staff can sign for exactly one pending company party.
+  // Prefer a direct binding (user_id/email). If none exists, staff can sign for pending company parties.
   const pendingPartyByBinding = pendingParties.find((p) => {
     if (!user) return false;
 
@@ -110,11 +110,12 @@ export default function FormalizacaoDetalhe() {
     return userIdMatch || emailMatch;
   });
 
-  const pendingCompanyParties = pendingParties.filter((p) => p.party_type === 'company');
+  // Staff can sign company parties even without direct binding
+  const pendingCompanyPartyForStaff = isStaff
+    ? pendingParties.find((p) => p.party_type === 'company')
+    : null;
 
-  const pendingPartyForUser =
-    pendingPartyByBinding ||
-    (isStaff && pendingCompanyParties.length === 1 ? pendingCompanyParties[0] : null);
+  const pendingPartyForUser = pendingPartyByBinding || pendingCompanyPartyForStaff;
 
   const handleSendForSignature = async () => {
     if (!id || !isDraft) return;
