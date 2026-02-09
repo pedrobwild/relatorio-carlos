@@ -15,6 +15,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useTeamContacts, TeamContact as TeamContactData } from "@/hooks/useTeamContacts";
 import { TeamContactEditModal } from "@/components/TeamContactEditModal";
+import { TeamContactPopover } from "@/components/TeamContactPopover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
@@ -588,83 +589,17 @@ const ReportHeader = ({
             {/* Team Contacts */}
             <div className="flex items-center gap-4">
               {teamContacts.map((contact) => (
-                <div key={contact.role} className="relative">
-                  <button
-                    onClick={() => toggleContact(contact.role)}
-                    className="flex items-center gap-2 hover:bg-accent/50 p-1.5 rounded-lg transition-colors"
-                    aria-label={`Ver contato de ${contact.name}`}
-                  >
-                    <Avatar className="h-7 w-7">
-                      <AvatarImage src={contact.photo_url} alt={contact.name} />
-                      <AvatarFallback className="bg-accent text-accent-foreground">
-                        <User className="w-3 h-3" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <span className="font-medium text-xs text-foreground">{contact.role}:</span>{" "}
-                      <span className="text-xs text-muted-foreground">{contact.name}</span>
-                    </div>
-                    <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  {expandedContact === contact.role && (
-                    <div className="absolute top-full left-0 mt-1 z-50 bg-card border border-border rounded-lg shadow-lg p-3 min-w-[240px] animate-fade-in">
-                      {/* Header with photo and edit button */}
-                      <div className="flex items-center gap-3 mb-3 pb-2 border-b border-border">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={contact.photo_url} alt={contact.name} />
-                          <AvatarFallback className="bg-accent text-accent-foreground">
-                            <User className="w-5 h-5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-foreground">{contact.name}</p>
-                          <p className="text-xs text-muted-foreground">{contact.role}</p>
-                        </div>
-                        {isStaff && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditContact(contact.role);
-                            }}
-                            aria-label={`Editar ${contact.role}`}
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                      <div className="space-y-1.5">
-                        {contact.email && (
-                          <a 
-                            href={`mailto:${contact.email}`}
-                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <Mail className="w-3 h-3" />
-                            <span>{contact.email}</span>
-                          </a>
-                        )}
-                        {contact.phone && (
-                          <a 
-                            href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <Phone className="w-3 h-3" />
-                            <span>{contact.phone}</span>
-                          </a>
-                        )}
-                        {contact.crea && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
-                            <span className="font-medium">CREA:</span>
-                            <span>{contact.crea}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <TeamContactPopover
+                  key={contact.role}
+                  role={contact.role}
+                  name={contact.name}
+                  phone={contact.phone}
+                  email={contact.email}
+                  crea={contact.crea}
+                  photoUrl={contact.photo_url}
+                  isStaff={isStaff}
+                  onEdit={() => handleEditContact(contact.role)}
+                />
               ))}
             </div>
 
