@@ -10,6 +10,7 @@ import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
 const statusColors: Record<string, string> = {
@@ -101,10 +102,10 @@ function ProjectCard({
             <Calendar className="h-3.5 w-3.5" />
             <span>
               {project.planned_start_date 
-                ? format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
+                ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
                 : 'A definir'} - {' '}
               {project.planned_end_date 
-                ? format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR }) 
+                ? format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR }) 
                 : 'A definir'}
             </span>
           </div>

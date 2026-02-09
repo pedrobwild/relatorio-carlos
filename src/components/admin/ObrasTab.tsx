@@ -42,6 +42,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseLocalDate } from '@/lib/activityStatus';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -389,8 +390,8 @@ function ObraCard({
             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
               <Calendar className="h-3 w-3" />
               <span>
-                {format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
-                {format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
+                {format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
+                {format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
               </span>
             </div>
           </div>
@@ -612,8 +613,8 @@ export function ObrasTab() {
                     <TableCell>{project.customer_name || '—'}</TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
-                        {format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
+                        {format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
+                        {format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
                       </span>
                     </TableCell>
                     <TableCell>
