@@ -38,8 +38,7 @@ export function useTeamContacts(projectId: string | undefined) {
     queryFn: async () => {
       if (!projectId) return [];
       
-      // Using type assertion because table was just created
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('project_team_contacts')
         .select('*')
         .eq('project_id', projectId)
@@ -69,8 +68,7 @@ export function useTeamContacts(projectId: string | undefined) {
 
   const upsertMutation = useMutation({
     mutationFn: async (contact: TeamContactInput) => {
-      // Using type assertion because table was just created
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('project_team_contacts')
         .upsert({
           project_id: contact.project_id,
