@@ -7,8 +7,8 @@ import { AppHeader } from '@/components/AppHeader';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
-
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
   completed: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
@@ -24,12 +24,12 @@ const statusLabels: Record<string, string> = {
 };
 
 function ProjectCard({ project, onClick }: { project: ProjectWithCustomer & { is_project_phase?: boolean }; onClick: () => void }) {
-  // BUG FIX: Guard against null dates to prevent Invalid Date crash
+  // BUG FIX: Use parseLocalDate para evitar d-1 por timezone UTC
   const rawStartDate = project.actual_start_date || project.planned_start_date;
   const rawEndDate = project.planned_end_date;
   
-  const startDate = rawStartDate ? new Date(rawStartDate) : null;
-  const endDate = rawEndDate ? new Date(rawEndDate) : null;
+  const startDate = rawStartDate ? parseLocalDate(rawStartDate) : null;
+  const endDate = rawEndDate ? parseLocalDate(rawEndDate) : null;
   const now = Date.now();
   const hasStarted = startDate ? now >= startDate.getTime() : false;
 
@@ -80,10 +80,10 @@ function ProjectCard({ project, onClick }: { project: ProjectWithCustomer & { is
           <Calendar className="h-3.5 w-3.5" />
           <span>
             {project.planned_start_date 
-              ? format(new Date(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
+              ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
               : 'A definir'} - {' '}
             {project.planned_end_date 
-              ? format(new Date(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })
+              ? format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })
               : 'A definir'}
           </span>
         </div>
