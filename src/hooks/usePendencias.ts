@@ -5,6 +5,7 @@ import { parseISO, differenceInDays } from "date-fns";
 import { useAuth } from "./useAuth";
 import { isDemoMode } from "@/config/flags";
 import type { Json } from "@/integrations/supabase/types";
+import { FORMALIZATION_TYPE_LABELS } from "@/types/formalization";
 
 // Database enum mappings
 export type PendingItemType = 
@@ -157,6 +158,101 @@ const mapDbItemToPendingItem = (item: PendingItemRow): PendingItem => ({
   resolvedBy: item.resolved_by || undefined,
 });
 
+// Fetch formalization signature pendencies for user
+async function fetchFormalizationPendencies(
+  userEmail: string | undefined,
+  userId: string | undefined,
+  projectId?: string
+): Promise<PendingItem[]> {
+  if (!userEmail && !userId) return [];
+
+  // Get formalizations pending signature where user is a party that must sign
+  let query = supabase
+    .from("formalizations")
+    .select(`
+      id,
+      title,
+      type,
+      status,
+      locked_at,
+      created_at,
+      project_id,
+      formalization_parties!inner (
+        id,
+        email,
+        user_id,
+        must_sign,
+        display_name
+      )
+    `)
+    .eq("status", "pending_signatures");
+
+  if (projectId) {
+    query = query.eq("project_id", projectId);
+  }
+
+  const { data: formalizations, error } = await query;
+
+  if (error) {
+    console.warn("Error fetching formalization pendencies:", error.message);
+    return [];
+  }
+
+  if (!formalizations) return [];
+
+  const pendencies: PendingItem[] = [];
+
+  for (const f of formalizations) {
+    // Find parties that match the current user and must sign
+    const parties = (f.formalization_parties || []) as Array<{
+      id: string;
+      email: string | null;
+      user_id: string | null;
+      must_sign: boolean;
+      display_name: string;
+    }>;
+
+    const userParties = parties.filter(p => 
+      p.must_sign && (
+        (userEmail && p.email?.toLowerCase() === userEmail.toLowerCase()) ||
+        (userId && p.user_id === userId)
+      )
+    );
+
+    if (userParties.length === 0) continue;
+
+    // Check if any of the user's parties already acknowledged
+    const { data: acks } = await supabase
+      .from("formalization_acknowledgements")
+      .select("party_id")
+      .in("party_id", userParties.map(p => p.id));
+
+    const ackedPartyIds = new Set((acks || []).map(a => a.party_id));
+    const pendingParties = userParties.filter(p => !ackedPartyIds.has(p.id));
+
+    if (pendingParties.length === 0) continue;
+
+    // Create a pending item for this formalization
+    const typeLabel = FORMALIZATION_TYPE_LABELS[f.type as keyof typeof FORMALIZATION_TYPE_LABELS] || "Formalização";
+    
+    pendencies.push({
+      id: `formalization-${f.id}`,
+      type: "signature",
+      title: f.title,
+      description: `${typeLabel} aguardando sua assinatura`,
+      dueDate: f.locked_at || f.created_at,
+      createdDate: f.created_at,
+      priority: "alta", // Signatures are always high priority
+      actionUrl: `/obra/${f.project_id}/formalizacoes/${f.id}`,
+      referenceType: "formalization",
+      referenceId: f.id,
+      status: "pending",
+    });
+  }
+
+  return pendencies;
+}
+
 interface UsePendenciasOptions {
   projectId?: string;
   includeCompleted?: boolean;
@@ -168,28 +264,34 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
   const queryClient = useQueryClient();
 
   const { data: pendingItems = [], isLoading, error } = useQuery({
-    queryKey: ["pending-items", projectId, includeCompleted],
+    queryKey: ["pending-items", projectId, includeCompleted, user?.email],
     queryFn: async () => {
-      // TODO: In production, this will query the backend
-      // For now, return empty array when not in demo mode
+      // Fetch regular pending items
+      let regularItems: PendingItem[] = [];
+      
       if (!isDemoMode) {
         const { data, error } = await buildPendingItemsQuery(projectId, includeCompleted);
-
         if (error) throw error;
-
-        return (data || []).map((item) => mapDbItemToPendingItem(item as PendingItemRow));
+        regularItems = (data || []).map((item) => mapDbItemToPendingItem(item as PendingItemRow));
+      } else {
+        // Demo mode: query database but return empty on error
+        const { data, error } = await buildPendingItemsQuery(projectId, includeCompleted);
+        if (error) {
+          console.warn('Pending items query failed (demo mode):', error.message);
+        } else {
+          regularItems = (data || []).map((item) => mapDbItemToPendingItem(item as PendingItemRow));
+        }
       }
 
-      // Demo mode: query database but return empty on error
-      const { data, error } = await buildPendingItemsQuery(projectId, includeCompleted);
+      // Fetch formalization signature pendencies
+      const formalizationItems = await fetchFormalizationPendencies(
+        user?.email || undefined,
+        user?.id,
+        projectId
+      );
 
-      // In demo mode, silently return empty array on error
-      if (error) {
-        console.warn('Pending items query failed (demo mode):', error.message);
-        return [];
-      }
-
-      return (data || []).map((item) => mapDbItemToPendingItem(item as PendingItemRow));
+      // Combine both sources
+      return [...regularItems, ...formalizationItems];
     },
     enabled: !!user,
   });
