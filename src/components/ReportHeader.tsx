@@ -13,6 +13,9 @@ import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
+import { useTeamContacts, TeamContact as TeamContactData } from "@/hooks/useTeamContacts";
+import { TeamContactEditModal } from "@/components/TeamContactEditModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -42,12 +45,13 @@ interface ReportHeaderProps {
   isProjectPhase?: boolean;
 }
 
-interface TeamContact {
+interface LegacyTeamContact {
   role: string;
   name: string;
   phone: string;
   email: string;
   crea?: string;
+  photo_url?: string;
 }
 
 // Calculate working days between two dates (excluding weekends)
@@ -85,6 +89,7 @@ const ReportHeader = ({
 }: ReportHeaderProps) => {
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [showDateChangeAlert, setShowDateChangeAlert] = useState(false);
+  const [editingContact, setEditingContact] = useState<TeamContactData | null>(null);
 
   // Date change info (hardcoded for now, could come from props or API)
   const dateChangeInfo = {
@@ -175,6 +180,16 @@ const ReportHeader = ({
   const { isStaff } = useUserRole();
   const { data: projects = [] } = useProjectsQuery();
   const navigate = useNavigate();
+  
+  // Team contacts from database
+  const { 
+    contacts: dbContacts, 
+    upsertContact, 
+    isUpserting, 
+    uploadPhoto, 
+    isUploading,
+    roleLabels 
+  } = useTeamContacts(projectId);
 
   // Filter out current project and get other available projects
   const otherProjects = useMemo(() => {
@@ -192,16 +207,40 @@ const ReportHeader = ({
     { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes, highlight: false },
   ];
 
-  // Filtrar contatos: em fase de projeto, cliente não vê Engenharia
-  const allTeamContacts: TeamContact[] = [
-    { role: "Engenharia", name: "Lucas Tresmondi", phone: "(99) 99999-9999", email: "lucas@bwild.com.br", crea: "5071459470-SP" },
-    { role: "Arquitetura", name: "Lorena Alves", phone: "(99) 99999-9999", email: "lorena@bwild.com.br" },
-    { role: "Relacionamento", name: "Victorya Capponi", phone: "(99) 99999-9999", email: "victorya@bwild.com.br" },
-  ];
+  // Map database contacts to legacy format for display
+  const teamContacts: LegacyTeamContact[] = useMemo(() => {
+    const mapped = dbContacts.map(c => ({
+      role: roleLabels[c.role_type] || c.role_type,
+      name: c.display_name,
+      phone: c.phone || '',
+      email: c.email || '',
+      crea: c.crea || undefined,
+      photo_url: c.photo_url || undefined,
+    }));
+    
+    // Filter for project phase
+    return isProjectPhase && !isStaff
+      ? mapped.filter(c => c.role !== 'Engenharia')
+      : mapped;
+  }, [dbContacts, isProjectPhase, isStaff, roleLabels]);
   
-  const teamContacts = isProjectPhase && !isStaff
-    ? allTeamContacts.filter(c => c.role !== "Engenharia")
-    : allTeamContacts;
+  // Get the database contact for editing
+  const getDbContactByRole = (role: string) => {
+    const roleTypeMap: Record<string, string> = {
+      'Engenharia': 'engenharia',
+      'Arquitetura': 'arquitetura',
+      'Relacionamento': 'relacionamento',
+    };
+    const roleType = roleTypeMap[role];
+    return dbContacts.find(c => c.role_type === roleType);
+  };
+
+  const handleEditContact = (role: string) => {
+    const contact = getDbContactByRole(role);
+    if (contact) {
+      setEditingContact(contact);
+    }
+  };
 
   const toggleContact = (role: string) => {
     setExpandedContact(expandedContact === role ? null : role);
@@ -555,9 +594,12 @@ const ReportHeader = ({
                     className="flex items-center gap-2 hover:bg-accent/50 p-1.5 rounded-lg transition-colors"
                     aria-label={`Ver contato de ${contact.name}`}
                   >
-                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-accent">
-                      <User className="w-3 h-3 text-accent-foreground" />
-                    </div>
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={contact.photo_url} alt={contact.name} />
+                      <AvatarFallback className="bg-accent text-accent-foreground">
+                        <User className="w-3 h-3" />
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <span className="font-medium text-xs text-foreground">{contact.role}:</span>{" "}
                       <span className="text-xs text-muted-foreground">{contact.name}</span>
@@ -566,22 +608,53 @@ const ReportHeader = ({
                   </button>
                   
                   {expandedContact === contact.role && (
-                    <div className="absolute top-full left-0 mt-1 z-10 bg-card border border-border rounded-lg shadow-lg p-2.5 min-w-[200px] animate-fade-in">
+                    <div className="absolute top-full left-0 mt-1 z-10 bg-card border border-border rounded-lg shadow-lg p-3 min-w-[240px] animate-fade-in">
+                      {/* Header with photo and edit button */}
+                      <div className="flex items-center gap-3 mb-3 pb-2 border-b border-border">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={contact.photo_url} alt={contact.name} />
+                          <AvatarFallback className="bg-accent text-accent-foreground">
+                            <User className="w-5 h-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-foreground">{contact.name}</p>
+                          <p className="text-xs text-muted-foreground">{contact.role}</p>
+                        </div>
+                        {isStaff && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditContact(contact.role);
+                            }}
+                            aria-label={`Editar ${contact.role}`}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
                       <div className="space-y-1.5">
-                        <a 
-                          href={`mailto:${contact.email}`}
-                          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <Mail className="w-3 h-3" />
-                          <span>{contact.email}</span>
-                        </a>
-                        <a 
-                          href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-                          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <Phone className="w-3 h-3" />
-                          <span>{contact.phone}</span>
-                        </a>
+                        {contact.email && (
+                          <a 
+                            href={`mailto:${contact.email}`}
+                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Mail className="w-3 h-3" />
+                            <span>{contact.email}</span>
+                          </a>
+                        )}
+                        {contact.phone && (
+                          <a 
+                            href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Phone className="w-3 h-3" />
+                            <span>{contact.phone}</span>
+                          </a>
+                        )}
                         {contact.crea && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
                             <span className="font-medium">CREA:</span>
@@ -852,7 +925,12 @@ const ReportHeader = ({
                 }`}
                 aria-label={`Ver contato de ${contact.name}`}
               >
-                <User className="w-4 h-4 text-primary" />
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={contact.photo_url} alt={contact.name} />
+                  <AvatarFallback className="bg-accent text-accent-foreground">
+                    <User className="w-3.5 h-3.5" />
+                  </AvatarFallback>
+                </Avatar>
                 <span className="text-[9px] font-medium text-foreground text-center leading-tight">
                   {contact.role}
                 </span>
@@ -864,23 +942,51 @@ const ReportHeader = ({
           {teamContacts.map((contact) => (
             expandedContact === contact.role && (
               <div key={`expanded-${contact.role}`} className="mt-2 bg-card border border-border rounded-lg p-2.5 animate-fade-in">
-                <p className="text-tiny font-semibold text-foreground mb-1.5">{contact.name}</p>
-                <p className="text-tiny text-muted-foreground mb-2">{contact.role}</p>
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={contact.photo_url} alt={contact.name} />
+                    <AvatarFallback className="bg-accent text-accent-foreground">
+                      <User className="w-4 h-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="text-tiny font-semibold text-foreground">{contact.name}</p>
+                    <p className="text-tiny text-muted-foreground">{contact.role}</p>
+                  </div>
+                  {isStaff && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditContact(contact.role);
+                      }}
+                      aria-label={`Editar ${contact.role}`}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </div>
                 <div className="flex flex-col gap-1.5">
-                  <a 
-                    href={`mailto:${contact.email}`}
-                    className="flex items-center gap-2 text-tiny text-primary hover:underline"
-                  >
-                    <Mail className="w-3 h-3" />
-                    <span>{contact.email}</span>
-                  </a>
-                  <a 
-                    href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-                    className="flex items-center gap-2 text-tiny text-primary hover:underline"
-                  >
-                    <Phone className="w-3 h-3" />
-                    <span>{contact.phone}</span>
-                  </a>
+                  {contact.email && (
+                    <a 
+                      href={`mailto:${contact.email}`}
+                      className="flex items-center gap-2 text-tiny text-primary hover:underline"
+                    >
+                      <Mail className="w-3 h-3" />
+                      <span>{contact.email}</span>
+                    </a>
+                  )}
+                  {contact.phone && (
+                    <a 
+                      href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
+                      className="flex items-center gap-2 text-tiny text-primary hover:underline"
+                    >
+                      <Phone className="w-3 h-3" />
+                      <span>{contact.phone}</span>
+                    </a>
+                  )}
                   {contact.crea && (
                     <span className="text-tiny text-muted-foreground">
                       CREA: {contact.crea}
@@ -932,6 +1038,23 @@ const ReportHeader = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Team Contact Edit Modal */}
+      <TeamContactEditModal
+        open={!!editingContact}
+        onOpenChange={(open) => !open && setEditingContact(null)}
+        contact={editingContact}
+        roleLabel={editingContact ? roleLabels[editingContact.role_type] : ''}
+        onSave={async (data) => {
+          await upsertContact(data);
+        }}
+        onUploadPhoto={async (file) => {
+          if (!editingContact) throw new Error('No contact selected');
+          return uploadPhoto({ file, roleType: editingContact.role_type });
+        }}
+        isSaving={isUpserting}
+        isUploading={isUploading}
+      />
     </header>
   );
 };
