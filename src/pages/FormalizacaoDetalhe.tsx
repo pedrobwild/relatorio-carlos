@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import bwildLogo from '@/assets/bwild-logo.png';
 import ReactMarkdown from 'react-markdown';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
@@ -73,7 +74,8 @@ export default function FormalizacaoDetalhe() {
   const navigate = useNavigate();
   const { paths } = useProjectNavigation();
   const { toast } = useToast();
-  const { isAdmin } = useUserRole();
+  const { user } = useAuth();
+  const { isAdmin, isStaff } = useUserRole();
   const [activeTab, setActiveTab] = useState('conteudo');
   const [acknowledged, setAcknowledged] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
@@ -93,12 +95,26 @@ export default function FormalizacaoDetalhe() {
   const isDraft = formalizacao?.status === 'draft';
   const hasParties = parties.length >= 2;
 
-  // Find current user's party (customer) that hasn't signed yet
-  const pendingCustomerParty = parties.find(p => 
-    p.party_type === 'customer' && 
-    p.must_sign &&
-    !acknowledgements.some(a => a.party_id === p.id)
+  const pendingParties = parties.filter(
+    (p) => p.must_sign && !acknowledgements.some((a) => a.party_id === p.id)
   );
+
+  // Prefer a direct binding (user_id/email). If none exists, staff can sign for exactly one pending company party.
+  const pendingPartyByBinding = pendingParties.find((p) => {
+    if (!user) return false;
+
+    const userIdMatch = p.user_id && p.user_id === user.id;
+    const emailMatch =
+      p.email && user.email && p.email.toLowerCase() === user.email.toLowerCase();
+
+    return userIdMatch || emailMatch;
+  });
+
+  const pendingCompanyParties = pendingParties.filter((p) => p.party_type === 'company');
+
+  const pendingPartyForUser =
+    pendingPartyByBinding ||
+    (isStaff && pendingCompanyParties.length === 1 ? pendingCompanyParties[0] : null);
 
   const handleSendForSignature = async () => {
     if (!id || !isDraft) return;
@@ -132,7 +148,27 @@ export default function FormalizacaoDetalhe() {
   };
 
   const handleAcknowledge = async () => {
-    if (!pendingCustomerParty || !id) return;
+    if (!pendingPartyForUser || !id) return;
+
+    if (!user) {
+      toast({
+        title: 'Faça login',
+        description: 'Entre no portal para registrar sua assinatura.',
+        variant: 'destructive',
+      });
+      navigate('/auth');
+      return;
+    }
+
+    // Assinaturas só são permitidas após o envio (documento travado)
+    if (formalizacao?.status !== 'pending_signatures') {
+      toast({
+        title: 'Assinatura indisponível',
+        description: 'Se estiver em rascunho, envie para assinatura antes de registrar ciência.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     if (isDemo) {
       toast({
@@ -145,7 +181,7 @@ export default function FormalizacaoDetalhe() {
     try {
       await acknowledge.mutateAsync({
         formalizationId: id,
-        partyId: pendingCustomerParty.id,
+        partyId: pendingPartyForUser.id,
         signatureText: 'Li e estou ciente do conteúdo desta formalização.',
       });
 
@@ -155,9 +191,16 @@ export default function FormalizacaoDetalhe() {
       });
     } catch (error) {
       console.error('Error acknowledging:', error);
+
+      const errorMessage = (error as any)?.message ?? '';
+      const isRls =
+        typeof errorMessage === 'string' && errorMessage.includes('row-level security');
+
       toast({
         title: 'Erro',
-        description: 'Não foi possível registrar sua ciência. Tente novamente.',
+        description: isRls
+          ? 'Você só pode assinar como a parte vinculada ao seu usuário/e-mail.'
+          : 'Não foi possível registrar sua ciência. Tente novamente.',
         variant: 'destructive',
       });
     }
@@ -419,7 +462,7 @@ export default function FormalizacaoDetalhe() {
         )}
 
         {/* Signature block for pending signatures */}
-        {formalizacao.status === 'pending_signatures' && pendingCustomerParty && (
+        {formalizacao.status === 'pending_signatures' && pendingPartyForUser && (
           <Card className="border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
             <CardContent className="p-6">
               <div className="flex items-start gap-3">
@@ -660,7 +703,7 @@ export default function FormalizacaoDetalhe() {
       </main>
 
       {/* Mobile floating action bar for pending signatures */}
-      {formalizacao.status === 'pending_signatures' && pendingCustomerParty && (
+      {formalizacao.status === 'pending_signatures' && pendingPartyForUser && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t shadow-lg sm:hidden animate-fade-in">
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
