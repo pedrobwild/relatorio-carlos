@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { debugAuth, logAuthState } from '@/lib/debugAuth';
 import { clearRoleCache } from './useUserRole';
+import { useLinkCustomerOnLogin } from './useLinkCustomerOnLogin';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,6 +14,9 @@ export function useAuth() {
   const initialSessionSet = useRef(false);
   // Track session ID to prevent duplicate updates for same session
   const lastSessionId = useRef<string | null>(null);
+
+  // Auto-link customer to projects on login based on email
+  useLinkCustomerOnLogin(user);
 
   useEffect(() => {
     let isMounted = true;
