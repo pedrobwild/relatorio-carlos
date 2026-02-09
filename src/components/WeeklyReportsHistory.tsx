@@ -259,8 +259,10 @@ const WeeklyReportsHistory = ({
   onReportClick,
   isStaff = false,
 }: WeeklyReportsHistoryProps) => {
-  const weeklyReports = generateWeeklyReports(projectStartDate, reportDate, activities);
-  const latestReport = weeklyReports[weeklyReports.length - 1]; // Latest is now the last one (ascending order)
+  const weeklyReportsAsc = generateWeeklyReports(projectStartDate, reportDate, activities);
+  // Display in descending order (most recent first)
+  const weeklyReports = [...weeklyReportsAsc].reverse();
+  const latestReport = weeklyReportsAsc[weeklyReportsAsc.length - 1]; // Latest is the last one in ascending order
   
   // Prepare chart data (already in chronological order)
   const chartData = weeklyReports.map(report => ({
@@ -294,7 +296,7 @@ const WeeklyReportsHistory = ({
         {weeklyReports.map((report, index) => {
           const statusConfig = getStatusConfig(report.status);
           const StatusIcon = statusConfig.icon;
-          const isLatest = index === weeklyReports.length - 1;
+          const isLatest = report.weekNumber === latestReport?.weekNumber;
           const canAccess = isStaff || report.isAvailableForCustomer;
           
           return (
