@@ -249,7 +249,7 @@ const ReportHeader = ({
   const { stats: pendenciasStats } = usePendencias();
 
   return (
-    <header className="bg-card rounded-xl border border-border overflow-hidden mb-3 md:mb-4 animate-fade-in">
+    <header className="bg-card rounded-xl border border-border mb-3 md:mb-4 animate-fade-in">
       {/* Desktop Layout */}
       <div className="hidden md:block">
         {/* Top Section: Project Info + Status */}
