@@ -596,24 +596,24 @@ const ReportHeader = ({
             </div>
 
             {/* Quick Links */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {quickLinks.map((link) => (
                 <Link
                   key={link.label}
                   to={link.href}
-                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                     link.highlight 
-                      ? 'bg-primary/10 text-primary hover:bg-primary/20 ring-1 ring-primary/30' 
-                      : 'text-foreground bg-secondary/60 hover:bg-primary/10 hover:text-primary border border-border/50'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm' 
+                      : 'bg-card text-foreground border border-border hover:border-primary hover:text-primary shadow-sm'
                   }`}
                   aria-label={`Acessar ${link.label}`}
                 >
-                  <link.icon className="w-3.5 h-3.5" />
+                  <link.icon className="w-4 h-4" />
                   {link.label}
                   {link.highlight && (
                     <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-foreground"></span>
                     </span>
                   )}
                 </Link>
