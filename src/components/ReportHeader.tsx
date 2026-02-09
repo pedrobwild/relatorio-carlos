@@ -596,7 +596,7 @@ const ReportHeader = ({
             </div>
 
             {/* Quick Links */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               {quickLinks.map((link) => (
                 <Link
                   key={link.label}
@@ -604,7 +604,7 @@ const ReportHeader = ({
                   className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     link.highlight 
                       ? 'bg-primary/10 text-primary hover:bg-primary/20 ring-1 ring-primary/30' 
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                      : 'text-foreground bg-secondary/60 hover:bg-primary/10 hover:text-primary border border-border/50'
                   }`}
                   aria-label={`Acessar ${link.label}`}
                 >
