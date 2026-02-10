@@ -22,7 +22,7 @@ export function StatusBadge({
     return (
       <div
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full font-semibold bg-primary/15 text-primary",
+          "inline-flex items-center gap-1.5 rounded-full font-semibold bg-primary/12 text-primary border border-primary/20",
           size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm"
         )}
         role="status"
@@ -37,10 +37,10 @@ export function StatusBadge({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full font-semibold",
+        "inline-flex items-center gap-1.5 rounded-full font-semibold border",
         isOnTrack
-          ? "bg-success/15 text-success"
-          : "bg-warning/15 text-warning",
+          ? "bg-success/12 text-success border-success/20"
+          : "bg-warning/12 text-warning border-warning/20",
         size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm"
       )}
       role="status"
@@ -55,7 +55,7 @@ export function StatusBadge({
       {progressDiff !== 0 && (
         <span
           className={cn(
-            "font-bold",
+            "font-bold tabular-nums",
             size === "sm" ? "text-[10px]" : "text-xs opacity-80"
           )}
         >

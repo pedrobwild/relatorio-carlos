@@ -30,7 +30,7 @@ function ProgressBar({
   return (
     <div className={className} role="progressbar" aria-valuenow={Math.round(percentage)} aria-valuemin={0} aria-valuemax={100}>
       <div className="flex items-center justify-between mb-1.5">
-        <h3 className="text-h3">{label}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{label}</h3>
         {titleRight}
       </div>
       <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
@@ -43,7 +43,7 @@ function ProgressBar({
         />
       </div>
       {(leftLabel || rightLabel) && (
-        <div className="flex items-center justify-between text-tiny mt-1.5">
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1.5 tabular-nums">
           <span>{leftLabel}</span>
           <span>{rightLabel}</span>
         </div>
@@ -105,7 +105,7 @@ export function ProgressSection({
                 <Pencil className="w-3.5 h-3.5" />
               </Link>
             )}
-            <span className="text-caption tabular-nums">
+            <span className="text-[11px] text-muted-foreground tabular-nums">
               {elapsedWorkingDays} de {totalWorkingDays} dias úteis
             </span>
           </div>
@@ -121,7 +121,10 @@ export function ProgressSection({
           leftLabel={`Previsto: ${plannedProgress}%`}
           rightLabel={`Realizado: ${actualProgress}%`}
           titleRight={
-            <span className="text-h3 tabular-nums">{actualProgress}%</span>
+            <span className={cn(
+              "text-sm font-bold tabular-nums",
+              isOnTrack ? "text-success" : "text-warning"
+            )}>{actualProgress}%</span>
           }
         />
       </div>
@@ -129,8 +132,8 @@ export function ProgressSection({
       {/* Comparative Progress - XL screens */}
       <div className="hidden xl:block">
         <div className="flex items-center justify-between mb-1.5">
-          <h3 className="text-h3">Progresso da Obra</h3>
-          <div className="flex items-center gap-4 text-caption">
+          <h3 className="text-sm font-semibold text-foreground">Progresso da Obra</h3>
+          <div className="flex items-center gap-4 text-[11px] text-muted-foreground tabular-nums">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-primary/50" />
               Previsto: {plannedProgress}%
@@ -153,7 +156,7 @@ export function ProgressSection({
         </div>
         <div className="h-2.5 bg-secondary rounded-full overflow-hidden relative" role="progressbar" aria-valuenow={actualProgress} aria-valuemin={0} aria-valuemax={100}>
           <div
-            className="absolute top-0 h-full bg-primary/30 rounded-full"
+            className="absolute top-0 h-full bg-primary/25 rounded-full transition-all duration-700"
             style={{ width: `${plannedProgress}%` }}
           />
           <div

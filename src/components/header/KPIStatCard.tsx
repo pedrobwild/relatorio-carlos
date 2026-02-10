@@ -36,8 +36,8 @@ export function KPIStatCard({
 
   const variantStyles = {
     default: "bg-card border-border",
-    warning: "bg-warning/10 border-warning/30",
-    success: "bg-success/10 border-success/30",
+    warning: "bg-warning/8 border-warning/25",
+    success: "bg-success/8 border-success/25",
   };
 
   const valueStyles = {
@@ -46,26 +46,32 @@ export function KPIStatCard({
     success: "text-success",
   };
 
+  const iconStyles = {
+    default: "text-muted-foreground",
+    warning: "text-warning",
+    success: "text-success",
+  };
+
   const card = (
     <Comp
       onClick={onClick}
       className={cn(
-        "rounded-xl border p-3.5 flex flex-col text-left transition-all min-h-[88px]",
+        "rounded-xl border p-3 sm:p-3.5 flex flex-col text-left transition-all min-h-[84px] group",
         variantStyles[variant],
-        onClick && "cursor-pointer hover:shadow-md hover:border-primary/30",
+        onClick && "cursor-pointer hover:shadow-md hover:border-primary/30 active:scale-[0.98]",
         className
       )}
     >
-      <div className="text-caption uppercase tracking-wider mb-auto flex items-center gap-1.5">
-        <Icon className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
-        <span className="text-[11px] font-semibold">{label}</span>
+      <div className="flex items-center gap-1.5 mb-auto">
+        <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", iconStyles[variant])} />
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
         {badge}
       </div>
       {children || (
-        <p className={cn("text-xl font-bold mt-2 tabular-nums", valueStyles[variant])}>
+        <p className={cn("text-xl font-bold mt-1.5 tabular-nums leading-tight", valueStyles[variant])}>
           {value}
           {unit && (
-            <span className="text-caption font-normal ml-1">{unit}</span>
+            <span className="text-[11px] font-normal text-muted-foreground ml-1">{unit}</span>
           )}
         </p>
       )}
