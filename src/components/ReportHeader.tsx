@@ -1,13 +1,15 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
-import { 
-  FileText, Box, Ruler, DollarSign, ClipboardSignature, User, Phone, Mail, 
+import {
+  FileText, DollarSign, ClipboardSignature, User, Phone, Mail,
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
-  TrendingUp, TrendingDown, ExternalLink, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft, Map,
+  TrendingUp, TrendingDown, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft, Map,
   ChevronsUpDown, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Activity } from "@/types/report";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
@@ -17,6 +19,10 @@ import { useTeamContacts, TeamContact as TeamContactData } from "@/hooks/useTeam
 import { TeamContactEditModal } from "@/components/TeamContactEditModal";
 import { TeamContactPopover } from "@/components/TeamContactPopover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { KPIStatCard } from "@/components/header/KPIStatCard";
+import { StatusBadge } from "@/components/header/StatusBadge";
+import { ProgressSection } from "@/components/header/ProgressSection";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -112,24 +118,17 @@ const ReportHeader = ({
     today.setHours(0, 0, 0, 0);
 
     const totalWorkingDays = calculateWorkingDays(start, end);
-    
-    // Dias decorridos e restantes só são calculados a partir da data de início oficial
     const hasStarted = today >= start;
     const elapsedWorkingDays = hasStarted ? calculateWorkingDays(start, today) : 0;
-    // Calculate remaining from today (if started) or full duration (if not started)
-    const remainingWorkingDays = !hasStarted 
-      ? totalWorkingDays 
+    const remainingWorkingDays = !hasStarted
+      ? totalWorkingDays
       : (today < end ? calculateWorkingDays(today, end) : 0);
 
-    // Check if any activity has weight defined
     const hasWeights = activities.some(a => (a as any).weight !== undefined);
-    
-    // Calculate total weight (should be 100, but normalize if not)
-    const totalWeight = hasWeights 
+    const totalWeight = hasWeights
       ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
       : activities.length;
 
-    // Calculate completion based on activities using weights
     const completedWeight = activities.reduce((sum, a) => {
       if (a.actualEnd) {
         return sum + (hasWeights ? ((a as any).weight || 0) : 1);
@@ -140,7 +139,6 @@ const ReportHeader = ({
     const totalActivities = activities.length;
     const actualProgress = totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
 
-    // Calculate planned progress (what should be done by reportDate) using weights
     const plannedWeight = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       if (plannedEnd <= report) {
@@ -150,12 +148,10 @@ const ReportHeader = ({
     }, 0);
     const plannedProgress = totalWeight > 0 ? (plannedWeight / totalWeight) * 100 : 0;
 
-    // Determine status
     const progressDiff = actualProgress - plannedProgress;
     const isOnTrack = progressDiff >= 0;
     const variancePercentage = Math.abs(progressDiff).toFixed(0);
 
-    // Current activity (first activity that's in progress on report date)
     const currentActivity = activities.find(a => {
       const plannedStart = new Date(a.plannedStart + "T00:00:00");
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
@@ -181,18 +177,16 @@ const ReportHeader = ({
   const { isStaff } = useUserRole();
   const { data: projects = [] } = useProjectsQuery();
   const navigate = useNavigate();
-  
-  // Team contacts from database
-  const { 
-    contacts: dbContacts, 
-    upsertContact, 
-    isUpserting, 
-    uploadPhoto, 
+
+  const {
+    contacts: dbContacts,
+    upsertContact,
+    isUpserting,
+    uploadPhoto,
     isUploading,
-    roleLabels 
+    roleLabels
   } = useTeamContacts(projectId);
 
-  // Filter out current project and get other available projects
   const otherProjects = useMemo(() => {
     return projects.filter(p => p.id !== projectId);
   }, [projects, projectId]);
@@ -208,7 +202,6 @@ const ReportHeader = ({
     { icon: ClipboardSignature, label: "Formalizações", href: paths.formalizacoes, highlight: false },
   ];
 
-  // Map database contacts to legacy format for display
   const teamContacts: LegacyTeamContact[] = useMemo(() => {
     const mapped = dbContacts.map(c => ({
       role: roleLabels[c.role_type] || c.role_type,
@@ -218,14 +211,11 @@ const ReportHeader = ({
       crea: c.crea || undefined,
       photo_url: c.photo_url || undefined,
     }));
-    
-    // Filter for project phase
     return isProjectPhase && !isStaff
       ? mapped.filter(c => c.role !== 'Engenharia')
       : mapped;
   }, [dbContacts, isProjectPhase, isStaff, roleLabels]);
-  
-  // Get the database contact for editing
+
   const getDbContactByRole = (role: string) => {
     const roleTypeMap: Record<string, string> = {
       'Engenharia': 'engenharia',
@@ -249,345 +239,228 @@ const ReportHeader = ({
 
   const { stats: pendenciasStats } = usePendencias();
 
-  return (
-    <header className="bg-card rounded-xl border border-border mb-3 md:mb-4 animate-fade-in">
-      {/* Desktop Layout */}
-      <div className="hidden md:block">
-        {/* Top Section: Project Info + Status */}
-        <div className="p-4 pb-3 border-b border-border">
-        <div className="flex items-start justify-between gap-4">
-            {/* Left: Back Button + Logo + Project */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  // BUG FIX: Previne loop se histórico estiver vazio
-                  // Se veio de outra página, volta. Senão, vai para o dashboard correto.
-                  if (window.history.length > 1) {
-                    navigate(-1);
-                  } else {
-                    navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
-                  }
-                }}
-                className="h-8 w-8"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
-              <div className="h-8 w-px bg-border" />
-              
-              {/* Project Selector Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 text-left hover:bg-accent rounded-lg px-2 py-1 transition-colors group">
-                    <div>
-                      <h1 className="text-h3 leading-tight group-hover:text-primary transition-colors">
-                        {projectName} – {unitName}
-                      </h1>
-                      {clientName && (
-                        <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
-                      )}
-                    </div>
-                    {otherProjects.length > 0 && (
-                      <ChevronsUpDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    )}
-                  </button>
-                </DropdownMenuTrigger>
-                {otherProjects.length > 0 && (
-                  <DropdownMenuContent align="start" className="w-72">
-                    <DropdownMenuLabel className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      Trocar de Obra
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {otherProjects.map((project) => (
-                      <DropdownMenuItem
-                        key={project.id}
-                        onClick={() => handleProjectSwitch(project.id)}
-                        className="flex flex-col items-start gap-0.5 cursor-pointer"
-                      >
-                        <span className="font-medium">
-                          {project.name} {project.unit_name && `– ${project.unit_name}`}
-                        </span>
-                        {project.customer_name && (
-                          <span className="text-xs text-muted-foreground">
-                            Cliente: {project.customer_name}
-                          </span>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                )}
-              </DropdownMenu>
-            </div>
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
+    }
+  };
 
-            {/* Right: CTA + Status Badge */}
-            <div className="flex items-center gap-3">
-              {/* Pendências CTA */}
-              <Link
-                to={paths.pendencias}
-                className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors font-semibold text-sm ${
-                  pendenciasStats.overdueCount > 0 
-                    ? 'bg-destructive/15 text-destructive hover:bg-destructive/25' 
+  const showMetrics = !(isProjectPhase && !isStaff);
+
+  return (
+    <header className="bg-card rounded-xl border border-border mb-3 md:mb-4 animate-fade-in shadow-sm">
+      {/* ============== DESKTOP LAYOUT ============== */}
+      <div className="hidden md:block">
+        {/* Top Bar: Navigation + Project Name + Status */}
+        <div className="px-5 py-4 flex items-center justify-between gap-4">
+          {/* Left: Back + Logo + Project Selector */}
+          <div className="flex items-center gap-3 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleGoBack}
+              className="h-9 w-9 shrink-0"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+
+            <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
+            <Separator orientation="vertical" className="h-8" />
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 text-left hover:bg-accent rounded-lg px-2.5 py-1.5 transition-colors group min-w-0">
+                  <div className="min-w-0">
+                    <h1 className="text-lg font-bold leading-tight group-hover:text-primary transition-colors truncate">
+                      {projectName} – {unitName}
+                    </h1>
+                    {clientName && (
+                      <p className="text-tiny mt-0.5">Cliente: {clientName}</p>
+                    )}
+                  </div>
+                  {otherProjects.length > 0 && (
+                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              {otherProjects.length > 0 && (
+                <DropdownMenuContent align="start" className="w-72">
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Trocar de Obra
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {otherProjects.map((project) => (
+                    <DropdownMenuItem
+                      key={project.id}
+                      onClick={() => handleProjectSwitch(project.id)}
+                      className="flex flex-col items-start gap-0.5 cursor-pointer"
+                    >
+                      <span className="font-medium">
+                        {project.name} {project.unit_name && `– ${project.unit_name}`}
+                      </span>
+                      {project.customer_name && (
+                        <span className="text-xs text-muted-foreground">
+                          Cliente: {project.customer_name}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              )}
+            </DropdownMenu>
+          </div>
+
+          {/* Right: Pendências + Status Badge */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              to={paths.pendencias}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-full transition-colors font-semibold text-sm ${
+                pendenciasStats.overdueCount > 0
+                  ? 'bg-destructive/15 text-destructive hover:bg-destructive/25'
+                  : pendenciasStats.urgentCount > 0
+                    ? 'bg-warning/15 text-warning hover:bg-warning/25'
+                    : 'bg-secondary text-muted-foreground hover:bg-accent'
+              }`}
+              aria-label={`${pendenciasStats.total} pendências`}
+            >
+              <Bell className="w-4 h-4" />
+              <span>Pendências</span>
+              <Badge
+                variant={pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"}
+                className={`min-w-5 h-5 px-1.5 text-xs font-bold ${
+                  pendenciasStats.overdueCount > 0
+                    ? ''
                     : pendenciasStats.urgentCount > 0
-                      ? 'bg-warning/15 text-warning hover:bg-warning/25'
-                      : 'bg-secondary text-muted-foreground hover:bg-accent'
+                      ? 'bg-warning text-warning-foreground'
+                      : 'bg-muted-foreground text-white'
                 }`}
               >
-                <Bell className="w-4 h-4" />
-                <span>Pendências</span>
-                <span className={`flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-white text-xs font-bold ${
-                  pendenciasStats.overdueCount > 0 
-                    ? 'bg-destructive' 
-                    : pendenciasStats.urgentCount > 0
-                      ? 'bg-warning'
-                      : 'bg-muted-foreground'
-                }`}>
-                  {pendenciasStats.total}
-                </span>
-              </Link>
+                {pendenciasStats.total}
+              </Badge>
+            </Link>
 
-              {/* Status Badge - Oculto em fase de projeto para clientes */}
-              {!(isProjectPhase && !isStaff) && (
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
-                  projectMetrics.isOnTrack 
-                    ? 'bg-success/15 text-success' 
-                    : 'bg-warning/15 text-warning'
-                }`}>
-                  {projectMetrics.isOnTrack ? (
-                    <>
-                      <TrendingUp className="w-4 h-4" />
-                      <span>No Prazo</span>
-                      {projectMetrics.progressDiff > 0 && (
-                        <span className="text-xs opacity-80">+{projectMetrics.variancePercentage}%</span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <TrendingDown className="w-4 h-4" />
-                      <span>Atenção ao Prazo</span>
-                      {parseInt(projectMetrics.variancePercentage) > 0 && (
-                        <span className="text-xs opacity-80">-{projectMetrics.variancePercentage}%</span>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-              
-              {/* Badge de Fase de Projeto para clientes */}
-              {isProjectPhase && !isStaff && (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm bg-primary/15 text-primary">
-                  <FileText className="w-4 h-4" />
-                  <span>Fase de Projeto</span>
-                </div>
-              )}
-            </div>
+            <StatusBadge
+              isOnTrack={projectMetrics.isOnTrack}
+              progressDiff={projectMetrics.progressDiff}
+              variancePercentage={projectMetrics.variancePercentage}
+              isProjectPhase={isProjectPhase}
+              isStaff={isStaff}
+            />
           </div>
         </div>
 
-        {/* Main Metrics Section */}
-        <div className={`p-4 pb-3 bg-secondary/20 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
-          <div className="grid grid-cols-6 xl:grid-cols-8 gap-4">
-            {/* Current Activity - Spans 2 columns on md, 3 on xl */}
-            <div className="col-span-2 xl:col-span-3 bg-card rounded-lg p-3 border border-border">
-              <div className="text-caption uppercase tracking-wide mb-1.5 flex items-center gap-2">
-                <ActivityIcon className="w-3.5 h-3.5" />
-                Etapa Atual
-              </div>
-              <p className="text-h3 line-clamp-2">
-                {projectMetrics.currentActivity}
-              </p>
-              <p className="text-caption mt-1">
-                {projectMetrics.completedActivities} de {projectMetrics.totalActivities} etapas concluídas
-              </p>
-            </div>
-
-            {/* Start Date */}
-            <div className="bg-card rounded-lg p-3 border border-border flex flex-col">
-              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Início</span>
-              </div>
-              <p className="text-h3 mt-2">{formatDateFull(startDate)}</p>
-            </div>
-
-            {/* End Date */}
-            <button 
-              onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
-              className={`bg-card rounded-lg p-3 border text-left transition-all flex flex-col ${
-                endDate === dateChangeInfo.originalDate 
-                  ? 'border-warning/50 hover:border-warning cursor-pointer' 
-                  : 'border-border cursor-default'
-              }`}
-            >
-              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Previsão</span>
-                {endDate === dateChangeInfo.originalDate && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] text-warning bg-warning/15 px-1.5 py-0.5 rounded-full font-semibold ml-auto">
-                    <AlertCircle className="w-2.5 h-2.5" />
-                    Alterado
-                  </span>
-                )}
-              </div>
-              <p className="text-h3 mt-2">{formatDateFull(effectiveEndDate)}</p>
-            </button>
-
-            {/* Total Working Days */}
-            <div className="bg-card rounded-lg p-3 border border-border flex flex-col">
-              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Duração</span>
-              </div>
-              <p className="text-h3 mt-2">
-                <span>{projectMetrics.totalWorkingDays}</span>
-                <span className="text-caption font-normal ml-1">dias úteis</span>
-              </p>
-            </div>
-
-            {/* Remaining Working Days */}
-            <div className={`rounded-lg p-3 border flex flex-col ${
-              projectMetrics.remainingWorkingDays <= 7 
-                ? 'bg-warning/10 border-warning/30' 
-                : 'bg-card border-border'
-            }`}>
-              <div className="text-caption uppercase tracking-wide mb-auto flex items-center gap-1.5">
-                {projectMetrics.remainingWorkingDays <= 7 ? (
-                  <AlertTriangle className="w-3.5 h-3.5 text-warning flex-shrink-0" />
-                ) : (
-                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                )}
-                <span>Restante</span>
-              </div>
-              <p className={`text-h3 mt-2 ${
-                projectMetrics.remainingWorkingDays <= 7 
-                  ? 'text-warning' 
-                  : ''
-              }`}>
-                <span>{projectMetrics.remainingWorkingDays}</span>
-                <span className="text-caption font-normal ml-1">dias úteis</span>
-              </p>
-            </div>
-
-            {/* Extra metrics for wider screens */}
-            <div className="hidden xl:flex xl:col-span-2 items-center gap-4">
-              {/* Planned Progress */}
-              <div className="flex-1 bg-card rounded-lg p-3 border border-border">
-                <div className="text-caption uppercase tracking-wide mb-1.5">Previsto</div>
-                <p className="text-h3">{projectMetrics.plannedProgress}%</p>
-              </div>
-              {/* Actual Progress */}
-              <div className={`flex-1 rounded-lg p-3 border ${
-                projectMetrics.isOnTrack 
-                  ? 'bg-success/10 border-success/30' 
-                  : 'bg-warning/10 border-warning/30'
-              }`}>
-                <div className="text-caption uppercase tracking-wide mb-1.5">Realizado</div>
-                <p className={`text-h3 ${
-                  projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
-                }`}>{projectMetrics.actualProgress}%</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Bars - Side by side on xl */}
-          <div className={`mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
-            {/* Timeline Progress Bar */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-h3">Cronograma</h3>
-                  {isStaff && activities.length > 0 && (
-                    <Link 
-                      to={paths.cronograma} 
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                      title="Editar cronograma"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Link>
-                  )}
+        {/* KPI Metrics Grid */}
+        {showMetrics && (
+          <div className="px-5 pb-4 border-t border-border pt-4 bg-secondary/10">
+            <div className="grid grid-cols-6 xl:grid-cols-8 gap-3">
+              {/* Current Activity - Larger card */}
+              <div className="col-span-2 xl:col-span-3 rounded-xl bg-card border border-border p-3.5 flex flex-col min-h-[88px]">
+                <div className="text-caption uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                  <ActivityIcon className="w-3.5 h-3.5 opacity-60" />
+                  <span className="text-[11px] font-semibold">Etapa Atual</span>
                 </div>
-                <span className="text-caption">
-                  {projectMetrics.elapsedWorkingDays} de {projectMetrics.totalWorkingDays} dias úteis
-                </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-h3 line-clamp-2 cursor-default">
+                        {projectMetrics.currentActivity}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-[300px]">
+                      <p>{projectMetrics.currentActivity}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <p className="text-tiny mt-auto pt-1 tabular-nums">
+                  {projectMetrics.completedActivities} de {projectMetrics.totalActivities} etapas concluídas
+                </p>
               </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
-                <div 
-                  className="h-full rounded-full bg-primary/70 transition-all duration-500"
-                  style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
+
+              {/* Start Date */}
+              <KPIStatCard
+                icon={Calendar}
+                label="Início"
+                value={formatDateFull(startDate)}
+              />
+
+              {/* End Date */}
+              <KPIStatCard
+                icon={CheckCircle2}
+                label="Previsão"
+                value={formatDateFull(effectiveEndDate)}
+                onClick={endDate === dateChangeInfo.originalDate ? () => setShowDateChangeAlert(true) : undefined}
+                variant={endDate === dateChangeInfo.originalDate ? "warning" : "default"}
+                badge={
+                  endDate === dateChangeInfo.originalDate ? (
+                    <span className="inline-flex items-center gap-0.5 text-[9px] text-warning bg-warning/15 px-1.5 py-0.5 rounded-full font-semibold ml-auto">
+                      <AlertCircle className="w-2.5 h-2.5" />
+                      Alterado
+                    </span>
+                  ) : undefined
+                }
+                tooltip={endDate === dateChangeInfo.originalDate ? "Clique para ver detalhes da alteração de prazo" : undefined}
+              />
+
+              {/* Duration */}
+              <KPIStatCard
+                icon={Clock}
+                label="Duração"
+                value={projectMetrics.totalWorkingDays}
+                unit="dias úteis"
+              />
+
+              {/* Remaining */}
+              <KPIStatCard
+                icon={projectMetrics.remainingWorkingDays <= 7 ? AlertTriangle : Clock}
+                label="Restante"
+                value={projectMetrics.remainingWorkingDays}
+                unit="dias úteis"
+                variant={projectMetrics.remainingWorkingDays <= 7 ? "warning" : "default"}
+              />
+
+              {/* Previsto / Realizado - XL only */}
+              <div className="hidden xl:flex xl:col-span-2 items-center gap-3">
+                <KPIStatCard
+                  icon={Calendar}
+                  label="Previsto"
+                  value={`${projectMetrics.plannedProgress}%`}
+                  className="flex-1"
+                />
+                <KPIStatCard
+                  icon={TrendingUp}
+                  label="Realizado"
+                  value={`${projectMetrics.actualProgress}%`}
+                  variant={projectMetrics.isOnTrack ? "success" : "warning"}
+                  className="flex-1"
                 />
               </div>
-              <p className="flex items-center justify-between text-tiny mt-1">
-                <span>Decorridos: {projectMetrics.elapsedWorkingDays} dias</span>
-                <span>Restantes: {projectMetrics.remainingWorkingDays} dias</span>
-              </p>
             </div>
 
-            {/* Work Progress Bar */}
-            <div className="xl:hidden">
-              <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-h3">Progresso da Obra</h3>
-                <span className="text-h3">{projectMetrics.actualProgress}%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div 
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    projectMetrics.isOnTrack 
-                      ? 'bg-success' 
-                      : 'bg-warning'
-                  }`}
-                  style={{ width: `${projectMetrics.actualProgress}%` }}
-                />
-              </div>
-              <p className="flex items-center justify-between text-tiny mt-1">
-                <span>Previsto até hoje: {projectMetrics.plannedProgress}%</span>
-                <span>Realizado: {projectMetrics.actualProgress}%</span>
-              </p>
-            </div>
-
-            {/* Comparative Progress Bar - XL only */}
-            <div className="hidden xl:block">
-              <div className="flex items-center justify-between mb-1.5">
-                <h3 className="text-h3">Progresso da Obra</h3>
-                <div className="flex items-center gap-4 text-caption">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-primary/50"></span>
-                    Previsto: {projectMetrics.plannedProgress}%
-                  </span>
-                  <span className={`flex items-center gap-1.5 font-semibold ${
-                    projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
-                  }`}>
-                    <span className={`w-2 h-2 rounded-full ${
-                      projectMetrics.isOnTrack ? 'bg-success' : 'bg-warning'
-                    }`}></span>
-                    Realizado: {projectMetrics.actualProgress}%
-                  </span>
-                </div>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden relative">
-                {/* Planned line */}
-                <div 
-                  className="absolute top-0 h-full bg-primary/30 rounded-full"
-                  style={{ width: `${projectMetrics.plannedProgress}%` }}
-                />
-                {/* Actual progress */}
-                <div 
-                  className={`absolute top-0 h-full rounded-full transition-all duration-500 ${
-                    projectMetrics.isOnTrack ? 'bg-success' : 'bg-warning'
-                  }`}
-                  style={{ width: `${projectMetrics.actualProgress}%` }}
-                />
-              </div>
-            </div>
+            {/* Progress Bars */}
+            <ProgressSection
+              elapsedWorkingDays={projectMetrics.elapsedWorkingDays}
+              totalWorkingDays={projectMetrics.totalWorkingDays}
+              remainingWorkingDays={projectMetrics.remainingWorkingDays}
+              actualProgress={projectMetrics.actualProgress}
+              plannedProgress={projectMetrics.plannedProgress}
+              isOnTrack={projectMetrics.isOnTrack}
+              isStaff={isStaff}
+              hasActivities={activities.length > 0}
+              cronogramaPath={paths.cronograma}
+              isProjectPhase={isProjectPhase}
+            />
           </div>
-        </div>
+        )}
 
         {/* Quick Links + Team Contacts */}
-        <div className="p-4 pt-3">
+        <div className="px-5 py-3 border-t border-border">
           <div className="flex items-center justify-between gap-4">
             {/* Team Contacts */}
-            <div className="flex items-center gap-4">
+            <nav className="flex items-center gap-3" aria-label="Equipe do projeto">
               {teamContacts.map((contact) => (
                 <TeamContactPopover
                   key={contact.role}
@@ -601,133 +474,105 @@ const ReportHeader = ({
                   onEdit={() => handleEditContact(contact.role)}
                 />
               ))}
-            </div>
+            </nav>
 
             {/* Quick Links */}
-            <div className="flex items-center gap-2">
+            <nav className="flex items-center gap-2" aria-label="Ações rápidas">
               {quickLinks.map((link) => (
                 <Link
                   key={link.label}
                   to={link.href}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    link.highlight 
-                      ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm' 
-                      : 'bg-card text-foreground border border-border hover:border-primary hover:text-primary shadow-sm'
+                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                    link.highlight
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md'
+                      : 'bg-card text-foreground border border-border hover:border-primary/40 hover:text-primary hover:shadow-sm'
                   }`}
                   aria-label={`Acessar ${link.label}`}
                 >
                   <link.icon className="w-4 h-4" />
                   {link.label}
                   {link.highlight && (
-                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-foreground"></span>
+                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-foreground" />
                     </span>
                   )}
                 </Link>
               ))}
-            </div>
+            </nav>
           </div>
         </div>
       </div>
 
-      {/* Mobile Layout */}
+      {/* ============== MOBILE LAYOUT ============== */}
       <div className="md:hidden">
-        {/* Status Banner + Pendências CTA */}
-        <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border">
-          {/* Back Button + Status */}
+        {/* Status Bar */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
-                // BUG FIX: Previne loop se histórico estiver vazio
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate(isStaff ? '/gestao' : '/minhas-obras', { replace: true });
-                }
-              }}
-              className="h-7 w-7"
+              onClick={handleGoBack}
+              className="h-8 w-8"
+              aria-label="Voltar"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            {/* Status - Oculto em fase de projeto para clientes */}
-            {isProjectPhase && !isStaff ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/15">
-                <FileText className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-semibold text-primary">Fase de Projeto</span>
-              </div>
-            ) : (
-              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full ${
-                projectMetrics.isOnTrack 
-                  ? 'bg-success/15' 
-                  : 'bg-warning/15'
-              }`}>
-                {projectMetrics.isOnTrack ? (
-                  <TrendingUp className="w-3.5 h-3.5 text-success" />
-                ) : (
-                  <TrendingDown className="w-3.5 h-3.5 text-warning" />
-                )}
-                <span className={`text-xs font-semibold ${
-                  projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
-                }`}>
-                  {projectMetrics.isOnTrack ? 'No Prazo' : 'Atenção'}
-                </span>
-                {projectMetrics.progressDiff !== 0 && (
-                  <span className={`text-[10px] font-bold ${
-                    projectMetrics.isOnTrack ? 'text-success' : 'text-warning'
-                  }`}>
-                    {projectMetrics.progressDiff >= 0 ? '+' : ''}{projectMetrics.progressDiff}%
-                  </span>
-                )}
-              </div>
-            )}
+            <StatusBadge
+              isOnTrack={projectMetrics.isOnTrack}
+              progressDiff={projectMetrics.progressDiff}
+              variancePercentage={projectMetrics.variancePercentage}
+              isProjectPhase={isProjectPhase}
+              isStaff={isStaff}
+              size="sm"
+            />
           </div>
 
-          {/* Pendências CTA */}
           <Link
             to="/pendencias"
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-colors ${
-              pendenciasStats.overdueCount > 0 
-                ? 'bg-destructive/15 text-destructive hover:bg-destructive/25' 
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-colors ${
+              pendenciasStats.overdueCount > 0
+                ? 'bg-destructive/15 text-destructive hover:bg-destructive/25'
                 : pendenciasStats.urgentCount > 0
                   ? 'bg-warning/15 text-warning hover:bg-warning/25'
                   : 'bg-secondary text-muted-foreground hover:bg-accent'
             }`}
+            aria-label={`${pendenciasStats.total} pendências`}
           >
             <Bell className="w-3.5 h-3.5" />
             <span className="text-xs font-semibold">Pendências</span>
-            <span className={`flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-white text-[10px] font-bold ${
-              pendenciasStats.overdueCount > 0 
-                ? 'bg-destructive' 
-                : pendenciasStats.urgentCount > 0
-                  ? 'bg-warning'
-                  : 'bg-muted-foreground'
-            }`}>
+            <Badge
+              variant={pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"}
+              className={`min-w-4 h-4 px-1 text-[10px] font-bold ${
+                pendenciasStats.overdueCount > 0
+                  ? ''
+                  : pendenciasStats.urgentCount > 0
+                    ? 'bg-warning text-warning-foreground'
+                    : 'bg-muted-foreground text-white'
+              }`}
+            >
               {pendenciasStats.total}
-            </span>
+            </Badge>
           </Link>
         </div>
 
-        {/* Project Info + Schedule Metrics - Unified Card */}
+        {/* Project Info + Metrics */}
         <div className="p-3 border-b border-border">
-          {/* Project Header with Dates */}
           <div className="flex items-start justify-between gap-2 mb-3">
-            {/* Project Selector for Mobile */}
+            {/* Project Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-1.5 py-1 -ml-1.5 transition-colors group">
-                  <div>
-                    <h1 className="text-body font-semibold leading-tight group-hover:text-primary transition-colors">
+                <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-1.5 py-1 -ml-1.5 transition-colors group min-w-0">
+                  <div className="min-w-0">
+                    <h1 className="text-[15px] font-bold leading-tight group-hover:text-primary transition-colors">
                       {projectName} – {unitName}
                     </h1>
                     {clientName && (
-                      <p className="text-tiny text-muted-foreground">Cliente: {clientName}</p>
+                      <p className="text-tiny mt-0.5">Cliente: {clientName}</p>
                     )}
                   </div>
                   {otherProjects.length > 0 && (
-                    <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                    <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                   )}
                 </button>
               </DropdownMenuTrigger>
@@ -757,13 +602,15 @@ const ReportHeader = ({
                 </DropdownMenuContent>
               )}
             </DropdownMenu>
-            {/* Datas - Ocultas em fase de projeto */}
-            {!(isProjectPhase && !isStaff) && (
-              <button 
+
+            {/* Dates */}
+            {showMetrics && (
+              <button
                 onClick={() => endDate === dateChangeInfo.originalDate && setShowDateChangeAlert(true)}
                 className="text-right shrink-0 flex items-center gap-1.5"
+                aria-label="Datas do projeto"
               >
-                <p className="text-tiny">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
+                <p className="text-tiny tabular-nums">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
                 {endDate === dateChangeInfo.originalDate && (
                   <span className="flex items-center justify-center w-4 h-4 rounded-full bg-warning/20">
                     <AlertCircle className="w-3 h-3 text-warning" />
@@ -773,56 +620,69 @@ const ReportHeader = ({
             )}
           </div>
 
-          {/* Timeline Progress Bar - First */}
-          <div className={`mb-2 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-tiny">
-                {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
-              </span>
-              <span className="text-tiny">
-                Restam {projectMetrics.remainingWorkingDays}
-              </span>
-            </div>
-            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div 
-                className="h-full rounded-full bg-primary/70 transition-all duration-500"
-                style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Current Activity + Progress - Second */}
-          <div className={`bg-secondary/30 rounded-lg p-2 ${isProjectPhase && !isStaff ? 'hidden' : ''}`}>
-            <h3 className="text-xs text-foreground line-clamp-1">
-              {projectMetrics.currentActivity}
-            </h3>
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-tiny">
-                {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
-              </span>
-              <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
-                <div 
-                  className={`h-full rounded-full ${
-                    projectMetrics.isOnTrack ? 'bg-success' : 'bg-warning'
-                  }`}
-                  style={{ width: `${projectMetrics.actualProgress}%` }}
-                />
+          {/* Timeline Progress */}
+          {showMetrics && (
+            <>
+              <div className="mb-2.5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-tiny tabular-nums">
+                    {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
+                  </span>
+                  <span className="text-tiny tabular-nums">
+                    Restam {projectMetrics.remainingWorkingDays}
+                  </span>
+                </div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={projectMetrics.elapsedWorkingDays} aria-valuemax={projectMetrics.totalWorkingDays}>
+                  <div
+                    className="h-full rounded-full bg-primary/70 transition-all duration-700 ease-out"
+                    style={{ width: `${(projectMetrics.elapsedWorkingDays / projectMetrics.totalWorkingDays) * 100}%` }}
+                  />
+                </div>
               </div>
-              <span className="text-tiny font-bold text-foreground">{projectMetrics.actualProgress}%</span>
-            </div>
-          </div>
+
+              {/* Current Activity + Work Progress */}
+              <div className="bg-secondary/30 rounded-xl p-2.5">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h3 className="text-xs font-semibold text-foreground line-clamp-1 cursor-default">
+                        {projectMetrics.currentActivity}
+                      </h3>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-[260px]">
+                      <p>{projectMetrics.currentActivity}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-tiny tabular-nums">
+                    {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={projectMetrics.actualProgress} aria-valuemax={100}>
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ease-out ${
+                        projectMetrics.isOnTrack ? 'bg-success' : 'bg-warning'
+                      }`}
+                      style={{ width: `${projectMetrics.actualProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-tiny font-bold text-foreground tabular-nums">{projectMetrics.actualProgress}%</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Quick Links */}
-        <div className="px-2.5 py-2.5 border-b border-border bg-secondary/20">
-          <div className="grid grid-cols-6 gap-1">
+        {/* Quick Links Grid */}
+        <div className="px-3 py-2.5 border-b border-border bg-secondary/10">
+          <div className="grid grid-cols-4 gap-1.5">
             {quickLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className={`relative flex flex-col items-center justify-center gap-1 py-2 rounded-xl shadow-sm active:scale-95 transition-all ${
-                  link.highlight 
-                    ? 'bg-primary/10 border-2 border-primary/50 ring-2 ring-primary/20' 
+                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl shadow-sm active:scale-95 transition-all ${
+                  link.highlight
+                    ? 'bg-primary/10 border-2 border-primary/50 ring-2 ring-primary/20'
                     : 'bg-card border border-border hover:border-primary/50 hover:shadow-md'
                 }`}
                 aria-label={`Acessar ${link.label}`}
@@ -833,12 +693,12 @@ const ReportHeader = ({
                   <link.icon className="w-4 h-4" />
                   {link.highlight && (
                     <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-foreground/60 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-foreground"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-foreground/60 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-foreground" />
                     </span>
                   )}
                 </div>
-                <span className={`text-[8px] font-semibold leading-tight text-center ${
+                <span className={`text-[9px] font-semibold leading-tight text-center ${
                   link.highlight ? 'text-primary' : 'text-foreground'
                 }`}>{link.label}</span>
               </Link>
@@ -846,18 +706,19 @@ const ReportHeader = ({
           </div>
         </div>
 
-        {/* Team Contacts - Grid Layout */}
-        <div className="px-2.5 py-2">
+        {/* Team Contacts */}
+        <div className="px-3 py-2.5">
           <div className="grid grid-cols-3 gap-1.5">
             {teamContacts.map((contact) => (
               <button
                 key={contact.role}
                 onClick={() => toggleContact(contact.role)}
-                className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg transition-all ${
-                  expandedContact === contact.role 
-                    ? 'bg-primary/10 border border-primary/30' 
+                className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all ${
+                  expandedContact === contact.role
+                    ? 'bg-primary/10 border border-primary/30 shadow-sm'
                     : 'bg-secondary/30 hover:bg-accent/50'
                 }`}
+                aria-expanded={expandedContact === contact.role}
                 aria-label={`Ver contato de ${contact.name}`}
               >
                 <Avatar className="h-8 w-8">
@@ -866,33 +727,33 @@ const ReportHeader = ({
                     <User className="w-3.5 h-3.5" />
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-[9px] font-medium text-foreground text-center leading-tight">
+                <span className="text-[9px] font-semibold text-foreground text-center leading-tight">
                   {contact.role}
                 </span>
                 <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${expandedContact === contact.role ? 'rotate-180' : ''}`} />
               </button>
             ))}
           </div>
-          
+
           {teamContacts.map((contact) => (
             expandedContact === contact.role && (
-              <div key={`expanded-${contact.role}`} className="mt-2 bg-card border border-border rounded-lg p-2.5 animate-fade-in">
-                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border">
+              <div key={`expanded-${contact.role}`} className="mt-2 bg-card border border-border rounded-xl p-3 animate-fade-in">
+                <div className="flex items-center gap-2.5 mb-2.5 pb-2.5 border-b border-border">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={contact.photo_url} alt={contact.name} />
                     <AvatarFallback className="bg-accent text-accent-foreground">
                       <User className="w-4 h-4" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <p className="text-tiny font-semibold text-foreground">{contact.name}</p>
-                    <p className="text-tiny text-muted-foreground">{contact.role}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{contact.name}</p>
+                    <p className="text-tiny">{contact.role}</p>
                   </div>
                   {isStaff && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-8 w-8"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditContact(contact.role);
@@ -903,22 +764,22 @@ const ReportHeader = ({
                     </Button>
                   )}
                 </div>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   {contact.email && (
-                    <a 
+                    <a
                       href={`mailto:${contact.email}`}
                       className="flex items-center gap-2 text-tiny text-primary hover:underline"
                     >
-                      <Mail className="w-3 h-3" />
+                      <Mail className="w-3.5 h-3.5" />
                       <span>{contact.email}</span>
                     </a>
                   )}
                   {contact.phone && (
-                    <a 
+                    <a
                       href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
                       className="flex items-center gap-2 text-tiny text-primary hover:underline"
                     >
-                      <Phone className="w-3 h-3" />
+                      <Phone className="w-3.5 h-3.5" />
                       <span>{contact.phone}</span>
                     </a>
                   )}
