@@ -250,7 +250,7 @@ const ReportHeader = ({
   const showMetrics = !(isProjectPhase && !isStaff);
 
   return (
-    <header className="bg-card rounded-xl border border-border mb-3 md:mb-4 animate-fade-in shadow-sm">
+    <header className="bg-card rounded-xl border border-border mb-3 md:mb-4 animate-fade-in shadow-sm overflow-hidden">
       {/* ============== DESKTOP LAYOUT ============== */}
       <div className="hidden md:block">
         {/* Top Bar: Navigation + Project Name + Status */}
@@ -261,7 +261,7 @@ const ReportHeader = ({
               variant="ghost"
               size="icon"
               onClick={handleGoBack}
-              className="h-9 w-9 shrink-0"
+              className="h-9 w-9 shrink-0 rounded-full hover:bg-accent"
               aria-label="Voltar"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -278,7 +278,7 @@ const ReportHeader = ({
                       {projectName} – {unitName}
                     </h1>
                     {clientName && (
-                      <p className="text-tiny mt-0.5">Cliente: {clientName}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Cliente: {clientName}</p>
                     )}
                   </div>
                   {otherProjects.length > 0 && (
@@ -287,7 +287,7 @@ const ReportHeader = ({
                 </button>
               </DropdownMenuTrigger>
               {otherProjects.length > 0 && (
-                <DropdownMenuContent align="start" className="w-72">
+                <DropdownMenuContent align="start" className="w-72 bg-popover">
                   <DropdownMenuLabel className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
                     Trocar de Obra
@@ -318,12 +318,12 @@ const ReportHeader = ({
           <div className="flex items-center gap-3 shrink-0">
             <Link
               to={paths.pendencias}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-full transition-colors font-semibold text-sm ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-full transition-colors font-semibold text-sm border ${
                 pendenciasStats.overdueCount > 0
-                  ? 'bg-destructive/15 text-destructive hover:bg-destructive/25'
+                  ? 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
                   : pendenciasStats.urgentCount > 0
-                    ? 'bg-warning/15 text-warning hover:bg-warning/25'
-                    : 'bg-secondary text-muted-foreground hover:bg-accent'
+                    ? 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20'
+                    : 'bg-secondary text-muted-foreground border-border hover:bg-accent'
               }`}
               aria-label={`${pendenciasStats.total} pendências`}
             >
@@ -355,18 +355,18 @@ const ReportHeader = ({
 
         {/* KPI Metrics Grid */}
         {showMetrics && (
-          <div className="px-5 pb-4 border-t border-border pt-4 bg-secondary/10">
+          <div className="px-5 pb-4 border-t border-border pt-4 bg-secondary/20">
             <div className="grid grid-cols-6 xl:grid-cols-8 gap-3">
               {/* Current Activity - Larger card */}
-              <div className="col-span-2 xl:col-span-3 rounded-xl bg-card border border-border p-3.5 flex flex-col min-h-[88px]">
-                <div className="text-caption uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                  <ActivityIcon className="w-3.5 h-3.5 opacity-60" />
-                  <span className="text-[11px] font-semibold">Etapa Atual</span>
+              <div className="col-span-2 xl:col-span-3 rounded-xl bg-card border border-border p-3.5 flex flex-col min-h-[84px]">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <ActivityIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Etapa Atual</span>
                 </div>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <p className="text-h3 line-clamp-2 cursor-default">
+                      <p className="text-sm font-semibold text-foreground line-clamp-2 cursor-default leading-snug">
                         {projectMetrics.currentActivity}
                       </p>
                     </TooltipTrigger>
@@ -375,7 +375,7 @@ const ReportHeader = ({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <p className="text-tiny mt-auto pt-1 tabular-nums">
+                <p className="text-[11px] text-muted-foreground mt-auto pt-1.5 tabular-nums">
                   {projectMetrics.completedActivities} de {projectMetrics.totalActivities} etapas concluídas
                 </p>
               </div>
@@ -460,7 +460,7 @@ const ReportHeader = ({
         <div className="px-5 py-3 border-t border-border">
           <div className="flex items-center justify-between gap-4">
             {/* Team Contacts */}
-            <nav className="flex items-center gap-3" aria-label="Equipe do projeto">
+            <nav className="flex items-center gap-2" aria-label="Equipe do projeto">
               {teamContacts.map((contact) => (
                 <TeamContactPopover
                   key={contact.role}
@@ -507,13 +507,13 @@ const ReportHeader = ({
       {/* ============== MOBILE LAYOUT ============== */}
       <div className="md:hidden">
         {/* Status Bar */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+        <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleGoBack}
-              className="h-8 w-8"
+              className="h-8 w-8 rounded-full"
               aria-label="Voltar"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -530,12 +530,12 @@ const ReportHeader = ({
 
           <Link
             to="/pendencias"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-colors border ${
               pendenciasStats.overdueCount > 0
-                ? 'bg-destructive/15 text-destructive hover:bg-destructive/25'
+                ? 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
                 : pendenciasStats.urgentCount > 0
-                  ? 'bg-warning/15 text-warning hover:bg-warning/25'
-                  : 'bg-secondary text-muted-foreground hover:bg-accent'
+                  ? 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20'
+                  : 'bg-secondary text-muted-foreground border-border hover:bg-accent'
             }`}
             aria-label={`${pendenciasStats.total} pendências`}
           >
@@ -568,7 +568,7 @@ const ReportHeader = ({
                       {projectName} – {unitName}
                     </h1>
                     {clientName && (
-                      <p className="text-tiny mt-0.5">Cliente: {clientName}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Cliente: {clientName}</p>
                     )}
                   </div>
                   {otherProjects.length > 0 && (
@@ -577,7 +577,7 @@ const ReportHeader = ({
                 </button>
               </DropdownMenuTrigger>
               {otherProjects.length > 0 && (
-                <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuContent align="start" className="w-64 bg-popover">
                   <DropdownMenuLabel className="flex items-center gap-2 text-xs">
                     <Building2 className="h-3.5 w-3.5" />
                     Trocar de Obra
@@ -610,7 +610,7 @@ const ReportHeader = ({
                 className="text-right shrink-0 flex items-center gap-1.5"
                 aria-label="Datas do projeto"
               >
-                <p className="text-tiny tabular-nums">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
+                <p className="text-[11px] text-muted-foreground tabular-nums">{formatDateFull(startDate)} → {formatDateFull(effectiveEndDate)}</p>
                 {endDate === dateChangeInfo.originalDate && (
                   <span className="flex items-center justify-center w-4 h-4 rounded-full bg-warning/20">
                     <AlertCircle className="w-3 h-3 text-warning" />
@@ -625,10 +625,10 @@ const ReportHeader = ({
             <>
               <div className="mb-2.5">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-tiny tabular-nums">
+                  <span className="text-[11px] text-muted-foreground tabular-nums">
                     {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
                   </span>
-                  <span className="text-tiny tabular-nums">
+                  <span className="text-[11px] text-muted-foreground tabular-nums">
                     Restam {projectMetrics.remainingWorkingDays}
                   </span>
                 </div>
@@ -655,7 +655,7 @@ const ReportHeader = ({
                   </Tooltip>
                 </TooltipProvider>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-tiny tabular-nums">
+                  <span className="text-[11px] text-muted-foreground tabular-nums">
                     {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
                   </span>
                   <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={projectMetrics.actualProgress} aria-valuemax={100}>
@@ -666,7 +666,7 @@ const ReportHeader = ({
                       style={{ width: `${projectMetrics.actualProgress}%` }}
                     />
                   </div>
-                  <span className="text-tiny font-bold text-foreground tabular-nums">{projectMetrics.actualProgress}%</span>
+                  <span className="text-[11px] font-bold text-foreground tabular-nums">{projectMetrics.actualProgress}%</span>
                 </div>
               </div>
             </>
@@ -674,13 +674,13 @@ const ReportHeader = ({
         </div>
 
         {/* Quick Links Grid */}
-        <div className="px-3 py-2.5 border-b border-border bg-secondary/10">
+        <div className="px-3 py-2.5 border-b border-border bg-secondary/15">
           <div className="grid grid-cols-4 gap-1.5">
             {quickLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl shadow-sm active:scale-95 transition-all ${
+                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl shadow-sm active:scale-95 transition-all min-h-[60px] ${
                   link.highlight
                     ? 'bg-primary/10 border-2 border-primary/50 ring-2 ring-primary/20'
                     : 'bg-card border border-border hover:border-primary/50 hover:shadow-md'
@@ -688,7 +688,7 @@ const ReportHeader = ({
                 aria-label={`Acessar ${link.label}`}
               >
                 <div className={`relative flex items-center justify-center w-8 h-8 rounded-full ${
-                  link.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary'
+                  link.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/12 text-primary'
                 }`}>
                   <link.icon className="w-4 h-4" />
                   {link.highlight && (
@@ -713,17 +713,17 @@ const ReportHeader = ({
               <button
                 key={contact.role}
                 onClick={() => toggleContact(contact.role)}
-                className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all ${
+                className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl transition-all min-h-[72px] ${
                   expandedContact === contact.role
                     ? 'bg-primary/10 border border-primary/30 shadow-sm'
-                    : 'bg-secondary/30 hover:bg-accent/50'
+                    : 'bg-secondary/30 hover:bg-accent/50 border border-transparent'
                 }`}
                 aria-expanded={expandedContact === contact.role}
                 aria-label={`Ver contato de ${contact.name}`}
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={contact.photo_url} alt={contact.name} />
-                  <AvatarFallback className="bg-accent text-accent-foreground">
+                  <AvatarFallback className="bg-accent text-accent-foreground text-xs">
                     <User className="w-3.5 h-3.5" />
                   </AvatarFallback>
                 </Avatar>
@@ -747,13 +747,13 @@ const ReportHeader = ({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{contact.name}</p>
-                    <p className="text-tiny">{contact.role}</p>
+                    <p className="text-[11px] text-muted-foreground">{contact.role}</p>
                   </div>
                   {isStaff && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-8 w-8 rounded-full"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditContact(contact.role);
@@ -768,7 +768,7 @@ const ReportHeader = ({
                   {contact.email && (
                     <a
                       href={`mailto:${contact.email}`}
-                      className="flex items-center gap-2 text-tiny text-primary hover:underline"
+                      className="flex items-center gap-2 text-[12px] text-primary hover:underline"
                     >
                       <Mail className="w-3.5 h-3.5" />
                       <span>{contact.email}</span>
@@ -777,14 +777,14 @@ const ReportHeader = ({
                   {contact.phone && (
                     <a
                       href={`tel:+55${contact.phone.replace(/\D/g, '')}`}
-                      className="flex items-center gap-2 text-tiny text-primary hover:underline"
+                      className="flex items-center gap-2 text-[12px] text-primary hover:underline"
                     >
                       <Phone className="w-3.5 h-3.5" />
                       <span>{contact.phone}</span>
                     </a>
                   )}
                   {contact.crea && (
-                    <span className="text-tiny text-muted-foreground">
+                    <span className="text-[11px] text-muted-foreground">
                       CREA: {contact.crea}
                     </span>
                   )}
