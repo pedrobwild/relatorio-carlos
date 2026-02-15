@@ -507,13 +507,14 @@ const ReportHeader = ({
                                 </Button>
                               )}
                             </div>
-                            <Calendar
-                              mode="single"
-                              selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
-                              onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
-                              locale={ptBR}
-                              disabled={savingMilestone}
-                            />
+                            <div>
+                              <Calendar
+                                mode="single"
+                                selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
+                                onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
+                                locale={ptBR}
+                              />
+                            </div>
                           </PopoverContent>
                         </Popover>
                       ) : (
@@ -717,13 +718,14 @@ const ReportHeader = ({
                                   </Button>
                                 )}
                               </div>
-                              <Calendar
-                                mode="single"
-                                selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
-                                onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
-                                locale={ptBR}
-                                disabled={savingMilestone}
-                              />
+                              <div>
+                                <Calendar
+                                  mode="single"
+                                  selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
+                                  onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
+                                  locale={ptBR}
+                                />
+                              </div>
                             </PopoverContent>
                           </Popover>
                         ) : (
