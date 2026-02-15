@@ -390,7 +390,7 @@ const ReportHeader = ({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="text-sm font-semibold text-foreground truncate cursor-default">
+                      <span className="text-sm font-semibold text-foreground cursor-default break-words">
                         {projectMetrics.currentActivity}
                       </span>
                     </TooltipTrigger>
@@ -596,7 +596,7 @@ const ReportHeader = ({
                       {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
                     </Badge>
                   </div>
-                  <p className="text-xs font-semibold text-foreground line-clamp-1 leading-tight">
+                  <p className="text-xs font-semibold text-foreground leading-tight">
                     {projectMetrics.currentActivity}
                   </p>
                 </div>
