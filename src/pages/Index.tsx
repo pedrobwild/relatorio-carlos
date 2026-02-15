@@ -25,6 +25,7 @@ import { isDemoMode } from "@/config/flags";
 // usePageVisibility removido - causava desmontagem de UI e perda de estado
 import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
 import { useWeeklyReports } from "@/hooks/useWeeklyReports";
+import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { pdfLogger } from "@/lib/devLogger";
 import { perf } from "@/lib/perf";
 import { prefetchForTab } from "@/lib/prefetch";
@@ -447,6 +448,7 @@ const Index = () => {
               isProjectPhase={project?.is_project_phase}
               milestoneDates={milestoneDates}
             />
+            <ProjectSubNav className="mt-3 -mx-3 md:-mx-4 lg:-mx-6 xl:-mx-8" />
 
             {/* Onboarding for new users */}
             <OnboardingChecklist projectId={projectId} />
@@ -499,6 +501,7 @@ const Index = () => {
                 isProjectPhase={project?.is_project_phase}
                 milestoneDates={milestoneDates}
               />
+              <ProjectSubNav className="mt-3 -mx-3 md:mx-0 rounded-none md:rounded-xl" />
             </div>
 
             <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
