@@ -1,16 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo.png";
 import {
   FileText, DollarSign, ClipboardSignature, User, Phone, Mail,
-  ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
+  ChevronDown, Calendar as CalendarIcon, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
   TrendingUp, TrendingDown, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft, Map,
-  ChevronsUpDown, Building2, ChevronRight, Milestone
+  ChevronsUpDown, Building2, ChevronRight, Milestone, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Activity } from "@/types/report";
+import { ptBR } from "date-fns/locale";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -51,6 +54,8 @@ interface MilestoneDates {
   dateMobilizationStart?: string | null;
 }
 
+export type MilestoneKey = 'dateBriefingArch' | 'dateApproval3d' | 'dateApprovalExec' | 'dateApprovalObra' | 'dateMobilizationStart';
+
 interface ReportHeaderProps {
   projectName: string;
   unitName: string;
@@ -61,6 +66,8 @@ interface ReportHeaderProps {
   activities: Activity[];
   isProjectPhase?: boolean;
   milestoneDates?: MilestoneDates;
+  canEditMilestones?: boolean;
+  onMilestoneDateChange?: (key: MilestoneKey, date: string | null) => Promise<void>;
 }
 
 interface LegacyTeamContact {
@@ -113,6 +120,8 @@ const ReportHeader = ({
   activities,
   isProjectPhase = false,
   milestoneDates,
+  canEditMilestones = false,
+  onMilestoneDateChange,
 }: ReportHeaderProps) => {
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [showDateChangeAlert, setShowDateChangeAlert] = useState(false);
@@ -268,15 +277,41 @@ const ReportHeader = ({
 
   // Milestones that have values
   const milestoneItems = useMemo(() => {
-    const items = [
-      { label: "Briefing Arq.", value: milestoneDates?.dateBriefingArch },
-      { label: "Aprov. 3D", value: milestoneDates?.dateApproval3d },
-      { label: "Aprov. Executivo", value: milestoneDates?.dateApprovalExec },
-      { label: "Aprov. Obra", value: milestoneDates?.dateApprovalObra },
-      { label: "Início Mobilização", value: milestoneDates?.dateMobilizationStart },
+    const items: { label: string; value: string | null | undefined; key: MilestoneKey }[] = [
+      { label: "Briefing Arq.", value: milestoneDates?.dateBriefingArch, key: 'dateBriefingArch' },
+      { label: "Aprov. 3D", value: milestoneDates?.dateApproval3d, key: 'dateApproval3d' },
+      { label: "Aprov. Executivo", value: milestoneDates?.dateApprovalExec, key: 'dateApprovalExec' },
+      { label: "Aprov. Obra", value: milestoneDates?.dateApprovalObra, key: 'dateApprovalObra' },
+      { label: "Início Mobilização", value: milestoneDates?.dateMobilizationStart, key: 'dateMobilizationStart' },
     ];
     return items;
   }, [milestoneDates]);
+
+  const [editingMilestone, setEditingMilestone] = useState<MilestoneKey | null>(null);
+  const [savingMilestone, setSavingMilestone] = useState(false);
+
+  const handleMilestoneDateSelect = useCallback(async (key: MilestoneKey, date: Date | undefined) => {
+    if (!onMilestoneDateChange) return;
+    setSavingMilestone(true);
+    try {
+      const dateStr = date ? date.toISOString().split('T')[0] : null;
+      await onMilestoneDateChange(key, dateStr);
+    } finally {
+      setSavingMilestone(false);
+      setEditingMilestone(null);
+    }
+  }, [onMilestoneDateChange]);
+
+  const handleClearMilestoneDate = useCallback(async (key: MilestoneKey) => {
+    if (!onMilestoneDateChange) return;
+    setSavingMilestone(true);
+    try {
+      await onMilestoneDateChange(key, null);
+    } finally {
+      setSavingMilestone(false);
+      setEditingMilestone(null);
+    }
+  }, [onMilestoneDateChange]);
 
   return (
     <header className="animate-fade-in mb-3 md:mb-4">
@@ -400,7 +435,7 @@ const ReportHeader = ({
                 {/* Key Dates — inline */}
                 <div className="flex items-center gap-3 shrink-0 self-center">
                   <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                    <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-caption">Início</span>
                     <span className="text-sm font-bold tabular-nums text-foreground">{formatDateShort(displayStartDate)}</span>
                   </div>
@@ -439,15 +474,59 @@ const ReportHeader = ({
                   {milestoneItems.map((m, i) => (
                     <div key={m.label} className="flex items-center gap-3">
                       {i > 0 && <span className="text-border">·</span>}
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-caption whitespace-nowrap">{m.label}</span>
-                        <span className={cn(
-                          "text-xs font-semibold tabular-nums whitespace-nowrap",
-                          m.value ? "text-foreground" : "text-muted-foreground/50"
-                        )}>
-                          {m.value ? formatDateFull(m.value) : "—"}
-                        </span>
-                      </div>
+                      {canEditMilestones && onMilestoneDateChange ? (
+                        <Popover open={editingMilestone === m.key} onOpenChange={(open) => setEditingMilestone(open ? m.key : null)}>
+                          <PopoverTrigger asChild>
+                            <button className={cn(
+                              "flex items-baseline gap-1.5 rounded-md px-1.5 py-0.5 -mx-1.5 -my-0.5 transition-colors",
+                              "hover:bg-accent/60 cursor-pointer group"
+                            )}>
+                              <span className="text-caption whitespace-nowrap">{m.label}</span>
+                              <span className={cn(
+                                "text-xs font-semibold tabular-nums whitespace-nowrap",
+                                m.value ? "text-foreground" : "text-muted-foreground/50"
+                              )}>
+                                {m.value ? formatDateFull(m.value) : "—"}
+                              </span>
+                              <Pencil className="w-2.5 h-2.5 text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <div className="p-2 border-b border-border flex items-center justify-between gap-2">
+                              <span className="text-xs font-semibold text-foreground">{m.label}</span>
+                              {m.value && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                                  onClick={() => handleClearMilestoneDate(m.key)}
+                                  disabled={savingMilestone}
+                                >
+                                  <X className="w-3 h-3 mr-1" />
+                                  Limpar
+                                </Button>
+                              )}
+                            </div>
+                            <Calendar
+                              mode="single"
+                              selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
+                              onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
+                              locale={ptBR}
+                              disabled={savingMilestone}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-caption whitespace-nowrap">{m.label}</span>
+                          <span className={cn(
+                            "text-xs font-semibold tabular-nums whitespace-nowrap",
+                            m.value ? "text-foreground" : "text-muted-foreground/50"
+                          )}>
+                            {m.value ? formatDateFull(m.value) : "—"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -609,13 +688,55 @@ const ReportHeader = ({
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {milestoneItems.map((m) => (
                       <div key={m.label} className="flex items-baseline justify-between gap-1">
-                        <span className="text-caption truncate">{m.label}</span>
-                        <span className={cn(
-                          "text-xs font-semibold tabular-nums shrink-0",
-                          m.value ? "text-foreground" : "text-muted-foreground/40"
-                        )}>
-                          {m.value ? formatDateShort(m.value) : "—"}
-                        </span>
+                        {canEditMilestones && onMilestoneDateChange ? (
+                          <Popover open={editingMilestone === m.key} onOpenChange={(open) => setEditingMilestone(open ? m.key : null)}>
+                            <PopoverTrigger asChild>
+                              <button className="flex items-baseline justify-between gap-1 w-full rounded px-1 -mx-1 hover:bg-accent/60 transition-colors">
+                                <span className="text-caption truncate">{m.label}</span>
+                                <span className={cn(
+                                  "text-xs font-semibold tabular-nums shrink-0",
+                                  m.value ? "text-foreground" : "text-muted-foreground/40"
+                                )}>
+                                  {m.value ? formatDateShort(m.value) : "—"}
+                                </span>
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <div className="p-2 border-b border-border flex items-center justify-between gap-2">
+                                <span className="text-xs font-semibold text-foreground">{m.label}</span>
+                                {m.value && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                                    onClick={() => handleClearMilestoneDate(m.key)}
+                                    disabled={savingMilestone}
+                                  >
+                                    <X className="w-3 h-3 mr-1" />
+                                    Limpar
+                                  </Button>
+                                )}
+                              </div>
+                              <Calendar
+                                mode="single"
+                                selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
+                                onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
+                                locale={ptBR}
+                                disabled={savingMilestone}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <>
+                            <span className="text-caption truncate">{m.label}</span>
+                            <span className={cn(
+                              "text-xs font-semibold tabular-nums shrink-0",
+                              m.value ? "text-foreground" : "text-muted-foreground/40"
+                            )}>
+                              {m.value ? formatDateShort(m.value) : "—"}
+                            </span>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
