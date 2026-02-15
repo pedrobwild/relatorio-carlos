@@ -19,13 +19,11 @@ interface WeeklyReportHeaderProps {
 }
 
 const getCurrentPhase = (activities: Activity[], weekStart: Date, weekEnd: Date): string => {
-  // Find activities that are in progress during this week
   const inProgressActivities = activities.filter((activity) => {
     const plannedStart = parseLocalDate(activity.plannedStart);
     const plannedEnd = parseLocalDate(activity.plannedEnd);
     const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
     
-    // Activity is in progress if not yet completed and overlaps with the week
     if (actualEnd && actualEnd <= weekEnd) return false;
     return plannedStart <= weekEnd && plannedEnd >= weekStart;
   });
@@ -34,7 +32,6 @@ const getCurrentPhase = (activities: Activity[], weekStart: Date, weekEnd: Date)
     return inProgressActivities[0].description;
   }
 
-  // Fallback to last completed activity
   const completedActivities = activities.filter((activity) => {
     if (!activity.actualEnd) return false;
     return parseLocalDate(activity.actualEnd) <= weekEnd;
@@ -62,53 +59,28 @@ const WeeklyReportHeader = ({
   const currentPhase = getCurrentPhase(activities, weeklyReport.startDate, weeklyReport.endDate);
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4 md:p-5 mb-4 animate-fade-in">
-      {/* Back to list button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onBackToList}
-        className="mb-3 -ml-2 text-muted-foreground hover:text-foreground h-8 text-sm"
-      >
-        <ArrowLeft className="w-4 h-4 mr-1.5" />
-        Ver todos
-      </Button>
+    <div className="max-w-[840px] mx-auto bg-card rounded-xl border border-border p-4 md:p-5 mb-6 animate-fade-in">
+      {/* Top row: Back + Navigation + PDF */}
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBackToList}
+          className="text-muted-foreground hover:text-foreground h-8 text-sm -ml-2"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Ver todos
+        </Button>
 
-      {/* Top row: Week badge, date range */}
-      <div className="flex flex-wrap items-center gap-2.5 mb-2">
-        <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-h3 whitespace-nowrap">
-          Semana {weeklyReport.weekNumber}
-        </span>
-        <span className="text-caption">
-          {dateRange}
-        </span>
-      </div>
-
-      {/* Current phase */}
-      <p className="text-body font-medium mb-3">
-        Etapa: {currentPhase}
-      </p>
-
-      {/* Progress bar */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-caption">Progresso da obra</span>
-          <span className="text-h3">{weeklyReport.completionPercentage}%</span>
-        </div>
-        <Progress value={weeklyReport.completionPercentage} className="h-2" />
-      </div>
-
-      {/* Navigation and export buttons - All in one row */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="sm"
             onClick={onPreviousWeek}
             disabled={!hasPrevious}
-            className="h-9 px-3 text-sm"
+            className="h-8 px-2.5 text-xs"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
+            <ArrowLeft className="w-3.5 h-3.5 mr-1" />
             Anterior
           </Button>
           <Button
@@ -116,25 +88,45 @@ const WeeklyReportHeader = ({
             size="sm"
             onClick={onNextWeek}
             disabled={!hasNext}
-            className="h-9 px-3 text-sm"
+            className="h-8 px-2.5 text-xs"
           >
             Próxima
-            <ArrowRight className="w-4 h-4 ml-1" />
+            <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Button>
+          {onExportPDF && (
+            <Button
+              onClick={onExportPDF}
+              disabled={isExporting}
+              size="sm"
+              className="h-8 px-3 text-xs"
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+              {isExporting ? "..." : "PDF"}
+            </Button>
+          )}
         </div>
-
-        {onExportPDF && (
-          <Button
-            onClick={onExportPDF}
-            disabled={isExporting}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 px-3 text-sm"
-            size="sm"
-          >
-            <Download className="w-4 h-4 mr-1.5" />
-            {isExporting ? "..." : "PDF"}
-          </Button>
-        )}
       </div>
+
+      {/* Main info row */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
+        <div className="flex items-baseline gap-2.5">
+          <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
+            Semana {weeklyReport.weekNumber}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {dateRange}
+          </span>
+        </div>
+        <span className="text-2xl font-bold tabular-nums">{weeklyReport.completionPercentage}%</span>
+      </div>
+
+      {/* Progress bar */}
+      <Progress value={weeklyReport.completionPercentage} className="h-1.5 mb-2" />
+
+      {/* Current phase */}
+      <p className="text-xs text-muted-foreground line-clamp-1">
+        Etapa: <span className="font-medium text-foreground/80">{currentPhase}</span>
+      </p>
     </div>
   );
 };

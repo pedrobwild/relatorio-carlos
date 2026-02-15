@@ -16,7 +16,7 @@ interface ClientDecisionsSectionProps {
 
 const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecision; animationDelay?: number }) => (
   <div 
-    className="p-2.5 sm:p-3 space-y-2"
+    className="px-5 py-3 sm:px-6 sm:py-4 space-y-2"
     style={{ 
       animationDelay: `${animationDelay}ms`,
       animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -24,27 +24,27 @@ const DecisionItem = ({ decision, animationDelay = 0 }: { decision: ClientDecisi
     }}
   >
     <div className="flex items-start justify-between gap-2">
-      <p className="text-body font-medium text-foreground leading-snug">{decision.description}</p>
-      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-tiny shrink-0">
+      <p className="text-sm font-medium text-foreground leading-[1.6]">{decision.description}</p>
+      <Badge variant="outline" className="bg-warning/10 text-foreground border-warning/20 text-xs shrink-0">
         Pendente
       </Badge>
     </div>
     
     {decision.options && decision.options.length > 0 && (
-      <div className="text-caption leading-snug">
-        <span className="font-medium">Opções: </span>
+      <div className="text-sm text-foreground/75 leading-[1.6]">
+        <span className="font-medium text-foreground/90">Opções: </span>
         {decision.options.join(" | ")}
       </div>
     )}
     
     <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-1">
-        <span className="text-tiny font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
           {format(new Date(decision.dueDate), "dd/MM", { locale: ptBR })}
         </span>
-        <span className="text-caption">Prazo para decisão</span>
+        <span className="text-xs text-muted-foreground">Prazo para decisão</span>
       </div>
-      <p className="text-destructive text-tiny leading-snug">
+      <p className="text-destructive text-xs leading-[1.5]">
         <span className="font-medium">Importante:</span> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
       </p>
     </div>
@@ -62,8 +62,8 @@ const ClientDecisionsSection = ({ decisions }: ClientDecisionsSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-        <h3 className="text-h2 text-white">Decisões e Aprovações do Cliente</h3>
+      <div className="px-4 py-2.5 bg-primary-dark">
+        <h3 className="text-base font-semibold text-white tracking-tight">Decisões e Aprovações do Cliente</h3>
       </div>
       
       {/* Desktop: Always show all */}
