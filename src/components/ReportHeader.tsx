@@ -470,6 +470,9 @@ const ReportHeader = ({
               hasActivities={activities.length > 0}
               cronogramaPath={paths.cronograma}
               isProjectPhase={isProjectPhase}
+              activities={activities}
+              projectStartDate={startDate}
+              projectEndDate={effectiveEndDate}
             />
 
           </div>
@@ -638,30 +641,21 @@ const ReportHeader = ({
         {/* Mobile: Summary area below */}
         {showMetrics && (
           <div className="mt-2 bg-card rounded-xl border border-border shadow-sm p-3">
-            {/* Work progress bar */}
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-foreground">Progresso da Obra</span>
-                <span className={cn(
-                  "text-xs font-bold tabular-nums",
-                  projectMetrics.isOnTrack ? "text-success" : "text-warning"
-                )}>{projectMetrics.actualProgress}%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden" role="progressbar" aria-valuenow={projectMetrics.actualProgress} aria-valuemax={100}>
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-700 ease-out",
-                    projectMetrics.isOnTrack ? "bg-success" : "bg-warning"
-                  )}
-                  style={{ width: `${projectMetrics.actualProgress}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1 tabular-nums">
-                <span>Previsto: {projectMetrics.plannedProgress}%</span>
-                <span>Realizado: {projectMetrics.actualProgress}%</span>
-              </div>
-            </div>
-
+            <ProgressSection
+              elapsedWorkingDays={projectMetrics.elapsedWorkingDays}
+              totalWorkingDays={projectMetrics.totalWorkingDays}
+              remainingWorkingDays={projectMetrics.remainingWorkingDays}
+              actualProgress={projectMetrics.actualProgress}
+              plannedProgress={projectMetrics.plannedProgress}
+              isOnTrack={projectMetrics.isOnTrack}
+              isStaff={isStaff}
+              hasActivities={activities.length > 0}
+              cronogramaPath={paths.cronograma}
+              isProjectPhase={isProjectPhase}
+              activities={activities}
+              projectStartDate={startDate}
+              projectEndDate={effectiveEndDate}
+            />
           </div>
         )}
       </div>
