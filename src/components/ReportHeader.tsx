@@ -491,30 +491,45 @@ const ReportHeader = ({
                               <Pencil className="w-2.5 h-2.5 text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors" />
                             </button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
+                          <PopoverContent
+                            className="w-auto p-0 z-[200]"
+                            align="start"
+                            onPointerDownOutside={(e) => e.preventDefault()}
+                            onInteractOutside={(e) => e.preventDefault()}
+                          >
                             <div className="p-2 border-b border-border flex items-center justify-between gap-2">
                               <span className="text-xs font-semibold text-foreground">{m.label}</span>
-                              {m.value && (
+                              <div className="flex items-center gap-1">
+                                {m.value && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                                    onClick={() => handleClearMilestoneDate(m.key)}
+                                    disabled={savingMilestone}
+                                  >
+                                    <X className="w-3 h-3 mr-1" />
+                                    Limpar
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 px-2 text-xs text-destructive hover:text-destructive"
-                                  onClick={() => handleClearMilestoneDate(m.key)}
-                                  disabled={savingMilestone}
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => setEditingMilestone(null)}
                                 >
-                                  <X className="w-3 h-3 mr-1" />
-                                  Limpar
+                                  Fechar
                                 </Button>
-                              )}
+                              </div>
                             </div>
-                            <div>
-                              <Calendar
-                                mode="single"
-                                selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
-                                onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
-                                locale={ptBR}
-                              />
-                            </div>
+                            <Calendar
+                              mode="single"
+                              selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
+                              onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
+                              locale={ptBR}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
                           </PopoverContent>
                         </Popover>
                       ) : (
@@ -702,30 +717,45 @@ const ReportHeader = ({
                                 </span>
                               </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent
+                              className="w-auto p-0 z-[200]"
+                              align="start"
+                              onPointerDownOutside={(e) => e.preventDefault()}
+                              onInteractOutside={(e) => e.preventDefault()}
+                            >
                               <div className="p-2 border-b border-border flex items-center justify-between gap-2">
                                 <span className="text-xs font-semibold text-foreground">{m.label}</span>
-                                {m.value && (
+                                <div className="flex items-center gap-1">
+                                  {m.value && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                                      onClick={() => handleClearMilestoneDate(m.key)}
+                                      disabled={savingMilestone}
+                                    >
+                                      <X className="w-3 h-3 mr-1" />
+                                      Limpar
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 px-2 text-xs text-destructive hover:text-destructive"
-                                    onClick={() => handleClearMilestoneDate(m.key)}
-                                    disabled={savingMilestone}
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => setEditingMilestone(null)}
                                   >
-                                    <X className="w-3 h-3 mr-1" />
-                                    Limpar
+                                    Fechar
                                   </Button>
-                                )}
+                                </div>
                               </div>
-                              <div>
-                                <Calendar
-                                  mode="single"
-                                  selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
-                                  onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
-                                  locale={ptBR}
-                                />
-                              </div>
+                              <Calendar
+                                mode="single"
+                                selected={m.value ? new Date(m.value + "T00:00:00") : undefined}
+                                onSelect={(date) => handleMilestoneDateSelect(m.key, date)}
+                                locale={ptBR}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
                             </PopoverContent>
                           </Popover>
                         ) : (
