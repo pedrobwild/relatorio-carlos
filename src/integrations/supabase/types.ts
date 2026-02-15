@@ -944,8 +944,51 @@ export type Database = {
           },
         ]
       }
+      journey_stage_date_log: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          project_id: string
+          stage_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id: string
+          stage_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          project_id?: string
+          stage_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_stage_date_log_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "journey_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_stages: {
         Row: {
+          confirmed_end: string | null
+          confirmed_start: string | null
           created_at: string
           cta_text: string | null
           cta_url: string | null
@@ -957,6 +1000,8 @@ export type Database = {
           microcopy: string | null
           name: string
           project_id: string
+          proposed_end: string | null
+          proposed_start: string | null
           responsible: string | null
           revision_text: string | null
           sort_order: number
@@ -965,6 +1010,8 @@ export type Database = {
           warning_text: string | null
         }
         Insert: {
+          confirmed_end?: string | null
+          confirmed_start?: string | null
           created_at?: string
           cta_text?: string | null
           cta_url?: string | null
@@ -976,6 +1023,8 @@ export type Database = {
           microcopy?: string | null
           name: string
           project_id: string
+          proposed_end?: string | null
+          proposed_start?: string | null
           responsible?: string | null
           revision_text?: string | null
           sort_order?: number
@@ -984,6 +1033,8 @@ export type Database = {
           warning_text?: string | null
         }
         Update: {
+          confirmed_end?: string | null
+          confirmed_start?: string | null
           created_at?: string
           cta_text?: string | null
           cta_url?: string | null
@@ -995,6 +1046,8 @@ export type Database = {
           microcopy?: string | null
           name?: string
           project_id?: string
+          proposed_end?: string | null
+          proposed_start?: string | null
           responsible?: string | null
           revision_text?: string | null
           sort_order?: number

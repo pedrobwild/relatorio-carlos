@@ -1,28 +1,23 @@
 import { useState } from 'react';
 import {
-  Circle, ClipboardList, Box, Ruler, FileText, FileCheck, CheckCircle, Calendar,
-  Edit2, Check, X, Plus, Trash2, AlertTriangle, Info, ChevronDown, ChevronUp,
+  Edit2, Check, X,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   JourneyStage,
   JourneyStageStatus,
-  JourneyTodo,
   useUpdateStage,
-  useToggleTodo,
-  useUpdateTodo,
-  useAddTodo,
-  useDeleteTodo,
 } from '@/hooks/useProjectJourney';
+import { StageSummary } from './StageSummary';
+import { StageDetailsSections } from './StageDetailsSections';
+import { StageChecklist } from './StageChecklist';
+import { StageDatesPanel } from './StageDatesPanel';
 import { MeetingScheduler } from './MeetingScheduler';
 
 interface JourneyStageCardProps {
@@ -31,185 +26,6 @@ interface JourneyStageCardProps {
   isAdmin: boolean;
   isExpanded: boolean;
   onToggleExpand: () => void;
-}
-
-const statusLabels: Record<JourneyStageStatus, string> = {
-  pending: '⚪ Em breve',
-  waiting_action: '🟡 Aguardando sua ação',
-  in_progress: '🔵 Em andamento',
-  completed: '🟢 Concluído',
-};
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  'clipboard-list': ClipboardList,
-  'box': Box,
-  'ruler': Ruler,
-  'file-text': FileText,
-  'file-check': FileCheck,
-  'check-circle': CheckCircle,
-  'circle': Circle,
-};
-
-function getIcon(iconName: string): React.ComponentType<{ className?: string }> {
-  return iconMap[iconName] || Circle;
-}
-
-function TodoItem({
-  todo,
-  projectId,
-  isAdmin,
-  canCheck,
-}: {
-  todo: JourneyTodo;
-  projectId: string;
-  isAdmin: boolean;
-  canCheck: boolean;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [text, setText] = useState(todo.text);
-  
-  const toggleTodo = useToggleTodo();
-  const updateTodo = useUpdateTodo();
-  const deleteTodo = useDeleteTodo();
-
-  const handleSave = () => {
-    updateTodo.mutate({ todoId: todo.id, text, projectId });
-    setIsEditing(false);
-  };
-
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-2">
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          className="flex-1 h-10 text-sm"
-          autoFocus
-        />
-        <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={handleSave}>
-          <Check className="h-4 w-4" />
-        </Button>
-        <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={() => setIsEditing(false)}>
-          <X className="h-4 w-4" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-10 w-10 shrink-0 text-destructive"
-          onClick={() => deleteTodo.mutate({ todoId: todo.id, projectId })}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-start gap-3 group min-h-[44px] py-2">
-      <Checkbox
-        checked={todo.completed}
-        disabled={!canCheck && !isAdmin}
-        onCheckedChange={(checked) =>
-          toggleTodo.mutate({ todoId: todo.id, completed: !!checked, projectId })
-        }
-        className="mt-0.5 h-5 w-5"
-      />
-      <span
-        className={cn(
-          "flex-1 text-sm leading-relaxed",
-          todo.completed && "line-through text-muted-foreground"
-        )}
-      >
-        {todo.text}
-      </span>
-      {isAdmin && (
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 opacity-0 group-hover:opacity-100 md:transition-opacity shrink-0"
-          onClick={() => setIsEditing(true)}
-        >
-          <Edit2 className="h-3 w-3" />
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function TodoList({
-  todos,
-  owner,
-  label,
-  projectId,
-  stageId,
-  isAdmin,
-}: {
-  todos: JourneyTodo[];
-  owner: 'client' | 'bwild';
-  label: string;
-  projectId: string;
-  stageId: string;
-  isAdmin: boolean;
-}) {
-  const [newTodoText, setNewTodoText] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const addTodo = useAddTodo();
-
-  const filteredTodos = todos.filter((t) => t.owner === owner);
-
-  const handleAdd = () => {
-    if (!newTodoText.trim()) return;
-    addTodo.mutate({ stageId, owner, text: newTodoText, projectId });
-    setNewTodoText('');
-    setIsAdding(false);
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2 min-h-[40px]">
-        <h4 className="text-sm font-medium text-muted-foreground">{label}</h4>
-        {isAdmin && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-9 text-xs px-3"
-            onClick={() => setIsAdding(true)}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Adicionar
-          </Button>
-        )}
-      </div>
-      <div className="space-y-1">
-        {filteredTodos.map((todo) => (
-          <TodoItem
-            key={todo.id}
-            todo={todo}
-            projectId={projectId}
-            isAdmin={isAdmin}
-            canCheck={owner === 'client'}
-          />
-        ))}
-        {isAdding && (
-          <div className="flex items-center gap-2 py-2">
-            <Input
-              value={newTodoText}
-              onChange={(e) => setNewTodoText(e.target.value)}
-              placeholder="Novo item..."
-              className="flex-1 h-10 text-sm"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            />
-            <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={handleAdd}>
-              <Check className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost" className="h-10 w-10 shrink-0" onClick={() => setIsAdding(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 }
 
 export function JourneyStageCard({
@@ -232,9 +48,8 @@ export function JourneyStageCard({
     revision_text: stage.revision_text || '',
     responsible: stage.responsible || '',
   });
-  
+
   const updateStage = useUpdateStage();
-  const Icon = getIcon(stage.icon);
 
   const handleSave = () => {
     updateStage.mutate({
@@ -254,13 +69,6 @@ export function JourneyStageCard({
     setIsEditing(false);
   };
 
-  const statusBadgeColor = {
-    pending: 'bg-muted text-muted-foreground',
-    waiting_action: 'bg-amber-100 text-amber-800',
-    in_progress: 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800',
-  };
-
   return (
     <Card
       className={cn(
@@ -272,57 +80,23 @@ export function JourneyStageCard({
       <Collapsible open={isExpanded} onOpenChange={onToggleExpand}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors p-4 md:p-6">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div
-                className={cn(
-                  "p-2.5 md:p-3 rounded-lg shrink-0",
-                  stage.status === 'completed' ? 'bg-green-100' : 
-                  stage.status === 'waiting_action' ? 'bg-amber-100' :
-                  stage.status === 'in_progress' ? 'bg-blue-100' : 'bg-muted'
-                )}
-              >
-                <Icon className={cn(
-                  "h-5 w-5",
-                  stage.status === 'completed' ? 'text-green-600' :
-                  stage.status === 'waiting_action' ? 'text-amber-600' :
-                  stage.status === 'in_progress' ? 'text-blue-600' : 'text-muted-foreground'
-                )} />
-              </div>
+            <div className="flex items-center gap-1 md:gap-2">
               <div className="flex-1 min-w-0">
-                <div className="flex items-start md:items-center gap-2 flex-col md:flex-row">
-                  <CardTitle className="text-base md:text-lg leading-tight">{stage.name}</CardTitle>
-                  <Badge className={cn("text-[10px] md:text-xs whitespace-nowrap", statusBadgeColor[stage.status])}>
-                    {statusLabels[stage.status]}
-                  </Badge>
-                </div>
-                {stage.responsible && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Responsável: {stage.responsible}
-                  </p>
-                )}
+                <StageSummary stage={stage} isExpanded={isExpanded} />
               </div>
-              <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                {isAdmin && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-10 w-10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsEditing(true);
-                    }}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                )}
-                <div className="h-10 w-10 flex items-center justify-center">
-                  {isExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </div>
-              </div>
+              {isAdmin && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-10 w-10 shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </CardHeader>
         </CollapsibleTrigger>
@@ -425,43 +199,26 @@ export function JourneyStageCard({
               </div>
             )}
 
-            {/* Description */}
-            {stage.description && !isEditing && (
-              <div className="prose prose-sm max-w-none text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                {stage.description}
-              </div>
-            )}
+            {/* Details (description, warning, dependencies, revision) */}
+            {!isEditing && <StageDetailsSections stage={stage} />}
 
-            {/* Warning */}
-            {stage.warning_text && (
-              <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-sm">{stage.warning_text}</AlertDescription>
-              </Alert>
-            )}
+            {/* Dates Panel */}
+            <StageDatesPanel
+              stageId={stage.id}
+              projectId={projectId}
+              dates={{
+                proposed_start: stage.proposed_start,
+                proposed_end: stage.proposed_end,
+                confirmed_start: stage.confirmed_start,
+                confirmed_end: stage.confirmed_end,
+              }}
+              isAdmin={isAdmin}
+              stageName={stage.name}
+            />
 
-            {/* Dependencies */}
-            {stage.dependencies_text && (
-              <Alert className="bg-blue-50 border-blue-200">
-                <Info className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800 whitespace-pre-line text-sm">
-                  <span className="font-medium">Dependências:</span>
-                  <br />
-                  {stage.dependencies_text}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Revision text */}
-            {stage.revision_text && (
-              <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                🔁 <span className="font-medium">Revisões:</span> {stage.revision_text}
-              </div>
-            )}
-
-            {/* Todos */}
+            {/* Checklists */}
             <div className="grid gap-5 md:gap-6 md:grid-cols-2">
-              <TodoList
+              <StageChecklist
                 todos={stage.todos}
                 owner="client"
                 label="✔️ To-dos do Cliente"
@@ -469,7 +226,7 @@ export function JourneyStageCard({
                 stageId={stage.id}
                 isAdmin={isAdmin}
               />
-              <TodoList
+              <StageChecklist
                 todos={stage.todos}
                 owner="bwild"
                 label="🧰 To-dos Bwild"

@@ -28,24 +28,28 @@ import type { JourneyCSM } from '@/components/journey/JourneyCSMSection';
    sort_order: number;
  }
  
- export interface JourneyStage {
-   id: string;
-   project_id: string;
-   sort_order: number;
-   name: string;
-   icon: string;
-   status: JourneyStageStatus;
-   description: string | null;
-   warning_text: string | null;
-   cta_text: string | null;
-   cta_url: string | null;
-   cta_visible: boolean;
-   microcopy: string | null;
-   responsible: string | null;
-   dependencies_text: string | null;
-   revision_text: string | null;
-   todos: JourneyTodo[];
- }
+export interface JourneyStage {
+  id: string;
+  project_id: string;
+  sort_order: number;
+  name: string;
+  icon: string;
+  status: JourneyStageStatus;
+  description: string | null;
+  warning_text: string | null;
+  cta_text: string | null;
+  cta_url: string | null;
+  cta_visible: boolean;
+  microcopy: string | null;
+  responsible: string | null;
+  dependencies_text: string | null;
+  revision_text: string | null;
+  proposed_start: string | null;
+  proposed_end: string | null;
+  confirmed_start: string | null;
+  confirmed_end: string | null;
+  todos: JourneyTodo[];
+}
  
  export interface ProjectJourneyData {
    hero: JourneyHero | null;
