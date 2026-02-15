@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN date_mobilization_start date;

@@ -1877,6 +1877,7 @@ export type Database = {
           date_approval_exec: string | null
           date_approval_obra: string | null
           date_briefing_arch: string | null
+          date_mobilization_start: string | null
           date_official_delivery: string | null
           date_official_start: string | null
           id: string
@@ -1900,6 +1901,7 @@ export type Database = {
           date_approval_exec?: string | null
           date_approval_obra?: string | null
           date_briefing_arch?: string | null
+          date_mobilization_start?: string | null
           date_official_delivery?: string | null
           date_official_start?: string | null
           id?: string
@@ -1923,6 +1925,7 @@ export type Database = {
           date_approval_exec?: string | null
           date_approval_obra?: string | null
           date_briefing_arch?: string | null
+          date_mobilization_start?: string | null
           date_official_delivery?: string | null
           date_official_start?: string | null
           id?: string

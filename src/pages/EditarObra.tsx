@@ -57,6 +57,7 @@ interface Project {
   date_approval_obra: string | null;
   date_official_start: string | null;
   date_official_delivery: string | null;
+  date_mobilization_start: string | null;
 }
 
 interface Customer {
@@ -305,6 +306,7 @@ export default function EditarObra() {
           date_approval_obra: project.date_approval_obra || null,
           date_official_start: project.date_official_start || null,
           date_official_delivery: project.date_official_delivery || null,
+          date_mobilization_start: project.date_mobilization_start || null,
         } as any)
         .eq('id', project.id);
 
@@ -806,6 +808,14 @@ export default function EditarObra() {
                       type="date"
                       value={project.date_approval_obra || ''}
                       onChange={(e) => handleProjectChange('date_approval_obra', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Início Mobilização</Label>
+                    <Input
+                      type="date"
+                      value={project.date_mobilization_start || ''}
+                      onChange={(e) => handleProjectChange('date_mobilization_start', e.target.value || null)}
                     />
                   </div>
                   <div>
