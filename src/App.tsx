@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +11,17 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
 import { createQueryPersister, QUERY_CACHE_VERSION } from "@/lib/queryPersister";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
+import { AuthRedirect } from "@/components/AuthRedirect";
+
+/** Thin wrapper: shows AuthRedirect (which navigates away) + a spinner while it resolves. */
+const AuthRedirectPage = () => {
+  return (
+    <>
+      <AuthRedirect />
+      <RouteFallback />
+    </>
+  );
+};
 
 // Route-level code splitting: reduz bundle/memória inicial e diminui chance de "tab discard".
 const Auth = lazy(() => import("./pages/Auth"));
@@ -27,7 +38,7 @@ const Demo = lazy(() => import("./pages/Demo"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
-const Home = lazy(() => import("./pages/Home"));
+
 const Index = lazy(() => import("./pages/Index"));
 const Contrato = lazy(() => import("./pages/Contrato"));
 const Projeto3D = lazy(() => import("./pages/Projeto3D"));
@@ -245,8 +256,8 @@ const App = () => (
               }
             />
             
-            {/* Legacy routes - redirect to appropriate pages */}
-            <Route path="/" element={<ProtectedRoute>{withSuspense(<Home />)}</ProtectedRoute>} />
+            {/* Root route - redirect based on role */}
+            <Route path="/" element={<ProtectedRoute><AuthRedirectPage /></ProtectedRoute>} />
             <Route path="/relatorio" element={<Navigate to="/minhas-obras" replace />} />
             <Route path="/contrato" element={<Navigate to="/minhas-obras" replace />} />
             <Route path="/projeto-3d" element={<Navigate to="/minhas-obras" replace />} />
