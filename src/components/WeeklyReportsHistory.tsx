@@ -5,6 +5,7 @@ import { Activity, WeeklyReport } from "@/types/report";
 import { parseLocalDate } from "@/lib/activityStatus";
 import { TrendingUp, TrendingDown, Minus, Calendar, ChevronRight, Clock, AlertTriangle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/EmptyState";
 
 interface WeeklyReportsHistoryProps {
   projectStartDate: string;
@@ -399,11 +400,11 @@ const WeeklyReportsHistory = ({
       </div>
 
       {weeklyReports.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground bg-card border border-border rounded-xl">
-          <AlertTriangle className="h-10 w-10 mx-auto mb-3 opacity-50" />
-          <p className="font-medium">Nenhum relatório disponível</p>
-          <p className="text-sm mt-1">Os relatórios semanais aparecerão aqui.</p>
-        </div>
+        <EmptyState
+          icon={AlertTriangle}
+          title="Nenhum relatório disponível"
+          description="Os relatórios semanais aparecerão aqui."
+        />
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState, useMemo, memo, useCallback } from "react";
+import { EmptyState } from "@/components/EmptyState";
 import {
   Table,
   TableBody,
@@ -234,9 +235,13 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
 
   if (activities.length === 0) {
     return (
-      <div className="mt-8 flex flex-col items-center justify-center py-12 text-muted-foreground bg-secondary/30 rounded-xl border border-border/50">
-        <CalendarDays className="w-12 h-12 mb-3 opacity-40" />
-        <p className="text-sm font-medium">Nenhuma atividade cadastrada.</p>
+      <div className="mt-8">
+        <EmptyState
+          variant="schedule"
+          title="Nenhuma atividade cadastrada"
+          description="As atividades do cronograma aparecerão aqui."
+          compact
+        />
       </div>
     );
   }
