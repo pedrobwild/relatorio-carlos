@@ -51,6 +51,12 @@ interface Project {
   contract_value: number | null;
   status: string;
   is_project_phase: boolean;
+  date_briefing_arch: string | null;
+  date_approval_3d: string | null;
+  date_approval_exec: string | null;
+  date_approval_obra: string | null;
+  date_official_start: string | null;
+  date_official_delivery: string | null;
 }
 
 interface Customer {
@@ -293,7 +299,13 @@ export default function EditarObra() {
           contract_value: project.contract_value,
           status: project.status,
           is_project_phase: project.is_project_phase,
-        })
+          date_briefing_arch: project.date_briefing_arch || null,
+          date_approval_3d: project.date_approval_3d || null,
+          date_approval_exec: project.date_approval_exec || null,
+          date_approval_obra: project.date_approval_obra || null,
+          date_official_start: project.date_official_start || null,
+          date_official_delivery: project.date_official_delivery || null,
+        } as any)
         .eq('id', project.id);
 
       if (error) throw error;
@@ -746,6 +758,70 @@ export default function EditarObra() {
                       type="date"
                       value={project.actual_end_date || ''}
                       onChange={(e) => handleProjectChange('actual_end_date', e.target.value || null)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-body">
+                  <Calendar className="h-5 w-5" />
+                  Datas Marco
+                </CardTitle>
+                <CardDescription>
+                  Datas dos marcos principais do projeto. Podem ser preenchidas posteriormente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Briefing Arquitetura</Label>
+                    <Input
+                      type="date"
+                      value={project.date_briefing_arch || ''}
+                      onChange={(e) => handleProjectChange('date_briefing_arch', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Aprovação Projeto 3D</Label>
+                    <Input
+                      type="date"
+                      value={project.date_approval_3d || ''}
+                      onChange={(e) => handleProjectChange('date_approval_3d', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Aprovação Projeto Executivo</Label>
+                    <Input
+                      type="date"
+                      value={project.date_approval_exec || ''}
+                      onChange={(e) => handleProjectChange('date_approval_exec', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Aprovação da Obra</Label>
+                    <Input
+                      type="date"
+                      value={project.date_approval_obra || ''}
+                      onChange={(e) => handleProjectChange('date_approval_obra', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Início Oficial</Label>
+                    <Input
+                      type="date"
+                      value={project.date_official_start || ''}
+                      onChange={(e) => handleProjectChange('date_official_start', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Entrega Oficial</Label>
+                    <Input
+                      type="date"
+                      value={project.date_official_delivery || ''}
+                      onChange={(e) => handleProjectChange('date_official_delivery', e.target.value || null)}
                     />
                   </div>
                 </div>

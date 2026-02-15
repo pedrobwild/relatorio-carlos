@@ -41,6 +41,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+interface MilestoneDates {
+  dateBriefingArch?: string | null;
+  dateApproval3d?: string | null;
+  dateApprovalExec?: string | null;
+  dateApprovalObra?: string | null;
+  dateOfficialStart?: string | null;
+  dateOfficialDelivery?: string | null;
+}
+
 interface ReportHeaderProps {
   projectName: string;
   unitName: string;
@@ -50,6 +59,7 @@ interface ReportHeaderProps {
   reportDate: string;
   activities: Activity[];
   isProjectPhase?: boolean;
+  milestoneDates?: MilestoneDates;
 }
 
 interface LegacyTeamContact {
@@ -93,6 +103,7 @@ const ReportHeader = ({
   reportDate,
   activities,
   isProjectPhase = false,
+  milestoneDates,
 }: ReportHeaderProps) => {
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [showDateChangeAlert, setShowDateChangeAlert] = useState(false);
@@ -417,37 +428,37 @@ const ReportHeader = ({
               <KPIStatCard
                 icon={Calendar}
                 label="Briefing Arquitetura"
-                value="—"
+                value={milestoneDates?.dateBriefingArch ? formatDateFull(milestoneDates.dateBriefingArch) : "—"}
                 size="compact"
               />
               <KPIStatCard
                 icon={Calendar}
                 label="Aprov. Projeto 3D"
-                value="—"
+                value={milestoneDates?.dateApproval3d ? formatDateFull(milestoneDates.dateApproval3d) : "—"}
                 size="compact"
               />
               <KPIStatCard
                 icon={Calendar}
                 label="Aprov. Proj. Executivo"
-                value="—"
+                value={milestoneDates?.dateApprovalExec ? formatDateFull(milestoneDates.dateApprovalExec) : "—"}
                 size="compact"
               />
               <KPIStatCard
                 icon={Calendar}
                 label="Aprovação da Obra"
-                value="—"
+                value={milestoneDates?.dateApprovalObra ? formatDateFull(milestoneDates.dateApprovalObra) : "—"}
                 size="compact"
               />
               <KPIStatCard
                 icon={Calendar}
                 label="Início oficial"
-                value={formatDateFull(startDate)}
+                value={milestoneDates?.dateOfficialStart ? formatDateFull(milestoneDates.dateOfficialStart) : formatDateFull(startDate)}
                 size="compact"
               />
               <KPIStatCard
                 icon={CheckCircle2}
                 label="Entrega oficial"
-                value={formatDateFull(effectiveEndDate)}
+                value={milestoneDates?.dateOfficialDelivery ? formatDateFull(milestoneDates.dateOfficialDelivery) : formatDateFull(effectiveEndDate)}
                 size="compact"
                 onClick={endDate === dateChangeInfo.originalDate ? () => setShowDateChangeAlert(true) : undefined}
                 variant={endDate === dateChangeInfo.originalDate ? "warning" : "default"}

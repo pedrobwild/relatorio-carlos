@@ -1873,6 +1873,12 @@ export type Database = {
           contract_value: number | null
           created_at: string
           created_by: string
+          date_approval_3d: string | null
+          date_approval_exec: string | null
+          date_approval_obra: string | null
+          date_briefing_arch: string | null
+          date_official_delivery: string | null
+          date_official_start: string | null
           id: string
           is_project_phase: boolean
           name: string
@@ -1890,6 +1896,12 @@ export type Database = {
           contract_value?: number | null
           created_at?: string
           created_by: string
+          date_approval_3d?: string | null
+          date_approval_exec?: string | null
+          date_approval_obra?: string | null
+          date_briefing_arch?: string | null
+          date_official_delivery?: string | null
+          date_official_start?: string | null
           id?: string
           is_project_phase?: boolean
           name: string
@@ -1907,6 +1919,12 @@ export type Database = {
           contract_value?: number | null
           created_at?: string
           created_by?: string
+          date_approval_3d?: string | null
+          date_approval_exec?: string | null
+          date_approval_obra?: string | null
+          date_briefing_arch?: string | null
+          date_official_delivery?: string | null
+          date_official_start?: string | null
           id?: string
           is_project_phase?: boolean
           name?: string

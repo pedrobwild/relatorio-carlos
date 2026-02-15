@@ -153,6 +153,20 @@ const Index = () => {
     return maxDate.toISOString().split('T')[0];
   };
 
+  // Milestone dates from project (cast to any since new columns may not be in generated types yet)
+  const milestoneDates = useMemo(() => {
+    if (!project) return undefined;
+    const p = project as any;
+    return {
+      dateBriefingArch: p.date_briefing_arch ?? null,
+      dateApproval3d: p.date_approval_3d ?? null,
+      dateApprovalExec: p.date_approval_exec ?? null,
+      dateApprovalObra: p.date_approval_obra ?? null,
+      dateOfficialStart: p.date_official_start ?? null,
+      dateOfficialDelivery: p.date_official_delivery ?? null,
+    };
+  }, [project]);
+
   // Use real project data if available, demo data only in demo mode
   const reportData: ReportData | null = useMemo(() => {
     if (project) {
@@ -431,6 +445,7 @@ const Index = () => {
               reportDate={reportData.reportDate}
               activities={reportData.activities}
               isProjectPhase={project?.is_project_phase}
+              milestoneDates={milestoneDates}
             />
 
             {/* Onboarding for new users */}
@@ -481,7 +496,8 @@ const Index = () => {
                 endDate={reportData.endDate}
                 reportDate={reportData.reportDate}
                 activities={reportData.activities}
-              isProjectPhase={project?.is_project_phase}
+                isProjectPhase={project?.is_project_phase}
+                milestoneDates={milestoneDates}
               />
             </div>
 
