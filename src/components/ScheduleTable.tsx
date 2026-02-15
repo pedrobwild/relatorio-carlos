@@ -1,4 +1,6 @@
 import { useState, useMemo, memo, useCallback } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { EmptyState } from "@/components/EmptyState";
 import {
   Table,
@@ -8,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, Clock, AlertTriangle, CalendarDays, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, CalendarDays, ArrowUpDown, ArrowUp, ArrowDown, CalendarIcon, X } from "lucide-react";
 import { Activity } from "@/types/report";
 import { cn } from "@/lib/utils";
 import {
@@ -17,12 +19,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 
 interface ScheduleTableProps {
   activities: Activity[];
   reportDate?: string;
   selectedActivityId?: string | null;
   onActivitySelect?: (activityId: string | null) => void;
+  /** If true, actual dates become editable */
+  canEditDates?: boolean;
+  /** Callback to persist date changes */
+  onUpdateActivityDates?: (activityId: string, updates: { actual_start?: string | null; actual_end?: string | null }) => Promise<boolean>;
 }
 
 type Status = "completed" | "delayed" | "on-time" | "in-progress" | "pending";
@@ -43,23 +56,25 @@ const formatDate = (dateStr: string, baseYear?: number): string => {
   return `${day}/${month}`;
 };
 
+const toISODate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 const parseDate = (dateStr: string): Date | null => {
   if (!dateStr) return null;
   return new Date(dateStr + "T00:00:00");
 };
 
 const getActivityStatus = (activity: Activity): Status => {
-  // Not started yet
   if (!activity.actualStart) {
     return "pending";
   }
-  
-  // Has actual end date = completed (regardless of delay)
   if (activity.actualEnd) {
     return "completed";
   }
-  
-  // Started but not finished
   return "in-progress";
 };
 
@@ -72,12 +87,11 @@ const getDelayDays = (activity: Activity): number | null => {
   if (plannedEnd && actualEnd) {
     const diffTime = actualEnd.getTime() - plannedEnd.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays; // Positive = delayed, Negative = ahead
+    return diffDays;
   }
   return null;
 };
 
-// Formatação do desvio em dias
 const formatDeviation = (days: number | null): { text: string; className: string } => {
   if (days === null) return { text: "—", className: "text-muted-foreground" };
   if (days === 0) return { text: "No prazo", className: "text-success" };
@@ -93,7 +107,6 @@ const statusOrder: Record<Status, number> = {
   completed: 4,
 };
 
-// Memoized to prevent re-renders when parent updates
 const StatusBadge = memo(({ status }: { status: Status }) => {
   const config = {
     completed: {
@@ -169,16 +182,181 @@ const SortableHeader = ({ field, currentField, direction, onSort, children, clas
   );
 };
 
-const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivitySelect }: ScheduleTableProps) => {
+/** Inline date cell with popover picker for staff */
+function EditableDateCell({
+  value,
+  baseYear,
+  activityId,
+  field,
+  onSave,
+}: {
+  value: string;
+  baseYear: number;
+  activityId: string;
+  field: "actual_start" | "actual_end";
+  onSave: (activityId: string, updates: { actual_start?: string | null; actual_end?: string | null }) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const currentDate = value ? new Date(value + "T00:00:00") : undefined;
+
+  const handleSelect = async (date: Date | undefined) => {
+    setSaving(true);
+    const isoDate = date ? toISODate(date) : null;
+    await onSave(activityId, { [field]: isoDate });
+    setSaving(false);
+    setOpen(false);
+  };
+
+  const handleClear = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSaving(true);
+    await onSave(activityId, { [field]: null });
+    setSaving(false);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "inline-flex items-center gap-1 px-2 py-1 rounded-md text-sm tabular-nums transition-all min-h-[32px]",
+            "hover:bg-primary/10 hover:text-primary cursor-pointer group",
+            value ? "font-medium text-foreground" : "text-muted-foreground",
+            saving && "opacity-50 pointer-events-none"
+          )}
+          title={`Clique para ${value ? 'alterar' : 'definir'} a data`}
+        >
+          {value ? formatDate(value, baseYear) : "—"}
+          <CalendarIcon className="w-3 h-3 opacity-0 group-hover:opacity-70 transition-opacity shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="center" sideOffset={4}>
+        <div className="p-2 pb-0 flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground">
+            {field === "actual_start" ? "Início Real" : "Término Real"}
+          </span>
+          {value && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={handleClear}
+            >
+              <X className="w-3 h-3 mr-1" />
+              Limpar
+            </Button>
+          )}
+        </div>
+        <Calendar
+          mode="single"
+          selected={currentDate}
+          onSelect={handleSelect}
+          locale={ptBR}
+          initialFocus
+          className="p-3 pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Read-only date cell for mobile editing */
+function EditableDateCellMobile({
+  value,
+  baseYear,
+  activityId,
+  field,
+  label,
+  onSave,
+}: {
+  value: string;
+  baseYear: number;
+  activityId: string;
+  field: "actual_start" | "actual_end";
+  label: string;
+  onSave: (activityId: string, updates: { actual_start?: string | null; actual_end?: string | null }) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const currentDate = value ? new Date(value + "T00:00:00") : undefined;
+
+  const handleSelect = async (date: Date | undefined) => {
+    setSaving(true);
+    const isoDate = date ? toISODate(date) : null;
+    await onSave(activityId, { [field]: isoDate });
+    setSaving(false);
+    setOpen(false);
+  };
+
+  const handleClear = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSaving(true);
+    await onSave(activityId, { [field]: null });
+    setSaving(false);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "w-full text-left bg-muted/40 rounded-md px-2 py-1.5 transition-all",
+            "hover:bg-primary/10 hover:ring-1 hover:ring-primary/30 cursor-pointer",
+            saving && "opacity-50 pointer-events-none"
+          )}
+          onClick={(e) => { e.stopPropagation(); }}
+        >
+          <p className="text-[8px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5 flex items-center gap-1">
+            {label}
+            <CalendarIcon className="w-2.5 h-2.5" />
+          </p>
+          <p className={cn(
+            "text-[10px] font-semibold tabular-nums",
+            value ? "text-foreground" : "text-muted-foreground"
+          )}>
+            {value ? formatDate(value, baseYear) : "Toque para definir"}
+          </p>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+        <div className="p-2 pb-0 flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
+          {value && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={handleClear}
+            >
+              <X className="w-3 h-3 mr-1" />
+              Limpar
+            </Button>
+          )}
+        </div>
+        <Calendar
+          mode="single"
+          selected={currentDate}
+          onSelect={handleSelect}
+          locale={ptBR}
+          initialFocus
+          className="p-3 pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivitySelect, canEditDates, onUpdateActivityDates }: ScheduleTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   
-  // Get base year from first activity's planned start
   const baseYear = activities.length > 0 && activities[0].plannedStart
     ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
     : new Date().getFullYear();
 
-  // Find current activity index based on reportDate
   const currentActivityIndex = useMemo(() => {
     if (!reportDate) return -1;
     const currentDate = new Date(reportDate + "T00:00:00");
@@ -225,7 +403,6 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
     });
   }, [activities, sortField, sortDirection]);
 
-  // Stats
   const stats = useMemo(() => {
     const delayed = activities.filter(a => getActivityStatus(a) === "delayed").length;
     const completed = activities.filter(a => getActivityStatus(a) === "completed").length;
@@ -260,10 +437,12 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
             </h3>
             <p className="text-[9px] md:text-xs text-muted-foreground">
               {stats.total} atividades • {stats.completed} concluídas
+              {canEditDates && (
+                <span className="text-primary ml-1">• Datas editáveis</span>
+              )}
             </p>
           </div>
           
-          {/* Quick stats badge - inline on mobile */}
           {stats.delayed > 0 && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] md:text-[10px] font-semibold bg-warning/10 text-warning border border-warning/30 shrink-0">
               <AlertTriangle className="w-2.5 h-2.5" />
@@ -273,28 +452,24 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
         </div>
       </div>
 
-      {/* Mobile Card View - Optimized for touch */}
+      {/* Mobile Card View */}
       <div className="md:hidden space-y-1.5">
         {sortedActivities.map((activity, index) => {
           const originalIndex = activities.indexOf(activity);
           const status = getActivityStatus(activity);
-          const isCurrentPhase = originalIndex === currentActivityIndex;
-          const delayDays = getDelayDays(activity);
-          const isDelayed = delayDays !== null && delayDays > 0;
-          const isAhead = delayDays !== null && delayDays < 0;
           
           return (
             <div
               key={activity.id || index}
               className={cn(
-                "bg-card border rounded-lg p-2.5 shadow-sm opacity-0 animate-fade-in transition-all active:scale-[0.98]",
-                onActivitySelect && "cursor-pointer",
+                "bg-card border rounded-lg p-2.5 shadow-sm opacity-0 animate-fade-in transition-all",
+                !canEditDates && onActivitySelect && "cursor-pointer active:scale-[0.98]",
                 selectedActivityId === activity.id 
                   ? "border-primary ring-2 ring-primary/20" 
                   : "border-border"
               )}
               style={{ animationDelay: `${index * 30}ms` }}
-              onClick={() => onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
+              onClick={() => !canEditDates && onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
             >
               {/* Top row: Number + Status */}
               <div className="flex items-center justify-between mb-1.5">
@@ -304,7 +479,7 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
                 <StatusBadge status={status} />
               </div>
 
-              {/* Title - Full width, no truncation */}
+              {/* Title */}
               <p className="text-xs font-semibold leading-snug text-foreground mb-2">
                 {activity.description}
               </p>
@@ -317,12 +492,33 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
                     {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
                   </p>
                 </div>
-                <div className="bg-muted/40 rounded-md px-2 py-1.5">
-                  <p className="text-[8px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Real</p>
-                  <p className="text-[10px] font-semibold tabular-nums text-foreground">
-                    {activity.actualStart ? `${formatDate(activity.actualStart, baseYear)} → ${formatDate(activity.actualEnd, baseYear)}` : "—"}
-                  </p>
-                </div>
+                {canEditDates && onUpdateActivityDates && activity.id ? (
+                  <>
+                    <EditableDateCellMobile
+                      value={activity.actualStart}
+                      baseYear={baseYear}
+                      activityId={activity.id}
+                      field="actual_start"
+                      label="Início Real"
+                      onSave={onUpdateActivityDates}
+                    />
+                    <EditableDateCellMobile
+                      value={activity.actualEnd}
+                      baseYear={baseYear}
+                      activityId={activity.id}
+                      field="actual_end"
+                      label="Término Real"
+                      onSave={onUpdateActivityDates}
+                    />
+                  </>
+                ) : (
+                  <div className="bg-muted/40 rounded-md px-2 py-1.5">
+                    <p className="text-[8px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Real</p>
+                    <p className="text-[10px] font-semibold tabular-nums text-foreground">
+                      {activity.actualStart ? `${formatDate(activity.actualStart, baseYear)} → ${formatDate(activity.actualEnd, baseYear)}` : "—"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -401,14 +597,14 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
                     key={activity.id || index}
                     className={cn(
                       "transition-colors border-b border-border/50 last:border-b-0",
-                      onActivitySelect && "cursor-pointer",
+                      !canEditDates && onActivitySelect && "cursor-pointer",
                       selectedActivityId === activity.id 
                         ? "bg-primary/10 hover:bg-primary/15 ring-1 ring-inset ring-primary/30" 
                         : index % 2 === 0 
                           ? "bg-card hover:bg-accent/30" 
                           : "bg-secondary/20 hover:bg-accent/30"
                     )}
-                    onClick={() => onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
+                    onClick={() => !canEditDates && onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
                   >
                     <TableCell className="py-3.5 pl-4 pr-3">
                       <div className="flex items-center gap-2.5">
@@ -426,11 +622,35 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
                     <TableCell className="py-3.5 text-center text-sm text-muted-foreground tabular-nums">
                       {formatDate(activity.plannedEnd, baseYear)}
                     </TableCell>
-                    <TableCell className="py-3.5 text-center text-sm font-medium text-foreground tabular-nums">
-                      {formatDate(activity.actualStart, baseYear)}
+                    <TableCell className="py-3.5 text-center">
+                      {canEditDates && onUpdateActivityDates && activity.id ? (
+                        <EditableDateCell
+                          value={activity.actualStart}
+                          baseYear={baseYear}
+                          activityId={activity.id}
+                          field="actual_start"
+                          onSave={onUpdateActivityDates}
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-foreground tabular-nums">
+                          {formatDate(activity.actualStart, baseYear)}
+                        </span>
+                      )}
                     </TableCell>
-                    <TableCell className="py-3.5 text-center text-sm font-medium tabular-nums text-foreground">
-                      {formatDate(activity.actualEnd, baseYear)}
+                    <TableCell className="py-3.5 text-center">
+                      {canEditDates && onUpdateActivityDates && activity.id ? (
+                        <EditableDateCell
+                          value={activity.actualEnd}
+                          baseYear={baseYear}
+                          activityId={activity.id}
+                          field="actual_end"
+                          onSave={onUpdateActivityDates}
+                        />
+                      ) : (
+                        <span className="text-sm font-medium tabular-nums text-foreground">
+                          {formatDate(activity.actualEnd, baseYear)}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="py-3.5 pr-4 text-center">
                       <StatusBadge status={status} />
