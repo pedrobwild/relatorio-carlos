@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, useCallback } from "react";
+import React, { useState, useMemo, memo, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { EmptyState } from "@/components/EmptyState";
@@ -107,7 +107,7 @@ const statusOrder: Record<Status, number> = {
   completed: 4,
 };
 
-const StatusBadge = memo(({ status }: { status: Status }) => {
+const StatusBadge = memo(React.forwardRef<HTMLSpanElement, { status: Status }>(({ status, ...rest }, ref) => {
   const config = {
     completed: {
       icon: CheckCircle2,
@@ -140,13 +140,15 @@ const StatusBadge = memo(({ status }: { status: Status }) => {
 
   return (
     <span
+      ref={ref}
       className={`inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold border ${className}`}
+      {...rest}
     >
       <Icon className="w-3 h-3 md:w-3.5 md:h-3.5" />
       {label}
     </span>
   );
-});
+}));
 StatusBadge.displayName = 'StatusBadge';
 
 interface SortableHeaderProps {
