@@ -85,7 +85,7 @@ export function ProgressSection({
       : 0;
 
   return (
-    <section className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4" aria-label="Progresso">
+    <section className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4 items-start" aria-label="Progresso">
       {/* Timeline Progress */}
       <ProgressBar
         label="Cronograma"

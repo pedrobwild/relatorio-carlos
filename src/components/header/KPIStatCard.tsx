@@ -56,24 +56,26 @@ export function KPIStatCard({
     <Comp
       onClick={onClick}
       className={cn(
-        "rounded-xl border p-3 sm:p-3.5 flex flex-col text-left transition-all min-h-[84px] group",
+        "rounded-xl border p-3 sm:p-3.5 flex flex-col justify-between text-left transition-all min-h-[88px] group",
         variantStyles[variant],
         onClick && "cursor-pointer hover:shadow-md hover:border-primary/30 active:scale-[0.98]",
         className
       )}
     >
-      <div className="flex items-center gap-1.5 mb-auto">
+      <div className="flex items-center gap-1.5">
         <Icon className={cn("w-3.5 h-3.5 flex-shrink-0", iconStyles[variant])} />
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground leading-none">{label}</span>
         {badge}
       </div>
       {children || (
-        <p className={cn("text-xl font-bold mt-1.5 tabular-nums leading-tight", valueStyles[variant])}>
-          {value}
+        <div className="mt-auto pt-1.5">
+          <p className={cn("text-xl font-bold tabular-nums leading-none", valueStyles[variant])}>
+            {value}
+          </p>
           {unit && (
-            <span className="text-[11px] font-normal text-muted-foreground ml-1">{unit}</span>
+            <span className="text-[11px] font-normal text-muted-foreground mt-1 block">{unit}</span>
           )}
-        </p>
+        </div>
       )}
     </Comp>
   );
