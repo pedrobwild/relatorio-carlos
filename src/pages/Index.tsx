@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, FileText, Loader2, AlertCircle, Activity, Plus, GanttChartSquare, Calendar } from "lucide-react";
+import { BarChart3, FileText, Loader2, AlertCircle, Plus, GanttChartSquare, Calendar, DollarSign, FolderOpen, ClipboardSignature, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ActivityTimeline } from "@/components/ActivityTimeline";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
@@ -82,7 +81,7 @@ const Index = () => {
   );
 
   const [activeTab, setActiveTab] = useState(() => {
-    return getPortalViewState(viewStateKey).activeTab ?? "curvaS";
+    return getPortalViewState(viewStateKey).activeTab ?? "cronograma";
   });
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
@@ -242,7 +241,7 @@ const Index = () => {
 
     // Se havia um relatório semanal aberto, força a aba “Relatórios” e restaura.
     if (open && typeof idx === "number" && reportsChronological[idx]) {
-      setActiveTab("relatorio");
+      setActiveTab("evolucao");
       setSelectedWeekIndex(idx);
       setSelectedWeeklyReport(reportsChronological[idx]);
     }
@@ -311,7 +310,7 @@ const Index = () => {
     setSelectedWeeklyReport(report);
     setSelectedWeekIndex(index);
     patchPortalViewState(viewStateKey, {
-      activeTab: "relatorio",
+      activeTab: "evolucao",
       weeklyReport: { open: true, index },
     });
   }, [viewStateKey]);
@@ -506,27 +505,43 @@ const Index = () => {
             </div>
 
             <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs value={activeTab} onValueChange={(val) => {
+                // Navigation tabs: redirect to page
+                if (val === "financeiro") { navigate(paths.financeiro); return; }
+                if (val === "documentos") { navigate(paths.documentos); return; }
+                if (val === "formalizacoes") { navigate(paths.formalizacoes); return; }
+                if (val === "pendencias") { navigate(paths.pendencias); return; }
+                setActiveTab(val);
+              }} className="w-full">
                 <div className="portal-tabs-bar">
                   <div className="px-3 md:px-5">
                     <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto scrollbar-hide">
-                      <TabsTrigger value="curvaS" className="portal-tab-trigger">
-                        <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
-                        Curva S
+                      <TabsTrigger value="cronograma" className="portal-tab-trigger">
+                        <GanttChartSquare className="w-3.5 h-3.5 mr-1.5" />
+                        Cronograma
                       </TabsTrigger>
-                      {/* Gantt tab hidden temporarily */}
-                      <TabsTrigger
-                        value="relatorio"
-                        className="portal-tab-trigger"
+                      <TabsTrigger value="evolucao" className="portal-tab-trigger"
                         onMouseEnter={() => prefetchForTab('relatorio', projectId)}
                         onFocus={() => prefetchForTab('relatorio', projectId)}
                       >
-                        <FileText className="w-3.5 h-3.5 mr-1.5" />
-                        Relatórios
+                        <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
+                        Evolução de Obra
                       </TabsTrigger>
-                      <TabsTrigger value="atividade" className="portal-tab-trigger">
-                        <Activity className="w-3.5 h-3.5 mr-1.5" />
-                        Atividade
+                      <TabsTrigger value="financeiro" className="portal-tab-trigger">
+                        <DollarSign className="w-3.5 h-3.5 mr-1.5" />
+                        Financeiro
+                      </TabsTrigger>
+                      <TabsTrigger value="documentos" className="portal-tab-trigger">
+                        <FolderOpen className="w-3.5 h-3.5 mr-1.5" />
+                        Documentos
+                      </TabsTrigger>
+                      <TabsTrigger value="formalizacoes" className="portal-tab-trigger">
+                        <ClipboardSignature className="w-3.5 h-3.5 mr-1.5" />
+                        Formalizações
+                      </TabsTrigger>
+                      <TabsTrigger value="pendencias" className="portal-tab-trigger">
+                        <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
+                        Pendências
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -536,13 +551,7 @@ const Index = () => {
                   <div className="flex gap-4">
                     {/* Main content area */}
                     <div className={selectedActivityId ? "flex-1 min-w-0" : "w-full"}>
-                      <TabsContent value="curvaS" className="mt-0 focus-visible:outline-none">
-                        <SCurveChart 
-                          activities={reportData.activities} 
-                          reportDate={reportData.reportDate}
-                          showFullChart={showFullChart}
-                          onShowFullChartChange={setShowFullChart}
-                        />
+                      <TabsContent value="cronograma" className="mt-0 focus-visible:outline-none">
                         <ScheduleTable 
                           activities={reportData.activities} 
                           reportDate={reportData.reportDate}
@@ -551,9 +560,7 @@ const Index = () => {
                         />
                       </TabsContent>
 
-                      {/* Gantt content hidden temporarily */}
-
-                      <TabsContent value="relatorio" className="mt-0 focus-visible:outline-none">
+                      <TabsContent value="evolucao" className="mt-0 focus-visible:outline-none">
                         {selectedWeeklyReport ? (
                           <>
                             <WeeklyReportHeader
@@ -572,7 +579,6 @@ const Index = () => {
                               const weekNum = extendedReport.weekNumber;
                               const weekStart = format(extendedReport.startDate, "yyyy-MM-dd");
                               const weekEnd = format(extendedReport.endDate, "yyyy-MM-dd");
-                              // Se já existe relatório salvo no banco, usa ele; senão template vazio
                               const storedData = reportDataByWeek.get(weekNum);
                               const templateData = storedData ?? createEmptyReportTemplate(
                                 projectId || "",
@@ -598,27 +604,29 @@ const Index = () => {
                             })()}
                           </>
                         ) : (
-                          <WeeklyReportsHistory
-                            projectStartDate={reportData.startDate}
-                            reportDate={reportData.reportDate}
-                            activities={reportData.activities}
-                            onReportClick={handleReportClick}
-                            isStaff={isStaff}
-                          />
+                          <>
+                            <SCurveChart 
+                              activities={reportData.activities} 
+                              reportDate={reportData.reportDate}
+                              showFullChart={showFullChart}
+                              onShowFullChartChange={setShowFullChart}
+                            />
+                            <div className="mt-6">
+                              <WeeklyReportsHistory
+                                projectStartDate={reportData.startDate}
+                                reportDate={reportData.reportDate}
+                                activities={reportData.activities}
+                                onReportClick={handleReportClick}
+                                isStaff={isStaff}
+                              />
+                            </div>
+                          </>
                         )}
-                      </TabsContent>
-
-                      <TabsContent value="atividade" className="mt-0 focus-visible:outline-none">
-                        <ActivityTimeline 
-                          projectId={project?.id} 
-                          maxItems={30}
-                          showHeader={false}
-                        />
                       </TabsContent>
                     </div>
 
                     {/* Activity Details Panel - visible on desktop when activity selected */}
-                    {selectedActivityId && (activeTab === 'curvaS' || activeTab === 'gantt') && (
+                    {selectedActivityId && activeTab === 'cronograma' && (
                       <div className="hidden lg:block w-80 shrink-0">
                         <ActivityDetailsPanel
                           activity={reportData.activities.find(a => a.id === selectedActivityId) || null}
