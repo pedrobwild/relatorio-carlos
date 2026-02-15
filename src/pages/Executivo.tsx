@@ -8,6 +8,7 @@ import PDFViewer from "@/components/PDFViewer";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const Executivo = () => {
   const { projectId } = useParams();
@@ -71,39 +72,25 @@ const Executivo = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to={paths.relatorio}>
-              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2.5">
-              <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
-              <span className="text-muted-foreground/40">|</span>
-              <h1 className="text-h2">Projeto Executivo</h1>
-            </div>
-          </div>
-          {hasDocument && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleOpenInNewTab(executivoDoc)}
-                className="h-9 w-9 rounded-full sm:hidden hover:bg-primary/10"
-                title="Abrir em nova aba"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </Button>
-              <Button onClick={() => handleDownload(executivoDoc)} size="sm" className="gap-2 h-9">
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Download</span>
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <PageHeader title="Projeto Executivo" backTo={paths.relatorio}>
+        {hasDocument && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleOpenInNewTab(executivoDoc)}
+              className="h-9 w-9 rounded-full sm:hidden hover:bg-primary/10"
+              title="Abrir em nova aba"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+            <Button onClick={() => handleDownload(executivoDoc)} size="sm" className="gap-2 h-9">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Download</span>
+            </Button>
+          </>
+        )}
+      </PageHeader>
 
       {/* Content */}
       {hasDocument ? (

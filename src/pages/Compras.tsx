@@ -64,6 +64,8 @@ import { useProjectActivities } from '@/hooks/useProjectActivities';
 import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
 import { PurchaseAlertBadge } from '@/components/PurchaseAlertBadge';
 import { cn } from '@/lib/utils';
+import { PageContainer } from '@/components/layout/PageContainer';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 const statusConfig: Record<PurchaseStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'Pendente', color: 'bg-amber-500/20 text-amber-700 border-amber-500/30', icon: Clock },
@@ -246,28 +248,14 @@ export default function Compras() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to={`/obra/${projectId}/cronograma`}>
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <ShoppingCart className="h-6 w-6" />
-                Cronograma de Compras
-              </h1>
-              <p className="text-muted-foreground">Planejamento de aquisições vinculado ao cronograma</p>
-            </div>
-          </div>
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Item
-          </Button>
-        </div>
+      <PageHeader title="Cronograma de Compras" backTo={`/obra/${projectId}/cronograma`} maxWidth="full" showLogo={false}>
+        <Button onClick={() => handleOpenDialog()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Item
+        </Button>
+      </PageHeader>
+      <div className="py-6">
+        <PageContainer maxWidth="full" className="space-y-6">
 
         {/* Alerts Panel */}
         <PurchaseAlertsPanel
@@ -509,6 +497,7 @@ export default function Compras() {
             )}
           </CardContent>
         </Card>
+        </PageContainer>
       </div>
 
       {/* Add/Edit Dialog */}
