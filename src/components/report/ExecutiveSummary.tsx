@@ -1,11 +1,12 @@
 import { WeeklyReportData, DeliverableItem } from "@/types/weeklyReport";
 import { CheckCircle2, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import DOMPurify from "dompurify";
 
 interface ExecutiveSummaryProps {
   data: WeeklyReportData;
@@ -13,13 +14,41 @@ interface ExecutiveSummaryProps {
 
 const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
   const [isOpen, setIsOpen] = useState(true);
-  const paragraphs = data.executiveSummary.split('\n\n');
-  const firstParagraph = paragraphs[0];
+
+  const isHtml = /<[a-z][\s\S]*>/i.test(data.executiveSummary);
+
+  const sanitizedHtml = useMemo(() => {
+    if (isHtml) {
+      return DOMPurify.sanitize(data.executiveSummary);
+    }
+    return "";
+  }, [data.executiveSummary, isHtml]);
+
+  // For plain text fallback
+  const paragraphs = isHtml ? [] : data.executiveSummary.split('\n\n');
+  const firstParagraph = paragraphs[0] || "";
   const remainingParagraphs = paragraphs.slice(1);
+
+  const renderContent = () => {
+    if (isHtml) {
+      return (
+        <div
+          className="text-sm text-foreground/85 leading-[1.7] prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1"
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+        />
+      );
+    }
+    return (
+      <div className="text-sm text-foreground/85 leading-[1.7] space-y-3">
+        {paragraphs.map((paragraph, index) => (
+          <p key={index}>{paragraph}</p>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* Summary Text - Collapsible on Mobile */}
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         <div className="px-4 py-2.5 bg-primary-dark">
           <h3 className="text-base font-semibold text-white tracking-tight">Resumo Executivo</h3>
@@ -27,50 +56,52 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
         
         {/* Desktop: Always show full content */}
         <div className="hidden sm:block px-5 py-4 sm:px-6 sm:py-5">
-          <div className="text-sm text-foreground/85 leading-[1.7] space-y-3">
-            {paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
+          {renderContent()}
         </div>
 
         {/* Mobile: Collapsible content */}
         <div className="sm:hidden">
-          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <div className="px-4 py-3">
-              <p className="text-sm leading-[1.65] text-foreground/85">
-                {firstParagraph}
-              </p>
-              
-              <CollapsibleContent className="overflow-hidden">
-                <div className="space-y-3 mt-3">
-                  {remainingParagraphs.map((paragraph, index) => (
-                      <p 
-                        key={index} 
-                        className="text-sm leading-[1.65] text-foreground/85"
-                      style={{
-                        animationDelay: `${(index + 1) * 50}ms`,
-                        animation: isOpen ? 'fade-in 0.3s ease-out forwards' : undefined,
-                        opacity: isOpen ? 0 : 1
-                      }}
-                    >
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </div>
-            
-            {remainingParagraphs.length > 0 && (
+          {isHtml ? (
+            <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+              <div className="px-4 py-3">
+                <CollapsibleContent className="overflow-hidden" forceMount>
+                  {renderContent()}
+                </CollapsibleContent>
+              </div>
               <CollapsibleTrigger asChild>
                 <button className="w-full py-2.5 px-4 border-t border-border flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
                   <span>{isOpen ? "Ver menos" : "Continuar lendo"}</span>
-                  {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-xs font-semibold">+{remainingParagraphs.length}</span>}
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                 </button>
               </CollapsibleTrigger>
-            )}
-          </Collapsible>
+            </Collapsible>
+          ) : (
+            <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+              <div className="px-4 py-3">
+                <p className="text-sm leading-[1.65] text-foreground/85">
+                  {firstParagraph}
+                </p>
+                <CollapsibleContent className="overflow-hidden">
+                  <div className="space-y-3 mt-3">
+                    {remainingParagraphs.map((paragraph, index) => (
+                      <p key={index} className="text-sm leading-[1.65] text-foreground/85">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </div>
+              {remainingParagraphs.length > 0 && (
+                <CollapsibleTrigger asChild>
+                  <button className="w-full py-2.5 px-4 border-t border-border flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
+                    <span>{isOpen ? "Ver menos" : "Continuar lendo"}</span>
+                    {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-xs font-semibold">+{remainingParagraphs.length}</span>}
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                </CollapsibleTrigger>
+              )}
+            </Collapsible>
+          )}
         </div>
       </div>
 
@@ -91,15 +122,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                   {item.subItems && item.subItems.length > 0 && (
                     <ul className="ml-6 space-y-1 border-l-2 border-border pl-3">
                       {item.subItems.map((subItem, subIndex) => (
-                        <li 
-                          key={subItem.id} 
-                          className="text-sm text-foreground/75 leading-[1.6]"
-                          style={{
-                            animationDelay: `${(subIndex + 1) * 30}ms`,
-                            animation: 'fade-in 0.3s ease-out forwards',
-                            opacity: 0
-                          }}
-                        >
+                        <li key={subItem.id} className="text-sm text-foreground/75 leading-[1.6]">
                           {subItem.description}
                         </li>
                       ))}

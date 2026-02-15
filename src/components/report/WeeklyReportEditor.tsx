@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Save, FileText, AlertTriangle, Calendar, Camera, MessageSquare, Video, Image, X, CheckCircle2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, FileText, AlertTriangle, Calendar, Camera, MessageSquare, Video, Image, X, CheckCircle2, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { RichTextEditorModal } from "./RichTextEditorModal";
 
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
@@ -31,6 +32,7 @@ const WeeklyReportEditor = ({
   isSaving: externalIsSaving,
 }: WeeklyReportEditorProps) => {
   const [formData, setFormData] = useState<WeeklyReportData>(data);
+  const [richTextOpen, setRichTextOpen] = useState(false);
 
   // Auto-save hook - saves automatically after 3 seconds of inactivity
   // IMPORTANT: auto-save must NOT close the editor.
@@ -319,12 +321,36 @@ const WeeklyReportEditor = ({
               <span className="font-semibold">Resumo Executivo</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <Textarea
-              placeholder="Descreva o resumo das atividades realizadas nesta semana..."
+          <AccordionContent className="px-4 pb-4 space-y-3">
+            <div className="relative">
+              {/* Preview of current content */}
+              <div
+                className="min-h-[100px] p-3 bg-muted/30 rounded-md border border-border text-sm leading-[1.7] text-foreground/85 cursor-pointer hover:border-primary/40 transition-colors"
+                onClick={() => setRichTextOpen(true)}
+                dangerouslySetInnerHTML={{
+                  __html: formData.executiveSummary
+                    ? (/<[a-z][\s\S]*>/i.test(formData.executiveSummary)
+                      ? formData.executiveSummary
+                      : formData.executiveSummary.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>'))
+                    : '<span class="text-muted-foreground">Clique para editar o resumo executivo...</span>',
+                }}
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setRichTextOpen(true)}
+              className="w-full"
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Abrir Editor de Texto
+            </Button>
+            <RichTextEditorModal
+              open={richTextOpen}
+              onOpenChange={setRichTextOpen}
               value={formData.executiveSummary}
-              onChange={(e) => updateExecutiveSummary(e.target.value)}
-              className="min-h-[120px]"
+              onSave={(html) => updateExecutiveSummary(html)}
+              title={`Resumo Executivo - Semana ${formData.weekNumber}`}
             />
           </AccordionContent>
         </AccordionItem>
