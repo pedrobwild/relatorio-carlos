@@ -330,8 +330,24 @@ const Index = () => {
   // Loading state or redirect in progress
   if (projectLoading || activitiesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen min-h-[100dvh] pb-safe">
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
+          <div className="flex flex-col items-center gap-0.5">
+            <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+            <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
+          </div>
+        </div>
+        <div className="p-3 md:p-4 lg:p-6 xl:p-8">
+          <div className="max-w-[1600px] mx-auto space-y-6">
+            {/* Header skeleton */}
+            <ContentSkeleton variant="cards" rows={3} />
+            {/* Chart skeleton */}
+            <div className="bg-card rounded-xl shadow-card overflow-hidden p-4 space-y-4">
+              <ContentSkeleton variant="chart" />
+              <ContentSkeleton variant="table" rows={6} />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
