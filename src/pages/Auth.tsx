@@ -329,7 +329,12 @@ export default function Auth() {
             <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
               <HelpCircle className="h-4 w-4 shrink-0" />
               <span>Problemas para acessar?</span>
-              <a href="/suporte" className="text-primary hover:underline font-medium">
+              <a
+                href="https://wa.me/5521989362122?text=Ol%C3%A1%2C%20tive%20uma%20dificuldade%20com%20meu%20acesso%20ao%20portal%20de%20jornada%20de%20obra%20da%20bwild%20e%20preciso%20de%20ajuda."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline font-medium"
+              >
                 Falar com suporte
               </a>
             </div>
