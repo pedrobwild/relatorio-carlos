@@ -34,6 +34,10 @@ import { format } from "date-fns";
 // Lazy load heavy components to reduce initial bundle
 const GanttChart = lazy(() => import("@/components/GanttChart"));
 const WeeklyReportTemplate = lazy(() => import("@/components/report/WeeklyReportTemplate"));
+const FinanceiroContent = lazy(() => import("@/components/tabs/FinanceiroContent"));
+const DocumentosContent = lazy(() => import("@/components/tabs/DocumentosContent"));
+const FormalizacoesContent = lazy(() => import("@/components/tabs/FormalizacoesContent"));
+const PendenciasContent = lazy(() => import("@/components/tabs/PendenciasContent"));
 
 // Demo data for projects without real data yet
 const demoReportData: ReportData = {
@@ -539,14 +543,7 @@ const Index = () => {
             </div>
 
             <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-              <Tabs value={activeTab} onValueChange={(val) => {
-                // Navigation tabs: redirect to page
-                if (val === "financeiro") { navigate(paths.financeiro); return; }
-                if (val === "documentos") { navigate(paths.documentos); return; }
-                if (val === "formalizacoes") { navigate(paths.formalizacoes); return; }
-                if (val === "pendencias") { navigate(paths.pendencias); return; }
-                setActiveTab(val);
-              }} className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="portal-tabs-bar">
                   <div className="px-3 md:px-5">
                     <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto scrollbar-hide">
@@ -658,6 +655,30 @@ const Index = () => {
                             </div>
                           </>
                         )}
+                      </TabsContent>
+
+                      <TabsContent value="financeiro" className="mt-0 focus-visible:outline-none">
+                        <Suspense fallback={<ContentSkeleton variant="cards" rows={3} />}>
+                          <FinanceiroContent />
+                        </Suspense>
+                      </TabsContent>
+
+                      <TabsContent value="documentos" className="mt-0 focus-visible:outline-none">
+                        <Suspense fallback={<ContentSkeleton variant="cards" rows={6} />}>
+                          <DocumentosContent />
+                        </Suspense>
+                      </TabsContent>
+
+                      <TabsContent value="formalizacoes" className="mt-0 focus-visible:outline-none">
+                        <Suspense fallback={<ContentSkeleton variant="cards" rows={4} />}>
+                          <FormalizacoesContent />
+                        </Suspense>
+                      </TabsContent>
+
+                      <TabsContent value="pendencias" className="mt-0 focus-visible:outline-none">
+                        <Suspense fallback={<ContentSkeleton variant="list" rows={5} />}>
+                          <PendenciasContent />
+                        </Suspense>
                       </TabsContent>
                     </div>
 
