@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -60,7 +60,17 @@ export default function JornadaProjeto() {
     }
   }, [journey?.stages, activeStageId]);
 
-  const handleStageClick = (stageId: string) => {
+  const scrollToCard = useCallback((stageId: string) => {
+    // Small delay so the card can expand first
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-stage-id="${stageId}"]`) as HTMLElement | null;
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+  }, []);
+
+  const handleStageClick = useCallback((stageId: string) => {
     setActiveStageId(stageId);
     setExpandedStages((prev) => {
       const newSet = new Set(prev);
@@ -71,7 +81,8 @@ export default function JornadaProjeto() {
       }
       return newSet;
     });
-  };
+    scrollToCard(stageId);
+  }, [scrollToCard]);
 
   if (isLoading || initializeJourney.isPending) {
     return (
