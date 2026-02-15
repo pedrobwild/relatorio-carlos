@@ -5,7 +5,7 @@ import {
   FileText, DollarSign, ClipboardSignature, User, Phone, Mail,
   ChevronDown, Calendar, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,
   TrendingUp, TrendingDown, Bell, AlertCircle, FolderOpen, Pencil, ArrowLeft, Map,
-  ChevronsUpDown, Building2, ChevronRight
+  ChevronsUpDown, Building2, ChevronRight, Milestone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -282,9 +282,9 @@ const ReportHeader = ({
     <header className="animate-fade-in mb-3 md:mb-4">
       {/* ============== DESKTOP LAYOUT ============== */}
       <div className="hidden md:block">
-        {/* ── L1: Identity + Signals ── */}
         <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-          <div className="px-5 py-3 flex items-center justify-between gap-4">
+          {/* ── L1: Identity Bar ── */}
+          <div className="px-6 py-3.5 flex items-center justify-between gap-4">
             {/* Left: Back + Logo + Project Selector */}
             <div className="flex items-center gap-3 min-w-0">
               <Button
@@ -302,13 +302,13 @@ const ReportHeader = ({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 text-left hover:bg-accent rounded-lg px-2.5 py-1.5 transition-colors group min-w-0">
+                  <button className="flex items-center gap-2 text-left hover:bg-accent rounded-lg px-3 py-2 transition-colors group min-w-0">
                     <div className="min-w-0">
-                      <h1 className="text-base font-bold leading-tight group-hover:text-primary transition-colors truncate">
+                      <h1 className="text-base font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
                         {projectName} – {unitName}
                       </h1>
                       {clientName && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">Cliente: {clientName}</p>
+                        <p className="text-caption mt-0.5 truncate">Cliente: {clientName}</p>
                       )}
                     </div>
                     {otherProjects.length > 0 && (
@@ -344,22 +344,23 @@ const ReportHeader = ({
               </DropdownMenu>
             </div>
 
-            {/* Right: Pendências + Status Badge */}
+            {/* Right: Pendências */}
             <div className="flex items-center gap-2.5 shrink-0">
               <Link
                 to={paths.pendencias}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors font-semibold text-sm border",
+                  "flex items-center gap-2 px-3.5 py-2 rounded-full transition-all font-semibold text-sm border",
+                  "hover:shadow-sm active:scale-[0.97]",
                   pendenciasStats.overdueCount > 0
                     ? 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
                     : pendenciasStats.urgentCount > 0
                       ? 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20'
-                      : 'bg-secondary text-muted-foreground border-border hover:bg-accent'
+                      : 'bg-secondary text-foreground border-border hover:bg-accent'
                 )}
                 aria-label={`${pendenciasStats.total} pendências`}
               >
-                <Bell className="w-3.5 h-3.5" />
-                <span className="text-xs">Pendências</span>
+                <Bell className="w-4 h-4" />
+                <span className="text-sm">Pendências</span>
                 <Badge
                   variant={pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"}
                   className={cn(
@@ -374,91 +375,88 @@ const ReportHeader = ({
                   {pendenciasStats.total}
                 </Badge>
               </Link>
-
             </div>
           </div>
 
-          {/* ── L2: Project State (inline) ── */}
+          {/* ── L2: Project State ── */}
           {showMetrics && (
-            <div className="px-5 py-2.5 border-t border-border bg-secondary/15 flex items-center gap-4 flex-wrap">
-              {/* Current Activity */}
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <ActivityIcon className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Etapa</span>
+            <div className="px-6 py-3 border-t border-border bg-muted/30">
+              <div className="flex items-start gap-6 flex-wrap">
+                {/* Current Stage */}
+                <div className="flex-1 min-w-0">
+                  <span className="text-meta font-semibold uppercase tracking-wider block mb-1">
+                    Etapa Atual
+                  </span>
+                  <p className="text-body font-semibold text-foreground break-words leading-snug">
+                    {projectMetrics.currentActivity}
+                  </p>
+                  <Badge variant="secondary" className="mt-1.5 text-meta px-2 py-0.5 h-auto font-medium tabular-nums">
+                    {projectMetrics.completedActivities} de {projectMetrics.totalActivities} atividades
+                  </Badge>
                 </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="text-sm font-semibold text-foreground cursor-default break-words">
-                        {projectMetrics.currentActivity}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-[300px]">
-                      <p>{projectMetrics.currentActivity}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <Badge variant="secondary" className="shrink-0 text-[10px] px-1.5 py-0 h-5 font-medium tabular-nums">
-                  {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
-                </Badge>
-              </div>
 
-              <Separator orientation="vertical" className="h-5 hidden lg:block" />
+                <Separator orientation="vertical" className="h-12 hidden lg:block self-center" />
 
-              {/* Key Dates */}
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-[11px] text-muted-foreground">Início</span>
-                  <span className="text-xs font-semibold tabular-nums">{formatDateShort(displayStartDate)}</span>
-                </div>
-                <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-[11px] text-muted-foreground">Entrega</span>
-                  <button
-                    onClick={endDate === dateChangeInfo.originalDate ? () => setShowDateChangeAlert(true) : undefined}
-                    className={cn(
-                      "text-xs font-semibold tabular-nums",
-                      endDate === dateChangeInfo.originalDate && "text-warning underline decoration-dotted cursor-pointer"
+                {/* Key Dates */}
+                <div className="flex items-center gap-4 shrink-0 self-center">
+                  <div className="text-center">
+                    <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Início</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{formatDateShort(displayStartDate)}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-border" />
+                  <div className="text-center">
+                    <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Entrega</span>
+                    <button
+                      onClick={endDate === dateChangeInfo.originalDate ? () => setShowDateChangeAlert(true) : undefined}
+                      className={cn(
+                        "text-sm font-bold tabular-nums",
+                        endDate === dateChangeInfo.originalDate
+                          ? "text-warning underline decoration-dotted decoration-warning/50 cursor-pointer hover:decoration-warning"
+                          : "text-foreground cursor-default"
+                      )}
+                    >
+                      {formatDateShort(displayEndDate)}
+                    </button>
+                    {endDate === dateChangeInfo.originalDate && (
+                      <AlertCircle className="w-3 h-3 text-warning inline-block ml-1" />
                     )}
-                  >
-                    {formatDateShort(displayEndDate)}
-                  </button>
-                  {endDate === dateChangeInfo.originalDate && (
-                    <AlertCircle className="w-3 h-3 text-warning" />
-                  )}
+                  </div>
                 </div>
               </div>
-
             </div>
           )}
 
-          {/* Milestones: compact horizontal row inside header */}
+          {/* ── L3: Milestones ── */}
           {showMetrics && (
-            <div className="px-5 py-2 border-t border-border bg-secondary/10">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Calendar className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Marcos do Projeto</span>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-1">
-                {milestoneItems.map((m) => (
-                  <div key={m.label} className="flex items-baseline gap-1.5">
-                    <span className="text-[11px] text-muted-foreground">{m.label}:</span>
-                    <span className="text-[11px] font-semibold tabular-nums text-foreground">
-                      {m.value ? formatDateFull(m.value) : "—"}
-                    </span>
-                  </div>
-                ))}
+            <div className="px-6 py-2.5 border-t border-border bg-muted/15">
+              <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+                <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
+                  Marcos
+                </span>
+                <div className="flex items-center gap-5 flex-wrap">
+                  {milestoneItems.map((m, i) => (
+                    <div key={m.label} className="flex items-center gap-3">
+                      {i > 0 && <span className="text-border">·</span>}
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-caption whitespace-nowrap">{m.label}</span>
+                        <span className={cn(
+                          "text-xs font-semibold tabular-nums whitespace-nowrap",
+                          m.value ? "text-foreground" : "text-muted-foreground/50"
+                        )}>
+                          {m.value ? formatDateFull(m.value) : "—"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* ── Summary Area: Progress Bars ── */}
+        {/* ── Progress Section ── */}
         {showMetrics && (
-          <div className="mt-3 bg-card rounded-xl border border-border shadow-sm p-5">
+          <div className="mt-3 bg-card rounded-xl border border-border shadow-sm px-6 py-5">
             <ProgressSection
               elapsedWorkingDays={projectMetrics.elapsedWorkingDays}
               totalWorkingDays={projectMetrics.totalWorkingDays}
@@ -474,7 +472,6 @@ const ReportHeader = ({
               projectStartDate={startDate}
               projectEndDate={effectiveEndDate}
             />
-
           </div>
         )}
       </div>
@@ -482,7 +479,7 @@ const ReportHeader = ({
       {/* ============== MOBILE LAYOUT ============== */}
       <div className="md:hidden">
         <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-          {/* Status Bar */}
+          {/* Top Bar */}
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
             <div className="flex items-center gap-2">
               <Button
@@ -500,12 +497,13 @@ const ReportHeader = ({
             <Link
               to={paths.pendencias}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-colors border",
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all border",
+                "active:scale-[0.97]",
                 pendenciasStats.overdueCount > 0
-                  ? 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
+                  ? 'bg-destructive/10 text-destructive border-destructive/20'
                   : pendenciasStats.urgentCount > 0
-                    ? 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20'
-                    : 'bg-secondary text-muted-foreground border-border hover:bg-accent'
+                    ? 'bg-warning/10 text-warning border-warning/20'
+                    : 'bg-secondary text-foreground border-border'
               )}
               aria-label={`${pendenciasStats.total} pendências`}
             >
@@ -529,16 +527,16 @@ const ReportHeader = ({
 
           {/* Project Info */}
           <div className="p-3">
-            <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="mb-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-1.5 py-1 -ml-1.5 transition-colors group min-w-0">
-                    <div className="min-w-0">
-                      <h1 className="text-[15px] font-bold leading-tight group-hover:text-primary transition-colors truncate">
+                  <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-lg px-2 py-1.5 -ml-2 transition-colors group min-w-0 w-full">
+                    <div className="min-w-0 flex-1">
+                      <h1 className="text-[15px] font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
                         {projectName} – {unitName}
                       </h1>
                       {clientName && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Cliente: {clientName}</p>
+                        <p className="text-caption mt-0.5">Cliente: {clientName}</p>
                       )}
                     </div>
                     {otherProjects.length > 0 && (
@@ -574,41 +572,46 @@ const ReportHeader = ({
               </DropdownMenu>
             </div>
 
-            {/* Mobile: Inline state */}
+            {/* Mobile: Project State */}
             {showMetrics && (
               <>
-                {/* Dates + Progress inline */}
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatDateShort(displayStartDate)}</span>
-                    <ChevronRight className="w-2.5 h-2.5 text-muted-foreground/40" />
-                    <span>{formatDateShort(displayEndDate)}</span>
-                  </div>
-                </div>
-
-                {/* Current Activity compact */}
-                <div className="bg-secondary/30 rounded-lg p-2.5 mb-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <ActivityIcon className="w-3 h-3 text-primary flex-shrink-0" />
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Etapa Atual</span>
-                    <Badge variant="secondary" className="ml-auto text-[9px] px-1 py-0 h-4 font-medium tabular-nums">
+                {/* Current Stage */}
+                <div className="bg-muted/40 rounded-lg p-3 mb-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-meta font-semibold uppercase tracking-wider">Etapa Atual</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-medium tabular-nums">
                       {projectMetrics.completedActivities}/{projectMetrics.totalActivities}
                     </Badge>
                   </div>
-                  <p className="text-xs font-semibold text-foreground leading-tight">
+                  <p className="text-sm font-semibold text-foreground leading-snug break-words">
                     {projectMetrics.currentActivity}
                   </p>
                 </div>
 
-                {/* Milestones compact - mobile */}
-                <div className="mb-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Marcos</span>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                {/* Dates Row */}
+                <div className="flex items-center justify-between gap-3 mb-3 px-1">
+                  <div>
+                    <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Início</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{formatDateShort(displayStartDate)}</span>
+                  </div>
+                  <div className="flex-1 h-px bg-border mx-2" />
+                  <div className="text-right">
+                    <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Entrega</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{formatDateShort(displayEndDate)}</span>
+                  </div>
+                </div>
+
+                {/* Milestones compact */}
+                <div className="mb-3">
+                  <span className="text-meta font-semibold uppercase tracking-wider block mb-1.5">Marcos do Projeto</span>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {milestoneItems.map((m) => (
                       <div key={m.label} className="flex items-baseline justify-between gap-1">
-                        <span className="text-[10px] text-muted-foreground truncate">{m.label}</span>
-                        <span className="text-[10px] font-semibold tabular-nums text-foreground shrink-0">
+                        <span className="text-caption truncate">{m.label}</span>
+                        <span className={cn(
+                          "text-xs font-semibold tabular-nums shrink-0",
+                          m.value ? "text-foreground" : "text-muted-foreground/40"
+                        )}>
                           {m.value ? formatDateShort(m.value) : "—"}
                         </span>
                       </div>
@@ -619,10 +622,10 @@ const ReportHeader = ({
                 {/* Timeline bar */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] text-muted-foreground tabular-nums">
+                    <span className="text-meta tabular-nums">
                       {projectMetrics.elapsedWorkingDays}/{projectMetrics.totalWorkingDays} dias úteis
                     </span>
-                    <span className="text-[11px] text-muted-foreground tabular-nums">
+                    <span className="text-meta tabular-nums">
                       Restam {projectMetrics.remainingWorkingDays}
                     </span>
                   </div>
@@ -638,7 +641,7 @@ const ReportHeader = ({
           </div>
         </div>
 
-        {/* Mobile: Summary area below */}
+        {/* Mobile: Progress Section */}
         {showMetrics && (
           <div className="mt-2 bg-card rounded-xl border border-border shadow-sm p-3">
             <ProgressSection
