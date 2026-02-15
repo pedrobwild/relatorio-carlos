@@ -356,28 +356,30 @@ const ReportHeader = ({
         {/* KPI Metrics Grid */}
         {showMetrics && (
           <div className="px-5 pb-4 border-t border-border pt-4 bg-secondary/20">
-            <div className="grid grid-cols-6 xl:grid-cols-8 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 gap-3">
               {/* Current Activity - Larger card */}
-              <div className="col-span-2 xl:col-span-3 rounded-xl bg-card border border-border p-3.5 flex flex-col min-h-[84px]">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <ActivityIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Etapa Atual</span>
+              <div className="col-span-2 sm:col-span-3 lg:col-span-2 xl:col-span-3 rounded-xl bg-card border border-border p-3.5 flex flex-col justify-between min-h-[88px]">
+                <div className="flex items-center gap-1.5">
+                  <ActivityIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground leading-none">Etapa Atual</span>
                 </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className="text-sm font-semibold text-foreground line-clamp-2 cursor-default leading-snug">
-                        {projectMetrics.currentActivity}
-                      </p>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-[300px]">
-                      <p>{projectMetrics.currentActivity}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <p className="text-[11px] text-muted-foreground mt-auto pt-1.5 tabular-nums">
-                  {projectMetrics.completedActivities} de {projectMetrics.totalActivities} etapas concluídas
-                </p>
+                <div className="mt-auto pt-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="text-sm font-semibold text-foreground line-clamp-1 cursor-default leading-tight">
+                          {projectMetrics.currentActivity}
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[300px]">
+                        <p>{projectMetrics.currentActivity}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <p className="text-[11px] text-muted-foreground mt-1 tabular-nums">
+                    {projectMetrics.completedActivities} de {projectMetrics.totalActivities} etapas concluídas
+                  </p>
+                </div>
               </div>
 
               {/* Start Date */}
@@ -422,22 +424,20 @@ const ReportHeader = ({
                 variant={projectMetrics.remainingWorkingDays <= 7 ? "warning" : "default"}
               />
 
-              {/* Previsto / Realizado - XL only */}
-              <div className="hidden xl:flex xl:col-span-2 items-center gap-3">
-                <KPIStatCard
-                  icon={Calendar}
-                  label="Previsto"
-                  value={`${projectMetrics.plannedProgress}%`}
-                  className="flex-1"
-                />
-                <KPIStatCard
-                  icon={TrendingUp}
-                  label="Realizado"
-                  value={`${projectMetrics.actualProgress}%`}
-                  variant={projectMetrics.isOnTrack ? "success" : "warning"}
-                  className="flex-1"
-                />
-              </div>
+              {/* Previsto / Realizado */}
+              <KPIStatCard
+                icon={Calendar}
+                label="Previsto"
+                value={`${projectMetrics.plannedProgress}%`}
+                className="hidden xl:flex"
+              />
+              <KPIStatCard
+                icon={TrendingUp}
+                label="Realizado"
+                value={`${projectMetrics.actualProgress}%`}
+                variant={projectMetrics.isOnTrack ? "success" : "warning"}
+                className="hidden xl:flex"
+              />
             </div>
 
             {/* Progress Bars */}
@@ -642,10 +642,14 @@ const ReportHeader = ({
 
               {/* Current Activity + Work Progress */}
               <div className="bg-secondary/30 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <ActivityIcon className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground leading-none">Etapa Atual</span>
+                </div>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <h3 className="text-xs font-semibold text-foreground line-clamp-1 cursor-default">
+                      <h3 className="text-xs font-semibold text-foreground line-clamp-1 cursor-default leading-tight">
                         {projectMetrics.currentActivity}
                       </h3>
                     </TooltipTrigger>
