@@ -1,106 +1,113 @@
- import { useState, useEffect } from 'react';
- import { useParams, useNavigate } from 'react-router-dom';
- import { Loader2 } from 'lucide-react';
- import { Separator } from '@/components/ui/separator';
- import { useProject } from '@/contexts/ProjectContext';
- import { useUserRole } from '@/hooks/useUserRole';
- import { useProjectJourney, useInitializeJourney } from '@/hooks/useProjectJourney';
- import { useProjectNavigation } from '@/hooks/useProjectNavigation';
- import { JourneyHeroSection } from '@/components/journey/JourneyHeroSection';
- import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
- import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
- import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
- import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
- import { PageHeader } from '@/components/layout/PageHeader';
- import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
- 
- export default function JornadaProjeto() {
-   const { projectId } = useParams<{ projectId: string }>();
-   const navigate = useNavigate();
-   const { project, loading: projectLoading } = useProject();
-   const { role, loading: roleLoading } = useUserRole();
-   const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
-   const initializeJourney = useInitializeJourney();
-   const { paths } = useProjectNavigation();
-   
-   const [activeStageId, setActiveStageId] = useState<string | null>(null);
-   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
- 
-   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
-   const isLoading = projectLoading || roleLoading || journeyLoading;
- 
-   // Initialize journey if not exists
-   useEffect(() => {
-     if (!journeyLoading && journey && !journey.hero && projectId) {
-       initializeJourney.mutate(projectId, {
-         onSuccess: () => refetch(),
-       });
-     }
-   }, [journeyLoading, journey, projectId, initializeJourney, refetch]);
- 
-   // Set first non-completed stage as active by default
-   useEffect(() => {
-     if (journey?.stages && !activeStageId) {
-       const firstActive = journey.stages.find(
-         (s) => s.status === 'waiting_action' || s.status === 'in_progress'
-       ) || journey.stages[0];
-       if (firstActive) {
-         setActiveStageId(firstActive.id);
-         setExpandedStages(new Set([firstActive.id]));
-       }
-     }
-   }, [journey?.stages, activeStageId]);
- 
-   const handleStageClick = (stageId: string) => {
-     setActiveStageId(stageId);
-     setExpandedStages((prev) => {
-       const newSet = new Set(prev);
-       if (newSet.has(stageId)) {
-         newSet.delete(stageId);
-       } else {
-         newSet.add(stageId);
-       }
-       return newSet;
-     });
-   };
- 
-   if (isLoading || initializeJourney.isPending) {
-     return (
-       <div className="min-h-screen flex items-center justify-center">
-         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-       </div>
-     );
-   }
- 
-   if (!project) {
-     return (
-       <div className="min-h-screen flex items-center justify-center">
-         <p className="text-muted-foreground">Projeto não encontrado</p>
-       </div>
-     );
-   }
- 
-   if (!journey?.hero || !journey.stages.length) {
-     return (
-       <div className="min-h-screen flex items-center justify-center">
-         <div className="text-center space-y-4">
-           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-           <p className="text-muted-foreground">Inicializando jornada do projeto...</p>
-         </div>
-       </div>
-     );
-   }
- 
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useProject } from '@/contexts/ProjectContext';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useProjectJourney, useInitializeJourney } from '@/hooks/useProjectJourney';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { JourneyHeroSection } from '@/components/journey/JourneyHeroSection';
+import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
+import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
+import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
+import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { ContentSkeleton } from '@/components/ContentSkeleton';
+
+// Lazy load tab content components
+const FinanceiroContent = lazy(() => import('@/components/tabs/FinanceiroContent'));
+const DocumentosContent = lazy(() => import('@/components/tabs/DocumentosContent'));
+const FormalizacoesContent = lazy(() => import('@/components/tabs/FormalizacoesContent'));
+const PendenciasContent = lazy(() => import('@/components/tabs/PendenciasContent'));
+
+export default function JornadaProjeto() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const { project, loading: projectLoading } = useProject();
+  const { role, loading: roleLoading } = useUserRole();
+  const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
+  const initializeJourney = useInitializeJourney();
+  const { paths } = useProjectNavigation();
+  
+  const [activeTab, setActiveTab] = useState<string>('jornada');
+  const [activeStageId, setActiveStageId] = useState<string | null>(null);
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+
+  const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
+  const isLoading = projectLoading || roleLoading || journeyLoading;
+
+  // Initialize journey if not exists
+  useEffect(() => {
+    if (!journeyLoading && journey && !journey.hero && projectId) {
+      initializeJourney.mutate(projectId, {
+        onSuccess: () => refetch(),
+      });
+    }
+  }, [journeyLoading, journey, projectId, initializeJourney, refetch]);
+
+  // Set first non-completed stage as active by default
+  useEffect(() => {
+    if (journey?.stages && !activeStageId) {
+      const firstActive = journey.stages.find(
+        (s) => s.status === 'waiting_action' || s.status === 'in_progress'
+      ) || journey.stages[0];
+      if (firstActive) {
+        setActiveStageId(firstActive.id);
+        setExpandedStages(new Set([firstActive.id]));
+      }
+    }
+  }, [journey?.stages, activeStageId]);
+
+  const handleStageClick = (stageId: string) => {
+    setActiveStageId(stageId);
+    setExpandedStages((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(stageId)) {
+        newSet.delete(stageId);
+      } else {
+        newSet.add(stageId);
+      }
+      return newSet;
+    });
+  };
+
+  if (isLoading || initializeJourney.isPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Projeto não encontrado</p>
+      </div>
+    );
+  }
+
+  if (!journey?.hero || !journey.stages.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Inicializando jornada do projeto...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen min-h-[100dvh] bg-background">
       {/* Header */}
       <PageHeader
         title="Jornada do Projeto"
-        backTo={`/obra/${projectId}`}
+        backTo="/minhas-obras"
         breadcrumbs={[
           { label: "Minhas Obras", href: "/minhas-obras" },
-          { label: project.name, href: `/obra/${projectId}` },
-          { label: "Jornada" },
+          { label: project.name },
         ]}
       >
         <div className="text-right min-w-0">
@@ -110,15 +117,83 @@
           )}
         </div>
       </PageHeader>
-      <ProjectSubNav />
+
+      {/* Tabs bar */}
+      <div className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-5xl mx-auto">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="px-4 sm:px-6 md:px-8">
+              <TabsList className="bg-transparent h-auto p-0 gap-0 w-full overflow-x-auto scrollbar-hide">
+                <TabsTrigger value="jornada" className="portal-tab-trigger">
+                  <Map className="w-3.5 h-3.5 mr-1.5" />
+                  Jornada
+                </TabsTrigger>
+                <TabsTrigger value="financeiro" className="portal-tab-trigger">
+                  <DollarSign className="w-3.5 h-3.5 mr-1.5" />
+                  Financeiro
+                </TabsTrigger>
+                <TabsTrigger value="documentos" className="portal-tab-trigger">
+                  <FolderOpen className="w-3.5 h-3.5 mr-1.5" />
+                  Documentos
+                </TabsTrigger>
+                <TabsTrigger value="formalizacoes" className="portal-tab-trigger">
+                  <ClipboardSignature className="w-3.5 h-3.5 mr-1.5" />
+                  Formalizações
+                </TabsTrigger>
+                <TabsTrigger value="pendencias" className="portal-tab-trigger">
+                  <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
+                  Pendências
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </Tabs>
+        </div>
+      </div>
 
       <main className="container max-w-5xl mx-auto px-4 py-5 md:py-8 pb-safe">
-        <div className="grid gap-6 md:gap-8 lg:grid-cols-[280px_1fr]">
-          {/* Sidebar with Timeline (desktop only) */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-6">
-              <div>
-                <h2 className="text-sm font-medium text-muted-foreground mb-4">
+        {/* Jornada tab content */}
+        {activeTab === 'jornada' && (
+          <div className="grid gap-6 md:gap-8 lg:grid-cols-[280px_1fr]">
+            {/* Sidebar with Timeline (desktop only) */}
+            <aside className="hidden lg:block">
+              <div className="sticky top-24 space-y-6">
+                <div>
+                  <h2 className="text-sm font-medium text-muted-foreground mb-4">
+                    Etapas da Jornada
+                  </h2>
+                  <JourneyTimeline
+                    stages={journey.stages}
+                    activeStageId={activeStageId}
+                    onStageClick={handleStageClick}
+                  />
+                </div>
+              </div>
+            </aside>
+
+            {/* Main content */}
+            <div className="space-y-5 md:space-y-8">
+              {/* Hero */}
+              <JourneyHeroSection
+                hero={journey.hero}
+                projectId={projectId!}
+                isAdmin={isAdmin}
+              />
+
+              {/* CSM Section */}
+              {journey.csm && (
+                <JourneyCSMSection
+                  csm={journey.csm}
+                  projectId={projectId!}
+                  isAdmin={isAdmin}
+                  onUpdate={() => refetch()}
+                />
+              )}
+
+              <Separator />
+
+              {/* Mobile Timeline */}
+              <div className="lg:hidden">
+                <h2 className="text-sm font-medium text-muted-foreground mb-3">
                   Etapas da Jornada
                 </h2>
                 <JourneyTimeline
@@ -126,70 +201,61 @@
                   activeStageId={activeStageId}
                   onStageClick={handleStageClick}
                 />
+                <Separator className="mt-5" />
               </div>
-            </div>
-          </aside>
 
-          {/* Main content */}
-          <div className="space-y-5 md:space-y-8">
-            {/* Hero */}
-            <JourneyHeroSection
-              hero={journey.hero}
-              projectId={projectId!}
-              isAdmin={isAdmin}
-            />
+              {/* Stage Cards */}
+              <div className="space-y-3 md:space-y-4">
+                {journey.stages.map((stage) => (
+                  <JourneyStageCard
+                    key={stage.id}
+                    stage={stage}
+                    projectId={projectId!}
+                    isAdmin={isAdmin}
+                    isExpanded={expandedStages.has(stage.id)}
+                    onToggleExpand={() => handleStageClick(stage.id)}
+                  />
+                ))}
+              </div>
 
-            {/* CSM Section */}
-            {journey.csm && (
-              <JourneyCSMSection
-                csm={journey.csm}
-                projectId={projectId!}
-                isAdmin={isAdmin}
-                onUpdate={() => refetch()}
-              />
-            )}
+              <Separator />
 
-            <Separator />
-
-            {/* Mobile Timeline */}
-            <div className="lg:hidden">
-              <h2 className="text-sm font-medium text-muted-foreground mb-3">
-                Etapas da Jornada
-              </h2>
-              <JourneyTimeline
-                stages={journey.stages}
-                activeStageId={activeStageId}
-                onStageClick={handleStageClick}
-              />
-              <Separator className="mt-5" />
-            </div>
-
-            {/* Stage Cards */}
-            <div className="space-y-3 md:space-y-4">
-              {journey.stages.map((stage) => (
-                <JourneyStageCard
-                  key={stage.id}
-                  stage={stage}
+              {/* Footer */}
+              {journey.footer && (
+                <JourneyFooterSection
+                  footer={journey.footer}
                   projectId={projectId!}
                   isAdmin={isAdmin}
-                  isExpanded={expandedStages.has(stage.id)}
-                  onToggleExpand={() => handleStageClick(stage.id)}
                 />
-              ))}
+              )}
             </div>
-
-            <Separator />
-
-            {/* Footer */}
-            {journey.footer && (
-              <JourneyFooterSection
-                footer={journey.footer}
-                projectId={projectId!}
-                isAdmin={isAdmin}
-              />
-            )}
           </div>
-        </div>
+        )}
+
+        {/* Other tabs */}
+        {activeTab === 'financeiro' && (
+          <Suspense fallback={<ContentSkeleton variant="cards" rows={3} />}>
+            <FinanceiroContent />
+          </Suspense>
+        )}
+
+        {activeTab === 'documentos' && (
+          <Suspense fallback={<ContentSkeleton variant="cards" rows={6} />}>
+            <DocumentosContent />
+          </Suspense>
+        )}
+
+        {activeTab === 'formalizacoes' && (
+          <Suspense fallback={<ContentSkeleton variant="cards" rows={4} />}>
+            <FormalizacoesContent />
+          </Suspense>
+        )}
+
+        {activeTab === 'pendencias' && (
+          <Suspense fallback={<ContentSkeleton variant="list" rows={5} />}>
+            <PendenciasContent />
+          </Suspense>
+        )}
       </main>
     </div>
   );

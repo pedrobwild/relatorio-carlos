@@ -114,9 +114,14 @@ export default function MinhasObras() {
   const navigate = useNavigate();
   const { data: projects = [], isLoading: loading, error } = useProjectsQuery();
 
-  const handleProjectClick = useCallback((projectId: string) => {
-    sessionStorage.setItem('selectedProjectId', projectId);
-    navigate(`/obra/${projectId}`);
+  const handleProjectClick = useCallback((project: ProjectWithCustomer & { is_project_phase?: boolean }) => {
+    sessionStorage.setItem('selectedProjectId', project.id);
+    // Obras em fase de projeto abrem direto na Jornada
+    if (project.is_project_phase) {
+      navigate(`/obra/${project.id}/jornada`);
+    } else {
+      navigate(`/obra/${project.id}`);
+    }
   }, [navigate]);
 
   return (
@@ -155,7 +160,7 @@ export default function MinhasObras() {
                 <ProjectCard
                   key={project.id}
                   project={project}
-                  onClick={() => handleProjectClick(project.id)}
+                  onClick={() => handleProjectClick(project)}
                 />
               ))}
             </div>
