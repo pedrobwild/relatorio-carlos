@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload, Bookmark, ShoppingCart } from 'lucide-react';
+import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -233,8 +234,20 @@ const Cronograma = () => {
 
   if (projectLoading || activitiesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <PageHeader
+          title="Cronograma"
+          showLogo={false}
+          maxWidth="md"
+          onBack={() => navigate(-1)}
+          breadcrumbs={[
+            { label: "Gestão", href: "/gestao" },
+            { label: "Cronograma" },
+          ]}
+        />
+        <div className="max-w-4xl mx-auto p-4">
+          <ContentSkeleton variant="table" rows={6} />
+        </div>
       </div>
     );
   }

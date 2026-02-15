@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
-import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, CheckCircle2, Calendar, ChevronRight, ShoppingCart, Loader2 } from "lucide-react";
+import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, CheckCircle2, Calendar, ChevronRight, ShoppingCart, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, PendingType, PendingStatus } from "@/hooks/usePendencias";
@@ -8,6 +9,8 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { ContentSkeleton } from "@/components/ContentSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {
@@ -107,8 +110,23 @@ const Pendencias = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        <PageHeader
+          title="Pendências"
+          backTo={paths.relatorio}
+          maxWidth="xl"
+          breadcrumbs={[
+            { label: "Minhas Obras", href: "/minhas-obras" },
+            { label: "Obra", href: paths.relatorio },
+            { label: "Pendências" },
+          ]}
+        />
+        <ProjectSubNav />
+        <main className="py-6">
+          <PageContainer maxWidth="xl">
+            <ContentSkeleton variant="list" rows={5} />
+          </PageContainer>
+        </main>
       </div>
     );
   }
@@ -166,11 +184,12 @@ const Pendencias = () => {
             </div>
 
             {/* Info Banner */}
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-              <p className="text-caption text-foreground/80">
+            <Alert className="border-primary/20 bg-primary/5">
+              <Info className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-caption text-foreground/80">
                 <strong>Importante:</strong> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
           </div>
 
           {/* Right Content */}
@@ -270,10 +289,12 @@ const Pendencias = () => {
 
             {/* Empty State */}
             {sortedItems.length === 0 && (
-              <div className="text-center py-16 bg-card rounded-lg border border-border">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-                <h3 className="text-h3 font-medium text-foreground mb-1">Tudo em dia!</h3>
-                <p className="text-caption text-muted-foreground">Não há pendências no momento.</p>
+              <div className="bg-card rounded-lg border border-border">
+                <EmptyState
+                  icon={CheckCircle2}
+                  title="Tudo em dia!"
+                  description="Não há pendências no momento."
+                />
               </div>
             )}
           </div>
@@ -300,11 +321,12 @@ const Pendencias = () => {
           </div>
 
           {/* Info Banner */}
-          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
-            <p className="text-caption text-foreground/80">
+          <Alert className="border-primary/20 bg-primary/5 mb-4">
+            <Info className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-caption text-foreground/80">
               <strong>Importante:</strong> Será acrescido 1 dia à data de entrega a cada dia sem retorno após o vencimento do prazo.
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
 
           {/* Pending Items List */}
           <div className="space-y-2">
@@ -406,10 +428,12 @@ const Pendencias = () => {
 
           {/* Empty State */}
           {sortedItems.length === 0 && (
-            <div className="text-center py-12">
-              <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-              <h3 className="text-h3 font-medium text-foreground mb-1">Tudo em dia!</h3>
-              <p className="text-caption text-muted-foreground">Não há pendências no momento.</p>
+            <div className="bg-card rounded-lg border border-border">
+              <EmptyState
+                icon={CheckCircle2}
+                title="Tudo em dia!"
+                description="Não há pendências no momento."
+              />
             </div>
           )}
         </div>
