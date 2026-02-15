@@ -48,6 +48,7 @@ interface MilestoneDates {
   dateApprovalObra?: string | null;
   dateOfficialStart?: string | null;
   dateOfficialDelivery?: string | null;
+  dateMobilizationStart?: string | null;
 }
 
 interface ReportHeaderProps {
@@ -272,7 +273,7 @@ const ReportHeader = ({
       { label: "Aprov. 3D", value: milestoneDates?.dateApproval3d },
       { label: "Aprov. Executivo", value: milestoneDates?.dateApprovalExec },
       { label: "Aprov. Obra", value: milestoneDates?.dateApprovalObra },
-      { label: "Início Mobilização", value: null },
+      { label: "Início Mobilização", value: milestoneDates?.dateMobilizationStart },
     ];
     return items;
   }, [milestoneDates]);

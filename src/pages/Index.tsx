@@ -165,6 +165,7 @@ const Index = () => {
       dateApprovalObra: p.date_approval_obra ?? null,
       dateOfficialStart: p.date_official_start ?? null,
       dateOfficialDelivery: p.date_official_delivery ?? null,
+      dateMobilizationStart: p.date_mobilization_start ?? null,
     };
   }, [project]);
 
