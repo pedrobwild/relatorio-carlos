@@ -375,27 +375,6 @@ const ReportHeader = ({
                 </Badge>
               </Link>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <StatusBadge
-                        isOnTrack={projectMetrics.isOnTrack}
-                        progressDiff={projectMetrics.progressDiff}
-                        variancePercentage={projectMetrics.variancePercentage}
-                        isProjectPhase={isProjectPhase}
-                        isStaff={isStaff}
-                        size="sm"
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p className="max-w-[220px] text-xs">
-                      Desvio entre o progresso previsto ({projectMetrics.plannedProgress}%) e o realizado ({projectMetrics.actualProgress}%) do cronograma.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </div>
           </div>
 
@@ -455,20 +434,6 @@ const ReportHeader = ({
 
               <Separator orientation="vertical" className="h-5 hidden lg:block" />
 
-              {/* Progress Chip */}
-              <div className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold tabular-nums border shrink-0",
-                projectMetrics.isOnTrack
-                  ? "bg-success/10 text-success border-success/20"
-                  : "bg-warning/10 text-warning border-warning/20"
-              )}>
-                {projectMetrics.isOnTrack ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                <span>Realizado {projectMetrics.actualProgress}%</span>
-              </div>
             </div>
           )}
         </div>
@@ -546,14 +511,7 @@ const ReportHeader = ({
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <StatusBadge
-                isOnTrack={projectMetrics.isOnTrack}
-                progressDiff={projectMetrics.progressDiff}
-                variancePercentage={projectMetrics.variancePercentage}
-                isProjectPhase={isProjectPhase}
-                isStaff={isStaff}
-                size="sm"
-              />
+              <img src={bwildLogo} alt="Bwild" className="h-5 w-auto" />
             </div>
 
             <Link
@@ -643,14 +601,6 @@ const ReportHeader = ({
                     <span>{formatDateShort(displayStartDate)}</span>
                     <ChevronRight className="w-2.5 h-2.5 text-muted-foreground/40" />
                     <span>{formatDateShort(displayEndDate)}</span>
-                  </div>
-                  <div className={cn(
-                    "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums border",
-                    projectMetrics.isOnTrack
-                      ? "bg-success/10 text-success border-success/20"
-                      : "bg-warning/10 text-warning border-warning/20"
-                  )}>
-                    <span>Realizado {projectMetrics.actualProgress}%</span>
                   </div>
                 </div>
 
