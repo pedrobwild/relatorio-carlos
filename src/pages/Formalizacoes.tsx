@@ -295,7 +295,7 @@ export default function Formalizacoes() {
                     className="block group animate-fade-in opacity-0"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
                   >
-                    <Card className="h-full group-hover:border-primary/50 group-hover:shadow-md transition-all duration-200 overflow-hidden">
+                    <Card className="h-full group-hover:border-primary/50 group-hover:shadow-sm transition-all duration-200 overflow-hidden">
                       <CardContent className="p-0">
                         <div className={`h-1 ${
                           formalizacao.status === 'signed' ? 'bg-green-500' :
@@ -306,46 +306,46 @@ export default function Formalizacoes() {
                         
                         <div className="p-4">
                           <div className="flex items-center justify-between gap-2 mb-2">
-                            <Badge variant="outline" className="text-xs font-normal gap-1.5 px-2 py-0.5 bg-background">
-                              <span role="img" aria-label={formalizacao.type || ''}>
-                                {getTypeIcon(formalizacao.type as FormalizationType)}
-                              </span>
-                              {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
-                            </Badge>
+                            <h3 className="font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">
+                              {formalizacao.title}
+                            </h3>
                             <Badge 
                               variant={getStatusBadgeVariant(formalizacao.status as FormalizationStatus)}
-                              className="text-xs gap-1"
+                              className="text-xs gap-1 shrink-0"
                             >
                               {getStatusIcon(formalizacao.status as FormalizationStatus)}
                               {FORMALIZATION_STATUS_LABELS[formalizacao.status as FormalizationStatus]}
                             </Badge>
                           </div>
                           
-                          <h3 className="font-semibold text-foreground leading-snug mb-1.5 group-hover:text-primary transition-colors line-clamp-2">
-                            {formalizacao.title}
-                          </h3>
-                          
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {formalizacao.summary}
-                          </p>
-                          
-                          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs font-normal gap-1 px-1.5 py-0 bg-background">
+                              <span role="img" aria-label={formalizacao.type || ''}>
+                                {getTypeIcon(formalizacao.type as FormalizationType)}
+                              </span>
+                              {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
+                            </Badge>
+                            <span>•</span>
                             <span>
                               {formalizacao.locked_at 
                                 ? `Travado ${formatDate(formalizacao.locked_at)}`
                                 : formatDate(formalizacao.created_at)
                               }
                             </span>
-                            <div className="flex items-center gap-3">
-                              {formalizacao.parties_signed !== null && formalizacao.parties_total !== null && (
+                            {formalizacao.parties_signed !== null && formalizacao.parties_total !== null && (
+                              <>
+                                <span>•</span>
                                 <span className="flex items-center gap-1">
                                   <CheckCircle2 className="h-3 w-3" />
                                   {formalizacao.parties_signed}/{formalizacao.parties_total}
                                 </span>
-                              )}
-                              <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                            </div>
+                              </>
+                            )}
                           </div>
+                          
+                          <p className="text-sm text-muted-foreground line-clamp-1">
+                            {formalizacao.summary}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
@@ -499,7 +499,7 @@ export default function Formalizacoes() {
                     className="block group animate-fade-in opacity-0"
                     style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
                   >
-                    <Card className="group-hover:border-primary/50 group-hover:shadow-md transition-all duration-200 overflow-hidden">
+                    <Card className="group-hover:border-primary/50 group-hover:shadow-sm transition-all duration-200 overflow-hidden">
                       <CardContent className="p-0">
                         <div className={`h-1 ${
                           formalizacao.status === 'signed' ? 'bg-green-500' :
@@ -510,15 +510,12 @@ export default function Formalizacoes() {
                         
                         <div className="p-4">
                           <div className="flex items-center justify-between gap-2 mb-2">
-                            <Badge variant="outline" className="text-xs font-normal gap-1.5 px-2 py-0.5 bg-background">
-                              <span role="img" aria-label={formalizacao.type || ''}>
-                                {getTypeIcon(formalizacao.type as FormalizationType)}
-                              </span>
-                              {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
-                            </Badge>
+                            <h3 className="font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">
+                              {formalizacao.title}
+                            </h3>
                             <Badge 
                               variant={getStatusBadgeVariant(formalizacao.status as FormalizationStatus)}
-                              className="text-xs gap-1"
+                              className="text-xs gap-1 shrink-0"
                             >
                               {getStatusIcon(formalizacao.status as FormalizationStatus)}
                               <span className="hidden xs:inline">
@@ -527,31 +524,34 @@ export default function Formalizacoes() {
                             </Badge>
                           </div>
                           
-                          <h3 className="font-semibold text-foreground leading-snug mb-1.5 group-hover:text-primary transition-colors">
-                            {formalizacao.title}
-                          </h3>
-                          
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {formalizacao.summary}
-                          </p>
-                          
-                          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
+                            <Badge variant="outline" className="text-xs font-normal gap-1 px-1.5 py-0 bg-background">
+                              <span role="img" aria-label={formalizacao.type || ''}>
+                                {getTypeIcon(formalizacao.type as FormalizationType)}
+                              </span>
+                              {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
+                            </Badge>
+                            <span>•</span>
                             <span>
                               {formalizacao.locked_at 
                                 ? `Travado ${formatDate(formalizacao.locked_at)}`
                                 : formatDate(formalizacao.created_at)
                               }
                             </span>
-                            <div className="flex items-center gap-3">
-                              {formalizacao.parties_signed !== null && formalizacao.parties_total !== null && (
+                            {formalizacao.parties_signed !== null && formalizacao.parties_total !== null && (
+                              <>
+                                <span>•</span>
                                 <span className="flex items-center gap-1">
                                   <CheckCircle2 className="h-3 w-3" />
                                   {formalizacao.parties_signed}/{formalizacao.parties_total}
                                 </span>
-                              )}
-                              <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-                            </div>
+                              </>
+                            )}
                           </div>
+                          
+                          <p className="text-sm text-muted-foreground line-clamp-1">
+                            {formalizacao.summary}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>

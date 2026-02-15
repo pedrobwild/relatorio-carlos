@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, memo } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck, Plus, MessageSquare } from "lucide-react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck, Plus, MessageSquare, ChevronRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
@@ -74,17 +74,17 @@ const DocumentCard = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors">
-          <div className="flex items-start gap-3">
+        <div className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/50 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" tabIndex={0}>
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg shrink-0">
               {categoryIcons[doc.document_type]}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-body font-medium truncate">{doc.name}</h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-body font-semibold line-clamp-1">{doc.name}</h3>
                 <Badge 
                   variant={doc.status === 'approved' ? 'default' : 'secondary'}
-                  className="shrink-0"
+                  className="shrink-0 text-xs"
                 >
                   {doc.status === 'approved' ? (
                     <><CheckCircle2 className="w-3 h-3 mr-1" />Aprovado</>
@@ -93,10 +93,7 @@ const DocumentCard = ({
                   )}
                 </Badge>
               </div>
-              {doc.description && (
-                <p className="text-caption text-muted-foreground mt-1 line-clamp-2">{doc.description}</p>
-              )}
-              <div className="flex items-center gap-3 mt-2 text-tiny text-muted-foreground">
+              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                 <span>v{doc.version}</span>
                 <span>•</span>
                 <span>{format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
@@ -110,7 +107,11 @@ const DocumentCard = ({
                   </>
                 )}
               </div>
+              {doc.description && (
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{doc.description}</p>
+              )}
             </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
           </div>
         </div>
       </DialogTrigger>

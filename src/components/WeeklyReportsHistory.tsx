@@ -377,11 +377,11 @@ const WeeklyReportsHistory = ({
                     </div>
                   </div>
                   
-                  {/* Current Activity/Phase */}
+                {/* Current Activity/Phase */}
                   {report.currentActivityName && canAccess && (
                     <div className="flex items-center gap-1 text-tiny text-muted-foreground">
-                      <Clock className="h-2.5 w-2.5" />
-                      <span className="truncate">Etapa: {report.currentActivityName}</span>
+                      <Clock className="h-2.5 w-2.5 shrink-0" />
+                      <span className="line-clamp-1">Etapa: {report.currentActivityName}</span>
                     </div>
                   )}
                 </div>
