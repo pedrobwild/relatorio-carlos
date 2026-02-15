@@ -356,9 +356,9 @@ const ReportHeader = ({
         {/* KPI Metrics Grid */}
         {showMetrics && (
           <div className="px-5 pb-4 border-t border-border pt-4 bg-secondary/20">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {/* Current Activity - Larger card */}
-              <div className="col-span-2 sm:col-span-3 lg:col-span-2 xl:col-span-3 rounded-xl bg-card border border-border p-3.5 flex flex-col justify-between min-h-[88px]">
+              <div className="col-span-2 sm:col-span-3 lg:col-span-2 xl:col-span-2 rounded-xl bg-card border border-border p-3.5 flex flex-col justify-between min-h-[88px]">
                 <div className="flex items-center gap-1.5">
                   <ActivityIcon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                   <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground leading-none">Etapa Atual</span>
@@ -382,18 +382,73 @@ const ReportHeader = ({
                 </div>
               </div>
 
-              {/* Start Date */}
+              {/* Duration */}
               <KPIStatCard
-                icon={Calendar}
-                label="Início"
-                value={formatDateFull(startDate)}
+                icon={Clock}
+                label="Duração"
+                value={projectMetrics.totalWorkingDays}
+                unit="dias úteis"
+                size="compact"
               />
 
-              {/* End Date */}
+              {/* Remaining */}
+              <KPIStatCard
+                icon={projectMetrics.remainingWorkingDays <= 7 ? AlertTriangle : Clock}
+                label="Restante"
+                value={projectMetrics.remainingWorkingDays}
+                unit="dias úteis"
+                size="compact"
+                variant={projectMetrics.remainingWorkingDays <= 7 ? "warning" : "default"}
+              />
+
+              {/* Previsto / Realizado */}
+              <KPIStatCard
+                icon={TrendingUp}
+                label="Realizado"
+                value={`${projectMetrics.actualProgress}%`}
+                size="compact"
+                variant={projectMetrics.isOnTrack ? "success" : "warning"}
+                className="hidden xl:flex"
+              />
+            </div>
+
+            {/* Milestone Dates Row */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
+              <KPIStatCard
+                icon={Calendar}
+                label="Briefing Arquitetura"
+                value="—"
+                size="compact"
+              />
+              <KPIStatCard
+                icon={Calendar}
+                label="Aprov. Projeto 3D"
+                value="—"
+                size="compact"
+              />
+              <KPIStatCard
+                icon={Calendar}
+                label="Aprov. Proj. Executivo"
+                value="—"
+                size="compact"
+              />
+              <KPIStatCard
+                icon={Calendar}
+                label="Aprovação da Obra"
+                value="—"
+                size="compact"
+              />
+              <KPIStatCard
+                icon={Calendar}
+                label="Início oficial"
+                value={formatDateFull(startDate)}
+                size="compact"
+              />
               <KPIStatCard
                 icon={CheckCircle2}
-                label="Previsão"
+                label="Entrega oficial"
                 value={formatDateFull(effectiveEndDate)}
+                size="compact"
                 onClick={endDate === dateChangeInfo.originalDate ? () => setShowDateChangeAlert(true) : undefined}
                 variant={endDate === dateChangeInfo.originalDate ? "warning" : "default"}
                 badge={
@@ -405,38 +460,6 @@ const ReportHeader = ({
                   ) : undefined
                 }
                 tooltip={endDate === dateChangeInfo.originalDate ? "Clique para ver detalhes da alteração de prazo" : undefined}
-              />
-
-              {/* Duration */}
-              <KPIStatCard
-                icon={Clock}
-                label="Duração"
-                value={projectMetrics.totalWorkingDays}
-                unit="dias úteis"
-              />
-
-              {/* Remaining */}
-              <KPIStatCard
-                icon={projectMetrics.remainingWorkingDays <= 7 ? AlertTriangle : Clock}
-                label="Restante"
-                value={projectMetrics.remainingWorkingDays}
-                unit="dias úteis"
-                variant={projectMetrics.remainingWorkingDays <= 7 ? "warning" : "default"}
-              />
-
-              {/* Previsto / Realizado */}
-              <KPIStatCard
-                icon={Calendar}
-                label="Previsto"
-                value={`${projectMetrics.plannedProgress}%`}
-                className="hidden xl:flex"
-              />
-              <KPIStatCard
-                icon={TrendingUp}
-                label="Realizado"
-                value={`${projectMetrics.actualProgress}%`}
-                variant={projectMetrics.isOnTrack ? "success" : "warning"}
-                className="hidden xl:flex"
               />
             </div>
 
