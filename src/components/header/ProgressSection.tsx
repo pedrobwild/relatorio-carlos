@@ -113,13 +113,13 @@ export function ProgressSection({
     <section className="mt-4" aria-label="Progresso">
       <div role="progressbar" aria-valuenow={Math.round(actualProgress)} aria-valuemin={0} aria-valuemax={100}>
         {/* Title row */}
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-foreground">Progresso de obra</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-card-label">Progresso de obra</h3>
           <div className="flex items-center gap-3">
             {isStaff && hasActivities && (
               <Link
                 to={cronogramaPath}
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors p-1 rounded hover:bg-accent"
                 title="Editar cronograma"
                 aria-label="Editar cronograma"
               >
@@ -127,7 +127,7 @@ export function ProgressSection({
               </Link>
             )}
             <span className={cn(
-              "text-sm font-bold tabular-nums",
+              "text-lg font-bold tabular-nums",
               isOnTrack ? "text-success" : "text-warning"
             )}>{actualProgress}%</span>
           </div>
@@ -184,7 +184,7 @@ export function ProgressSection({
         </div>
 
         {/* Labels */}
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-4 tabular-nums">
+        <div className="flex items-center justify-between text-caption mt-4 tabular-nums">
           <span>Previsto: {plannedProgress}%</span>
           <span>Realizado: {actualProgress}%</span>
         </div>
