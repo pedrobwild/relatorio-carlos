@@ -296,6 +296,47 @@
   }
 }
 
+@layer components {
+  /* ====== Portal Underline Tabs ======
+   * Underline-style tabs used in the main portal (Curva S / Relatórios / Atividade).
+   * Sticky bar sits below the header. 44px min hit area for accessibility.
+   */
+  .portal-tabs-bar {
+    @apply border-b border-border bg-card/95 backdrop-blur-sm;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .portal-tab-trigger {
+    @apply relative flex-1 md:flex-none rounded-none px-3 md:px-5 font-semibold text-xs md:text-sm transition-all;
+    min-height: 44px;
+    color: hsl(var(--muted-foreground));
+    background: transparent;
+    box-shadow: none;
+  }
+  .portal-tab-trigger::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 rounded-full;
+    background: transparent;
+    transition: background-color 150ms ease;
+  }
+  .portal-tab-trigger:hover {
+    color: hsl(var(--foreground));
+  }
+  .portal-tab-trigger[data-state="active"] {
+    color: hsl(var(--primary));
+    background: transparent;
+    box-shadow: none;
+  }
+  .portal-tab-trigger[data-state="active"]::after {
+    background: hsl(var(--primary));
+  }
+  .portal-tab-trigger:focus-visible {
+    @apply outline-2 outline-offset-[-2px] outline-primary rounded-sm;
+  }
+}
+
 @layer utilities {
   .gradient-primary {
     background: var(--gradient-primary);
