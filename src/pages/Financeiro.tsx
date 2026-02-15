@@ -14,6 +14,7 @@ import { useProjectPayments, useMarkPaymentPaid, ProjectPayment } from "@/hooks/
 import { useUserRole } from "@/hooks/useUserRole";
 import { BoletoUploadButton } from "@/components/BoletoUploadButton";
 import { downloadBoleto } from "@/hooks/useBoletoUpload";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 const Financeiro = () => {
   const { project, loading: projectLoading } = useProject();
@@ -119,20 +120,7 @@ const Financeiro = () => {
     <TooltipProvider>
       <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-background border-b border-border">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-            <Link to={paths.relatorio}>
-              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full min-h-auto">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2.5">
-              <img src={bwildLogo} alt="Bwild" className="h-5 w-auto" />
-              <span className="text-muted-foreground/30">|</span>
-              <h1 className="text-h2">Financeiro</h1>
-            </div>
-          </div>
-        </div>
+        <PageHeader title="Financeiro" backTo={paths.relatorio} />
 
         {/* Content */}
         <div className="flex-1 max-w-5xl mx-auto w-full">

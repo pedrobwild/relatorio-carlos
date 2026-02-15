@@ -14,6 +14,8 @@ import { useCan } from '@/hooks/useCan';
 import { EmptyState } from '@/components/EmptyState';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { PageContainer } from '@/components/layout/PageContainer';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
@@ -126,40 +128,23 @@ export default function Formalizacoes() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => navigate(paths.relatorio)}
-                aria-label="Voltar para o relatório"
-                className="rounded-full shrink-0 h-9 w-9 hover:bg-primary/10 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-6 shrink-0" />
-              <span className="text-muted-foreground/30 shrink-0">|</span>
-              <h1 className="text-base font-semibold truncate">Formalizações</h1>
-            </div>
-            {canCreate && (
-              <Button 
-                size="sm"
-                onClick={() => navigate(paths.formalizacoesNova)} 
-                aria-label="Criar nova formalização"
-                className="shrink-0 gap-1.5 shadow-sm hover:shadow-md transition-all"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Nova Formalização</span>
-                <span className="sm:hidden">Nova</span>
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
+      <PageHeader title="Formalizações" backTo={paths.relatorio} maxWidth="xl">
+        {canCreate && (
+          <Button 
+            size="sm"
+            onClick={() => navigate(paths.formalizacoesNova)} 
+            aria-label="Criar nova formalização"
+            className="shrink-0 gap-1.5 shadow-sm hover:shadow-md transition-all"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nova Formalização</span>
+            <span className="sm:hidden">Nova</span>
+          </Button>
+        )}
+      </PageHeader>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="py-6">
+        <PageContainer maxWidth="xl">
         {/* Desktop: Two-column layout */}
         <div className="hidden lg:grid lg:grid-cols-[280px_1fr] lg:gap-6">
           {/* Left Sidebar */}
@@ -565,6 +550,7 @@ export default function Formalizacoes() {
             </TabsContent>
           </Tabs>
         </div>
+        </PageContainer>
       </main>
 
       {/* Floating Action Button (Mobile) - Admin only */}

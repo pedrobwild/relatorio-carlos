@@ -19,6 +19,8 @@ import { useCan } from "@/hooks/useCan";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { DocumentVersionUpload } from "@/components/DocumentVersionUpload";
 import { EmptyState } from "@/components/EmptyState";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -326,29 +328,15 @@ const Documentos = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col" data-testid="documents-page">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to={paths.relatorio}>
-              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2.5">
-              <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
-              <span className="text-muted-foreground/40">|</span>
-              <h1 className="text-h2">Documentos</h1>
-            </div>
-          </div>
-          {canUpload && projectId && (
-            <DocumentUpload projectId={projectId} onSuccess={refetch} />
-          )}
-        </div>
-      </div>
+      <PageHeader title="Documentos" backTo={paths.relatorio}>
+        {canUpload && projectId && (
+          <DocumentUpload projectId={projectId} onSuccess={refetch} />
+        )}
+      </PageHeader>
 
       {/* Content */}
-      <div className="flex-1 p-4 md:p-6">
-        <div className="max-w-5xl mx-auto">
+      <div className="flex-1 py-6">
+        <PageContainer>
           {documents.length === 0 ? (
             <EmptyState
               variant="documents"
@@ -419,7 +407,7 @@ const Documentos = () => {
               ))}
             </Tabs>
           )}
-        </div>
+        </PageContainer>
       </div>
 
       {/* Version History Dialog */}

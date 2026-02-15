@@ -7,13 +7,13 @@
 @layer base {
   :root {
     --background: 220 20% 97%;
-    --foreground: 220 14% 8%;
+    --foreground: 220 14% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 14% 8%;
+    --card-foreground: 220 14% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 14% 8%;
+    --popover-foreground: 220 14% 10%;
 
     --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
@@ -23,7 +23,7 @@
     --secondary-foreground: 220 14% 15%;
 
     --muted: 220 14% 96%;
-    --muted-foreground: 220 12% 35%;
+    --muted-foreground: 220 9% 42%;
 
     --accent: 262 91% 95%;
     --accent-foreground: 263 70% 45%;
@@ -48,6 +48,9 @@
     --ring: 262 83% 58%;
 
     --radius: 0.75rem;
+
+    /* Spacing scale (8pt grid) — use via Tailwind utilities */
+    /* 4px=1, 8px=2, 12px=3, 16px=4, 24px=6, 32px=8, 40px=10, 48px=12, 64px=16 */
 
     --gradient-primary: linear-gradient(135deg, hsl(262, 83%, 58%), hsl(263, 70%, 45%));
     --gradient-background: linear-gradient(to bottom right, hsl(220, 20%, 97%), hsl(220, 14%, 96%));
@@ -84,7 +87,7 @@
     --secondary-foreground: 220 14% 96%;
 
     --muted: 220 14% 20%;
-    --muted-foreground: 220 9% 60%;
+    --muted-foreground: 220 9% 55%;
 
     --accent: 262 40% 25%;
     --accent-foreground: 262 83% 75%;
@@ -154,7 +157,7 @@
     min-height: 100dvh; /* Dynamic viewport height for mobile */
     overflow-x: hidden;
     overflow-y: auto !important; /* Ensure vertical scroll always works */
-    line-height: 1.3; /* Compact line-height */
+    line-height: 1.5; /* Readable line-height for body */
     /* CRITICAL: Prevent nested elements from capturing page scroll */
     overscroll-behavior-x: none;
   }
@@ -179,48 +182,70 @@
     pointer-events: auto;
   }
 
-  /* Compact line-height for text elements */
+  /* Body text: comfortable reading line-height */
   p, span, li, td, th, label {
+    line-height: 1.5;
+  }
+
+  /* Headings: tighter line-height */
+  h1, h2, h3, h4, h5, h6 {
     line-height: 1.25;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    line-height: 1.15;
+  /* ====== Typography Scale (Design System) ======
+   * Consistent hierarchy: PageTitle > SectionTitle > CardLabel > CardValue > Body > Caption > Meta
+   * Line-heights: headings 1.2–1.3, body 1.5–1.6
+   */
+
+  /* PageTitle: Main page title - 20px mobile / 24px desktop */
+  .text-page-title {
+    @apply text-xl md:text-2xl font-bold text-foreground;
+    line-height: 1.25;
   }
 
-  /* Typography Scale - Balanced for mobile and desktop
-   * RULE: Titles/topics are always larger than content below them
-   * H1 > H2 > H3 > Body/Caption > Tiny
-   */
-  
-  /* H1: Page titles - 18px mobile / 20px desktop */
+  /* H1 (alias for backward compat) */
   .text-h1 {
     @apply text-lg md:text-xl font-bold text-foreground;
+    line-height: 1.25;
   }
   
-  /* H2: Section titles - 15px mobile / 16px desktop */
+  /* SectionTitle / H2: Section headings - 16px mobile / 18px desktop */
+  .text-section-title,
   .text-h2 {
-    @apply text-[15px] md:text-base font-semibold text-foreground;
+    @apply text-base md:text-lg font-semibold text-foreground;
+    line-height: 1.3;
   }
   
-  /* H3: Subsection/card titles, main topics - 14px mobile / 15px desktop */
+  /* CardLabel / H3: Card/subsection headings - 14px mobile / 15px desktop */
+  .text-card-label,
   .text-h3 {
     @apply text-sm md:text-[15px] font-semibold text-foreground;
+    line-height: 1.3;
+  }
+
+  /* CardValue: Large numeric values in KPI cards */
+  .text-card-value {
+    @apply text-xl md:text-2xl font-bold text-foreground tabular-nums;
+    line-height: 1.2;
   }
   
-  /* Body: Regular content, primary information - 14px mobile / 15px desktop */
+  /* Body: Regular content - 14px mobile / 15px desktop */
   .text-body {
     @apply text-sm md:text-[15px] text-foreground;
+    line-height: 1.5;
   }
   
-  /* Caption: Secondary information, sub-items - 13px mobile / 14px desktop */
+  /* Caption: Secondary text - 13px mobile / 14px desktop */
   .text-caption {
     @apply text-[13px] md:text-sm text-muted-foreground;
+    line-height: 1.5;
   }
   
-  /* Tiny: Metadata, badges, timestamps - 11px mobile / 12px desktop */
+  /* Meta/Tiny: Timestamps, badges - 11px mobile / 12px desktop */
+  .text-meta,
   .text-tiny {
     @apply text-[11px] md:text-xs text-muted-foreground;
+    line-height: 1.4;
   }
 
   /* Improve touch targets for mobile - Apple's minimum is 44px */

@@ -5,6 +5,8 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, PendingType, PendingStatus } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {
@@ -113,22 +115,10 @@ const Pendencias = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
-        <div className="flex items-center justify-between px-3 py-2.5 max-w-6xl mx-auto">
-          <div className="flex items-center gap-2">
-            <Link
-              to={paths.relatorio}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary hover:bg-accent transition-colors"
-              aria-label="Voltar ao relatório"
-            >
-            </Link>
-            <span className="text-muted-foreground/50">|</span>
-            <h1 className="text-body font-semibold">Pendências</h1>
-          </div>
-        </div>
-      </header>
+      <PageHeader title="Pendências" backTo={paths.relatorio} maxWidth="xl" />
 
-      <main className="p-3 sm:p-4 md:p-6 max-w-6xl mx-auto">
+      <main className="py-6">
+        <PageContainer maxWidth="xl">
         {/* Desktop: Two-column layout */}
         <div className="hidden lg:grid lg:grid-cols-[280px_1fr] lg:gap-6">
           {/* Left Sidebar */}
@@ -412,6 +402,7 @@ const Pendencias = () => {
             </div>
           )}
         </div>
+        </PageContainer>
       </main>
     </div>
   );

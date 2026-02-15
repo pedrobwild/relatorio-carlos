@@ -7,6 +7,8 @@ import PDFViewer from "@/components/PDFViewer";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -66,39 +68,25 @@ const Contrato = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to={paths.relatorio}>
-              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2.5">
-              <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
-              <span className="text-muted-foreground/40">|</span>
-              <h1 className="text-h2">Contrato</h1>
-            </div>
-          </div>
-          {hasContract && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleOpenInNewTab(mainContract)}
-                className="h-9 w-9 rounded-full sm:hidden hover:bg-primary/10"
-                title="Abrir em nova aba"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </Button>
-              <Button onClick={() => handleDownload(mainContract)} size="sm" className="gap-2 h-9">
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Download</span>
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <PageHeader title="Contrato" backTo={paths.relatorio} maxWidth="xl">
+        {hasContract && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleOpenInNewTab(mainContract)}
+              className="h-9 w-9 rounded-full sm:hidden hover:bg-primary/10"
+              title="Abrir em nova aba"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+            <Button onClick={() => handleDownload(mainContract)} size="sm" className="gap-2 h-9">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Download</span>
+            </Button>
+          </>
+        )}
+      </PageHeader>
 
       {/* Content */}
       <div className="flex-1 min-h-0 p-2 sm:p-4 md:p-6 overflow-auto">
