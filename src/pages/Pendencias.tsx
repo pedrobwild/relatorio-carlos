@@ -7,6 +7,7 @@ import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, PendingType
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 
 const getTypeIcon = (type: PendingType) => {
   switch (type) {
@@ -115,7 +116,17 @@ const Pendencias = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <PageHeader title="Pendências" backTo={paths.relatorio} maxWidth="xl" />
+      <PageHeader
+        title="Pendências"
+        backTo={paths.relatorio}
+        maxWidth="xl"
+        breadcrumbs={[
+          { label: "Minhas Obras", href: "/minhas-obras" },
+          { label: "Obra", href: paths.relatorio },
+          { label: "Pendências" },
+        ]}
+      />
+      <ProjectSubNav />
 
       <main className="py-6">
         <PageContainer maxWidth="xl">

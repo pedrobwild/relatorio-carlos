@@ -15,6 +15,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { BoletoUploadButton } from "@/components/BoletoUploadButton";
 import { downloadBoleto } from "@/hooks/useBoletoUpload";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 
 const Financeiro = () => {
   const { project, loading: projectLoading } = useProject();
@@ -120,7 +121,16 @@ const Financeiro = () => {
     <TooltipProvider>
       <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
         {/* Header */}
-        <PageHeader title="Financeiro" backTo={paths.relatorio} />
+        <PageHeader
+          title="Financeiro"
+          backTo={paths.relatorio}
+          breadcrumbs={[
+            { label: "Minhas Obras", href: "/minhas-obras" },
+            { label: project?.name || "Obra", href: paths.relatorio },
+            { label: "Financeiro" },
+          ]}
+        />
+        <ProjectSubNav />
 
         {/* Content */}
         <div className="flex-1 max-w-5xl mx-auto w-full">

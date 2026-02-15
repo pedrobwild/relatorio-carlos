@@ -1,8 +1,13 @@
 import { cn } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import bwildLogo from "@/assets/bwild-logo.png";
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
 
 interface PageHeaderProps {
   title: string;
@@ -14,6 +19,8 @@ interface PageHeaderProps {
   maxWidth?: "md" | "lg" | "xl" | "full";
   /** Show Bwild logo */
   showLogo?: boolean;
+  /** Breadcrumb trail — array of { label, href? } */
+  breadcrumbs?: BreadcrumbItem[];
 }
 
 const maxWidthMap = {
@@ -25,7 +32,7 @@ const maxWidthMap = {
 
 /**
  * PageHeader — sticky header with consistent layout across all sub-pages.
- * Includes back button, optional logo, title, and right-side actions.
+ * Includes back button, optional breadcrumb, logo, title, and right-side actions.
  */
 export function PageHeader({
   title,
@@ -35,6 +42,7 @@ export function PageHeader({
   className,
   maxWidth = "lg",
   showLogo = true,
+  breadcrumbs,
 }: PageHeaderProps) {
   const BackWrapper = backTo ? Link : "div";
   const backProps = backTo ? { to: backTo } : {};
@@ -67,7 +75,28 @@ export function PageHeader({
               <span className="text-muted-foreground/40 shrink-0">|</span>
             </>
           )}
-          <h1 className="text-page-title truncate">{title}</h1>
+          <div className="min-w-0">
+            {breadcrumbs && breadcrumbs.length > 0 && (
+              <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 overflow-hidden">
+                {breadcrumbs.map((crumb, i) => (
+                  <span key={i} className="flex items-center gap-1 shrink-0">
+                    {i > 0 && <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+                    {crumb.href ? (
+                      <Link
+                        to={crumb.href}
+                        className="hover:text-foreground transition-colors truncate max-w-[120px]"
+                      >
+                        {crumb.label}
+                      </Link>
+                    ) : (
+                      <span className="truncate max-w-[120px]">{crumb.label}</span>
+                    )}
+                  </span>
+                ))}
+              </nav>
+            )}
+            <h1 className="text-page-title truncate">{title}</h1>
+          </div>
         </div>
         {children && (
           <div className="flex items-center gap-2 shrink-0">
