@@ -1,13 +1,8 @@
-import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useProject } from "@/contexts/ProjectContext";
 import { cn } from "@/lib/utils";
 import {
-  BarChart3,
-  DollarSign,
-  FolderOpen,
-  ClipboardSignature,
-  AlertCircle,
   FileText,
   Box,
   Ruler,
@@ -21,6 +16,8 @@ interface NavItem {
   icon: React.ElementType;
   /** Only show for staff roles */
   staffOnly?: boolean;
+  /** Only show when project is in project phase */
+  projectPhaseOnly?: boolean;
 }
 
 interface ProjectSubNavProps {
@@ -31,29 +28,27 @@ interface ProjectSubNavProps {
 
 /**
  * ProjectSubNav — horizontal sub-navigation for obra internal pages.
- * Shows all available sections within a project with active state.
- * Sticky below the page header.
+ * Shows only secondary sections (Contrato, Projeto 3D, Executivo, Jornada).
+ * Primary sections are now tabs in the main content area.
  */
 export function ProjectSubNav({ className, showStaffItems = false }: ProjectSubNavProps) {
   const { paths, projectId } = useProjectNavigation();
+  const { project } = useProject();
 
   if (!projectId) return null;
 
+  const isProjectPhase = project?.is_project_phase === true;
+
   const navItems: NavItem[] = [
-    { label: "Resumo", path: paths.relatorio, icon: BarChart3 },
-    { label: "Financeiro", path: paths.financeiro, icon: DollarSign },
-    { label: "Documentos", path: paths.documentos, icon: FolderOpen },
-    { label: "Formalizações", path: paths.formalizacoes, icon: ClipboardSignature },
-    { label: "Pendências", path: paths.pendencias, icon: AlertCircle },
     { label: "Contrato", path: paths.contrato, icon: FileText },
     { label: "Projeto 3D", path: paths.projeto3D, icon: Box },
     { label: "Executivo", path: paths.executivo, icon: Ruler },
-    { label: "Jornada", path: paths.jornada, icon: Map },
+    { label: "Jornada", path: paths.jornada, icon: Map, projectPhaseOnly: true },
   ];
 
-  const visibleItems = showStaffItems
-    ? navItems
-    : navItems.filter((item) => !item.staffOnly);
+  const visibleItems = navItems
+    .filter((item) => showStaffItems || !item.staffOnly)
+    .filter((item) => !item.projectPhaseOnly || isProjectPhase);
 
   return (
     <div
