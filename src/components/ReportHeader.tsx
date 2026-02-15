@@ -397,15 +397,17 @@ const ReportHeader = ({
 
                 <Separator orientation="vertical" className="h-12 hidden lg:block self-center" />
 
-                {/* Key Dates */}
-                <div className="flex items-center gap-4 shrink-0 self-center">
-                  <div className="text-center">
-                    <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Início</span>
+                {/* Key Dates — inline */}
+                <div className="flex items-center gap-3 shrink-0 self-center">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-caption">Início</span>
                     <span className="text-sm font-bold tabular-nums text-foreground">{formatDateShort(displayStartDate)}</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-border" />
-                  <div className="text-center">
-                    <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Entrega</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-caption">Entrega</span>
                     <button
                       onClick={endDate === dateChangeInfo.originalDate ? () => setShowDateChangeAlert(true) : undefined}
                       className={cn(
@@ -418,7 +420,7 @@ const ReportHeader = ({
                       {formatDateShort(displayEndDate)}
                     </button>
                     {endDate === dateChangeInfo.originalDate && (
-                      <AlertCircle className="w-3 h-3 text-warning inline-block ml-1" />
+                      <AlertCircle className="w-3 h-3 text-warning" />
                     )}
                   </div>
                 </div>
