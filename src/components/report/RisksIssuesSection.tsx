@@ -15,7 +15,7 @@ interface RisksIssuesSectionProps {
 
 const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDelay?: number }) => (
   <div 
-    className="p-2.5 sm:p-3 space-y-2"
+    className="px-5 py-3 sm:px-6 sm:py-4 space-y-2.5"
     style={{ 
       animationDelay: `${animationDelay}ms`,
       animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -26,19 +26,19 @@ const RiskItem = ({ issue, animationDelay = 0 }: { issue: RiskIssue; animationDe
       <div className="flex-1">
         <div className="flex items-start gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
-          <p className="text-body font-medium text-foreground leading-snug">{issue.title}</p>
+          <p className="text-sm font-medium text-foreground leading-[1.6]">{issue.title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 mt-1 ml-5">
-          <span className="text-tiny font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
+          <span className="text-xs font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
             {format(new Date(issue.dueDate), "dd/MM", { locale: ptBR })}
           </span>
         </div>
       </div>
     </div>
     
-    <div className="bg-secondary rounded-lg p-2 space-y-1">
-      <p className="text-caption font-bold text-foreground">Plano de Ação</p>
-      <div className="text-caption text-foreground/80 leading-snug space-y-0.5">
+    <div className="bg-secondary rounded-lg p-3 space-y-1.5">
+      <p className="text-xs font-bold text-foreground uppercase tracking-wide">Plano de Ação</p>
+      <div className="text-sm text-foreground/80 leading-[1.6] space-y-1">
         {issue.actionPlan.split('\n').map((line, idx) => (
           <p key={idx}>{idx + 1}) {line.trim()}</p>
         ))}
@@ -55,8 +55,8 @@ const RisksIssuesSection = ({ issues }: RisksIssuesSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-        <h3 className="text-h2 text-white">Gestão de Riscos</h3>
+      <div className="px-4 py-2.5 bg-primary-dark">
+        <h3 className="text-base font-semibold text-white tracking-tight">Gestão de Riscos</h3>
       </div>
       
       {/* Desktop: Always show all */}

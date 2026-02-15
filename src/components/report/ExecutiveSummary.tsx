@@ -18,16 +18,16 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
   const remainingParagraphs = paragraphs.slice(1);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       {/* Summary Text - Collapsible on Mobile */}
       <div className="bg-card rounded-lg border border-border overflow-hidden">
-        <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-          <h3 className="text-h2 text-white">Resumo Executivo</h3>
+        <div className="px-4 py-2.5 bg-primary-dark">
+          <h3 className="text-base font-semibold text-white tracking-tight">Resumo Executivo</h3>
         </div>
         
         {/* Desktop: Always show full content */}
-        <div className="hidden sm:block p-3 sm:p-4">
-          <div className="text-body text-foreground/80 leading-snug text-justify space-y-2">
+        <div className="hidden sm:block px-5 py-4 sm:px-6 sm:py-5">
+          <div className="text-sm text-foreground/85 leading-[1.7] space-y-3">
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -37,17 +37,17 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
         {/* Mobile: Collapsible content */}
         <div className="sm:hidden">
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <div className="p-3">
-              <p className="text-caption leading-snug text-justify">
+            <div className="px-4 py-3">
+              <p className="text-sm leading-[1.65] text-foreground/85">
                 {firstParagraph}
               </p>
               
               <CollapsibleContent className="overflow-hidden">
-                <div className="space-y-2 mt-2">
+                <div className="space-y-3 mt-3">
                   {remainingParagraphs.map((paragraph, index) => (
                       <p 
                         key={index} 
-                        className="text-caption leading-snug text-justify"
+                        className="text-sm leading-[1.65] text-foreground/85"
                       style={{
                         animationDelay: `${(index + 1) * 50}ms`,
                         animation: isOpen ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -63,9 +63,9 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
             
             {remainingParagraphs.length > 0 && (
               <CollapsibleTrigger asChild>
-                <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
+                <button className="w-full py-2.5 px-4 border-t border-border flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
                   <span>{isOpen ? "Ver menos" : "Continuar lendo"}</span>
-                  {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingParagraphs.length}</span>}
+                  {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-xs font-semibold">+{remainingParagraphs.length}</span>}
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                 </button>
               </CollapsibleTrigger>
@@ -77,23 +77,23 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
       {/* Deliverables Completed This Week */}
       {data.deliverablesCompleted.length > 0 && (
         <div className="bg-card rounded-lg border border-border overflow-hidden">
-          <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-            <h3 className="text-h2 text-white">Entregáveis concluídos na semana</h3>
+          <div className="px-4 py-2.5 bg-primary-dark">
+            <h3 className="text-base font-semibold text-white tracking-tight">Entregáveis concluídos na semana</h3>
           </div>
-          <div className="p-3 sm:p-4">
-            <ul className="space-y-2.5">
+          <div className="px-5 py-4 sm:px-6 sm:py-5">
+            <ul className="space-y-3">
               {data.deliverablesCompleted.map((item) => (
-                <li key={item.id} className="space-y-1">
-                  <div className="flex items-start gap-1.5 text-body text-foreground font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-success shrink-0 mt-0.5" />
-                    <span className="leading-snug">{item.description}</span>
+                <li key={item.id} className="space-y-1.5">
+                  <div className="flex items-start gap-2 text-sm text-foreground font-medium">
+                    <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                    <span className="leading-[1.6]">{item.description}</span>
                   </div>
                   {item.subItems && item.subItems.length > 0 && (
-                    <ul className="ml-4 sm:ml-5 space-y-0.5 border-l-2 border-border pl-2.5">
+                    <ul className="ml-6 space-y-1 border-l-2 border-border pl-3">
                       {item.subItems.map((subItem, subIndex) => (
                         <li 
                           key={subItem.id} 
-                          className="text-caption leading-snug"
+                          className="text-sm text-foreground/75 leading-[1.6]"
                           style={{
                             animationDelay: `${(subIndex + 1) * 30}ms`,
                             animation: 'fade-in 0.3s ease-out forwards',

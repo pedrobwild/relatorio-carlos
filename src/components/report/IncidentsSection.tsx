@@ -53,7 +53,7 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
   return (
     <>
       <div 
-        className="p-2.5 sm:p-3 space-y-2"
+        className="px-5 py-3 sm:px-6 sm:py-4 space-y-2.5"
         style={{ 
           animationDelay: `${animationDelay}ms`,
           animation: animationDelay > 0 ? 'fade-in 0.3s ease-out forwards' : undefined,
@@ -61,34 +61,34 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         }}
       >
         <div className="flex items-center">
-          <span className={`text-tiny font-semibold px-1.5 py-0.5 rounded ${statusConfig.className}`}>
+          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${statusConfig.className}`}>
             {statusConfig.label}
           </span>
         </div>
 
-        <div className="space-y-1 text-caption">
-          <p className="leading-snug"><span className="font-semibold">Data:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
-          <p className="leading-snug"><span className="font-semibold">Previsão:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
+        <div className="space-y-1 text-sm text-foreground/75">
+          <p className="leading-[1.6]"><span className="font-semibold text-foreground/90">Data:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
+          <p className="leading-[1.6]"><span className="font-semibold text-foreground/90">Previsão:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
         </div>
 
         <div className="space-y-1">
           <div className="flex items-start gap-1.5">
-            <AlertOctagon className="w-3 h-3 text-destructive shrink-0 mt-0.5" />
-            <p className="text-tiny font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
+            <AlertOctagon className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+            <p className="text-xs font-bold text-foreground uppercase tracking-wide">Ocorrência</p>
           </div>
-          <p className="text-caption leading-snug ml-4">{incident.occurrence}</p>
+          <p className="text-sm text-foreground/80 leading-[1.6] ml-5">{incident.occurrence}</p>
         </div>
 
         {photos.length > 0 && (
           <div className="space-y-1">
             <div className="flex items-center gap-1.5">
-              <Camera className="w-3 h-3 text-muted-foreground" />
-              <p className="text-tiny font-bold text-foreground uppercase tracking-wide">
+              <Camera className="w-3.5 h-3.5 text-muted-foreground" />
+              <p className="text-xs font-bold text-foreground uppercase tracking-wide">
                 Fotos
               </p>
-              <span className="text-tiny">({photos.length})</span>
+              <span className="text-xs text-muted-foreground">({photos.length})</span>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 ml-4">
+            <div className="grid grid-cols-3 gap-1.5 ml-5">
               {photos.map((photo, index) => (
                 <button
                   key={photo.id}
@@ -106,19 +106,19 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
           </div>
         )}
 
-        <div className="bg-secondary rounded-lg p-2 space-y-1">
-          <p className="text-tiny font-bold text-foreground">Causa</p>
-          <p className="text-caption leading-snug">{incident.cause}</p>
+        <div className="bg-secondary rounded-lg p-3 space-y-1.5">
+          <p className="text-xs font-bold text-foreground uppercase tracking-wide">Causa</p>
+          <p className="text-sm text-foreground/80 leading-[1.6]">{incident.cause}</p>
         </div>
 
-        <div className="bg-secondary rounded-lg p-2 space-y-1">
-          <p className="text-tiny font-bold text-foreground">Ação</p>
-          <p className="text-caption leading-snug">{incident.action}</p>
+        <div className="bg-secondary rounded-lg p-3 space-y-1.5">
+          <p className="text-xs font-bold text-foreground uppercase tracking-wide">Ação</p>
+          <p className="text-sm text-foreground/80 leading-[1.6]">{incident.action}</p>
         </div>
 
-        <div className="bg-secondary rounded-lg p-2 space-y-1">
-          <p className="text-tiny font-bold text-foreground">Impacto</p>
-          <p className="text-caption leading-snug">{incident.impact}</p>
+        <div className="bg-secondary rounded-lg p-3 space-y-1.5">
+          <p className="text-xs font-bold text-foreground uppercase tracking-wide">Impacto</p>
+          <p className="text-sm text-foreground/80 leading-[1.6]">{incident.impact}</p>
         </div>
       </div>
 
@@ -200,8 +200,8 @@ const IncidentsSection = ({ incidents }: IncidentsSectionProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-primary-dark">
-        <h3 className="text-h2 text-white">Intercorrências de Obra</h3>
+      <div className="px-4 py-2.5 bg-primary-dark">
+        <h3 className="text-base font-semibold text-white tracking-tight">Intercorrências de Obra</h3>
       </div>
       
       <div className="hidden sm:block divide-y divide-border">
