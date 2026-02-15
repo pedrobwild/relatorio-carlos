@@ -1,55 +1,64 @@
 import { Link } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
+import { Activity } from "@/types/report";
+import { format, addMonths, startOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
-interface ProgressBarProps {
+interface Milestone {
   label: string;
-  percentage: number;
-  variant?: "primary" | "success" | "warning";
-  leftLabel?: string;
-  rightLabel?: string;
-  titleRight?: React.ReactNode;
-  className?: string;
+  expectedPercent: number;
+  position: number; // 0-100 on the bar timeline
 }
 
-function ProgressBar({
-  label,
-  percentage,
-  variant = "primary",
-  leftLabel,
-  rightLabel,
-  titleRight,
-  className,
-}: ProgressBarProps) {
-  const barColor = {
-    primary: "bg-primary/70",
-    success: "bg-success",
-    warning: "bg-warning",
-  };
+/** Calculate monthly milestones: expected % complete at each month boundary */
+function computeMilestones(
+  activities: Activity[],
+  startDate: string,
+  endDate: string
+): Milestone[] {
+  if (!activities.length || !startDate || !endDate) return [];
 
-  return (
-    <div className={className} role="progressbar" aria-valuenow={Math.round(percentage)} aria-valuemin={0} aria-valuemax={100}>
-      <div className="flex items-center justify-between mb-1.5">
-        <h3 className="text-sm font-semibold text-foreground">{label}</h3>
-        {titleRight}
-      </div>
-      <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
-        <div
-          className={cn(
-            "h-full rounded-full transition-all duration-700 ease-out",
-            barColor[variant]
-          )}
-          style={{ width: `${Math.min(percentage, 100)}%` }}
-        />
-      </div>
-      {(leftLabel || rightLabel) && (
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1.5 tabular-nums">
-          <span>{leftLabel}</span>
-          <span>{rightLabel}</span>
-        </div>
-      )}
-    </div>
-  );
+  const start = new Date(startDate + "T00:00:00");
+  const end = new Date(endDate + "T00:00:00");
+  const totalDuration = end.getTime() - start.getTime();
+  if (totalDuration <= 0) return [];
+
+  const hasWeights = activities.some(a => a.weight !== undefined);
+  const totalWeight = hasWeights
+    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
+    : activities.length;
+  if (totalWeight === 0) return [];
+
+  const milestones: Milestone[] = [];
+
+  // Generate one milestone per month boundary
+  let current = addMonths(startOfMonth(start), 1); // first full month end
+  while (current < end) {
+    const position = ((current.getTime() - start.getTime()) / totalDuration) * 100;
+
+    // Calculate expected % at this date based on planned end dates
+    const plannedWeight = activities.reduce((sum, a) => {
+      const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
+      if (plannedEnd <= current) {
+        return sum + (hasWeights ? (a.weight || 0) : 1);
+      }
+      return sum;
+    }, 0);
+    const expectedPercent = Math.round((plannedWeight / totalWeight) * 100);
+
+    milestones.push({
+      label: format(current, "MMM", { locale: ptBR }),
+      expectedPercent,
+      position: Math.min(position, 100),
+    });
+
+    current = addMonths(current, 1);
+  }
+
+  return milestones;
 }
 
 interface ProgressSectionProps {
@@ -63,12 +72,12 @@ interface ProgressSectionProps {
   hasActivities: boolean;
   cronogramaPath: string;
   isProjectPhase?: boolean;
+  activities?: Activity[];
+  projectStartDate?: string;
+  projectEndDate?: string;
 }
 
 export function ProgressSection({
-  elapsedWorkingDays,
-  totalWorkingDays,
-  remainingWorkingDays,
   actualProgress,
   plannedProgress,
   isOnTrack,
@@ -76,24 +85,36 @@ export function ProgressSection({
   hasActivities,
   cronogramaPath,
   isProjectPhase,
+  activities = [],
+  projectStartDate,
+  projectEndDate,
 }: ProgressSectionProps) {
-  if (isProjectPhase && !isStaff) return null;
+  const milestones = useMemo(
+    () => computeMilestones(activities, projectStartDate || "", projectEndDate || ""),
+    [activities, projectStartDate, projectEndDate]
+  );
 
-  const timelinePercent =
-    totalWorkingDays > 0
-      ? (elapsedWorkingDays / totalWorkingDays) * 100
-      : 0;
+  // Calculate "today" position on the timeline
+  const todayPosition = useMemo(() => {
+    if (!projectStartDate || !projectEndDate) return null;
+    const start = new Date(projectStartDate + "T00:00:00");
+    const end = new Date(projectEndDate + "T00:00:00");
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const total = end.getTime() - start.getTime();
+    if (total <= 0 || now < start) return null;
+    if (now > end) return 100;
+    return ((now.getTime() - start.getTime()) / total) * 100;
+  }, [projectStartDate, projectEndDate]);
+
+  if (isProjectPhase && !isStaff) return null;
 
   return (
     <section className="mt-4" aria-label="Progresso">
-      {/* Timeline Progress */}
-      <ProgressBar
-        label="Progresso de obra"
-        percentage={actualProgress}
-        variant={isOnTrack ? "success" : "warning"}
-        leftLabel={`Previsto: ${plannedProgress}%`}
-        rightLabel={`Realizado: ${actualProgress}%`}
-        titleRight={
+      <div role="progressbar" aria-valuenow={Math.round(actualProgress)} aria-valuemin={0} aria-valuemax={100}>
+        {/* Title row */}
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-foreground">Progresso de obra</h3>
           <div className="flex items-center gap-3">
             {isStaff && hasActivities && (
               <Link
@@ -110,8 +131,64 @@ export function ProgressSection({
               isOnTrack ? "text-success" : "text-warning"
             )}>{actualProgress}%</span>
           </div>
-        }
-      />
+        </div>
+
+        {/* Progress bar with milestones */}
+        <div className="relative">
+          {/* Bar */}
+          <div className="h-3 bg-secondary rounded-full overflow-hidden relative">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-700 ease-out",
+                isOnTrack ? "bg-success" : "bg-warning"
+              )}
+              style={{ width: `${Math.min(actualProgress, 100)}%` }}
+            />
+          </div>
+
+          {/* Milestone markers */}
+          <TooltipProvider delayDuration={100}>
+            {milestones.map((m, i) => (
+              <Tooltip key={i}>
+                <TooltipTrigger asChild>
+                  <div
+                    className="absolute top-0 flex flex-col items-center"
+                    style={{ left: `${m.position}%`, transform: "translateX(-50%)" }}
+                  >
+                    {/* Tick mark on bar */}
+                    <div className="w-px h-3 bg-foreground/20" />
+                    {/* Label below */}
+                    <span className="text-[9px] text-muted-foreground mt-0.5 uppercase font-medium whitespace-nowrap">
+                      {m.label}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p className="font-semibold">{m.label.toUpperCase()}</p>
+                  <p>Previsto: {m.expectedPercent}%</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
+
+          {/* Today indicator */}
+          {todayPosition !== null && (
+            <div
+              className="absolute top-0 flex flex-col items-center pointer-events-none"
+              style={{ left: `${todayPosition}%`, transform: "translateX(-50%)" }}
+            >
+              <div className="w-0.5 h-3 bg-primary" />
+              <span className="text-[8px] text-primary font-bold mt-0.5">HOJE</span>
+            </div>
+          )}
+        </div>
+
+        {/* Labels */}
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-4 tabular-nums">
+          <span>Previsto: {plannedProgress}%</span>
+          <span>Realizado: {actualProgress}%</span>
+        </div>
+      </div>
     </section>
   );
 }
