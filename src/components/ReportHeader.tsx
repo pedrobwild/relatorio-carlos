@@ -272,11 +272,10 @@ const ReportHeader = ({
       { label: "Aprov. 3D", value: milestoneDates?.dateApproval3d },
       { label: "Aprov. Executivo", value: milestoneDates?.dateApprovalExec },
       { label: "Aprov. Obra", value: milestoneDates?.dateApprovalObra },
-      { label: "Início", value: milestoneDates?.dateOfficialStart || startDate },
-      { label: "Entrega", value: milestoneDates?.dateOfficialDelivery || effectiveEndDate },
+      { label: "Início Mobilização", value: null },
     ];
     return items;
-  }, [milestoneDates, startDate, effectiveEndDate]);
+  }, [milestoneDates]);
 
   return (
     <header className="animate-fade-in mb-3 md:mb-4">
@@ -432,8 +431,26 @@ const ReportHeader = ({
                 </div>
               </div>
 
-              <Separator orientation="vertical" className="h-5 hidden lg:block" />
+            </div>
+          )}
 
+          {/* Milestones: compact horizontal row inside header */}
+          {showMetrics && (
+            <div className="px-5 py-2 border-t border-border bg-secondary/10">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Calendar className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Marcos do Projeto</span>
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-1">
+                {milestoneItems.map((m) => (
+                  <div key={m.label} className="flex items-baseline gap-1.5">
+                    <span className="text-[11px] text-muted-foreground">{m.label}:</span>
+                    <span className="text-[11px] font-semibold tabular-nums text-foreground">
+                      {m.value ? formatDateFull(m.value) : "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -454,23 +471,6 @@ const ReportHeader = ({
               isProjectPhase={isProjectPhase}
             />
 
-            {/* Milestones: compact horizontal row */}
-            <div className="mt-4 pt-3 border-t border-border">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Calendar className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Marcos do Projeto</span>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-1">
-                {milestoneItems.map((m) => (
-                  <div key={m.label} className="flex items-baseline gap-1.5">
-                    <span className="text-[11px] text-muted-foreground">{m.label}:</span>
-                    <span className="text-[11px] font-semibold tabular-nums text-foreground">
-                      {m.value ? formatDateFull(m.value) : "—"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Team Contacts: compact chips */}
             {teamContacts.length > 0 && (
@@ -618,6 +618,21 @@ const ReportHeader = ({
                   </p>
                 </div>
 
+                {/* Milestones compact - mobile */}
+                <div className="mb-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Marcos</span>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1">
+                    {milestoneItems.map((m) => (
+                      <div key={m.label} className="flex items-baseline justify-between gap-1">
+                        <span className="text-[10px] text-muted-foreground truncate">{m.label}</span>
+                        <span className="text-[10px] font-semibold tabular-nums text-foreground shrink-0">
+                          {m.value ? formatDateShort(m.value) : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Timeline bar */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -667,20 +682,6 @@ const ReportHeader = ({
               </div>
             </div>
 
-            {/* Milestones compact */}
-            <div className="border-t border-border pt-2.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Marcos</span>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-1.5">
-                {milestoneItems.map((m) => (
-                  <div key={m.label} className="flex items-baseline justify-between gap-1">
-                    <span className="text-[10px] text-muted-foreground truncate">{m.label}</span>
-                    <span className="text-[10px] font-semibold tabular-nums text-foreground shrink-0">
-                      {m.value ? formatDateShort(m.value) : "—"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Team compact */}
             {teamContacts.length > 0 && (
