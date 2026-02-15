@@ -183,13 +183,10 @@ export default function Auth() {
               <img src={bwildLogo} alt="Bwild" className="h-10" />
             </div>
 
-            <div className="text-center space-y-2 mb-6">
+            <div className="text-center mb-6">
               <h1 className="text-xl font-bold text-foreground leading-tight">
-                Acompanhe sua obra em tempo real
+                Portal de Jornada de Obra
               </h1>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Veja o andamento, prazos, relatórios e documentos da sua obra — tudo em um só lugar.
-              </p>
             </div>
 
 
