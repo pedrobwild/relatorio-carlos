@@ -1,17 +1,18 @@
  import { useState, useEffect } from 'react';
  import { useParams, useNavigate } from 'react-router-dom';
- import { ArrowLeft, Loader2 } from 'lucide-react';
- import { Button } from '@/components/ui/button';
+ import { Loader2 } from 'lucide-react';
  import { Separator } from '@/components/ui/separator';
  import { useProject } from '@/contexts/ProjectContext';
  import { useUserRole } from '@/hooks/useUserRole';
  import { useProjectJourney, useInitializeJourney } from '@/hooks/useProjectJourney';
+ import { useProjectNavigation } from '@/hooks/useProjectNavigation';
  import { JourneyHeroSection } from '@/components/journey/JourneyHeroSection';
  import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
  import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
  import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
-import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
- import bwildLogo from '@/assets/bwild-logo.png';
+ import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
+ import { PageHeader } from '@/components/layout/PageHeader';
+ import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
  
  export default function JornadaProjeto() {
    const { projectId } = useParams<{ projectId: string }>();
@@ -20,6 +21,7 @@ import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
    const { role, loading: roleLoading } = useUserRole();
    const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
    const initializeJourney = useInitializeJourney();
+   const { paths } = useProjectNavigation();
    
    const [activeStageId, setActiveStageId] = useState<string | null>(null);
    const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
@@ -91,30 +93,24 @@ import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
  
   return (
     <div className="min-h-screen min-h-[100dvh] bg-background">
-      {/* Header - Mobile optimized with safe area */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b safe-area-top">
-        <div className="container max-w-5xl mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(`/obra/${projectId}`)}
-                className="h-11 w-11 shrink-0"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <img src={bwildLogo} alt="BWild" className="h-7 md:h-8" />
-            </div>
-            <div className="text-right min-w-0">
-              <p className="font-medium text-sm truncate">{project.name}</p>
-              {project.unit_name && (
-                <p className="text-xs text-muted-foreground truncate">{project.unit_name}</p>
-              )}
-            </div>
-          </div>
+      {/* Header */}
+      <PageHeader
+        title="Jornada do Projeto"
+        backTo={`/obra/${projectId}`}
+        breadcrumbs={[
+          { label: "Minhas Obras", href: "/minhas-obras" },
+          { label: project.name, href: `/obra/${projectId}` },
+          { label: "Jornada" },
+        ]}
+      >
+        <div className="text-right min-w-0">
+          <p className="font-medium text-sm truncate">{project.name}</p>
+          {project.unit_name && (
+            <p className="text-xs text-muted-foreground truncate">{project.unit_name}</p>
+          )}
         </div>
-      </header>
+      </PageHeader>
+      <ProjectSubNav />
 
       <main className="container max-w-5xl mx-auto px-4 py-5 md:py-8 pb-safe">
         <div className="grid gap-6 md:gap-8 lg:grid-cols-[280px_1fr]">

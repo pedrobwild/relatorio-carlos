@@ -9,6 +9,7 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 
 const Executivo = () => {
   const { projectId } = useParams();
@@ -72,7 +73,15 @@ const Executivo = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
-      <PageHeader title="Projeto Executivo" backTo={paths.relatorio}>
+      <PageHeader
+        title="Projeto Executivo"
+        backTo={paths.relatorio}
+        breadcrumbs={[
+          { label: "Minhas Obras", href: "/minhas-obras" },
+          { label: project?.name || "Obra", href: paths.relatorio },
+          { label: "Executivo" },
+        ]}
+      >
         {hasDocument && (
           <>
             <Button
@@ -91,6 +100,7 @@ const Executivo = () => {
           </>
         )}
       </PageHeader>
+      <ProjectSubNav />
 
       {/* Content */}
       {hasDocument ? (

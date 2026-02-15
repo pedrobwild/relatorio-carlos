@@ -16,6 +16,7 @@ import bwildLogo from '@/assets/bwild-logo.png';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
@@ -128,7 +129,16 @@ export default function Formalizacoes() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <PageHeader title="Formalizações" backTo={paths.relatorio} maxWidth="xl">
+      <PageHeader
+        title="Formalizações"
+        backTo={paths.relatorio}
+        maxWidth="xl"
+        breadcrumbs={[
+          { label: "Minhas Obras", href: "/minhas-obras" },
+          { label: "Obra", href: paths.relatorio },
+          { label: "Formalizações" },
+        ]}
+      >
         {canCreate && (
           <Button 
             size="sm"
@@ -142,6 +152,7 @@ export default function Formalizacoes() {
           </Button>
         )}
       </PageHeader>
+      <ProjectSubNav />
 
       <main className="py-6">
         <PageContainer maxWidth="xl">

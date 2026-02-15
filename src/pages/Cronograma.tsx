@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload, Bookmark, ShoppingCart } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload, Bookmark, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ImportScheduleModal } from '@/components/ImportScheduleModal';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { cn } from '@/lib/utils';
 interface ActivityFormData {
   id: string;
@@ -241,65 +242,58 @@ const Cronograma = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                // BUG FIX: Previne loop se histórico estiver vazio
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate('/gestao', { replace: true });
-                }
-              }}
-              className="h-9 w-9"
-            >
-              <ArrowLeft className="h-5 w-5" />
+      <PageHeader
+        title="Cronograma"
+        showLogo={false}
+        maxWidth="md"
+        onBack={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate('/gestao', { replace: true });
+          }
+        }}
+        breadcrumbs={[
+          { label: "Gestão", href: "/gestao" },
+          { label: project?.name || "Obra", href: `/obra/${projectId}` },
+          { label: "Cronograma" },
+        ]}
+      >
+        <div className="flex items-center gap-2">
+          <Link to={paths.compras}>
+            <Button variant="outline" size="sm">
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Compras
             </Button>
-            <div>
-              <h1 className="font-semibold text-lg">Cronograma</h1>
-              <p className="text-sm text-muted-foreground">{project?.name}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to={`/obra/${projectId}/compras`}>
-              <Button variant="outline" size="sm">
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Compras
-              </Button>
-            </Link>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleSaveBaseline}
-              disabled={savingBaseline || activities.length === 0}
-              title={hasBaseline ? "Atualizar baseline" : "Salvar baseline"}
-            >
-              {savingBaseline ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Bookmark className={cn("w-4 h-4 mr-2", hasBaseline && "fill-current")} />
-              )}
-              {hasBaseline ? 'Atualizar Baseline' : 'Salvar Baseline'}
-            </Button>
-            <Button variant="outline" onClick={() => setImportModalOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Importar
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              Salvar
-            </Button>
-          </div>
+          </Link>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleSaveBaseline}
+            disabled={savingBaseline || activities.length === 0}
+            title={hasBaseline ? "Atualizar baseline" : "Salvar baseline"}
+          >
+            {savingBaseline ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Bookmark className={cn("w-4 h-4 mr-2", hasBaseline && "fill-current")} />
+            )}
+            {hasBaseline ? 'Atualizar Baseline' : 'Salvar Baseline'}
+          </Button>
+          <Button variant="outline" onClick={() => setImportModalOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Importar
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            Salvar
+          </Button>
         </div>
-      </div>
+      </PageHeader>
 
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         {/* Weight summary */}

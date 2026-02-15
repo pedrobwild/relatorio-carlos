@@ -66,6 +66,7 @@ import { PurchaseAlertBadge } from '@/components/PurchaseAlertBadge';
 import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
 
 const statusConfig: Record<PurchaseStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'Pendente', color: 'bg-amber-500/20 text-amber-700 border-amber-500/30', icon: Clock },
@@ -248,12 +249,23 @@ export default function Compras() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="Cronograma de Compras" backTo={`/obra/${projectId}/cronograma`} maxWidth="full" showLogo={false}>
+      <PageHeader
+        title="Cronograma de Compras"
+        backTo={`/obra/${projectId}/cronograma`}
+        maxWidth="full"
+        showLogo={false}
+        breadcrumbs={[
+          { label: "Gestão", href: "/gestao" },
+          { label: "Cronograma", href: `/obra/${projectId}/cronograma` },
+          { label: "Compras" },
+        ]}
+      >
         <Button onClick={() => handleOpenDialog()}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Item
         </Button>
       </PageHeader>
+      <ProjectSubNav showStaffItems />
       <div className="py-6">
         <PageContainer maxWidth="full" className="space-y-6">
 

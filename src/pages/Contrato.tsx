@@ -9,6 +9,7 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -68,7 +69,16 @@ const Contrato = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col">
       {/* Header */}
-      <PageHeader title="Contrato" backTo={paths.relatorio} maxWidth="xl">
+      <PageHeader
+        title="Contrato"
+        backTo={paths.relatorio}
+        maxWidth="xl"
+        breadcrumbs={[
+          { label: "Minhas Obras", href: "/minhas-obras" },
+          { label: project?.name || "Obra", href: paths.relatorio },
+          { label: "Contrato" },
+        ]}
+      >
         {hasContract && (
           <>
             <Button
@@ -87,6 +97,7 @@ const Contrato = () => {
           </>
         )}
       </PageHeader>
+      <ProjectSubNav />
 
       {/* Content */}
       <div className="flex-1 min-h-0 p-2 sm:p-4 md:p-6 overflow-auto">
