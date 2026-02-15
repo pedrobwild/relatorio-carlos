@@ -154,34 +154,22 @@ export default function Demo() {
 
             <div className="bg-card rounded-xl shadow-card overflow-hidden opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="border-b border-border bg-secondary/30">
+                <div className="portal-tabs-bar">
                   <div className="px-3 md:px-5">
-                    <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto">
-                      <TabsTrigger
-                        value="curvaS"
-                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
-                      >
+                    <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto scrollbar-hide">
+                      <TabsTrigger value="curvaS" className="portal-tab-trigger">
                         <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
                         Curva S
                       </TabsTrigger>
-                      <TabsTrigger
-                        value="gantt"
-                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
-                      >
+                      <TabsTrigger value="gantt" className="portal-tab-trigger">
                         <GanttChartSquare className="w-3.5 h-3.5 mr-1.5" />
                         Gantt
                       </TabsTrigger>
-                      <TabsTrigger
-                        value="relatorio"
-                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
-                      >
+                      <TabsTrigger value="relatorio" className="portal-tab-trigger">
                         <FileText className="w-3.5 h-3.5 mr-1.5" />
                         Relatórios
                       </TabsTrigger>
-                      <TabsTrigger
-                        value="atividade"
-                        className="relative flex-1 md:flex-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-muted-foreground rounded-none px-3 md:px-5 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary"
-                      >
+                      <TabsTrigger value="atividade" className="portal-tab-trigger">
                         <Activity className="w-3.5 h-3.5 mr-1.5" />
                         Atividade
                       </TabsTrigger>
