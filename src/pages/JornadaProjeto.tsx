@@ -9,6 +9,7 @@ import { useProjectJourney, useInitializeJourney } from '@/hooks/useProjectJourn
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { JourneyHeroSection } from '@/components/journey/JourneyHeroSection';
 import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
+import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper';
 import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
 import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
@@ -188,18 +189,12 @@ export default function JornadaProjeto() {
 
               <Separator />
 
-              {/* Mobile Timeline */}
-              <div className="lg:hidden">
-                <h2 className="text-sm font-medium text-muted-foreground mb-3">
-                  Etapas da Jornada
-                </h2>
-                <JourneyTimeline
-                  stages={journey.stages}
-                  activeStageId={activeStageId}
-                  onStageClick={handleStageClick}
-                />
-                <Separator className="mt-5" />
-              </div>
+              {/* Mobile Stepper */}
+              <JourneyMobileStepper
+                stages={journey.stages}
+                activeStageId={activeStageId}
+                onStageClick={handleStageClick}
+              />
 
               {/* Stage Cards */}
               <div className="space-y-3 md:space-y-4">
