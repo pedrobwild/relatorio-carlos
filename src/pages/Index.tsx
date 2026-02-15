@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, FileText, Loader2, AlertCircle, Plus, GanttChartSquare, Calendar, DollarSign, FolderOpen, ClipboardSignature, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ReportHeader from "@/components/ReportHeader";
+import ReportHeader, { type MilestoneKey } from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
@@ -59,9 +59,9 @@ const demoReportData: ReportData = {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { project, loading: projectLoading, error: projectError } = useProject();
+  const { project, loading: projectLoading, error: projectError, setProject } = useProject();
   const { projectId, paths } = useProjectNavigation();
-  const { isStaff, isCustomer } = useUserRole();
+  const { isStaff, isCustomer, isAdmin } = useUserRole();
   const { can } = useCan();
   const { activities: dbActivities, loading: activitiesLoading, updateActivity } = useProjectActivities(projectId);
   const {
@@ -72,6 +72,36 @@ const Index = () => {
   } = useWeeklyReports({ projectId });
   
   const canEditSchedule = can('schedule:edit');
+
+  // Milestone key -> DB column mapping
+  const milestoneKeyToColumn: Record<MilestoneKey, string> = {
+    dateBriefingArch: 'date_briefing_arch',
+    dateApproval3d: 'date_approval_3d',
+    dateApprovalExec: 'date_approval_exec',
+    dateApprovalObra: 'date_approval_obra',
+    dateMobilizationStart: 'date_mobilization_start',
+  };
+
+  const handleMilestoneDateChange = useCallback(async (key: MilestoneKey, date: string | null) => {
+    if (!projectId) return;
+    const column = milestoneKeyToColumn[key];
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { error } = await supabase
+      .from('projects')
+      .update({ [column]: date } as any)
+      .eq('id', projectId);
+    if (error) {
+      const { toast } = await import('sonner');
+      toast.error('Erro ao salvar data do marco');
+      throw error;
+    }
+    // Update local project state
+    if (project) {
+      setProject({ ...project, [column]: date } as any);
+    }
+    const { toast } = await import('sonner');
+    toast.success('Data do marco atualizada');
+  }, [projectId, project, setProject]);
 
   // Persistência da UI do portal (aba ativa e semana do relatório) para evitar “voltar pra Curva S”
   // quando o navegador recarrega/remonta a página ao alternar abas.
@@ -447,6 +477,8 @@ const Index = () => {
               activities={reportData.activities}
               isProjectPhase={project?.is_project_phase}
               milestoneDates={milestoneDates}
+              canEditMilestones={isAdmin}
+              onMilestoneDateChange={isAdmin ? handleMilestoneDateChange : undefined}
             />
             <ProjectSubNav className="mt-3 -mx-3 md:-mx-4 lg:-mx-6 xl:-mx-8" />
 
@@ -500,6 +532,8 @@ const Index = () => {
                 activities={reportData.activities}
                 isProjectPhase={project?.is_project_phase}
                 milestoneDates={milestoneDates}
+                canEditMilestones={isAdmin}
+                onMilestoneDateChange={isAdmin ? handleMilestoneDateChange : undefined}
               />
               <ProjectSubNav className="mt-3 -mx-3 md:mx-0 rounded-none md:rounded-xl" />
             </div>
