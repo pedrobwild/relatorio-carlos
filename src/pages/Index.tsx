@@ -557,6 +557,8 @@ const Index = () => {
                           reportDate={reportData.reportDate}
                           selectedActivityId={selectedActivityId}
                           onActivitySelect={setSelectedActivityId}
+                          canEditDates={canEditSchedule}
+                          onUpdateActivityDates={canEditSchedule ? updateActivity : undefined}
                         />
                       </TabsContent>
 
