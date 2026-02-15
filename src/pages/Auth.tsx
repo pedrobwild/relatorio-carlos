@@ -192,9 +192,6 @@ export default function Auth() {
               </p>
             </div>
 
-            <p className="text-center text-xs text-muted-foreground mb-5">
-              Entre com o e-mail cadastrado pela Bwild.
-            </p>
 
             {formError && (
               <div
