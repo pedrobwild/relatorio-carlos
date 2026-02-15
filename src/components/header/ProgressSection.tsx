@@ -85,14 +85,14 @@ export function ProgressSection({
       : 0;
 
   return (
-    <section className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4 items-start" aria-label="Progresso">
+    <section className="mt-4" aria-label="Progresso">
       {/* Timeline Progress */}
       <ProgressBar
-        label="Cronograma"
-        percentage={timelinePercent}
-        variant="primary"
-        leftLabel={`Decorridos: ${elapsedWorkingDays} dias`}
-        rightLabel={`Restantes: ${remainingWorkingDays} dias`}
+        label="Progresso de obra"
+        percentage={actualProgress}
+        variant={isOnTrack ? "success" : "warning"}
+        leftLabel={`Previsto: ${plannedProgress}%`}
+        rightLabel={`Realizado: ${actualProgress}%`}
         titleRight={
           <div className="flex items-center gap-3">
             {isStaff && hasActivities && (
@@ -105,69 +105,13 @@ export function ProgressSection({
                 <Pencil className="w-3.5 h-3.5" />
               </Link>
             )}
-            <span className="text-[11px] text-muted-foreground tabular-nums">
-              {elapsedWorkingDays} de {totalWorkingDays} dias úteis
-            </span>
-          </div>
-        }
-      />
-
-      {/* Work Progress - Small screens */}
-      <div className="xl:hidden">
-        <ProgressBar
-          label="Progresso da Obra"
-          percentage={actualProgress}
-          variant={isOnTrack ? "success" : "warning"}
-          leftLabel={`Previsto: ${plannedProgress}%`}
-          rightLabel={`Realizado: ${actualProgress}%`}
-          titleRight={
             <span className={cn(
               "text-sm font-bold tabular-nums",
               isOnTrack ? "text-success" : "text-warning"
             )}>{actualProgress}%</span>
-          }
-        />
-      </div>
-
-      {/* Comparative Progress - XL screens */}
-      <div className="hidden xl:block">
-        <div className="flex items-center justify-between mb-1.5">
-          <h3 className="text-sm font-semibold text-foreground">Progresso da Obra</h3>
-          <div className="flex items-center gap-4 text-[11px] text-muted-foreground tabular-nums">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-primary/50" />
-              Previsto: {plannedProgress}%
-            </span>
-            <span
-              className={cn(
-                "flex items-center gap-1.5 font-semibold",
-                isOnTrack ? "text-success" : "text-warning"
-              )}
-            >
-              <span
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  isOnTrack ? "bg-success" : "bg-warning"
-                )}
-              />
-              Realizado: {actualProgress}%
-            </span>
           </div>
-        </div>
-        <div className="h-2.5 bg-secondary rounded-full overflow-hidden relative" role="progressbar" aria-valuenow={actualProgress} aria-valuemin={0} aria-valuemax={100}>
-          <div
-            className="absolute top-0 h-full bg-primary/25 rounded-full transition-all duration-700"
-            style={{ width: `${plannedProgress}%` }}
-          />
-          <div
-            className={cn(
-              "absolute top-0 h-full rounded-full transition-all duration-700 ease-out",
-              isOnTrack ? "bg-success" : "bg-warning"
-            )}
-            style={{ width: `${actualProgress}%` }}
-          />
-        </div>
-      </div>
+        }
+      />
     </section>
   );
 }
