@@ -5,6 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AppHeader } from '@/components/AppHeader';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
+import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { PageContainer } from '@/components/layout/PageContainer';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
@@ -125,44 +128,39 @@ export default function MinhasObras() {
         </div>
       </AppHeader>
 
-      <main className="container max-w-2xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h2 className="text-h2 font-bold mb-1">Minhas Obras</h2>
-          <p className="text-caption text-muted-foreground">
-            Selecione uma obra para acompanhar o progresso
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2].map((i) => (
-              <Card key={i} className="h-32 animate-pulse bg-muted" />
-            ))}
-          </div>
-        ) : error ? (
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground">Erro ao carregar obras: {String(error)}</p>
-          </Card>
-        ) : projects.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="text-body font-semibold mb-2">Nenhuma obra encontrada</h3>
+      <main className="py-6">
+        <PageContainer maxWidth="sm">
+          <div className="mb-6">
+            <h2 className="text-h2 font-bold mb-1">Minhas Obras</h2>
             <p className="text-caption text-muted-foreground">
-              Você ainda não possui obras vinculadas ao seu cadastro.
-              Entre em contato com a equipe Bwild.
+              Selecione uma obra para acompanhar o progresso
             </p>
-          </Card>
-        ) : (
-          <div className="space-y-3" data-testid="obras-list">
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={() => handleProjectClick(project.id)}
-              />
-            ))}
           </div>
-        )}
+
+          {loading ? (
+            <ContentSkeleton variant="list" rows={3} />
+          ) : error ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">Erro ao carregar obras: {String(error)}</p>
+            </Card>
+          ) : projects.length === 0 ? (
+            <EmptyState
+              icon={Building2}
+              title="Nenhuma obra encontrada"
+              description="Você ainda não possui obras vinculadas ao seu cadastro. Entre em contato com a equipe Bwild."
+            />
+          ) : (
+            <div className="space-y-3" data-testid="obras-list">
+              {projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onClick={() => handleProjectClick(project.id)}
+                />
+              ))}
+            </div>
+          )}
+        </PageContainer>
       </main>
     </div>
   );
