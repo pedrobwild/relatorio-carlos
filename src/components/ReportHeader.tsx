@@ -237,7 +237,7 @@ const ReportHeader = ({
     setExpandedContact(expandedContact === role ? null : role);
   };
 
-  const { stats: pendenciasStats } = usePendencias();
+  const { stats: pendenciasStats } = usePendencias({ projectId });
 
   const handleGoBack = () => {
     if (window.history.length > 1) {
