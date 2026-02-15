@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Activity } from "@/types/report";
 import { ptBR } from "date-fns/locale";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -203,6 +204,7 @@ const ReportHeader = ({
   }, [startDate, effectiveEndDate, reportDate, activities]);
 
   const { paths, projectId } = useProjectNavigation();
+  const isMobile = useIsMobile();
   const { isStaff } = useUserRole();
   const { data: projects = [] } = useProjectsQuery();
   const navigate = useNavigate();
@@ -474,7 +476,7 @@ const ReportHeader = ({
                   {milestoneItems.map((m, i) => (
                     <div key={m.label} className="flex items-center gap-3">
                       {i > 0 && <span className="text-border">·</span>}
-                      {canEditMilestones && onMilestoneDateChange ? (
+                      {canEditMilestones && onMilestoneDateChange && !isMobile ? (
                         <Popover open={editingMilestone === m.key} onOpenChange={(open) => setEditingMilestone(open ? m.key : null)}>
                           <PopoverTrigger asChild>
                             <button className={cn(
@@ -704,7 +706,7 @@ const ReportHeader = ({
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {milestoneItems.map((m) => (
                       <div key={m.label} className="flex items-baseline justify-between gap-1">
-                        {canEditMilestones && onMilestoneDateChange ? (
+                        {canEditMilestones && onMilestoneDateChange && isMobile ? (
                           <Popover open={editingMilestone === m.key} onOpenChange={(open) => setEditingMilestone(open ? m.key : null)}>
                             <PopoverTrigger asChild>
                               <button className="flex items-baseline justify-between gap-1 w-full rounded px-1 -mx-1 hover:bg-accent/60 transition-colors">
