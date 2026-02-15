@@ -468,11 +468,11 @@ const ReportHeader = ({
           {/* ── L3: Milestones ── */}
           {showMetrics && (
             <div className="px-6 py-2.5 border-t border-border bg-muted/15">
-              <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
                 <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
                   Marcos
                 </span>
-                <div className="flex items-center gap-5 flex-wrap">
+                <div className="flex items-center gap-3 flex-nowrap shrink-0">
                   {milestoneItems.map((m, i) => (
                     <div key={m.label} className="flex items-center gap-3">
                       {i > 0 && <span className="text-border">·</span>}
