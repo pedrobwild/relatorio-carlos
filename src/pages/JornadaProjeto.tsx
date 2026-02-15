@@ -105,10 +105,7 @@ export default function JornadaProjeto() {
       <PageHeader
         title="Jornada do Projeto"
         backTo="/minhas-obras"
-        breadcrumbs={[
-          { label: "Minhas Obras", href: "/minhas-obras" },
-          { label: project.name },
-        ]}
+        
       >
         <div className="text-right min-w-0">
           <p className="font-medium text-sm truncate">{project.name}</p>
