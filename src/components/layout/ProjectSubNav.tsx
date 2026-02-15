@@ -2,12 +2,7 @@ import { NavLink } from "@/components/NavLink";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { cn } from "@/lib/utils";
-import {
-  FileText,
-  Box,
-  Ruler,
-  Map,
-} from "lucide-react";
+import { Map } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface NavItem {
@@ -40,9 +35,6 @@ export function ProjectSubNav({ className, showStaffItems = false }: ProjectSubN
   const isProjectPhase = project?.is_project_phase === true;
 
   const navItems: NavItem[] = [
-    { label: "Contrato", path: paths.contrato, icon: FileText },
-    { label: "Projeto 3D", path: paths.projeto3D, icon: Box },
-    { label: "Executivo", path: paths.executivo, icon: Ruler },
     { label: "Jornada", path: paths.jornada, icon: Map, projectPhaseOnly: true },
   ];
 
