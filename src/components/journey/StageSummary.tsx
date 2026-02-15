@@ -1,39 +1,77 @@
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Circle, ClipboardList, Box, Ruler, FileText, FileCheck, CheckCircle, ChevronDown, ChevronUp, CalendarDays } from 'lucide-react';
+import {
+  Circle, ClipboardList, Box, Ruler, FileText, FileCheck, CheckCircle,
+  ChevronDown, ChevronUp, CalendarDays, Check, Lock, Eye, ChevronRight,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 
-const statusLabels: Record<JourneyStageStatus, string> = {
-  pending: 'Em breve',
-  waiting_action: 'Aguardando sua ação',
-  in_progress: 'Em andamento',
-  completed: 'Concluído',
+/* ─── Visual state derivation (same logic as JourneyTimeline) ─── */
+
+type VisualState = 'completed' | 'current' | 'next' | 'blocked' | 'validating' | 'future';
+
+function deriveVisualStateStandalone(stage: JourneyStage): VisualState {
+  if (stage.status === 'completed') return 'completed';
+  if (stage.status === 'in_progress') return 'current';
+  if (stage.status === 'waiting_action') return 'validating';
+  if (stage.dependencies_text) return 'blocked';
+  return 'future';
+}
+
+const vsConfig: Record<VisualState, {
+  label: string;
+  badgeClass: string;
+  iconBg: string;
+  iconColor: string;
+  Icon: React.ElementType;
+}> = {
+  completed: {
+    label: 'Concluída',
+    badgeClass: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))]',
+    iconBg: 'bg-[hsl(var(--success-light))]',
+    iconColor: 'text-[hsl(var(--success))]',
+    Icon: Check,
+  },
+  current: {
+    label: 'Etapa atual',
+    badgeClass: 'bg-accent text-primary',
+    iconBg: 'bg-accent',
+    iconColor: 'text-primary',
+    Icon: ChevronRight,
+  },
+  validating: {
+    label: 'Em validação',
+    badgeClass: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))]',
+    iconBg: 'bg-[hsl(var(--warning-light))]',
+    iconColor: 'text-[hsl(var(--warning))]',
+    Icon: Eye,
+  },
+  next: {
+    label: 'Próxima',
+    badgeClass: 'bg-accent text-accent-foreground',
+    iconBg: 'bg-accent',
+    iconColor: 'text-accent-foreground',
+    Icon: Circle,
+  },
+  blocked: {
+    label: 'Bloqueada',
+    badgeClass: 'bg-muted text-muted-foreground',
+    iconBg: 'bg-muted',
+    iconColor: 'text-muted-foreground',
+    Icon: Lock,
+  },
+  future: {
+    label: 'Em breve',
+    badgeClass: 'bg-muted text-muted-foreground',
+    iconBg: 'bg-muted',
+    iconColor: 'text-muted-foreground',
+    Icon: Circle,
+  },
 };
 
-const statusBadgeColor: Record<JourneyStageStatus, string> = {
-  pending: 'bg-muted text-muted-foreground',
-  waiting_action: 'bg-amber-100 text-amber-800',
-  in_progress: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
-};
-
-const statusIconBg: Record<JourneyStageStatus, string> = {
-  pending: 'bg-muted',
-  waiting_action: 'bg-amber-100',
-  in_progress: 'bg-blue-100',
-  completed: 'bg-green-100',
-};
-
-const statusIconColor: Record<JourneyStageStatus, string> = {
-  pending: 'text-muted-foreground',
-  waiting_action: 'text-amber-600',
-  in_progress: 'text-blue-600',
-  completed: 'text-green-600',
-};
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+const stageIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'clipboard-list': ClipboardList,
   'box': Box,
   'ruler': Ruler,
@@ -43,12 +81,11 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'circle': Circle,
 };
 
-function getIcon(iconName: string): React.ComponentType<{ className?: string }> {
-  return iconMap[iconName] || Circle;
+function getStageIcon(iconName: string): React.ComponentType<{ className?: string }> {
+  return stageIconMap[iconName] || Circle;
 }
 
 function getDisplayDate(stage: JourneyStage): string | null {
-  // Show confirmed date if available, otherwise proposed
   const dateStr = stage.confirmed_start || stage.proposed_start;
   if (!dateStr) return null;
   try {
@@ -58,17 +95,20 @@ function getDisplayDate(stage: JourneyStage): string | null {
   }
 }
 
+/* ─── Component ─── */
+
 interface StageSummaryProps {
   stage: JourneyStage;
   isExpanded: boolean;
 }
 
 export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
-  const Icon = getIcon(stage.icon);
+  const vs = deriveVisualStateStandalone(stage);
+  const cfg = vsConfig[vs];
+  const StageIcon = getStageIcon(stage.icon);
   const displayDate = getDisplayDate(stage);
   const isConfirmed = !!stage.confirmed_start;
 
-  // Count completed todos
   const totalTodos = stage.todos.length;
   const completedTodos = stage.todos.filter(t => t.completed).length;
 
@@ -78,18 +118,26 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
       <div
         className={cn(
           "p-2.5 md:p-3 rounded-lg shrink-0",
-          statusIconBg[stage.status]
+          cfg.iconBg,
         )}
       >
-        <Icon className={cn("h-5 w-5", statusIconColor[stage.status])} />
+        <StageIcon className={cn("h-5 w-5", cfg.iconColor)} />
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start md:items-center gap-2 flex-col md:flex-row">
-          <span className="text-base md:text-lg font-semibold leading-tight">{stage.name}</span>
-          <Badge className={cn("text-[10px] md:text-xs whitespace-nowrap", statusBadgeColor[stage.status])}>
-            {statusLabels[stage.status]}
+          <span className={cn(
+            "text-base md:text-lg font-semibold leading-tight",
+            vs === 'completed' && "text-muted-foreground line-through decoration-1",
+          )}>
+            {stage.name}
+          </span>
+          <Badge className={cn("text-[10px] md:text-xs whitespace-nowrap border-0", cfg.badgeClass)}>
+            {vs === 'current' && <ChevronRight className="h-3 w-3 mr-0.5" />}
+            {vs === 'validating' && <Eye className="h-3 w-3 mr-0.5" />}
+            {vs === 'blocked' && <Lock className="h-3 w-3 mr-0.5" />}
+            {cfg.label}
           </Badge>
         </div>
 
@@ -103,7 +151,7 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
           {displayDate && (
             <span className={cn(
               "text-xs inline-flex items-center gap-1",
-              isConfirmed ? "text-green-700 font-medium" : "text-muted-foreground"
+              isConfirmed ? "text-[hsl(var(--success))] font-medium" : "text-muted-foreground"
             )}>
               <CalendarDays className="h-3 w-3" />
               {displayDate}
@@ -113,6 +161,12 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
           {totalTodos > 0 && (
             <span className="text-xs text-muted-foreground">
               {completedTodos}/{totalTodos} itens
+            </span>
+          )}
+          {vs === 'blocked' && stage.dependencies_text && (
+            <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+              <Lock className="h-3 w-3" />
+              Depende de: {stage.dependencies_text}
             </span>
           )}
         </div>
