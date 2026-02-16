@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
 import { journeyCopy } from '@/constants/journeyCopy';
@@ -13,6 +13,7 @@ import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper'
 import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
 import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
+import { CurrentStageHero, CurrentStageHeroSkeleton } from '@/components/journey/CurrentStageHero';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { UpcomingDatesBar } from '@/components/journey/UpcomingDatesBar';
@@ -99,6 +100,17 @@ export default function JornadaProjeto() {
   };
 
   const allStagesForStepper = journey?.stages ? [welcomeVirtualStage, ...journey.stages] : [];
+
+  // Derive the "current" real stage for the hero banner
+  const currentStage = useMemo(() => {
+    if (!journey?.stages) return null;
+    return (
+      journey.stages.find(s => s.status === 'waiting_action') ||
+      journey.stages.find(s => s.status === 'in_progress') ||
+      journey.stages.find(s => s.status !== 'completed') ||
+      null
+    );
+  }, [journey?.stages]);
 
   const handleStageClick = useCallback((stageId: string) => {
     setActiveStageId(stageId);
@@ -239,6 +251,17 @@ export default function JornadaProjeto() {
                 onToggleExpand={() => handleStageClick('welcome')}
                 onGoToBriefing={handleGoToBriefing}
               />
+
+              {/* Current Stage Hero Banner */}
+              {currentStage && (
+                <CurrentStageHero
+                  stage={currentStage}
+                  projectId={projectId!}
+                  onCtaClick={() => {
+                    handleStageClick(currentStage.id);
+                  }}
+                />
+              )}
 
               {/* Stage Cards */}
               <div className="space-y-3 md:space-y-4">
