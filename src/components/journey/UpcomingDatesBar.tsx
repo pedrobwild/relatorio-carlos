@@ -4,18 +4,11 @@ import { CalendarIcon, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStageDates, type StageDate } from '@/hooks/useStageDates';
 import { Skeleton } from '@/components/ui/skeleton';
+import { journeyCopy } from '@/constants/journeyCopy';
 
 interface UpcomingDatesBarProps {
   projectId: string;
 }
-
-const typeEmoji: Record<string, string> = {
-  meeting: '📅',
-  deadline: '⏰',
-  start_planned: '🟢',
-  end_planned: '🔴',
-  milestone: '🏁',
-};
 
 function getEffectiveDate(sd: StageDate): string | null {
   return sd.bwild_confirmed_at || sd.customer_proposed_at;
@@ -34,7 +27,6 @@ export function UpcomingDatesBar({ projectId }: UpcomingDatesBarProps) {
     );
   }
 
-  // Filter to dates that have at least a proposed or confirmed value, sort chronologically, take up to 6
   const upcoming = (allDates || [])
     .filter((d) => {
       const eff = getEffectiveDate(d);
@@ -53,13 +45,16 @@ export function UpcomingDatesBar({ projectId }: UpcomingDatesBarProps) {
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Próximas datas</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          {journeyCopy.page.next_milestones.title}
+        </p>
       </div>
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
         {upcoming.map((sd) => {
           const isConfirmed = !!sd.bwild_confirmed_at;
           const effDate = getEffectiveDate(sd)!;
-          const emoji = typeEmoji[sd.date_type] || '📌';
+          const typeInfo = journeyCopy.dates.types[sd.date_type];
+          const emoji = typeInfo?.emoji || '📌';
 
           return (
             <div

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { journeyCopy } from '@/constants/journeyCopy';
 import {
   useStageDates,
   useCreateStageDate,
@@ -27,6 +28,7 @@ function TimePicker({ value, onChange }: { value: string; onChange: (v: string) 
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className="h-9 w-[110px] text-sm font-mono"
+      aria-label={journeyCopy.dates.form.timeLabel}
     />
   );
 }
@@ -58,7 +60,6 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
   const [pickerTime, setPickerTime] = useState('09:00');
   const [notes, setNotes] = useState('');
 
-  // Find existing meeting date for this stage
   const meetingDate = dates?.find((d) => d.date_type === 'meeting');
 
   const isConfirmed = !!meetingDate?.bwild_confirmed_at;
@@ -96,13 +97,12 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
 
     const errorHandler = {
       onError: () => {
-        toast.error('Não foi possível salvar. Tente novamente.', {
-          action: { label: 'Tentar novamente', onClick: handleSubmit },
+        toast.error(journeyCopy.errors.save_date, {
+          action: { label: journeyCopy.errors.retry, onClick: handleSubmit },
         });
       },
     };
 
-    // If no meeting date exists yet, create one first then propose
     if (!meetingDate) {
       const title = ctaText || `Reunião - ${stageName}`;
       createDate.mutate(
@@ -150,19 +150,19 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
         <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[hsl(var(--success-light))] border border-[hsl(var(--success)/0.2)]">
           <CheckCircle2 className="h-5 w-5 text-[hsl(var(--success))] shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[hsl(var(--success))]">Reunião confirmada</p>
+            <p className="text-sm font-semibold text-[hsl(var(--success))]">{journeyCopy.dates.meeting.confirmed}</p>
             <p className="text-xs text-[hsl(var(--success))]">
               {format(parseISO(meetingDate.bwild_confirmed_at!), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
             </p>
           </div>
           {!isAdmin && (
             <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenPropose}>
-              Alterar sugestão
+              {journeyCopy.dates.meeting.changeSuggestion}
             </Button>
           )}
           {isAdmin && (
             <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenConfirm}>
-              Ajustar
+              {journeyCopy.dates.meeting.adjust}
             </Button>
           )}
         </div>
@@ -171,7 +171,7 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
         {meetingDate.customer_proposed_at &&
           meetingDate.customer_proposed_at !== meetingDate.bwild_confirmed_at && (
           <p className="text-xs text-muted-foreground px-1">
-            💡 O cliente sugeriu{' '}
+            💡 {journeyCopy.dates.divergence.customerSuggested}{' '}
             <span className="font-medium">
               {format(parseISO(meetingDate.customer_proposed_at), "dd/MM 'às' HH:mm")}
             </span>
@@ -205,26 +205,26 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
         <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[hsl(var(--warning-light))] border border-[hsl(var(--warning)/0.2)]">
           <Clock className="h-5 w-5 text-[hsl(var(--warning))] shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[hsl(var(--warning))]">Aguardando confirmação</p>
+            <p className="text-sm font-semibold text-[hsl(var(--warning))]">{journeyCopy.dates.meeting.awaitingConfirmation}</p>
             <p className="text-xs text-[hsl(var(--warning))]">
               Sugestão: {format(parseISO(meetingDate.customer_proposed_at!), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
             </p>
           </div>
           {!isAdmin ? (
             <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenPropose}>
-              Alterar sugestão
+              {journeyCopy.dates.meeting.changeSuggestion}
             </Button>
           ) : (
             <Button size="sm" className="h-11 text-xs shrink-0 gap-1.5 min-w-[44px]" onClick={handleOpenConfirm}>
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-              Confirmar data
+              {journeyCopy.dates.meeting.confirmDate}
             </Button>
           )}
         </div>
 
         {!isAdmin && (
           <p className="text-xs text-muted-foreground italic px-1">
-            ✨ Sua sugestão será analisada pela equipe Bwild. Entraremos em contato para confirmar a melhor data.
+            ✨ {journeyCopy.dates.meeting.customerMicrocopy}
           </p>
         )}
 
@@ -254,7 +254,7 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
       {mode === 'idle' ? (
         <Button className="w-full md:w-auto min-h-[44px] gap-2" onClick={handleOpenPropose}>
           <Sparkles className="h-4 w-4" />
-          {ctaText || 'Escolher data da reunião'}
+          {ctaText || journeyCopy.dates.meeting.chooseDateCta}
         </Button>
       ) : (
         <DateTimeForm
@@ -308,7 +308,7 @@ function DateTimeForm({
   return (
     <div className="p-4 rounded-xl border border-border/60 bg-card shadow-[var(--shadow-sm)] space-y-3">
       <p className="text-xs font-medium text-foreground">
-        {mode === 'propose' ? '📅 Sugerir data e horário' : '✅ Confirmar data e horário'}
+        {mode === 'propose' ? journeyCopy.dates.form.proposeTitle : journeyCopy.dates.form.confirmTitle}
       </p>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -319,7 +319,7 @@ function DateTimeForm({
               !pickerDate && "text-muted-foreground"
             )} disabled={isPending}>
               <CalendarIcon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-              {pickerDate ? format(pickerDate, "dd/MM/yyyy") : 'Escolher data'}
+              {pickerDate ? format(pickerDate, "dd/MM/yyyy") : journeyCopy.dates.form.chooseDate}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -337,7 +337,7 @@ function DateTimeForm({
       </div>
 
       <Input
-        placeholder="Observação (opcional)"
+        placeholder={journeyCopy.dates.form.notesPlaceholder}
         value={notes}
         onChange={(e) => onNotesChange(e.target.value)}
         className="h-9 text-sm"
@@ -346,7 +346,7 @@ function DateTimeForm({
 
       {mode === 'propose' && !isStaff && hasConfirmed && (
         <p className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
-          ✨ Sua sugestão será analisada pela equipe Bwild. Entraremos em contato para confirmar a melhor data.
+          ✨ {journeyCopy.dates.meeting.customerMicrocopy}
         </p>
       )}
 
@@ -362,10 +362,10 @@ function DateTimeForm({
           ) : (
             <Check className="h-3.5 w-3.5" />
           )}
-          {mode === 'propose' ? 'Enviar sugestão' : 'Confirmar'}
+          {mode === 'propose' ? journeyCopy.dates.form.submitPropose : journeyCopy.dates.form.submitConfirm}
         </Button>
         <Button variant="ghost" size="sm" className="h-8" onClick={onCancel} disabled={isPending}>
-          <X className="h-3.5 w-3.5 mr-1" /> Cancelar
+          <X className="h-3.5 w-3.5 mr-1" /> {journeyCopy.dates.form.cancel}
         </Button>
       </div>
     </div>

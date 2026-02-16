@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { JourneyHero, useUpdateHero } from '@/hooks/useProjectJourney';
+import { journeyCopy } from '@/constants/journeyCopy';
 
 interface JourneyHeroSectionProps {
   hero: JourneyHero;
@@ -40,7 +41,7 @@ export function JourneyHeroSection({ hero, projectId, isAdmin }: JourneyHeroSect
     return (
       <div className="space-y-4 p-4 md:p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl md:rounded-2xl border">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-muted-foreground">Editando Hero</span>
+          <span className="text-sm text-muted-foreground">{journeyCopy.admin.editHero}</span>
           <div className="flex gap-2">
             <Button size="icon" variant="ghost" onClick={handleCancel} className="h-10 w-10">
               <X className="h-4 w-4" />

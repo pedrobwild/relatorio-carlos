@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { journeyCopy } from '@/constants/journeyCopy';
 
 interface JourneyTimelineProps {
   stages: JourneyStage[];
@@ -14,10 +15,6 @@ interface JourneyTimelineProps {
   onStageClick: (stageId: string) => void;
 }
 
-/**
- * Derive a visual display state from the DB status + position in the list.
- * No business logic changes — purely presentational mapping.
- */
 type VisualState = 'completed' | 'current' | 'next' | 'blocked' | 'validating' | 'future';
 
 function deriveVisualState(
@@ -29,32 +26,33 @@ function deriveVisualState(
   if (stage.status === 'in_progress') return 'current';
   if (stage.status === 'waiting_action') return 'validating';
 
-  // "pending" — decide between "next", "blocked", or "future"
   if (stage.status === 'pending') {
-    // If it has explicit dependency text, it's blocked
     if (stage.dependencies_text) return 'blocked';
-
-    // First pending after the last non-pending is "next"
     const lastNonPendingIdx = stages.reduce(
       (acc, s, i) => (s.status !== 'pending' ? i : acc),
       -1,
     );
     if (index === lastNonPendingIdx + 1) return 'next';
-
-    // Otherwise it depends on an earlier stage
     if (index > 0 && stages[index - 1].status === 'pending') return 'blocked';
-
     return 'future';
   }
 
   return 'future';
 }
 
+const statusLabels: Record<VisualState, string> = {
+  completed: journeyCopy.status.completed.label,
+  current: journeyCopy.status.current.label,
+  validating: journeyCopy.status.in_review.label,
+  next: journeyCopy.status.next.label,
+  blocked: journeyCopy.status.blocked.label,
+  future: journeyCopy.status.future.label,
+};
+
 const visualConfig: Record<
   VisualState,
   {
     icon: React.ElementType;
-    label: string;
     iconColor: string;
     bgColor: string;
     ringColor: string;
@@ -63,7 +61,6 @@ const visualConfig: Record<
 > = {
   completed: {
     icon: Check,
-    label: 'Concluída',
     iconColor: 'text-success-foreground',
     bgColor: 'bg-[hsl(var(--success))]',
     ringColor: '',
@@ -71,7 +68,6 @@ const visualConfig: Record<
   },
   current: {
     icon: ChevronRight,
-    label: 'Etapa atual',
     iconColor: 'text-primary-foreground',
     bgColor: 'bg-primary',
     ringColor: 'ring-2 ring-primary/30 ring-offset-2 ring-offset-background',
@@ -79,7 +75,6 @@ const visualConfig: Record<
   },
   validating: {
     icon: Eye,
-    label: 'Em validação',
     iconColor: 'text-[hsl(var(--warning-foreground))]',
     bgColor: 'bg-[hsl(var(--warning))]',
     ringColor: 'ring-2 ring-[hsl(var(--warning)/0.3)] ring-offset-2 ring-offset-background',
@@ -87,7 +82,6 @@ const visualConfig: Record<
   },
   next: {
     icon: Circle,
-    label: 'Próxima',
     iconColor: 'text-primary',
     bgColor: 'bg-accent',
     ringColor: '',
@@ -95,7 +89,6 @@ const visualConfig: Record<
   },
   blocked: {
     icon: Lock,
-    label: 'Bloqueada',
     iconColor: 'text-muted-foreground',
     bgColor: 'bg-muted',
     ringColor: '',
@@ -103,7 +96,6 @@ const visualConfig: Record<
   },
   future: {
     icon: Circle,
-    label: 'Em breve',
     iconColor: 'text-muted-foreground/50',
     bgColor: 'bg-muted',
     ringColor: '',
@@ -117,7 +109,6 @@ function getBlockedByName(
   stages: JourneyStage[],
 ): string | null {
   if (stage.dependencies_text) return stage.dependencies_text;
-  // Infer from previous pending stage
   if (index > 0 && stages[index - 1].status !== 'completed') {
     return stages[index - 1].name;
   }
@@ -129,8 +120,7 @@ function getBlockedByName(
 export function JourneyTimeline({ stages, activeStageId, onStageClick }: JourneyTimelineProps) {
   return (
     <TooltipProvider delayDuration={300}>
-      <nav aria-label="Etapas da jornada" className="relative">
-        {/* Vertical connector line (desktop) */}
+      <nav aria-label={journeyCopy.a11y.stagesNav} className="relative">
         <div
           className="absolute left-[19px] lg:left-[15px] top-5 bottom-5 w-0.5 bg-border hidden lg:block"
           aria-hidden
@@ -140,6 +130,7 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
           {stages.map((stage, index) => {
             const vs = deriveVisualState(stage, index, stages);
             const config = visualConfig[vs];
+            const label = statusLabels[vs];
             const Icon = config.icon;
             const isActive = stage.id === activeStageId;
             const isBlocked = vs === 'blocked';
@@ -158,7 +149,6 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
                   isActive && 'bg-primary/5 ring-1 ring-primary/20',
                 )}
               >
-                {/* Status circle */}
                 <div
                   className={cn(
                     'relative z-10 flex items-center justify-center w-10 h-10 lg:w-8 lg:h-8 rounded-full shrink-0 transition-all',
@@ -175,7 +165,6 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
                   />
                 </div>
 
-                {/* Text */}
                 <div className="flex-1 min-w-0">
                   <span
                     className={cn(
@@ -197,7 +186,7 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
                       (vs === 'blocked' || vs === 'future') && 'text-muted-foreground',
                     )}
                   >
-                    {config.label}
+                    {label}
                     {isBlocked && blockedBy && (
                       <span className="lg:hidden ml-1 text-muted-foreground">
                         · {blockedBy}
@@ -208,7 +197,6 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
               </button>
             );
 
-            // Wrap blocked items with tooltip on desktop
             if (isBlocked && blockedBy) {
               return (
                 <li key={stage.id}>
@@ -217,7 +205,7 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
                     <TooltipContent side="right" className="max-w-[200px]">
                       <p className="text-xs">
                         <Lock className="inline h-3 w-3 mr-1 -mt-0.5" />
-                        Depende de: <strong>{blockedBy}</strong>
+                        {journeyCopy.stageSummary.dependsOn} <strong>{blockedBy}</strong>
                       </p>
                     </TooltipContent>
                   </Tooltip>

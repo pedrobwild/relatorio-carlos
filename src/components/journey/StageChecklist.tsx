@@ -11,6 +11,7 @@ import {
   useAddTodo,
   useDeleteTodo,
 } from '@/hooks/useProjectJourney';
+import { journeyCopy } from '@/constants/journeyCopy';
 
 interface TodoItemProps {
   todo: JourneyTodo;
@@ -133,7 +134,7 @@ export function StageChecklist({
             className="h-9 text-xs px-3"
             onClick={() => setIsAdding(true)}
           >
-            <Plus className="h-3 w-3 mr-1" /> Adicionar
+            <Plus className="h-3 w-3 mr-1" /> {journeyCopy.checklist.add}
           </Button>
         )}
       </div>
@@ -150,7 +151,7 @@ export function StageChecklist({
         {filteredTodos.length === 0 && !isAdding && (
           <div className="flex items-center gap-2 py-3 text-muted-foreground/60">
             <CheckCircle className="h-4 w-4 shrink-0" />
-            <p className="text-xs italic">Sem pendências nesta etapa</p>
+            <p className="text-xs italic">{journeyCopy.checklist.empty}</p>
           </div>
         )}
         {isAdding && (
@@ -158,7 +159,7 @@ export function StageChecklist({
             <Input
               value={newTodoText}
               onChange={(e) => setNewTodoText(e.target.value)}
-              placeholder="Novo item..."
+              placeholder={journeyCopy.checklist.newItemPlaceholder}
               className="flex-1 h-10 text-sm"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}

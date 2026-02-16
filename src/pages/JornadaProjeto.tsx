@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
+import { journeyCopy } from '@/constants/journeyCopy';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
@@ -96,7 +97,7 @@ export default function JornadaProjeto() {
   if (!project) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Projeto não encontrado</p>
+        <p className="text-muted-foreground">{journeyCopy.loading.notFound}</p>
       </div>
     );
   }
@@ -106,7 +107,7 @@ export default function JornadaProjeto() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Inicializando jornada do projeto...</p>
+          <p className="text-muted-foreground">{journeyCopy.loading.initializing}</p>
         </div>
       </div>
     );
@@ -116,7 +117,7 @@ export default function JornadaProjeto() {
     <div className="min-h-screen min-h-[100dvh] bg-background">
       {/* Header */}
       <PageHeader
-        title="Jornada do Projeto"
+        title={journeyCopy.page.title}
         backTo="/minhas-obras"
         
       >
@@ -136,23 +137,23 @@ export default function JornadaProjeto() {
               <TabsList className="bg-transparent h-auto p-0 gap-0 w-full overflow-x-auto scrollbar-hide">
                 <TabsTrigger value="jornada" className="portal-tab-trigger">
                   <Map className="w-3.5 h-3.5 mr-1.5" />
-                  Jornada
+                  {journeyCopy.tabs.jornada}
                 </TabsTrigger>
                 <TabsTrigger value="financeiro" className="portal-tab-trigger">
                   <DollarSign className="w-3.5 h-3.5 mr-1.5" />
-                  Financeiro
+                  {journeyCopy.tabs.financeiro}
                 </TabsTrigger>
                 <TabsTrigger value="documentos" className="portal-tab-trigger">
                   <FolderOpen className="w-3.5 h-3.5 mr-1.5" />
-                  Documentos
+                  {journeyCopy.tabs.documentos}
                 </TabsTrigger>
                 <TabsTrigger value="formalizacoes" className="portal-tab-trigger">
                   <ClipboardSignature className="w-3.5 h-3.5 mr-1.5" />
-                  Formalizações
+                  {journeyCopy.tabs.formalizacoes}
                 </TabsTrigger>
                 <TabsTrigger value="pendencias" className="portal-tab-trigger">
                   <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
-                  Pendências
+                  {journeyCopy.tabs.pendencias}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -169,7 +170,7 @@ export default function JornadaProjeto() {
               <div className="sticky top-24 space-y-6">
                 <div>
                   <h2 className="text-sm font-medium text-muted-foreground mb-4">
-                    Etapas da Jornada
+                    {journeyCopy.page.sidebarTitle}
                   </h2>
                   <JourneyTimeline
                     stages={journey.stages}
