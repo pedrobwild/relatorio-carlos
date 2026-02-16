@@ -11,11 +11,10 @@ import { useProjectJourney, useInitializeJourney, JourneyStage } from '@/hooks/u
 
 import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
 import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper';
-import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
 import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
+import { StageDetailInline } from '@/components/journey/StageDetailInline';
 
-import { StageDetailSheet } from '@/components/journey/StageDetailSheet';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 
@@ -44,8 +43,8 @@ export default function JornadaProjeto() {
   const initializeJourney = useInitializeJourney();
 
   const [activeTab, setActiveTab] = useState<string>('jornada');
-  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  // 'welcome' = show welcome stage; a stage id = show that stage inline
+  const [activeView, setActiveView] = useState<string>('welcome');
 
   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
   const isLoading = projectLoading || roleLoading || journeyLoading;
@@ -87,9 +86,9 @@ export default function JornadaProjeto() {
   const allStagesForStepper = journey?.stages ? [welcomeVirtualStage, ...journey.stages] : [];
 
   const selectedStage = useMemo(() => {
-    if (!selectedStageId || !journey?.stages) return null;
-    return journey.stages.find(s => s.id === selectedStageId) || null;
-  }, [selectedStageId, journey?.stages]);
+    if (activeView === 'welcome' || !journey?.stages) return null;
+    return journey.stages.find(s => s.id === activeView) || null;
+  }, [activeView, journey?.stages]);
 
   const selectedStageNextName = useMemo(() => {
     if (!selectedStage || !journey?.stages) return null;
@@ -97,24 +96,18 @@ export default function JornadaProjeto() {
     return journey.stages[idx + 1]?.name ?? null;
   }, [selectedStage, journey?.stages]);
 
-  const handleStageSelect = useCallback((stageId: string) => {
+  const handleTimelineClick = useCallback((stageId: string) => {
     if (stageId === 'welcome') {
-      // Welcome stage opens inline, not in sheet
+      setActiveView('welcome');
       return;
     }
-    setSelectedStageId(stageId);
-    setSheetOpen(true);
-  }, []);
-
-  const handleTimelineClick = useCallback((stageId: string) => {
-    if (stageId === 'welcome') return;
     // Check if stage is blocked
     if (journey?.stages) {
       const idx = journey.stages.findIndex(s => s.id === stageId);
       if (idx >= 0 && isStageBlocked(journey.stages[idx], idx, journey.stages)) return;
     }
-    handleStageSelect(stageId);
-  }, [journey?.stages, handleStageSelect]);
+    setActiveView(stageId);
+  }, [journey?.stages]);
 
   if (isLoading || initializeJourney.isPending) {
     return (
@@ -216,7 +209,7 @@ export default function JornadaProjeto() {
                   </h2>
                   <JourneyTimeline
                     stages={allStagesForStepper}
-                    activeStageId={selectedStageId}
+                    activeStageId={activeView}
                     onStageClick={handleTimelineClick}
                   />
                 </div>
@@ -229,31 +222,26 @@ export default function JornadaProjeto() {
               {/* Mobile Stepper */}
               <JourneyMobileStepper
                 stages={allStagesForStepper}
-                activeStageId={selectedStageId}
+                activeStageId={activeView}
                 onStageClick={handleTimelineClick}
               />
 
-
-              {/* Welcome Stage (Stage 0) — always visible inline */}
-              <JourneyWelcomeStage
-                hero={journey.hero}
-                projectId={projectId!}
-                isAdmin={isAdmin}
-              />
-
-              {/* Stage Cards */}
-              <div className="space-y-3 md:space-y-4">
-                {journey.stages.map((stage, idx) => (
-                  <JourneyStageCard
-                    key={stage.id}
-                    stage={stage}
-                    isActive={selectedStageId === stage.id && sheetOpen}
-                    isBlocked={isStageBlocked(stage, idx, journey.stages)}
-                    onSelect={() => handleStageSelect(stage.id)}
-                    nextStageName={journey.stages[idx + 1]?.name ?? null}
-                  />
-                ))}
-              </div>
+              {/* Content area — switches based on activeView */}
+              {activeView === 'welcome' ? (
+                <JourneyWelcomeStage
+                  hero={journey.hero}
+                  projectId={projectId!}
+                  isAdmin={isAdmin}
+                />
+              ) : selectedStage ? (
+                <StageDetailInline
+                  key={selectedStage.id}
+                  stage={selectedStage}
+                  projectId={projectId!}
+                  isAdmin={isAdmin}
+                  nextStageName={selectedStageNextName}
+                />
+              ) : null}
 
               <Separator />
 
@@ -294,17 +282,6 @@ export default function JornadaProjeto() {
           </Suspense>
         )}
       </main>
-
-      {/* Stage Detail Sheet */}
-      <StageDetailSheet
-        stage={selectedStage}
-        projectId={projectId!}
-        isAdmin={isAdmin}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        nextStageName={selectedStageNextName}
-      />
-
     </div>
   );
 }
