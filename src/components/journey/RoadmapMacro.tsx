@@ -3,13 +3,11 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Check, ChevronRight, Eye, Lock, Circle,
-  CalendarCheck, CalendarClock,
+  CalendarClock,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { JourneyStage } from '@/hooks/useProjectJourney';
-import { useStageDates, type StageDate } from '@/hooks/useStageDates';
 import { journeyCopy } from '@/constants/journeyCopy';
 
 /* ─── Visual state (reuses same logic as timeline) ─── */
@@ -87,24 +85,6 @@ const vsConfig: Record<VisualState, {
   },
 };
 
-/* ─── Helpers ─── */
-
-function findNextConfirmedDate(dates: StageDate[] | undefined): StageDate | null {
-  if (!dates?.length) return null;
-  const now = new Date();
-  return dates
-    .filter(d => d.bwild_confirmed_at && new Date(d.bwild_confirmed_at) > now)
-    .sort((a, b) => new Date(a.bwild_confirmed_at!).getTime() - new Date(b.bwild_confirmed_at!).getTime())[0] || null;
-}
-
-function formatDateShort(dateStr: string): string {
-  try {
-    return format(parseISO(dateStr), "dd MMM", { locale: ptBR });
-  } catch {
-    return '';
-  }
-}
-
 /* ─── Component ─── */
 
 interface RoadmapMacroProps {
@@ -113,11 +93,7 @@ interface RoadmapMacroProps {
   deliveryDate: string | null | undefined;
 }
 
-export function RoadmapMacro({ stages, projectId, deliveryDate }: RoadmapMacroProps) {
-  const { data: allDates, isLoading: datesLoading } = useStageDates(projectId);
-
-  const nextConfirmed = useMemo(() => findNextConfirmedDate(allDates), [allDates]);
-
+export function RoadmapMacro({ stages, deliveryDate }: RoadmapMacroProps) {
   const formattedDelivery = useMemo(() => {
     if (!deliveryDate) return null;
     try {
@@ -168,33 +144,14 @@ export function RoadmapMacro({ stages, projectId, deliveryDate }: RoadmapMacroPr
         </div>
       </div>
 
-      {/* Info chips row */}
-      {(nextConfirmed || formattedDelivery) && (
+      {/* Delivery date chip */}
+      {formattedDelivery && (
         <div className="flex flex-wrap items-center gap-2">
-          {nextConfirmed && (
-            <div className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
-              <CalendarCheck className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
-              <span className="text-muted-foreground">Próximo marco:</span>
-              <span className="font-medium text-foreground">
-                {nextConfirmed.title} · {formatDateShort(nextConfirmed.bwild_confirmed_at!)}
-              </span>
-            </div>
-          )}
-
-          {formattedDelivery && (
-            <div className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
-              <CalendarClock className="h-3.5 w-3.5 text-primary" />
-              <span className="text-muted-foreground">Previsão de conclusão:</span>
-              <span className="font-medium text-foreground">{formattedDelivery}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {datesLoading && (
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-48 rounded-lg" />
-          <Skeleton className="h-8 w-52 rounded-lg" />
+          <div className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
+            <CalendarClock className="h-3.5 w-3.5 text-primary" />
+            <span className="text-muted-foreground">Previsão de conclusão:</span>
+            <span className="font-medium text-foreground">{formattedDelivery}</span>
+          </div>
         </div>
       )}
     </div>
