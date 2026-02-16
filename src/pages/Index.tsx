@@ -372,9 +372,12 @@ const Index = () => {
     }
   }, [selectedWeekIndex, reportsChronological, viewStateKey]);
 
-  // Note: We no longer auto-redirect customers to journey page.
-  // The journey is accessible via the highlighted link in ReportHeader.
-  // This allows customers to access schedule, financeiro, documents etc. normally.
+  // Redirect ALL users to journey page when project is in "fase de projeto"
+  useEffect(() => {
+    if (!projectLoading && project?.is_project_phase && projectId) {
+      navigate(`/obra/${projectId}/jornada`, { replace: true });
+    }
+  }, [projectLoading, project?.is_project_phase, projectId, navigate]);
 
   // Loading state or redirect in progress
   if (projectLoading || activitiesLoading) {
