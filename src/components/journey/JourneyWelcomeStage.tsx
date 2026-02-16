@@ -13,6 +13,8 @@ interface JourneyWelcomeStageProps {
   hero: JourneyHero;
   projectId: string;
   isAdmin: boolean;
+  onAdvance: () => void;
+  nextStageName: string;
 }
 
 const contentVariants = {
@@ -43,7 +45,7 @@ const portalBullets = [
   { icon: '📅', text: 'Veja datas, reuniões e prazos em um só lugar.' },
 ];
 
-export function JourneyWelcomeStage({ hero, projectId, isAdmin }: JourneyWelcomeStageProps) {
+export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextStageName }: JourneyWelcomeStageProps) {
   const [guideExpanded, setGuideExpanded] = useState(true);
   const [teamExpanded, setTeamExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -205,6 +207,17 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin }: JourneyWelcome
           )}
         </AnimatePresence>
       </Card>
+
+      {/* Advance button */}
+      <div className="pt-2">
+        <Button
+          className="w-full min-h-[48px] gap-2 text-sm"
+          onClick={onAdvance}
+        >
+          Confirme meu entendimento, avançar para {nextStageName}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
 
       <TeamMemberEditModal
         open={editModalOpen}
