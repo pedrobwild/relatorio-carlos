@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useProjectJourney, useInitializeJourney } from '@/hooks/useProjectJourney';
+import { useProjectJourney, useInitializeJourney, JourneyStage } from '@/hooks/useProjectJourney';
 
 import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
 import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper';
@@ -16,6 +16,7 @@ import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
 import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
 import { CurrentStageHero, CurrentStageHeroSkeleton } from '@/components/journey/CurrentStageHero';
+import { StageDetailSheet } from '@/components/journey/StageDetailSheet';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { RoadmapMacro, RoadmapMacroSkeleton } from '@/components/journey/RoadmapMacro';
@@ -26,18 +27,26 @@ const DocumentosContent = lazy(() => import('@/components/tabs/DocumentosContent
 const FormalizacoesContent = lazy(() => import('@/components/tabs/FormalizacoesContent'));
 const PendenciasContent = lazy(() => import('@/components/tabs/PendenciasContent'));
 
+/* ─── Helpers ─── */
+
+function isStageBlocked(stage: JourneyStage, index: number, stages: JourneyStage[]): boolean {
+  if (stage.status === 'completed' || stage.status === 'in_progress' || stage.status === 'waiting_action') return false;
+  if (stage.dependencies_text) return true;
+  if (index > 0 && stages[index - 1].status !== 'completed') return true;
+  return false;
+}
+
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
-  
+
   const { project, loading: projectLoading } = useProject();
   const { role, loading: roleLoading } = useUserRole();
   const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
   const initializeJourney = useInitializeJourney();
-  
-  
+
   const [activeTab, setActiveTab] = useState<string>('jornada');
-  const [activeStageId, setActiveStageId] = useState<string | null>(null);
-  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+  const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
   const isLoading = projectLoading || roleLoading || journeyLoading;
@@ -50,32 +59,6 @@ export default function JornadaProjeto() {
       });
     }
   }, [journeyLoading, journey, projectId, initializeJourney, refetch]);
-
-  // Set welcome stage as active by default on first visit
-  useEffect(() => {
-    if (journey?.stages && !activeStageId) {
-      setActiveStageId('welcome');
-      setExpandedStages(new Set(['welcome']));
-    }
-  }, [journey?.stages, activeStageId]);
-
-  const scrollToCard = useCallback((stageId: string) => {
-    requestAnimationFrame(() => {
-      const el = document.querySelector(`[data-stage-id="${stageId}"]`) as HTMLElement | null;
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    });
-  }, []);
-
-  const handleGoToBriefing = useCallback(() => {
-    const firstStage = journey?.stages?.[0];
-    if (firstStage) {
-      setActiveStageId(firstStage.id);
-      setExpandedStages(new Set([firstStage.id]));
-      scrollToCard(firstStage.id);
-    }
-  }, [journey?.stages, scrollToCard]);
 
   // Build stages list with virtual welcome stage for stepper/timeline
   const welcomeVirtualStage = {
@@ -115,19 +98,35 @@ export default function JornadaProjeto() {
     );
   }, [journey?.stages]);
 
-  const handleStageClick = useCallback((stageId: string) => {
-    setActiveStageId(stageId);
-    setExpandedStages((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(stageId)) {
-        newSet.delete(stageId);
-      } else {
-        newSet.add(stageId);
-      }
-      return newSet;
-    });
-    scrollToCard(stageId);
-  }, [scrollToCard]);
+  const selectedStage = useMemo(() => {
+    if (!selectedStageId || !journey?.stages) return null;
+    return journey.stages.find(s => s.id === selectedStageId) || null;
+  }, [selectedStageId, journey?.stages]);
+
+  const selectedStageNextName = useMemo(() => {
+    if (!selectedStage || !journey?.stages) return null;
+    const idx = journey.stages.findIndex(s => s.id === selectedStage.id);
+    return journey.stages[idx + 1]?.name ?? null;
+  }, [selectedStage, journey?.stages]);
+
+  const handleStageSelect = useCallback((stageId: string) => {
+    if (stageId === 'welcome') {
+      // Welcome stage opens inline, not in sheet
+      return;
+    }
+    setSelectedStageId(stageId);
+    setSheetOpen(true);
+  }, []);
+
+  const handleTimelineClick = useCallback((stageId: string) => {
+    if (stageId === 'welcome') return;
+    // Check if stage is blocked
+    if (journey?.stages) {
+      const idx = journey.stages.findIndex(s => s.id === stageId);
+      if (idx >= 0 && isStageBlocked(journey.stages[idx], idx, journey.stages)) return;
+    }
+    handleStageSelect(stageId);
+  }, [journey?.stages, handleStageSelect]);
 
   if (isLoading || initializeJourney.isPending) {
     return (
@@ -162,7 +161,6 @@ export default function JornadaProjeto() {
       <PageHeader
         title={journeyCopy.page.title}
         backTo="/minhas-obras"
-        
       >
         <div className="text-right min-w-0">
           <p className="font-medium text-sm truncate">{project.name}</p>
@@ -216,7 +214,6 @@ export default function JornadaProjeto() {
 
       <main className={cn(
         "container max-w-5xl mx-auto px-4 py-5 md:py-8",
-        // Extra bottom padding when sticky CTA is visible on mobile
         currentStage?.status === 'waiting_action' && currentStage?.cta_visible && currentStage?.cta_text
           ? 'pb-24 md:pb-safe'
           : 'pb-safe',
@@ -233,8 +230,8 @@ export default function JornadaProjeto() {
                   </h2>
                   <JourneyTimeline
                     stages={allStagesForStepper}
-                    activeStageId={activeStageId}
-                    onStageClick={handleStageClick}
+                    activeStageId={selectedStageId}
+                    onStageClick={handleTimelineClick}
                   />
                 </div>
               </div>
@@ -242,39 +239,40 @@ export default function JornadaProjeto() {
 
             {/* Main content */}
             <div className="space-y-5 md:space-y-8">
-              {/* Current Stage Hero Banner — above the fold */}
+              {/* Current Stage Hero Banner */}
               {currentStage && (
                 <CurrentStageHero
                   stage={currentStage}
                   projectId={projectId!}
-                  onCtaClick={() => {
-                    handleStageClick(currentStage.id);
-                  }}
+                  onCtaClick={() => handleStageSelect(currentStage.id)}
                 />
               )}
 
-              {/* Mobile Stepper (dropdown) */}
+              {/* Mobile Stepper */}
               <JourneyMobileStepper
                 stages={allStagesForStepper}
-                activeStageId={activeStageId}
-                onStageClick={handleStageClick}
+                activeStageId={selectedStageId}
+                onStageClick={handleTimelineClick}
               />
 
               {/* Roadmap Macro */}
               <RoadmapMacro
                 stages={journey.stages}
-                projectId={projectId!}
                 deliveryDate={(project as any).date_official_delivery}
               />
 
-
-              {/* Welcome Stage (Stage 0) */}
+              {/* Welcome Stage (Stage 0) — always visible inline */}
               <JourneyWelcomeStage
                 hero={journey.hero}
                 csm={journey.csm}
-                isExpanded={expandedStages.has('welcome')}
-                onToggleExpand={() => handleStageClick('welcome')}
-                onGoToBriefing={handleGoToBriefing}
+                isExpanded={false}
+                onToggleExpand={() => {}}
+                onGoToBriefing={() => {
+                  const firstStage = journey.stages[0];
+                  if (firstStage && !isStageBlocked(firstStage, 0, journey.stages)) {
+                    handleStageSelect(firstStage.id);
+                  }
+                }}
               />
 
               {/* Stage Cards */}
@@ -283,10 +281,9 @@ export default function JornadaProjeto() {
                   <JourneyStageCard
                     key={stage.id}
                     stage={stage}
-                    projectId={projectId!}
-                    isAdmin={isAdmin}
-                    isExpanded={expandedStages.has(stage.id)}
-                    onToggleExpand={() => handleStageClick(stage.id)}
+                    isActive={selectedStageId === stage.id && sheetOpen}
+                    isBlocked={isStageBlocked(stage, idx, journey.stages)}
+                    onSelect={() => handleStageSelect(stage.id)}
                     nextStageName={journey.stages[idx + 1]?.name ?? null}
                   />
                 ))}
@@ -332,15 +329,22 @@ export default function JornadaProjeto() {
         )}
       </main>
 
-      {/* Global sticky CTA for mobile — visible when current stage needs client action */}
+      {/* Stage Detail Sheet */}
+      <StageDetailSheet
+        stage={selectedStage}
+        projectId={projectId!}
+        isAdmin={isAdmin}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        nextStageName={selectedStageNextName}
+      />
+
+      {/* Global sticky CTA for mobile */}
       {activeTab === 'jornada' && currentStage?.status === 'waiting_action' && currentStage.cta_visible && currentStage.cta_text && (
         <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
           <Button
             className="w-full min-h-[48px] gap-2 text-sm font-semibold"
-            onClick={() => {
-              handleStageClick(currentStage.id);
-              setExpandedStages(prev => new Set(prev).add(currentStage.id));
-            }}
+            onClick={() => handleStageSelect(currentStage.id)}
           >
             ⚡ {currentStage.cta_text}
             <ArrowRight className="h-4 w-4" />
