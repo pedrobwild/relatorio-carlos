@@ -263,12 +263,6 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                 <StageDatesPanel
                   stageId={stage.id}
                   projectId={projectId}
-                  dates={{
-                    proposed_start: stage.proposed_start,
-                    proposed_end: stage.proposed_end,
-                    confirmed_start: stage.confirmed_start,
-                    confirmed_end: stage.confirmed_end,
-                  }}
                   isAdmin={isAdmin}
                   stageName={stage.name}
                 />

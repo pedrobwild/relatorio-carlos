@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon, Check, X, Clock, CheckCircle2, Plus, History,
-  AlertTriangle, Calendar as CalendarIconSolid, Sparkles, RotateCcw,
+  AlertTriangle, Calendar as CalendarIconSolid, Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,10 +16,7 @@ import {
 } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
 import { journeyCopy } from '@/constants/journeyCopy';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   useStageDates,
   useCreateStageDate,
@@ -30,14 +27,7 @@ import {
   type StageDateEvent,
 } from '@/hooks/useStageDates';
 
-// ─── Types ───
 
-interface StageDates {
-  proposed_start: string | null;
-  proposed_end: string | null;
-  confirmed_start: string | null;
-  confirmed_end: string | null;
-}
 
 // ─── Time Picker Helper ───
 
@@ -581,6 +571,61 @@ function CreateStageDateForm({
   );
 }
 
+
+// ─── Mini Timeline ───
+
+function MiniTimeline({ dates }: { dates: StageDate[] }) {
+  // Collect all dates with actual values, sorted chronologically
+  const timelineItems = dates
+    .map((sd) => {
+      const dateStr = sd.bwild_confirmed_at || sd.customer_proposed_at;
+      if (!dateStr) return null;
+      const isConfirmed = !!sd.bwild_confirmed_at;
+      const tl = typeLabels[sd.date_type] || { emoji: '📌', label: sd.date_type };
+      return { id: sd.id, date: parseISO(dateStr), dateStr, title: sd.title, isConfirmed, tl };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a!.date.getTime() - b!.date.getTime()) as {
+      id: string; date: Date; dateStr: string; title: string; isConfirmed: boolean; tl: { emoji: string; label: string };
+    }[];
+
+  if (timelineItems.length === 0) return null;
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+        {journeyCopy.dates.miniTimeline.title}
+      </p>
+      <ol className="relative pl-4 space-y-0 list-none" aria-label="Linha do tempo de datas">
+        <div className="absolute left-[5px] top-2 bottom-2 w-px bg-border" aria-hidden />
+        {timelineItems.map((item, idx) => (
+          <li key={item.id} className="relative flex items-start gap-2.5 py-1.5">
+            <div
+              className={cn(
+                "absolute -left-4 top-[7px] h-2.5 w-2.5 rounded-full border-2 border-background shrink-0",
+                item.isConfirmed ? "bg-[hsl(var(--success))]" : "bg-[hsl(var(--warning))]"
+              )}
+              aria-hidden
+            />
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-xs" aria-hidden>{item.tl.emoji}</span>
+              <span className="text-xs font-medium text-foreground truncate">{item.title}</span>
+              <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap ml-auto">
+                {format(item.date, "dd/MM", { locale: ptBR })}
+              </span>
+              {item.isConfirmed ? (
+                <CheckCircle2 className="h-3 w-3 text-[hsl(var(--success))] shrink-0" aria-label="Confirmada" />
+              ) : (
+                <Clock className="h-3 w-3 text-[hsl(var(--warning))] shrink-0" aria-label="Proposta" />
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 // ─── Empty State ───
 
 function EmptyDatesState({ isStaff }: { isStaff: boolean }) {
@@ -621,134 +666,24 @@ function DatesSkeleton() {
   );
 }
 
-// ─── Inline Date Field (legacy journey_stages columns) ───
-
-function InlineDateField({
-  label,
-  value,
-  icon: Icon,
-  isConfirmed,
-  onSelect,
-  canEdit,
-}: {
-  label: string;
-  value: string | null;
-  icon: React.ElementType;
-  isConfirmed?: boolean;
-  onSelect: (date: Date | undefined) => void;
-  canEdit: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const parsedDate = value ? parseISO(value) : undefined;
-
-  if (!canEdit) {
-    return (
-      <div className="flex items-center gap-2 min-h-[44px]">
-        <Icon className={cn("h-4 w-4 shrink-0", isConfirmed ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className={cn("text-sm font-medium", isConfirmed ? "text-[hsl(var(--success))]" : "text-foreground")}>
-            {parsedDate ? format(parsedDate, "dd 'de' MMM, yyyy", { locale: ptBR }) : journeyCopy.dates.status.inDefinition}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            "flex items-center gap-2 min-h-[44px] w-full rounded-lg px-3 py-2 text-left transition-colors",
-            "hover:bg-muted/50 active:bg-muted/70 focus-visible:outline-2 focus-visible:outline-primary",
-            "border border-transparent hover:border-border"
-          )}
-          aria-label={`${label}: ${parsedDate ? format(parsedDate, "dd/MM/yyyy") : journeyCopy.dates.status.selectDate}`}
-        >
-          <Icon className={cn("h-4 w-4 shrink-0", isConfirmed ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className={cn("text-sm font-medium", isConfirmed ? "text-[hsl(var(--success))]" : parsedDate ? "text-foreground" : "text-muted-foreground")}>
-              {parsedDate ? format(parsedDate, "dd 'de' MMM, yyyy", { locale: ptBR }) : journeyCopy.dates.status.selectDate}
-            </p>
-          </div>
-          <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={parsedDate}
-          onSelect={(date) => { onSelect(date); setOpen(false); }}
-          className="p-3 pointer-events-auto"
-          locale={ptBR}
-        />
-        {parsedDate && (
-          <div className="p-2 border-t">
-            <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive min-h-[44px]"
-              onClick={() => { onSelect(undefined); setOpen(false); }}>
-              <X className="h-4 w-4 mr-1" aria-hidden /> {journeyCopy.dates.status.clearDate}
-            </Button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 // ─── Main Panel ───
 
 interface StageDatesPanelProps {
   stageId: string;
   projectId: string;
-  dates: StageDates;
   isAdmin: boolean;
   stageName: string;
 }
 
-export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName }: StageDatesPanelProps) {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+export function StageDatesPanel({ stageId, projectId, isAdmin, stageName }: StageDatesPanelProps) {
   const [showCreate, setShowCreate] = useState(false);
 
   const stageKey = stageName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
   const { data: granularDates, isLoading } = useStageDates(projectId, stageKey);
 
-  const handleDateChange = async (fieldName: keyof StageDates, newDate: Date | undefined) => {
-    const oldValue = dates[fieldName];
-    const newValue = newDate ? format(newDate, 'yyyy-MM-dd') : null;
-    if (oldValue === newValue) return;
-
-    try {
-      const { error: updateError } = await supabase
-        .from('journey_stages')
-        .update({ [fieldName]: newValue })
-        .eq('id', stageId);
-      if (updateError) throw updateError;
-
-      await supabase.from('journey_stage_date_log').insert({
-        stage_id: stageId,
-        project_id: projectId,
-        field_name: fieldName,
-        old_value: oldValue,
-        new_value: newValue,
-        changed_by: user?.id || null,
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
-      toast.success(journeyCopy.toasts.date_updated);
-    } catch {
-      toast.error(journeyCopy.errors.update_date);
-    }
-  };
-
-  const hasAnyDate = dates.proposed_start || dates.proposed_end || dates.confirmed_start || dates.confirmed_end;
   const hasGranularDates = (granularDates?.length ?? 0) > 0;
-  const canEditProposed = true;
-  const canEditConfirmed = isAdmin;
 
-  if (!isAdmin && !hasAnyDate && !hasGranularDates && !isLoading) return null;
+  if (!isAdmin && !hasGranularDates && !isLoading) return null;
 
   return (
     <section
@@ -763,40 +698,17 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
           </div>
           <h4 className="text-sm font-bold text-foreground tracking-tight">{journeyCopy.dates.panel.title}</h4>
         </div>
-        {!showCreate && (
+        {isAdmin && !showCreate && (
           <Button variant="outline" size="sm" className="h-11 text-xs gap-1.5 min-w-[44px]" onClick={() => setShowCreate(true)}>
             <Plus className="h-3.5 w-3.5" aria-hidden /> {journeyCopy.dates.panel.newDate}
           </Button>
         )}
       </div>
 
-      {/* Inline dates (legacy journey_stages columns) */}
-      {(hasAnyDate || isAdmin) && (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-          <div className="space-y-1.5 p-3 rounded-lg bg-muted/30 border border-border/30">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              {journeyCopy.dates.status.proposed}
-            </p>
-            <InlineDateField label="Início proposto" value={dates.proposed_start} icon={Clock}
-              onSelect={(d) => handleDateChange('proposed_start', d)} canEdit={canEditProposed} />
-            <InlineDateField label="Término proposto" value={dates.proposed_end} icon={Clock}
-              onSelect={(d) => handleDateChange('proposed_end', d)} canEdit={canEditProposed} />
-          </div>
-          <div className="space-y-1.5 p-3 rounded-lg bg-muted/30 border border-border/30">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              {journeyCopy.dates.status.confirmed}
-            </p>
-            <InlineDateField label="Início confirmado" value={dates.confirmed_start} icon={CheckCircle2}
-              isConfirmed={!!dates.confirmed_start}
-              onSelect={(d) => handleDateChange('confirmed_start', d)} canEdit={canEditConfirmed} />
-            <InlineDateField label="Término confirmado" value={dates.confirmed_end} icon={CheckCircle2}
-              isConfirmed={!!dates.confirmed_end}
-              onSelect={(d) => handleDateChange('confirmed_end', d)} canEdit={canEditConfirmed} />
-          </div>
-        </div>
-      )}
+      {/* Mini Timeline */}
+      {hasGranularDates && <MiniTimeline dates={granularDates!} />}
 
-      {/* Granular dates */}
+      {/* Granular date cards */}
       {isLoading ? (
         <DatesSkeleton />
       ) : hasGranularDates ? (
@@ -805,9 +717,9 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
             <StageDateRow key={sd.id} sd={sd} isStaff={isAdmin} projectId={projectId} />
           ))}
         </div>
-      ) : !hasAnyDate ? (
+      ) : (
         <EmptyDatesState isStaff={isAdmin} />
-      ) : null}
+      )}
 
       {/* Create form */}
       {showCreate && (
