@@ -169,159 +169,151 @@ export default function Auth() {
 
   return (
     <div
-      className="min-h-[100dvh] flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat p-4 sm:p-8 overflow-y-auto safe-area-top safe-area-bottom"
+      className="min-h-[100dvh] flex bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${authBg})` }}
     >
-      <div className="w-full max-w-[420px] space-y-6">
-        <Card className="border-white/10 shadow-2xl bg-white/10 backdrop-blur-md">
-          <CardContent className="pt-8 pb-6 px-6 sm:px-8">
-            <div className="text-center mb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
-                Portal Bwild
-              </h1>
-            </div>
+      {/* Left side – form */}
+      <div className="flex flex-col justify-center w-full max-w-md px-8 sm:px-14 py-12 safe-area-top safe-area-bottom">
+        <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-10">
+          Portal Bwild<span className="text-sky-400">.</span>
+        </h1>
 
+        {formError && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="flex items-start gap-2.5 rounded-lg border border-red-400/30 bg-red-500/10 p-3 mb-5"
+          >
+            <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-300">{formError}</p>
+          </div>
+        )}
 
-            {formError && (
-              <div
-                role="alert"
-                aria-live="assertive"
-                className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3 mb-5"
-              >
-                <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <p className="text-sm text-destructive">{formError}</p>
-              </div>
+        <form onSubmit={handleLogin} className="space-y-5" data-testid="login-form" noValidate>
+          <div className="space-y-1.5">
+            <Label htmlFor="login-email" className="text-white/80 flex items-center gap-1.5">
+              <Mail className="h-3.5 w-3.5" /> E-mail
+            </Label>
+            <Input
+              id="login-email"
+              data-testid="login-identifier"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
+              }}
+              onBlur={() => { if (fieldErrors.email) validate(); }}
+              className="bg-transparent border-white/30 text-white placeholder:text-white/40 focus-visible:ring-sky-400/50 focus-visible:border-sky-400/50"
+              aria-invalid={!!fieldErrors.email}
+              aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
+              disabled={loading}
+              autoFocus
+            />
+            {fieldErrors.email && (
+              <p id="login-email-error" role="alert" className="text-xs text-red-400 mt-1">
+                {fieldErrors.email}
+              </p>
             )}
+          </div>
 
-            <form onSubmit={handleLogin} className="space-y-4" data-testid="login-form" noValidate>
-              <div className="space-y-1.5">
-                <Label htmlFor="login-email" className="text-white/90">E-mail</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="login-email"
-                    data-testid="login-identifier"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                    }}
-                    onBlur={() => { if (fieldErrors.email) validate(); }}
-                    className="pl-10"
-                    aria-invalid={!!fieldErrors.email}
-                    aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
-                    disabled={loading}
-                    autoFocus
-                  />
-                </div>
-                {fieldErrors.email && (
-                  <p id="login-email-error" role="alert" className="text-xs text-destructive mt-1">
-                    {fieldErrors.email}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="login-password" className="text-white/90">Senha</Label>
-                  <a
-                    href="/recuperar-senha"
-                    className="text-xs text-white/70 hover:text-white hover:underline font-medium"
-                    tabIndex={0}
-                  >
-                    Esqueci minha senha
-                  </a>
-
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="login-password"
-                    data-testid="login-password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                    }}
-                    onKeyDown={handlePasswordKeyEvent}
-                    onKeyUp={handlePasswordKeyEvent}
-                    className="pl-10 pr-10"
-                    aria-invalid={!!fieldErrors.password}
-                    aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {fieldErrors.password && (
-                  <p id="login-password-error" role="alert" className="text-xs text-destructive mt-1">
-                    {fieldErrors.password}
-                  </p>
-                )}
-                {capsLockOn && (
-                  <p className="text-xs text-warning flex items-center gap-1 mt-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Caps Lock está ativado
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full mt-2 bg-white text-slate-900 hover:bg-white/90 font-semibold"
+          <div className="space-y-1.5">
+            <Label htmlFor="login-password" className="text-white/80 flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5" /> Senha
+            </Label>
+            <div className="relative">
+              <Input
+                id="login-password"
+                data-testid="login-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                }}
+                onKeyDown={handlePasswordKeyEvent}
+                onKeyUp={handlePasswordKeyEvent}
+                className="bg-transparent border-white/30 text-white placeholder:text-white/40 pr-10 focus-visible:ring-sky-400/50 focus-visible:border-sky-400/50"
+                aria-invalid={!!fieldErrors.password}
+                aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
                 disabled={loading}
-                data-testid="login-submit"
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Entrando...
-                  </>
-                ) : (
-                  'Acessar meu portal'
-                )}
-              </Button>
-            </form>
-
-            <Separator className="my-5 border-white/20" />
-
-            <div className="flex items-center justify-center gap-1.5 text-sm text-white/70">
-              <HelpCircle className="h-4 w-4 shrink-0" />
-              <span>Problemas para acessar?</span>
-              <a
-                href="https://web.whatsapp.com/send?phone=5521989362122&text=Ol%C3%A1%2C%20tive%20uma%20dificuldade%20com%20meu%20acesso%20ao%20portal%20de%20jornada%20de%20obra%20da%20bwild%20e%20preciso%20de%20ajuda."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white hover:underline font-medium"
-              >
-                Falar com suporte
-              </a>
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
-          </CardContent>
-        </Card>
+            {fieldErrors.password && (
+              <p id="login-password-error" role="alert" className="text-xs text-red-400 mt-1">
+                {fieldErrors.password}
+              </p>
+            )}
+            {capsLockOn && (
+              <p className="text-xs text-amber-400 flex items-center gap-1 mt-1">
+                <AlertCircle className="h-3 w-3" />
+                Caps Lock está ativado
+              </p>
+            )}
+          </div>
 
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="flex items-center gap-1.5 text-xs text-white/50">
+          <div className="flex justify-center">
+            <a
+              href="/recuperar-senha"
+              className="text-xs text-white/60 hover:text-white hover:underline font-medium"
+              tabIndex={0}
+            >
+              ? Esqueci minha senha
+            </a>
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full bg-sky-500 hover:bg-sky-400 text-white font-semibold"
+            disabled={loading}
+            data-testid="login-submit"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Entrando...
+              </>
+            ) : (
+              'Entrar'
+            )}
+          </Button>
+        </form>
+
+        <div className="mt-8 flex items-center justify-center gap-1.5 text-sm text-white/50">
+          <HelpCircle className="h-4 w-4 shrink-0" />
+          <span>Problemas?</span>
+          <a
+            href="https://web.whatsapp.com/send?phone=5521989362122&text=Ol%C3%A1%2C%20tive%20uma%20dificuldade%20com%20meu%20acesso%20ao%20portal%20de%20jornada%20de%20obra%20da%20bwild%20e%20preciso%20de%20ajuda."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/70 hover:text-white hover:underline font-medium"
+          >
+            Falar com suporte
+          </a>
+        </div>
+
+        <div className="mt-6 flex flex-col items-center gap-1">
+          <div className="flex items-center gap-1.5 text-xs text-white/30">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Acesso seguro · LGPD</span>
           </div>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-white/20">
             © {new Date().getFullYear()} Bwild · Todos os direitos reservados
           </p>
         </div>
