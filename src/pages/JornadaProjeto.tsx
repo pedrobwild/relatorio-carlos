@@ -1,19 +1,18 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
 import { journeyCopy } from '@/constants/journeyCopy';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProjectJourney, useInitializeJourney } from '@/hooks/useProjectJourney';
-import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { JourneyHeroSection } from '@/components/journey/JourneyHeroSection';
+
 import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
 import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper';
 import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
-import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
+import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { UpcomingDatesBar } from '@/components/journey/UpcomingDatesBar';
@@ -26,12 +25,12 @@ const PendenciasContent = lazy(() => import('@/components/tabs/PendenciasContent
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
-  const navigate = useNavigate();
+  
   const { project, loading: projectLoading } = useProject();
   const { role, loading: roleLoading } = useUserRole();
   const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
   const initializeJourney = useInitializeJourney();
-  const { paths } = useProjectNavigation();
+  
   
   const [activeTab, setActiveTab] = useState<string>('jornada');
   const [activeStageId, setActiveStageId] = useState<string | null>(null);
@@ -49,21 +48,15 @@ export default function JornadaProjeto() {
     }
   }, [journeyLoading, journey, projectId, initializeJourney, refetch]);
 
-  // Set first non-completed stage as active by default
+  // Set welcome stage as active by default on first visit
   useEffect(() => {
     if (journey?.stages && !activeStageId) {
-      const firstActive = journey.stages.find(
-        (s) => s.status === 'waiting_action' || s.status === 'in_progress'
-      ) || journey.stages[0];
-      if (firstActive) {
-        setActiveStageId(firstActive.id);
-        setExpandedStages(new Set([firstActive.id]));
-      }
+      setActiveStageId('welcome');
+      setExpandedStages(new Set(['welcome']));
     }
   }, [journey?.stages, activeStageId]);
 
   const scrollToCard = useCallback((stageId: string) => {
-    // Small delay so the card can expand first
     requestAnimationFrame(() => {
       const el = document.querySelector(`[data-stage-id="${stageId}"]`) as HTMLElement | null;
       if (el) {
@@ -71,6 +64,41 @@ export default function JornadaProjeto() {
       }
     });
   }, []);
+
+  const handleGoToBriefing = useCallback(() => {
+    const firstStage = journey?.stages?.[0];
+    if (firstStage) {
+      setActiveStageId(firstStage.id);
+      setExpandedStages(new Set([firstStage.id]));
+      scrollToCard(firstStage.id);
+    }
+  }, [journey?.stages, scrollToCard]);
+
+  // Build stages list with virtual welcome stage for stepper/timeline
+  const welcomeVirtualStage = {
+    id: 'welcome',
+    project_id: projectId || '',
+    sort_order: 0,
+    name: 'Boas-vindas',
+    icon: 'users',
+    status: 'completed' as const,
+    description: null,
+    warning_text: null,
+    cta_text: null,
+    cta_url: null,
+    cta_visible: false,
+    microcopy: null,
+    responsible: null,
+    dependencies_text: null,
+    revision_text: null,
+    proposed_start: null,
+    proposed_end: null,
+    confirmed_start: null,
+    confirmed_end: null,
+    todos: [],
+  };
+
+  const allStagesForStepper = journey?.stages ? [welcomeVirtualStage, ...journey.stages] : [];
 
   const handleStageClick = useCallback((stageId: string) => {
     setActiveStageId(stageId);
@@ -183,7 +211,7 @@ export default function JornadaProjeto() {
                     {journeyCopy.page.sidebarTitle}
                   </h2>
                   <JourneyTimeline
-                    stages={journey.stages}
+                    stages={allStagesForStepper}
                     activeStageId={activeStageId}
                     onStageClick={handleStageClick}
                   />
@@ -193,33 +221,23 @@ export default function JornadaProjeto() {
 
             {/* Main content */}
             <div className="space-y-5 md:space-y-8">
-              {/* Hero */}
-              <JourneyHeroSection
-                hero={journey.hero}
-                projectId={projectId!}
-                isAdmin={isAdmin}
-              />
-
               {/* Upcoming dates bar */}
               <UpcomingDatesBar projectId={projectId!} />
 
-              {/* CSM Section */}
-              {journey.csm && (
-                <JourneyCSMSection
-                  csm={journey.csm}
-                  projectId={projectId!}
-                  isAdmin={isAdmin}
-                  onUpdate={() => refetch()}
-                />
-              )}
-
-              <Separator />
-
               {/* Mobile Stepper */}
               <JourneyMobileStepper
-                stages={journey.stages}
+                stages={allStagesForStepper}
                 activeStageId={activeStageId}
                 onStageClick={handleStageClick}
+              />
+
+              {/* Welcome Stage (Stage 0) */}
+              <JourneyWelcomeStage
+                hero={journey.hero}
+                csm={journey.csm}
+                isExpanded={expandedStages.has('welcome')}
+                onToggleExpand={() => handleStageClick('welcome')}
+                onGoToBriefing={handleGoToBriefing}
               />
 
               {/* Stage Cards */}
