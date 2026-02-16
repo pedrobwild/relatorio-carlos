@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
 import { journeyCopy } from '@/constants/journeyCopy';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -15,7 +14,7 @@ import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper'
 import { JourneyStageCard } from '@/components/journey/JourneyStageCard';
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
 import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
-import { CurrentStageHero, CurrentStageHeroSkeleton } from '@/components/journey/CurrentStageHero';
+
 import { StageDetailSheet } from '@/components/journey/StageDetailSheet';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -86,17 +85,6 @@ export default function JornadaProjeto() {
   };
 
   const allStagesForStepper = journey?.stages ? [welcomeVirtualStage, ...journey.stages] : [];
-
-  // Derive the "current" real stage for the hero banner
-  const currentStage = useMemo(() => {
-    if (!journey?.stages) return null;
-    return (
-      journey.stages.find(s => s.status === 'waiting_action') ||
-      journey.stages.find(s => s.status === 'in_progress') ||
-      journey.stages.find(s => s.status !== 'completed') ||
-      null
-    );
-  }, [journey?.stages]);
 
   const selectedStage = useMemo(() => {
     if (!selectedStageId || !journey?.stages) return null;
@@ -214,9 +202,7 @@ export default function JornadaProjeto() {
 
       <main className={cn(
         "container max-w-5xl mx-auto px-4 py-5 md:py-8",
-        currentStage?.status === 'waiting_action' && currentStage?.cta_visible && currentStage?.cta_text
-          ? 'pb-24 md:pb-safe'
-          : 'pb-safe',
+        'pb-safe',
       )}>
         {/* Jornada tab content */}
         {activeTab === 'jornada' && (
@@ -239,14 +225,6 @@ export default function JornadaProjeto() {
 
             {/* Main content */}
             <div className="space-y-5 md:space-y-8">
-              {/* Current Stage Hero Banner */}
-              {currentStage && (
-                <CurrentStageHero
-                  stage={currentStage}
-                  projectId={projectId!}
-                  onCtaClick={() => handleStageSelect(currentStage.id)}
-                />
-              )}
 
               {/* Mobile Stepper */}
               <JourneyMobileStepper
@@ -334,18 +312,6 @@ export default function JornadaProjeto() {
         nextStageName={selectedStageNextName}
       />
 
-      {/* Global sticky CTA for mobile */}
-      {activeTab === 'jornada' && currentStage?.status === 'waiting_action' && currentStage.cta_visible && currentStage.cta_text && (
-        <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-          <Button
-            className="w-full min-h-[48px] gap-2 text-sm font-semibold"
-            onClick={() => handleStageSelect(currentStage.id)}
-          >
-            ⚡ {currentStage.cta_text}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
