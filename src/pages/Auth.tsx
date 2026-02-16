@@ -175,7 +175,7 @@ export default function Auth() {
       {/* Form – centered on mobile, left on desktop */}
       <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-md px-6 sm:px-14 py-8 sm:py-12 safe-area-top safe-area-bottom mx-auto md:mx-0">
         <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-10">
-          Portal Bwild<span className="text-sky-400">.</span>
+          Portal Bwild<span className="text-[#366478]">.</span>
         </h1>
 
         {formError && (
@@ -209,7 +209,7 @@ export default function Auth() {
                 if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
               }}
               onBlur={() => { if (fieldErrors.email) validate(); }}
-              className="bg-transparent border-white/30 text-white placeholder:text-white/40 focus-visible:ring-sky-400/50 focus-visible:border-sky-400/50"
+              className="bg-transparent border-white/30 text-white placeholder:text-white/40 focus-visible:ring-white/40 focus-visible:border-white/50"
               aria-invalid={!!fieldErrors.email}
               aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
               disabled={loading}
@@ -240,7 +240,7 @@ export default function Auth() {
                 }}
                 onKeyDown={handlePasswordKeyEvent}
                 onKeyUp={handlePasswordKeyEvent}
-                className="bg-transparent border-white/30 text-white placeholder:text-white/40 pr-10 focus-visible:ring-sky-400/50 focus-visible:border-sky-400/50"
+                className="bg-transparent border-white/30 text-white placeholder:text-white/40 pr-10 focus-visible:ring-white/40 focus-visible:border-white/50"
                 aria-invalid={!!fieldErrors.password}
                 aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
                 disabled={loading}
