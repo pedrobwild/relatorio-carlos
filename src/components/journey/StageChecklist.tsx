@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Check, X, Plus, Edit2, Trash2, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Check, X, Plus, Edit2, Trash2, CheckCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -112,9 +112,22 @@ export function StageChecklist({
 }: StageChecklistProps) {
   const [newTodoText, setNewTodoText] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const addTodo = useAddTodo();
 
   const filteredTodos = todos.filter((t) => t.owner === owner);
+  const allDone = filteredTodos.length > 0 && filteredTodos.every(t => t.completed);
+  const prevAllDone = useRef(allDone);
+
+  // Micro-celebration: detect when all items just became completed
+  useEffect(() => {
+    if (allDone && !prevAllDone.current) {
+      setShowCelebration(true);
+      const timer = setTimeout(() => setShowCelebration(false), 2500);
+      return () => clearTimeout(timer);
+    }
+    prevAllDone.current = allDone;
+  }, [allDone]);
 
   const handleAdd = () => {
     if (!newTodoText.trim()) return;
@@ -173,6 +186,16 @@ export function StageChecklist({
           </div>
         )}
       </div>
+
+      {/* Micro-celebration */}
+      {showCelebration && (
+        <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--success)/0.06)] border border-[hsl(var(--success)/0.15)] px-3 py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <Sparkles className="h-4 w-4 text-[hsl(var(--success))] shrink-0" />
+          <span className="text-xs font-medium text-[hsl(var(--success))]">
+            Tudo certo por aqui! Obrigado pela agilidade.
+          </span>
+        </div>
+      )}
     </div>
   );
 }

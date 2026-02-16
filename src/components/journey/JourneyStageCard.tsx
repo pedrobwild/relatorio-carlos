@@ -1,7 +1,7 @@
 import { useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Edit2, Check, X,
+  Edit2, Check, X, ArrowRight, CheckCircle2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ interface JourneyStageCardProps {
   isAdmin: boolean;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  nextStageName?: string | null;
 }
 
 const contentVariants = {
@@ -54,7 +55,7 @@ const contentVariants = {
 
 export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps>(
   function JourneyStageCard(
-    { stage, projectId, isAdmin, isExpanded, onToggleExpand },
+    { stage, projectId, isAdmin, isExpanded, onToggleExpand, nextStageName },
     ref,
   ) {
     const [isEditing, setIsEditing] = useState(false);
@@ -141,6 +142,19 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
             )}
           </div>
         </CardHeader>
+
+        {/* Completed stage banner */}
+        {stage.status === 'completed' && !isExpanded && nextStageName && (
+          <div className="flex items-center gap-2 px-4 py-2.5 md:px-6 border-t border-[hsl(var(--success)/0.15)] bg-[hsl(var(--success)/0.04)]">
+            <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))] shrink-0" />
+            <span className="text-xs text-[hsl(var(--success))] font-medium">Etapa concluída</span>
+            <span className="text-xs text-muted-foreground">·</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              Próxima: <span className="font-medium text-foreground">{nextStageName}</span>
+              <ArrowRight className="h-3 w-3" />
+            </span>
+          </div>
+        )}
 
         {/* Animated content */}
         <AnimatePresence initial={false}>
