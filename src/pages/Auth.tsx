@@ -9,10 +9,9 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
   Loader2, Mail, Lock, Eye, EyeOff,
-  CalendarClock, FileText, Camera,
   AlertCircle, ShieldCheck, HelpCircle,
 } from 'lucide-react';
-import bwildLogo from '@/assets/bwild-logo.png';
+import authBg from '@/assets/auth-bg.png';
 import { z } from 'zod';
 import { logError, logInfo } from '@/lib/errorLogger';
 
@@ -168,24 +167,17 @@ export default function Auth() {
     );
   }
 
-  const FEATURES = [
-    { icon: CalendarClock, label: 'Cronograma e prazos' },
-    { icon: Camera, label: 'Relatórios semanais e fotos' },
-    { icon: FileText, label: 'Documentos e aprovações' },
-  ] as const;
-
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-primary/5 via-background to-background p-4 sm:p-8 overflow-y-auto safe-area-top safe-area-bottom">
+    <div
+      className="min-h-[100dvh] flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat p-4 sm:p-8 overflow-y-auto safe-area-top safe-area-bottom"
+      style={{ backgroundImage: `url(${authBg})` }}
+    >
       <div className="w-full max-w-[420px] space-y-6">
-        <Card className="border-border/60 shadow-lg">
+        <Card className="border-white/10 shadow-2xl bg-white/10 backdrop-blur-md">
           <CardContent className="pt-8 pb-6 px-6 sm:px-8">
-            <div className="flex justify-center mb-6">
-              <img src={bwildLogo} alt="Bwild" className="h-10" />
-            </div>
-
             <div className="text-center mb-6">
-              <h1 className="text-xl font-bold text-foreground leading-tight">
-                Portal de Jornada de Obra
+              <h1 className="text-xl font-bold text-white leading-tight">
+                Portal Bwild
               </h1>
             </div>
 
@@ -203,7 +195,7 @@ export default function Auth() {
 
             <form onSubmit={handleLogin} className="space-y-4" data-testid="login-form" noValidate>
               <div className="space-y-1.5">
-                <Label htmlFor="login-email">E-mail</Label>
+                <Label htmlFor="login-email" className="text-white/90">E-mail</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
@@ -237,7 +229,7 @@ export default function Auth() {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="login-password">Senha</Label>
+                  <Label htmlFor="login-password" className="text-white/90">Senha</Label>
                   <a
                     href="/recuperar-senha"
                     className="text-xs text-primary hover:underline font-medium"
@@ -245,6 +237,7 @@ export default function Auth() {
                   >
                     Esqueci minha senha
                   </a>
+
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -306,34 +299,16 @@ export default function Auth() {
               </Button>
             </form>
 
-            <Separator className="my-5" />
+            <Separator className="my-5 border-white/20" />
 
-            <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Você acompanha aqui:
-              </p>
-              <ul className="space-y-2.5">
-                {FEATURES.map(({ icon: Icon, label }) => (
-                  <li key={label} className="flex items-center gap-2.5">
-                    <div className="flex items-center justify-center h-7 w-7 rounded-md bg-primary/10 shrink-0">
-                      <Icon className="h-3.5 w-3.5 text-primary" />
-                    </div>
-                    <span className="text-sm text-foreground">{label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <Separator className="my-5" />
-
-            <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-1.5 text-sm text-white/70">
               <HelpCircle className="h-4 w-4 shrink-0" />
               <span>Problemas para acessar?</span>
               <a
                 href="https://web.whatsapp.com/send?phone=5521989362122&text=Ol%C3%A1%2C%20tive%20uma%20dificuldade%20com%20meu%20acesso%20ao%20portal%20de%20jornada%20de%20obra%20da%20bwild%20e%20preciso%20de%20ajuda."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline font-medium"
+                className="text-white hover:underline font-medium"
               >
                 Falar com suporte
               </a>
@@ -342,11 +317,11 @@ export default function Auth() {
         </Card>
 
         <div className="flex flex-col items-center gap-1.5">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs text-white/50">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Acesso seguro · LGPD</span>
           </div>
-          <p className="text-xs text-muted-foreground/60">
+          <p className="text-xs text-white/40">
             © {new Date().getFullYear()} Bwild · Todos os direitos reservados
           </p>
         </div>
