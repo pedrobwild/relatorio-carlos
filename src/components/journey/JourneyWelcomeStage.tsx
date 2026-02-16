@@ -13,7 +13,6 @@ interface JourneyWelcomeStageProps {
   hero: JourneyHero;
   projectId: string;
   isAdmin: boolean;
-  onGoToBriefing: () => void;
 }
 
 const contentVariants = {
@@ -44,9 +43,9 @@ const portalBullets = [
   { icon: '📅', text: 'Veja datas, reuniões e prazos em um só lugar.' },
 ];
 
-export function JourneyWelcomeStage({ hero, projectId, isAdmin, onGoToBriefing }: JourneyWelcomeStageProps) {
+export function JourneyWelcomeStage({ hero, projectId, isAdmin }: JourneyWelcomeStageProps) {
   const [guideExpanded, setGuideExpanded] = useState(true);
-  const [teamExpanded, setTeamExpanded] = useState(true);
+  const [teamExpanded, setTeamExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<JourneyTeamMember | null>(null);
 
@@ -123,7 +122,14 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onGoToBriefing }
 
                 <Button
                   className="w-full md:w-auto min-h-[44px] gap-2"
-                  onClick={(e) => { e.stopPropagation(); onGoToBriefing(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTeamExpanded(true);
+                    // Scroll to team section after a brief delay
+                    setTimeout(() => {
+                      document.querySelector('[data-stage-id="welcome-team"]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 350);
+                  }}
                 >
                   Entendi, conhecer meu time
                   <ArrowRight className="h-4 w-4" />
