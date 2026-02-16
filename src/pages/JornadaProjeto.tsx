@@ -18,7 +18,6 @@ import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
 import { CurrentStageHero, CurrentStageHeroSkeleton } from '@/components/journey/CurrentStageHero';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { UpcomingDatesBar } from '@/components/journey/UpcomingDatesBar';
 import { RoadmapMacro, RoadmapMacroSkeleton } from '@/components/journey/RoadmapMacro';
 
 // Lazy load tab content components
@@ -268,8 +267,6 @@ export default function JornadaProjeto() {
                 deliveryDate={(project as any).date_official_delivery}
               />
 
-              {/* Upcoming dates bar */}
-              <UpcomingDatesBar projectId={projectId!} />
 
               {/* Welcome Stage (Stage 0) */}
               <JourneyWelcomeStage
