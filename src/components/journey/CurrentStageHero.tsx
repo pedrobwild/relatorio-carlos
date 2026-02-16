@@ -155,11 +155,9 @@ export function CurrentStageHero({ stage, projectId, onCtaClick }: CurrentStageH
                 Aguardando você há {waitingDays} {waitingDays === 1 ? 'dia' : 'dias'}
               </span>
             </div>
-            {waitingDays >= 3 && (
-              <p className="text-[11px] text-muted-foreground ml-5">
-                Isso pode ajustar o cronograma em {waitingDays} {waitingDays === 1 ? 'dia' : 'dias'}.
-              </p>
-            )}
+            <p className="text-[11px] text-muted-foreground ml-5">
+              Para manter o planejamento alinhado, esta etapa está aguardando sua ação.
+            </p>
           </div>
         )}
 

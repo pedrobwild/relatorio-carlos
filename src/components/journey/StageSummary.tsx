@@ -1,8 +1,9 @@
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Circle, ClipboardList, Box, Ruler, FileText, FileCheck, CheckCircle,
   ChevronDown, ChevronUp, CalendarDays, Check, Lock, Eye, ChevronRight,
+  Clock,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -117,6 +118,19 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
   const progressPct = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
   const allDone = totalTodos > 0 && completedTodos === totalTodos;
 
+  // Compute waiting days
+  const waitingDays = (() => {
+    if (stage.status !== 'waiting_action') return null;
+    const ref = stage.waiting_since;
+    if (!ref) return null;
+    try {
+      const days = differenceInDays(new Date(), parseISO(ref));
+      return days > 0 ? days : null;
+    } catch {
+      return null;
+    }
+  })();
+
   return (
     <div className="flex items-center gap-3 md:gap-4">
       {/* Icon */}
@@ -148,6 +162,13 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
 
         {/* Compact info row */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+          {/* Waiting days counter */}
+          {waitingDays !== null && (
+            <span className="text-xs inline-flex items-center gap-1 text-[hsl(var(--warning))] font-medium">
+              <Clock className="h-3 w-3" />
+              Aguardando você há {waitingDays} {waitingDays === 1 ? 'dia' : 'dias'}
+            </span>
+          )}
           {stage.responsible && (
             <span className="text-xs text-muted-foreground">
               {stage.responsible}
