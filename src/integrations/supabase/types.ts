@@ -1923,6 +1923,8 @@ export type Database = {
           actual_end_date: string | null
           actual_start_date: string | null
           address: string | null
+          bairro: string | null
+          cep: string | null
           contract_value: number | null
           created_at: string
           created_by: string
@@ -1947,6 +1949,8 @@ export type Database = {
           actual_end_date?: string | null
           actual_start_date?: string | null
           address?: string | null
+          bairro?: string | null
+          cep?: string | null
           contract_value?: number | null
           created_at?: string
           created_by: string
@@ -1971,6 +1975,8 @@ export type Database = {
           actual_end_date?: string | null
           actual_start_date?: string | null
           address?: string | null
+          bairro?: string | null
+          cep?: string | null
           contract_value?: number | null
           created_at?: string
           created_by?: string

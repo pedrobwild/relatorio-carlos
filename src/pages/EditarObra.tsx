@@ -293,6 +293,8 @@ export default function EditarObra() {
           name: project.name,
           unit_name: project.unit_name,
           address: project.address,
+          bairro: (project as any).bairro || null,
+          cep: (project as any).cep || null,
           planned_start_date: project.planned_start_date || null,
           planned_end_date: project.planned_end_date || null,
           actual_start_date: project.actual_start_date,
@@ -607,7 +609,7 @@ export default function EditarObra() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <Label>Nome do Projeto *</Label>
+                    <Label>Condomínio *</Label>
                     <Input
                       value={project.name}
                       onChange={(e) => handleProjectChange('name', e.target.value)}
@@ -634,11 +636,26 @@ export default function EditarObra() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
                     <Label>Endereço</Label>
                     <Input
                       value={project.address || ''}
                       onChange={(e) => handleProjectChange('address', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Bairro</Label>
+                    <Input
+                      value={(project as any).bairro || ''}
+                      onChange={(e) => handleProjectChange('bairro' as any, e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>CEP</Label>
+                    <Input
+                      value={(project as any).cep || ''}
+                      onChange={(e) => handleProjectChange('cep' as any, e.target.value || null)}
+                      placeholder="00000-000"
                     />
                   </div>
                 </div>
