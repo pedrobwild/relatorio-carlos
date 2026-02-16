@@ -900,6 +900,82 @@ export type Database = {
           },
         ]
       }
+      journey_meeting_availability: {
+        Row: {
+          confirmed_by: string | null
+          confirmed_datetime: string | null
+          created_at: string
+          end_date: string
+          id: string
+          notes: string | null
+          preferred_weekdays: string[]
+          project_id: string
+          stage_id: string
+          start_date: string
+          status: string
+          submitted_at: string
+          submitted_by: string
+          time_slots: string[]
+          updated_at: string
+        }
+        Insert: {
+          confirmed_by?: string | null
+          confirmed_datetime?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          preferred_weekdays?: string[]
+          project_id: string
+          stage_id: string
+          start_date: string
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+          time_slots?: string[]
+          updated_at?: string
+        }
+        Update: {
+          confirmed_by?: string | null
+          confirmed_datetime?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          preferred_weekdays?: string[]
+          project_id?: string
+          stage_id?: string
+          start_date?: string
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+          time_slots?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_meeting_availability_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "journey_meeting_availability_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_meeting_availability_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "journey_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_meeting_slots: {
         Row: {
           booked_at: string | null
