@@ -274,7 +274,7 @@ export default function JornadaProjeto() {
 
               {/* Stage Cards */}
               <div className="space-y-3 md:space-y-4">
-                {journey.stages.map((stage) => (
+                {journey.stages.map((stage, idx) => (
                   <JourneyStageCard
                     key={stage.id}
                     stage={stage}
@@ -282,6 +282,7 @@ export default function JornadaProjeto() {
                     isAdmin={isAdmin}
                     isExpanded={expandedStages.has(stage.id)}
                     onToggleExpand={() => handleStageClick(stage.id)}
+                    nextStageName={journey.stages[idx + 1]?.name ?? null}
                   />
                 ))}
               </div>

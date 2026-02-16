@@ -5,11 +5,12 @@ import {
   ChevronDown, ChevronUp, CalendarDays, Check, Lock, Eye, ChevronRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 import { journeyCopy } from '@/constants/journeyCopy';
 
-/* ─── Visual state derivation (same logic as JourneyTimeline) ─── */
+/* ─── Visual state derivation ─── */
 
 type VisualState = 'completed' | 'current' | 'next' | 'blocked' | 'validating' | 'future';
 
@@ -110,8 +111,11 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
   const displayDate = getDisplayDate(stage);
   const isConfirmed = !!stage.confirmed_start;
 
-  const totalTodos = stage.todos.length;
-  const completedTodos = stage.todos.filter(t => t.completed).length;
+  const clientTodos = stage.todos.filter(t => t.owner === 'client');
+  const totalTodos = clientTodos.length;
+  const completedTodos = clientTodos.filter(t => t.completed).length;
+  const progressPct = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
+  const allDone = totalTodos > 0 && completedTodos === totalTodos;
 
   return (
     <div className="flex items-center gap-3 md:gap-4">
@@ -160,7 +164,11 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
             </span>
           )}
           {totalTodos > 0 && (
-            <span className="text-xs text-muted-foreground">
+            <span className={cn(
+              "text-xs inline-flex items-center gap-1.5",
+              allDone ? "text-[hsl(var(--success))] font-medium" : "text-muted-foreground",
+            )}>
+              {allDone && <Check className="h-3 w-3" />}
               {completedTodos}/{totalTodos} {journeyCopy.stageSummary.items}
             </span>
           )}
@@ -171,6 +179,16 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
             </span>
           )}
         </div>
+
+        {/* Mini progress bar — only for active/validating stages with todos */}
+        {totalTodos > 0 && vs !== 'completed' && vs !== 'future' && (
+          <div className="mt-1.5 max-w-[180px]">
+            <Progress
+              value={progressPct}
+              className={cn("h-1", allDone && "animate-pulse")}
+            />
+          </div>
+        )}
       </div>
 
       {/* Expand indicator */}
