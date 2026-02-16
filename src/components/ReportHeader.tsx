@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useProject } from "@/contexts/ProjectContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { useTeamContacts, TeamContact as TeamContactData } from "@/hooks/useTeamContacts";
@@ -204,6 +205,7 @@ const ReportHeader = ({
   }, [startDate, effectiveEndDate, reportDate, activities]);
 
   const { paths, projectId } = useProjectNavigation();
+  const { project: currentProject } = useProject();
   const isMobile = useIsMobile();
   const { isStaff } = useUserRole();
   const { data: projects = [] } = useProjectsQuery();
@@ -347,6 +349,13 @@ const ReportHeader = ({
                       {clientName && (
                         <p className="text-caption mt-0.5 truncate">Cliente: {clientName}</p>
                       )}
+                      {(() => {
+                        const p = currentProject as any;
+                        const addressParts = [p?.address, p?.bairro, p?.cep].filter(Boolean);
+                        return addressParts.length > 0 ? (
+                          <p className="text-xs text-muted-foreground truncate">{addressParts.join(' · ')}</p>
+                        ) : null;
+                      })()}
                     </div>
                     {otherProjects.length > 0 && (
                       <ChevronsUpDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
@@ -637,6 +646,13 @@ const ReportHeader = ({
                       {clientName && (
                         <p className="text-caption mt-0.5">Cliente: {clientName}</p>
                       )}
+                      {(() => {
+                        const p = currentProject as any;
+                        const addressParts = [p?.address, p?.bairro, p?.cep].filter(Boolean);
+                        return addressParts.length > 0 ? (
+                          <p className="text-xs text-muted-foreground truncate">{addressParts.join(' · ')}</p>
+                        ) : null;
+                      })()}
                     </div>
                     {otherProjects.length > 0 && (
                       <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />

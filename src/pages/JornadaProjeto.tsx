@@ -123,8 +123,18 @@ export default function JornadaProjeto() {
       >
         <div className="text-right min-w-0">
           <p className="font-medium text-sm truncate">{project.name}</p>
-          {project.unit_name && (
-            <p className="text-xs text-muted-foreground truncate">{project.unit_name}</p>
+          <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-0.5">
+            {project.unit_name && (
+              <span className="text-xs text-muted-foreground">{project.unit_name}</span>
+            )}
+            {project.customer_name && (
+              <span className="text-xs text-muted-foreground">• {project.customer_name}</span>
+            )}
+          </div>
+          {((project as any).address || (project as any).bairro || (project as any).cep) && (
+            <p className="text-xs text-muted-foreground truncate">
+              {[(project as any).address, (project as any).bairro, (project as any).cep].filter(Boolean).join(' · ')}
+            </p>
           )}
         </div>
       </PageHeader>
