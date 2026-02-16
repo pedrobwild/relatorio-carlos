@@ -176,7 +176,7 @@ export default function Auth() {
         <Card className="border-white/10 shadow-2xl bg-white/10 backdrop-blur-md">
           <CardContent className="pt-8 pb-6 px-6 sm:px-8">
             <div className="text-center mb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
                 Portal Bwild
               </h1>
             </div>
