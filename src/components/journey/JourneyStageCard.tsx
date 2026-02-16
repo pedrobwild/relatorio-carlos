@@ -1,13 +1,14 @@
 import { useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Edit2, Check, X, ArrowRight, CheckCircle2,
+  Edit2, Check, X, ArrowRight, CheckCircle2, ChevronDown,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { journeyCopy } from '@/constants/journeyCopy';
 import {
@@ -268,10 +269,29 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                   </div>
                 )}
 
-                {/* Details */}
-                {!isEditing && <StageDetailsSections stage={stage} />}
+                {/* ① CTA — first, above the fold */}
+                {!isEditing && stage.cta_visible && stage.cta_text && (
+                  <div className="space-y-2">
+                    {stage.cta_text.toLowerCase().includes('reunião') ? (
+                      <MeetingCTA
+                        stageId={stage.id}
+                        stageName={stage.name}
+                        projectId={projectId}
+                        isAdmin={isAdmin}
+                        ctaText={stage.cta_text}
+                      />
+                    ) : (
+                      <Button className="w-full md:w-auto min-h-[44px]">
+                        {stage.cta_text}
+                      </Button>
+                    )}
+                    {stage.microcopy && (
+                      <p className="text-xs text-muted-foreground">{stage.microcopy}</p>
+                    )}
+                  </div>
+                )}
 
-                {/* Dates Panel */}
+                {/* ② Dates Panel */}
                 <StageDatesPanel
                   stageId={stage.id}
                   projectId={projectId}
@@ -279,7 +299,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                   stageName={stage.name}
                 />
 
-                {/* Checklists — vertical on mobile, 2-col on desktop */}
+                {/* ③ Checklists — vertical on mobile, 2-col on desktop */}
                 <div className="grid gap-5 md:gap-6 md:grid-cols-2">
                   <StageChecklist
                     todos={stage.todos}
@@ -299,37 +319,30 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                   />
                 </div>
 
-                {/* Stage Registry (Decisions, Conversations, History) */}
+                {/* ④ Stage Registry (Decisions, Conversations, History) */}
                 <StageRegistry
                   stageId={stage.id}
                   projectId={projectId}
                   isAdmin={isAdmin}
                 />
 
-                {/* CTA */}
-                {stage.cta_visible && stage.cta_text && stage.cta_text.toLowerCase().includes('reunião') ? (
-                  <div className="pt-2 space-y-2">
-                    <MeetingCTA
-                      stageId={stage.id}
-                      stageName={stage.name}
-                      projectId={projectId}
-                      isAdmin={isAdmin}
-                      ctaText={stage.cta_text}
-                    />
-                    {stage.microcopy && (
-                      <p className="text-xs text-muted-foreground">{stage.microcopy}</p>
-                    )}
-                  </div>
-                ) : stage.cta_visible && stage.cta_text ? (
-                  <div className="pt-2 space-y-2">
-                    <Button className="w-full md:w-auto min-h-[44px]">
-                      {stage.cta_text}
-                    </Button>
-                    {stage.microcopy && (
-                      <p className="text-xs text-muted-foreground">{stage.microcopy}</p>
-                    )}
-                  </div>
-                ) : null}
+                {/* ⑤ "Sobre esta etapa" — collapsible at bottom */}
+                {!isEditing && stage.description && (
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between h-10 text-xs text-muted-foreground hover:text-foreground gap-2 px-3"
+                      >
+                        <span className="font-medium">Sobre esta etapa</span>
+                        <ChevronDown className="h-3.5 w-3.5 transition-transform [[data-state=open]>&]:rotate-180" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <StageDetailsSections stage={stage} />
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </CardContent>
             </motion.div>
           )}
