@@ -66,7 +66,7 @@ export default function JornadaProjeto() {
     sort_order: 0,
     name: 'Boas-vindas',
     icon: 'users',
-    status: 'completed' as const,
+    status: 'in_progress' as const,
     description: null,
     warning_text: null,
     cta_text: null,
@@ -239,12 +239,6 @@ export default function JornadaProjeto() {
                 hero={journey.hero}
                 projectId={projectId!}
                 isAdmin={isAdmin}
-                onGoToBriefing={() => {
-                  const firstStage = journey.stages[0];
-                  if (firstStage && !isStageBlocked(firstStage, 0, journey.stages)) {
-                    handleStageSelect(firstStage.id);
-                  }
-                }}
               />
 
               {/* Stage Cards */}
