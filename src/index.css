@@ -197,9 +197,9 @@
    * Line-heights: headings 1.2–1.3, body 1.5–1.6
    */
 
-  /* PageTitle: Main page title - 20px mobile / 24px desktop */
+  /* PageTitle: Main page title - 16px mobile / 18px desktop */
   .text-page-title {
-    @apply text-xl md:text-2xl font-bold text-foreground;
+    @apply text-base md:text-lg font-bold text-foreground;
     line-height: 1.25;
   }
 
