@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, X, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Check, X, Plus, Edit2, Trash2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -137,7 +137,7 @@ export function StageChecklist({
           </Button>
         )}
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1" role="list" aria-label={label}>
         {filteredTodos.map((todo) => (
           <TodoItem
             key={todo.id}
@@ -148,7 +148,10 @@ export function StageChecklist({
           />
         ))}
         {filteredTodos.length === 0 && !isAdding && (
-          <p className="text-xs text-muted-foreground py-2 italic">Nenhum item</p>
+          <div className="flex items-center gap-2 py-3 text-muted-foreground/60">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <p className="text-xs italic">Sem pendências nesta etapa</p>
+          </div>
         )}
         {isAdding && (
           <div className="flex items-center gap-2 py-2">

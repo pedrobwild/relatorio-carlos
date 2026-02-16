@@ -89,6 +89,11 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
       setIsEditing(false);
     };
 
+    const showMobileSticky =
+      stage.status === 'waiting_action' &&
+      stage.cta_visible &&
+      stage.cta_text;
+
     return (
       <Card
         ref={ref}
@@ -105,6 +110,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
           onClick={onToggleExpand}
           role="button"
           aria-expanded={isExpanded}
+          aria-label={`Etapa: ${stage.name}`}
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -121,11 +127,12 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-10 w-10 shrink-0"
+                className="h-11 w-11 shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsEditing(true);
                 }}
+                aria-label="Editar etapa"
               >
                 <Edit2 className="h-4 w-4" />
               </Button>
@@ -146,33 +153,34 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
               <CardContent className="space-y-5 md:space-y-6 pt-0 px-4 pb-4 md:px-6 md:pb-6">
                 {/* Admin Edit Form */}
                 {isEditing && (
-                  <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+                  <div className="space-y-4 p-4 bg-muted/30 rounded-lg border" role="form" aria-label="Editar etapa">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-sm">Editar Etapa</span>
                       <div className="flex gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => setIsEditing(false)} className="h-10 w-10">
+                        <Button size="icon" variant="ghost" onClick={() => setIsEditing(false)} className="h-11 w-11" aria-label="Cancelar edição">
                           <X className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" onClick={handleSave} disabled={updateStage.isPending} className="h-10 w-10">
+                        <Button size="icon" onClick={handleSave} disabled={updateStage.isPending} className="h-11 w-11" aria-label="Salvar edição">
                           <Check className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="text-sm text-muted-foreground">Nome</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-name-${stage.id}`}>Nome</label>
                         <Input
+                          id={`stage-name-${stage.id}`}
                           value={editData.name}
                           onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-muted-foreground">Status</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-status-${stage.id}`}>Status</label>
                         <Select
                           value={editData.status}
                           onValueChange={(v) => setEditData({ ...editData, status: v as JourneyStageStatus })}
                         >
-                          <SelectTrigger className="h-10">
+                          <SelectTrigger className="h-11" id={`stage-status-${stage.id}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -185,8 +193,9 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground">Descrição</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-desc-${stage.id}`}>Descrição</label>
                       <Textarea
+                        id={`stage-desc-${stage.id}`}
                         value={editData.description}
                         onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                         rows={4}
@@ -194,45 +203,51 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="text-sm text-muted-foreground">Texto do CTA</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-cta-${stage.id}`}>Texto do CTA</label>
                         <Input
+                          id={`stage-cta-${stage.id}`}
                           value={editData.cta_text}
                           onChange={(e) => setEditData({ ...editData, cta_text: e.target.value })}
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-muted-foreground">Responsável</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-resp-${stage.id}`}>Responsável</label>
                         <Input
+                          id={`stage-resp-${stage.id}`}
                           value={editData.responsible}
                           onChange={(e) => setEditData({ ...editData, responsible: e.target.value })}
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground">Microcopy</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-micro-${stage.id}`}>Microcopy</label>
                       <Input
+                        id={`stage-micro-${stage.id}`}
                         value={editData.microcopy}
                         onChange={(e) => setEditData({ ...editData, microcopy: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground">Aviso (warning)</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-warn-${stage.id}`}>Aviso (warning)</label>
                       <Input
+                        id={`stage-warn-${stage.id}`}
                         value={editData.warning_text}
                         onChange={(e) => setEditData({ ...editData, warning_text: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground">Dependências</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-deps-${stage.id}`}>Dependências</label>
                       <Textarea
+                        id={`stage-deps-${stage.id}`}
                         value={editData.dependencies_text}
                         onChange={(e) => setEditData({ ...editData, dependencies_text: e.target.value })}
                         rows={2}
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground">Revisões</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-rev-${stage.id}`}>Revisões</label>
                       <Input
+                        id={`stage-rev-${stage.id}`}
                         value={editData.revision_text}
                         onChange={(e) => setEditData({ ...editData, revision_text: e.target.value })}
                       />
@@ -305,6 +320,21 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Mobile sticky CTA for waiting_action */}
+        {!isExpanded && showMobileSticky && (
+          <div className="md:hidden border-t border-border/40 px-4 py-3 bg-[hsl(var(--warning-light))]">
+            <Button
+              className="w-full min-h-[44px] gap-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand();
+              }}
+            >
+              ⚡ {stage.cta_text}
+            </Button>
+          </div>
+        )}
       </Card>
     );
   },
