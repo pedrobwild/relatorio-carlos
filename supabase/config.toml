@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.send-signature-request]
 verify_jwt = false
+
+[functions.stage-dates]
+verify_jwt = true

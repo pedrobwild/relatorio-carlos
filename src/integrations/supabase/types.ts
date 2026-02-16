@@ -2001,6 +2001,107 @@ export type Database = {
           },
         ]
       }
+      stage_date_events: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          stage_date_id: string
+        }
+        Insert: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          stage_date_id: string
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          stage_date_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_date_events_stage_date_id_fkey"
+            columns: ["stage_date_id"]
+            isOneToOne: false
+            referencedRelation: "stage_dates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_dates: {
+        Row: {
+          bwild_confirmed_at: string | null
+          bwild_confirmed_by: string | null
+          created_at: string
+          customer_proposed_at: string | null
+          customer_proposed_by: string | null
+          date_type: string
+          id: string
+          notes: string | null
+          project_id: string
+          stage_key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bwild_confirmed_at?: string | null
+          bwild_confirmed_by?: string | null
+          created_at?: string
+          customer_proposed_at?: string | null
+          customer_proposed_by?: string | null
+          date_type: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          stage_key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bwild_confirmed_at?: string | null
+          bwild_confirmed_by?: string | null
+          created_at?: string
+          customer_proposed_at?: string | null
+          customer_proposed_by?: string | null
+          date_type?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          stage_key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_dates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "stage_dates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_errors: {
         Row: {
           created_at: string
