@@ -48,6 +48,7 @@ export interface JourneyStage {
   proposed_end: string | null;
   confirmed_start: string | null;
   confirmed_end: string | null;
+  waiting_since: string | null;
   todos: JourneyTodo[];
 }
  

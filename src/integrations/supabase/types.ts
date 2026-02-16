@@ -1007,6 +1007,7 @@ export type Database = {
           sort_order: number
           status: Database["public"]["Enums"]["journey_stage_status"]
           updated_at: string
+          waiting_since: string | null
           warning_text: string | null
         }
         Insert: {
@@ -1030,6 +1031,7 @@ export type Database = {
           sort_order?: number
           status?: Database["public"]["Enums"]["journey_stage_status"]
           updated_at?: string
+          waiting_since?: string | null
           warning_text?: string | null
         }
         Update: {
@@ -1053,6 +1055,7 @@ export type Database = {
           sort_order?: number
           status?: Database["public"]["Enums"]["journey_stage_status"]
           updated_at?: string
+          waiting_since?: string | null
           warning_text?: string | null
         }
         Relationships: [
