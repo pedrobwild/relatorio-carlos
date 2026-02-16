@@ -173,8 +173,8 @@ export default function Auth() {
       style={{ backgroundImage: `url(${authBg})` }}
     >
       {/* Form – centered on mobile, left on desktop */}
-      <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-md px-6 sm:px-14 py-8 sm:py-12 safe-area-top safe-area-bottom mx-auto md:mx-0">
-        <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-10">
+      <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-lg px-8 sm:px-16 py-12 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
+        <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-12">
           Portal Bwild<span className="text-[#366478]">.</span>
         </h1>
 
@@ -182,16 +182,16 @@ export default function Auth() {
           <div
             role="alert"
             aria-live="assertive"
-            className="flex items-start gap-2.5 rounded-lg border border-red-400/30 bg-red-500/10 p-3 mb-5"
+            className="flex items-start gap-2.5 rounded-lg border border-red-400/30 bg-red-500/10 p-3.5 mb-6 w-full"
           >
             <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
             <p className="text-sm text-red-300">{formError}</p>
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-5" data-testid="login-form" noValidate>
-          <div className="space-y-1.5">
-            <Label htmlFor="login-email" className="text-white/80 flex items-center gap-1.5">
+        <form onSubmit={handleLogin} className="space-y-6 w-full" data-testid="login-form" noValidate>
+          <div className="space-y-2">
+            <Label htmlFor="login-email" className="text-white/80 flex items-center gap-1.5 text-sm">
               <Mail className="h-3.5 w-3.5" /> E-mail
             </Label>
             <Input
@@ -209,7 +209,7 @@ export default function Auth() {
                 if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
               }}
               onBlur={() => { if (fieldErrors.email) validate(); }}
-              className="bg-transparent border-white/30 text-white placeholder:text-white/40 focus-visible:ring-white/40 focus-visible:border-white/50"
+              className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/35 focus-visible:ring-white/40 focus-visible:border-white/50 text-base"
               aria-invalid={!!fieldErrors.email}
               aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
               disabled={loading}
@@ -222,8 +222,8 @@ export default function Auth() {
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="login-password" className="text-white/80 flex items-center gap-1.5">
+          <div className="space-y-2">
+            <Label htmlFor="login-password" className="text-white/80 flex items-center gap-1.5 text-sm">
               <Lock className="h-3.5 w-3.5" /> Senha
             </Label>
             <div className="relative">
@@ -240,7 +240,7 @@ export default function Auth() {
                 }}
                 onKeyDown={handlePasswordKeyEvent}
                 onKeyUp={handlePasswordKeyEvent}
-                className="bg-transparent border-white/30 text-white placeholder:text-white/40 pr-10 focus-visible:ring-white/40 focus-visible:border-white/50"
+                className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/35 pr-11 focus-visible:ring-white/40 focus-visible:border-white/50 text-base"
                 aria-invalid={!!fieldErrors.password}
                 aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
                 disabled={loading}
@@ -268,7 +268,7 @@ export default function Auth() {
             )}
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center pt-1">
             <a
               href="/recuperar-senha"
               className="text-xs text-white/60 hover:text-white hover:underline font-medium"
@@ -280,7 +280,7 @@ export default function Auth() {
 
           <Button
             type="submit"
-            className="w-full bg-white text-slate-900 hover:bg-white/90 font-semibold"
+            className="w-full h-12 bg-white text-slate-900 hover:bg-white/90 font-semibold text-base"
             disabled={loading}
             data-testid="login-submit"
           >
