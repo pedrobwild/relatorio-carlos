@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
+import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { journeyCopy } from '@/constants/journeyCopy';
+import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
@@ -213,7 +215,13 @@ export default function JornadaProjeto() {
         </div>
       </div>
 
-      <main className="container max-w-5xl mx-auto px-4 py-5 md:py-8 pb-safe">
+      <main className={cn(
+        "container max-w-5xl mx-auto px-4 py-5 md:py-8",
+        // Extra bottom padding when sticky CTA is visible on mobile
+        currentStage?.status === 'waiting_action' && currentStage?.cta_visible && currentStage?.cta_text
+          ? 'pb-24 md:pb-safe'
+          : 'pb-safe',
+      )}>
         {/* Jornada tab content */}
         {activeTab === 'jornada' && (
           <div className="grid gap-6 md:gap-8 lg:grid-cols-[280px_1fr]">
@@ -235,6 +243,24 @@ export default function JornadaProjeto() {
 
             {/* Main content */}
             <div className="space-y-5 md:space-y-8">
+              {/* Current Stage Hero Banner — above the fold */}
+              {currentStage && (
+                <CurrentStageHero
+                  stage={currentStage}
+                  projectId={projectId!}
+                  onCtaClick={() => {
+                    handleStageClick(currentStage.id);
+                  }}
+                />
+              )}
+
+              {/* Mobile Stepper (dropdown) */}
+              <JourneyMobileStepper
+                stages={allStagesForStepper}
+                activeStageId={activeStageId}
+                onStageClick={handleStageClick}
+              />
+
               {/* Roadmap Macro */}
               <RoadmapMacro
                 stages={journey.stages}
@@ -245,13 +271,6 @@ export default function JornadaProjeto() {
               {/* Upcoming dates bar */}
               <UpcomingDatesBar projectId={projectId!} />
 
-              {/* Mobile Stepper */}
-              <JourneyMobileStepper
-                stages={allStagesForStepper}
-                activeStageId={activeStageId}
-                onStageClick={handleStageClick}
-              />
-
               {/* Welcome Stage (Stage 0) */}
               <JourneyWelcomeStage
                 hero={journey.hero}
@@ -260,17 +279,6 @@ export default function JornadaProjeto() {
                 onToggleExpand={() => handleStageClick('welcome')}
                 onGoToBriefing={handleGoToBriefing}
               />
-
-              {/* Current Stage Hero Banner */}
-              {currentStage && (
-                <CurrentStageHero
-                  stage={currentStage}
-                  projectId={projectId!}
-                  onCtaClick={() => {
-                    handleStageClick(currentStage.id);
-                  }}
-                />
-              )}
 
               {/* Stage Cards */}
               <div className="space-y-3 md:space-y-4">
@@ -326,6 +334,22 @@ export default function JornadaProjeto() {
           </Suspense>
         )}
       </main>
+
+      {/* Global sticky CTA for mobile — visible when current stage needs client action */}
+      {activeTab === 'jornada' && currentStage?.status === 'waiting_action' && currentStage.cta_visible && currentStage.cta_text && (
+        <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+          <Button
+            className="w-full min-h-[48px] gap-2 text-sm font-semibold"
+            onClick={() => {
+              handleStageClick(currentStage.id);
+              setExpandedStages(prev => new Set(prev).add(currentStage.id));
+            }}
+          >
+            ⚡ {currentStage.cta_text}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
