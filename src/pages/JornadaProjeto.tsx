@@ -17,6 +17,7 @@ import { CurrentStageHero, CurrentStageHeroSkeleton } from '@/components/journey
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { UpcomingDatesBar } from '@/components/journey/UpcomingDatesBar';
+import { RoadmapMacro, RoadmapMacroSkeleton } from '@/components/journey/RoadmapMacro';
 
 // Lazy load tab content components
 const FinanceiroContent = lazy(() => import('@/components/tabs/FinanceiroContent'));
@@ -233,6 +234,13 @@ export default function JornadaProjeto() {
 
             {/* Main content */}
             <div className="space-y-5 md:space-y-8">
+              {/* Roadmap Macro */}
+              <RoadmapMacro
+                stages={journey.stages}
+                projectId={projectId!}
+                deliveryDate={(project as any).date_official_delivery}
+              />
+
               {/* Upcoming dates bar */}
               <UpcomingDatesBar projectId={projectId!} />
 
