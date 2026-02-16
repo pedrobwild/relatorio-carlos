@@ -103,9 +103,10 @@ function getDisplayDate(stage: JourneyStage): string | null {
 interface StageSummaryProps {
   stage: JourneyStage;
   isExpanded: boolean;
+  hideChevron?: boolean;
 }
 
-export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
+export function StageSummary({ stage, isExpanded, hideChevron }: StageSummaryProps) {
   const vs = deriveVisualStateStandalone(stage);
   const cfg = vsConfig[vs];
   const StageIcon = getStageIcon(stage.icon);
@@ -213,13 +214,15 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
       </div>
 
       {/* Expand indicator */}
-      <div className="h-10 w-10 flex items-center justify-center shrink-0">
-        {isExpanded ? (
-          <ChevronUp className="h-5 w-5 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-5 w-5 text-muted-foreground" />
-        )}
-      </div>
+      {!hideChevron && (
+        <div className="h-10 w-10 flex items-center justify-center shrink-0">
+          {isExpanded ? (
+            <ChevronUp className="h-5 w-5 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+          )}
+        </div>
+      )}
     </div>
   );
 }

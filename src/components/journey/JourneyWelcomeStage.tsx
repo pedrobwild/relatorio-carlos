@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Users, Compass, ArrowRight, Mail, Phone, Upload, ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -47,11 +48,10 @@ const portalBullets = [
 export function JourneyWelcomeStage({
   hero,
   csm,
-  isExpanded,
-  onToggleExpand,
   onGoToBriefing,
-}: JourneyWelcomeStageProps) {
+}: Omit<JourneyWelcomeStageProps, 'isExpanded' | 'onToggleExpand'> & { isExpanded?: boolean; onToggleExpand?: () => void }) {
   const photoUrl = csm?.photo_url || defaultCsmPhoto;
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <Card
@@ -63,15 +63,15 @@ export function JourneyWelcomeStage({
       {/* Header — always visible */}
       <CardHeader
         className="cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors p-4 md:p-6"
-        onClick={onToggleExpand}
+        onClick={() => setExpanded(!expanded)}
         role="button"
-        aria-expanded={isExpanded}
+        aria-expanded={expanded}
         aria-label="Etapa: Boas-vindas & Time"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onToggleExpand();
+            setExpanded(!expanded);
           }
         }}
       >
@@ -86,7 +86,7 @@ export function JourneyWelcomeStage({
             <p className="text-xs text-primary font-medium">Conheça o portal e quem cuida do seu projeto</p>
           </div>
           <motion.div
-            animate={{ rotate: isExpanded ? 90 : 0 }}
+            animate={{ rotate: expanded ? 90 : 0 }}
             transition={{ duration: 0.2 }}
           >
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -96,7 +96,7 @@ export function JourneyWelcomeStage({
 
       {/* Animated content */}
       <AnimatePresence initial={false}>
-        {isExpanded && (
+        {expanded && (
           <motion.div
             key="content"
             variants={contentVariants}

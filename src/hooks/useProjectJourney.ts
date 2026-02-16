@@ -259,20 +259,68 @@ async function fetchProjectJourney(projectId: string): Promise<ProjectJourneyDat
    });
  }
  
- export function useDeleteTodo() {
-   const queryClient = useQueryClient();
- 
-   return useMutation({
-     mutationFn: async ({ todoId, projectId }: { todoId: string; projectId: string }) => {
-       const { error } = await supabase
-         .from('journey_todos')
-         .delete()
-         .eq('id', todoId);
-       if (error) throw error;
-       return { projectId };
-     },
-     onSuccess: ({ projectId }) => {
-       queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
-     },
-   });
- }
+export function useDeleteTodo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ todoId, projectId }: { todoId: string; projectId: string }) => {
+      const { error } = await supabase
+        .from('journey_todos')
+        .delete()
+        .eq('id', todoId);
+      if (error) throw error;
+      return { projectId };
+    },
+    onSuccess: ({ projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
+    },
+  });
+}
+
+export function useCompleteStage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ stageId, projectId }: { stageId: string; projectId: string }) => {
+      // 1) Mark current stage as completed with confirmed_end = now
+      const { error: completeError } = await supabase
+        .from('journey_stages')
+        .update({
+          status: 'completed' as JourneyStageStatus,
+          confirmed_end: new Date().toISOString(),
+        })
+        .eq('id', stageId);
+      if (completeError) throw completeError;
+
+      // 2) Find current stage's sort_order to unlock the next one
+      const { data: currentStage } = await supabase
+        .from('journey_stages')
+        .select('sort_order')
+        .eq('id', stageId)
+        .single();
+
+      if (currentStage) {
+        // 3) Get the next stage by sort_order
+        const { data: nextStages } = await supabase
+          .from('journey_stages')
+          .select('id, status')
+          .eq('project_id', projectId)
+          .gt('sort_order', currentStage.sort_order)
+          .order('sort_order', { ascending: true })
+          .limit(1);
+
+        if (nextStages && nextStages.length > 0 && nextStages[0].status === 'pending') {
+          await supabase
+            .from('journey_stages')
+            .update({ status: 'in_progress' as JourneyStageStatus })
+            .eq('id', nextStages[0].id);
+        }
+      }
+
+      return { projectId };
+    },
+    onSuccess: ({ projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
+    },
+  });
+}

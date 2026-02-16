@@ -89,7 +89,7 @@ const vsConfig: Record<VisualState, {
 
 interface RoadmapMacroProps {
   stages: JourneyStage[];
-  projectId: string;
+  projectId?: string;
   deliveryDate: string | null | undefined;
 }
 
