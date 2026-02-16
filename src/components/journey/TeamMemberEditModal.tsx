@@ -4,7 +4,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { InlineRichEditor } from '@/components/ui/inline-rich-editor';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, Loader2, User } from 'lucide-react';
@@ -129,8 +129,13 @@ export function TeamMemberEditModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tm_desc">Descrição da função *</Label>
-            <Textarea id="tm_desc" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} required rows={4} placeholder="Descreva a função desta pessoa no projeto..." />
+            <Label>Descrição da função *</Label>
+            <InlineRichEditor
+              value={form.description}
+              onChange={html => setForm(p => ({ ...p, description: html }))}
+              placeholder="Descreva a função desta pessoa no projeto..."
+              minHeight="100px"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
