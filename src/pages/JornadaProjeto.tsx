@@ -182,27 +182,32 @@ export default function JornadaProjeto() {
       <div className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-5xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <div className="px-4 sm:px-6 md:px-8">
+            <div className="px-3 sm:px-6 md:px-8">
               <TabsList className="bg-transparent h-auto p-0 gap-0 w-full overflow-x-auto scrollbar-hide">
                 <TabsTrigger value="jornada" className="portal-tab-trigger">
-                  <Map className="w-3.5 h-3.5 mr-1.5" />
-                  {journeyCopy.tabs.jornada}
+                  <Map className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span className="hidden sm:inline">{journeyCopy.tabs.jornada}</span>
+                  <span className="sm:hidden">Jornada</span>
                 </TabsTrigger>
                 <TabsTrigger value="financeiro" className="portal-tab-trigger">
-                  <DollarSign className="w-3.5 h-3.5 mr-1.5" />
-                  {journeyCopy.tabs.financeiro}
+                  <DollarSign className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span className="hidden sm:inline">{journeyCopy.tabs.financeiro}</span>
+                  <span className="sm:hidden">Financeiro</span>
                 </TabsTrigger>
                 <TabsTrigger value="documentos" className="portal-tab-trigger">
-                  <FolderOpen className="w-3.5 h-3.5 mr-1.5" />
-                  {journeyCopy.tabs.documentos}
+                  <FolderOpen className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span className="hidden sm:inline">{journeyCopy.tabs.documentos}</span>
+                  <span className="sm:hidden">Docs</span>
                 </TabsTrigger>
                 <TabsTrigger value="formalizacoes" className="portal-tab-trigger">
-                  <ClipboardSignature className="w-3.5 h-3.5 mr-1.5" />
-                  {journeyCopy.tabs.formalizacoes}
+                  <ClipboardSignature className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span className="hidden sm:inline">{journeyCopy.tabs.formalizacoes}</span>
+                  <span className="sm:hidden">Formal.</span>
                 </TabsTrigger>
                 <TabsTrigger value="pendencias" className="portal-tab-trigger">
-                  <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
-                  {journeyCopy.tabs.pendencias}
+                  <AlertCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  <span className="hidden sm:inline">{journeyCopy.tabs.pendencias}</span>
+                  <span className="sm:hidden">Pendências</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -211,7 +216,7 @@ export default function JornadaProjeto() {
       </div>
 
       <main className={cn(
-        "container max-w-5xl mx-auto px-4 py-5 md:py-8",
+        "container max-w-5xl mx-auto px-3 sm:px-4 py-4 md:py-8",
         'pb-safe',
       )}>
         {/* Jornada tab content */}
