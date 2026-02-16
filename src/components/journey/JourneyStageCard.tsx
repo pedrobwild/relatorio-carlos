@@ -282,7 +282,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                   stageName={stage.name}
                 />
 
-                {/* Checklists */}
+                {/* Checklists — vertical on mobile, 2-col on desktop */}
                 <div className="grid gap-5 md:gap-6 md:grid-cols-2">
                   <StageChecklist
                     todos={stage.todos}
@@ -338,20 +338,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
           )}
         </AnimatePresence>
 
-        {/* Mobile sticky CTA for waiting_action */}
-        {!isExpanded && showMobileSticky && (
-          <div className="md:hidden border-t border-border/40 px-4 py-3 bg-[hsl(var(--warning-light))]">
-            <Button
-              className="w-full min-h-[44px] gap-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleExpand();
-              }}
-            >
-              ⚡ {stage.cta_text}
-            </Button>
-          </div>
-        )}
+        {/* Mobile inline CTA removed — now handled by global sticky in JornadaProjeto */}
       </Card>
     );
   },
