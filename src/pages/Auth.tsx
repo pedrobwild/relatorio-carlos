@@ -274,13 +274,13 @@ export default function Auth() {
               className="text-xs text-white/60 hover:text-white hover:underline font-medium"
               tabIndex={0}
             >
-              ? Esqueci minha senha
+              Esqueci minha senha
             </a>
           </div>
 
           <Button
             type="submit"
-            className="w-full bg-sky-500 hover:bg-sky-400 text-white font-semibold"
+            className="w-full bg-white text-slate-900 hover:bg-white/90 font-semibold"
             disabled={loading}
             data-testid="login-submit"
           >
