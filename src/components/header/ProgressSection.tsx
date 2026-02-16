@@ -94,18 +94,30 @@ export function ProgressSection({
     [activities, projectStartDate, projectEndDate]
   );
 
-  // Calculate "today" position on the timeline
+  // HOJE position = planned progress at today, same scale as green bar
   const todayPosition = useMemo(() => {
-    if (!projectStartDate || !projectEndDate) return null;
-    const start = new Date(projectStartDate + "T00:00:00");
-    const end = new Date(projectEndDate + "T00:00:00");
+    if (!projectStartDate || !projectEndDate || activities.length === 0) return null;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const total = end.getTime() - start.getTime();
-    if (total <= 0 || now < start) return null;
-    if (now > end) return 100;
-    return ((now.getTime() - start.getTime()) / total) * 100;
-  }, [projectStartDate, projectEndDate]);
+    const start = new Date(projectStartDate + "T00:00:00");
+    if (now < start) return null;
+
+    const hasWeights = activities.some(a => (a as any).weight !== undefined);
+    const totalWeight = hasWeights
+      ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+      : activities.length;
+    if (totalWeight === 0) return null;
+
+    const plannedWeightByNow = activities.reduce((sum, a) => {
+      const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
+      if (plannedEnd <= now) {
+        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+      }
+      return sum;
+    }, 0);
+
+    return Math.min((plannedWeightByNow / totalWeight) * 100, 100);
+  }, [projectStartDate, projectEndDate, activities]);
 
   if (isProjectPhase && !isStaff) return null;
 
