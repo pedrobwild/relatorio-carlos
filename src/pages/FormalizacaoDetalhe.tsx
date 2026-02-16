@@ -304,7 +304,7 @@ export default function FormalizacaoDetalhe() {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-6 shrink-0" />
+              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
               <span className="text-muted-foreground/30 hidden sm:inline">|</span>
               <span className="text-sm font-medium truncate hidden sm:inline">
                 {formalizacao.title}

@@ -385,7 +385,7 @@ const Index = () => {
       <div className="min-h-screen min-h-[100dvh] pb-safe">
         <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
           <div className="flex flex-col items-center gap-0.5">
-            <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+            <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
             <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
           </div>
         </div>
@@ -466,7 +466,7 @@ const Index = () => {
         {/* Fixed Mobile Header */}
         <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
           <div className="flex flex-col items-center gap-0.5">
-            <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+            <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
             <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
           </div>
         </div>
@@ -520,7 +520,7 @@ const Index = () => {
       {/* Fixed Mobile Header */}
       <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
         <div className="flex flex-col items-center gap-0.5 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
-          <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+          <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
           <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
         </div>
       </div>
