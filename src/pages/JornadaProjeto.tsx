@@ -237,9 +237,8 @@ export default function JornadaProjeto() {
               {/* Welcome Stage (Stage 0) — always visible inline */}
               <JourneyWelcomeStage
                 hero={journey.hero}
-                csm={journey.csm}
-                isExpanded={false}
-                onToggleExpand={() => {}}
+                projectId={projectId!}
+                isAdmin={isAdmin}
                 onGoToBriefing={() => {
                   const firstStage = journey.stages[0];
                   if (firstStage && !isStageBlocked(firstStage, 0, journey.stages)) {

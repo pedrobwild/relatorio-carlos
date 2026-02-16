@@ -1142,6 +1142,63 @@ export type Database = {
           },
         ]
       }
+      journey_team_members: {
+        Row: {
+          created_at: string
+          description: string
+          display_name: string
+          email: string | null
+          id: string
+          phone: string | null
+          photo_url: string | null
+          project_id: string
+          role_title: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          display_name: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          photo_url?: string | null
+          project_id: string
+          role_title?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          display_name?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          photo_url?: string | null
+          project_id?: string
+          role_title?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_team_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "journey_team_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_todos: {
         Row: {
           completed: boolean
