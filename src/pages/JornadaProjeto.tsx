@@ -15,6 +15,7 @@ import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection'
 import { JourneyCSMSection } from '@/components/journey/JourneyCSMSection';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { UpcomingDatesBar } from '@/components/journey/UpcomingDatesBar';
 
 // Lazy load tab content components
 const FinanceiroContent = lazy(() => import('@/components/tabs/FinanceiroContent'));
@@ -187,6 +188,9 @@ export default function JornadaProjeto() {
                 projectId={projectId!}
                 isAdmin={isAdmin}
               />
+
+              {/* Upcoming dates bar */}
+              <UpcomingDatesBar projectId={projectId!} />
 
               {/* CSM Section */}
               {journey.csm && (
