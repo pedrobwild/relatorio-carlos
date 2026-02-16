@@ -97,6 +97,7 @@ export default function JornadaProjeto() {
     proposed_end: null,
     confirmed_start: null,
     confirmed_end: null,
+    waiting_since: null,
     todos: [],
   };
 

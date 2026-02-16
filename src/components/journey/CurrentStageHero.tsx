@@ -83,8 +83,7 @@ function getEffectiveDate(sd: StageDate): string | null {
 
 function computeWaitingDays(stage: JourneyStage): number | null {
   if (stage.status !== 'waiting_action') return null;
-  // Use the stage's confirmed_start or proposed_start as reference
-  const ref = stage.confirmed_start || stage.proposed_start;
+  const ref = stage.waiting_since || stage.confirmed_start || stage.proposed_start;
   if (!ref) return null;
   const days = differenceInDays(new Date(), parseISO(ref));
   return days > 0 ? days : null;
@@ -149,11 +148,18 @@ export function CurrentStageHero({ stage, projectId, onCtaClick }: CurrentStageH
       {/* Info row: waiting counter + next date */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {waitingDays !== null && (
-          <div className="flex items-center gap-1.5 text-[hsl(var(--warning))]">
-            <Clock className="h-3.5 w-3.5" />
-            <span className="text-xs font-semibold tabular-nums">
-              Aguardando você há {waitingDays} {waitingDays === 1 ? 'dia' : 'dias'}
-            </span>
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 text-[hsl(var(--warning))]">
+              <Clock className="h-3.5 w-3.5" />
+              <span className="text-xs font-semibold tabular-nums">
+                Aguardando você há {waitingDays} {waitingDays === 1 ? 'dia' : 'dias'}
+              </span>
+            </div>
+            {waitingDays >= 3 && (
+              <p className="text-[11px] text-muted-foreground ml-5">
+                Isso pode ajustar o cronograma em {waitingDays} {waitingDays === 1 ? 'dia' : 'dias'}.
+              </p>
+            )}
           </div>
         )}
 
