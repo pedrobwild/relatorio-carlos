@@ -176,7 +176,7 @@ export default function Auth() {
         <Card className="border-white/10 shadow-2xl bg-white/10 backdrop-blur-md">
           <CardContent className="pt-8 pb-6 px-6 sm:px-8">
             <div className="text-center mb-6">
-              <h1 className="text-xl font-bold text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 Portal Bwild
               </h1>
             </div>
@@ -232,7 +232,7 @@ export default function Auth() {
                   <Label htmlFor="login-password" className="text-white/90">Senha</Label>
                   <a
                     href="/recuperar-senha"
-                    className="text-xs text-primary hover:underline font-medium"
+                    className="text-xs text-white/70 hover:text-white hover:underline font-medium"
                     tabIndex={0}
                   >
                     Esqueci minha senha
@@ -284,7 +284,7 @@ export default function Auth() {
 
               <Button
                 type="submit"
-                className="w-full mt-2"
+                className="w-full mt-2 bg-white text-slate-900 hover:bg-white/90 font-semibold"
                 disabled={loading}
                 data-testid="login-submit"
               >
