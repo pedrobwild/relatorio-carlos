@@ -115,11 +115,15 @@ export const journeyCopy = {
     },
     types: {
       meeting: { emoji: '📅', label: 'Reunião' },
-      deadline: { emoji: '⏰', label: 'Prazo' },
-      start_planned: { emoji: '🟢', label: 'Início planejado' },
-      end_planned: { emoji: '🔴', label: 'Término planejado' },
-      milestone: { emoji: '🏁', label: 'Marco' },
+      deadline: { emoji: '📨', label: 'Prazo de envio' },
+      start_planned: { emoji: '🟢', label: 'Início estimado' },
+      end_planned: { emoji: '🏁', label: 'Entrega estimada' },
+      milestone: { emoji: '⭐', label: 'Marco importante' },
     } as Record<string, { emoji: string; label: string }>,
+    miniTimeline: {
+      title: 'Linha do tempo',
+      empty: 'Datas aparecerão aqui conforme definidas.',
+    },
     meeting: {
       scheduled_title: 'Reunião agendada',
       scheduled_subtitle: 'Você verá qualquer atualização por aqui.',
