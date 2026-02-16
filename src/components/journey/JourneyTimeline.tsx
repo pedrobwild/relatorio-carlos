@@ -1,4 +1,6 @@
 import { Check, Clock, Circle, Lock, Eye, ChevronRight } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 import {
@@ -24,15 +26,12 @@ function deriveVisualState(
 ): VisualState {
   if (stage.status === 'completed') return 'completed';
   if (stage.status === 'in_progress') return 'current';
-  if (stage.status === 'waiting_action') return 'validating';
+  if (stage.status === 'waiting_action') return 'current';
 
   if (stage.status === 'pending') {
+    // The first pending stage right after a completed/in_progress/waiting_action is "next"
+    if (index > 0 && stages[index - 1].status === 'completed') return 'next';
     if (stage.dependencies_text) return 'blocked';
-    const lastNonPendingIdx = stages.reduce(
-      (acc, s, i) => (s.status !== 'pending' ? i : acc),
-      -1,
-    );
-    if (index === lastNonPendingIdx + 1) return 'next';
     if (index > 0 && stages[index - 1].status === 'pending') return 'blocked';
     return 'future';
   }
@@ -118,15 +117,13 @@ function getBlockedByName(
 /* ───────────── Component ───────────── */
 
 export function JourneyTimeline({ stages, activeStageId, onStageClick }: JourneyTimelineProps) {
+  // Icon size for lg: w-8 h-8 → 32px, padding top of first item ~12px
+  // Center line on the icons: left = padding-left + icon-width/2 = 12px + 16px = 28px (for lg)
+  // For mobile: w-10 h-10 → 40px, left = 12px + 20px = 32px
   return (
     <TooltipProvider delayDuration={300}>
       <nav aria-label={journeyCopy.a11y.stagesNav} className="relative">
-        <div
-          className="absolute left-[19px] lg:left-[15px] top-5 bottom-5 w-0.5 bg-border hidden lg:block"
-          aria-hidden
-        />
-
-        <ol className="space-y-1 list-none p-0 m-0">
+        <ol className="space-y-0 list-none p-0 m-0 relative">
           {stages.map((stage, index) => {
             const vs = deriveVisualState(stage, index, stages);
             const config = visualConfig[vs];
@@ -137,18 +134,37 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
             const blockedBy = isBlocked ? getBlockedByName(stage, index, stages) : null;
             const isCompleted = vs === 'completed';
             const isCurrent = vs === 'current' || vs === 'validating';
+            const isLast = index === stages.length - 1;
+
+            // Format completion date for completed stages (skip welcome/virtual stages)
+            const completionDate = isCompleted && stage.confirmed_end
+              ? format(parseISO(stage.confirmed_end), "dd MMM", { locale: ptBR })
+              : null;
 
             const buttonContent = (
               <button
                 onClick={() => onStageClick(stage.id)}
                 aria-current={isCurrent ? 'step' : undefined}
                 className={cn(
-                  'relative flex items-center gap-3 w-full p-3 rounded-lg text-left transition-all',
+                  'relative flex items-center gap-3 w-full py-3 px-3 rounded-lg text-left transition-all',
                   'hover:bg-muted/50 active:bg-muted/70 focus-visible:outline-2 focus-visible:outline-primary',
                   'min-h-[56px]',
                   isActive && 'bg-primary/5 ring-1 ring-primary/20',
                 )}
               >
+                {/* Connector line — positioned at center of the icon */}
+                {!isLast && (
+                  <div
+                    className={cn(
+                      'absolute left-[32px] lg:left-[28px] w-0.5 hidden lg:block',
+                      // Start from bottom of current icon, extend to top of next icon
+                      'top-[calc(50%+16px)] lg:top-[calc(50%+16px)] h-[calc(100%-4px)]',
+                      config.lineColor,
+                    )}
+                    aria-hidden
+                  />
+                )}
+
                 <div
                   className={cn(
                     'relative z-10 flex items-center justify-center w-10 h-10 lg:w-8 lg:h-8 rounded-full shrink-0 transition-all',
@@ -178,7 +194,7 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
                   </span>
                   <span
                     className={cn(
-                      'text-xs',
+                      'text-xs flex items-center gap-1',
                       vs === 'current' && 'text-primary font-medium',
                       vs === 'validating' && 'text-[hsl(var(--warning))] font-medium',
                       vs === 'completed' && 'text-[hsl(var(--success))]',
@@ -187,6 +203,9 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
                     )}
                   >
                     {label}
+                    {isCompleted && completionDate && (
+                      <span className="text-muted-foreground font-normal">· {completionDate}</span>
+                    )}
                     {isBlocked && blockedBy && (
                       <span className="lg:hidden ml-1 text-muted-foreground">
                         · {blockedBy}
