@@ -336,7 +336,7 @@ const ReportHeader = ({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
 
-              <img src={bwildLogo} alt="Bwild" className="h-7 w-auto shrink-0" />
+              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
               <Separator orientation="vertical" className="h-6" />
 
               <DropdownMenu>
@@ -599,7 +599,7 @@ const ReportHeader = ({
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <img src={bwildLogo} alt="Bwild" className="h-5 w-auto" />
+              <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
             </div>
 
             <Link

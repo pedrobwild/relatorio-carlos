@@ -116,7 +116,7 @@ const Suporte = () => {
               </Button>
             </Link>
             <div className="flex items-center gap-2.5">
-              <img src={bwildLogo} alt="Bwild" className="h-6 w-auto" />
+              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
               <span className="text-muted-foreground/40">|</span>
               <h1 className="text-h2">Formalizações</h1>
             </div>
