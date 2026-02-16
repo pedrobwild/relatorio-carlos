@@ -172,8 +172,8 @@ export default function Auth() {
       className="min-h-[100dvh] flex bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${authBg})` }}
     >
-      {/* Left side – form */}
-      <div className="flex flex-col justify-center w-full max-w-md px-8 sm:px-14 py-12 safe-area-top safe-area-bottom">
+      {/* Form – centered on mobile, left on desktop */}
+      <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-md px-6 sm:px-14 py-8 sm:py-12 safe-area-top safe-area-bottom mx-auto md:mx-0">
         <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-10">
           Portal Bwild<span className="text-sky-400">.</span>
         </h1>
