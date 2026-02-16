@@ -32,6 +32,7 @@ import { StageChecklist } from './StageChecklist';
 import { StageDatesPanel } from './StageDatesPanel';
 import { MeetingCTA } from './MeetingCTA';
 import { StageRegistry } from './StageRegistry';
+import { BriefingStageLayout } from './briefing/BriefingStageLayout';
 
 interface StageDetailInlineProps {
   stage: JourneyStage;
@@ -50,6 +51,74 @@ export function StageDetailInline({
   const completeStage = useCompleteStage();
 
   const canComplete = isAdmin && stage.status !== 'completed' && stage.status !== 'pending';
+
+  // Detect briefing stage by name pattern
+  const isBriefingStage = stage.name.toLowerCase().includes('briefing');
+
+  if (isBriefingStage && !isEditing) {
+    return (
+      <div className="space-y-6">
+        <BriefingStageLayout stage={stage} projectId={projectId} isAdmin={isAdmin} />
+
+        {/* Admin footer actions */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {isAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-12 sm:h-10 gap-1.5 text-xs min-h-[44px] w-full sm:w-auto"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+              Editar etapa
+            </Button>
+          )}
+          {canComplete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  className="h-12 sm:h-10 gap-1.5 text-xs min-h-[44px] w-full sm:w-auto sm:ml-auto"
+                  disabled={completeStage.isPending}
+                >
+                  {completeStage.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  )}
+                  Concluir etapa
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Concluir "{stage.name}"?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    A data de conclusão será registrada e a próxima etapa
+                    {nextStageName ? ` ("${nextStageName}")` : ''} será liberada automaticamente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="min-h-[44px]">Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="min-h-[44px]"
+                    onClick={() => completeStage.mutate({ stageId: stage.id, projectId })}
+                  >
+                    Sim, concluir
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {stage.status === 'completed' && (
+            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-[hsl(var(--success))] font-medium sm:ml-auto py-2">
+              <CheckCircle2 className="h-4 w-4" />
+              Etapa concluída
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
