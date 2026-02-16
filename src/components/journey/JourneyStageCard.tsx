@@ -92,10 +92,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
       setIsEditing(false);
     };
 
-    const showMobileSticky =
-      stage.status === 'waiting_action' &&
-      stage.cta_visible &&
-      stage.cta_text;
+    // showMobileSticky is now handled globally in JornadaProjeto
 
     return (
       <Card

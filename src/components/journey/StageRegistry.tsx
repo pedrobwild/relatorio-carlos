@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   BookOpen, MessageSquare, Clock, Plus, ExternalLink,
-  Trash2, User, Building2,
+  Trash2, User, Building2, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,7 @@ interface StageRegistryProps {
 /* ─── Main ─── */
 
 export function StageRegistry({ stageId, projectId, isAdmin }: StageRegistryProps) {
-  const { data: records, isLoading } = useStageRecords(stageId, projectId);
+  const { data: records, isLoading, isError, refetch } = useStageRecords(stageId, projectId);
   const [activeTab, setActiveTab] = useState<RecordCategory>('decision');
   const [showForm, setShowForm] = useState(false);
 
@@ -57,30 +57,36 @@ export function StageRegistry({ stageId, projectId, isAdmin }: StageRegistryProp
   }, [records]);
 
   return (
-    <div className="space-y-3">
+    <section className="space-y-3" aria-label="Registro da etapa">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-primary" />
+          <BookOpen className="h-4 w-4 text-primary" aria-hidden />
           Registro da etapa
         </h3>
         {isAdmin && !showForm && (
           <Button
             size="sm"
             variant="outline"
-            className="h-8 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-xs min-h-[44px]"
             onClick={() => setShowForm(true)}
+            aria-label="Adicionar novo registro"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-3.5 w-3.5" aria-hidden />
             Novo registro
           </Button>
         )}
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RecordCategory)}>
-        <TabsList className="w-full grid grid-cols-3 h-9">
+        <TabsList className="w-full grid grid-cols-3 h-10">
           {tabConfig.map(({ value, label, Icon }) => (
-            <TabsTrigger key={value} value={value} className="text-xs gap-1.5 data-[state=active]:shadow-sm">
-              <Icon className="h-3.5 w-3.5" />
+            <TabsTrigger
+              key={value}
+              value={value}
+              className="text-xs gap-1.5 data-[state=active]:shadow-sm min-h-[40px]"
+              aria-label={`${label}${counts[value] > 0 ? ` (${counts[value]})` : ''}`}
+            >
+              <Icon className="h-3.5 w-3.5" aria-hidden />
               <span className="hidden sm:inline">{label}</span>
               {counts[value] > 0 && (
                 <Badge variant="secondary" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
@@ -103,16 +109,44 @@ export function StageRegistry({ stageId, projectId, isAdmin }: StageRegistryProp
             )}
 
             {isLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-2" aria-busy="true" aria-label="Carregando registros">
                 <Skeleton className="h-16 w-full rounded-lg" />
                 <Skeleton className="h-16 w-full rounded-lg" />
               </div>
+            ) : isError ? (
+              <div className="flex flex-col items-center gap-3 py-6" role="alert">
+                <AlertCircle className="h-8 w-8 text-destructive/60" aria-hidden />
+                <p className="text-sm text-muted-foreground">Erro ao carregar registros.</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-9 gap-1.5 min-h-[44px]"
+                  onClick={() => refetch()}
+                >
+                  <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                  Tentar novamente
+                </Button>
+              </div>
             ) : filtered.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">
-                Nenhum registro nesta categoria.
-              </p>
+              <div className="flex flex-col items-center gap-2 py-6" role="status">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  {value === 'decision' && <BookOpen className="h-5 w-5 text-muted-foreground" aria-hidden />}
+                  {value === 'conversation' && <MessageSquare className="h-5 w-5 text-muted-foreground" aria-hidden />}
+                  {value === 'history' && <Clock className="h-5 w-5 text-muted-foreground" aria-hidden />}
+                </div>
+                <p className="text-sm font-medium text-foreground">
+                  {value === 'decision' && 'Nenhuma decisão registrada'}
+                  {value === 'conversation' && 'Nenhuma conversa registrada'}
+                  {value === 'history' && 'Nenhum registro ainda'}
+                </p>
+                <p className="text-xs text-muted-foreground max-w-[240px] text-center">
+                  {isAdmin
+                    ? 'Clique em "Novo registro" para adicionar.'
+                    : 'Os registros aparecerão aqui conforme o projeto avança.'}
+                </p>
+              </div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-2" role="list" aria-label={`Lista de ${value === 'decision' ? 'decisões' : value === 'conversation' ? 'conversas' : 'registros'}`}>
                 {filtered.map((r) => (
                   <RecordItem key={r.id} record={r} isAdmin={isAdmin} stageId={stageId} />
                 ))}
@@ -121,7 +155,7 @@ export function StageRegistry({ stageId, projectId, isAdmin }: StageRegistryProp
           </TabsContent>
         ))}
       </Tabs>
-    </div>
+    </section>
   );
 }
 
@@ -131,14 +165,17 @@ function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin
   const deleteRecord = useDeleteStageRecord();
 
   return (
-    <li className="group flex items-start gap-3 rounded-lg border border-border/60 bg-card p-3 transition-colors hover:bg-muted/20">
+    <li className="group flex items-start gap-3 rounded-lg border border-border/60 bg-card p-3 transition-colors hover:bg-muted/20 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-1">
       {/* Responsible indicator */}
-      <div className={cn(
-        'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-        record.responsible === 'client'
-          ? 'bg-primary/10 text-primary'
-          : 'bg-muted text-muted-foreground',
-      )}>
+      <div
+        className={cn(
+          'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+          record.responsible === 'client'
+            ? 'bg-primary/10 text-primary'
+            : 'bg-muted text-muted-foreground',
+        )}
+        aria-hidden
+      >
         {record.responsible === 'client'
           ? <User className="h-3.5 w-3.5" />
           : <Building2 className="h-3.5 w-3.5" />}
@@ -152,8 +189,8 @@ function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin
               href={record.evidence_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-primary hover:text-primary/80"
-              aria-label="Ver evidência"
+              className="shrink-0 text-primary hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-primary rounded"
+              aria-label={`Ver evidência: ${record.title}`}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
@@ -176,12 +213,16 @@ function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin
         <Button
           size="icon"
           variant="ghost"
-          className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+          className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 md:transition-opacity text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px]"
           onClick={() => deleteRecord.mutate({ id: record.id, stageId })}
           disabled={deleteRecord.isPending}
-          aria-label="Remover registro"
+          aria-label={`Remover registro: ${record.title}`}
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          {deleteRecord.isPending ? (
+            <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Trash2 className="h-3.5 w-3.5" />
+          )}
         </Button>
       )}
     </li>
@@ -232,29 +273,38 @@ function AddRecordForm({
   };
 
   return (
-    <div className="mb-3 space-y-3 rounded-lg border border-primary/20 bg-primary/[0.02] p-3">
+    <div className="mb-3 space-y-3 rounded-lg border border-primary/20 bg-primary/[0.02] p-3" role="form" aria-label={`Nova ${categoryLabels[category]}`}>
       <p className="text-xs font-medium text-primary">
         Nova {categoryLabels[category]}
       </p>
-      <Input
-        placeholder="Título"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="h-9 text-sm"
-        autoFocus
-      />
-      <Textarea
-        placeholder="Descrição curta (opcional)"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={2}
-        className="text-sm"
-      />
-      <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label htmlFor={`rec-title-${stageId}`} className="sr-only">Título</label>
+        <Input
+          id={`rec-title-${stageId}`}
+          placeholder="Título"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="h-10 text-sm"
+          autoFocus
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+        />
+      </div>
+      <div>
+        <label htmlFor={`rec-desc-${stageId}`} className="sr-only">Descrição</label>
+        <Textarea
+          id={`rec-desc-${stageId}`}
+          placeholder="Descrição curta (opcional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={2}
+          className="text-sm"
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="text-[11px] text-muted-foreground mb-1 block">Responsável</label>
+          <label htmlFor={`rec-resp-${stageId}`} className="text-[11px] text-muted-foreground mb-1 block">Responsável</label>
           <Select value={responsible} onValueChange={(v) => setResponsible(v as 'client' | 'bwild')}>
-            <SelectTrigger className="h-9 text-sm">
+            <SelectTrigger className="h-10 text-sm" id={`rec-resp-${stageId}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -264,25 +314,29 @@ function AddRecordForm({
           </Select>
         </div>
         <div>
-          <label className="text-[11px] text-muted-foreground mb-1 block">Link evidência</label>
+          <label htmlFor={`rec-evidence-${stageId}`} className="text-[11px] text-muted-foreground mb-1 block">Link evidência</label>
           <Input
+            id={`rec-evidence-${stageId}`}
             placeholder="https://..."
             value={evidenceUrl}
             onChange={(e) => setEvidenceUrl(e.target.value)}
-            className="h-9 text-sm"
+            className="h-10 text-sm"
           />
         </div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button size="sm" variant="ghost" onClick={onClose} className="h-8">
+        <Button size="sm" variant="ghost" onClick={onClose} className="h-9 min-h-[44px]">
           Cancelar
         </Button>
         <Button
           size="sm"
           onClick={handleSubmit}
           disabled={!title.trim() || create.isPending}
-          className="h-8"
+          className="h-9 min-h-[44px]"
         >
+          {create.isPending ? (
+            <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
+          ) : null}
           Salvar
         </Button>
       </div>
