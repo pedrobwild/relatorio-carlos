@@ -52,7 +52,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
   const minDate = useMemo(() => getMinStartDate(), []);
   const showForm = !existing || isEditing;
 
-  const disabledDays = useMemo(() => {
+  const disabledStartDays = useMemo(() => {
     return (date: Date) => {
       if (isWeekend(date)) return true;
       const d = new Date(date);
@@ -62,6 +62,24 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
       return d < min;
     };
   }, [minDate]);
+
+  const disabledEndDays = useMemo(() => {
+    return (date: Date) => {
+      if (isWeekend(date)) return true;
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const min = new Date(minDate);
+      min.setHours(0, 0, 0, 0);
+      if (d < min) return true;
+      if (startDate) {
+        const minEnd = new Date(startDate);
+        minEnd.setHours(0, 0, 0, 0);
+        minEnd.setDate(minEnd.getDate() + 3); // block next 2 days after start
+        if (d < minEnd) return true;
+      }
+      return false;
+    };
+  }, [minDate, startDate]);
 
   const validate = (): boolean => {
     const errs: string[] = [];
@@ -277,14 +295,14 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
             label="Data inicial"
             date={startDate}
             onSelect={(d) => { setStartDate(d); setErrors([]); }}
-            disabled={disabledDays}
+            disabled={disabledStartDays}
             minDate={minDate}
           />
           <DatePickerField
             label="Data final"
             date={endDate}
             onSelect={(d) => { setEndDate(d); setErrors([]); }}
-            disabled={disabledDays}
+            disabled={disabledEndDays}
             minDate={startDate || minDate}
           />
         </div>
