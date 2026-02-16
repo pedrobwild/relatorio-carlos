@@ -1,0 +1,80 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+export type RecordCategory = 'decision' | 'conversation' | 'history';
+export type RecordResponsible = 'client' | 'bwild';
+
+export interface StageRecord {
+  id: string;
+  stage_id: string;
+  project_id: string;
+  category: RecordCategory;
+  title: string;
+  description: string | null;
+  record_date: string;
+  responsible: RecordResponsible;
+  evidence_url: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export function useStageRecords(stageId: string | undefined, projectId: string | undefined) {
+  return useQuery({
+    queryKey: ['stage-records', stageId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('journey_stage_records' as any)
+        .select('*')
+        .eq('stage_id', stageId!)
+        .order('record_date', { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as StageRecord[];
+    },
+    enabled: !!stageId && !!projectId,
+  });
+}
+
+export function useCreateStageRecord() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      stage_id: string;
+      project_id: string;
+      category: RecordCategory;
+      title: string;
+      description?: string;
+      record_date?: string;
+      responsible?: RecordResponsible;
+      evidence_url?: string;
+      created_by: string;
+    }) => {
+      const { error } = await supabase
+        .from('journey_stage_records' as any)
+        .insert(input as any);
+      if (error) throw error;
+      return { stageId: input.stage_id };
+    },
+    onSuccess: ({ stageId }) => {
+      qc.invalidateQueries({ queryKey: ['stage-records', stageId] });
+    },
+  });
+}
+
+export function useDeleteStageRecord() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, stageId }: { id: string; stageId: string }) => {
+      const { error } = await supabase
+        .from('journey_stage_records' as any)
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      return { stageId };
+    },
+    onSuccess: ({ stageId }) => {
+      qc.invalidateQueries({ queryKey: ['stage-records', stageId] });
+    },
+  });
+}

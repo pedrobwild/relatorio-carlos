@@ -20,6 +20,7 @@ import { StageDetailsSections } from './StageDetailsSections';
 import { StageChecklist } from './StageChecklist';
 import { StageDatesPanel } from './StageDatesPanel';
 import { MeetingCTA } from './MeetingCTA';
+import { StageRegistry } from './StageRegistry';
 
 interface JourneyStageCardProps {
   stage: JourneyStage;
@@ -286,6 +287,13 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                     isAdmin={isAdmin}
                   />
                 </div>
+
+                {/* Stage Registry (Decisions, Conversations, History) */}
+                <StageRegistry
+                  stageId={stage.id}
+                  projectId={projectId}
+                  isAdmin={isAdmin}
+                />
 
                 {/* CTA */}
                 {stage.cta_visible && stage.cta_text && stage.cta_text.toLowerCase().includes('reunião') ? (
