@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import { Check, ChevronRight, Circle, Lock, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
+import { journeyCopy } from '@/constants/journeyCopy';
 
 /* ─── Visual state (shared logic with JourneyTimeline) ─── */
 
@@ -120,7 +121,7 @@ export function JourneyMobileStepper({
         ref={scrollRef}
         className="flex items-start gap-0 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-4 -mx-4 pb-2"
         role="tablist"
-        aria-label="Etapas da jornada"
+        aria-label={journeyCopy.a11y.stagesNav}
       >
         {stages.map((stage, index) => {
           const vs = deriveVisualState(stage, index, stages);

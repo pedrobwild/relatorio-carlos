@@ -7,6 +7,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
+import { journeyCopy } from '@/constants/journeyCopy';
 
 /* ─── Visual state derivation (same logic as JourneyTimeline) ─── */
 
@@ -28,42 +29,42 @@ const vsConfig: Record<VisualState, {
   Icon: React.ElementType;
 }> = {
   completed: {
-    label: 'Concluída',
+    label: journeyCopy.status.completed.label,
     badgeClass: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))]',
     iconBg: 'bg-[hsl(var(--success-light))]',
     iconColor: 'text-[hsl(var(--success))]',
     Icon: Check,
   },
   current: {
-    label: 'Etapa atual',
+    label: journeyCopy.status.current.label,
     badgeClass: 'bg-accent text-primary',
     iconBg: 'bg-accent',
     iconColor: 'text-primary',
     Icon: ChevronRight,
   },
   validating: {
-    label: 'Em validação',
+    label: journeyCopy.status.in_review.label,
     badgeClass: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))]',
     iconBg: 'bg-[hsl(var(--warning-light))]',
     iconColor: 'text-[hsl(var(--warning))]',
     Icon: Eye,
   },
   next: {
-    label: 'Próxima',
+    label: journeyCopy.status.next.label,
     badgeClass: 'bg-accent text-accent-foreground',
     iconBg: 'bg-accent',
     iconColor: 'text-accent-foreground',
     Icon: Circle,
   },
   blocked: {
-    label: 'Bloqueada',
+    label: journeyCopy.status.blocked.label,
     badgeClass: 'bg-muted text-muted-foreground',
     iconBg: 'bg-muted',
     iconColor: 'text-muted-foreground',
     Icon: Lock,
   },
   future: {
-    label: 'Em breve',
+    label: journeyCopy.status.future.label,
     badgeClass: 'bg-muted text-muted-foreground',
     iconBg: 'bg-muted',
     iconColor: 'text-muted-foreground',
@@ -160,13 +161,13 @@ export function StageSummary({ stage, isExpanded }: StageSummaryProps) {
           )}
           {totalTodos > 0 && (
             <span className="text-xs text-muted-foreground">
-              {completedTodos}/{totalTodos} itens
+              {completedTodos}/{totalTodos} {journeyCopy.stageSummary.items}
             </span>
           )}
           {vs === 'blocked' && stage.dependencies_text && (
             <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
               <Lock className="h-3 w-3" />
-              Depende de: {stage.dependencies_text}
+              {journeyCopy.stageSummary.dependsOn} {stage.dependencies_text}
             </span>
           )}
         </div>

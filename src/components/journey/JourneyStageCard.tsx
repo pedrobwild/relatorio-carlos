@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { journeyCopy } from '@/constants/journeyCopy';
 import {
   JourneyStage,
   JourneyStageStatus,
@@ -110,7 +111,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
           onClick={onToggleExpand}
           role="button"
           aria-expanded={isExpanded}
-          aria-label={`Etapa: ${stage.name}`}
+          aria-label={journeyCopy.a11y.open_stage.replace('{stageName}', stage.name)}
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -132,7 +133,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                   e.stopPropagation();
                   setIsEditing(true);
                 }}
-                aria-label="Editar etapa"
+                aria-label={journeyCopy.a11y.editStage}
               >
                 <Edit2 className="h-4 w-4" />
               </Button>
@@ -153,21 +154,21 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
               <CardContent className="space-y-5 md:space-y-6 pt-0 px-4 pb-4 md:px-6 md:pb-6">
                 {/* Admin Edit Form */}
                 {isEditing && (
-                  <div className="space-y-4 p-4 bg-muted/30 rounded-lg border" role="form" aria-label="Editar etapa">
+                  <div className="space-y-4 p-4 bg-muted/30 rounded-lg border" role="form" aria-label={journeyCopy.admin.editStage}>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-sm">Editar Etapa</span>
+                      <span className="font-medium text-sm">{journeyCopy.admin.editStage}</span>
                       <div className="flex gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => setIsEditing(false)} className="h-11 w-11" aria-label="Cancelar edição">
+                        <Button size="icon" variant="ghost" onClick={() => setIsEditing(false)} className="h-11 w-11" aria-label={journeyCopy.a11y.cancelEdit}>
                           <X className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" onClick={handleSave} disabled={updateStage.isPending} className="h-11 w-11" aria-label="Salvar edição">
+                        <Button size="icon" onClick={handleSave} disabled={updateStage.isPending} className="h-11 w-11" aria-label={journeyCopy.a11y.saveEdit}>
                           <Check className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="text-sm text-muted-foreground" htmlFor={`stage-name-${stage.id}`}>Nome</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-name-${stage.id}`}>{journeyCopy.admin.fields.name}</label>
                         <Input
                           id={`stage-name-${stage.id}`}
                           value={editData.name}
@@ -175,7 +176,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-muted-foreground" htmlFor={`stage-status-${stage.id}`}>Status</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-status-${stage.id}`}>{journeyCopy.admin.fields.status}</label>
                         <Select
                           value={editData.status}
                           onValueChange={(v) => setEditData({ ...editData, status: v as JourneyStageStatus })}
@@ -184,16 +185,16 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Em breve</SelectItem>
-                            <SelectItem value="waiting_action">Aguardando ação</SelectItem>
-                            <SelectItem value="in_progress">Em andamento</SelectItem>
-                            <SelectItem value="completed">Concluído</SelectItem>
+                            <SelectItem value="pending">{journeyCopy.admin.statusOptions.pending}</SelectItem>
+                            <SelectItem value="waiting_action">{journeyCopy.admin.statusOptions.waiting_action}</SelectItem>
+                            <SelectItem value="in_progress">{journeyCopy.admin.statusOptions.in_progress}</SelectItem>
+                            <SelectItem value="completed">{journeyCopy.admin.statusOptions.completed}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground" htmlFor={`stage-desc-${stage.id}`}>Descrição</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-desc-${stage.id}`}>{journeyCopy.admin.fields.description}</label>
                       <Textarea
                         id={`stage-desc-${stage.id}`}
                         value={editData.description}
@@ -203,7 +204,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="text-sm text-muted-foreground" htmlFor={`stage-cta-${stage.id}`}>Texto do CTA</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-cta-${stage.id}`}>{journeyCopy.admin.fields.ctaText}</label>
                         <Input
                           id={`stage-cta-${stage.id}`}
                           value={editData.cta_text}
@@ -211,7 +212,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-muted-foreground" htmlFor={`stage-resp-${stage.id}`}>Responsável</label>
+                        <label className="text-sm text-muted-foreground" htmlFor={`stage-resp-${stage.id}`}>{journeyCopy.admin.fields.responsible}</label>
                         <Input
                           id={`stage-resp-${stage.id}`}
                           value={editData.responsible}
@@ -220,7 +221,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground" htmlFor={`stage-micro-${stage.id}`}>Microcopy</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-micro-${stage.id}`}>{journeyCopy.admin.fields.microcopy}</label>
                       <Input
                         id={`stage-micro-${stage.id}`}
                         value={editData.microcopy}
@@ -228,7 +229,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground" htmlFor={`stage-warn-${stage.id}`}>Aviso (warning)</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-warn-${stage.id}`}>{journeyCopy.admin.fields.warning}</label>
                       <Input
                         id={`stage-warn-${stage.id}`}
                         value={editData.warning_text}
@@ -236,7 +237,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground" htmlFor={`stage-deps-${stage.id}`}>Dependências</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-deps-${stage.id}`}>{journeyCopy.admin.fields.dependencies}</label>
                       <Textarea
                         id={`stage-deps-${stage.id}`}
                         value={editData.dependencies_text}
@@ -245,7 +246,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-muted-foreground" htmlFor={`stage-rev-${stage.id}`}>Revisões</label>
+                      <label className="text-sm text-muted-foreground" htmlFor={`stage-rev-${stage.id}`}>{journeyCopy.admin.fields.revisions}</label>
                       <Input
                         id={`stage-rev-${stage.id}`}
                         value={editData.revision_text}

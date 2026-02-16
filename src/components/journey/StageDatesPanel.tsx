@@ -15,6 +15,7 @@ import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription,
 } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
+import { journeyCopy } from '@/constants/journeyCopy';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -113,29 +114,23 @@ function getDateStatus(sd: StageDate): DateStatus {
 
 const statusConfig: Record<DateStatus, { label: string; badgeClass: string; icon: React.ElementType }> = {
   confirmed: {
-    label: 'Confirmada pela Bwild',
+    label: journeyCopy.dates.status.confirmed,
     badgeClass: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success)/0.2)]',
     icon: CheckCircle2,
   },
   proposed: {
-    label: 'Proposta pelo cliente',
+    label: journeyCopy.dates.status.proposed,
     badgeClass: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.2)]',
     icon: Clock,
   },
   empty: {
-    label: 'Sem data',
+    label: journeyCopy.dates.status.empty,
     badgeClass: 'bg-muted text-muted-foreground border-border/50',
     icon: CalendarIcon,
   },
 };
 
-const typeLabels: Record<string, { emoji: string; label: string }> = {
-  meeting: { emoji: '📅', label: 'Reunião' },
-  deadline: { emoji: '⏰', label: 'Prazo' },
-  start_planned: { emoji: '🟢', label: 'Início planejado' },
-  end_planned: { emoji: '🔴', label: 'Término planejado' },
-  milestone: { emoji: '🏁', label: 'Marco' },
-};
+const typeLabels = journeyCopy.dates.types;
 
 function buildISO(date: Date, time: string): string {
   const [h, m] = time.split(':').map(Number);
@@ -158,8 +153,8 @@ function DivergenceWarning({ proposed, confirmed }: { proposed: string; confirme
     <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-[hsl(var(--warning-light))] border border-[hsl(var(--warning)/0.15)]" role="alert">
       <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--warning))] shrink-0 mt-0.5" aria-hidden />
       <p className="text-xs text-[hsl(var(--warning))]">
-        A data confirmada difere da proposta em <span className="font-semibold">{diffDays} dia{diffDays > 1 ? 's' : ''}</span>.
-        Em caso de dúvida, entre em contato com sua CSM.
+        A data confirmada difere da proposta em <span className="font-semibold">{diffDays} {diffDays > 1 ? journeyCopy.dates.divergence.days : journeyCopy.dates.divergence.day}</span>.
+        {journeyCopy.dates.divergence.suffix}
       </p>
     </div>
   );
@@ -167,18 +162,9 @@ function DivergenceWarning({ proposed, confirmed }: { proposed: string; confirme
 
 // ─── History Drawer ───
 
-const actionLabels: Record<string, string> = {
-  proposed: 'Sugeriu data',
-  confirmed: 'Confirmou data',
-  adjusted: 'Ajustou data',
-  created: 'Criou registro',
-};
+const actionLabels = journeyCopy.dates.history.actions;
 
-const roleLabels: Record<string, string> = {
-  customer: 'Cliente',
-  staff: 'Bwild',
-  admin: 'Bwild',
-};
+const roleLabels = journeyCopy.dates.history.roles;
 
 function DateHistoryDrawer({
   open,
@@ -199,7 +185,7 @@ function DateHistoryDrawer({
         <DrawerHeader className="text-left">
           <DrawerTitle className="text-base flex items-center gap-2">
             <History className="h-4 w-4 text-primary" aria-hidden />
-            Histórico de alterações
+            {journeyCopy.dates.history.title}
           </DrawerTitle>
           <DrawerDescription className="text-xs">{title}</DrawerDescription>
         </DrawerHeader>
@@ -255,8 +241,8 @@ function DateHistoryDrawer({
           ) : (
             <div className="text-center py-8 space-y-2">
               <History className="h-8 w-8 text-muted-foreground/30 mx-auto" aria-hidden />
-              <p className="text-sm text-muted-foreground">Nenhuma alteração registrada</p>
-              <p className="text-xs text-muted-foreground/60">O histórico aparecerá aqui conforme as datas forem atualizadas.</p>
+              <p className="text-sm text-muted-foreground">{journeyCopy.dates.history.empty}</p>
+              <p className="text-xs text-muted-foreground/60">{journeyCopy.dates.history.emptySubtitle}</p>
             </div>
           )}
         </div>
@@ -306,8 +292,8 @@ function StageDateRow({
         {
           onSuccess: () => setMode('idle'),
           onError: (err: Error) => {
-            toast.error('Não foi possível salvar a sugestão. Tente novamente.', {
-              action: { label: 'Tentar novamente', onClick: handleSubmit },
+            toast.error(journeyCopy.errors.save_suggestion, {
+              action: { label: journeyCopy.errors.retry, onClick: handleSubmit },
             });
           },
         },
@@ -318,8 +304,8 @@ function StageDateRow({
         {
           onSuccess: () => setMode('idle'),
           onError: (err: Error) => {
-            toast.error('Não foi possível confirmar a data. Tente novamente.', {
-              action: { label: 'Tentar novamente', onClick: handleSubmit },
+            toast.error(journeyCopy.errors.confirm_date, {
+              action: { label: journeyCopy.errors.retry, onClick: handleSubmit },
             });
           },
         },
@@ -353,13 +339,13 @@ function StageDateRow({
         <div className="flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg bg-muted/40">
           <Clock className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Proposta do cliente</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{journeyCopy.dates.status.proposed}</p>
             {sd.customer_proposed_at ? (
               <p className="text-sm font-medium text-foreground">
                 {format(parseISO(sd.customer_proposed_at), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground/60 italic">Ainda não proposta</p>
+              <p className="text-sm text-muted-foreground/60 italic">{journeyCopy.dates.status.notProposed}</p>
             )}
           </div>
         </div>
@@ -371,13 +357,13 @@ function StageDateRow({
         )}>
           <CheckCircle2 className={cn("h-4 w-4 shrink-0", sd.bwild_confirmed_at ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Confirmada pela Bwild</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{journeyCopy.dates.status.confirmed}</p>
             {sd.bwild_confirmed_at ? (
               <p className="text-sm font-semibold text-[hsl(var(--success))]">
                 {format(parseISO(sd.bwild_confirmed_at), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground/60 italic">Aguardando confirmação</p>
+              <p className="text-sm text-muted-foreground/60 italic">{journeyCopy.dates.status.awaitingConfirmation}</p>
             )}
           </div>
         </div>
@@ -415,7 +401,7 @@ function StageDateRow({
               }}
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              {sd.customer_proposed_at ? 'Alterar sugestão' : 'Sugerir data'}
+              {sd.customer_proposed_at ? journeyCopy.dates.meeting.changeSuggestion : journeyCopy.dates.form.suggestDate}
             </Button>
           )}
           {isStaff && (
@@ -431,7 +417,7 @@ function StageDateRow({
                   setMode('propose');
                 }}
               >
-                Ajustar proposta
+                {journeyCopy.dates.form.adjustProposal}
               </Button>
               <Button
                 size="sm"
@@ -445,7 +431,7 @@ function StageDateRow({
                 }}
               >
                 <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                Confirmar data
+                {journeyCopy.dates.form.submitConfirm}
               </Button>
             </>
           )}
@@ -457,7 +443,7 @@ function StageDateRow({
             aria-label={`Ver histórico de ${sd.title}`}
           >
             <History className="h-3.5 w-3.5" aria-hidden />
-            Ver histórico
+            {journeyCopy.dates.history.trigger}
           </Button>
         </div>
       )}
@@ -475,7 +461,7 @@ function StageDateRow({
       {mode !== 'idle' && (
         <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
           <p className="text-xs font-medium text-foreground">
-            {mode === 'propose' ? '📅 Sugerir data e horário' : '✅ Confirmar data e horário'}
+            {mode === 'propose' ? journeyCopy.dates.form.proposeTitle : journeyCopy.dates.form.confirmTitle}
           </p>
 
           <DateTimePicker
@@ -483,13 +469,13 @@ function StageDateRow({
             time={pickerTime}
             onDateChange={setPickerDate}
             onTimeChange={setPickerTime}
-            label="Escolher data"
+            label={journeyCopy.dates.form.chooseDate}
             disabled={isPending}
             disablePastDates={sd.date_type === 'meeting'}
           />
 
           <Input
-            placeholder="Observação (opcional)"
+            placeholder={journeyCopy.dates.form.notesPlaceholder}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="h-11 text-sm"
@@ -500,7 +486,7 @@ function StageDateRow({
           {/* Customer microcopy */}
           {mode === 'propose' && !isStaff && sd.bwild_confirmed_at && (
             <p className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
-              ✨ Sua sugestão será analisada pela equipe Bwild. Entraremos em contato para confirmar a melhor data.
+              ✨ {journeyCopy.dates.meeting.customerMicrocopy}
             </p>
           )}
 
@@ -512,14 +498,14 @@ function StageDateRow({
               onClick={handleSubmit}
             >
               {isPending ? (
-                <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-label="Salvando" />
+                <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-label={journeyCopy.a11y.saving} />
               ) : (
                 <Check className="h-3.5 w-3.5" aria-hidden />
               )}
-              {mode === 'propose' ? 'Enviar sugestão' : 'Confirmar'}
+              {mode === 'propose' ? journeyCopy.dates.form.submitPropose : journeyCopy.dates.form.submitConfirm}
             </Button>
             <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={() => setMode('idle')} disabled={isPending}>
-              <X className="h-3.5 w-3.5 mr-1" aria-hidden /> Cancelar
+              <X className="h-3.5 w-3.5 mr-1" aria-hidden /> {journeyCopy.dates.form.cancel}
             </Button>
           </div>
         </div>
@@ -548,10 +534,10 @@ function CreateStageDateForm({
     <div className="p-4 rounded-xl border border-dashed border-primary/30 bg-accent/30 space-y-3" role="form" aria-label="Nova data importante">
       <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
         <Plus className="h-3.5 w-3.5 text-primary" aria-hidden />
-        Nova data importante
+        {journeyCopy.dates.create.title}
       </p>
       <Input
-        placeholder="Título (ex: Reunião de briefing)"
+        placeholder={journeyCopy.dates.create.titlePlaceholder}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="h-11 text-sm"
@@ -563,11 +549,9 @@ function CreateStageDateForm({
         onChange={(e) => setDateType(e.target.value as StageDate['date_type'])}
         aria-label="Tipo de data"
       >
-        <option value="meeting">📅 Reunião</option>
-        <option value="deadline">⏰ Prazo</option>
-        <option value="start_planned">🟢 Início planejado</option>
-        <option value="end_planned">🔴 Término planejado</option>
-        <option value="milestone">🏁 Marco</option>
+        {Object.entries(journeyCopy.dates.types).map(([key, { emoji, label }]) => (
+          <option key={key} value={key}>{emoji} {label}</option>
+        ))}
       </select>
       <div className="flex gap-2">
         <Button
@@ -579,7 +563,7 @@ function CreateStageDateForm({
               { stage_key: stageKey, date_type: dateType, title: title.trim() },
               {
                 onSuccess: () => onClose(),
-                onError: () => toast.error('Erro ao criar data. Tente novamente.'),
+                onError: () => toast.error(journeyCopy.errors.create_date),
               },
             );
           }}
@@ -589,9 +573,9 @@ function CreateStageDateForm({
           ) : (
             <Check className="h-3.5 w-3.5" aria-hidden />
           )}
-          Criar
+          {journeyCopy.dates.create.create}
         </Button>
-        <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={onClose}>Cancelar</Button>
+        <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={onClose}>{journeyCopy.dates.create.cancel}</Button>
       </div>
     </div>
   );
@@ -605,11 +589,11 @@ function EmptyDatesState({ isStaff }: { isStaff: boolean }) {
       <div className="mx-auto w-10 h-10 rounded-full bg-accent flex items-center justify-center">
         <CalendarIconSolid className="h-5 w-5 text-primary" aria-hidden />
       </div>
-      <p className="text-sm font-medium text-foreground">Sem datas ainda</p>
+      <p className="text-sm font-medium text-foreground">{journeyCopy.dates.panel.empty_title}</p>
       <p className="text-xs text-muted-foreground max-w-[240px] mx-auto">
         {isStaff
-          ? 'Adicione datas importantes para esta etapa, como reuniões, prazos e marcos.'
-          : 'As datas desta etapa ainda serão definidas. Você será notificado quando houver novidades.'}
+          ? journeyCopy.dates.panel.empty_body_admin
+          : journeyCopy.dates.panel.empty_body_client}
       </p>
     </div>
   );
@@ -664,7 +648,7 @@ function InlineDateField({
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">{label}</p>
           <p className={cn("text-sm font-medium", isConfirmed ? "text-[hsl(var(--success))]" : "text-foreground")}>
-            {parsedDate ? format(parsedDate, "dd 'de' MMM, yyyy", { locale: ptBR }) : 'Em definição'}
+            {parsedDate ? format(parsedDate, "dd 'de' MMM, yyyy", { locale: ptBR }) : journeyCopy.dates.status.inDefinition}
           </p>
         </div>
       </div>
@@ -680,13 +664,13 @@ function InlineDateField({
             "hover:bg-muted/50 active:bg-muted/70 focus-visible:outline-2 focus-visible:outline-primary",
             "border border-transparent hover:border-border"
           )}
-          aria-label={`${label}: ${parsedDate ? format(parsedDate, "dd/MM/yyyy") : 'Selecionar data'}`}
+          aria-label={`${label}: ${parsedDate ? format(parsedDate, "dd/MM/yyyy") : journeyCopy.dates.status.selectDate}`}
         >
           <Icon className={cn("h-4 w-4 shrink-0", isConfirmed ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">{label}</p>
             <p className={cn("text-sm font-medium", isConfirmed ? "text-[hsl(var(--success))]" : parsedDate ? "text-foreground" : "text-muted-foreground")}>
-              {parsedDate ? format(parsedDate, "dd 'de' MMM, yyyy", { locale: ptBR }) : 'Selecionar data'}
+              {parsedDate ? format(parsedDate, "dd 'de' MMM, yyyy", { locale: ptBR }) : journeyCopy.dates.status.selectDate}
             </p>
           </div>
           <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
@@ -704,7 +688,7 @@ function InlineDateField({
           <div className="p-2 border-t">
             <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive min-h-[44px]"
               onClick={() => { onSelect(undefined); setOpen(false); }}>
-              <X className="h-4 w-4 mr-1" aria-hidden /> Limpar data
+              <X className="h-4 w-4 mr-1" aria-hidden /> {journeyCopy.dates.status.clearDate}
             </Button>
           </div>
         )}
@@ -753,9 +737,9 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
       });
 
       queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
-      toast.success('Data atualizada');
+      toast.success(journeyCopy.toasts.date_updated);
     } catch {
-      toast.error('Erro ao atualizar data. Tente novamente.');
+      toast.error(journeyCopy.errors.update_date);
     }
   };
 
@@ -777,11 +761,11 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
           <div className="p-1.5 rounded-lg bg-accent">
             <CalendarIcon className="h-4 w-4 text-primary" aria-hidden />
           </div>
-          <h4 className="text-sm font-bold text-foreground tracking-tight">Datas importantes</h4>
+          <h4 className="text-sm font-bold text-foreground tracking-tight">{journeyCopy.dates.panel.title}</h4>
         </div>
         {!showCreate && (
           <Button variant="outline" size="sm" className="h-11 text-xs gap-1.5 min-w-[44px]" onClick={() => setShowCreate(true)}>
-            <Plus className="h-3.5 w-3.5" aria-hidden /> Nova data
+            <Plus className="h-3.5 w-3.5" aria-hidden /> {journeyCopy.dates.panel.newDate}
           </Button>
         )}
       </div>
@@ -791,7 +775,7 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
           <div className="space-y-1.5 p-3 rounded-lg bg-muted/30 border border-border/30">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Proposta do cliente
+              {journeyCopy.dates.status.proposed}
             </p>
             <InlineDateField label="Início proposto" value={dates.proposed_start} icon={Clock}
               onSelect={(d) => handleDateChange('proposed_start', d)} canEdit={canEditProposed} />
@@ -800,7 +784,7 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
           </div>
           <div className="space-y-1.5 p-3 rounded-lg bg-muted/30 border border-border/30">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Confirmada pela Bwild
+              {journeyCopy.dates.status.confirmed}
             </p>
             <InlineDateField label="Início confirmado" value={dates.confirmed_start} icon={CheckCircle2}
               isConfirmed={!!dates.confirmed_start}
