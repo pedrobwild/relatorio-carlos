@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export type RecordCategory = 'decision' | 'conversation' | 'history';
 export type RecordResponsible = 'client' | 'bwild';
@@ -31,6 +32,7 @@ export function useStageRecords(stageId: string | undefined, projectId: string |
       return (data || []) as unknown as StageRecord[];
     },
     enabled: !!stageId && !!projectId,
+    retry: 2,
   });
 }
 
@@ -57,6 +59,10 @@ export function useCreateStageRecord() {
     },
     onSuccess: ({ stageId }) => {
       qc.invalidateQueries({ queryKey: ['stage-records', stageId] });
+      toast.success('Registro salvo com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao salvar registro. Tente novamente.');
     },
   });
 }
@@ -75,6 +81,10 @@ export function useDeleteStageRecord() {
     },
     onSuccess: ({ stageId }) => {
       qc.invalidateQueries({ queryKey: ['stage-records', stageId] });
+      toast.success('Registro removido');
+    },
+    onError: () => {
+      toast.error('Erro ao remover registro. Tente novamente.');
     },
   });
 }
