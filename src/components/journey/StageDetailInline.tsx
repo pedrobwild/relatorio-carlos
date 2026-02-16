@@ -149,12 +149,12 @@ export function StageDetailInline({
       <Separator />
 
       {/* Footer actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {isAdmin && !isEditing && (
           <Button
             size="sm"
             variant="outline"
-            className="h-10 gap-1.5 text-xs min-h-[44px]"
+            className="h-12 sm:h-10 gap-1.5 text-xs min-h-[44px] w-full sm:w-auto"
             onClick={() => setIsEditing(true)}
           >
             <Edit2 className="h-3.5 w-3.5" />
@@ -167,7 +167,7 @@ export function StageDetailInline({
             <AlertDialogTrigger asChild>
               <Button
                 size="sm"
-                className="h-10 gap-1.5 text-xs min-h-[44px] ml-auto"
+                className="h-12 sm:h-10 gap-1.5 text-xs min-h-[44px] w-full sm:w-auto sm:ml-auto"
                 disabled={completeStage.isPending}
               >
                 {completeStage.isPending ? (
@@ -202,7 +202,7 @@ export function StageDetailInline({
         )}
 
         {stage.status === 'completed' && (
-          <div className="ml-auto flex items-center gap-1.5 text-xs text-[hsl(var(--success))] font-medium">
+          <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-[hsl(var(--success))] font-medium sm:ml-auto py-2">
             <CheckCircle2 className="h-4 w-4" />
             Etapa concluída
           </div>
@@ -213,6 +213,7 @@ export function StageDetailInline({
 }
 
 /* ─── Admin Edit Form ─── */
+
 
 function AdminEditForm({
   stage,
