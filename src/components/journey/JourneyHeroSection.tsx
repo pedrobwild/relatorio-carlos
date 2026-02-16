@@ -89,7 +89,7 @@ export function JourneyHeroSection({ hero, projectId, isAdmin }: JourneyHeroSect
           {hero.badge_text}
         </Badge>
       )}
-      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground pr-10">
+      <h1 className="text-lg md:text-xl font-bold text-foreground pr-10">
         {hero.title}
       </h1>
       <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
