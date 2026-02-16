@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon, Check, X, Clock, CheckCircle2, Plus, History,
-  AlertTriangle, Calendar as CalendarIconSolid, Sparkles,
+  AlertTriangle, Calendar as CalendarIconSolid, Sparkles, RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -40,13 +40,15 @@ interface StageDates {
 
 // ─── Time Picker Helper ───
 
-function TimePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function TimePicker({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
   return (
     <Input
       type="time"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-9 w-[110px] text-sm font-mono"
+      className="h-11 w-[120px] text-sm font-mono"
+      aria-label="Horário"
+      disabled={disabled}
     />
   );
 }
@@ -71,13 +73,14 @@ function DateTimePicker({
   disablePastDates?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <fieldset className="flex items-center gap-2 flex-wrap" disabled={disabled}>
+      <legend className="sr-only">{label}</legend>
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className={cn(
-            "h-9 text-xs flex-1 min-w-[140px] justify-start",
+            "h-11 text-xs flex-1 min-w-[140px] justify-start",
             !date && "text-muted-foreground"
-          )} disabled={disabled}>
+          )} disabled={disabled} aria-label="Selecionar data">
             <CalendarIcon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
             {date ? format(date, "dd/MM/yyyy") : label}
           </Button>
@@ -93,8 +96,8 @@ function DateTimePicker({
           />
         </PopoverContent>
       </Popover>
-      <TimePicker value={time} onChange={onTimeChange} />
-    </div>
+      <TimePicker value={time} onChange={onTimeChange} disabled={disabled} />
+    </fieldset>
   );
 }
 
@@ -152,8 +155,8 @@ function DivergenceWarning({ proposed, confirmed }: { proposed: string; confirme
   if (diffDays === 0) return null;
 
   return (
-    <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-[hsl(var(--warning-light))] border border-[hsl(var(--warning)/0.15)]">
-      <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--warning))] shrink-0 mt-0.5" />
+    <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-[hsl(var(--warning-light))] border border-[hsl(var(--warning)/0.15)]" role="alert">
+      <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--warning))] shrink-0 mt-0.5" aria-hidden />
       <p className="text-xs text-[hsl(var(--warning))]">
         A data confirmada difere da proposta em <span className="font-semibold">{diffDays} dia{diffDays > 1 ? 's' : ''}</span>.
         Em caso de dúvida, entre em contato com sua CSM.
@@ -161,8 +164,6 @@ function DivergenceWarning({ proposed, confirmed }: { proposed: string; confirme
     </div>
   );
 }
-
-// ─── Stage Date Row (Granular) ───
 
 // ─── History Drawer ───
 
@@ -197,7 +198,7 @@ function DateHistoryDrawer({
       <DrawerContent className="max-h-[85vh]">
         <DrawerHeader className="text-left">
           <DrawerTitle className="text-base flex items-center gap-2">
-            <History className="h-4 w-4 text-primary" />
+            <History className="h-4 w-4 text-primary" aria-hidden />
             Histórico de alterações
           </DrawerTitle>
           <DrawerDescription className="text-xs">{title}</DrawerDescription>
@@ -205,15 +206,15 @@ function DateHistoryDrawer({
 
         <div className="px-4 pb-6 overflow-y-auto">
           {isLoading ? (
-            <div className="space-y-3 py-4">
+            <div className="space-y-3 py-4" aria-busy="true" aria-label="Carregando histórico">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-14 rounded-lg" />
               ))}
             </div>
           ) : events && events.length > 0 ? (
-            <div className="relative pl-5 space-y-0">
+            <ol className="relative pl-5 space-y-0 list-none" aria-label="Histórico de alterações">
               {/* Vertical line */}
-              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
+              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" aria-hidden />
 
               {events.map((ev, idx) => {
                 const isFirst = idx === 0;
@@ -221,12 +222,12 @@ function DateHistoryDrawer({
                 const actionLabel = actionLabels[ev.action] || ev.action;
 
                 return (
-                  <div key={ev.id} className="relative flex gap-3 py-3">
+                  <li key={ev.id} className="relative flex gap-3 py-3">
                     {/* Dot */}
                     <div className={cn(
                       "absolute -left-5 top-[18px] h-3.5 w-3.5 rounded-full border-2 border-background shrink-0",
                       isFirst ? "bg-primary" : "bg-muted-foreground/30"
-                    )} />
+                    )} aria-hidden />
 
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -247,13 +248,13 @@ function DateHistoryDrawer({
                         {format(parseISO(ev.created_at), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
                       </p>
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           ) : (
             <div className="text-center py-8 space-y-2">
-              <History className="h-8 w-8 text-muted-foreground/30 mx-auto" />
+              <History className="h-8 w-8 text-muted-foreground/30 mx-auto" aria-hidden />
               <p className="text-sm text-muted-foreground">Nenhuma alteração registrada</p>
               <p className="text-xs text-muted-foreground/60">O histórico aparecerá aqui conforme as datas forem atualizadas.</p>
             </div>
@@ -302,12 +303,26 @@ function StageDateRow({
     if (mode === 'propose') {
       propose.mutate(
         { stage_date_id: sd.id, datetime: iso, notes: notes || undefined },
-        { onSuccess: () => setMode('idle') },
+        {
+          onSuccess: () => setMode('idle'),
+          onError: (err: Error) => {
+            toast.error('Não foi possível salvar a sugestão. Tente novamente.', {
+              action: { label: 'Tentar novamente', onClick: handleSubmit },
+            });
+          },
+        },
       );
     } else if (mode === 'confirm') {
       confirm.mutate(
         { stage_date_id: sd.id, datetime: iso, notes: notes || undefined },
-        { onSuccess: () => setMode('idle') },
+        {
+          onSuccess: () => setMode('idle'),
+          onError: (err: Error) => {
+            toast.error('Não foi possível confirmar a data. Tente novamente.', {
+              action: { label: 'Tentar novamente', onClick: handleSubmit },
+            });
+          },
+        },
       );
     }
   };
@@ -315,7 +330,10 @@ function StageDateRow({
   const isPending = propose.isPending || confirm.isPending;
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card shadow-[var(--shadow-sm)] overflow-hidden transition-shadow hover:shadow-[var(--shadow-md)]">
+    <article
+      className="rounded-xl border border-border/60 bg-card shadow-[var(--shadow-sm)] overflow-hidden transition-shadow hover:shadow-[var(--shadow-md)]"
+      aria-label={`${tl.label}: ${sd.title}`}
+    >
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
         <span className="text-base" aria-hidden>{tl.emoji}</span>
@@ -324,16 +342,16 @@ function StageDateRow({
           <p className="text-[11px] text-muted-foreground">{tl.label}</p>
         </div>
         <Badge variant="outline" className={cn("text-[10px] gap-1 border", cfg.badgeClass)}>
-          <StatusIcon className="h-3 w-3" />
+          <StatusIcon className="h-3 w-3" aria-hidden />
           {cfg.label}
         </Badge>
       </div>
 
-      {/* Date display */}
-      <div className="px-4 pb-3 grid gap-2 sm:grid-cols-2">
+      {/* Date display — stacks vertically on mobile */}
+      <div className="px-4 pb-3 grid gap-2 grid-cols-1 sm:grid-cols-2">
         {/* Proposed */}
-        <div className="flex items-center gap-2.5 min-h-[40px] px-3 py-2 rounded-lg bg-muted/40">
-          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+        <div className="flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg bg-muted/40">
+          <Clock className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Proposta do cliente</p>
             {sd.customer_proposed_at ? (
@@ -348,10 +366,10 @@ function StageDateRow({
 
         {/* Confirmed */}
         <div className={cn(
-          "flex items-center gap-2.5 min-h-[40px] px-3 py-2 rounded-lg",
+          "flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg",
           sd.bwild_confirmed_at ? "bg-[hsl(var(--success-light))]" : "bg-muted/40"
         )}>
-          <CheckCircle2 className={cn("h-4 w-4 shrink-0", sd.bwild_confirmed_at ? "text-[hsl(var(--success))]" : "text-muted-foreground")} />
+          <CheckCircle2 className={cn("h-4 w-4 shrink-0", sd.bwild_confirmed_at ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Confirmada pela Bwild</p>
             {sd.bwild_confirmed_at ? (
@@ -388,7 +406,7 @@ function StageDateRow({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs gap-1.5"
+              className="h-11 text-xs gap-1.5 min-w-[44px]"
               onClick={() => {
                 setPickerDate(sd.customer_proposed_at ? parseISO(sd.customer_proposed_at) : undefined);
                 setPickerTime(sd.customer_proposed_at ? format(parseISO(sd.customer_proposed_at), 'HH:mm') : '09:00');
@@ -396,7 +414,7 @@ function StageDateRow({
                 setMode('propose');
               }}
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
               {sd.customer_proposed_at ? 'Alterar sugestão' : 'Sugerir data'}
             </Button>
           )}
@@ -405,7 +423,7 @@ function StageDateRow({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5"
+                className="h-11 text-xs gap-1.5 min-w-[44px]"
                 onClick={() => {
                   setPickerDate(sd.customer_proposed_at ? parseISO(sd.customer_proposed_at) : undefined);
                   setPickerTime(sd.customer_proposed_at ? format(parseISO(sd.customer_proposed_at), 'HH:mm') : '09:00');
@@ -417,7 +435,7 @@ function StageDateRow({
               </Button>
               <Button
                 size="sm"
-                className="h-8 text-xs gap-1.5"
+                className="h-11 text-xs gap-1.5 min-w-[44px]"
                 onClick={() => {
                   const ref = sd.customer_proposed_at || sd.bwild_confirmed_at;
                   setPickerDate(ref ? parseISO(ref) : undefined);
@@ -426,7 +444,7 @@ function StageDateRow({
                   setMode('confirm');
                 }}
               >
-                <CheckCircle2 className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                 Confirmar data
               </Button>
             </>
@@ -434,10 +452,11 @@ function StageDateRow({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 text-xs gap-1 ml-auto text-muted-foreground hover:text-foreground"
+            className="h-11 text-xs gap-1 ml-auto text-muted-foreground hover:text-foreground min-w-[44px]"
             onClick={() => setShowHistory(true)}
+            aria-label={`Ver histórico de ${sd.title}`}
           >
-            <History className="h-3.5 w-3.5" />
+            <History className="h-3.5 w-3.5" aria-hidden />
             Ver histórico
           </Button>
         </div>
@@ -473,8 +492,9 @@ function StageDateRow({
             placeholder="Observação (opcional)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="h-9 text-sm"
+            className="h-11 text-sm"
             disabled={isPending}
+            aria-label="Observação"
           />
 
           {/* Customer microcopy */}
@@ -487,25 +507,25 @@ function StageDateRow({
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              className="h-8 gap-1.5"
+              className="h-11 gap-1.5 min-w-[44px]"
               disabled={!pickerDate || isPending}
               onClick={handleSubmit}
             >
               {isPending ? (
-                <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-label="Salvando" />
               ) : (
-                <Check className="h-3.5 w-3.5" />
+                <Check className="h-3.5 w-3.5" aria-hidden />
               )}
               {mode === 'propose' ? 'Enviar sugestão' : 'Confirmar'}
             </Button>
-            <Button variant="ghost" size="sm" className="h-8" onClick={() => setMode('idle')} disabled={isPending}>
-              <X className="h-3.5 w-3.5 mr-1" /> Cancelar
+            <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={() => setMode('idle')} disabled={isPending}>
+              <X className="h-3.5 w-3.5 mr-1" aria-hidden /> Cancelar
             </Button>
           </div>
         </div>
       )}
 
-    </div>
+    </article>
   );
 }
 
@@ -525,21 +545,23 @@ function CreateStageDateForm({
   const create = useCreateStageDate(projectId);
 
   return (
-    <div className="p-4 rounded-xl border border-dashed border-primary/30 bg-accent/30 space-y-3">
+    <div className="p-4 rounded-xl border border-dashed border-primary/30 bg-accent/30 space-y-3" role="form" aria-label="Nova data importante">
       <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-        <Plus className="h-3.5 w-3.5 text-primary" />
+        <Plus className="h-3.5 w-3.5 text-primary" aria-hidden />
         Nova data importante
       </p>
       <Input
         placeholder="Título (ex: Reunião de briefing)"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="h-9 text-sm"
+        className="h-11 text-sm"
+        aria-label="Título da data"
       />
       <select
-        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         value={dateType}
         onChange={(e) => setDateType(e.target.value as StageDate['date_type'])}
+        aria-label="Tipo de data"
       >
         <option value="meeting">📅 Reunião</option>
         <option value="deadline">⏰ Prazo</option>
@@ -550,23 +572,26 @@ function CreateStageDateForm({
       <div className="flex gap-2">
         <Button
           size="sm"
-          className="h-8 gap-1.5"
+          className="h-11 gap-1.5 min-w-[44px]"
           disabled={!title.trim() || create.isPending}
           onClick={() => {
             create.mutate(
               { stage_key: stageKey, date_type: dateType, title: title.trim() },
-              { onSuccess: () => onClose() },
+              {
+                onSuccess: () => onClose(),
+                onError: () => toast.error('Erro ao criar data. Tente novamente.'),
+              },
             );
           }}
         >
           {create.isPending ? (
             <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Check className="h-3.5 w-3.5" />
+            <Check className="h-3.5 w-3.5" aria-hidden />
           )}
           Criar
         </Button>
-        <Button variant="ghost" size="sm" className="h-8" onClick={onClose}>Cancelar</Button>
+        <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={onClose}>Cancelar</Button>
       </div>
     </div>
   );
@@ -578,9 +603,9 @@ function EmptyDatesState({ isStaff }: { isStaff: boolean }) {
   return (
     <div className="text-center py-6 space-y-2">
       <div className="mx-auto w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-        <CalendarIconSolid className="h-5 w-5 text-primary" />
+        <CalendarIconSolid className="h-5 w-5 text-primary" aria-hidden />
       </div>
-      <p className="text-sm font-medium text-foreground">Nenhuma data registrada</p>
+      <p className="text-sm font-medium text-foreground">Sem datas ainda</p>
       <p className="text-xs text-muted-foreground max-w-[240px] mx-auto">
         {isStaff
           ? 'Adicione datas importantes para esta etapa, como reuniões, prazos e marcos.'
@@ -594,7 +619,7 @@ function EmptyDatesState({ isStaff }: { isStaff: boolean }) {
 
 function DatesSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" aria-busy="true" aria-label="Carregando datas">
       {[1, 2].map((i) => (
         <div key={i} className="rounded-xl border border-border/60 p-4 space-y-3">
           <div className="flex items-center gap-3">
@@ -602,7 +627,7 @@ function DatesSkeleton() {
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-5 w-24 ml-auto rounded-full" />
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
             <Skeleton className="h-14 rounded-lg" />
             <Skeleton className="h-14 rounded-lg" />
           </div>
@@ -634,8 +659,8 @@ function InlineDateField({
 
   if (!canEdit) {
     return (
-      <div className="flex items-center gap-2 min-h-[40px]">
-        <Icon className={cn("h-4 w-4 shrink-0", isConfirmed ? "text-[hsl(var(--success))]" : "text-muted-foreground")} />
+      <div className="flex items-center gap-2 min-h-[44px]">
+        <Icon className={cn("h-4 w-4 shrink-0", isConfirmed ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">{label}</p>
           <p className={cn("text-sm font-medium", isConfirmed ? "text-[hsl(var(--success))]" : "text-foreground")}>
@@ -649,19 +674,22 @@ function InlineDateField({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className={cn(
-          "flex items-center gap-2 min-h-[44px] w-full rounded-lg px-3 py-2 text-left transition-colors",
-          "hover:bg-muted/50 active:bg-muted/70 focus-visible:outline-2 focus-visible:outline-primary",
-          "border border-transparent hover:border-border"
-        )}>
-          <Icon className={cn("h-4 w-4 shrink-0", isConfirmed ? "text-[hsl(var(--success))]" : "text-muted-foreground")} />
+        <button
+          className={cn(
+            "flex items-center gap-2 min-h-[44px] w-full rounded-lg px-3 py-2 text-left transition-colors",
+            "hover:bg-muted/50 active:bg-muted/70 focus-visible:outline-2 focus-visible:outline-primary",
+            "border border-transparent hover:border-border"
+          )}
+          aria-label={`${label}: ${parsedDate ? format(parsedDate, "dd/MM/yyyy") : 'Selecionar data'}`}
+        >
+          <Icon className={cn("h-4 w-4 shrink-0", isConfirmed ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground">{label}</p>
             <p className={cn("text-sm font-medium", isConfirmed ? "text-[hsl(var(--success))]" : parsedDate ? "text-foreground" : "text-muted-foreground")}>
               {parsedDate ? format(parsedDate, "dd 'de' MMM, yyyy", { locale: ptBR }) : 'Selecionar data'}
             </p>
           </div>
-          <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+          <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -674,9 +702,9 @@ function InlineDateField({
         />
         {parsedDate && (
           <div className="p-2 border-t">
-            <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive"
+            <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive min-h-[44px]"
               onClick={() => { onSelect(undefined); setOpen(false); }}>
-              <X className="h-4 w-4 mr-1" /> Limpar data
+              <X className="h-4 w-4 mr-1" aria-hidden /> Limpar data
             </Button>
           </div>
         )}
@@ -727,7 +755,7 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
       queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
       toast.success('Data atualizada');
     } catch {
-      toast.error('Erro ao atualizar data');
+      toast.error('Erro ao atualizar data. Tente novamente.');
     }
   };
 
@@ -739,25 +767,28 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
   if (!isAdmin && !hasAnyDate && !hasGranularDates && !isLoading) return null;
 
   return (
-    <div className="space-y-4 p-4 md:p-5 bg-card rounded-xl border border-border/50 shadow-[var(--shadow-sm)]">
+    <section
+      className="space-y-4 p-4 md:p-5 bg-card rounded-xl border border-border/50 shadow-[var(--shadow-sm)]"
+      aria-label="Datas importantes da etapa"
+    >
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded-lg bg-accent">
-            <CalendarIcon className="h-4 w-4 text-primary" />
+            <CalendarIcon className="h-4 w-4 text-primary" aria-hidden />
           </div>
           <h4 className="text-sm font-bold text-foreground tracking-tight">Datas importantes</h4>
         </div>
         {!showCreate && (
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowCreate(true)}>
-            <Plus className="h-3.5 w-3.5" /> Nova data
+          <Button variant="outline" size="sm" className="h-11 text-xs gap-1.5 min-w-[44px]" onClick={() => setShowCreate(true)}>
+            <Plus className="h-3.5 w-3.5" aria-hidden /> Nova data
           </Button>
         )}
       </div>
 
       {/* Inline dates (legacy journey_stages columns) */}
       {(hasAnyDate || isAdmin) && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
           <div className="space-y-1.5 p-3 rounded-lg bg-muted/30 border border-border/30">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
               Proposta do cliente
@@ -798,6 +829,6 @@ export function StageDatesPanel({ stageId, projectId, dates, isAdmin, stageName 
       {showCreate && (
         <CreateStageDateForm projectId={projectId} stageKey={stageKey} onClose={() => setShowCreate(false)} />
       )}
-    </div>
+    </section>
   );
 }

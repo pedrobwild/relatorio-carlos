@@ -9,7 +9,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import {
   useStageDates,
   useCreateStageDate,
@@ -92,6 +94,14 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
     if (!pickerDate) return;
     const iso = buildISO(pickerDate, pickerTime);
 
+    const errorHandler = {
+      onError: () => {
+        toast.error('Não foi possível salvar. Tente novamente.', {
+          action: { label: 'Tentar novamente', onClick: handleSubmit },
+        });
+      },
+    };
+
     // If no meeting date exists yet, create one first then propose
     if (!meetingDate) {
       const title = ctaText || `Reunião - ${stageName}`;
@@ -103,7 +113,7 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
           customer_proposed_at: iso,
           notes: notes || undefined,
         },
-        { onSuccess: () => setMode('idle') },
+        { onSuccess: () => setMode('idle'), ...errorHandler },
       );
       return;
     }
@@ -111,17 +121,27 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
     if (mode === 'propose') {
       propose.mutate(
         { stage_date_id: meetingDate.id, datetime: iso, notes: notes || undefined },
-        { onSuccess: () => setMode('idle') },
+        { onSuccess: () => setMode('idle'), ...errorHandler },
       );
     } else if (mode === 'confirm') {
       confirm.mutate(
         { stage_date_id: meetingDate.id, datetime: iso, notes: notes || undefined },
-        { onSuccess: () => setMode('idle') },
+        { onSuccess: () => setMode('idle'), ...errorHandler },
       );
     }
   };
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card" aria-busy="true">
+        <Skeleton className="h-5 w-5 rounded-full" />
+        <div className="flex-1 space-y-1.5">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-48" />
+        </div>
+      </div>
+    );
+  }
 
   // ─── Confirmed state ───
   if (isConfirmed && meetingDate) {
@@ -136,12 +156,12 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
             </p>
           </div>
           {!isAdmin && (
-            <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={handleOpenPropose}>
+            <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenPropose}>
               Alterar sugestão
             </Button>
           )}
           {isAdmin && (
-            <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={handleOpenConfirm}>
+            <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenConfirm}>
               Ajustar
             </Button>
           )}
@@ -191,12 +211,12 @@ export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCT
             </p>
           </div>
           {!isAdmin ? (
-            <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={handleOpenPropose}>
+            <Button variant="outline" size="sm" className="h-11 text-xs shrink-0 min-w-[44px]" onClick={handleOpenPropose}>
               Alterar sugestão
             </Button>
           ) : (
-            <Button size="sm" className="h-8 text-xs shrink-0 gap-1.5" onClick={handleOpenConfirm}>
-              <CheckCircle2 className="h-3.5 w-3.5" />
+            <Button size="sm" className="h-11 text-xs shrink-0 gap-1.5 min-w-[44px]" onClick={handleOpenConfirm}>
+              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
               Confirmar data
             </Button>
           )}
