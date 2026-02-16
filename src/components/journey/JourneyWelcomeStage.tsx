@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Users, Compass, ArrowRight, Mail, Phone, ImageIcon, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Users, ArrowRight, Mail, Phone, ImageIcon, Plus, Edit2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
 import { JourneyHero } from '@/hooks/useProjectJourney';
 import { useJourneyTeamMembers, JourneyTeamMember } from '@/hooks/useJourneyTeamMembers';
 import { TeamMemberEditModal } from '@/components/journey/TeamMemberEditModal';
+import { WelcomeGuideCard } from '@/components/journey/WelcomeGuideCard';
+import { WelcomeContractCard } from '@/components/journey/WelcomeContractCard';
 
 interface JourneyWelcomeStageProps {
   hero: JourneyHero;
@@ -39,14 +40,7 @@ const contentVariants = {
   },
 };
 
-const portalBullets = [
-  { icon: '📋', text: 'Acompanhe cada etapa e saiba exatamente o que está acontecendo.' },
-  { icon: '✅', text: 'Conclua pendências e aprove documentos direto por aqui.' },
-  { icon: '📅', text: 'Veja datas, reuniões e prazos em um só lugar.' },
-];
-
 export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextStageName }: JourneyWelcomeStageProps) {
-  const [guideExpanded, setGuideExpanded] = useState(true);
   const [teamExpanded, setTeamExpanded] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<JourneyTeamMember | null>(null);
@@ -71,76 +65,17 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextS
   const openAddModal = () => { setEditingMember(null); setEditModalOpen(true); };
   const openEditModal = (member: JourneyTeamMember) => { setEditingMember(member); setEditModalOpen(true); };
 
+  const scrollToTeam = () => {
+    setTeamExpanded(true);
+    setTimeout(() => {
+      document.querySelector('[data-stage-id="welcome-team"]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 350);
+  };
+
   return (
     <div className="space-y-4">
       {/* Block 1: Guia de Uso */}
-      <Card
-        data-stage-id="welcome-guide"
-        className="transition-shadow duration-200 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10"
-      >
-        <CardHeader
-          className="cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors p-4 md:p-6"
-          onClick={() => setGuideExpanded(!guideExpanded)}
-          role="button"
-          aria-expanded={guideExpanded}
-          aria-label="Guia de Uso"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setGuideExpanded(!guideExpanded); } }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary shrink-0">
-              <Compass className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">Guia de Uso</h3>
-              <p className="text-xs text-primary font-medium">Conheça o portal Bwild e como extrair ao máximo esta ferramenta</p>
-            </div>
-            <motion.div animate={{ rotate: guideExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </motion.div>
-          </div>
-        </CardHeader>
-
-        <AnimatePresence initial={false}>
-          {guideExpanded && (
-            <motion.div key="guide-content" variants={contentVariants} initial="collapsed" animate="expanded" exit="exit">
-              <CardContent className="space-y-5 pt-0 px-4 pb-5 md:px-6 md:pb-6">
-                <div className="space-y-2">
-                  <h2 className="text-base md:text-lg font-bold text-foreground">{hero.title}</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{hero.subtitle}</p>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-foreground">Como usar o portal</h4>
-                  <ul className="space-y-2.5">
-                    {portalBullets.map((bullet, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <span className="text-base leading-none mt-0.5 shrink-0">{bullet.icon}</span>
-                        <span className="text-sm text-muted-foreground leading-relaxed">{bullet.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Button
-                  className="w-full md:w-auto min-h-[44px] gap-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTeamExpanded(true);
-                    // Scroll to team section after a brief delay
-                    setTimeout(() => {
-                      document.querySelector('[data-stage-id="welcome-team"]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }, 350);
-                  }}
-                >
-                  Entendi, conhecer meu time
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
+      <WelcomeGuideCard hero={hero} onScrollToTeam={scrollToTeam} />
 
       {/* Block 2: Seu Time */}
       <Card
@@ -207,6 +142,9 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextS
           )}
         </AnimatePresence>
       </Card>
+
+      {/* Block 3: Resumo do Contrato */}
+      <WelcomeContractCard />
 
       {/* Advance button */}
       <div className="pt-2">
