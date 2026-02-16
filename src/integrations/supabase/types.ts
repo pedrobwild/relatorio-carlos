@@ -985,6 +985,73 @@ export type Database = {
           },
         ]
       }
+      journey_stage_records: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          evidence_url: string | null
+          id: string
+          project_id: string
+          record_date: string
+          responsible: string
+          stage_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          evidence_url?: string | null
+          id?: string
+          project_id: string
+          record_date?: string
+          responsible?: string
+          stage_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          evidence_url?: string | null
+          id?: string
+          project_id?: string
+          record_date?: string
+          responsible?: string
+          stage_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_stage_records_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "journey_stage_records_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_stage_records_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "journey_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_stages: {
         Row: {
           confirmed_end: string | null
