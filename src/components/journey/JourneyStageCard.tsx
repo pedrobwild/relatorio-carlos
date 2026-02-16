@@ -18,7 +18,7 @@ import { StageSummary } from './StageSummary';
 import { StageDetailsSections } from './StageDetailsSections';
 import { StageChecklist } from './StageChecklist';
 import { StageDatesPanel } from './StageDatesPanel';
-import { MeetingScheduler } from './MeetingScheduler';
+import { MeetingCTA } from './MeetingCTA';
 
 interface JourneyStageCardProps {
   stage: JourneyStage;
@@ -280,7 +280,7 @@ export const JourneyStageCard = forwardRef<HTMLDivElement, JourneyStageCardProps
                 {/* CTA */}
                 {stage.cta_visible && stage.cta_text && stage.cta_text.toLowerCase().includes('reunião') ? (
                   <div className="pt-2 space-y-2">
-                    <MeetingScheduler
+                    <MeetingCTA
                       stageId={stage.id}
                       stageName={stage.name}
                       projectId={projectId}
