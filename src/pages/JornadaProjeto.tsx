@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useProjectJourney, useInitializeJourney, JourneyStage } from '@/hooks/useProjectJourney';
+import { useProjectJourney, useInitializeJourney, JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 
 import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
 import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper';
@@ -45,6 +45,8 @@ export default function JornadaProjeto() {
   const [activeTab, setActiveTab] = useState<string>('jornada');
   // 'welcome' = show welcome stage; a stage id = show that stage inline
   const [activeView, setActiveView] = useState<string>('welcome');
+  // Track whether client has acknowledged welcome stage
+  const [welcomeCompleted, setWelcomeCompleted] = useState(false);
 
   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
   const isLoading = projectLoading || roleLoading || journeyLoading;
@@ -65,7 +67,7 @@ export default function JornadaProjeto() {
     sort_order: 0,
     name: 'Boas-vindas',
     icon: 'users',
-    status: 'in_progress' as const,
+    status: (welcomeCompleted ? 'completed' : 'in_progress') as JourneyStageStatus,
     description: null,
     warning_text: null,
     cta_text: null,
@@ -83,7 +85,12 @@ export default function JornadaProjeto() {
     todos: [],
   };
 
-  const allStagesForStepper = journey?.stages ? [welcomeVirtualStage, ...journey.stages] : [];
+  // While welcome is not completed, override all real stages to 'pending' so none shows as "Etapa atual"
+  const adjustedStages = journey?.stages
+    ? journey.stages.map(s => welcomeCompleted ? s : { ...s, status: 'pending' as JourneyStageStatus })
+    : [];
+
+  const allStagesForStepper = journey?.stages ? [welcomeVirtualStage, ...adjustedStages] : [];
 
   const selectedStage = useMemo(() => {
     if (activeView === 'welcome' || !journey?.stages) return null;
@@ -101,12 +108,22 @@ export default function JornadaProjeto() {
       setActiveView('welcome');
       return;
     }
+    // Block navigation to real stages while welcome is not completed
+    if (!welcomeCompleted) return;
     // Check if stage is blocked
     if (journey?.stages) {
       const idx = journey.stages.findIndex(s => s.id === stageId);
       if (idx >= 0 && isStageBlocked(journey.stages[idx], idx, journey.stages)) return;
     }
     setActiveView(stageId);
+  }, [journey?.stages, welcomeCompleted]);
+
+  const handleAdvanceFromWelcome = useCallback(() => {
+    setWelcomeCompleted(true);
+    // Navigate to first real stage
+    if (journey?.stages && journey.stages.length > 0) {
+      setActiveView(journey.stages[0].id);
+    }
   }, [journey?.stages]);
 
   if (isLoading || initializeJourney.isPending) {
@@ -232,6 +249,8 @@ export default function JornadaProjeto() {
                   hero={journey.hero}
                   projectId={projectId!}
                   isAdmin={isAdmin}
+                  onAdvance={handleAdvanceFromWelcome}
+                  nextStageName={journey.stages[0]?.name ?? 'próxima etapa'}
                 />
               ) : selectedStage ? (
                 <StageDetailInline
