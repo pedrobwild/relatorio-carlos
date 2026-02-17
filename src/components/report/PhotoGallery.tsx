@@ -110,7 +110,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
       </div>
 
       <Dialog open={selectedIndex !== null} onOpenChange={() => setSelectedIndex(null)}>
-        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
+        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none max-h-[95dvh]">
           <VisuallyHidden>
             <DialogTitle>
               {selectedIndex !== null ? photos[selectedIndex].caption : "Foto"}
@@ -122,8 +122,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 z-10 text-white hover:bg-white/20"
+                className="absolute top-2 right-2 z-10 text-white hover:bg-white/20 h-11 w-11"
                 onClick={() => setSelectedIndex(null)}
+                aria-label="Fechar"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -132,8 +133,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20 h-11 w-11"
                   onClick={handlePrevious}
+                  aria-label="Foto anterior"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </Button>
@@ -142,8 +144,9 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20 h-11 w-11"
                   onClick={handleNext}
+                  aria-label="Próxima foto"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </Button>

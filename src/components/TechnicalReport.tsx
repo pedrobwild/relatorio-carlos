@@ -77,7 +77,7 @@ const ReportModalButton = ({ icon, label, count, children, title }: ReportModalB
         </div>
       </Button>
     </DialogTrigger>
-    <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+    <DialogContent className="max-w-lg max-h-[85dvh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
       </DialogHeader>
