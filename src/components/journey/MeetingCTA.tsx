@@ -315,7 +315,7 @@ function DateTimeForm({
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className={cn(
-              "h-9 text-xs flex-1 min-w-[140px] justify-start",
+              "h-11 min-h-[44px] text-xs flex-1 min-w-[140px] justify-start",
               !pickerDate && "text-muted-foreground"
             )} disabled={isPending}>
               <CalendarIcon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
@@ -340,7 +340,7 @@ function DateTimeForm({
         placeholder={journeyCopy.dates.form.notesPlaceholder}
         value={notes}
         onChange={(e) => onNotesChange(e.target.value)}
-        className="h-9 text-sm"
+        className="h-11 min-h-[44px] text-sm"
         disabled={isPending}
       />
 
@@ -353,7 +353,7 @@ function DateTimeForm({
       <div className="flex items-center gap-2">
         <Button
           size="sm"
-          className="h-8 gap-1.5"
+          className="h-11 min-h-[44px] gap-1.5"
           disabled={!pickerDate || isPending}
           onClick={onSubmit}
         >
@@ -364,7 +364,7 @@ function DateTimeForm({
           )}
           {mode === 'propose' ? journeyCopy.dates.form.submitPropose : journeyCopy.dates.form.submitConfirm}
         </Button>
-        <Button variant="ghost" size="sm" className="h-8" onClick={onCancel} disabled={isPending}>
+        <Button variant="ghost" size="sm" className="h-11 min-h-[44px]" onClick={onCancel} disabled={isPending}>
           <X className="h-3.5 w-3.5 mr-1" /> {journeyCopy.dates.form.cancel}
         </Button>
       </div>
