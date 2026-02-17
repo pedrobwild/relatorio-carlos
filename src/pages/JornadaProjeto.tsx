@@ -163,6 +163,9 @@ export default function JornadaProjeto() {
     setWelcomeCompleted(true);
     if (journey?.stages && journey.stages.length > 0) {
       setActiveView(journey.stages[0].id);
+      setTimeout(() => {
+        contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   }, [journey?.stages]);
 
