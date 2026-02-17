@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
-import { ChevronRight, Briefcase, HardHat } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
-import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 type ProjectData = ProjectWithCustomer & { is_project_phase?: boolean };
 
@@ -14,21 +14,6 @@ interface ProjectCardSummaryProps {
   project: ProjectData;
   onClick: () => void;
 }
-
-// ── Status visual tokens (soft, low-tension) ──────────────────────────
-const statusStyles: Record<string, string> = {
-  active: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
-  completed: 'bg-sky-500/10 text-sky-700 border-sky-500/20',
-  paused: 'bg-amber-500/10 text-amber-700 border-amber-500/20',
-  cancelled: 'bg-muted text-muted-foreground border-border',
-};
-
-const statusLabels: Record<string, string> = {
-  active: 'Em andamento',
-  completed: 'Concluída',
-  paused: 'Pausada',
-  cancelled: 'Encerrada',
-};
 
 // ── Helpers ────────────────────────────────────────────────────────────
 function safeFormat(dateStr: string | null | undefined, fmt = 'dd/MM/yy'): string | null {
@@ -40,10 +25,68 @@ function safeFormat(dateStr: string | null | undefined, fmt = 'dd/MM/yy'): strin
   }
 }
 
+/** Fetch current journey stage name for a project */
+function useCurrentJourneyStage(projectId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['project-current-stage', projectId],
+    queryFn: async () => {
+      // Get the first non-completed stage (current stage)
+      const { data } = await supabase
+        .from('journey_stages')
+        .select('name, status')
+        .eq('project_id', projectId)
+        .order('sort_order', { ascending: true });
+
+      if (!data || data.length === 0) return null;
+      const current = data.find(s => s.status !== 'completed');
+      return current?.name ?? data[data.length - 1]?.name ?? null;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Fetch current cronograma activity (etapa) for obra projects */
+function useCurrentObraEtapa(projectId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['project-current-etapa', projectId],
+    queryFn: async () => {
+      // Get in-progress activities, or the next planned one
+      const { data } = await supabase
+        .from('atividades')
+        .select('titulo, etapa, status, data_prevista_fim')
+        .eq('obra_id', projectId)
+        .in('status', ['em_andamento', 'nao_iniciada'])
+        .order('data_prevista_fim', { ascending: true })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        return data[0].etapa || data[0].titulo;
+      }
+      return null;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // ── Component ──────────────────────────────────────────────────────────
 export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps) {
   const isProjectPhase = !!project.is_project_phase;
   const isActive = project.status === 'active';
+
+  // Fetch current stage info
+  const { data: journeyStageName } = useCurrentJourneyStage(project.id, isProjectPhase && isActive);
+  const { data: obraEtapa } = useCurrentObraEtapa(project.id, !isProjectPhase && isActive);
+
+  // Current stage label
+  const currentStageLabel = useMemo(() => {
+    if (!isActive) return null;
+    if (isProjectPhase) {
+      return journeyStageName ? `Etapa atual: ${journeyStageName}` : 'Em acompanhamento';
+    }
+    return obraEtapa ? `Etapa atual: ${obraEtapa}` : 'Em acompanhamento';
+  }, [isActive, isProjectPhase, journeyStageName, obraEtapa]);
 
   // Progress (only for obra in execution)
   const progress = useMemo(() => {
@@ -63,7 +106,6 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
   // Time info
   const timeInfo = useMemo(() => {
     if (isProjectPhase) {
-      // Fase de Projeto: show "Datas em alinhamento" or period if available
       const start = safeFormat(project.planned_start_date);
       const end = safeFormat(project.planned_end_date);
       if (!start && !end) return 'Datas em alinhamento';
@@ -71,7 +113,6 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
       if (end) return `Entrega estimada: ${end}`;
       return 'Datas em alinhamento';
     }
-    // Obra: show delivery estimate
     const end = safeFormat(project.planned_end_date);
     if (end) return `Entrega estimada: ${end}`;
     const start = safeFormat(project.planned_start_date);
@@ -108,32 +149,14 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
           />
         </div>
 
-        {/* ── BLOCO 2: Chips de contexto ──────────────────────────── */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge
-            variant="outline"
-            className={cn('text-xs', statusStyles[project.status] ?? statusStyles.active)}
-          >
-            {statusLabels[project.status] ?? project.status}
-          </Badge>
-          <Badge
-            variant="outline"
-            className="text-xs bg-muted/50 text-muted-foreground border-border"
-          >
-            {isProjectPhase ? (
-              <><Briefcase className="h-3 w-3 mr-1" aria-hidden="true" />Fase de Projeto</>
-            ) : (
-              <><HardHat className="h-3 w-3 mr-1" aria-hidden="true" />Fase de Obra</>
-            )}
-          </Badge>
-        </div>
+        {/* ── BLOCO 2: Etapa atual ────────────────────────────────── */}
+        {currentStageLabel && (
+          <p className="text-caption text-muted-foreground leading-snug">
+            {currentStageLabel}
+          </p>
+        )}
 
-        {/* ── BLOCO 3: Próximo passo ──────────────────────────────── */}
-        <p className="text-caption text-muted-foreground leading-snug">
-          Em acompanhamento pela equipe Bwild
-        </p>
-
-        {/* ── BLOCO 4: Tempo & Progresso ──────────────────────────── */}
+        {/* ── BLOCO 3: Tempo & Progresso ──────────────────────────── */}
         {isActive && !isProjectPhase && (
           <div className="space-y-1.5">
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
