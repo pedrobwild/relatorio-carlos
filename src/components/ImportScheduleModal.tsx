@@ -6,10 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Download, FileSpreadsheet, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Upload, Download, FileSpreadsheet, Check, AlertCircle, Loader2, LayoutTemplate, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
+import { activityTemplateSets, generateActivitiesFromTemplate, type ActivityTemplateSet } from '@/data/activityTemplates';
 
 interface ActivityFormData {
   id: string;
@@ -322,36 +326,85 @@ export const ImportScheduleModal = ({ open, onOpenChange, onImport }: ImportSche
     toast.success('Template baixado');
   };
 
-  const renderUploadStep = () => (
-    <div className="space-y-6">
-      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-        <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="font-medium mb-2">Arraste um arquivo ou clique para selecionar</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Suporta arquivos CSV e Excel (.xlsx, .xls)
-        </p>
-        <Input
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          onChange={handleFileUpload}
-          className="max-w-xs mx-auto"
-          disabled={isProcessing}
-        />
-        {isProcessing && (
-          <div className="flex items-center justify-center gap-2 mt-4 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Processando arquivo...
-          </div>
-        )}
-      </div>
+  const handleTemplateSelect = (template: ActivityTemplateSet) => {
+    const activities = generateActivitiesFromTemplate(template);
+    setMappedData(activities);
+    setStep('preview');
+    toast.success(`Template "${template.name}" carregado com ${activities.length} atividades`);
+  };
 
-      <div className="border-t pt-4">
-        <Button variant="outline" onClick={downloadTemplate} className="w-full">
-          <Download className="h-4 w-4 mr-2" />
-          Baixar Planilha Modelo
-        </Button>
-      </div>
-    </div>
+  const renderUploadStep = () => (
+    <Tabs defaultValue="template" className="space-y-4">
+      <TabsList className="w-full">
+        <TabsTrigger value="template" className="flex-1 gap-1.5">
+          <LayoutTemplate className="h-4 w-4" />
+          Templates
+        </TabsTrigger>
+        <TabsTrigger value="upload" className="flex-1 gap-1.5">
+          <Upload className="h-4 w-4" />
+          Importar planilha
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="template" className="space-y-3">
+        <p className="text-sm text-muted-foreground text-center">
+          Escolha um modelo pré-definido para começar rapidamente
+        </p>
+        {activityTemplateSets.map((template, index) => (
+          <Card
+            key={template.id}
+            className="cursor-pointer group hover:border-primary hover:shadow-sm transition-all animate-fade-in opacity-0"
+            style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'forwards' }}
+            onClick={() => handleTemplateSelect(template)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleTemplateSelect(template)}
+          >
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                <span className="text-xl">{template.emoji}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm group-hover:text-primary transition-colors">{template.name}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-1">{template.description}</p>
+                <Badge variant="secondary" className="text-[10px] mt-1">{template.activities.length} atividades</Badge>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
+            </CardContent>
+          </Card>
+        ))}
+      </TabsContent>
+
+      <TabsContent value="upload" className="space-y-6">
+        <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+          <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="font-medium mb-2">Arraste um arquivo ou clique para selecionar</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Suporta arquivos CSV e Excel (.xlsx, .xls)
+          </p>
+          <Input
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={handleFileUpload}
+            className="max-w-xs mx-auto"
+            disabled={isProcessing}
+          />
+          {isProcessing && (
+            <div className="flex items-center justify-center gap-2 mt-4 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processando arquivo...
+            </div>
+          )}
+        </div>
+
+        <div className="border-t pt-4">
+          <Button variant="outline" onClick={downloadTemplate} className="w-full">
+            <Download className="h-4 w-4 mr-2" />
+            Baixar Planilha Modelo
+          </Button>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 
   const renderMappingStep = () => (

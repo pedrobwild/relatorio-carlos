@@ -10,12 +10,14 @@ import { MeetingMinutesForm } from '@/components/formalizacao/MeetingMinutesForm
 import { ExceptionCustodyForm } from '@/components/formalizacao/ExceptionCustodyForm';
 import { PartiesForm } from '@/components/formalizacao/PartiesForm';
 import { ReviewStep } from '@/components/formalizacao/ReviewStep';
+import { GenericFormEditor } from '@/components/formalizacao/GenericFormEditor';
 import { useCreateFormalizacao, useAddParty, useSendForSignature } from '@/hooks/useFormalizacoes';
 import { useToast } from '@/hooks/use-toast';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { formalizationTemplates } from '@/data/formalizationTemplates';
 import type { FormalizationType } from '@/types/formalization';
 
 type WizardStep = 'template' | 'form' | 'parties' | 'review';
@@ -81,7 +83,14 @@ export default function FormalizacaoNova() {
   const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
 
   const handleTemplateSelect = (type: FormalizationType) => {
-    setFormData(prev => ({ ...prev, type }));
+    const template = formalizationTemplates[type];
+    setFormData(prev => ({ 
+      ...prev, 
+      type,
+      title: template?.title || '',
+      summary: template?.summary || '',
+      body_md: template?.body_md || '',
+    }));
     setCurrentStep('form');
   };
 
@@ -179,7 +188,8 @@ export default function FormalizacaoNova() {
         if (formData.type === 'exception_custody') {
           return <ExceptionCustodyForm onComplete={handleFormComplete} initialData={formData} />;
         }
-        return null;
+        // scope_change, general — use generic form with pre-filled template
+        return <GenericFormEditor onComplete={handleFormComplete} initialData={formData} />;
       case 'parties':
         return <PartiesForm onComplete={handlePartiesComplete} initialParties={formData.parties} />;
       case 'review':
