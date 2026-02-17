@@ -591,8 +591,42 @@ export function TemplatesTab() {
                   <h4 className="font-medium mb-3">
                     Atividades ({(previewTemplate.default_activities ?? []).length})
                   </h4>
-                  {(previewTemplate.default_activities ?? []).length > 0 ? (
-                    <div className="rounded-lg border overflow-hidden">
+                {(previewTemplate.default_activities ?? []).length > 0 ? (
+                    <>
+                      {/* Mini-Gantt */}
+                      <div className="rounded-lg border p-3 bg-muted/30">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Timeline</p>
+                        <div className="space-y-1">
+                          {(() => {
+                            const acts = previewTemplate.default_activities as ActivityItem[];
+                            const cumDays: number[] = [];
+                            let acc = 0;
+                            acts.forEach(a => { cumDays.push(acc); acc += a.durationDays; });
+                            const total = acc;
+                            return acts.map((act, i) => (
+                              <div key={i} className="flex items-center gap-2 group/bar">
+                                <span className="text-[10px] text-muted-foreground w-5 text-right shrink-0">{i + 1}</span>
+                                <div className="flex-1 h-4 relative rounded-sm overflow-hidden bg-muted">
+                                  <div
+                                    className="absolute top-0 h-full rounded-sm bg-primary/60 group-hover/bar:bg-primary/80 transition-colors"
+                                    style={{
+                                      left: `${(cumDays[i] / total) * 100}%`,
+                                      width: `${Math.max((act.durationDays / total) * 100, 2)}%`,
+                                    }}
+                                    title={`${act.description} — ${act.durationDays}d`}
+                                  />
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                        <div className="flex justify-between mt-1.5">
+                          <span className="text-[10px] text-muted-foreground">Dia 1</span>
+                          <span className="text-[10px] text-muted-foreground">Dia {totalDays(previewTemplate.default_activities as ActivityItem[])}</span>
+                        </div>
+                      </div>
+                      {/* Table */}
+                      <div className="rounded-lg border overflow-hidden">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -621,6 +655,7 @@ export function TemplatesTab() {
                         </TableBody>
                       </Table>
                     </div>
+                    </>
                   ) : (
                     <p className="text-sm text-muted-foreground">Nenhuma atividade pré-definida</p>
                   )}
