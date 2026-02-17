@@ -206,9 +206,10 @@ function TeamMemberCard({
             <p className="text-xs text-primary font-medium">{member.role_title}</p>
           </div>
           {member.description && (
-            <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-              {member.description}
-            </p>
+            <div
+              className="text-xs text-muted-foreground leading-relaxed prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: member.description }}
+            />
           )}
           <div className="flex flex-wrap gap-3 pt-1">
             {member.email && (
