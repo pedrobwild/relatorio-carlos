@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { journeyCopy } from '@/constants/journeyCopy';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -16,10 +17,15 @@ import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection'
 import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
 import { StageDetailInline } from '@/components/journey/StageDetailInline';
 import { JourneyProgressBar } from '@/components/journey/JourneyProgressBar';
+import { PullToRefreshIndicator } from '@/components/journey/PullToRefreshIndicator';
+import { TabOnboardingTip } from '@/components/journey/TabOnboardingTip';
 
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { prefetchForTab } from '@/lib/prefetch';
+import { useTabKeyboardNav } from '@/hooks/useKeyboardShortcuts';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 // Lazy load tab content components
@@ -50,8 +56,19 @@ export default function JornadaProjeto() {
   const [welcomeCompleted, setWelcomeCompleted] = useState(false);
   const [timelineSheetOpen, setTimelineSheetOpen] = useState(false);
 
+  const isMobile = useIsMobile();
   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
   const isLoading = projectLoading || roleLoading || journeyLoading;
+
+  // Keyboard shortcuts: Arrow Left/Right to switch tabs
+  const TABS = useMemo(() => ['jornada', 'financeiro', 'documentos', 'formalizacoes', 'pendencias'], []);
+  useTabKeyboardNav(TABS, activeTab, setActiveTab);
+
+  // Pull-to-refresh on mobile
+  const { pulling, refreshing, pullDistance, threshold } = usePullToRefresh({
+    onRefresh: async () => { await refetch(); },
+    enabled: isMobile && activeTab === 'jornada',
+  });
 
   // Initialize journey if not exists
   useEffect(() => {
@@ -216,10 +233,36 @@ export default function JornadaProjeto() {
         </div>
       </div>
 
-        <main className={cn(
+      <main className={cn(
         "max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4 md:py-8 w-full overflow-x-hidden",
         'pb-safe',
       )}>
+        <PullToRefreshIndicator
+          pulling={pulling}
+          refreshing={refreshing}
+          pullDistance={pullDistance}
+          threshold={threshold}
+        />
+
+        {/* Breadcrumb contextual */}
+        {activeTab !== 'jornada' && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+            <button
+              onClick={() => setActiveTab('jornada')}
+              className="hover:text-foreground transition-colors"
+            >
+              {project.name}
+            </button>
+            <span>›</span>
+            <span className="text-foreground font-medium">
+              {activeTab === 'financeiro' ? 'Financeiro'
+                : activeTab === 'documentos' ? 'Documentos'
+                : activeTab === 'formalizacoes' ? 'Formalizações'
+                : 'Pendências'}
+            </span>
+          </div>
+        )}
+
         {/* Jornada tab content */}
         {activeTab === 'jornada' && (
           <div className="grid gap-4 md:gap-8 lg:grid-cols-[280px_1fr]">
@@ -272,51 +315,84 @@ export default function JornadaProjeto() {
                 onStageClick={handleTimelineClick}
               />
 
-              {/* Content area — switches based on activeView */}
-              {activeView === 'welcome' ? (
-                <JourneyWelcomeStage
-                  hero={journey.hero}
-                  projectId={projectId!}
-                  isAdmin={isAdmin}
-                  onAdvance={handleAdvanceFromWelcome}
-                  nextStageName={journey.stages[0]?.name ?? 'próxima etapa'}
-                />
-              ) : selectedStage ? (
-                <StageDetailInline
-                  key={selectedStage.id}
-                  stage={selectedStage}
-                  projectId={projectId!}
-                  isAdmin={isAdmin}
-                  nextStageName={selectedStageNextName}
-                />
-              ) : null}
+              {/* Content area — switches based on activeView with transitions */}
+              <AnimatePresence mode="wait">
+                {activeView === 'welcome' ? (
+                  <motion.div
+                    key="welcome"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <JourneyWelcomeStage
+                      hero={journey.hero}
+                      projectId={projectId!}
+                      isAdmin={isAdmin}
+                      onAdvance={handleAdvanceFromWelcome}
+                      nextStageName={journey.stages[0]?.name ?? 'próxima etapa'}
+                    />
+                  </motion.div>
+                ) : selectedStage ? (
+                  <motion.div
+                    key={selectedStage.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <StageDetailInline
+                      stage={selectedStage}
+                      projectId={projectId!}
+                      isAdmin={isAdmin}
+                      nextStageName={selectedStageNextName}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
 
               <Separator />
             </div>
           </div>
         )}
 
-        {/* Other tabs */}
+        {/* Other tabs with onboarding tips */}
         {activeTab === 'financeiro' && (
-          <Suspense fallback={<ContentSkeleton variant="cards" rows={3} />}>
+          <Suspense fallback={<ContentSkeleton variant="table" rows={4} />}>
+            <TabOnboardingTip
+              tabKey="financeiro"
+              message="Aqui você acompanha pagamentos, boletos e o histórico financeiro do seu projeto."
+            />
             <FinanceiroContent />
           </Suspense>
         )}
 
         {activeTab === 'documentos' && (
-          <Suspense fallback={<ContentSkeleton variant="cards" rows={6} />}>
+          <Suspense fallback={<ContentSkeleton variant="list" rows={6} />}>
+            <TabOnboardingTip
+              tabKey="documentos"
+              message="Todos os documentos do projeto ficam organizados aqui: contratos, plantas, projetos e aditivos."
+            />
             <DocumentosContent />
           </Suspense>
         )}
 
         {activeTab === 'formalizacoes' && (
-          <Suspense fallback={<ContentSkeleton variant="cards" rows={4} />}>
+          <Suspense fallback={<ContentSkeleton variant="list" rows={4} />}>
+            <TabOnboardingTip
+              tabKey="formalizacoes"
+              message="Formalizações registram decisões e aprovações do projeto. Cada uma pode ser assinada digitalmente."
+            />
             <FormalizacoesContent />
           </Suspense>
         )}
 
         {activeTab === 'pendencias' && (
           <Suspense fallback={<ContentSkeleton variant="list" rows={5} />}>
+            <TabOnboardingTip
+              tabKey="pendencias"
+              message="Itens que precisam da sua atenção: aprovações, envios de documentos e decisões pendentes."
+            />
             <PendenciasContent />
           </Suspense>
         )}

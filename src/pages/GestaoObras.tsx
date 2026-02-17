@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -286,11 +287,7 @@ export default function GestaoObras() {
 
         {/* Projects Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="h-40 animate-pulse bg-muted" />
-            ))}
-          </div>
+          <ContentSkeleton variant="cards" rows={3} />
         ) : error ? (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">Erro ao carregar obras: {String(error)}</p>
