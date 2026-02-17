@@ -117,7 +117,7 @@ export function JourneyTimelineSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="px-0 pt-4 pb-[env(safe-area-inset-bottom)] max-h-[80vh]">
+      <SheetContent side="bottom" className="px-0 pt-4 pb-[env(safe-area-inset-bottom)] max-h-[85dvh] rounded-t-2xl">
         <SheetHeader className="text-left px-5 pb-3">
           <SheetTitle className="text-base">
             Linha do tempo ({displayIdx}/{stages.length})

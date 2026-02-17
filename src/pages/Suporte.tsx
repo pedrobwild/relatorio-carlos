@@ -53,11 +53,11 @@ const mockFormalizations = [
 const getStatusIcon = (status: FormalizationStatus) => {
   switch (status) {
     case "signed":
-      return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+      return <CheckCircle2 className="w-4 h-4 text-[hsl(var(--success))]" />;
     case "pending_signatures":
-      return <Clock className="w-4 h-4 text-amber-600" />;
+      return <Clock className="w-4 h-4 text-[hsl(var(--warning))]" />;
     case "voided":
-      return <XCircle className="w-4 h-4 text-red-600" />;
+      return <XCircle className="w-4 h-4 text-destructive" />;
     default:
       return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
   }
@@ -111,7 +111,7 @@ const Suporte = () => {
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/relatorio">
-              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10">
+              <Button variant="ghost" size="icon" className="shrink-0 h-11 w-11 rounded-full hover:bg-primary/10">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
@@ -133,20 +133,20 @@ const Suporte = () => {
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-3">
-            <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900">
+            <Card className="bg-[hsl(var(--success-light))] border-[hsl(var(--success)/0.3)]">
               <CardContent className="p-4 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  <span className="text-2xl font-bold text-green-700 dark:text-green-400">{signedCount}</span>
+                  <CheckCircle2 className="w-5 h-5 text-[hsl(var(--success))]" />
+                  <span className="text-2xl font-bold text-[hsl(var(--success))]">{signedCount}</span>
                 </div>
                 <span className="text-caption mt-1">Assinadas</span>
               </CardContent>
             </Card>
-            <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900">
+            <Card className="bg-[hsl(var(--warning-light))] border-[hsl(var(--warning)/0.3)]">
               <CardContent className="p-4 flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-amber-600" />
-                  <span className="text-2xl font-bold text-amber-700 dark:text-amber-400">{pendingCount}</span>
+                  <Clock className="w-5 h-5 text-[hsl(var(--warning))]" />
+                  <span className="text-2xl font-bold text-[hsl(var(--warning))]">{pendingCount}</span>
                 </div>
                 <span className="text-caption mt-1">Pendentes</span>
               </CardContent>
@@ -168,10 +168,10 @@ const Suporte = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
                 placeholder="Buscar formalizações..." 
-                className="pl-9"
+                className="pl-9 h-11"
               />
             </div>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" className="h-11 w-11">
               <Filter className="w-4 h-4" />
             </Button>
           </div>
