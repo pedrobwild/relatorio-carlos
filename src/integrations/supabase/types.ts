@@ -2123,6 +2123,7 @@ export type Database = {
       }
       project_templates: {
         Row: {
+          category: string | null
           created_at: string
           created_by: string
           default_activities: Json | null
@@ -2134,6 +2135,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           created_by: string
           default_activities?: Json | null
@@ -2145,6 +2147,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           created_by?: string
           default_activities?: Json | null
