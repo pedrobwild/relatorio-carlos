@@ -99,27 +99,30 @@ const FormalizacoesContent = () => {
       )}
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
         <button onClick={() => setActiveTab('pendentes')}
-          className={`p-3 rounded-lg border text-left transition-all hover:shadow-sm ${activeTab === 'pendentes' ? 'border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20' : 'border-border hover:border-amber-500/30'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-amber-600" /><span className="text-sm font-medium">Pendentes</span></div>
-            <span className="text-xl font-bold text-amber-600">{pendingCount}</span>
+          className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] ${activeTab === 'pendentes' ? 'border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20 ring-1 ring-amber-500/30' : 'border-border hover:border-amber-500/30'}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">Pendentes</span>
           </div>
+          <span className="text-2xl font-bold text-amber-600 tabular-nums">{pendingCount}</span>
         </button>
         <button onClick={() => setActiveTab('finalizadas')}
-          className={`p-3 rounded-lg border text-left transition-all hover:shadow-sm ${activeTab === 'finalizadas' ? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20' : 'border-border hover:border-green-500/30'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /><span className="text-sm font-medium">Finalizadas</span></div>
-            <span className="text-xl font-bold text-green-600">{signedCount}</span>
+          className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] ${activeTab === 'finalizadas' ? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20 ring-1 ring-green-500/30' : 'border-border hover:border-green-500/30'}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">Finalizadas</span>
           </div>
+          <span className="text-2xl font-bold text-green-600 tabular-nums">{signedCount}</span>
         </button>
         <button onClick={() => setActiveTab('todas')}
-          className={`p-3 rounded-lg border text-left transition-all hover:shadow-sm ${activeTab === 'todas' ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /><span className="text-sm font-medium">Todas</span></div>
-            <span className="text-xl font-bold text-muted-foreground">{formalizacoes?.length || 0}</span>
+          className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] col-span-2 sm:col-span-1 ${activeTab === 'todas' ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/30' : 'border-border hover:border-primary/30'}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">Todas</span>
           </div>
+          <span className="text-2xl font-bold text-muted-foreground tabular-nums">{formalizacoes?.length || 0}</span>
         </button>
       </div>
 

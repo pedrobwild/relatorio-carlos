@@ -89,7 +89,7 @@ const DocumentCard = ({
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 flex flex-col">
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-[95vw] h-[95dvh] sm:h-[90vh] p-0 flex flex-col rounded-t-xl sm:rounded-xl">
         <DialogHeader className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between">
             <div>
@@ -106,8 +106,8 @@ const DocumentCard = ({
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="gap-2" onClick={() => onViewHistory(doc.id)}>
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
+              <Button variant="ghost" size="sm" className="gap-1.5 h-9 px-2 sm:px-3" onClick={() => onViewHistory(doc.id)}>
                 <History className="w-4 h-4" /><span className="hidden sm:inline">Histórico</span>
               </Button>
               {isStaff && doc.status === 'pending' && (
