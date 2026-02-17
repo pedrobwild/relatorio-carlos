@@ -269,15 +269,6 @@ export default function JornadaProjeto() {
               ) : null}
 
               <Separator />
-
-              {/* Footer */}
-              {journey.footer && (
-                <JourneyFooterSection
-                  footer={journey.footer}
-                  projectId={projectId!}
-                  isAdmin={isAdmin}
-                />
-              )}
             </div>
           </div>
         )}
