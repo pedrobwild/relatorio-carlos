@@ -207,7 +207,7 @@ function TeamMemberCard({
           </div>
           {member.description && (
             <div
-              className="text-xs text-muted-foreground leading-relaxed max-w-none [&_p]:margin-0 [&_strong]:font-semibold"
+              className="text-xs text-muted-foreground leading-relaxed max-w-none [&_p]:m-0 [&_strong]:font-semibold [&_*]:!text-xs [&_*]:!font-[inherit] [&_span]:!text-inherit"
               dangerouslySetInnerHTML={{ __html: member.description }}
             />
           )}
