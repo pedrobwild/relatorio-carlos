@@ -408,7 +408,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {isEditing ? 'Atualizar disponibilidade' : 'Enviar disponibilidade'}
+            {isEditing ? 'Atualizar disponibilidade' : 'Registrar disponibilidade'}
           </Button>
         </div>
       </CardContent>
