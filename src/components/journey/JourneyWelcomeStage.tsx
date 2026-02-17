@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { Users, ArrowRight, Mail, Phone, ImageIcon, Plus, Edit2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -208,7 +209,7 @@ function TeamMemberCard({
           {member.description && (
             <div
               className="text-xs text-muted-foreground leading-relaxed max-w-none [&_p]:m-0 [&_strong]:font-semibold [&_*]:!text-xs [&_*]:!font-[inherit] [&_span]:!text-inherit"
-              dangerouslySetInnerHTML={{ __html: member.description }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(member.description) }}
             />
           )}
           <div className="flex flex-wrap gap-3 pt-1">

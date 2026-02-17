@@ -296,16 +296,29 @@ export default function GestaoObras() {
             <p className="text-muted-foreground">Erro ao carregar obras: {String(error)}</p>
           </Card>
         ) : filteredProjects.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground mb-4">
-              {searchTerm || statusFilter ? 'Nenhuma obra encontrada' : 'Nenhuma obra cadastrada'}
-            </p>
-            {!searchTerm && !statusFilter && (
-              <Button onClick={() => navigate('/gestao/nova-obra')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Cadastrar primeira obra
-              </Button>
+          <Card className="p-12 text-center border-dashed">
+            <Building2 className="h-16 w-16 mx-auto text-muted-foreground/30 mb-6" />
+            {searchTerm || statusFilter ? (
+              <>
+                <h3 className="text-body font-semibold mb-2">Nenhuma obra encontrada</h3>
+                <p className="text-caption text-muted-foreground mb-4">
+                  Tente ajustar os filtros de busca.
+                </p>
+                <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter(null); setEngineerFilter(null); }}>
+                  Limpar filtros
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-body font-semibold mb-2">Nenhuma obra cadastrada</h3>
+                <p className="text-caption text-muted-foreground mb-6 max-w-md mx-auto">
+                  Comece cadastrando sua primeira obra para gerenciar cronogramas, documentos, financeiro e muito mais.
+                </p>
+                <Button size="lg" onClick={() => navigate('/gestao/nova-obra')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Cadastrar primeira obra
+                </Button>
+              </>
             )}
           </Card>
         ) : (

@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import DOMPurify from 'dompurify';
 import { WeeklyReportData, LookaheadTask, RiskIssue, ClientDecision, Incident, GalleryPhoto } from "@/types/weeklyReport";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -328,11 +329,13 @@ const WeeklyReportEditor = ({
                 className="min-h-[100px] p-3 bg-muted/30 rounded-md border border-border text-sm leading-[1.7] text-foreground/85 cursor-pointer hover:border-primary/40 transition-colors"
                 onClick={() => setRichTextOpen(true)}
                 dangerouslySetInnerHTML={{
-                  __html: formData.executiveSummary
-                    ? (/<[a-z][\s\S]*>/i.test(formData.executiveSummary)
-                      ? formData.executiveSummary
-                      : formData.executiveSummary.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>'))
-                    : '<span class="text-muted-foreground">Clique para editar o resumo executivo...</span>',
+                  __html: DOMPurify.sanitize(
+                    formData.executiveSummary
+                      ? (/<[a-z][\s\S]*>/i.test(formData.executiveSummary)
+                        ? formData.executiveSummary
+                        : formData.executiveSummary.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>'))
+                      : '<span class="text-muted-foreground">Clique para editar o resumo executivo...</span>'
+                  ),
                 }}
               />
             </div>
