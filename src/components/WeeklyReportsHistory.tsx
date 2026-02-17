@@ -204,22 +204,22 @@ const getStatusConfig = (status: 'ahead' | 'on-track' | 'behind') => {
       return {
         label: 'Adiantado',
         icon: TrendingUp,
-        className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-        iconClassName: 'text-emerald-500',
+        className: 'bg-success/10 text-[hsl(var(--success))] border-success/20',
+        iconClassName: 'text-[hsl(var(--success))]',
       };
     case 'behind':
       return {
         label: 'Atrasado',
         icon: TrendingDown,
-        className: 'bg-red-500/10 text-red-600 border-red-500/20',
-        iconClassName: 'text-red-500',
+        className: 'bg-destructive/10 text-destructive border-destructive/20',
+        iconClassName: 'text-destructive',
       };
     default:
       return {
         label: 'Em dia',
         icon: Minus,
-        className: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-        iconClassName: 'text-blue-500',
+        className: 'bg-info/10 text-[hsl(var(--info))] border-info/20',
+        iconClassName: 'text-[hsl(var(--info))]',
       };
   }
 };
@@ -353,7 +353,7 @@ const WeeklyReportsHistory = ({
                         {canAccess && report.variance !== 0 && (
                           <span className={cn(
                             "font-medium",
-                            report.variance > 0 ? "text-emerald-600" : "text-red-600"
+                            report.variance > 0 ? "text-[hsl(var(--success))]" : "text-destructive"
                           )}>
                             ({report.variance > 0 ? '+' : ''}{report.variance}% vs previsto)
                           </span>
@@ -371,7 +371,7 @@ const WeeklyReportsHistory = ({
                       <div 
                         className={cn(
                           "h-full rounded-full transition-all duration-500",
-                          report.variance >= 0 ? "bg-emerald-500" : "bg-red-500"
+                          report.variance >= 0 ? "bg-[hsl(var(--success))]" : "bg-destructive"
                         )}
                         style={{ width: `${report.completionPercentage}%` }}
                       />

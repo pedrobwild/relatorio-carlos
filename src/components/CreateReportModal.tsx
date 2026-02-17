@@ -309,7 +309,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                   </h3>
                   <p className={cn(
                     "text-tiny mt-0.5",
-                    totalWeight === 100 ? "text-emerald-600" : "text-amber-600"
+                    totalWeight === 100 ? "text-[hsl(var(--success))]" : "text-[hsl(var(--warning))]"
                   )}>
                     Peso total: {totalWeight}% {totalWeight !== 100 && "(deve somar 100%)"}
                   </p>
@@ -335,7 +335,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          className="min-h-[44px] min-w-[44px] h-11 w-11 text-destructive hover:text-destructive"
                           onClick={() => removeActivity(index)}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -458,7 +458,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            className="min-h-[44px] min-w-[44px] h-11 w-11 text-destructive hover:text-destructive"
                             onClick={() => removeIncident(index)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -556,13 +556,13 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
         </ScrollArea>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={!isFormValid}
-            className="gradient-primary"
+            className="gradient-primary min-h-[44px]"
           >
             Criar Relatório
           </Button>
