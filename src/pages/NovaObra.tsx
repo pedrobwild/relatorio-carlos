@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Calendar, DollarSign, Send, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Building2, User, Calendar, DollarSign, Send, LayoutTemplate, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,10 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useProjectTemplates, type ProjectTemplate } from '@/hooks/useProjectTemplates';
+import { useProjectTemplates, type ProjectTemplate, type TemplateActivity } from '@/hooks/useProjectTemplates';
 
 import { z } from 'zod';
 
@@ -63,6 +66,7 @@ export default function NovaObra() {
   const [sendInvite, setSendInvite] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
+  const [showActivityPreview, setShowActivityPreview] = useState(false);
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -77,11 +81,37 @@ export default function NovaObra() {
     is_project_phase: false,
   });
 
+  // Calculate total business days from template activities
+  const templateTotalDays = useMemo(() => {
+    if (!selectedTemplate?.default_activities) return 0;
+    return (selectedTemplate.default_activities as TemplateActivity[]).reduce((s, a) => s + a.durationDays, 0);
+  }, [selectedTemplate]);
+
+  // Auto-calculate end date when start date changes and template is selected
+  const autoCalculateEndDate = (startDateStr: string) => {
+    if (!startDateStr || templateTotalDays <= 0) return;
+    const start = new Date(startDateStr + 'T00:00:00');
+    // Skip to weekday
+    while (start.getDay() === 0 || start.getDay() === 6) start.setDate(start.getDate() + 1);
+    let remaining = templateTotalDays - 1;
+    const end = new Date(start);
+    while (remaining > 0) {
+      end.setDate(end.getDate() + 1);
+      if (end.getDay() !== 0 && end.getDay() !== 6) remaining--;
+    }
+    const fmt = (d: Date) => d.toISOString().split('T')[0];
+    setFormData(prev => ({ ...prev, planned_end_date: fmt(end) }));
+  };
+
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when field changes
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    // Auto-calculate end date when start date changes with template selected
+    if (field === 'planned_start_date' && typeof value === 'string' && selectedTemplate) {
+      autoCalculateEndDate(value);
     }
   };
 
@@ -230,6 +260,12 @@ export default function NovaObra() {
         }
       }
 
+      // 7. Increment template usage counter
+      if (selectedTemplate) {
+        const { error: usageError } = await supabase.rpc('increment_template_usage', { p_template_id: selectedTemplate.id });
+        if (usageError) console.error('Usage tracking error:', usageError);
+      }
+
       toast({ 
         title: 'Obra cadastrada!', 
         description: sendInvite 
@@ -286,11 +322,30 @@ export default function NovaObra() {
                     const tpl = templates.find((t) => t.id === id);
                     if (tpl) {
                       setSelectedTemplate(tpl);
-                      setFormData((prev) => ({
-                        ...prev,
-                        is_project_phase: tpl.is_project_phase,
-                        contract_value: tpl.default_contract_value?.toString() ?? prev.contract_value,
-                      }));
+                      setShowActivityPreview(false);
+                      setFormData((prev) => {
+                        const updated = {
+                          ...prev,
+                          is_project_phase: tpl.is_project_phase,
+                          contract_value: tpl.default_contract_value?.toString() ?? prev.contract_value,
+                        };
+                        return updated;
+                      });
+                      // Auto-calculate end date if start date exists
+                      if (formData.planned_start_date && Array.isArray(tpl.default_activities) && tpl.default_activities.length > 0) {
+                        const totalDays = (tpl.default_activities as TemplateActivity[]).reduce((s, a) => s + a.durationDays, 0);
+                        if (totalDays > 0) {
+                          const start = new Date(formData.planned_start_date + 'T00:00:00');
+                          while (start.getDay() === 0 || start.getDay() === 6) start.setDate(start.getDate() + 1);
+                          let remaining = totalDays - 1;
+                          const end = new Date(start);
+                          while (remaining > 0) {
+                            end.setDate(end.getDate() + 1);
+                            if (end.getDay() !== 0 && end.getDay() !== 6) remaining--;
+                          }
+                          setFormData(prev => ({ ...prev, planned_end_date: end.toISOString().split('T')[0] }));
+                        }
+                      }
                       toast({ title: `Template "${tpl.name}" aplicado` });
                     }
                   }}
@@ -308,9 +363,53 @@ export default function NovaObra() {
                   </SelectContent>
                 </Select>
                 {selectedTemplate && Array.isArray(selectedTemplate.default_activities) && selectedTemplate.default_activities.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    ✓ {selectedTemplate.default_activities.length} atividades serão criadas automaticamente no cronograma
-                  </p>
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="secondary">
+                        {selectedTemplate.default_activities.length} atividades
+                      </Badge>
+                      <Badge variant="outline">
+                        {templateTotalDays} dias úteis
+                      </Badge>
+                      {selectedTemplate.default_activities.reduce((s, a) => s + (a as TemplateActivity).weight, 0) > 0 && (
+                        <Badge variant="outline">
+                          {selectedTemplate.default_activities.reduce((s, a) => s + (a as TemplateActivity).weight, 0)}% peso total
+                        </Badge>
+                      )}
+                    </div>
+                    <Collapsible open={showActivityPreview} onOpenChange={setShowActivityPreview}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="gap-1 h-7 text-xs px-2">
+                          {showActivityPreview ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          {showActivityPreview ? 'Ocultar' : 'Ver'} atividades
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="rounded-lg border overflow-hidden mt-2">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-xs">#</TableHead>
+                                <TableHead className="text-xs">Atividade</TableHead>
+                                <TableHead className="text-xs w-16 text-right">Dias</TableHead>
+                                <TableHead className="text-xs w-16 text-right">Peso</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {(selectedTemplate.default_activities as TemplateActivity[]).map((act, i) => (
+                                <TableRow key={i}>
+                                  <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
+                                  <TableCell className="text-sm">{act.description}</TableCell>
+                                  <TableCell className="text-sm text-right">{act.durationDays}</TableCell>
+                                  <TableCell className="text-sm text-right">{act.weight}%</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
                 )}
               </CardContent>
             </Card>

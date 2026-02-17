@@ -16,6 +16,8 @@ export interface ProjectTemplate {
   default_activities: TemplateActivity[] | null;
   default_contract_value: number | null;
   category: string | null;
+  usage_count: number;
+  last_used_at: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;

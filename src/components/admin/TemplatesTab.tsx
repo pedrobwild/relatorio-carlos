@@ -57,7 +57,7 @@ const emptyForm: FormState = {
   category: 'geral',
 };
 
-type SortField = 'name' | 'created_at' | 'is_project_phase';
+type SortField = 'name' | 'created_at' | 'is_project_phase' | 'usage_count';
 
 export function TemplatesTab() {
   const { toast } = useToast();
@@ -109,6 +109,7 @@ export function TemplatesTab() {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'created_at') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       if (sortBy === 'is_project_phase') return (a.is_project_phase ? 0 : 1) - (b.is_project_phase ? 0 : 1);
+      if (sortBy === 'usage_count') return (b.usage_count ?? 0) - (a.usage_count ?? 0);
       return 0;
     });
   }, [templates, search, sortBy, filterCategory]);
@@ -423,6 +424,7 @@ export function TemplatesTab() {
             <SelectContent>
               <SelectItem value="name">Nome (A-Z)</SelectItem>
               <SelectItem value="created_at">Mais recentes</SelectItem>
+              <SelectItem value="usage_count">Mais usados</SelectItem>
               <SelectItem value="is_project_phase">Tipo (Fase)</SelectItem>
             </SelectContent>
           </Select>
@@ -493,6 +495,11 @@ export function TemplatesTab() {
                     {acts.length > 0 && (
                       <Badge variant="outline">
                         {acts.length} atividades · {totalDays(acts)}d
+                      </Badge>
+                    )}
+                    {(t.usage_count ?? 0) > 0 && (
+                      <Badge variant="outline" className="gap-1 text-muted-foreground">
+                        {t.usage_count}× usado
                       </Badge>
                     )}
                     {t.default_contract_value && (
