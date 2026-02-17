@@ -67,6 +67,7 @@ export default function NovaObra() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [showActivityPreview, setShowActivityPreview] = useState(false);
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState('__all__');
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -216,7 +217,7 @@ export default function NovaObra() {
         }
       }
 
-      // 6. Create activities from template if selected
+      // 6. Create activities from template if selected (with auto-predecessors)
       if (selectedTemplate && Array.isArray(selectedTemplate.default_activities) && selectedTemplate.default_activities.length > 0) {
         const activities = selectedTemplate.default_activities as { description: string; durationDays: number; weight: number }[];
         const startDate = formData.planned_start_date ? new Date(formData.planned_start_date + 'T00:00:00') : new Date();
@@ -226,8 +227,12 @@ export default function NovaObra() {
           startDate.setDate(startDate.getDate() + 1);
         }
 
+        // First pass: generate IDs and dates
         let currentDate = new Date(startDate);
+        const activityIds: string[] = [];
         const rows = activities.map((act, idx) => {
+          const actId = crypto.randomUUID();
+          activityIds.push(actId);
           const actStart = new Date(currentDate);
           let remaining = act.durationDays - 1;
           const actEnd = new Date(actStart);
@@ -242,6 +247,7 @@ export default function NovaObra() {
           }
           const fmt = (d: Date) => d.toISOString().split('T')[0];
           return {
+            id: actId,
             project_id: project.id,
             description: act.description,
             planned_start: fmt(actStart),
@@ -249,6 +255,8 @@ export default function NovaObra() {
             weight: act.weight,
             sort_order: idx,
             created_by: user!.id,
+            // Auto-predecessor: each activity depends on the previous one
+            predecessor_ids: idx > 0 ? [activityIds[idx - 1]] : [],
           };
         });
 
@@ -317,6 +325,31 @@ export default function NovaObra() {
                 <CardDescription>Selecione um template para preencher automaticamente</CardDescription>
               </CardHeader>
               <CardContent>
+                {/* Category filter */}
+                {(() => {
+                  const cats = [...new Set((templates ?? []).map(t => t.category || 'geral'))].sort();
+                  return cats.length > 1 ? (
+                    <div className="flex gap-1.5 flex-wrap mb-3">
+                      <Badge
+                        variant={templateCategoryFilter === '__all__' ? 'default' : 'outline'}
+                        className="cursor-pointer"
+                        onClick={() => setTemplateCategoryFilter('__all__')}
+                      >
+                        Todos
+                      </Badge>
+                      {cats.map(c => (
+                        <Badge
+                          key={c}
+                          variant={templateCategoryFilter === c ? 'default' : 'outline'}
+                          className="cursor-pointer"
+                          onClick={() => setTemplateCategoryFilter(c)}
+                        >
+                          {c.charAt(0).toUpperCase() + c.slice(1)}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
                 <Select
                   onValueChange={(id) => {
                     const tpl = templates.find((t) => t.id === id);
@@ -354,7 +387,9 @@ export default function NovaObra() {
                     <SelectValue placeholder="Escolha um template (opcional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    {templates.map((t) => (
+                    {(templates ?? [])
+                      .filter(t => templateCategoryFilter === '__all__' || (t.category || 'geral') === templateCategoryFilter)
+                      .map((t) => (
                       <SelectItem key={t.id} value={t.id}>
                         {t.name}
                         {t.description ? ` — ${t.description}` : ''}
@@ -377,11 +412,44 @@ export default function NovaObra() {
                         </Badge>
                       )}
                     </div>
+                    {/* Mini-Gantt timeline preview */}
+                    <div className="rounded-lg border p-3 mt-1 bg-muted/30">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Timeline estimada</p>
+                      <div className="space-y-1">
+                        {(() => {
+                          const acts = selectedTemplate.default_activities as TemplateActivity[];
+                          const cumDays: number[] = [];
+                          let acc = 0;
+                          acts.forEach(a => { cumDays.push(acc); acc += a.durationDays; });
+                          const total = acc;
+                          return acts.map((act, i) => (
+                            <div key={i} className="flex items-center gap-2 group/bar">
+                              <span className="text-[10px] text-muted-foreground w-5 text-right shrink-0">{i + 1}</span>
+                              <div className="flex-1 h-4 relative rounded-sm overflow-hidden bg-muted">
+                                <div
+                                  className="absolute top-0 h-full rounded-sm bg-primary/60 group-hover/bar:bg-primary/80 transition-colors"
+                                  style={{
+                                    left: `${(cumDays[i] / total) * 100}%`,
+                                    width: `${Math.max((act.durationDays / total) * 100, 2)}%`,
+                                  }}
+                                  title={`${act.description} — ${act.durationDays}d`}
+                                />
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                      <div className="flex justify-between mt-1.5">
+                        <span className="text-[10px] text-muted-foreground">Dia 1</span>
+                        <span className="text-[10px] text-muted-foreground">Dia {templateTotalDays}</span>
+                      </div>
+                    </div>
+
                     <Collapsible open={showActivityPreview} onOpenChange={setShowActivityPreview}>
                       <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="sm" className="gap-1 h-7 text-xs px-2">
                           {showActivityPreview ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                          {showActivityPreview ? 'Ocultar' : 'Ver'} atividades
+                          {showActivityPreview ? 'Ocultar' : 'Ver'} detalhes
                         </Button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
