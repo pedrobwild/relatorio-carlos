@@ -35,9 +35,9 @@ export function PurchaseAlertsPanel({
 
   if (totalAlerts === 0) {
     return (
-      <Card className="border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20">
+      <Card className="border-[hsl(var(--success))]/20 bg-success-light/50 dark:bg-[hsl(var(--success))]/5">
         <CardContent className="py-4">
-          <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+          <div className="flex items-center gap-2 text-[hsl(var(--success))]">
             <Bell className="h-4 w-4" />
             <span className="text-sm font-medium">Nenhum alerta de prazo</span>
           </div>
@@ -72,7 +72,7 @@ export function PurchaseAlertsPanel({
                 "hover:bg-accent/50 transition-colors",
                 urgencyLevel === 'overdue' && "bg-destructive/5",
                 urgencyLevel === 'critical' && "bg-destructive/5",
-                urgencyLevel === 'warning' && "bg-amber-50 dark:bg-amber-950/20",
+                urgencyLevel === 'warning' && "bg-warning/5",
               )}
               onClick={() => onItemClick?.(purchase)}
             >
@@ -103,11 +103,11 @@ export function PurchaseAlertsPanel({
   };
 
   return (
-    <Card className="border-amber-200 dark:border-amber-900">
+    <Card className="border-[hsl(var(--warning))]/20 dark:border-[hsl(var(--warning))]/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Bell className="h-4 w-4 text-amber-600" />
+            <Bell className="h-4 w-4 text-[hsl(var(--warning))]" />
             Alertas de Prazo
             <Badge variant="secondary" className="ml-1">
               {totalAlerts}
@@ -147,7 +147,7 @@ export function PurchaseAlertsPanel({
                 "Atenção (≤7 dias)",
                 Clock,
                 'warning',
-                "text-amber-600"
+                "text-[hsl(var(--warning))]"
               )}
               {renderAlertSection(
                 approaching,
