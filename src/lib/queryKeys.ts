@@ -184,6 +184,18 @@ export const queryKeys = {
       [...queryKeys.files.all, 'detail', fileId] as const,
     cleanup: () => [...queryKeys.files.all, 'cleanup'] as const,
   },
+
+  // ============================================================================
+  // Project Templates
+  // ============================================================================
+  projectTemplates: {
+    all: ['project-templates'] as const,
+    lists: () => [...queryKeys.projectTemplates.all, 'list'] as const,
+    list: (filters?: { search?: string }) =>
+      [...queryKeys.projectTemplates.lists(), filters] as const,
+    detail: (id: string | undefined) =>
+      [...queryKeys.projectTemplates.all, 'detail', id] as const,
+  },
 } as const;
 
 // ============================================================================
