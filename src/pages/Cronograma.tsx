@@ -315,7 +315,7 @@ const Cronograma = () => {
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Peso total das atividades:</span>
-              <span className={`font-semibold ${totalWeight === 100 ? 'text-green-600' : totalWeight > 100 ? 'text-destructive' : 'text-amber-600'}`}>
+              <span className={`font-semibold ${totalWeight === 100 ? 'text-[hsl(var(--success))]' : totalWeight > 100 ? 'text-destructive' : 'text-[hsl(var(--warning))]'}`}>
                 {totalWeight.toFixed(1)}%
               </span>
             </div>
@@ -343,18 +343,20 @@ const Cronograma = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-11 w-11 min-h-[44px] min-w-[44px]"
                       onClick={() => handleMoveUp(index)}
                       disabled={index === 0}
+                      aria-label="Mover para cima"
                     >
                       <GripVertical className="h-4 w-4 rotate-90" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
                       onClick={() => handleRemoveActivity(activity.id)}
                       disabled={activities.length === 1}
+                      aria-label="Remover atividade"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

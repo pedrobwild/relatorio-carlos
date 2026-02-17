@@ -486,16 +486,18 @@ export default function Compras() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8"
+                              className="h-11 w-11 min-h-[44px] min-w-[44px]"
                               onClick={() => handleOpenDialog(purchase)}
+                              aria-label="Editar item"
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
                               onClick={() => setDeleteId(purchase.id)}
+                              aria-label="Excluir item"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -514,7 +516,7 @@ export default function Compras() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[95dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingPurchase ? 'Editar Item de Compra' : 'Novo Item de Compra'}
@@ -700,10 +702,11 @@ export default function Compras() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" className="min-h-[44px]" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>
             <Button 
+              className="min-h-[44px]"
               onClick={handleSubmit}
               disabled={!formData.item_name || !formData.required_by_date || addPurchase.isPending || updatePurchase.isPending}
             >
