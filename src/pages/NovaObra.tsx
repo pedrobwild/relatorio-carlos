@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useProjectTemplates, type ProjectTemplate, type TemplateActivity } from '@/hooks/useProjectTemplates';
+import { useProjectTemplates, type ProjectTemplate, type TemplateActivity, type TemplateCustomField } from '@/hooks/useProjectTemplates';
 
 import { z } from 'zod';
 
@@ -68,6 +68,7 @@ export default function NovaObra() {
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [showActivityPreview, setShowActivityPreview] = useState(false);
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState('__all__');
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -477,6 +478,40 @@ export default function NovaObra() {
                         </div>
                       </CollapsibleContent>
                     </Collapsible>
+
+                    {/* Custom Fields */}
+                    {selectedTemplate.custom_fields && (selectedTemplate.custom_fields as TemplateCustomField[]).length > 0 && (
+                      <div className="space-y-3 mt-3 p-3 rounded-lg border bg-muted/30">
+                        <p className="text-xs font-medium text-muted-foreground">Campos do template</p>
+                        {(selectedTemplate.custom_fields as TemplateCustomField[]).map((field) => (
+                          <div key={field.key} className="space-y-1">
+                            <Label className="text-sm">{field.label} {field.required && '*'}</Label>
+                            {field.type === 'select' && field.options ? (
+                              <Select
+                                value={customFieldValues[field.key] ?? ''}
+                                onValueChange={(v) => setCustomFieldValues(prev => ({ ...prev, [field.key]: v }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {field.options.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                type={field.type === 'number' ? 'number' : 'text'}
+                                value={customFieldValues[field.key] ?? ''}
+                                onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                placeholder={field.label}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

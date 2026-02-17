@@ -19,7 +19,10 @@ import {
   useCreateProjectTemplate,
   useUpdateProjectTemplate,
   useDeleteProjectTemplate,
+  useTemplateVersions,
+  useRestoreTemplateVersion,
   type ProjectTemplate,
+  type TemplateCustomField,
 } from '@/hooks/useProjectTemplates';
 import { activityTemplateSets } from '@/data/activityTemplates';
 
@@ -37,6 +40,7 @@ interface FormState {
   selected_activity_template: string;
   custom_activities: ActivityItem[];
   category: string;
+  custom_fields: TemplateCustomField[];
 }
 
 const CATEGORIES = [
@@ -55,6 +59,7 @@ const emptyForm: FormState = {
   selected_activity_template: '',
   custom_activities: [],
   category: 'geral',
+  custom_fields: [],
 };
 
 type SortField = 'name' | 'created_at' | 'is_project_phase' | 'usage_count';
@@ -65,6 +70,7 @@ export function TemplatesTab() {
   const createTemplate = useCreateProjectTemplate();
   const updateTemplate = useUpdateProjectTemplate();
   const deleteTemplate = useDeleteProjectTemplate();
+  const restoreVersion = useRestoreTemplateVersion();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -77,6 +83,7 @@ export function TemplatesTab() {
 
   // Preview sheet
   const [previewTemplate, setPreviewTemplate] = useState<ProjectTemplate | null>(null);
+  const { data: versions } = useTemplateVersions(previewTemplate?.id ?? null);
 
   // Drag state
   const dragIdx = useRef<number | null>(null);
@@ -141,6 +148,7 @@ export function TemplatesTab() {
       selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : '__none__'),
       custom_activities: actMatch ? [] : activities,
       category: t.category || 'geral',
+      custom_fields: (t.custom_fields ?? []) as TemplateCustomField[],
     });
     setDialogOpen(true);
   };
@@ -221,6 +229,7 @@ export function TemplatesTab() {
       default_activities: validActivities,
       default_contract_value: form.default_contract_value ? parseFloat(form.default_contract_value) : null,
       category: form.category,
+      custom_fields: form.custom_fields.filter(f => f.key.trim() && f.label.trim()),
     };
 
     try {
@@ -260,6 +269,7 @@ export function TemplatesTab() {
       selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : '__none__'),
       custom_activities: actMatch ? [] : activities,
       category: t.category || 'geral',
+      custom_fields: (t.custom_fields ?? []) as TemplateCustomField[],
     });
     setDialogOpen(true);
   };
@@ -661,6 +671,45 @@ export function TemplatesTab() {
                   )}
                 </div>
 
+                {/* Version History */}
+                {versions && versions.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h4 className="font-medium mb-3">Histórico de versões ({versions.length})</h4>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {versions.map((v) => (
+                          <div key={v.id} className="flex items-center justify-between rounded-lg border p-2.5">
+                            <div>
+                              <p className="text-sm font-medium">v{v.version_number} — {v.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(v.created_at).toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              disabled={restoreVersion.isPending}
+                              onClick={async () => {
+                                try {
+                                  await restoreVersion.mutateAsync({ templateId: previewTemplate.id, version: v });
+                                  toast({ title: `Restaurado para v${v.version_number}` });
+                                  setPreviewTemplate(null);
+                                } catch {
+                                  toast({ title: 'Erro ao restaurar', variant: 'destructive' });
+                                }
+                              }}
+                            >
+                              Restaurar
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="flex gap-2 pt-2">
                   <Button onClick={() => { setPreviewTemplate(null); openEdit(previewTemplate); }} className="flex-1 gap-2">
                     <Pencil className="h-4 w-4" /> Editar
@@ -874,6 +923,78 @@ export function TemplatesTab() {
                 </div>
               ) : null}
             </div>
+          </div>
+
+          {/* Custom Fields Editor */}
+          <Separator />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Campos customizados</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1"
+                onClick={() => setForm(p => ({
+                  ...p,
+                  custom_fields: [...p.custom_fields, { key: '', label: '', type: 'text' as const }],
+                }))}
+              >
+                <Plus className="h-3.5 w-3.5" /> Campo
+              </Button>
+            </div>
+            {form.custom_fields.length > 0 && (
+              <div className="space-y-2">
+                {form.custom_fields.map((field, i) => (
+                  <div key={i} className="flex gap-2 items-start">
+                    <Input
+                      value={field.key}
+                      onChange={(e) => {
+                        const updated = [...form.custom_fields];
+                        updated[i] = { ...updated[i], key: e.target.value.replace(/\s+/g, '_').toLowerCase() };
+                        setForm(p => ({ ...p, custom_fields: updated }));
+                      }}
+                      placeholder="chave"
+                      className="h-8 text-sm w-24"
+                    />
+                    <Input
+                      value={field.label}
+                      onChange={(e) => {
+                        const updated = [...form.custom_fields];
+                        updated[i] = { ...updated[i], label: e.target.value };
+                        setForm(p => ({ ...p, custom_fields: updated }));
+                      }}
+                      placeholder="Rótulo"
+                      className="h-8 text-sm flex-1"
+                    />
+                    <Select
+                      value={field.type}
+                      onValueChange={(v) => {
+                        const updated = [...form.custom_fields];
+                        updated[i] = { ...updated[i], type: v as 'text' | 'number' | 'select' };
+                        setForm(p => ({ ...p, custom_fields: updated }));
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-24 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text">Texto</SelectItem>
+                        <SelectItem value="number">Número</SelectItem>
+                        <SelectItem value="select">Seleção</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive shrink-0"
+                      onClick={() => setForm(p => ({ ...p, custom_fields: p.custom_fields.filter((_, j) => j !== i) }))}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <DialogFooter>

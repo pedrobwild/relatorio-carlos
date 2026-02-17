@@ -8,6 +8,14 @@ export interface TemplateActivity {
   weight: number;
 }
 
+export interface TemplateCustomField {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'select';
+  options?: string[];
+  required?: boolean;
+}
+
 export interface ProjectTemplate {
   id: string;
   name: string;
@@ -16,11 +24,27 @@ export interface ProjectTemplate {
   default_activities: TemplateActivity[] | null;
   default_contract_value: number | null;
   category: string | null;
+  custom_fields: TemplateCustomField[] | null;
   usage_count: number;
   last_used_at: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface TemplateVersion {
+  id: string;
+  template_id: string;
+  version_number: number;
+  name: string;
+  description: string | null;
+  is_project_phase: boolean;
+  default_activities: TemplateActivity[] | null;
+  default_contract_value: number | null;
+  category: string | null;
+  custom_fields: TemplateCustomField[] | null;
+  created_by: string;
+  created_at: string;
 }
 
 interface CreateTemplateInput {
@@ -30,6 +54,7 @@ interface CreateTemplateInput {
   default_activities?: any[];
   default_contract_value?: number | null;
   category?: string;
+  custom_fields?: TemplateCustomField[];
 }
 
 export function useProjectTemplates() {
@@ -46,6 +71,51 @@ export function useProjectTemplates() {
   });
 }
 
+export function useTemplateVersions(templateId: string | null) {
+  return useQuery({
+    queryKey: ['template-versions', templateId],
+    queryFn: async () => {
+      if (!templateId) return [];
+      const { data, error } = await supabase
+        .from('project_template_versions')
+        .select('*')
+        .eq('template_id', templateId)
+        .order('version_number', { ascending: false });
+      if (error) throw error;
+      return data as unknown as TemplateVersion[];
+    },
+    enabled: !!templateId,
+  });
+}
+
+export function useRestoreTemplateVersion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ templateId, version }: { templateId: string; version: TemplateVersion }) => {
+      const { data, error } = await supabase
+        .from('project_templates')
+        .update({
+          name: version.name,
+          description: version.description,
+          is_project_phase: version.is_project_phase,
+          default_activities: version.default_activities,
+          default_contract_value: version.default_contract_value,
+          category: version.category,
+          custom_fields: version.custom_fields,
+        } as any)
+        .eq('id', templateId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as ProjectTemplate;
+    },
+    onSuccess: (_, { templateId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.projectTemplates.all });
+      qc.invalidateQueries({ queryKey: ['template-versions', templateId] });
+    },
+  });
+}
+
 export function useCreateProjectTemplate() {
   const qc = useQueryClient();
   return useMutation({
@@ -57,6 +127,7 @@ export function useCreateProjectTemplate() {
         .insert({
           ...input,
           default_activities: input.default_activities ?? [],
+          custom_fields: input.custom_fields ?? [],
           created_by: user.id,
         } as any)
         .select()
