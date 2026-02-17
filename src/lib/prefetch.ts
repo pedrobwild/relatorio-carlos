@@ -104,6 +104,84 @@ export async function prefetchWeeklyReports(projectId: string | undefined): Prom
 }
 
 /**
+ * Prefetch payments for a project
+ */
+export async function prefetchPayments(projectId: string | undefined): Promise<void> {
+  if (!projectId) return;
+  
+  const key = `payments-${projectId}`;
+  if (prefetchedKeys.has(key)) return;
+  prefetchedKeys.add(key);
+
+  await queryClient.prefetchQuery({
+    queryKey: ['project-payments', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_payments')
+        .select('id, installment_number, description, amount, due_date, paid_at')
+        .eq('project_id', projectId)
+        .order('installment_number', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Prefetch purchases for a project
+ */
+export async function prefetchPurchases(projectId: string | undefined): Promise<void> {
+  if (!projectId) return;
+  
+  const key = `purchases-${projectId}`;
+  if (prefetchedKeys.has(key)) return;
+  prefetchedKeys.add(key);
+
+  await queryClient.prefetchQuery({
+    queryKey: ['project-purchases', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_purchases')
+        .select('id, item_name, status, required_by_date, estimated_cost')
+        .eq('project_id', projectId)
+        .order('required_by_date', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+/**
+ * Prefetch formalizations for a project
+ */
+export async function prefetchFormalizations(projectId: string | undefined): Promise<void> {
+  if (!projectId) return;
+  
+  const key = `formalizations-${projectId}`;
+  if (prefetchedKeys.has(key)) return;
+  prefetchedKeys.add(key);
+
+  await queryClient.prefetchQuery({
+    queryKey: queryKeys.formalizacoes.list({ projectId }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('formalizations')
+        .select('id, title, type, status, created_at, updated_at')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
  * Prefetch pending items for a project
  */
 export async function prefetchPendingItems(projectId: string | undefined): Promise<void> {
@@ -126,7 +204,7 @@ export async function prefetchPendingItems(projectId: string | undefined): Promi
       if (error) throw error;
       return data;
     },
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
   });
 }
 
@@ -158,10 +236,13 @@ export function prefetchForTab(tabName: string, projectId: string | undefined): 
       prefetchPendingItems(projectId);
       break;
     case 'financeiro':
-      // Prefetch payments data could be added here
+      prefetchPayments(projectId);
+      break;
+    case 'compras':
+      prefetchPurchases(projectId);
       break;
     case 'formalizacoes':
-      // Prefetch formalizations data could be added here
+      prefetchFormalizations(projectId);
       break;
   }
 }

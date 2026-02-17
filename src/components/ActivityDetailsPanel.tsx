@@ -161,6 +161,7 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
             size="icon"
             className="shrink-0 -mt-1 -mr-1"
             onClick={onClose}
+            aria-label="Fechar detalhes da atividade"
           >
             <X className="w-4 h-4" />
           </Button>
