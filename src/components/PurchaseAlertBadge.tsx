@@ -34,7 +34,7 @@ export function PurchaseAlertBadge({
       variant: 'outline' as const,
       icon: Clock,
       label: `${daysUntil} dias`,
-      className: 'border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950/20',
+      className: 'border-[hsl(var(--warning))] text-[hsl(var(--warning))] bg-warning/5',
     },
     approaching: {
       variant: 'secondary' as const,

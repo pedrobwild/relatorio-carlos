@@ -467,7 +467,7 @@ const GanttChart = ({
             <Button 
               variant="outline" 
               size="sm" 
-              className="h-7 text-xs gap-1 px-2"
+              className="h-9 min-h-[44px] text-xs gap-1 px-2"
               onClick={handleToggleFullChart}
             >
               {showFullChart ? (
@@ -488,7 +488,7 @@ const GanttChart = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-9 w-9"
+              className="h-11 w-11 min-h-[44px]"
               onClick={handleZoomIn}
               disabled={currentZoomIndex === 0}
               aria-label="Aumentar zoom"
@@ -499,7 +499,7 @@ const GanttChart = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-9 w-9"
+              className="h-11 w-11 min-h-[44px]"
               onClick={handleZoomOut}
               disabled={currentZoomIndex === zoomLevels.length - 1}
               aria-label="Diminuir zoom"
@@ -516,10 +516,10 @@ const GanttChart = ({
               onClick={() => setBaselineVisible(!baselineVisible)}
               className={cn(
                 "flex items-center gap-1.5 px-2 py-1 rounded transition-colors",
-                baselineVisible ? "bg-slate-500/20" : "bg-muted hover:bg-muted/80"
+                baselineVisible ? "bg-muted-foreground/20" : "bg-muted hover:bg-muted/80"
               )}
             >
-              <div className="w-3 h-1 bg-slate-400 rounded-full" />
+              <div className="w-3 h-1 bg-muted-foreground rounded-full" />
               <span className={baselineVisible ? "text-foreground" : "text-muted-foreground"}>
                 Baseline {baselineVisible ? '✓' : ''}
               </span>
@@ -530,7 +530,7 @@ const GanttChart = ({
             <span className="text-muted-foreground">Previsto</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-green-500" />
+            <div className="w-3 h-3 rounded-sm bg-success" />
             <span className="text-muted-foreground">Concluído</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -552,7 +552,7 @@ const GanttChart = ({
               onClick={() => setDebugMode(!debugMode)}
               className={cn(
                 "flex items-center gap-1.5 px-2 py-1 rounded transition-colors font-mono text-[10px]",
-                debugMode ? "bg-amber-500/20 text-amber-700" : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                debugMode ? "bg-warning/20 text-[hsl(var(--warning))]" : "bg-muted hover:bg-muted/80 text-muted-foreground"
               )}
             >
               🐛 Debug {debugMode ? 'ON' : 'OFF'}
@@ -817,17 +817,17 @@ const GanttChart = ({
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div 
-                              className="absolute top-1.5 h-2 rounded-full bg-slate-400/40 border border-slate-400/60"
+                              className="absolute top-1.5 h-2 rounded-full bg-muted-foreground/30 border border-muted-foreground/40"
                               style={{ left: baselineStyle.left, width: baselineStyle.width }}
                             />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="font-medium text-slate-600">Baseline (Original)</p>
+                            <p className="font-medium text-muted-foreground">Baseline (Original)</p>
                             <p className="text-xs">
                               {format(parseLocalDate(task.baselineStart!), 'dd/MM/yyyy')} - {format(parseLocalDate(task.baselineEnd!), 'dd/MM/yyyy')}
                             </p>
                             {(task.baselineStart !== task.plannedStart || task.baselineEnd !== task.plannedEnd) && (
-                              <p className="text-xs text-amber-600 mt-1">
+                              <p className="text-xs text-[hsl(var(--warning))] mt-1">
                                 ⚠ Datas alteradas desde o baseline
                               </p>
                             )}

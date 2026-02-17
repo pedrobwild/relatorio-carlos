@@ -61,7 +61,7 @@ export function TeamContactPopover({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 flex-shrink-0"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] flex-shrink-0"
               onClick={onEdit}
               aria-label={`Editar ${role}`}
             >
