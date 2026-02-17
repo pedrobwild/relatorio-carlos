@@ -217,7 +217,7 @@ export default function AdminAuditoria() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container max-w-7xl mx-auto px-4 py-3">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button 
@@ -247,7 +247,7 @@ export default function AdminAuditoria() {
         </div>
       </header>
 
-      <main className="container max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Filters Card */}
         <Card>
           <CardHeader className="pb-3">

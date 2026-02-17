@@ -389,7 +389,7 @@ const Index = () => {
             <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
           </div>
         </div>
-        <div className="p-3 md:p-4 lg:p-6 xl:p-8">
+        <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
             {/* Header skeleton */}
             <ContentSkeleton variant="cards" rows={3} />
@@ -471,7 +471,7 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="p-3 md:p-4 lg:p-6 xl:p-8">
+        <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
             {/* Full project header with quick links */}
             <ReportHeader
@@ -525,7 +525,7 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="p-3 md:p-4 lg:p-6 xl:p-8">
+      <div className="px-4 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">
           <div ref={reportRef}>
             <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
@@ -581,7 +581,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                <div className="p-3 md:p-4 lg:p-6">
+                <div className="p-4 md:p-4 lg:p-6">
                   <div className="flex gap-4">
                     {/* Main content area */}
                     <div className={selectedActivityId ? "flex-1 min-w-0" : "w-full"}>

@@ -115,7 +115,7 @@ export default function Demo() {
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background">
       {/* Demo Header */}
       <div className="sticky top-0 z-50 bg-gradient-to-r from-accent/30 via-background to-accent/30 border-b border-accent">
-        <div className="container max-w-6xl mx-auto px-4 py-3">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" onClick={() => navigate('/gestao')}>
