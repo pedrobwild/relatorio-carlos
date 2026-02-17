@@ -223,7 +223,7 @@ function EditableDateCell({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "inline-flex items-center gap-1 px-2 py-1 rounded-md text-sm tabular-nums transition-all min-h-[32px]",
+            "inline-flex items-center gap-1 px-2 py-1 rounded-md text-sm tabular-nums transition-all min-h-[44px]",
             "hover:bg-primary/10 hover:text-primary cursor-pointer group",
             value ? "font-medium text-foreground" : "text-muted-foreground",
             saving && "opacity-50 pointer-events-none"
