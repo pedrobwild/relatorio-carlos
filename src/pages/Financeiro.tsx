@@ -263,7 +263,7 @@ const Financeiro = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-7 px-3 text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30 min-h-auto"
+                                  className="h-11 min-h-[44px] px-3 text-xs hover:bg-primary/10 hover:text-primary hover:border-primary/30"
                                   onClick={() => downloadBoleto(payment.boleto_path!)}
                                 >
                                   <Download className="w-3.5 h-3.5 mr-1.5" />
@@ -401,7 +401,7 @@ const Financeiro = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 px-2 mt-1 text-xs text-primary hover:text-primary hover:bg-primary/10 min-h-auto"
+                                className="h-11 min-h-[44px] px-3 mt-1 text-xs text-primary hover:text-primary hover:bg-primary/10"
                                 onClick={() => downloadBoleto(payment.boleto_path!)}
                               >
                                 <Download className="w-3.5 h-3.5 mr-1" />
