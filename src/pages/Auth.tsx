@@ -297,7 +297,7 @@ export default function Auth() {
           </Button>
         </form>
 
-        <div className="mt-8 flex items-center justify-center gap-1.5 text-sm text-white/70">
+        <div className="mt-8 flex items-center justify-center gap-1.5 text-sm text-white/70 w-full">
           <HelpCircle className="h-4 w-4 shrink-0" />
           <span>Problemas?</span>
           <a
@@ -310,7 +310,7 @@ export default function Auth() {
           </a>
         </div>
 
-        <div className="mt-6 flex flex-col items-center gap-1">
+        <div className="mt-6 flex flex-col items-center gap-1 w-full text-center">
           <div className="flex items-center gap-1.5 text-xs text-white/50">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Acesso seguro · LGPD</span>
