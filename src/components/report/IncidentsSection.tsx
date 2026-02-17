@@ -23,12 +23,12 @@ interface IncidentsSectionProps {
 const getStatusConfig = (status: Incident['status']) => {
   switch (status) {
     case 'resolvido':
-      return { label: 'Resolvido', className: 'bg-green-100 text-green-800' };
+      return { label: 'Resolvido', className: 'bg-success/10 text-success' };
     case 'em andamento':
-      return { label: 'Em andamento', className: 'bg-yellow-100 text-yellow-800' };
+      return { label: 'Em andamento', className: 'bg-warning/10 text-warning' };
     case 'aberto':
     default:
-      return { label: 'Aberto', className: 'bg-red-100 text-red-800' };
+      return { label: 'Aberto', className: 'bg-destructive/10 text-destructive' };
   }
 };
 
