@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, FileText, Users, Package, RefreshCw } from 'lucide-react';
+import { ChevronRight, FileText, Users, Package, RefreshCw, Repeat, FileEdit } from 'lucide-react';
 import { FORMALIZATION_TYPE_LABELS, type FormalizationType } from '@/types/formalization';
 
 interface TemplateSelectorProps {
@@ -34,6 +34,20 @@ const templates: {
     emoji: '📦',
     description: 'Formaliza a custódia temporária de itens, incluindo estado, local e responsabilidades.',
     tags: ['Custódia', 'Item'],
+  },
+  {
+    type: 'scope_change',
+    icon: <Repeat className="h-5 w-5" />,
+    emoji: '🔄',
+    description: 'Registra alterações no escopo original do projeto com análise de impacto em prazo e custo.',
+    tags: ['Escopo', 'Aditivo'],
+  },
+  {
+    type: 'general',
+    icon: <FileEdit className="h-5 w-5" />,
+    emoji: '📄',
+    description: 'Documento genérico para registros que não se encaixam nos demais templates.',
+    tags: ['Geral', 'Livre'],
   },
 ];
 
@@ -99,7 +113,7 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
-        Mais templates em breve
+        Selecione um template para iniciar com conteúdo pré-preenchido
       </p>
     </div>
   );

@@ -134,6 +134,7 @@ export default function GestaoObras() {
   const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [phaseFilter, setPhaseFilter] = useState<'all' | 'project' | 'execution'>('all');
   const [engineerFilter, setEngineerFilter] = useState<string | null>(null);
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectWithCustomer | null>(null);
@@ -170,8 +171,11 @@ export default function GestaoObras() {
       p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || p.status === statusFilter;
     const matchesEngineer = !engineerFilter || p.engineer_user_id === engineerFilter;
-    return matchesSearch && matchesStatus && matchesEngineer;
-  }), [projects, searchTerm, statusFilter, engineerFilter]);
+    const matchesPhase = phaseFilter === 'all' || 
+      (phaseFilter === 'project' && p.is_project_phase) || 
+      (phaseFilter === 'execution' && !p.is_project_phase);
+    return matchesSearch && matchesStatus && matchesEngineer && matchesPhase;
+  }), [projects, searchTerm, statusFilter, engineerFilter, phaseFilter]);
 
   const { activeCount, completedCount, thisMonthCount } = useMemo(() => ({
     activeCount: projects.filter(p => p.status === 'active').length,
@@ -250,7 +254,7 @@ export default function GestaoObras() {
         )}
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="flex flex-col gap-3 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -260,7 +264,8 @@ export default function GestaoObras() {
               className="pl-10"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {/* Status filters */}
             <Button
               variant={statusFilter === null ? 'default' : 'outline'}
               size="sm"
@@ -276,11 +281,51 @@ export default function GestaoObras() {
               Em andamento
             </Button>
             <Button
+              variant={statusFilter === 'paused' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('paused')}
+            >
+              Pausadas
+            </Button>
+            <Button
               variant={statusFilter === 'completed' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setStatusFilter('completed')}
             >
               Concluídas
+            </Button>
+            <Button
+              variant={statusFilter === 'cancelled' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('cancelled')}
+            >
+              Canceladas
+            </Button>
+            
+            {/* Divider */}
+            <div className="w-px h-8 bg-border mx-1 hidden sm:block" />
+            
+            {/* Phase filter */}
+            <Button
+              variant={phaseFilter === 'all' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setPhaseFilter('all')}
+            >
+              Todas fases
+            </Button>
+            <Button
+              variant={phaseFilter === 'project' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setPhaseFilter('project')}
+            >
+              🏗️ Fase Projeto
+            </Button>
+            <Button
+              variant={phaseFilter === 'execution' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setPhaseFilter('execution')}
+            >
+              🔨 Execução
             </Button>
           </div>
         </div>
@@ -295,13 +340,13 @@ export default function GestaoObras() {
         ) : filteredProjects.length === 0 ? (
           <Card className="p-12 text-center border-dashed">
             <Building2 className="h-16 w-16 mx-auto text-muted-foreground/30 mb-6" />
-            {searchTerm || statusFilter || engineerFilter ? (
+          {searchTerm || statusFilter || engineerFilter || phaseFilter !== 'all' ? (
               <>
                 <h3 className="text-body font-semibold mb-2">Nenhuma obra encontrada</h3>
                 <p className="text-caption text-muted-foreground mb-4">
                   Nenhum resultado para os filtros selecionados. Tente ajustar sua busca.
                 </p>
-                <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter(null); setEngineerFilter(null); }}>
+                <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter(null); setEngineerFilter(null); setPhaseFilter('all'); }}>
                   Limpar filtros
                 </Button>
               </>
