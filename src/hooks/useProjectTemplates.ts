@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/queryKeys';
 
 export interface ProjectTemplate {
   id: string;
@@ -23,12 +24,12 @@ interface CreateTemplateInput {
 
 export function useProjectTemplates() {
   return useQuery({
-    queryKey: ['project-templates'],
+    queryKey: queryKeys.projectTemplates.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_templates')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true });
       if (error) throw error;
       return data as unknown as ProjectTemplate[];
     },
@@ -53,7 +54,7 @@ export function useCreateProjectTemplate() {
       if (error) throw error;
       return data as unknown as ProjectTemplate;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['project-templates'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projectTemplates.all }),
   });
 }
 
@@ -70,7 +71,7 @@ export function useUpdateProjectTemplate() {
       if (error) throw error;
       return data as unknown as ProjectTemplate;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['project-templates'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projectTemplates.all }),
   });
 }
 
@@ -84,6 +85,6 @@ export function useDeleteProjectTemplate() {
         .eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['project-templates'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projectTemplates.all }),
   });
 }
