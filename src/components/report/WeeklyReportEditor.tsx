@@ -369,7 +369,7 @@ const WeeklyReportEditor = ({
                 <CardContent className="p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Tarefa {index + 1}</span>
-                    <Button variant="ghost" size="sm" onClick={() => removeLookaheadTask(index)}>
+                    <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11" onClick={() => removeLookaheadTask(index)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
@@ -434,7 +434,7 @@ const WeeklyReportEditor = ({
         <AccordionItem value="risks" className="bg-card border border-border rounded-lg overflow-hidden">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <AlertTriangle className="w-4 h-4 text-[hsl(var(--warning))]" />
               <span className="font-semibold">Riscos e Impedimentos ({formData.risksAndIssues.length})</span>
             </div>
           </AccordionTrigger>
@@ -444,7 +444,7 @@ const WeeklyReportEditor = ({
                 <CardContent className="p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Item {index + 1}</span>
-                    <Button variant="ghost" size="sm" onClick={() => removeRiskIssue(index)}>
+                    <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11" onClick={() => removeRiskIssue(index)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
@@ -535,7 +535,7 @@ const WeeklyReportEditor = ({
         <AccordionItem value="decisions" className="bg-card border border-border rounded-lg overflow-hidden">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-blue-500" />
+              <MessageSquare className="w-4 h-4 text-[hsl(var(--info))]" />
               <span className="font-semibold">Decisões do Cliente ({formData.clientDecisions.length})</span>
             </div>
           </AccordionTrigger>
@@ -545,7 +545,7 @@ const WeeklyReportEditor = ({
                 <CardContent className="p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Decisão {index + 1}</span>
-                    <Button variant="ghost" size="sm" onClick={() => removeClientDecision(index)}>
+                    <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11" onClick={() => removeClientDecision(index)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
@@ -588,7 +588,7 @@ const WeeklyReportEditor = ({
         <AccordionItem value="incidents" className="bg-card border border-border rounded-lg overflow-hidden">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <AlertTriangle className="w-4 h-4 text-destructive" />
               <span className="font-semibold">Ocorrências ({formData.incidents.length})</span>
             </div>
           </AccordionTrigger>
@@ -598,7 +598,7 @@ const WeeklyReportEditor = ({
                 <CardContent className="p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Ocorrência {index + 1}</span>
-                    <Button variant="ghost" size="sm" onClick={() => removeIncident(index)}>
+                    <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11" onClick={() => removeIncident(index)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
@@ -681,7 +681,7 @@ const WeeklyReportEditor = ({
         <AccordionItem value="gallery" className="bg-card border border-border rounded-lg overflow-hidden">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50">
             <div className="flex items-center gap-2">
-              <Camera className="w-4 h-4 text-green-500" />
+              <Camera className="w-4 h-4 text-[hsl(var(--success))]" />
               <span className="font-semibold">Fotos e Vídeos ({formData.gallery.length})</span>
             </div>
           </AccordionTrigger>
@@ -694,7 +694,7 @@ const WeeklyReportEditor = ({
                 <CardContent className="p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Mídia {index + 1}</span>
-                    <Button variant="ghost" size="sm" onClick={() => removeGalleryPhoto(index)}>
+                    <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11" onClick={() => removeGalleryPhoto(index)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
