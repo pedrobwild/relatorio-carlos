@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectTemplates, type ProjectTemplate, type TemplateActivity, type TemplateCustomField } from '@/hooks/useProjectTemplates';
+import { addBusinessDays, isWeekend } from '@/lib/businessDays';
 
 import { z } from 'zod';
 
@@ -93,14 +94,8 @@ export default function NovaObra() {
   const autoCalculateEndDate = (startDateStr: string) => {
     if (!startDateStr || templateTotalDays <= 0) return;
     const start = new Date(startDateStr + 'T00:00:00');
-    // Skip to weekday
-    while (start.getDay() === 0 || start.getDay() === 6) start.setDate(start.getDate() + 1);
-    let remaining = templateTotalDays - 1;
-    const end = new Date(start);
-    while (remaining > 0) {
-      end.setDate(end.getDate() + 1);
-      if (end.getDay() !== 0 && end.getDay() !== 6) remaining--;
-    }
+    // addBusinessDays adds N days; we need totalDays - 1 since start counts as day 1
+    const end = addBusinessDays(start, templateTotalDays - 1);
     const fmt = (d: Date) => d.toISOString().split('T')[0];
     setFormData(prev => ({ ...prev, planned_end_date: fmt(end) }));
   };
@@ -224,28 +219,22 @@ export default function NovaObra() {
         const startDate = formData.planned_start_date ? new Date(formData.planned_start_date + 'T00:00:00') : new Date();
         
         // Skip to next weekday if starting on weekend
-        while (startDate.getDay() === 0 || startDate.getDay() === 6) {
-          startDate.setDate(startDate.getDate() + 1);
+        let currentDate = new Date(startDate);
+        if (isWeekend(currentDate)) {
+          currentDate = addBusinessDays(currentDate, 0);
+          currentDate.setDate(currentDate.getDate() + 1);
+          while (isWeekend(currentDate)) currentDate.setDate(currentDate.getDate() + 1);
         }
 
         // First pass: generate IDs and dates
-        let currentDate = new Date(startDate);
         const activityIds: string[] = [];
         const rows = activities.map((act, idx) => {
           const actId = crypto.randomUUID();
           activityIds.push(actId);
           const actStart = new Date(currentDate);
-          let remaining = act.durationDays - 1;
-          const actEnd = new Date(actStart);
-          while (remaining > 0) {
-            actEnd.setDate(actEnd.getDate() + 1);
-            if (actEnd.getDay() !== 0 && actEnd.getDay() !== 6) remaining--;
-          }
-          currentDate = new Date(actEnd);
-          currentDate.setDate(currentDate.getDate() + 1);
-          while (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-            currentDate.setDate(currentDate.getDate() + 1);
-          }
+          const actEnd = addBusinessDays(actStart, act.durationDays - 1);
+          // Next activity starts on the next business day after this one ends
+          currentDate = addBusinessDays(actEnd, 1);
           const fmt = (d: Date) => d.toISOString().split('T')[0];
           return {
             id: actId,
@@ -370,13 +359,7 @@ export default function NovaObra() {
                         const totalDays = (tpl.default_activities as TemplateActivity[]).reduce((s, a) => s + a.durationDays, 0);
                         if (totalDays > 0) {
                           const start = new Date(formData.planned_start_date + 'T00:00:00');
-                          while (start.getDay() === 0 || start.getDay() === 6) start.setDate(start.getDate() + 1);
-                          let remaining = totalDays - 1;
-                          const end = new Date(start);
-                          while (remaining > 0) {
-                            end.setDate(end.getDate() + 1);
-                            if (end.getDay() !== 0 && end.getDay() !== 6) remaining--;
-                          }
+                          const end = addBusinessDays(start, totalDays - 1);
                           setFormData(prev => ({ ...prev, planned_end_date: end.toISOString().split('T')[0] }));
                         }
                       }
