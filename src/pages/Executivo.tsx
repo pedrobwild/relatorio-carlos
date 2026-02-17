@@ -163,7 +163,7 @@ const Executivo = () => {
                               </div>
                             </div>
                           </DialogTrigger>
-                          <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                          <DialogContent className="max-w-4xl max-h-[95dvh] h-[90vh] flex flex-col p-0">
                             <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
                               <div className="flex items-center justify-between gap-4">
                                 <DialogTitle className="flex items-center gap-2 text-base">
@@ -199,7 +199,7 @@ const Executivo = () => {
                               </div>
                             </div>
                           </DialogTrigger>
-                          <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                          <DialogContent className="max-w-4xl max-h-[95dvh] h-[90vh] flex flex-col p-0">
                             <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
                               <div className="flex items-center justify-between gap-4">
                                 <DialogTitle className="flex items-center gap-2 text-base">
@@ -284,7 +284,7 @@ const Executivo = () => {
                           <span className="sm:hidden">Ver</span>
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                      <DialogContent className="max-w-4xl max-h-[95dvh] h-[90vh] flex flex-col p-0">
                         <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
                           <div className="flex items-center justify-between gap-4">
                             <DialogTitle className="flex items-center gap-2 text-base">
@@ -327,7 +327,7 @@ const Executivo = () => {
                           <span className="sm:hidden">Ver</span>
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+                      <DialogContent className="max-w-4xl max-h-[95dvh] h-[90vh] flex flex-col p-0">
                         <DialogHeader className="p-4 pr-12 border-b border-border flex-shrink-0">
                           <div className="flex items-center justify-between gap-4">
                             <DialogTitle className="flex items-center gap-2 text-base">
