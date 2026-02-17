@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity } from 'lucide-react';
+import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsersTab } from '@/components/admin/UsersTab';
 import { ObrasTab } from '@/components/admin/ObrasTab';
+import { TemplatesTab } from '@/components/admin/TemplatesTab';
 import { FilesCleanupCard } from '@/components/admin/FilesCleanupCard';
 import bwildLogo from '@/assets/bwild-logo.png';
 
@@ -45,7 +46,7 @@ export default function Admin() {
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
             <TabsTrigger value="usuarios" className="gap-2">
               <Users className="h-4 w-4" />
               Usuários
@@ -53,6 +54,10 @@ export default function Admin() {
             <TabsTrigger value="obras" className="gap-2">
               <Building2 className="h-4 w-4" />
               Obras
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="gap-2">
+              <LayoutTemplate className="h-4 w-4" />
+              Templates
             </TabsTrigger>
             <TabsTrigger value="sistema" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -66,6 +71,10 @@ export default function Admin() {
 
           <TabsContent value="obras">
             <ObrasTab />
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <TemplatesTab />
           </TabsContent>
 
           <TabsContent value="sistema">

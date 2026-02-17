@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Calendar, DollarSign, Send } from 'lucide-react';
+import { ArrowLeft, Building2, User, Calendar, DollarSign, Send, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useProjectTemplates, type ProjectTemplate } from '@/hooks/useProjectTemplates';
 import bwildLogo from '@/assets/bwild-logo.png';
 import { z } from 'zod';
 
@@ -56,6 +58,7 @@ export default function NovaObra() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { data: templates } = useProjectTemplates();
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -223,6 +226,46 @@ export default function NovaObra() {
 
       <main className="max-w-3xl mx-auto px-4 py-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Template Selector */}
+          {templates && templates.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-body">
+                  <LayoutTemplate className="h-5 w-5" />
+                  Template
+                </CardTitle>
+                <CardDescription>Selecione um template para preencher automaticamente</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  onValueChange={(id) => {
+                    const tpl = templates.find((t) => t.id === id);
+                    if (tpl) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        is_project_phase: tpl.is_project_phase,
+                        contract_value: tpl.default_contract_value?.toString() ?? prev.contract_value,
+                      }));
+                      toast({ title: `Template "${tpl.name}" aplicado` });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Escolha um template (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name}
+                        {t.description ? ` — ${t.description}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Project Info */}
           <Card>
             <CardHeader>
