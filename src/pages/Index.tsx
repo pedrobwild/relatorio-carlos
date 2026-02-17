@@ -114,9 +114,7 @@ const Index = () => {
     [projectId]
   );
 
-  const [activeTab, setActiveTab] = useState(() => {
-    return getPortalViewState(viewStateKey).activeTab ?? "cronograma";
-  });
+  const [activeTab, setActiveTab] = useState("cronograma");
   const [isExporting, setIsExporting] = useState(false);
   const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(() => {
