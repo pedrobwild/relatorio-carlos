@@ -2121,6 +2121,42 @@ export type Database = {
           },
         ]
       }
+      project_templates: {
+        Row: {
+          created_at: string
+          created_by: string
+          default_activities: Json | null
+          default_contract_value: number | null
+          description: string | null
+          id: string
+          is_project_phase: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          default_activities?: Json | null
+          default_contract_value?: number | null
+          description?: string | null
+          id?: string
+          is_project_phase?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          default_activities?: Json | null
+          default_contract_value?: number | null
+          description?: string | null
+          id?: string
+          is_project_phase?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           actual_end_date: string | null
