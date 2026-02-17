@@ -62,6 +62,7 @@ export default function NovaObra() {
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -182,7 +183,50 @@ export default function NovaObra() {
         
         if (journeyError) {
           console.error('Journey initialization error:', journeyError);
-          // Don't throw - project is created, just log
+        }
+      }
+
+      // 6. Create activities from template if selected
+      if (selectedTemplate && selectedTemplate.default_activities?.length > 0) {
+        const activities = selectedTemplate.default_activities as { description: string; durationDays: number; weight: number }[];
+        const startDate = formData.planned_start_date ? new Date(formData.planned_start_date + 'T00:00:00') : new Date();
+        
+        // Skip to next weekday if starting on weekend
+        while (startDate.getDay() === 0 || startDate.getDay() === 6) {
+          startDate.setDate(startDate.getDate() + 1);
+        }
+
+        let currentDate = new Date(startDate);
+        const rows = activities.map((act) => {
+          const actStart = new Date(currentDate);
+          let remaining = act.durationDays - 1;
+          const actEnd = new Date(actStart);
+          while (remaining > 0) {
+            actEnd.setDate(actEnd.getDate() + 1);
+            if (actEnd.getDay() !== 0 && actEnd.getDay() !== 6) remaining--;
+          }
+          currentDate = new Date(actEnd);
+          currentDate.setDate(currentDate.getDate() + 1);
+          while (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+          const fmt = (d: Date) => d.toISOString().split('T')[0];
+          return {
+            obra_id: project.id,
+            titulo: act.description,
+            data_prevista_inicio: fmt(actStart),
+            data_prevista_fim: fmt(actEnd),
+            etapa: `peso:${act.weight}`,
+            status: 'pendente' as const,
+            prioridade: 'media' as const,
+          };
+        });
+
+        const { error: actError } = await supabase
+          .from('atividades')
+          .insert(rows as any);
+        if (actError) {
+          console.error('Activities creation error:', actError);
         }
       }
 
@@ -241,6 +285,7 @@ export default function NovaObra() {
                   onValueChange={(id) => {
                     const tpl = templates.find((t) => t.id === id);
                     if (tpl) {
+                      setSelectedTemplate(tpl);
                       setFormData((prev) => ({
                         ...prev,
                         is_project_phase: tpl.is_project_phase,
@@ -262,6 +307,11 @@ export default function NovaObra() {
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedTemplate && selectedTemplate.default_activities?.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ✓ {selectedTemplate.default_activities.length} atividades serão criadas automaticamente no cronograma
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}

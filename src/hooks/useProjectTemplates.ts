@@ -9,6 +9,7 @@ export interface ProjectTemplate {
   is_project_phase: boolean;
   default_activities: any[];
   default_contract_value: number | null;
+  category: string;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -20,6 +21,7 @@ interface CreateTemplateInput {
   is_project_phase: boolean;
   default_activities?: any[];
   default_contract_value?: number | null;
+  category?: string;
 }
 
 export function useProjectTemplates() {

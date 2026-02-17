@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, FileText, Copy, Search, Eye, X, GripVertical } from 'lucide-react';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { Plus, Pencil, Trash2, FileText, Copy, Search, Eye, X, GripVertical, Download, Upload, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,16 @@ interface FormState {
   default_contract_value: string;
   selected_activity_template: string;
   custom_activities: ActivityItem[];
+  category: string;
 }
+
+const CATEGORIES = [
+  { value: 'geral', label: 'Geral' },
+  { value: 'residencial', label: 'Residencial' },
+  { value: 'comercial', label: 'Comercial' },
+  { value: 'reforma', label: 'Reforma' },
+  { value: 'projeto', label: 'Projeto' },
+];
 
 const emptyForm: FormState = {
   name: '',
@@ -45,6 +54,7 @@ const emptyForm: FormState = {
   default_contract_value: '',
   selected_activity_template: '',
   custom_activities: [],
+  category: 'geral',
 };
 
 type SortField = 'name' | 'created_at' | 'is_project_phase';
@@ -60,16 +70,33 @@ export function TemplatesTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
-  // Search & sort
+  // Search, sort & filter
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortField>('name');
+  const [filterCategory, setFilterCategory] = useState<string>('__all__');
 
   // Preview sheet
   const [previewTemplate, setPreviewTemplate] = useState<ProjectTemplate | null>(null);
 
+  // Drag state
+  const dragIdx = useRef<number | null>(null);
+  const dragOverIdx = useRef<number | null>(null);
+
+  // Import ref
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const categories = useMemo(() => {
+    if (!templates) return [];
+    const cats = new Set(templates.map((t) => t.category || 'geral'));
+    return Array.from(cats).sort();
+  }, [templates]);
+
   const filtered = useMemo(() => {
     if (!templates) return [];
     let list = templates;
+    if (filterCategory !== '__all__') {
+      list = list.filter((t) => (t.category || 'geral') === filterCategory);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -84,7 +111,7 @@ export function TemplatesTab() {
       if (sortBy === 'is_project_phase') return (a.is_project_phase ? 0 : 1) - (b.is_project_phase ? 0 : 1);
       return 0;
     });
-  }, [templates, search, sortBy]);
+  }, [templates, search, sortBy, filterCategory]);
 
   const resolveActivities = (f: FormState): ActivityItem[] => {
     if (f.custom_activities.length > 0) return f.custom_activities;
@@ -111,13 +138,13 @@ export function TemplatesTab() {
       default_contract_value: t.default_contract_value?.toString() ?? '',
       selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : ''),
       custom_activities: actMatch ? [] : activities,
+      category: t.category || 'geral',
     });
     setDialogOpen(true);
   };
 
   const handlePresetChange = (presetId: string) => {
     if (presetId === '__custom__') {
-      // Keep current or start from selected preset
       const current = resolveActivities(form);
       setForm((p) => ({
         ...p,
@@ -155,6 +182,31 @@ export function TemplatesTab() {
     }));
   };
 
+  // Drag & drop handlers
+  const handleDragStart = (idx: number) => {
+    dragIdx.current = idx;
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    dragOverIdx.current = idx;
+  };
+
+  const handleDrop = () => {
+    if (dragIdx.current === null || dragOverIdx.current === null) return;
+    const from = dragIdx.current;
+    const to = dragOverIdx.current;
+    if (from === to) return;
+    setForm((p) => {
+      const acts = [...p.custom_activities];
+      const [moved] = acts.splice(from, 1);
+      acts.splice(to, 0, moved);
+      return { ...p, custom_activities: acts };
+    });
+    dragIdx.current = null;
+    dragOverIdx.current = null;
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) return;
     const activities = resolveActivities(form);
@@ -164,6 +216,7 @@ export function TemplatesTab() {
       is_project_phase: form.is_project_phase,
       default_activities: activities,
       default_contract_value: form.default_contract_value ? parseFloat(form.default_contract_value) : null,
+      category: form.category,
     };
 
     try {
@@ -202,12 +255,85 @@ export function TemplatesTab() {
       default_contract_value: t.default_contract_value?.toString() ?? '',
       selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : ''),
       custom_activities: actMatch ? [] : activities,
+      category: t.category || 'geral',
     });
     setDialogOpen(true);
   };
 
+  // Export template as JSON
+  const handleExport = useCallback((t: ProjectTemplate) => {
+    const exportData = {
+      name: t.name,
+      description: t.description,
+      is_project_phase: t.is_project_phase,
+      default_activities: t.default_activities,
+      default_contract_value: t.default_contract_value,
+      category: t.category,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `template-${t.name.toLowerCase().replace(/\s+/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Template exportado' });
+  }, [toast]);
+
+  // Export all templates
+  const handleExportAll = useCallback(() => {
+    if (!templates?.length) return;
+    const exportData = templates.map((t) => ({
+      name: t.name,
+      description: t.description,
+      is_project_phase: t.is_project_phase,
+      default_activities: t.default_activities,
+      default_contract_value: t.default_contract_value,
+      category: t.category,
+    }));
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'templates-export.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: `${templates.length} templates exportados` });
+  }, [templates, toast]);
+
+  // Import templates from JSON
+  const handleImport = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      let count = 0;
+      for (const item of items) {
+        if (!item.name) continue;
+        await createTemplate.mutateAsync({
+          name: item.name,
+          description: item.description || undefined,
+          is_project_phase: !!item.is_project_phase,
+          default_activities: item.default_activities || [],
+          default_contract_value: item.default_contract_value ?? null,
+          category: item.category || 'geral',
+        });
+        count++;
+      }
+      toast({ title: `${count} template(s) importado(s)` });
+    } catch {
+      toast({ title: 'Erro ao importar JSON', variant: 'destructive' });
+    }
+    // Reset input
+    if (importInputRef.current) importInputRef.current.value = '';
+  }, [createTemplate, toast]);
+
   const totalWeight = (acts: ActivityItem[]) => acts.reduce((s, a) => s + a.weight, 0);
   const totalDays = (acts: ActivityItem[]) => acts.reduce((s, a) => s + a.durationDays, 0);
+
+  const getCategoryLabel = (cat: string) => CATEGORIES.find((c) => c.value === cat)?.label ?? cat;
 
   return (
     <div className="space-y-6">
@@ -218,13 +344,30 @@ export function TemplatesTab() {
             Crie templates reutilizáveis para agilizar o cadastro de novas obras
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Template
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImport}
+          />
+          <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()} className="gap-1.5">
+            <Upload className="h-3.5 w-3.5" /> Importar
+          </Button>
+          {templates && templates.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleExportAll} className="gap-1.5">
+              <Download className="h-3.5 w-3.5" /> Exportar todos
+            </Button>
+          )}
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Novo Template
+          </Button>
+        </div>
       </div>
 
-      {/* Search & Sort */}
+      {/* Search, Sort & Category Filter */}
       {templates && templates.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -246,6 +389,20 @@ export function TemplatesTab() {
               </Button>
             )}
           </div>
+          {categories.length > 1 && (
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-[160px]">
+                <Tag className="h-3.5 w-3.5 mr-1.5" />
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todas</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortField)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Ordenar por" />
@@ -289,7 +446,10 @@ export function TemplatesTab() {
         </Card>
       ) : filtered.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          <p>Nenhum template encontrado para "{search}"</p>
+          <p>Nenhum template encontrado</p>
+          <Button variant="link" onClick={() => { setSearch(''); setFilterCategory('__all__'); }}>
+            Limpar filtros
+          </Button>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -311,6 +471,12 @@ export function TemplatesTab() {
                     <Badge variant="secondary">
                       {t.is_project_phase ? 'Fase Projeto' : 'Execução'}
                     </Badge>
+                    {t.category && t.category !== 'geral' && (
+                      <Badge variant="outline" className="gap-1">
+                        <Tag className="h-3 w-3" />
+                        {getCategoryLabel(t.category)}
+                      </Badge>
+                    )}
                     {acts.length > 0 && (
                       <Badge variant="outline">
                         {acts.length} atividades · {totalDays(acts)}d
@@ -332,6 +498,9 @@ export function TemplatesTab() {
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => handleDuplicate(t)} className="h-8 gap-1">
                       <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleExport(t)} className="h-8 gap-1">
+                      <Download className="h-3.5 w-3.5" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -381,6 +550,10 @@ export function TemplatesTab() {
                     <p className="font-medium text-sm">
                       {previewTemplate.is_project_phase ? 'Fase de Projeto' : 'Execução'}
                     </p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Categoria</p>
+                    <p className="font-medium text-sm">{getCategoryLabel(previewTemplate.category || 'geral')}</p>
                   </div>
                   <div className="rounded-lg border p-3">
                     <p className="text-xs text-muted-foreground">Valor Padrão</p>
@@ -437,6 +610,9 @@ export function TemplatesTab() {
                   <Button onClick={() => { setPreviewTemplate(null); openEdit(previewTemplate); }} className="flex-1 gap-2">
                     <Pencil className="h-4 w-4" /> Editar
                   </Button>
+                  <Button variant="outline" onClick={() => handleExport(previewTemplate)} className="gap-2">
+                    <Download className="h-4 w-4" /> Exportar
+                  </Button>
                   <Button variant="outline" onClick={() => { setPreviewTemplate(null); handleDuplicate(previewTemplate); }} className="gap-2">
                     <Copy className="h-4 w-4" /> Duplicar
                   </Button>
@@ -489,16 +665,31 @@ export function TemplatesTab() {
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div>
-                <Label htmlFor="tpl-phase" className="text-sm font-medium">Fase de projeto</Label>
-                <p className="text-xs text-muted-foreground">Obra em fase de aprovação</p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <Label htmlFor="tpl-phase" className="text-sm font-medium">Fase de projeto</Label>
+                  <p className="text-xs text-muted-foreground">Obra em fase de aprovação</p>
+                </div>
+                <Switch
+                  id="tpl-phase"
+                  checked={form.is_project_phase}
+                  onCheckedChange={(v) => setForm((p) => ({ ...p, is_project_phase: v }))}
+                />
               </div>
-              <Switch
-                id="tpl-phase"
-                checked={form.is_project_phase}
-                onCheckedChange={(v) => setForm((p) => ({ ...p, is_project_phase: v }))}
-              />
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Select value={form.category} onValueChange={(v) => setForm((p) => ({ ...p, category: v }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <Separator />
@@ -525,13 +716,14 @@ export function TemplatesTab() {
                 </Select>
               </div>
 
-              {/* Show activities table */}
+              {/* Custom activities with drag & drop */}
               {form.selected_activity_template === '__custom__' ? (
                 <div className="space-y-2">
                   <div className="rounded-lg border overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="text-xs w-8" />
                           <TableHead className="text-xs">Atividade</TableHead>
                           <TableHead className="text-xs w-20">Dias</TableHead>
                           <TableHead className="text-xs w-20">Peso %</TableHead>
@@ -540,7 +732,17 @@ export function TemplatesTab() {
                       </TableHeader>
                       <TableBody>
                         {form.custom_activities.map((act, i) => (
-                          <TableRow key={i}>
+                          <TableRow
+                            key={i}
+                            draggable
+                            onDragStart={() => handleDragStart(i)}
+                            onDragOver={(e) => handleDragOver(e, i)}
+                            onDrop={handleDrop}
+                            className="cursor-move"
+                          >
+                            <TableCell className="p-1 w-8">
+                              <GripVertical className="h-4 w-4 text-muted-foreground" />
+                            </TableCell>
                             <TableCell className="p-1">
                               <Input
                                 value={act.description}
