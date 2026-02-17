@@ -945,52 +945,115 @@ export function TemplatesTab() {
             {form.custom_fields.length > 0 && (
               <div className="space-y-2">
                 {form.custom_fields.map((field, i) => (
-                  <div key={i} className="flex gap-2 items-start">
-                    <Input
-                      value={field.key}
-                      onChange={(e) => {
-                        const updated = [...form.custom_fields];
-                        updated[i] = { ...updated[i], key: e.target.value.replace(/\s+/g, '_').toLowerCase() };
-                        setForm(p => ({ ...p, custom_fields: updated }));
-                      }}
-                      placeholder="chave"
-                      className="h-8 text-sm w-24"
-                    />
-                    <Input
-                      value={field.label}
-                      onChange={(e) => {
-                        const updated = [...form.custom_fields];
-                        updated[i] = { ...updated[i], label: e.target.value };
-                        setForm(p => ({ ...p, custom_fields: updated }));
-                      }}
-                      placeholder="Rótulo"
-                      className="h-8 text-sm flex-1"
-                    />
-                    <Select
-                      value={field.type}
-                      onValueChange={(v) => {
-                        const updated = [...form.custom_fields];
-                        updated[i] = { ...updated[i], type: v as 'text' | 'number' | 'select' };
-                        setForm(p => ({ ...p, custom_fields: updated }));
-                      }}
-                    >
-                      <SelectTrigger className="h-8 w-24 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text">Texto</SelectItem>
-                        <SelectItem value="number">Número</SelectItem>
-                        <SelectItem value="select">Seleção</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive shrink-0"
-                      onClick={() => setForm(p => ({ ...p, custom_fields: p.custom_fields.filter((_, j) => j !== i) }))}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
+                  <div key={i} className="space-y-2 rounded-lg border p-2.5">
+                    <div className="flex gap-2 items-start">
+                      <Input
+                        value={field.key}
+                        onChange={(e) => {
+                          const updated = [...form.custom_fields];
+                          updated[i] = { ...updated[i], key: e.target.value.replace(/\s+/g, '_').toLowerCase() };
+                          setForm(p => ({ ...p, custom_fields: updated }));
+                        }}
+                        placeholder="chave"
+                        className="h-8 text-sm w-24"
+                      />
+                      <Input
+                        value={field.label}
+                        onChange={(e) => {
+                          const updated = [...form.custom_fields];
+                          updated[i] = { ...updated[i], label: e.target.value };
+                          setForm(p => ({ ...p, custom_fields: updated }));
+                        }}
+                        placeholder="Rótulo"
+                        className="h-8 text-sm flex-1"
+                      />
+                      <Select
+                        value={field.type}
+                        onValueChange={(v) => {
+                          const updated = [...form.custom_fields];
+                          updated[i] = { ...updated[i], type: v as 'text' | 'number' | 'select', options: v === 'select' ? (updated[i].options ?? ['']) : undefined };
+                          setForm(p => ({ ...p, custom_fields: updated }));
+                        }}
+                      >
+                        <SelectTrigger className="h-8 w-24 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">Texto</SelectItem>
+                          <SelectItem value="number">Número</SelectItem>
+                          <SelectItem value="select">Seleção</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="checkbox"
+                          checked={field.required ?? false}
+                          onChange={(e) => {
+                            const updated = [...form.custom_fields];
+                            updated[i] = { ...updated[i], required: e.target.checked };
+                            setForm(p => ({ ...p, custom_fields: updated }));
+                          }}
+                          className="h-3.5 w-3.5"
+                          title="Obrigatório"
+                        />
+                        <span className="text-[10px] text-muted-foreground">Req</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive shrink-0"
+                        onClick={() => setForm(p => ({ ...p, custom_fields: p.custom_fields.filter((_, j) => j !== i) }))}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    {/* Options editor for select-type fields */}
+                    {field.type === 'select' && (
+                      <div className="pl-2 space-y-1">
+                        <p className="text-[10px] text-muted-foreground font-medium">Opções:</p>
+                        {(field.options ?? ['']).map((opt, oi) => (
+                          <div key={oi} className="flex gap-1 items-center">
+                            <Input
+                              value={opt}
+                              onChange={(e) => {
+                                const updated = [...form.custom_fields];
+                                const opts = [...(updated[i].options ?? [''])];
+                                opts[oi] = e.target.value;
+                                updated[i] = { ...updated[i], options: opts };
+                                setForm(p => ({ ...p, custom_fields: updated }));
+                              }}
+                              placeholder={`Opção ${oi + 1}`}
+                              className="h-7 text-xs flex-1"
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => {
+                                const updated = [...form.custom_fields];
+                                const opts = (updated[i].options ?? ['']).filter((_, j) => j !== oi);
+                                updated[i] = { ...updated[i], options: opts.length ? opts : [''] };
+                                setForm(p => ({ ...p, custom_fields: updated }));
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-[10px] gap-1"
+                          onClick={() => {
+                            const updated = [...form.custom_fields];
+                            updated[i] = { ...updated[i], options: [...(updated[i].options ?? []), ''] };
+                            setForm(p => ({ ...p, custom_fields: updated }));
+                          }}
+                        >
+                          <Plus className="h-3 w-3" /> Opção
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
