@@ -154,7 +154,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
             size="icon"
             onClick={goToPrevPage}
             disabled={pageNumber <= 1}
-            className="h-10 w-10 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
           >
             <ChevronLeft className="w-5 h-5" />
           </Button>
@@ -166,7 +166,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
             size="icon"
             onClick={goToNextPage}
             disabled={pageNumber >= numPages}
-            className="h-10 w-10 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
           >
             <ChevronRight className="w-5 h-5" />
           </Button>
@@ -178,7 +178,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
             size="icon"
             onClick={zoomOut}
             disabled={scale <= 0.5}
-            className="h-10 w-10 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
           >
             <ZoomOut className="w-5 h-5" />
           </Button>
@@ -186,7 +186,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
             variant="ghost"
             size="sm"
             onClick={resetZoom}
-            className="h-10 px-2 touch-manipulation text-xs"
+            className="h-11 min-h-[44px] px-2 touch-manipulation text-xs"
           >
             {Math.round(scale * 100)}%
           </Button>
@@ -195,7 +195,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
             size="icon"
             onClick={zoomIn}
             disabled={scale >= 3}
-            className="h-10 w-10 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
           >
             <ZoomIn className="w-5 h-5" />
           </Button>

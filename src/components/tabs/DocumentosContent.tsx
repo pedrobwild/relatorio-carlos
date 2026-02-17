@@ -107,13 +107,13 @@ const DocumentCard = ({
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
-              <Button variant="ghost" size="sm" className="gap-1.5 h-9 px-2 sm:px-3" onClick={() => onViewHistory(doc.id)}>
+              <Button variant="ghost" size="sm" className="gap-1.5 h-11 min-h-[44px] px-3" onClick={() => onViewHistory(doc.id)}>
                 <History className="w-4 h-4" /><span className="hidden sm:inline">Histórico</span>
               </Button>
               {isStaff && doc.status === 'pending' && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2" disabled={isApproving}>
+                    <Button variant="outline" size="sm" className="gap-2 h-11 min-h-[44px] px-3" disabled={isApproving}>
                       <CheckCheck className="w-4 h-4" /><span className="hidden sm:inline">Aprovar</span>
                     </Button>
                   </AlertDialogTrigger>
@@ -132,7 +132,7 @@ const DocumentCard = ({
                 </AlertDialog>
               )}
               {isStaff && <DocumentVersionUpload document={doc} onSuccess={onVersionUploaded} />}
-              <Button onClick={handleDownload} size="sm" className="gap-2">
+              <Button onClick={handleDownload} size="sm" className="gap-2 h-11 min-h-[44px] px-3">
                 <Download className="w-4 h-4" />Download
               </Button>
             </div>

@@ -51,7 +51,7 @@ export function BoletoUploadButton({ paymentId, projectId, boletoPath }: BoletoU
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 min-h-auto"
+            className="h-11 min-h-[44px] px-3 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -94,7 +94,7 @@ export function BoletoUploadButton({ paymentId, projectId, boletoPath }: BoletoU
       <Button
         variant="ghost"
         size="sm"
-        className="h-7 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10 min-h-auto"
+        className="h-11 min-h-[44px] px-3 text-xs text-primary hover:text-primary hover:bg-primary/10"
         onClick={() => fileInputRef.current?.click()}
         disabled={isLoading}
       >
