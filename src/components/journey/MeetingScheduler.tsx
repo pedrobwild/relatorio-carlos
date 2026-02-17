@@ -92,15 +92,15 @@
    if (bookedSlot) {
      const bookedDate = new Date(bookedSlot.slot_datetime);
      return (
-       <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-         <Check className="h-5 w-5 text-green-600" />
-         <div>
-           <p className="font-medium text-green-800">Reunião agendada</p>
-           <p className="text-sm text-green-700">
-             {format(bookedDate, "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-           </p>
-         </div>
-       </div>
+        <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-lg">
+          <Check className="h-5 w-5 text-[hsl(var(--success))]" />
+          <div>
+            <p className="font-medium text-[hsl(var(--success))]">Reunião agendada</p>
+            <p className="text-sm text-[hsl(var(--success))]">
+              {format(bookedDate, "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+            </p>
+          </div>
+        </div>
      );
    }
  
@@ -214,14 +214,14 @@
                              </p>
                            </div>
                            {isAdmin ? (
-                             <Button
-                               size="icon"
-                               variant="ghost"
-                               className="text-destructive hover:text-destructive"
-                               onClick={() => deleteSlot.mutate({ slotId: slot.id, projectId })}
-                             >
-                               <Trash2 className="h-4 w-4" />
-                             </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
+                                onClick={() => deleteSlot.mutate({ slotId: slot.id, projectId })}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                            ) : (
                              <Button
                                size="sm"
