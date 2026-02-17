@@ -44,10 +44,10 @@ const FinanceiroContent = () => {
     if (!payment.due_date) return { text: "Em definição", color: "text-muted-foreground" };
     const dueDate = new Date(payment.due_date);
     const days = differenceInDays(dueDate, today);
-    if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-red-600" };
-    if (days === 0) return { text: "Vence hoje", color: "text-red-600" };
-    if (days === 1) return { text: "Vence amanhã", color: "text-amber-600" };
-    if (days <= 5) return { text: `Vence em ${days} dias`, color: "text-amber-600" };
+    if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-destructive" };
+    if (days === 0) return { text: "Vence hoje", color: "text-destructive" };
+    if (days === 1) return { text: "Vence amanhã", color: "text-[hsl(var(--warning))]" };
+    if (days <= 5) return { text: `Vence em ${days} dias`, color: "text-[hsl(var(--warning))]" };
     return null;
   };
 
@@ -107,12 +107,12 @@ const FinanceiroContent = () => {
             </p>
 
             <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-success/10 border border-success/20">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
+                  <Check className="w-4 h-4 text-[hsl(var(--success))]" />
                   <span className="text-caption font-medium">Pago</span>
                 </div>
-                <p className="text-h3 text-emerald-700">{formatCurrency(paidAmount)}</p>
+                <p className="text-h3 text-[hsl(var(--success))]">{formatCurrency(paidAmount)}</p>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
                 <div className="flex items-center gap-2">
@@ -160,9 +160,9 @@ const FinanceiroContent = () => {
                       payment.paid_at 
                         ? "bg-card border-border" 
                         : urgency === "overdue" || urgency === "urgent"
-                          ? "bg-rose-500/5 border-rose-500/30" 
+                        ? "bg-destructive/5 border-destructive/30" 
                           : urgency === "approaching"
-                            ? "bg-amber-500/5 border-amber-500/30"
+                            ? "bg-warning/5 border-warning/30"
                             : "bg-card border-border"
                     }`}
                   >
@@ -172,7 +172,7 @@ const FinanceiroContent = () => {
                         <div className="flex items-center gap-3 text-caption">
                           {payment.paid_at ? (
                             <span className="flex items-center gap-1.5">
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <Check className="w-3.5 h-3.5 text-[hsl(var(--success))]" />
                               Pago em {formatShortDate(payment.paid_at)}
                             </span>
                           ) : (
