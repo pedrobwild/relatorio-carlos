@@ -34,7 +34,7 @@ const ReportKPICards = ({ data }: ReportKPICardsProps) => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {/* Physical Progress */}
         <div className="bg-card rounded-lg p-4 border border-border">
           <div className="flex items-center justify-between mb-2">
