@@ -10,7 +10,8 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useProjectJourney, useInitializeJourney, JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 
 import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
-import { JourneyMobileStepper } from '@/components/journey/JourneyMobileStepper';
+import { JourneyStepperCompact } from '@/components/journey/JourneyStepperCompact';
+import { JourneyTimelineSheet } from '@/components/journey/JourneyTimelineSheet';
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
 import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
 import { StageDetailInline } from '@/components/journey/StageDetailInline';
@@ -43,10 +44,9 @@ export default function JornadaProjeto() {
   const initializeJourney = useInitializeJourney();
 
   const [activeTab, setActiveTab] = useState<string>('jornada');
-  // 'welcome' = show welcome stage; a stage id = show that stage inline
   const [activeView, setActiveView] = useState<string>('welcome');
-  // Track whether client has acknowledged welcome stage
   const [welcomeCompleted, setWelcomeCompleted] = useState(false);
+  const [timelineSheetOpen, setTimelineSheetOpen] = useState(false);
 
   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
   const isLoading = projectLoading || roleLoading || journeyLoading;
@@ -60,7 +60,7 @@ export default function JornadaProjeto() {
     }
   }, [journeyLoading, journey, projectId, initializeJourney, refetch]);
 
-  // Build stages list with virtual welcome stage for stepper/timeline
+  // Build stages list with virtual welcome stage
   const welcomeVirtualStage = {
     id: 'welcome',
     project_id: projectId || '',
@@ -85,7 +85,6 @@ export default function JornadaProjeto() {
     todos: [],
   };
 
-  // While welcome is not completed, override all real stages to 'pending' so none shows as "Etapa atual"
   const adjustedStages = journey?.stages
     ? journey.stages.map(s => welcomeCompleted ? s : { ...s, status: 'pending' as JourneyStageStatus })
     : [];
@@ -108,9 +107,7 @@ export default function JornadaProjeto() {
       setActiveView('welcome');
       return;
     }
-    // Block navigation to real stages while welcome is not completed
     if (!welcomeCompleted) return;
-    // Check if stage is blocked
     if (journey?.stages) {
       const idx = journey.stages.findIndex(s => s.id === stageId);
       if (idx >= 0 && isStageBlocked(journey.stages[idx], idx, journey.stages)) return;
@@ -120,7 +117,6 @@ export default function JornadaProjeto() {
 
   const handleAdvanceFromWelcome = useCallback(() => {
     setWelcomeCompleted(true);
-    // Navigate to first real stage
     if (journey?.stages && journey.stages.length > 0) {
       setActiveView(journey.stages[0].id);
     }
@@ -155,7 +151,7 @@ export default function JornadaProjeto() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-background">
-      {/* Header */}
+      {/* Header — compact: project name inline, meta collapsed */}
       <PageHeader
         title={journeyCopy.page.title}
         backTo="/minhas-obras"
@@ -167,23 +163,18 @@ export default function JornadaProjeto() {
               <span className="text-xs text-muted-foreground">{project.unit_name}</span>
             )}
             {project.customer_name && (
-              <span className="text-xs text-muted-foreground">• {project.customer_name}</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">• {project.customer_name}</span>
             )}
           </div>
-          {((project as any).address || (project as any).bairro || (project as any).cep) && (
-            <p className="text-xs text-muted-foreground truncate">
-              {[(project as any).address, (project as any).bairro, (project as any).cep].filter(Boolean).join(' · ')}
-            </p>
-          )}
         </div>
       </PageHeader>
 
-      {/* Tabs bar */}
+      {/* Tabs bar — horizontal scroll, 44px touch targets */}
       <div className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-5xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <div className="px-3 sm:px-6 md:px-8">
-              <TabsList className="bg-transparent h-auto p-0 gap-0 w-full overflow-x-auto scrollbar-hide">
+            <div className="px-3 sm:px-6 md:px-8 overflow-x-auto scrollbar-hide">
+              <TabsList className="bg-transparent h-auto p-0 gap-0 w-full whitespace-nowrap">
                 <TabsTrigger value="jornada" className="portal-tab-trigger">
                   <Map className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span className="hidden sm:inline">{journeyCopy.tabs.jornada}</span>
@@ -216,12 +207,12 @@ export default function JornadaProjeto() {
       </div>
 
       <main className={cn(
-        "container max-w-5xl mx-auto px-3 sm:px-4 py-4 md:py-8",
+        "container max-w-5xl mx-auto px-4 sm:px-4 py-4 md:py-8",
         'pb-safe',
       )}>
         {/* Jornada tab content */}
         {activeTab === 'jornada' && (
-          <div className="grid gap-6 md:gap-8 lg:grid-cols-[280px_1fr]">
+          <div className="grid gap-4 md:gap-8 lg:grid-cols-[280px_1fr]">
             {/* Sidebar with Timeline (desktop only) */}
             <aside className="hidden lg:block">
               <div className="sticky top-24 space-y-6">
@@ -239,10 +230,20 @@ export default function JornadaProjeto() {
             </aside>
 
             {/* Main content */}
-            <div className="space-y-5 md:space-y-8">
+            <div className="space-y-4 md:space-y-8">
 
-              {/* Mobile Stepper */}
-              <JourneyMobileStepper
+              {/* Mobile Stepper Compact */}
+              <JourneyStepperCompact
+                stages={allStagesForStepper}
+                activeStageId={activeView}
+                onOpenTimeline={() => setTimelineSheetOpen(true)}
+                onStageClick={handleTimelineClick}
+              />
+
+              {/* Mobile Timeline Sheet */}
+              <JourneyTimelineSheet
+                open={timelineSheetOpen}
+                onOpenChange={setTimelineSheetOpen}
                 stages={allStagesForStepper}
                 activeStageId={activeView}
                 onStageClick={handleTimelineClick}
