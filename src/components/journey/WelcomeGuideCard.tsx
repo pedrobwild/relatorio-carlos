@@ -122,7 +122,7 @@ export function WelcomeGuideCard({ hero, onScrollToTeam }: WelcomeGuideCardProps
                   onScrollToTeam();
                 }}
               >
-                Entendi, conhecer meu time
+                Avançar
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
