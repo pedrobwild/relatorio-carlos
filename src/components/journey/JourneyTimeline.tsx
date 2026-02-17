@@ -1,4 +1,5 @@
 import { Check, Clock, Circle, Lock, Eye, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -146,12 +147,19 @@ export function JourneyTimeline({ stages, activeStageId, onStageClick }: Journey
                 onClick={() => onStageClick(stage.id)}
                 aria-current={isCurrent ? 'step' : undefined}
                 className={cn(
-                  'relative flex items-center gap-3 w-full py-3 px-3 rounded-lg text-left transition-all',
+                  'relative flex items-center gap-3 w-full py-3 px-3 rounded-lg text-left transition-colors',
                   'hover:bg-muted/50 active:bg-muted/70 focus-visible:outline-2 focus-visible:outline-primary',
                   'min-h-[56px]',
-                  isActive && 'bg-primary/5 ring-1 ring-primary/20',
                 )}
               >
+                {/* Active indicator — animated */}
+                {isActive && (
+                  <motion.div
+                    layoutId="timeline-active-indicator"
+                    className="absolute inset-0 rounded-lg bg-primary/5 ring-1 ring-primary/20"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
                 {/* Connector line — positioned at center of the icon */}
                 {!isLast && (
                   <div
