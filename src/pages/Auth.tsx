@@ -177,7 +177,7 @@ export default function Auth() {
       <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-lg px-8 sm:px-16 py-12 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
         {/* Mobile: logo image / Desktop: text */}
         <div className="mb-12">
-          <img src={bwildLogo} alt="Bwild" className="h-10 block md:hidden" />
+          <img src={bwildLogo} alt="Bwild" className="h-12 block md:hidden brightness-0 invert" />
           <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight hidden md:block">
             Portal Bwild<span className="text-[#366478]">.</span>
           </h1>
