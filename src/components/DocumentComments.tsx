@@ -159,7 +159,7 @@ export function DocumentComments({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                    className="h-11 w-11 min-h-[44px] min-w-[44px] opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                     onClick={() => handleDelete(comment.id)}
                     disabled={deletingId === comment.id}
                     aria-label="Excluir comentário"
