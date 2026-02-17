@@ -54,7 +54,7 @@ export function WelcomeGuideCard({ hero, onScrollToTeam }: WelcomeGuideCardProps
   return (
     <Card
       data-stage-id="welcome-guide"
-      className="transition-shadow duration-200 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10"
+      className="transition-shadow duration-200 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 overflow-hidden"
     >
       <CardHeader
         className="cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors p-4 md:p-6"
