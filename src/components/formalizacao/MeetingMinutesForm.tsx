@@ -195,6 +195,7 @@ ${values.recordingLink ? `### Link da Gravação\n${values.recordingLink}` : ''}
                     size="icon"
                     onClick={() => remove(index)}
                     aria-label="Remover participante"
+                    className="min-h-[44px] min-w-[44px]"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -325,7 +326,7 @@ ${values.recordingLink ? `### Link da Gravação\n${values.recordingLink}` : ''}
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full" aria-label="Continuar para próximo passo">
+        <Button type="submit" className="w-full min-h-[44px]" aria-label="Continuar para próximo passo">
           Continuar
         </Button>
       </form>
