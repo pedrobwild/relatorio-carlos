@@ -127,10 +127,10 @@ export function JourneyCSMSection({ csm, projectId, isAdmin, onUpdate }: Journey
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm text-muted-foreground">Editando informações</span>
             <div className="flex gap-2">
-              <Button size="icon" variant="ghost" onClick={handleCancel} className="h-10 w-10">
+              <Button size="icon" variant="ghost" onClick={handleCancel} className="h-11 w-11 min-h-[44px]">
                 <X className="h-4 w-4" />
               </Button>
-              <Button size="icon" onClick={handleSave} className="h-10 w-10">
+              <Button size="icon" onClick={handleSave} className="h-11 w-11 min-h-[44px]">
                 <Check className="h-4 w-4" />
               </Button>
             </div>
@@ -196,7 +196,7 @@ export function JourneyCSMSection({ csm, projectId, isAdmin, onUpdate }: Journey
         <Button
           size="icon"
           variant="ghost"
-          className="absolute top-3 right-3 md:top-4 md:right-4 h-10 w-10 z-10"
+          className="absolute top-3 right-3 md:top-4 md:right-4 h-11 w-11 min-h-[44px] z-10"
           onClick={() => setIsEditing(true)}
         >
           <Edit2 className="h-4 w-4" />
