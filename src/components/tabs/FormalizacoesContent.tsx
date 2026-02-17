@@ -22,8 +22,8 @@ import {
 
 const getStatusIcon = (status: FormalizationStatus) => {
   switch (status) {
-    case 'signed': return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-    case 'pending_signatures': return <Clock className="h-4 w-4 text-amber-600" />;
+    case 'signed': return <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />;
+    case 'pending_signatures': return <Clock className="h-4 w-4 text-[hsl(var(--warning))]" />;
     case 'draft': return <FileText className="h-4 w-4 text-muted-foreground" />;
     case 'voided': return <XCircle className="h-4 w-4 text-destructive" />;
     default: return <FileText className="h-4 w-4" />;
@@ -101,20 +101,20 @@ const FormalizacoesContent = () => {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
         <button onClick={() => setActiveTab('pendentes')}
-          className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] ${activeTab === 'pendentes' ? 'border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20 ring-1 ring-amber-500/30' : 'border-border hover:border-amber-500/30'}`}>
+          className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] ${activeTab === 'pendentes' ? 'border-warning/50 bg-warning/5 ring-1 ring-warning/30' : 'border-border hover:border-warning/30'}`}>
           <div className="flex items-center gap-2 mb-1">
-            <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+            <Clock className="h-4 w-4 text-[hsl(var(--warning))] shrink-0" />
             <span className="text-xs sm:text-sm font-medium">Pendentes</span>
           </div>
-          <span className="text-2xl font-bold text-amber-600 tabular-nums">{pendingCount}</span>
+          <span className="text-2xl font-bold text-[hsl(var(--warning))] tabular-nums">{pendingCount}</span>
         </button>
         <button onClick={() => setActiveTab('finalizadas')}
-          className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] ${activeTab === 'finalizadas' ? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20 ring-1 ring-green-500/30' : 'border-border hover:border-green-500/30'}`}>
+          className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] ${activeTab === 'finalizadas' ? 'border-success/50 bg-success/5 ring-1 ring-success/30' : 'border-border hover:border-success/30'}`}>
           <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))] shrink-0" />
             <span className="text-xs sm:text-sm font-medium">Finalizadas</span>
           </div>
-          <span className="text-2xl font-bold text-green-600 tabular-nums">{signedCount}</span>
+          <span className="text-2xl font-bold text-[hsl(var(--success))] tabular-nums">{signedCount}</span>
         </button>
         <button onClick={() => setActiveTab('todas')}
           className={`p-3 sm:p-4 rounded-xl border text-left transition-all hover:shadow-sm min-h-[44px] col-span-2 sm:col-span-1 ${activeTab === 'todas' ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/30' : 'border-border hover:border-primary/30'}`}>
@@ -162,7 +162,7 @@ const FormalizacoesContent = () => {
             <Link key={formalizacao.id} to={`${paths.formalizacoes}/${formalizacao.id}`} className="block group animate-fade-in opacity-0" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}>
               <Card className="h-full group-hover:border-primary/50 group-hover:shadow-sm transition-all duration-200 overflow-hidden">
                 <CardContent className="p-0">
-                  <div className={`h-1 ${formalizacao.status === 'signed' ? 'bg-green-500' : formalizacao.status === 'pending_signatures' ? 'bg-amber-500' : formalizacao.status === 'voided' ? 'bg-destructive' : 'bg-muted'}`} />
+                  <div className={`h-1 ${formalizacao.status === 'signed' ? 'bg-[hsl(var(--success))]' : formalizacao.status === 'pending_signatures' ? 'bg-[hsl(var(--warning))]' : formalizacao.status === 'voided' ? 'bg-destructive' : 'bg-muted'}`} />
                   <div className="p-4">
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <h3 className="font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">{formalizacao.title}</h3>

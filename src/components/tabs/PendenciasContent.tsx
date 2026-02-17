@@ -35,12 +35,12 @@ const getTypeLabel = (type: PendingType) => {
 
 const getTypeColor = (type: PendingType) => {
   switch (type) {
-    case "decision": return "bg-amber-500/15 text-amber-600 border-amber-500/30";
-    case "invoice": return "bg-rose-500/15 text-rose-600 border-rose-500/30";
-    case "signature": return "bg-violet-500/15 text-violet-600 border-violet-500/30";
-    case "approval_3d": return "bg-cyan-500/15 text-cyan-600 border-cyan-500/30";
-    case "approval_exec": return "bg-indigo-500/15 text-indigo-600 border-indigo-500/30";
-    case "extra_purchase": return "bg-emerald-500/15 text-emerald-600 border-emerald-500/30";
+    case "decision": return "bg-warning/15 text-[hsl(var(--warning))] border-warning/30";
+    case "invoice": return "bg-destructive/15 text-destructive border-destructive/30";
+    case "signature": return "bg-primary/15 text-primary border-primary/30";
+    case "approval_3d": return "bg-info/15 text-[hsl(var(--info))] border-info/30";
+    case "approval_exec": return "bg-accent text-accent-foreground border-accent/30";
+    case "extra_purchase": return "bg-success/15 text-[hsl(var(--success))] border-success/30";
     default: return "bg-secondary text-muted-foreground border-border";
   }
 };
@@ -48,7 +48,7 @@ const getTypeColor = (type: PendingType) => {
 const getStatusBadge = (status: PendingStatus) => {
   switch (status) {
     case "atrasado": return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Atrasado</Badge>;
-    case "urgente": return <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">Urgente</Badge>;
+    case "urgente": return <Badge className="bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 py-0">Urgente</Badge>;
     case "pendente": return <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Pendente</Badge>;
   }
 };
@@ -84,19 +84,19 @@ const PendenciasContent = () => {
     <div>
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-        <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3 sm:p-4">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
-            <span className="text-xs sm:text-sm text-rose-600 font-medium">Atrasados</span>
+            <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+            <span className="text-xs sm:text-sm text-destructive font-medium">Atrasados</span>
           </div>
-          <p className="text-2xl font-bold text-rose-600 tabular-nums">{stats.overdueCount}</p>
+          <p className="text-2xl font-bold text-destructive tabular-nums">{stats.overdueCount}</p>
         </div>
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 sm:p-4">
+        <div className="bg-warning/10 border border-warning/20 rounded-xl p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-            <span className="text-xs sm:text-sm text-amber-600 font-medium">Urgentes</span>
+            <Clock className="w-4 h-4 text-[hsl(var(--warning))] shrink-0" />
+            <span className="text-xs sm:text-sm text-[hsl(var(--warning))] font-medium">Urgentes</span>
           </div>
-          <p className="text-2xl font-bold text-amber-600 tabular-nums">{stats.urgentCount}</p>
+          <p className="text-2xl font-bold text-[hsl(var(--warning))] tabular-nums">{stats.urgentCount}</p>
         </div>
         <div className="bg-secondary border border-border rounded-xl p-3 sm:p-4 col-span-2 sm:col-span-1">
           <div className="flex items-center gap-2 mb-1">
@@ -124,7 +124,7 @@ const PendenciasContent = () => {
           return (
             <div key={item.id}
               className={`bg-card border rounded-xl p-4 transition-all hover:shadow-md animate-fade-in ${
-                status === "atrasado" ? "border-rose-500/40" : status === "urgente" ? "border-amber-500/40" : "border-border"
+                status === "atrasado" ? "border-destructive/40" : status === "urgente" ? "border-warning/40" : "border-border"
               }`}
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -151,19 +151,19 @@ const PendenciasContent = () => {
                     </div>
                   )}
                   {item.impact && (
-                    <p className="text-tiny text-amber-600 bg-amber-500/10 rounded px-2 py-1 mb-2 inline-block">
+                    <p className="text-tiny text-[hsl(var(--warning))] bg-warning/10 rounded px-2 py-1 mb-2 inline-block">
                       <strong>Impacto:</strong> {item.impact}
                     </p>
                   )}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-border mt-3 gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <span className={`text-caption font-medium ${status === "atrasado" ? "text-rose-600" : status === "urgente" ? "text-amber-600" : "text-foreground"}`}>
+                      <span className={`text-caption font-medium ${status === "atrasado" ? "text-destructive" : status === "urgente" ? "text-[hsl(var(--warning))]" : "text-foreground"}`}>
                         Prazo: {formatDateStr(item.dueDate)}
                       </span>
                       {status === "atrasado" && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{daysOverdue}d atrasado</Badge>}
                       {status === "urgente" && daysRemaining >= 0 && (
-                        <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">
+                        <Badge className="bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] text-[10px] px-1.5 py-0">
                           {daysRemaining === 0 ? "vence hoje" : daysRemaining === 1 ? "vence amanhã" : `${daysRemaining}d restantes`}
                         </Badge>
                       )}

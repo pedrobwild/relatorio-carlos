@@ -136,7 +136,7 @@ function EditUserDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="h-11 w-11 min-h-[44px] min-w-[44px]">
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -233,7 +233,7 @@ function ResetPasswordDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Redefinir senha">
+        <Button variant="ghost" size="icon" className="h-11 w-11 min-h-[44px] min-w-[44px]" title="Redefinir senha">
           <KeyRound className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -317,7 +317,7 @@ function UserCard({
             <ResetPasswordDialog user={user} onReset={onResetPassword} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                <Button variant="ghost" size="icon" className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
@@ -901,7 +901,7 @@ export function UsersTab() {
                         <ResetPasswordDialog user={user} onReset={handleResetPassword} />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                            <Button variant="ghost" size="icon" className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>

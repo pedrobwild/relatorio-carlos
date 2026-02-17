@@ -91,8 +91,8 @@ function AuditDetailDialog({ audit }: { audit: AuditoriaWithUser }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 px-2">
-          <ChevronRight className="h-3 w-3" />
+        <Button variant="ghost" size="sm" className="h-11 w-11 min-h-[44px] min-w-[44px] p-0">
+          <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">

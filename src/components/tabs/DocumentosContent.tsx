@@ -288,7 +288,7 @@ const DocumentosContent = () => {
                 </div>
                 {doc.checksum && (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono bg-muted/50 rounded px-2 py-1">
-                    <ShieldCheck className="w-3 h-3 text-green-600" />
+                    <ShieldCheck className="w-3 h-3 text-[hsl(var(--success))]" />
                     <span className="truncate" title={doc.checksum}>SHA256: {doc.checksum}</span>
                   </div>
                 )}
