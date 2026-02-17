@@ -235,10 +235,10 @@ const DocumentosContent = () => {
         </EmptyState>
       ) : (
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto p-1 bg-muted/50">
-            <TabsTrigger value="all" className="shrink-0">Todos ({documents.length})</TabsTrigger>
+          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto min-h-[44px] p-1 bg-muted/50 scrollbar-none">
+            <TabsTrigger value="all" className="shrink-0 whitespace-nowrap min-h-[36px]">Todos ({documents.length})</TabsTrigger>
             {categoriesWithDocs.map(cat => (
-              <TabsTrigger key={cat} value={cat} className="shrink-0">{DOCUMENT_CATEGORIES[cat].label}</TabsTrigger>
+              <TabsTrigger key={cat} value={cat} className="shrink-0 whitespace-nowrap min-h-[36px]">{DOCUMENT_CATEGORIES[cat].label}</TabsTrigger>
             ))}
           </TabsList>
 

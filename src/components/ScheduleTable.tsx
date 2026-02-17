@@ -311,12 +311,12 @@ function EditableDateCellMobile({
           )}
           onClick={(e) => { e.stopPropagation(); }}
         >
-          <p className="text-[8px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5 flex items-center gap-1">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5 flex items-center gap-1">
             {label}
             <CalendarIcon className="w-2.5 h-2.5" />
           </p>
           <p className={cn(
-            "text-[10px] font-semibold tabular-nums",
+            "text-xs font-semibold tabular-nums",
             value ? "text-foreground" : "text-muted-foreground"
           )}>
             {value ? formatDate(value, baseYear) : "Toque para definir"}
@@ -475,22 +475,22 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
             >
               {/* Top row: Number + Status */}
               <div className="flex items-center justify-between mb-1.5">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold shrink-0 bg-primary/10 text-primary">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary">
                   {originalIndex + 1}
                 </span>
                 <StatusBadge status={status} />
               </div>
 
               {/* Title */}
-              <p className="text-xs font-semibold leading-snug text-foreground mb-2">
+              <p className="text-sm font-semibold leading-snug text-foreground mb-2">
                 {activity.description}
               </p>
 
               {/* Dates grid */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-muted/40 rounded-md px-2 py-1.5">
-                  <p className="text-[8px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Previsto</p>
-                  <p className="text-[10px] font-semibold text-foreground tabular-nums">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium mb-0.5">Previsto</p>
+                  <p className="text-xs font-semibold text-foreground tabular-nums">
                     {formatDate(activity.plannedStart, baseYear)} → {formatDate(activity.plannedEnd, baseYear)}
                   </p>
                 </div>

@@ -488,9 +488,10 @@ const GanttChart = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-7 w-7"
+              className="h-9 w-9"
               onClick={handleZoomIn}
               disabled={currentZoomIndex === 0}
+              aria-label="Aumentar zoom"
             >
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -498,9 +499,10 @@ const GanttChart = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-7 w-7"
+              className="h-9 w-9"
               onClick={handleZoomOut}
               disabled={currentZoomIndex === zoomLevels.length - 1}
+              aria-label="Diminuir zoom"
             >
               <ZoomOut className="h-4 w-4" />
             </Button>

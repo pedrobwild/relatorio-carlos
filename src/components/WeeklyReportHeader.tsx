@@ -66,7 +66,8 @@ const WeeklyReportHeader = ({
           variant="ghost"
           size="sm"
           onClick={onBackToList}
-          className="text-muted-foreground hover:text-foreground h-8 text-sm -ml-2"
+          className="text-muted-foreground hover:text-foreground min-h-[44px] h-auto text-sm -ml-2 px-3"
+          aria-label="Voltar para lista de relatórios"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Ver todos
@@ -78,19 +79,21 @@ const WeeklyReportHeader = ({
             size="sm"
             onClick={onPreviousWeek}
             disabled={!hasPrevious}
-            className="h-8 px-2.5 text-xs"
+            className="min-h-[44px] h-auto px-3 text-xs"
+            aria-label="Semana anterior"
           >
             <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-            Anterior
+            <span className="hidden xs:inline">Anterior</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={onNextWeek}
             disabled={!hasNext}
-            className="h-8 px-2.5 text-xs"
+            className="min-h-[44px] h-auto px-3 text-xs"
+            aria-label="Próxima semana"
           >
-            Próxima
+            <span className="hidden xs:inline">Próxima</span>
             <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </Button>
           {onExportPDF && (
@@ -98,7 +101,8 @@ const WeeklyReportHeader = ({
               onClick={onExportPDF}
               disabled={isExporting}
               size="sm"
-              className="h-8 px-3 text-xs"
+              className="min-h-[44px] h-auto px-3 text-xs"
+              aria-label="Exportar relatório em PDF"
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />
               {isExporting ? "..." : "PDF"}
