@@ -12,6 +12,7 @@ import {
   AlertCircle, ShieldCheck, HelpCircle,
 } from 'lucide-react';
 import authBg from '@/assets/auth-bg.png';
+import bwildLogo from '@/assets/bwild-logo.png';
 import { z } from 'zod';
 import { logError, logInfo } from '@/lib/errorLogger';
 
@@ -174,9 +175,13 @@ export default function Auth() {
     >
       {/* Form – centered on mobile, left on desktop */}
       <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-lg px-8 sm:px-16 py-12 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
-        <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-12">
-          Portal Bwild<span className="text-[#366478]">.</span>
-        </h1>
+        {/* Mobile: logo image / Desktop: text */}
+        <div className="mb-12">
+          <img src={bwildLogo} alt="Bwild" className="h-10 block md:hidden" />
+          <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight hidden md:block">
+            Portal Bwild<span className="text-[#366478]">.</span>
+          </h1>
+        </div>
 
         {formError && (
           <div
@@ -191,7 +196,7 @@ export default function Auth() {
 
         <form onSubmit={handleLogin} className="space-y-6 w-full" data-testid="login-form" noValidate>
           <div className="space-y-2">
-            <Label htmlFor="login-email" className="text-white/80 flex items-center gap-1.5 text-sm">
+            <Label htmlFor="login-email" className="text-white flex items-center gap-1.5 text-sm font-medium">
               <Mail className="h-3.5 w-3.5" /> E-mail
             </Label>
             <Input
@@ -203,13 +208,14 @@ export default function Auth() {
               autoCapitalize="none"
               autoCorrect="off"
               placeholder="seu@email.com"
+
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
               }}
               onBlur={() => { if (fieldErrors.email) validate(); }}
-              className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/35 focus-visible:ring-white/40 focus-visible:border-white/50 text-base"
+              className="h-12 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus-visible:ring-white/40 focus-visible:border-white/50 text-base"
               aria-invalid={!!fieldErrors.email}
               aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
               disabled={loading}
@@ -223,7 +229,7 @@ export default function Auth() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="login-password" className="text-white/80 flex items-center gap-1.5 text-sm">
+            <Label htmlFor="login-password" className="text-white flex items-center gap-1.5 text-sm font-medium">
               <Lock className="h-3.5 w-3.5" /> Senha
             </Label>
             <div className="relative">
@@ -240,7 +246,7 @@ export default function Auth() {
                 }}
                 onKeyDown={handlePasswordKeyEvent}
                 onKeyUp={handlePasswordKeyEvent}
-                className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/35 pr-11 focus-visible:ring-white/40 focus-visible:border-white/50 text-base"
+                className="h-12 bg-white/10 border-white/30 text-white placeholder:text-white/50 pr-11 focus-visible:ring-white/40 focus-visible:border-white/50 text-base"
                 aria-invalid={!!fieldErrors.password}
                 aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
                 disabled={loading}
@@ -271,7 +277,7 @@ export default function Auth() {
           <div className="flex justify-center pt-1">
             <a
               href="/recuperar-senha"
-              className="text-xs text-white/60 hover:text-white hover:underline font-medium"
+              className="text-xs text-white/80 hover:text-white hover:underline font-medium"
               tabIndex={0}
             >
               Esqueci minha senha
@@ -295,25 +301,25 @@ export default function Auth() {
           </Button>
         </form>
 
-        <div className="mt-8 flex items-center justify-center gap-1.5 text-sm text-white/50">
+        <div className="mt-8 flex items-center justify-center gap-1.5 text-sm text-white/70">
           <HelpCircle className="h-4 w-4 shrink-0" />
           <span>Problemas?</span>
           <a
             href="https://web.whatsapp.com/send?phone=5521989362122&text=Ol%C3%A1%2C%20tive%20uma%20dificuldade%20com%20meu%20acesso%20ao%20portal%20de%20jornada%20de%20obra%20da%20bwild%20e%20preciso%20de%20ajuda."
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/70 hover:text-white hover:underline font-medium"
+            className="text-white/90 hover:text-white hover:underline font-medium"
           >
             Falar com suporte
           </a>
         </div>
 
         <div className="mt-6 flex flex-col items-center gap-1">
-          <div className="flex items-center gap-1.5 text-xs text-white/30">
+          <div className="flex items-center gap-1.5 text-xs text-white/50">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>Acesso seguro · LGPD</span>
           </div>
-          <p className="text-xs text-white/20">
+          <p className="text-xs text-white/40">
             © {new Date().getFullYear()} Bwild · Todos os direitos reservados
           </p>
         </div>
