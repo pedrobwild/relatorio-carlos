@@ -210,7 +210,7 @@ export default function NovaObra() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')} className="min-h-[44px] min-w-[44px] h-11 w-11" aria-label="Voltar">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -459,11 +459,11 @@ export default function NovaObra() {
           </Card>
 
           {/* Submit */}
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => navigate('/gestao')}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px]">
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="min-h-[44px]">
               {loading ? (
                 'Cadastrando...'
               ) : (

@@ -300,7 +300,7 @@ export default function FormalizacaoDetalhe() {
                 size="icon" 
                 onClick={() => navigate('/formalizacoes')}
                 aria-label="Voltar para lista"
-                className="rounded-full h-9 w-9 shrink-0 hover:bg-primary/10"
+                className="rounded-full min-h-[44px] min-w-[44px] h-11 w-11 shrink-0 hover:bg-primary/10"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -317,7 +317,7 @@ export default function FormalizacaoDetalhe() {
                 aria-label="Baixar PDF"
                 onClick={handleDownloadPdf}
                 disabled={downloadingPdf}
-                className="h-9"
+                className="min-h-[44px] h-11"
               >
                 {downloadingPdf ? (
                   <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
@@ -335,7 +335,7 @@ export default function FormalizacaoDetalhe() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="h-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="min-h-[44px] h-11 w-11 text-destructive hover:text-destructive hover:bg-destructive/10"
                       disabled={deleteFormalizacao.isPending}
                     >
                       {deleteFormalizacao.isPending ? (
@@ -509,7 +509,7 @@ export default function FormalizacaoDetalhe() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 h-11">
+          <TabsList className="grid w-full grid-cols-3 min-h-[44px] h-11">
             <TabsTrigger value="conteudo" className="gap-1.5 text-sm">
               <FileText className="h-4 w-4" />
               <span className="hidden xs:inline">Conteúdo</span>
@@ -557,14 +557,14 @@ export default function FormalizacaoDetalhe() {
                         key={party.id} 
                         className={`flex items-center justify-between p-3 rounded-lg border ${
                           isSigned 
-                            ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-900/50' 
+                            ? 'bg-success/10 border-success/30' 
                             : 'bg-muted/50 border-border'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           {isSigned ? (
-                            <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center">
+                              <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
                             </div>
                           ) : (
                             <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
@@ -582,7 +582,7 @@ export default function FormalizacaoDetalhe() {
                         <div className="text-right">
                           {isSigned ? (
                             <div>
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                              <Badge variant="outline" className="bg-success/10 text-[hsl(var(--success))] border-success/30">
                                 Assinado
                               </Badge>
                               <p className="text-xs text-muted-foreground mt-1">
@@ -611,7 +611,7 @@ export default function FormalizacaoDetalhe() {
                     </div>
                     <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden">
                       <div 
-                        className="h-full bg-green-500 rounded-full transition-all duration-300"
+                        className="h-full bg-[hsl(var(--success))] rounded-full transition-all duration-300"
                         style={{ 
                           width: `${((formalizacao.parties_signed ?? 0) / ((formalizacao.parties_total ?? parties.length) || 1)) * 100}%` 
                         }}

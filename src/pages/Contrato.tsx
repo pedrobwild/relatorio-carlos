@@ -141,7 +141,7 @@ const Contrato = () => {
                                 </div>
                               </div>
                             </DialogTrigger>
-                            <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 flex flex-col">
+                            <DialogContent className="max-w-4xl w-[95vw] max-h-[95dvh] h-[90vh] p-0 flex flex-col">
                               <DialogHeader className="p-4 border-b border-border shrink-0">
                                 <div className="flex items-center justify-between">
                                   <div>
@@ -214,7 +214,7 @@ const Contrato = () => {
                               </div>
                             </div>
                           </DialogTrigger>
-                          <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 flex flex-col">
+                          <DialogContent className="max-w-4xl w-[95vw] max-h-[95dvh] h-[90vh] p-0 flex flex-col">
                             <DialogHeader className="p-4 border-b border-border shrink-0">
                               <div className="flex items-center justify-between">
                                 <div>

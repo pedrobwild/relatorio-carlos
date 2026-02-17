@@ -284,7 +284,7 @@ export default function FormalizacaoNova() {
       </div>
 
       {/* Step content */}
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl">
+      <main className="flex-1 mx-auto w-full px-4 py-6 max-w-2xl">
         <div className="animate-fade-in">
           {renderStepContent()}
         </div>
