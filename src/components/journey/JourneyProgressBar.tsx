@@ -2,6 +2,7 @@ import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { JourneyStage } from '@/hooks/useProjectJourney';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface JourneyProgressBarProps {
   stages: JourneyStage[];
@@ -38,10 +39,14 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
         </div>
         <span className="text-xs font-medium text-muted-foreground whitespace-nowrap tabular-nums">
           {allDone ? (
-            <span className="text-[hsl(var(--success))] inline-flex items-center gap-1">
+            <motion.span
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-[hsl(var(--success))] inline-flex items-center gap-1"
+            >
               <Sparkles className="h-3 w-3" />
               Concluída!
-            </span>
+            </motion.span>
           ) : (
             <>Etapa {currentIndex + 1} de {totalStages}</>
           )}
@@ -49,24 +54,31 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
       </div>
 
       {/* Next step hint */}
-      {showNextHint && nextStage && onNextClick && (
-        <button
-          onClick={onNextClick}
-          className={cn(
-            "w-full flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5",
-            "hover:bg-primary/10 transition-colors text-left group cursor-pointer"
-          )}
-        >
-          <div className="p-1.5 rounded-full bg-primary/10 shrink-0">
-            <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-0.5 transition-transform" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-primary">Próxima etapa</p>
-            <p className="text-sm font-semibold text-foreground truncate">{nextStage.name}</p>
-          </div>
-          <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))] shrink-0" />
-        </button>
-      )}
+      <AnimatePresence mode="wait">
+        {showNextHint && nextStage && onNextClick && (
+          <motion.button
+            key={nextStage.id}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            onClick={onNextClick}
+            className={cn(
+              "w-full flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5",
+              "hover:bg-primary/10 transition-colors text-left group cursor-pointer"
+            )}
+          >
+            <div className="p-1.5 rounded-full bg-primary/10 shrink-0">
+              <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-0.5 transition-transform" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-primary">Próxima etapa</p>
+              <p className="text-sm font-semibold text-foreground truncate">{nextStage.name}</p>
+            </div>
+            <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))] shrink-0" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

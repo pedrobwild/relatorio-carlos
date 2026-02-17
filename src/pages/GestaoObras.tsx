@@ -201,19 +201,19 @@ export default function GestaoObras() {
         </div>
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <Card className="p-4">
+          <Card className={`p-4 ${projects.length === 0 ? 'border-dashed bg-muted/30' : ''}`}>
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Total</p>
             <p className="text-h2 font-bold">{projects.length}</p>
           </Card>
-          <Card className="p-4">
+          <Card className={`p-4 ${activeCount === 0 ? 'border-dashed bg-muted/30' : ''}`}>
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Em andamento</p>
             <p className="text-h2 font-bold text-success">{activeCount}</p>
           </Card>
-          <Card className="p-4">
+          <Card className={`p-4 ${completedCount === 0 ? 'border-dashed bg-muted/30' : ''}`}>
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Concluídas</p>
             <p className="text-h2 font-bold text-primary">{completedCount}</p>
           </Card>
-          <Card className="p-4">
+          <Card className={`p-4 ${thisMonthCount === 0 ? 'border-dashed bg-muted/30' : ''}`}>
             <p className="text-tiny text-muted-foreground uppercase tracking-wider">Este mês</p>
             <p className="text-h2 font-bold">{thisMonthCount}</p>
           </Card>
@@ -298,11 +298,11 @@ export default function GestaoObras() {
         ) : filteredProjects.length === 0 ? (
           <Card className="p-12 text-center border-dashed">
             <Building2 className="h-16 w-16 mx-auto text-muted-foreground/30 mb-6" />
-            {searchTerm || statusFilter ? (
+            {searchTerm || statusFilter || engineerFilter ? (
               <>
                 <h3 className="text-body font-semibold mb-2">Nenhuma obra encontrada</h3>
                 <p className="text-caption text-muted-foreground mb-4">
-                  Tente ajustar os filtros de busca.
+                  Nenhum resultado para os filtros selecionados. Tente ajustar sua busca.
                 </p>
                 <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter(null); setEngineerFilter(null); }}>
                   Limpar filtros
@@ -310,13 +310,13 @@ export default function GestaoObras() {
               </>
             ) : (
               <>
-                <h3 className="text-body font-semibold mb-2">Nenhuma obra cadastrada</h3>
+                <h3 className="text-lg font-semibold mb-2">Cadastre sua primeira obra</h3>
                 <p className="text-caption text-muted-foreground mb-6 max-w-md mx-auto">
-                  Comece cadastrando sua primeira obra para gerenciar cronogramas, documentos, financeiro e muito mais.
+                  Gerencie cronogramas, documentos, financeiro e a jornada completa do seu projeto — tudo em um só lugar.
                 </p>
                 <Button size="lg" onClick={() => navigate('/gestao/nova-obra')}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Cadastrar primeira obra
+                  Criar nova obra
                 </Button>
               </>
             )}

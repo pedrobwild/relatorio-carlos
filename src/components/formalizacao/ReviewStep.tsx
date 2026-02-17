@@ -64,7 +64,7 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
           <Separator />
           
           <div 
-            className="prose prose-sm dark:prose-invert max-w-none text-body"
+            className="prose prose-sm dark:prose-invert max-w-none text-body [&_*]:!font-[inherit] [&_span]:!text-inherit"
             dangerouslySetInnerHTML={{ __html: sanitizedBody }}
           />
         </CardContent>
