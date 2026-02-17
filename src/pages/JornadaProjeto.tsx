@@ -206,8 +206,8 @@ export default function JornadaProjeto() {
         </div>
       </div>
 
-      <main className={cn(
-        "container max-w-5xl mx-auto px-4 sm:px-4 py-4 md:py-8",
+        <main className={cn(
+        "max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4 md:py-8 w-full overflow-x-hidden",
         'pb-safe',
       )}>
         {/* Jornada tab content */}
@@ -230,7 +230,7 @@ export default function JornadaProjeto() {
             </aside>
 
             {/* Main content */}
-            <div className="space-y-4 md:space-y-8">
+            <div className="space-y-4 md:space-y-8 min-w-0">
 
               {/* Mobile Stepper Compact */}
               <JourneyStepperCompact
