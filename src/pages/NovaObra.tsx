@@ -187,7 +187,7 @@ export default function NovaObra() {
       }
 
       // 6. Create activities from template if selected
-      if (selectedTemplate && selectedTemplate.default_activities?.length > 0) {
+      if (selectedTemplate && Array.isArray(selectedTemplate.default_activities) && selectedTemplate.default_activities.length > 0) {
         const activities = selectedTemplate.default_activities as { description: string; durationDays: number; weight: number }[];
         const startDate = formData.planned_start_date ? new Date(formData.planned_start_date + 'T00:00:00') : new Date();
         
@@ -307,7 +307,7 @@ export default function NovaObra() {
                     ))}
                   </SelectContent>
                 </Select>
-                {selectedTemplate && selectedTemplate.default_activities?.length > 0 && (
+                {selectedTemplate && Array.isArray(selectedTemplate.default_activities) && selectedTemplate.default_activities.length > 0 && (
                   <p className="text-xs text-muted-foreground mt-2">
                     ✓ {selectedTemplate.default_activities.length} atividades serão criadas automaticamente no cronograma
                   </p>
