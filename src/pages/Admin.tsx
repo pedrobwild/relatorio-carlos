@@ -24,6 +24,7 @@ export default function Admin() {
                 size="icon"
                 onClick={() => navigate('/gestao')}
                 className="shrink-0"
+                aria-label="Voltar para gestão"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>

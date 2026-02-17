@@ -356,7 +356,7 @@ const ComparisonModal = ({
                 Arraste para comparar • Pinça para zoom
               </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar comparação">
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -409,22 +409,22 @@ const ComparisonModal = ({
           
           <div className="absolute top-4 right-4 flex items-center gap-2 z-30">
             {scale > 1 && (
-              <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={resetView}>
+              <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={resetView} aria-label="Resetar zoom">
                 <RotateCcw className="w-4 h-4" />
               </Button>
             )}
-            <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={handleZoomOut} disabled={scale <= 1}>
+            <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={handleZoomOut} disabled={scale <= 1} aria-label="Diminuir zoom">
               <ZoomOut className="w-4 h-4" />
             </Button>
             <span className="text-white text-tiny bg-black/50 px-2 py-1 rounded">{Math.round(scale * 100)}%</span>
-            <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={handleZoomIn} disabled={scale >= 4}>
+            <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={handleZoomIn} disabled={scale >= 4} aria-label="Aumentar zoom">
               <ZoomIn className="w-4 h-4" />
             </Button>
-            <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={toggleFullscreen}>
+            <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Sair de tela cheia' : 'Tela cheia'}>
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </Button>
             {isFullscreen && (
-              <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={onClose}>
+              <Button variant="secondary" size="icon" className="h-9 w-9 bg-black/50 hover:bg-black/70 text-white border-0" onClick={onClose} aria-label="Fechar">
                 <X className="w-4 h-4" />
               </Button>
             )}
@@ -666,13 +666,13 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
             
             {/* Mobile navigation */}
             <div className="flex sm:hidden items-center gap-2">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrevious}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrevious} aria-label="Cômodo anterior">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="text-tiny text-muted-foreground min-w-[40px] text-center">
                 {currentIndex + 1}/{rooms.length}
               </span>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNext}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNext} aria-label="Próximo cômodo">
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
