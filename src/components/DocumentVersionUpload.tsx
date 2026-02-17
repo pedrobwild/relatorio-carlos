@@ -214,8 +214,8 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
           </div>
 
           {/* Info about versioning */}
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-caption">
-            <p className="text-blue-800 dark:text-blue-200">
+          <div className="p-3 bg-info-light dark:bg-[hsl(var(--info))]/10 rounded-lg text-caption border border-[hsl(var(--info))]/20">
+            <p className="text-[hsl(var(--info))]">
               <strong>Controle de versão:</strong> O sistema calculará automaticamente 
               o checksum SHA256 para verificação de integridade. Arquivos duplicados 
               serão detectados e rejeitados.

@@ -221,7 +221,7 @@ export function DocumentViewer({
       {/* Approval Stamp Overlay */}
       {isApproved && (
         <div className="absolute top-4 right-4 z-20 pointer-events-none">
-          <div className="bg-green-500/90 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transform rotate-[-3deg]">
+          <div className="bg-[hsl(var(--success))]/90 text-success-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transform rotate-[-3deg]">
             <CheckCircle2 className="h-5 w-5" />
             <div className="text-sm">
               <div className="font-semibold">APROVADO</div>
@@ -243,7 +243,7 @@ export function DocumentViewer({
               size="icon"
               onClick={goToPrevPage}
               disabled={pageNumber <= 1}
-              className="h-9 w-9 touch-manipulation"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
               aria-label="Página anterior"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -256,7 +256,7 @@ export function DocumentViewer({
               size="icon"
               onClick={goToNextPage}
               disabled={pageNumber >= numPages}
-              className="h-9 w-9 touch-manipulation"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
               aria-label="Próxima página"
             >
               <ChevronRight className="w-5 h-5" />
@@ -265,7 +265,7 @@ export function DocumentViewer({
         ) : (
           <div className="flex items-center gap-2">
             {isApproved && (
-              <Badge variant="default" className="bg-green-600 gap-1">
+              <Badge variant="default" className="bg-[hsl(var(--success))] gap-1">
                 <CheckCircle2 className="h-3 w-3" />
                 Aprovado
               </Badge>
@@ -279,7 +279,7 @@ export function DocumentViewer({
             size="icon"
             onClick={zoomOut}
             disabled={scale <= 0.5}
-            className="h-9 w-9 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
             aria-label="Diminuir zoom"
           >
             <ZoomOut className="w-5 h-5" />
@@ -288,7 +288,7 @@ export function DocumentViewer({
             variant="ghost"
             size="sm"
             onClick={resetZoom}
-            className="h-9 px-2 touch-manipulation text-xs"
+            className="h-11 min-h-[44px] px-2 touch-manipulation text-xs"
           >
             {Math.round(scale * 100)}%
           </Button>
@@ -297,7 +297,7 @@ export function DocumentViewer({
             size="icon"
             onClick={zoomIn}
             disabled={scale >= 3}
-            className="h-9 w-9 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
             aria-label="Aumentar zoom"
           >
             <ZoomIn className="w-5 h-5" />
@@ -316,7 +316,7 @@ export function DocumentViewer({
             variant="ghost"
             size="icon"
             onClick={toggleFullscreen}
-            className="h-9 w-9 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
             aria-label={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
           >
             {isFullscreen ? (
@@ -331,7 +331,7 @@ export function DocumentViewer({
               variant="ghost"
               size="icon"
               onClick={handleDownload}
-              className="h-9 w-9 touch-manipulation"
+              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
               aria-label="Baixar documento"
             >
               <Download className="w-4 h-4" />
@@ -342,7 +342,7 @@ export function DocumentViewer({
             variant="ghost"
             size="icon"
             onClick={() => window.open(url, '_blank')}
-            className="h-9 w-9 touch-manipulation"
+            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
             aria-label="Abrir em nova aba"
           >
             <ExternalLink className="w-4 h-4" />

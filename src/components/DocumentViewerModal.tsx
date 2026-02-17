@@ -133,7 +133,7 @@ export function DocumentViewerModal({
                   variant={document.status === 'approved' ? 'default' : 'secondary'}
                   className={cn(
                     "text-xs gap-1",
-                    document.status === 'approved' && "bg-green-600"
+                    document.status === 'approved' && "bg-[hsl(var(--success))]"
                   )}
                 >
                   {document.status === 'approved' ? (
@@ -153,7 +153,7 @@ export function DocumentViewerModal({
                     className="text-xs text-muted-foreground font-mono flex items-center gap-1" 
                     title={document.checksum}
                   >
-                    <ShieldCheck className="h-3 w-3 text-green-600" />
+                    <ShieldCheck className="h-3 w-3 text-[hsl(var(--success))]" />
                     SHA256: {document.checksum.substring(0, 8)}...
                   </span>
                 )}
@@ -281,12 +281,12 @@ export function DocumentViewerModal({
                   key={ver.id}
                   variant={ver.id === document.id ? "secondary" : "ghost"}
                   size="sm"
-                  className="shrink-0 h-7 text-xs"
+                  className="shrink-0 h-9 min-h-[44px] text-xs"
                   onClick={() => onVersionSelect?.(ver)}
                 >
                   v{ver.version}
                   {ver.status === 'approved' && (
-                    <CheckCircle2 className="h-3 w-3 ml-1 text-green-600" />
+                    <CheckCircle2 className="h-3 w-3 ml-1 text-[hsl(var(--success))]" />
                   )}
                 </Button>
               ))}

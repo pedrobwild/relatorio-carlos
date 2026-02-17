@@ -393,10 +393,10 @@ export const ImportScheduleModal = ({ open, onOpenChange, onImport }: ImportSche
       </div>
 
       <div className="flex justify-between pt-4 border-t">
-        <Button variant="outline" onClick={() => setStep('upload')}>
+        <Button variant="outline" onClick={() => setStep('upload')} className="min-h-[44px]">
           Voltar
         </Button>
-        <Button onClick={processMapping}>
+        <Button onClick={processMapping} className="min-h-[44px]">
           Continuar
         </Button>
       </div>
@@ -405,9 +405,9 @@ export const ImportScheduleModal = ({ open, onOpenChange, onImport }: ImportSche
 
   const renderPreviewStep = () => (
     <div className="space-y-4">
-      <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
-        <Check className="h-4 w-4 text-green-600" />
-        <AlertDescription className="text-green-800 dark:text-green-200">
+      <Alert className="bg-success-light dark:bg-[hsl(var(--success))]/10 border-[hsl(var(--success))]/20">
+        <Check className="h-4 w-4 text-[hsl(var(--success))]" />
+        <AlertDescription className="text-[hsl(var(--success))]">
           {mappedData.length} atividades prontas para importação
         </AlertDescription>
       </Alert>
@@ -443,10 +443,10 @@ export const ImportScheduleModal = ({ open, onOpenChange, onImport }: ImportSche
       )}
 
       <div className="flex justify-between pt-4 border-t">
-        <Button variant="outline" onClick={() => setStep('mapping')}>
+        <Button variant="outline" onClick={() => setStep('mapping')} className="min-h-[44px]">
           Voltar
         </Button>
-        <Button onClick={handleImport}>
+        <Button onClick={handleImport} className="min-h-[44px]">
           <Upload className="h-4 w-4 mr-2" />
           Importar {mappedData.length} Atividades
         </Button>
