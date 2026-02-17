@@ -122,6 +122,9 @@
 @layer base {
   * {
     @apply border-border;
+    /* Mobile-first text containment: prevent any element from causing horizontal overflow */
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   /* Prevent text selection on interactive elements only, not globally */

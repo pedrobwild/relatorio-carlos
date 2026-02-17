@@ -32,7 +32,7 @@ export function PageContainer({
   return (
     <div
       className={cn(
-        "mx-auto w-full",
+        "mx-auto w-full overflow-x-hidden",
         maxWidthMap[maxWidth],
         !noPadding && "px-4 sm:px-6 md:px-8",
         className
