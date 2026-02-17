@@ -15,6 +15,7 @@ import { JourneyTimelineSheet } from '@/components/journey/JourneyTimelineSheet'
 import { JourneyFooterSection } from '@/components/journey/JourneyFooterSection';
 import { JourneyWelcomeStage } from '@/components/journey/JourneyWelcomeStage';
 import { StageDetailInline } from '@/components/journey/StageDetailInline';
+import { JourneyProgressBar } from '@/components/journey/JourneyProgressBar';
 
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -231,6 +232,19 @@ export default function JornadaProjeto() {
 
             {/* Main content */}
             <div className="space-y-4 md:space-y-8 min-w-0">
+
+              {/* Global progress indicator — hide during welcome */}
+              {journey.stages.length > 0 && activeView !== 'welcome' && (
+                <JourneyProgressBar
+                  stages={journey.stages}
+                  activeStageId={activeView}
+                  onNextClick={() => {
+                    const idx = journey.stages.findIndex(s => s.id === activeView);
+                    const next = journey.stages[idx + 1];
+                    if (next && next.status !== 'completed') handleTimelineClick(next.id);
+                  }}
+                />
+              )}
 
               {/* Mobile Stepper Compact */}
               <JourneyStepperCompact
