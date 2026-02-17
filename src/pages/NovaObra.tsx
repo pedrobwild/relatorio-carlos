@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectTemplates, type ProjectTemplate } from '@/hooks/useProjectTemplates';
-import bwildLogo from '@/assets/bwild-logo.png';
+
 import { z } from 'zod';
 
 // Validation schema
