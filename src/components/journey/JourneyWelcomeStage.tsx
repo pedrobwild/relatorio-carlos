@@ -87,7 +87,7 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextS
           onClick={() => setTeamExpanded(!teamExpanded)}
           role="button"
           aria-expanded={teamExpanded}
-          aria-label="Seu Time"
+          aria-label="Equipe Bwild"
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTeamExpanded(!teamExpanded); } }}
         >
@@ -96,7 +96,7 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextS
               <Users className="h-4 w-4 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground">Seu Time</h3>
+              <h3 className="font-semibold text-sm text-foreground">Equipe Bwild</h3>
               <p className="text-xs text-primary font-medium">Conheça quem cuida do seu projeto</p>
             </div>
             <motion.div animate={{ rotate: teamExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
