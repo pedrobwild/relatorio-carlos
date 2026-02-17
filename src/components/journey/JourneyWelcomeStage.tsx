@@ -149,11 +149,11 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextS
       {/* Advance button */}
       <div className="pt-2">
         <Button
-          className="w-full min-h-[48px] gap-2 text-sm whitespace-normal text-center leading-snug py-3"
+          className="w-full min-h-[48px] gap-2 text-sm"
           onClick={onAdvance}
         >
-          <span>Confirme meu entendimento, avançar para {nextStageName}</span>
-          <ArrowRight className="h-4 w-4 shrink-0" />
+          Próxima etapa
+          <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
 
