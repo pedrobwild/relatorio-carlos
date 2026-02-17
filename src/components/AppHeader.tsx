@@ -33,7 +33,7 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-      <div className="container max-w-7xl mx-auto px-4 py-3">
+      <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {showBackButton && onBack && (

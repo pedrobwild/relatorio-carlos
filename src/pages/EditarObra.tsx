@@ -520,7 +520,7 @@ export default function EditarObra() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container max-w-5xl mx-auto px-4 py-3">
+        <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')}>
@@ -576,7 +576,7 @@ export default function EditarObra() {
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="geral" className="flex items-center gap-2">

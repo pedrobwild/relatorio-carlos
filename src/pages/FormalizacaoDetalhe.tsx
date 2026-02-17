@@ -292,7 +292,7 @@ export default function FormalizacaoDetalhe() {
     <div className="min-h-screen bg-background pb-20 sm:pb-6">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-3">
+        <div className="mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Button 
@@ -386,7 +386,7 @@ export default function FormalizacaoDetalhe() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-4xl space-y-6">
+      <main className="mx-auto px-4 py-6 max-w-4xl space-y-6">
         {/* Document header */}
         <Card>
           <CardContent className="p-6">

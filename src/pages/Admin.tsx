@@ -16,7 +16,7 @@ export default function Admin() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container max-w-6xl mx-auto px-4 py-3">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button 
@@ -42,7 +42,7 @@ export default function Admin() {
         </div>
       </header>
 
-      <main className="container max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 max-w-lg">
             <TabsTrigger value="usuarios" className="gap-2">

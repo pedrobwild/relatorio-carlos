@@ -208,7 +208,7 @@ export default function NovaObra() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container max-w-3xl mx-auto px-4 py-3">
+        <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')}>
               <ArrowLeft className="h-5 w-5" />
@@ -221,7 +221,7 @@ export default function NovaObra() {
         </div>
       </header>
 
-      <main className="container max-w-3xl mx-auto px-4 py-6">
+      <main className="max-w-3xl mx-auto px-4 py-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Project Info */}
           <Card>

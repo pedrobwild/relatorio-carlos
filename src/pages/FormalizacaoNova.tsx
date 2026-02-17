@@ -199,7 +199,7 @@ export default function FormalizacaoNova() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-3">
+        <div className="mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button 
@@ -230,7 +230,7 @@ export default function FormalizacaoNova() {
 
       {/* Progress indicator */}
       <div className="bg-muted/30 border-b">
-        <div className="container mx-auto px-4 py-4">
+        <div className="mx-auto px-4 py-4">
           {/* Desktop stepper */}
           <div className="hidden sm:flex items-center justify-between max-w-2xl mx-auto">
             {STEPS.map((step, index) => {

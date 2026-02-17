@@ -272,36 +272,37 @@ const Cronograma = () => {
           { label: "Cronograma" },
         ]}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Link to={paths.compras}>
-            <Button variant="outline" size="sm">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Compras
+            <Button variant="outline" size="sm" className="text-xs">
+              <ShoppingCart className="w-4 h-4 mr-1.5" />
+              <span className="hidden sm:inline">Compras</span>
             </Button>
           </Link>
           <Button 
             variant="outline" 
             size="sm"
+            className="text-xs"
             onClick={handleSaveBaseline}
             disabled={savingBaseline || activities.length === 0}
             title={hasBaseline ? "Atualizar baseline" : "Salvar baseline"}
           >
             {savingBaseline ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
             ) : (
-              <Bookmark className={cn("w-4 h-4 mr-2", hasBaseline && "fill-current")} />
+              <Bookmark className={cn("w-4 h-4 mr-1.5", hasBaseline && "fill-current")} />
             )}
-            {hasBaseline ? 'Atualizar Baseline' : 'Salvar Baseline'}
+            <span className="hidden sm:inline">{hasBaseline ? 'Atualizar Baseline' : 'Baseline'}</span>
           </Button>
-          <Button variant="outline" onClick={() => setImportModalOpen(true)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Importar
+          <Button variant="outline" size="sm" className="text-xs" onClick={() => setImportModalOpen(true)}>
+            <Upload className="w-4 h-4 mr-1.5" />
+            <span className="hidden sm:inline">Importar</span>
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button size="sm" onClick={handleSave} disabled={saving}>
             {saving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
             ) : (
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-4 h-4 mr-1.5" />
             )}
             Salvar
           </Button>

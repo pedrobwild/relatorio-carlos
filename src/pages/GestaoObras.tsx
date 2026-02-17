@@ -191,7 +191,7 @@ export default function GestaoObras() {
         </div>
       </AppHeader>
 
-      <main className="container max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6">
         {/* Action Button */}
         <div className="flex justify-end mb-6">
           <Button onClick={() => navigate('/gestao/nova-obra')}>

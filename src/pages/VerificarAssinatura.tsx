@@ -111,7 +111,7 @@ export default function VerificarAssinatura() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-background/95 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4">
+        <div className="mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src={bwildLogo} alt="Bwild" className="h-8" />
@@ -128,7 +128,7 @@ export default function VerificarAssinatura() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <main className="mx-auto px-4 py-8 max-w-2xl">
         {loading ? (
           <Card>
             <CardContent className="py-16 flex flex-col items-center justify-center">
