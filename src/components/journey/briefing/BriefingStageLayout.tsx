@@ -1,7 +1,6 @@
 import { Separator } from '@/components/ui/separator';
 import { StageSummary } from '../StageSummary';
 import { StageIntroCard } from './StageIntroCard';
-import { ClientNextActionsCard } from './ClientNextActionsCard';
 import { MeetingAvailabilityCard } from './MeetingAvailabilityCard';
 import { MeetingConfirmationCard } from './MeetingConfirmationCard';
 import { StageLogSection } from './StageLogSection';
@@ -25,13 +24,6 @@ export function BriefingStageLayout({ stage, projectId, isAdmin }: BriefingStage
       {/* ① StageIntroCard */}
       <StageIntroCard />
 
-      {/* ② ClientNextActionsCard */}
-      <ClientNextActionsCard
-        todos={stage.todos}
-        projectId={projectId}
-        stageId={stage.id}
-        isAdmin={isAdmin}
-      />
 
       {/* ③ MeetingConfirmationCard (shown above availability when confirmed) */}
       {availability?.status === 'confirmed' && (
