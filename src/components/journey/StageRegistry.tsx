@@ -37,13 +37,15 @@ interface StageRegistryProps {
   stageId: string;
   projectId: string;
   isAdmin: boolean;
+  /** When true, only shows conversation/minutes records with direct minutes form */
+  minutesOnly?: boolean;
 }
 
 /* ─── Main ─── */
 
-export function StageRegistry({ stageId, projectId, isAdmin }: StageRegistryProps) {
+export function StageRegistry({ stageId, projectId, isAdmin, minutesOnly = false }: StageRegistryProps) {
   const { data: records, isLoading, isError, refetch } = useStageRecords(stageId, projectId);
-  const [activeTab, setActiveTab] = useState<RecordCategory>('decision');
+  const [activeTab, setActiveTab] = useState<RecordCategory>(minutesOnly ? 'conversation' : 'decision');
   const [showForm, setShowForm] = useState(false);
 
   const filtered = useMemo(
@@ -79,33 +81,36 @@ export function StageRegistry({ stageId, projectId, isAdmin }: StageRegistryProp
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RecordCategory)}>
-        <TabsList className="w-full grid grid-cols-3 h-10">
-          {tabConfig.map(({ value, label, Icon }) => (
-            <TabsTrigger
-              key={value}
-              value={value}
-              className="text-xs gap-1.5 data-[state=active]:shadow-sm min-h-[40px]"
-              aria-label={`${label}${counts[value] > 0 ? ` (${counts[value]})` : ''}`}
-            >
-              <Icon className="h-3.5 w-3.5" aria-hidden />
-              <span className="hidden sm:inline">{label}</span>
-              {counts[value] > 0 && (
-                <Badge variant="secondary" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
-                  {counts[value]}
-                </Badge>
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {!minutesOnly && (
+          <TabsList className="w-full grid grid-cols-3 h-10">
+            {tabConfig.map(({ value, label, Icon }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="text-xs gap-1.5 data-[state=active]:shadow-sm min-h-[40px]"
+                aria-label={`${label}${counts[value] > 0 ? ` (${counts[value]})` : ''}`}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden />
+                <span className="hidden sm:inline">{label}</span>
+                {counts[value] > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-4 min-w-[16px] px-1 text-[10px]">
+                    {counts[value]}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
-        {tabConfig.map(({ value }) => (
-          <TabsContent key={value} value={value} className="mt-3">
+        {(minutesOnly ? tabConfig.filter(t => t.value === 'conversation') : tabConfig).map(({ value }) => (
+          <TabsContent key={value} value={value} className={minutesOnly ? "mt-0" : "mt-3"}>
             {showForm && activeTab === value && (
               <AddRecordForm
                 stageId={stageId}
                 projectId={projectId}
                 category={value}
                 onClose={() => setShowForm(false)}
+                minutesOnly={minutesOnly}
               />
             )}
 
@@ -237,11 +242,13 @@ function AddRecordForm({
   projectId,
   category,
   onClose,
+  minutesOnly,
 }: {
   stageId: string;
   projectId: string;
   category: RecordCategory;
   onClose: () => void;
+  minutesOnly?: boolean;
 }) {
   const { user } = useAuth();
   const create = useCreateStageRecord();
@@ -249,7 +256,7 @@ function AddRecordForm({
   const [description, setDescription] = useState('');
   const [responsible, setResponsible] = useState<'client' | 'bwild'>('bwild');
   const [evidenceUrl, setEvidenceUrl] = useState('');
-  const [isMinutesMode, setIsMinutesMode] = useState(false);
+  const [isMinutesMode, setIsMinutesMode] = useState(minutesOnly ?? false);
 
   // Meeting minutes state
   const [meetingDate, setMeetingDate] = useState('');
@@ -317,7 +324,7 @@ function AddRecordForm({
   };
 
   // Show minutes mode toggle for conversation category
-  if (category === 'conversation' && !isMinutesMode) {
+  if (category === 'conversation' && !isMinutesMode && !minutesOnly) {
     return (
       <div className="mb-3 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

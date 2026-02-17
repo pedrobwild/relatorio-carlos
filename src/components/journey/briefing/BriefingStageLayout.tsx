@@ -44,6 +44,7 @@ export function BriefingStageLayout({ stage, projectId, isAdmin }: BriefingStage
         stageId={stage.id}
         projectId={projectId}
         isAdmin={isAdmin}
+        minutesOnly
       />
     </div>
   );
