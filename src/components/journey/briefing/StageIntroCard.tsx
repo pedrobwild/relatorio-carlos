@@ -12,7 +12,10 @@ export function StageIntroCard() {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground">Instruções</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Na reunião de briefing, nosso time de arquitetura buscará te conhecer: estilo, objetivos, referências e prioridades. Queremos traduzir tudo o que você sonhou para a primeira versão do Projeto 3D, reduzindo surpresas e aumentando as chances de acertarmos desde o início.
+              O primeiro passo da sua jornada será uma reunião por vídeo chamada com a Lorena, sócia e diretora de arquitetura da Bwild.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Na reunião de briefing, nosso objetivo é te conhecer melhor: estilo, objetivos, referências e prioridades. Queremos traduzir tudo o que você sonhou para a primeira versão do Projeto 3D, reduzindo surpresas e aumentando as chances de acertarmos desde o início.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               O projeto será desenvolvido apenas dentro do que está contemplado na Planilha Orçamentária (Anexo II). Customizações são permitidas somente enquanto não ultrapassarem o valor total do orçamento contratado. Mudanças que aumentem o valor exigem aditivo contratual (novo preço e, se necessário, novo prazo).
