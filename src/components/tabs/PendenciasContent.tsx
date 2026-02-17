@@ -83,24 +83,27 @@ const PendenciasContent = () => {
   return (
     <div>
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-rose-500" /><span className="text-sm text-rose-600 font-medium">Atrasados</span></div>
-            <p className="text-xl font-bold text-rose-600">{stats.overdueCount}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3 sm:p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span className="text-xs sm:text-sm text-rose-600 font-medium">Atrasados</span>
           </div>
+          <p className="text-2xl font-bold text-rose-600 tabular-nums">{stats.overdueCount}</p>
         </div>
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-amber-500" /><span className="text-sm text-amber-600 font-medium">Urgentes</span></div>
-            <p className="text-xl font-bold text-amber-600">{stats.urgentCount}</p>
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 sm:p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+            <span className="text-xs sm:text-sm text-amber-600 font-medium">Urgentes</span>
           </div>
+          <p className="text-2xl font-bold text-amber-600 tabular-nums">{stats.urgentCount}</p>
         </div>
-        <div className="bg-secondary border border-border rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-muted-foreground" /><span className="text-sm font-medium">Total</span></div>
-            <p className="text-xl font-bold">{stats.total}</p>
+        <div className="bg-secondary border border-border rounded-xl p-3 sm:p-4 col-span-2 sm:col-span-1">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">Total</span>
           </div>
+          <p className="text-2xl font-bold tabular-nums">{stats.total}</p>
         </div>
       </div>
 
@@ -120,13 +123,13 @@ const PendenciasContent = () => {
           const daysRemaining = getDaysRemaining(item, today);
           return (
             <div key={item.id}
-              className={`bg-card border rounded-lg p-4 transition-all hover:shadow-md animate-fade-in ${
+              className={`bg-card border rounded-xl p-4 transition-all hover:shadow-md animate-fade-in ${
                 status === "atrasado" ? "border-rose-500/40" : status === "urgente" ? "border-amber-500/40" : "border-border"
               }`}
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <div className="flex items-start gap-4">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${getTypeColor(item.type)}`}>
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-xl shrink-0 ${getTypeColor(item.type)}`}>
                   {getTypeIcon(item.type)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -152,9 +155,9 @@ const PendenciasContent = () => {
                       <strong>Impacto:</strong> {item.impact}
                     </p>
                   )}
-                  <div className="flex items-center justify-between pt-3 border-t border-border mt-3">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-border mt-3 gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <span className={`text-caption font-medium ${status === "atrasado" ? "text-rose-600" : status === "urgente" ? "text-amber-600" : "text-foreground"}`}>
                         Prazo: {formatDateStr(item.dueDate)}
                       </span>
@@ -165,7 +168,7 @@ const PendenciasContent = () => {
                         </Badge>
                       )}
                     </div>
-                    <Link to={getActionUrl(item)} className="flex items-center gap-1 text-caption text-primary hover:underline font-medium">
+                    <Link to={getActionUrl(item)} className="flex items-center gap-1 text-caption text-primary hover:underline font-medium min-h-[44px] sm:min-h-0 shrink-0">
                       Ver detalhes<ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
