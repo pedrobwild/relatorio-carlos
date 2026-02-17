@@ -197,7 +197,7 @@ export default function NovaObra() {
         }
 
         let currentDate = new Date(startDate);
-        const rows = activities.map((act) => {
+        const rows = activities.map((act, idx) => {
           const actStart = new Date(currentDate);
           let remaining = act.durationDays - 1;
           const actEnd = new Date(actStart);
@@ -212,18 +212,18 @@ export default function NovaObra() {
           }
           const fmt = (d: Date) => d.toISOString().split('T')[0];
           return {
-            obra_id: project.id,
-            titulo: act.description,
-            data_prevista_inicio: fmt(actStart),
-            data_prevista_fim: fmt(actEnd),
-            etapa: `peso:${act.weight}`,
-            status: 'pendente' as const,
-            prioridade: 'media' as const,
+            project_id: project.id,
+            description: act.description,
+            planned_start: fmt(actStart),
+            planned_end: fmt(actEnd),
+            weight: act.weight,
+            sort_order: idx,
+            created_by: user!.id,
           };
         });
 
         const { error: actError } = await supabase
-          .from('atividades')
+          .from('project_activities')
           .insert(rows as any);
         if (actError) {
           console.error('Activities creation error:', actError);
