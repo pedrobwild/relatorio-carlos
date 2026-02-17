@@ -33,7 +33,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
     if (isHtml) {
       return (
         <div
-          className="text-sm text-foreground/85 leading-[1.7] prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1"
+          className="text-sm text-foreground/85 leading-[1.7] prose prose-sm max-w-none [&_p]:mb-3 [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1 [&_*]:!font-[inherit] [&_span]:!text-inherit"
           dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
       );
