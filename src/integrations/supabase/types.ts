@@ -2121,11 +2121,65 @@ export type Database = {
           },
         ]
       }
+      project_template_versions: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          custom_fields: Json | null
+          default_activities: Json | null
+          default_contract_value: number | null
+          description: string | null
+          id: string
+          is_project_phase: boolean
+          name: string
+          template_id: string
+          version_number: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          custom_fields?: Json | null
+          default_activities?: Json | null
+          default_contract_value?: number | null
+          description?: string | null
+          id?: string
+          is_project_phase?: boolean
+          name: string
+          template_id: string
+          version_number?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          custom_fields?: Json | null
+          default_activities?: Json | null
+          default_contract_value?: number | null
+          description?: string | null
+          id?: string
+          is_project_phase?: boolean
+          name?: string
+          template_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "project_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_templates: {
         Row: {
           category: string | null
           created_at: string
           created_by: string
+          custom_fields: Json | null
           default_activities: Json | null
           default_contract_value: number | null
           description: string | null
@@ -2140,6 +2194,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by: string
+          custom_fields?: Json | null
           default_activities?: Json | null
           default_contract_value?: number | null
           description?: string | null
@@ -2154,6 +2209,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string
+          custom_fields?: Json | null
           default_activities?: Json | null
           default_contract_value?: number | null
           description?: string | null
