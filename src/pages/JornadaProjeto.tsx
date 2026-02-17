@@ -19,6 +19,7 @@ import { JourneyProgressBar } from '@/components/journey/JourneyProgressBar';
 
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { prefetchForTab } from '@/lib/prefetch';
 
 
 // Lazy load tab content components
@@ -181,22 +182,30 @@ export default function JornadaProjeto() {
                   <span className="hidden sm:inline">{journeyCopy.tabs.jornada}</span>
                   <span className="sm:hidden">Jornada</span>
                 </TabsTrigger>
-                <TabsTrigger value="financeiro" className="portal-tab-trigger">
+                <TabsTrigger value="financeiro" className="portal-tab-trigger"
+                  onMouseEnter={() => prefetchForTab('financeiro', projectId)}
+                  onFocus={() => prefetchForTab('financeiro', projectId)}>
                   <DollarSign className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span className="hidden sm:inline">{journeyCopy.tabs.financeiro}</span>
                   <span className="sm:hidden">Financeiro</span>
                 </TabsTrigger>
-                <TabsTrigger value="documentos" className="portal-tab-trigger">
+                <TabsTrigger value="documentos" className="portal-tab-trigger"
+                  onMouseEnter={() => prefetchForTab('documentos', projectId)}
+                  onFocus={() => prefetchForTab('documentos', projectId)}>
                   <FolderOpen className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span className="hidden sm:inline">{journeyCopy.tabs.documentos}</span>
                   <span className="sm:hidden">Docs</span>
                 </TabsTrigger>
-                <TabsTrigger value="formalizacoes" className="portal-tab-trigger">
+                <TabsTrigger value="formalizacoes" className="portal-tab-trigger"
+                  onMouseEnter={() => prefetchForTab('formalizacoes', projectId)}
+                  onFocus={() => prefetchForTab('formalizacoes', projectId)}>
                   <ClipboardSignature className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span className="hidden sm:inline">{journeyCopy.tabs.formalizacoes}</span>
                   <span className="sm:hidden">Formal.</span>
                 </TabsTrigger>
-                <TabsTrigger value="pendencias" className="portal-tab-trigger">
+                <TabsTrigger value="pendencias" className="portal-tab-trigger"
+                  onMouseEnter={() => prefetchForTab('pendencias', projectId)}
+                  onFocus={() => prefetchForTab('pendencias', projectId)}>
                   <AlertCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span className="hidden sm:inline">{journeyCopy.tabs.pendencias}</span>
                   <span className="sm:hidden">Pendências</span>

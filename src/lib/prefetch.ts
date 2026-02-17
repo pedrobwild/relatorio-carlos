@@ -157,6 +157,12 @@ export function prefetchForTab(tabName: string, projectId: string | undefined): 
     case 'pendencias':
       prefetchPendingItems(projectId);
       break;
+    case 'financeiro':
+      // Prefetch payments data could be added here
+      break;
+    case 'formalizacoes':
+      // Prefetch formalizations data could be added here
+      break;
   }
 }
 
