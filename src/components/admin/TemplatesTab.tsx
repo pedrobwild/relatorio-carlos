@@ -114,9 +114,10 @@ export function TemplatesTab() {
   }, [templates, search, sortBy, filterCategory]);
 
   const resolveActivities = (f: FormState): ActivityItem[] => {
-    if (f.custom_activities.length > 0) return f.custom_activities;
+    if (f.selected_activity_template === '__none__' || !f.selected_activity_template) return [];
+    if (f.selected_activity_template === '__custom__') return f.custom_activities;
     const preset = activityTemplateSets.find((a) => a.id === f.selected_activity_template);
-    return preset?.activities ?? [];
+    return preset?.activities ?? f.custom_activities;
   };
 
   const openCreate = () => {
@@ -136,7 +137,7 @@ export function TemplatesTab() {
       description: t.description ?? '',
       is_project_phase: t.is_project_phase,
       default_contract_value: t.default_contract_value?.toString() ?? '',
-      selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : ''),
+      selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : '__none__'),
       custom_activities: actMatch ? [] : activities,
       category: t.category || 'geral',
     });
@@ -253,7 +254,7 @@ export function TemplatesTab() {
       description: t.description ?? '',
       is_project_phase: t.is_project_phase,
       default_contract_value: t.default_contract_value?.toString() ?? '',
-      selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : ''),
+      selected_activity_template: actMatch?.id ?? (activities.length > 0 ? '__custom__' : '__none__'),
       custom_activities: actMatch ? [] : activities,
       category: t.category || 'geral',
     });
@@ -311,18 +312,28 @@ export function TemplatesTab() {
       const items = Array.isArray(parsed) ? parsed : [parsed];
       let count = 0;
       for (const item of items) {
-        if (!item.name) continue;
+        if (!item.name || typeof item.name !== 'string') continue;
+        // Validate activities structure
+        const activities = Array.isArray(item.default_activities)
+          ? item.default_activities
+              .filter((a: any) => a?.description && typeof a.durationDays === 'number' && typeof a.weight === 'number')
+              .map((a: any) => ({
+                description: String(a.description).slice(0, 200),
+                durationDays: Math.max(1, Math.round(a.durationDays)),
+                weight: Math.max(0, Math.min(100, Math.round(a.weight))),
+              }))
+          : [];
         await createTemplate.mutateAsync({
-          name: item.name,
-          description: item.description || undefined,
+          name: item.name.slice(0, 200),
+          description: item.description ? String(item.description).slice(0, 500) : undefined,
           is_project_phase: !!item.is_project_phase,
-          default_activities: item.default_activities || [],
-          default_contract_value: item.default_contract_value ?? null,
-          category: item.category || 'geral',
+          default_activities: activities,
+          default_contract_value: typeof item.default_contract_value === 'number' ? item.default_contract_value : null,
+          category: typeof item.category === 'string' ? item.category : 'geral',
         });
         count++;
       }
-      toast({ title: `${count} template(s) importado(s)` });
+      toast({ title: count > 0 ? `${count} template(s) importado(s)` : 'Nenhum template válido encontrado' });
     } catch {
       toast({ title: 'Erro ao importar JSON', variant: 'destructive' });
     }
@@ -785,13 +796,20 @@ export function TemplatesTab() {
                       </TableBody>
                     </Table>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={addActivity} className="gap-1">
                       <Plus className="h-3.5 w-3.5" /> Atividade
                     </Button>
-                    <span className="text-xs text-muted-foreground">
-                      Total: {totalDays(form.custom_activities)}d · {totalWeight(form.custom_activities)}%
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">
+                        Total: {totalDays(form.custom_activities)}d · {totalWeight(form.custom_activities)}%
+                      </span>
+                      {form.custom_activities.length > 0 && totalWeight(form.custom_activities) !== 100 && (
+                        <span className="text-xs text-amber-600">
+                          ⚠ Peso total ≠ 100%
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : form.selected_activity_template && form.selected_activity_template !== '__none__' ? (

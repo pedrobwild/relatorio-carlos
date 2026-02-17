@@ -2,14 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
 
+export interface TemplateActivity {
+  description: string;
+  durationDays: number;
+  weight: number;
+}
+
 export interface ProjectTemplate {
   id: string;
   name: string;
   description: string | null;
   is_project_phase: boolean;
-  default_activities: any[];
+  default_activities: TemplateActivity[] | null;
   default_contract_value: number | null;
-  category: string;
+  category: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
