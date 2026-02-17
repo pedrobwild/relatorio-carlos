@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -47,13 +47,28 @@ function isStageBlocked(stage: JourneyStage, index: number, stages: JourneyStage
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { project, loading: projectLoading } = useProject();
   const { role, loading: roleLoading } = useUserRole();
   const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
   const initializeJourney = useInitializeJourney();
 
-  const [activeTab, setActiveTab] = useState<string>('jornada');
+  // Sync tab with URL query param ?tab=
+  const tabFromUrl = searchParams.get('tab');
+  const validTabs = ['jornada', 'financeiro', 'documentos', 'formalizacoes', 'pendencias'];
+  const initialTab = tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'jornada';
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'jornada') {
+      searchParams.delete('tab');
+    } else {
+      searchParams.set('tab', tab);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [activeView, setActiveView] = useState<string>('welcome');
   const [welcomeCompleted, setWelcomeCompleted] = useState(false);
   const [timelineSheetOpen, setTimelineSheetOpen] = useState(false);
@@ -68,7 +83,7 @@ export default function JornadaProjeto() {
 
   // Keyboard shortcuts: Arrow Left/Right to switch tabs
   const TABS = useMemo(() => ['jornada', 'financeiro', 'documentos', 'formalizacoes', 'pendencias'], []);
-  useTabKeyboardNav(TABS, activeTab, setActiveTab);
+  useTabKeyboardNav(TABS, activeTab, handleTabChange);
 
   // Pull-to-refresh on mobile
   const { pulling, refreshing, pullDistance, threshold } = usePullToRefresh({
@@ -213,9 +228,9 @@ export default function JornadaProjeto() {
       {/* Tabs bar — horizontal scroll, 44px touch targets */}
       <div className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-5xl mx-auto">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="px-3 sm:px-6 md:px-8 overflow-x-auto scrollbar-hide">
-              <TabsList className="bg-transparent h-auto p-0 gap-0 w-full whitespace-nowrap">
+              <TabsList className="bg-transparent h-auto p-0 gap-0 w-full whitespace-nowrap" aria-label="Navegação do projeto">
                 <TabsTrigger value="jornada" className="portal-tab-trigger">
                   <Map className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span className="hidden sm:inline">{journeyCopy.tabs.jornada}</span>
@@ -260,10 +275,14 @@ export default function JornadaProjeto() {
         </div>
       </div>
 
-      <main className={cn(
-        "max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4 md:py-8 w-full overflow-x-hidden",
-        'pb-safe',
-      )}>
+      <main
+        className={cn(
+          "max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4 md:py-8 w-full overflow-x-hidden",
+          'pb-safe',
+        )}
+        role="region"
+        aria-label={`Conteúdo da aba ${activeTab === 'jornada' ? 'Jornada' : activeTab === 'financeiro' ? 'Financeiro' : activeTab === 'documentos' ? 'Documentos' : activeTab === 'formalizacoes' ? 'Formalizações' : 'Pendências'}`}
+      >
         <PullToRefreshIndicator
           pulling={pulling}
           refreshing={refreshing}
@@ -275,7 +294,7 @@ export default function JornadaProjeto() {
         {activeTab !== 'jornada' && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
             <button
-              onClick={() => setActiveTab('jornada')}
+              onClick={() => handleTabChange('jornada')}
               className="hover:text-foreground transition-colors"
             >
               {project.name}
