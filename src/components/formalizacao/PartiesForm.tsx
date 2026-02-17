@@ -280,7 +280,7 @@ export function PartiesForm({ onComplete, initialParties }: PartiesFormProps) {
           <p className="text-sm text-destructive">{form.formState.errors.parties.message}</p>
         )}
 
-        <Button type="submit" className="w-full" aria-label="Continuar para revisão">
+        <Button type="submit" className="w-full min-h-[44px]" aria-label="Continuar para revisão">
           Continuar
         </Button>
       </form>

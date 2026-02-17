@@ -141,7 +141,7 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
       <div className="flex flex-col sm:flex-row gap-3">
         <Button 
           variant="outline" 
-          className="flex-1"
+          className="flex-1 min-h-[44px]"
           onClick={() => onSubmit(false)}
           disabled={isSubmitting}
           aria-label="Salvar como rascunho"
@@ -149,7 +149,7 @@ export function ReviewStep({ formData, onSubmit, isSubmitting }: ReviewStepProps
           Salvar Rascunho
         </Button>
         <Button 
-          className="flex-1"
+          className="flex-1 min-h-[44px]"
           onClick={() => onSubmit(true)}
           disabled={isSubmitting}
           aria-label="Enviar para ciência"

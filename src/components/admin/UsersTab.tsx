@@ -63,10 +63,10 @@ const roleLabels: Record<AppRole, string> = {
 };
 
 const roleColors: Record<AppRole, string> = {
-  admin: 'bg-red-500/10 text-red-600 border-red-500/20',
-  manager: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
-  engineer: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  customer: 'bg-green-500/10 text-green-600 border-green-500/20',
+  admin: 'bg-destructive/10 text-destructive border-destructive/20',
+  manager: 'bg-accent/10 text-accent-foreground border-accent/20',
+  engineer: 'bg-primary/10 text-primary border-primary/20',
+  customer: 'bg-success/10 text-[hsl(var(--success))] border-success/20',
 };
 
 function RoleSelector({ 

@@ -45,10 +45,10 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-600 border-green-500/20',
-  completed: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  paused: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  cancelled: 'bg-red-500/10 text-red-600 border-red-500/20',
+  active: 'bg-success/10 text-[hsl(var(--success))] border-success/20',
+  completed: 'bg-primary/10 text-primary border-primary/20',
+  paused: 'bg-warning/10 text-[hsl(var(--warning))] border-warning/20',
+  cancelled: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
 const statusLabels: Record<string, string> = {
@@ -400,15 +400,15 @@ function ObraCard({
               {statusLabels[project.status]}
             </Badge>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onView}>
+              <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11" onClick={onView}>
                 <Eye className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+              <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11" onClick={onEdit}>
                 <Settings className="h-4 w-4" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px] h-11 w-11 text-destructive hover:text-destructive">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </AlertDialogTrigger>

@@ -233,7 +233,7 @@ ${values.observations ? `### Observações\n${values.observations}` : ''}`;
           )}
         />
 
-        <Button type="submit" className="w-full" aria-label="Continuar para próximo passo">
+        <Button type="submit" className="w-full min-h-[44px]" aria-label="Continuar para próximo passo">
           Continuar
         </Button>
       </form>
