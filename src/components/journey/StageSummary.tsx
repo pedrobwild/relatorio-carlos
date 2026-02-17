@@ -46,9 +46,9 @@ const vsConfig: Record<VisualState, {
   },
   validating: {
     label: journeyCopy.status.in_review.label,
-    badgeClass: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))]',
-    iconBg: 'bg-[hsl(var(--warning-light))]',
-    iconColor: 'text-[hsl(var(--warning))]',
+    badgeClass: 'bg-accent text-primary',
+    iconBg: 'bg-accent',
+    iconColor: 'text-primary',
     Icon: Eye,
   },
   next: {
@@ -153,12 +153,13 @@ export function StageSummary({ stage, isExpanded, hideChevron }: StageSummaryPro
           )}>
             {stage.name}
           </span>
-          <Badge className={cn("text-[10px] md:text-xs whitespace-nowrap border-0", cfg.badgeClass)}>
-            {vs === 'current' && <ChevronRight className="h-3 w-3 mr-0.5" />}
-            {vs === 'validating' && <Eye className="h-3 w-3 mr-0.5" />}
-            {vs === 'blocked' && <Lock className="h-3 w-3 mr-0.5" />}
-            {cfg.label}
-          </Badge>
+          {vs !== 'validating' && (
+            <Badge className={cn("text-[10px] md:text-xs whitespace-nowrap border-0", cfg.badgeClass)}>
+              {vs === 'current' && <ChevronRight className="h-3 w-3 mr-0.5" />}
+              {vs === 'blocked' && <Lock className="h-3 w-3 mr-0.5" />}
+              {cfg.label}
+            </Badge>
+          )}
         </div>
 
         {/* Compact info row */}
