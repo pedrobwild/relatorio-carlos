@@ -2131,8 +2131,10 @@ export type Database = {
           description: string | null
           id: string
           is_project_phase: boolean
+          last_used_at: string | null
           name: string
           updated_at: string
+          usage_count: number | null
         }
         Insert: {
           category?: string | null
@@ -2143,8 +2145,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_project_phase?: boolean
+          last_used_at?: string | null
           name: string
           updated_at?: string
+          usage_count?: number | null
         }
         Update: {
           category?: string | null
@@ -2155,8 +2159,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_project_phase?: boolean
+          last_used_at?: string | null
           name?: string
           updated_at?: string
+          usage_count?: number | null
         }
         Relationships: []
       }
@@ -3025,6 +3031,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_template_usage: {
+        Args: { p_template_id: string }
+        Returns: undefined
       }
       initialize_project_journey: {
         Args: { p_project_id: string }
