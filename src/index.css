@@ -122,9 +122,16 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
     /* Mobile-first text containment: prevent any element from causing horizontal overflow */
     word-break: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Images and media: never overflow container */
+  img, video, svg, canvas, iframe {
+    max-width: 100%;
+    height: auto;
   }
 
   /* Prevent text selection on interactive elements only, not globally */
