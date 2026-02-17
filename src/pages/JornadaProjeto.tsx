@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2, Map, DollarSign, FolderOpen, ClipboardSignature, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { journeyCopy } from '@/constants/journeyCopy';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -26,6 +27,7 @@ import { prefetchForTab } from '@/lib/prefetch';
 import { useTabKeyboardNav } from '@/hooks/useKeyboardShortcuts';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePendencias } from '@/hooks/usePendencias';
 
 
 // Lazy load tab content components
@@ -55,10 +57,14 @@ export default function JornadaProjeto() {
   const [activeView, setActiveView] = useState<string>('welcome');
   const [welcomeCompleted, setWelcomeCompleted] = useState(false);
   const [timelineSheetOpen, setTimelineSheetOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useIsMobile();
   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
   const isLoading = projectLoading || roleLoading || journeyLoading;
+
+  // Pending items count for badge
+  const { stats: pendingStats } = usePendencias({ projectId });
 
   // Keyboard shortcuts: Arrow Left/Right to switch tabs
   const TABS = useMemo(() => ['jornada', 'financeiro', 'documentos', 'formalizacoes', 'pendencias'], []);
@@ -132,6 +138,10 @@ export default function JornadaProjeto() {
       if (idx >= 0 && isStageBlocked(journey.stages[idx], idx, journey.stages)) return;
     }
     setActiveView(stageId);
+    // Scroll to content area smoothly
+    setTimeout(() => {
+      contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   }, [journey?.stages, welcomeCompleted]);
 
   const handleAdvanceFromWelcome = useCallback(() => {
@@ -140,6 +150,18 @@ export default function JornadaProjeto() {
       setActiveView(journey.stages[0].id);
     }
   }, [journey?.stages]);
+
+  // Welcome toast — once per project
+  useEffect(() => {
+    if (!project || !projectId) return;
+    const key = `welcome_toast_${projectId}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+    toast(`Bem-vindo ao portal, ${project.customer_name?.split(' ')[0] || ''}! 👋`, {
+      description: 'Acompanhe cada etapa do seu projeto aqui.',
+      duration: 5000,
+    });
+  }, [project, projectId]);
 
   if (isLoading || initializeJourney.isPending) {
     return (
@@ -220,12 +242,17 @@ export default function JornadaProjeto() {
                   <span className="hidden sm:inline">{journeyCopy.tabs.formalizacoes}</span>
                   <span className="sm:hidden">Formal.</span>
                 </TabsTrigger>
-                <TabsTrigger value="pendencias" className="portal-tab-trigger"
+                <TabsTrigger value="pendencias" className="portal-tab-trigger relative"
                   onMouseEnter={() => prefetchForTab('pendencias', projectId)}
                   onFocus={() => prefetchForTab('pendencias', projectId)}>
                   <AlertCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span className="hidden sm:inline">{journeyCopy.tabs.pendencias}</span>
                   <span className="sm:hidden">Pendências</span>
+                  {pendingStats.total > 0 && (
+                    <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold tabular-nums">
+                      {pendingStats.total > 99 ? '99+' : pendingStats.total}
+                    </span>
+                  )}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -283,7 +310,7 @@ export default function JornadaProjeto() {
             </aside>
 
             {/* Main content */}
-            <div className="space-y-4 md:space-y-8 min-w-0">
+            <div ref={contentRef} className="space-y-4 md:space-y-8 min-w-0">
 
               {/* Global progress indicator — hide during welcome */}
               {journey.stages.length > 0 && activeView !== 'welcome' && (
