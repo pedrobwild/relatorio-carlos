@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/layout/UserMenu";
 import bwildLogo from "@/assets/bwild-logo.png";
 
 export interface BreadcrumbItem {
@@ -98,11 +99,10 @@ export function PageHeader({
             <h1 className="text-page-title truncate">{title}</h1>
           </div>
         </div>
-        {children && (
-          <div className="flex items-center gap-2 shrink-0">
-            {children}
-          </div>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {children}
+          <UserMenu />
+        </div>
       </div>
     </div>
   );

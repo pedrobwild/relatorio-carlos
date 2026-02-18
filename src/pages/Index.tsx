@@ -29,6 +29,7 @@ import { pdfLogger } from "@/lib/devLogger";
 import { perf } from "@/lib/perf";
 import { prefetchForTab } from "@/lib/prefetch";
 import bwildLogo from "@/assets/bwild-logo.png";
+import { UserMenu } from "@/components/layout/UserMenu";
 import { format } from "date-fns";
 
 // Lazy load heavy components to reduce initial bundle
@@ -382,9 +383,10 @@ const Index = () => {
     return (
       <div className="min-h-screen min-h-[100dvh] pb-safe">
         <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
-          <div className="flex flex-col items-center gap-0.5">
+          <div className="flex items-center justify-between">
             <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
             <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
+            <UserMenu />
           </div>
         </div>
         <div className="px-4 md:p-4 lg:p-6 xl:p-8">
@@ -463,9 +465,10 @@ const Index = () => {
       <div className="min-h-screen min-h-[100dvh] pb-safe">
         {/* Fixed Mobile Header */}
         <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
-          <div className="flex flex-col items-center gap-0.5">
+          <div className="flex items-center justify-between">
             <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
             <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
+            <UserMenu />
           </div>
         </div>
 
@@ -517,9 +520,10 @@ const Index = () => {
     <div className="min-h-screen min-h-[100dvh] pb-safe">
       {/* Fixed Mobile Header */}
       <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
-        <div className="flex flex-col items-center gap-0.5 opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
+        <div className="flex items-center justify-between opacity-0 animate-fade-in" style={{ animationDelay: "0ms" }}>
           <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
           <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
+          <UserMenu />
         </div>
       </div>
 
