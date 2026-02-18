@@ -473,18 +473,16 @@ const ScheduleTable = ({ activities, reportDate, selectedActivityId, onActivityS
               style={{ animationDelay: `${index * 30}ms` }}
               onClick={() => !canEditDates && onActivitySelect?.(selectedActivityId === activity.id ? null : activity.id || null)}
             >
-              {/* Top row: Number + Status */}
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary">
+              {/* Top row: Number + Title + Status */}
+              <div className="flex items-start gap-2 mb-2">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary mt-0.5">
                   {originalIndex + 1}
                 </span>
+                <p className="flex-1 min-w-0 text-sm font-semibold leading-snug text-foreground">
+                  {activity.description}
+                </p>
                 <StatusBadge status={status} />
               </div>
-
-              {/* Title */}
-              <p className="text-sm font-semibold leading-snug text-foreground mb-2">
-                {activity.description}
-              </p>
 
               {/* Dates grid */}
               <div className="grid grid-cols-2 gap-2">
