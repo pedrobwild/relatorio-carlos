@@ -170,9 +170,16 @@ export default function Auth() {
 
   return (
     <div
-      className="min-h-[100dvh] flex bg-cover bg-center bg-no-repeat"
+      className="min-h-[100dvh] flex relative bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${authBg})` }}
     >
+      {/* Logo – visible only on mobile (bg image has logo on desktop) */}
+      <img
+        src={bwildLogo}
+        alt="Bwild"
+        className="absolute top-6 right-6 h-8 md:hidden object-contain"
+      />
+
       {/* Form – centered on mobile, left on desktop */}
       <div className="flex flex-col justify-center items-center md:items-start w-full md:max-w-lg px-5 sm:px-12 md:px-16 py-10 sm:py-16 safe-area-top safe-area-bottom mx-auto md:mx-0">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-10 sm:mb-12 text-center md:text-left w-full">
