@@ -387,13 +387,15 @@ function ObraCard({
                 <User className="h-3 w-3" /> {project.customer_name}
               </p>
             )}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-              <Calendar className="h-3 w-3" />
-              <span>
-                {format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
-                {format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
-              </span>
-            </div>
+            {project.planned_start_date && project.planned_end_date && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  {format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
+                  {format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex flex-col items-end gap-2">
             <Badge variant="outline" className={statusColors[project.status]}>
