@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, ImageIcon, Loader2, Upload, X, Eye, MessageSquareWarning } from 'lucide-react';
@@ -87,8 +87,7 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
     }
   }, [selectedFiles, createVersion]);
 
-  const handleRequestRevision = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent AlertDialogAction from auto-closing
+  const handleRequestRevision = useCallback(async () => {
     if (!revisionTarget) return;
     setIsRequesting(true);
     try {
@@ -261,10 +260,10 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isRequesting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRequestRevision} disabled={isRequesting}>
+            <Button onClick={handleRequestRevision} disabled={isRequesting}>
               {isRequesting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
               Confirmar solicitação
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
