@@ -97,10 +97,10 @@ export const journeyCopy = {
 
   dates: {
     panel: {
-      title: 'Datas importantes',
-      empty_title: 'Sem datas definidas',
-      empty_body_client: 'Assim que uma data for definida, ela aparecerá aqui.',
-      empty_body_admin: 'Adicione uma data para orientar o cliente e o cronograma desta etapa.',
+      title: 'Prazo de Entrega',
+      empty_title: 'Sem prazo definido',
+      empty_body_client: 'Assim que um prazo for definido, ele aparecerá aqui.',
+      empty_body_admin: 'Adicione um prazo de entrega para esta etapa.',
       newDate: 'Nova data',
     },
     status: {
