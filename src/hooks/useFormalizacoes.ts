@@ -460,15 +460,7 @@ export function useDeleteFormalizacao() {
         .eq('id', id)
         .single();
 
-      // Delete related records first (in order of dependencies)
-      await supabase.from('formalization_acknowledgements').delete().eq('formalization_id', id);
-      await supabase.from('formalization_events').delete().eq('formalization_id', id);
-      await supabase.from('formalization_evidence_links').delete().eq('formalization_id', id);
-      await supabase.from('formalization_attachments').delete().eq('formalization_id', id);
-      await supabase.from('formalization_versions').delete().eq('formalization_id', id);
-      await supabase.from('formalization_parties').delete().eq('formalization_id', id);
-
-      // Delete the formalization itself
+      // Child records are deleted automatically via ON DELETE CASCADE
       const { error } = await supabase
         .from('formalizations')
         .delete()
