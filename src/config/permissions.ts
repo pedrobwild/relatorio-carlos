@@ -72,8 +72,6 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
 
   engineer: [
     // Documents
-    'documents:upload',
-    'documents:approve',
     'documents:view',
     // Formalizations
     'formalizations:create',
@@ -114,9 +112,6 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
 
   manager: [
     // All engineer permissions
-    'documents:upload',
-    'documents:approve',
-    'documents:delete',
     'documents:view',
     'formalizations:create',
     'formalizations:sign',
