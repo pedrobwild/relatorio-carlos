@@ -155,39 +155,42 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
       {/* PDF Controls - Top */}
       <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border shrink-0">
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToPrevPage}
-            disabled={pageNumber <= 1}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToPrevPage}
+              disabled={pageNumber <= 1}
+              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
+              aria-label="Página anterior"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
           <span className="text-sm font-medium min-w-[80px] text-center">
             {pageNumber} / {numPages}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToNextPage}
+              disabled={pageNumber >= numPages}
+              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
+              aria-label="Próxima página"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Button>
         </div>
 
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={zoomOut}
-            disabled={scale <= 0.5}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-          >
-            <ZoomOut className="w-5 h-5" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={zoomOut}
+              disabled={scale <= 0.5}
+              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
+              aria-label="Diminuir zoom"
+            >
+              <ZoomOut className="w-5 h-5" />
+            </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -196,15 +199,16 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
           >
             {Math.round(scale * 100)}%
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={zoomIn}
-            disabled={scale >= 3}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-          >
-            <ZoomIn className="w-5 h-5" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={zoomIn}
+              disabled={scale >= 3}
+              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
+              aria-label="Aumentar zoom"
+            >
+              <ZoomIn className="w-5 h-5" />
+            </Button>
           {scale > 1 && (
             <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
               <Move className="w-3.5 h-3.5" />
