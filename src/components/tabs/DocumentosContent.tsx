@@ -1,14 +1,16 @@
 import { useState, useCallback, useMemo, memo } from "react";
-import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, ChevronRight } from "lucide-react";
+import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, ChevronRight, Trash2 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { useProject } from "@/contexts/ProjectContext";
 import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
+import { useDeleteDocumentMutation } from "@/hooks/useDocumentsQuery";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCan } from "@/hooks/useCan";
 import { DocumentUpload } from "@/components/DocumentUpload";
@@ -31,12 +33,14 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
 };
 
 const DocumentCard = ({ 
-  doc, onViewHistory, onVersionUploaded, isStaff,
+  doc, onViewHistory, onVersionUploaded, isStaff, canDelete, onDelete,
 }: { 
   doc: ProjectDocument; 
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
   isStaff: boolean;
+  canDelete: boolean;
+  onDelete: (docId: string) => void;
 }) => {
   const handleDownload = async () => {
     if (!doc.url) return;
@@ -105,6 +109,29 @@ const DocumentCard = ({
               <Button onClick={handleDownload} size="sm" className="gap-2 h-11 min-h-[44px] px-3">
                 <Download className="w-4 h-4" />Download
               </Button>
+              {canDelete && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-1.5 h-11 min-h-[44px] px-3 text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" /><span className="hidden sm:inline">Excluir</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir documento</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir "{doc.name}"? Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDelete(doc.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -130,11 +157,11 @@ const DocumentCard = ({
 };
 
 const CategorySection = ({ 
-  category, documents, onViewHistory, onVersionUploaded, isStaff,
+  category, documents, onViewHistory, onVersionUploaded, isStaff, canDelete, onDelete,
 }: { 
   category: DocumentCategory; documents: ProjectDocument[];
   onViewHistory: (docId: string) => void; onVersionUploaded: () => void;
-  isStaff: boolean;
+  isStaff: boolean; canDelete: boolean; onDelete: (docId: string) => void;
 }) => {
   if (documents.length === 0) return null;
   return (
@@ -146,7 +173,7 @@ const CategorySection = ({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {documents.map(doc => (
-          <DocumentCard key={doc.id} doc={doc} onViewHistory={onViewHistory} onVersionUploaded={onVersionUploaded} isStaff={isStaff} />
+          <DocumentCard key={doc.id} doc={doc} onViewHistory={onViewHistory} onVersionUploaded={onVersionUploaded} isStaff={isStaff} canDelete={canDelete} onDelete={onDelete} />
         ))}
       </div>
     </div>
@@ -159,10 +186,16 @@ const DocumentosContent = () => {
   const { documents, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
   const { isStaff } = useUserRole();
   const { can } = useCan();
+  const deleteDocMutation = useDeleteDocumentMutation();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
 
   const canUpload = can('documents:upload');
+  const canDelete = can('documents:delete');
+
+  const handleDelete = (docId: string) => {
+    deleteDocMutation.mutate(docId);
+  };
 
   const historyDocs = historyDocId ? getVersionHistory(historyDocId) : [];
 
@@ -202,7 +235,7 @@ const DocumentosContent = () => {
           <TabsContent value="all" className="space-y-8 mt-6">
             {categoriesWithDocs.map(cat => (
               <CategorySection key={cat} category={cat} documents={getLatestByCategory(cat)}
-                onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} />
+                onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onDelete={handleDelete} />
             ))}
           </TabsContent>
 
@@ -210,7 +243,7 @@ const DocumentosContent = () => {
             <TabsContent key={cat} value={cat} className="mt-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {getLatestByCategory(cat).map(doc => (
-                  <DocumentCard key={doc.id} doc={doc} onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} />
+                  <DocumentCard key={doc.id} doc={doc} onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onDelete={handleDelete} />
                 ))}
               </div>
             </TabsContent>

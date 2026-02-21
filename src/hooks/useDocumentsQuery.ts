@@ -131,31 +131,23 @@ export function useLatestDocumentsByCategoryQuery(
 }
 
 /**
- * Mutation for approving a document
+ * Mutation for deleting a document
  */
-export function useApproveDocumentMutation() {
+export function useDeleteDocumentMutation() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (documentId: string) => {
-      if (!user) throw new Error('Usuário não autenticado');
-      
-      const result = await documentsRepo.approveDocument({
-        document_id: documentId,
-        approved_by: user.id,
-      });
-      
+      const result = await documentsRepo.deleteDocument(documentId);
       if (result.error) throw result.error;
       return result.data;
     },
     onSuccess: () => {
-      toast.success('Documento aprovado com sucesso');
-      // Invalidate all document queries to refresh the list
+      toast.success('Documento excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: documentKeys.lists() });
     },
     onError: () => {
-      toast.error('Erro ao aprovar documento');
+      toast.error('Erro ao excluir documento');
     },
   });
 }
