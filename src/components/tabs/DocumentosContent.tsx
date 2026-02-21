@@ -112,20 +112,31 @@ const DocumentCard = ({
               {canDelete && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1.5 h-11 min-h-[44px] px-3 text-destructive hover:text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="gap-1.5 h-11 min-h-[44px] px-3 text-destructive hover:text-destructive"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Trash2 className="w-4 h-4" /><span className="hidden sm:inline">Excluir</span>
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir documento</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Tem certeza que deseja excluir "{doc.name}"? Esta ação não pode ser desfeita.
+                        Tem certeza que deseja excluir &quot;{doc.name}&quot;? Esta ação não pode ser desfeita.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDelete(doc.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      <AlertDialogAction 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(doc.id);
+                        }} 
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
                         Excluir
                       </AlertDialogAction>
                     </AlertDialogFooter>
