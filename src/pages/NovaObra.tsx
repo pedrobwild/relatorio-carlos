@@ -704,12 +704,35 @@ export default function NovaObra() {
               {formData.is_project_phase && (
                 <div className="space-y-2">
                   <Label htmlFor="contract_signing_date">Data de Assinatura do Contrato</Label>
-                  <Input
-                    id="contract_signing_date"
-                    type="date"
-                    value={formData.contract_signing_date}
-                    onChange={(e) => handleChange('contract_signing_date', e.target.value)}
-                  />
+                  {formData.is_project_phase && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="checkbox"
+                        id="contract_date_undefined"
+                        checked={formData.contract_signing_date === ''}
+                        onChange={(e) => handleChange('contract_signing_date', e.target.checked ? '' : '')}
+                        className="h-4 w-4 rounded border-border"
+                      />
+                      <Label htmlFor="contract_date_undefined" className="text-caption cursor-pointer text-muted-foreground">
+                        Em definição
+                      </Label>
+                    </div>
+                  )}
+                  {formData.contract_signing_date !== '' ? (
+                    <Input
+                      id="contract_signing_date"
+                      type="date"
+                      value={formData.contract_signing_date}
+                      onChange={(e) => handleChange('contract_signing_date', e.target.value)}
+                    />
+                  ) : (
+                    <Input
+                      id="contract_signing_date"
+                      disabled
+                      placeholder="Em definição"
+                      value=""
+                    />
+                  )}
                 </div>
               )}
 
