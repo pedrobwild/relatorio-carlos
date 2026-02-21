@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Search, FileText, Image, Film, File, Eye, Download, Trash2, Archive, Filter } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
 import { AppHeader } from '@/components/AppHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { EmptyState } from '@/components/EmptyState';
@@ -153,6 +154,7 @@ function FilePreviewModal({
 // ---- main page ----
 
 export default function Arquivos() {
+  const { isStaff } = useUserRole();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'active' | 'archived' | 'deleted'>('active');
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
@@ -253,28 +255,31 @@ export default function Arquivos() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {/* Status filters */}
-            <Button
-              variant={statusFilter === 'active' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('active')}
-            >
-              Ativos
-            </Button>
-            <Button
-              variant={statusFilter === 'archived' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('archived')}
-            >
-              Arquivados
-            </Button>
-            <Button
-              variant={statusFilter === 'deleted' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('deleted')}
-            >
-              Excluídos
-            </Button>
+            {isStaff ? (
+              <>
+                <Button
+                  variant={statusFilter === 'active' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('active')}
+                >
+                  Ativos
+                </Button>
+                <Button
+                  variant={statusFilter === 'archived' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('archived')}
+                >
+                  Arquivados
+                </Button>
+                <Button
+                  variant={statusFilter === 'deleted' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setStatusFilter('deleted')}
+                >
+                  Excluídos
+                </Button>
+              </>
+            ) : null}
 
             {fileProjects.length > 0 && (
               <>
@@ -373,7 +378,7 @@ export default function Arquivos() {
                     >
                       <Download className="h-4 w-4" />
                     </Button>
-                    {file.status === 'active' && (
+                    {file.status === 'active' && isStaff && (
                       <>
                         <Button
                           variant="ghost"
