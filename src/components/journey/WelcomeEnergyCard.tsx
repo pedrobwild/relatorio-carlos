@@ -18,7 +18,7 @@ const DEFAULT_CONTENT = `<p>Como proprietário, é preciso que você solicite a 
 <li>Ao final, será gerado um <strong>número de protocolo</strong></li>
 </ol>
 <p>Esse número de protocolo é muito importante para nós, pois com ele conseguimos acompanhar o andamento da solicitação junto à ENEL e nos programar internamente para o início da obra assim que a energia for liberada.</p>
-<p><strong>Assim que finalizar, nos envie esse número por aqui, tá bom?</strong></p>`;
+<p><strong>Assim que finalizar, nos envie no e-mail victorya@bwild.com.br.</strong></p>`;
 
 const contentVariants = {
   collapsed: { height: 0, opacity: 0, overflow: 'hidden' as const },
