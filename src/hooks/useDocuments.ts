@@ -134,9 +134,9 @@ export function useDocuments(projectId: string | undefined) {
     queryKey: queryKeys.documents.list(projectId),
     queryFn: () => fetchDocuments(projectId!),
     enabled: !!projectId && !!user,
-    // Refresh before signed URLs expire (URLs valid for 1 hour, refresh at 30 min)
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 2 * 60 * 1000, // 2 minutes — keep fresh so new uploads appear quickly
+    gcTime: 30 * 60 * 1000, // 30 minutes (signed URLs valid for 1 hour)
+    refetchOnWindowFocus: true, // Ensure documents refresh when user switches tabs
     placeholderData: (previousData) => previousData, // Keep previous data while refetching
   });
 
@@ -312,6 +312,6 @@ export function useDocument(documentId: string | undefined) {
       } as ProjectDocument;
     },
     enabled: !!documentId,
-    staleTime: 30 * 60 * 1000, // 30 minutes (match signed URL refresh timing)
+    staleTime: 2 * 60 * 1000, // 2 minutes (match list query)
   });
 }
