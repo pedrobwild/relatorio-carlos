@@ -224,34 +224,6 @@ const getStatusConfig = (status: 'ahead' | 'on-track' | 'behind') => {
   }
 };
 
-// BUG FIX: Tipagem adequada para tooltip do Recharts
-interface VarianceTooltipPayload {
-  value: number;
-}
-
-interface VarianceTooltipProps {
-  active?: boolean;
-  payload?: VarianceTooltipPayload[];
-  label?: string;
-}
-
-const CustomTooltip = ({ active, payload, label }: VarianceTooltipProps) => {
-  if (active && payload && payload.length) {
-    const variance = payload[0].value;
-    return (
-      <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-        <p className="text-xs text-muted-foreground mb-1">Semana {label}</p>
-        <p className={cn(
-          "text-sm font-bold",
-          variance >= 0 ? "text-success" : "text-destructive"
-        )}>
-          {variance > 0 ? '+' : ''}{variance}% vs previsto
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
 
 const WeeklyReportsHistory = ({
   projectStartDate,
