@@ -62,7 +62,9 @@ const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
 // Wrapper component to provide project context
 const ProjectPage = ({ children }: { children: React.ReactNode }) => (
-  <ProjectProvider>{children}</ProjectProvider>
+  <ErrorBoundary name="ProjectPage" feature="general">
+    <ProjectProvider>{children}</ProjectProvider>
+  </ErrorBoundary>
 );
 
 const RouteFallback = () => (
