@@ -110,20 +110,27 @@ export function RichTextEditorModal({
   const [fontSize, setFontSize] = useState("3");
 
   // Initialize editor content when modal opens
+  // Use requestAnimationFrame to wait for the Radix portal to mount the DOM
   useEffect(() => {
-    if (open && editorRef.current) {
-      // If value looks like HTML, set it directly; otherwise wrap plain text
+    if (!open) return;
+    const setContent = () => {
+      if (!editorRef.current) return;
       const isHtml = /<[a-z][\s\S]*>/i.test(value);
       if (isHtml) {
         editorRef.current.innerHTML = value;
       } else {
-        // Convert plain text (split by \n\n for paragraphs, \n for line breaks)
         const html = value
           .split("\n\n")
           .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
           .join("");
         editorRef.current.innerHTML = html || "<p><br></p>";
       }
+    };
+    // Try immediately, then retry after paint in case portal hasn't mounted yet
+    if (editorRef.current) {
+      setContent();
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(setContent));
     }
   }, [open, value]);
 
