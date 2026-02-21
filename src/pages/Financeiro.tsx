@@ -57,7 +57,7 @@ const Financeiro = () => {
     return null;
   };
 
-  const totalValue = project?.contract_value || payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalValue = project?.contract_value ?? payments.reduce((sum, p) => sum + p.amount, 0);
   const paidAmount = payments.filter(p => p.paid_at).reduce((sum, p) => sum + p.amount, 0);
   const remainingAmount = totalValue - paidAmount;
   const paidCount = payments.filter(p => p.paid_at).length;

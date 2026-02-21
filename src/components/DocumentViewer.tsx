@@ -72,16 +72,23 @@ export function DocumentViewer({
     setNumPages(numPages);
   };
 
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
   const handleContainerRef = useCallback((node: HTMLDivElement | null) => {
+    // Cleanup previous observer
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+      resizeObserverRef.current = null;
+    }
+    containerRef.current = node;
     if (node) {
-      containerRef.current = node;
-      const resizeObserver = new ResizeObserver((entries) => {
+      const observer = new ResizeObserver((entries) => {
         for (const entry of entries) {
           setContainerWidth(entry.contentRect.width);
         }
       });
-      resizeObserver.observe(node);
-      return () => resizeObserver.disconnect();
+      observer.observe(node);
+      resizeObserverRef.current = observer;
     }
   }, []);
 
