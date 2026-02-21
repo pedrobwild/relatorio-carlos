@@ -1,7 +1,24 @@
-import { useState } from 'react';
-import { Zap, ArrowRight } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import DOMPurify from 'dompurify';
+import { Zap, ArrowRight, Edit2, Save, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { InlineRichEditor } from '@/components/ui/inline-rich-editor';
+import { usePageInstructions } from '@/hooks/usePageInstructions';
+
+const PAGE_KEY = 'ligacao_energia';
+
+const DEFAULT_CONTENT = `<p>Como proprietário, é preciso que você solicite a ligação da energia elétrica para que possamos trabalhar. Você pode fazer a solicitação online, de forma rápida, pelo site da ENEL. Segue o passo a passo:</p>
+<ol>
+<li>Acesse o site: <a href="https://www.enel.com.br" target="_blank" rel="noopener noreferrer">www.enel.com.br</a></li>
+<li>Clique em <strong>"Agência Virtual"</strong></li>
+<li>Depois, selecione a opção <strong>"Ligação Nova"</strong> ou <strong>"Nova Conexão"</strong></li>
+<li>Preencha os dados do imóvel e envie os documentos solicitados (normalmente RG, CPF e comprovante de posse do imóvel)</li>
+<li>Ao final, será gerado um <strong>número de protocolo</strong></li>
+</ol>
+<p>Esse número de protocolo é muito importante para nós, pois com ele conseguimos acompanhar o andamento da solicitação junto à ENEL e nos programar internamente para o início da obra assim que a energia for liberada.</p>
+<p><strong>Assim que finalizar, nos envie esse número por aqui, tá bom?</strong></p>`;
 
 const contentVariants = {
   collapsed: { height: 0, opacity: 0, overflow: 'hidden' as const },
@@ -25,8 +42,37 @@ const contentVariants = {
   },
 };
 
-export function WelcomeEnergyCard() {
+interface WelcomeEnergyCardProps {
+  projectId: string;
+  isAdmin: boolean;
+}
+
+export function WelcomeEnergyCard({ projectId, isAdmin }: WelcomeEnergyCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const { instruction, loading, save } = usePageInstructions(projectId, PAGE_KEY);
+
+  const displayContent = instruction?.content_html || DEFAULT_CONTENT;
+
+  const startEditing = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDraft(displayContent);
+    setEditing(true);
+  }, [displayContent]);
+
+  const cancelEditing = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditing(false);
+    setDraft('');
+  }, []);
+
+  const handleSave = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await save(draft);
+    setEditing(false);
+  }, [draft, save]);
 
   return (
     <Card className="transition-shadow duration-200 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-amber-500/10">
@@ -62,35 +108,47 @@ export function WelcomeEnergyCard() {
         {expanded && (
           <motion.div key="energy-content" variants={contentVariants} initial="collapsed" animate="expanded" exit="exit">
             <CardContent className="space-y-4 pt-0 px-4 pb-5 md:px-6 md:pb-6">
-              <p className="text-sm text-foreground leading-relaxed">
-                Como proprietário, é preciso que você solicite a ligação da energia elétrica para que possamos trabalhar. Você pode fazer a solicitação online, de forma rápida, pelo site da ENEL. Segue o passo a passo:
-              </p>
-
-              <ol className="list-decimal list-inside space-y-2 text-sm text-foreground">
-                <li>
-                  Acesse o site:{' '}
-                  <a
-                    href="https://www.enel.com.br"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+              {isAdmin && !editing && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-xs h-8"
+                    onClick={startEditing}
                   >
-                    www.enel.com.br
-                  </a>
-                </li>
-                <li>Clique em <strong>"Agência Virtual"</strong></li>
-                <li>Depois, selecione a opção <strong>"Ligação Nova"</strong> ou <strong>"Nova Conexão"</strong></li>
-                <li>Preencha os dados do imóvel e envie os documentos solicitados (normalmente RG, CPF e comprovante de posse do imóvel)</li>
-                <li>Ao final, será gerado um <strong>número de protocolo</strong></li>
-              </ol>
+                    <Edit2 className="h-3.5 w-3.5" />
+                    Editar
+                  </Button>
+                </div>
+              )}
 
-              <p className="text-sm text-foreground leading-relaxed">
-                Esse número de protocolo é muito importante para nós, pois com ele conseguimos acompanhar o andamento da solicitação junto à ENEL e nos programar internamente para o início da obra assim que a energia for liberada.
-              </p>
-
-              <p className="text-sm text-foreground leading-relaxed font-medium">
-                Assim que finalizar, nos envie esse número por aqui, tá bom?
-              </p>
+              {editing ? (
+                <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                  <InlineRichEditor
+                    value={draft}
+                    onChange={setDraft}
+                    placeholder="Instruções sobre ligação de energia..."
+                    minHeight="200px"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={cancelEditing}>
+                      <X className="h-3.5 w-3.5" />
+                      Cancelar
+                    </Button>
+                    <Button size="sm" className="gap-1.5" onClick={handleSave}>
+                      <Save className="h-3.5 w-3.5" />
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+              ) : loading ? (
+                <div className="h-24 animate-pulse rounded bg-muted/40" />
+              ) : (
+                <div
+                  className="text-sm text-foreground leading-relaxed prose prose-sm max-w-none [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_p]:mb-3"
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
+                />
+              )}
             </CardContent>
           </motion.div>
         )}
