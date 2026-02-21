@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, Link2, Trash2, File, Image, FileText, ExternalLink, Plus } from 'lucide-react';
+import { Upload, File, Image, FileText, ExternalLink, Plus, Eye, Download, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { DocumentViewer } from '@/components/DocumentViewer';
 import { 
   uploadFormalizationAttachment, 
   getAttachmentUrl, 
@@ -61,6 +62,10 @@ export function FormalizacaoEvidence({
   const [uploading, setUploading] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [newLink, setNewLink] = useState({ kind: 'other' as EvidenceLinkKind, url: '', description: '' });
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<{ name: string; mimeType: string; storagePath: string } | null>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -103,7 +108,10 @@ export function FormalizacaoEvidence({
 
   const handleDownload = async (storagePath: string, filename: string) => {
     try {
-      await downloadAttachment(storagePath, filename);
+      const downloaded = await downloadAttachment(storagePath, filename);
+      if (!downloaded) {
+        throw new Error('Falha ao gerar URL de download');
+      }
     } catch (error) {
       toast({
         title: 'Erro',
@@ -111,6 +119,28 @@ export function FormalizacaoEvidence({
         variant: 'destructive',
       });
     }
+  };
+
+  const handlePreview = async (attachmentId: string, storagePath: string, filename: string, mimeType: string) => {
+    setPreviewOpen(true);
+    setPreviewingId(attachmentId);
+    setPreviewUrl(null);
+    setPreviewFile({ name: filename, mimeType, storagePath });
+
+    const url = await getAttachmentUrl(storagePath);
+    if (!url) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar a pré-visualização do anexo.',
+        variant: 'destructive',
+      });
+      setPreviewingId(null);
+      setPreviewOpen(false);
+      return;
+    }
+
+    setPreviewUrl(url);
+    setPreviewingId(null);
   };
 
   const handleAddLink = async () => {
@@ -207,20 +237,82 @@ export function FormalizacaoEvidence({
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDownload(attachment.storage_path, attachment.original_filename)}
-                    aria-label={`Baixar ${attachment.original_filename}`}
-                  >
-                    Baixar
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePreview(
+                        attachment.id,
+                        attachment.storage_path,
+                        attachment.original_filename,
+                        attachment.mime_type
+                      )}
+                      aria-label={`Pré-visualizar ${attachment.original_filename}`}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Ver
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(attachment.storage_path, attachment.original_filename)}
+                      aria-label={`Baixar ${attachment.original_filename}`}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Baixar
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Preview Modal */}
+      <Dialog
+        open={previewOpen}
+        onOpenChange={(open) => {
+          setPreviewOpen(open);
+          if (!open) {
+            setPreviewUrl(null);
+            setPreviewFile(null);
+            setPreviewingId(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-4xl w-[95vw] h-[85vh] p-0 flex flex-col gap-0">
+          <DialogHeader className="p-4 border-b border-border shrink-0">
+            <DialogTitle className="text-base truncate">
+              {previewFile?.name ?? 'Pré-visualização do anexo'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {previewingId ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : previewUrl && previewFile ? (
+              <DocumentViewer
+                url={previewUrl}
+                title={previewFile.name}
+                mimeType={previewFile.mimeType}
+                className="h-full rounded-none border-0"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <p className="text-muted-foreground">Não foi possível carregar a pré-visualização.</p>
+                {previewFile && (
+                  <Button onClick={() => handleDownload(previewFile.storagePath, previewFile.name)} variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Baixar arquivo
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Evidence Links */}
       <Card>
