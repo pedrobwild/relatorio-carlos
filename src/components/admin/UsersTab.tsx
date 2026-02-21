@@ -301,7 +301,7 @@ function UserCard({
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             <p className="font-medium truncate">
               {user.display_name || user.email}
@@ -311,7 +311,7 @@ function UserCard({
               Desde {format(new Date(user.created_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <RoleSelector user={user} onRoleChange={onRoleChange} />
             <EditUserDialog user={user} onSave={onEdit} />
             <ResetPasswordDialog user={user} onReset={onResetPassword} />
