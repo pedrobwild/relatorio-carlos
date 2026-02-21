@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, ExternalLink, FileText, Box, Play, Loader2, Info, Pencil } from "lucide-react";
+import { Download, ExternalLink, FileText, Box, Play, Loader2, Info, Pencil, Layers } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PDFViewer from "@/components/PDFViewer";
@@ -12,6 +12,7 @@ import { usePageInstructions } from "@/hooks/usePageInstructions";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { RichTextEditorModal } from "@/components/report/RichTextEditorModal";
+import { VersionsListModal } from "@/components/projeto3d/VersionsListModal";
 import DOMPurify from "dompurify";
 
 const Projeto3D = () => {
@@ -22,6 +23,7 @@ const Projeto3D = () => {
   const { isStaff } = useUserRole();
   const { instruction, loading: instrLoading, save: saveInstruction } = usePageInstructions(projectId, 'projeto_3d');
   const [editorOpen, setEditorOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
 
   const projeto3dDoc = getLatestByCategory('projeto_3d')[0];
   const loading = projectLoading || docsLoading;
@@ -150,6 +152,25 @@ const Projeto3D = () => {
           {/* Instructions Card */}
           <InstructionsCard />
 
+          {/* 3D Versions Button */}
+          <div className="bg-card rounded-xl border border-border shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Layers className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Versões do Projeto 3D</h3>
+                  <p className="text-xs text-muted-foreground">Imagens com comentários posicionáveis</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setVersionsOpen(true)} className="gap-1.5">
+                <Layers className="h-4 w-4" />
+                Gerenciar
+              </Button>
+            </div>
+          </div>
+
           {!hasDocument && !hasVideo ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Box className="w-16 h-16 text-muted-foreground/30 mb-4" />
@@ -218,6 +239,15 @@ const Projeto3D = () => {
           value={instruction?.content_html || ''}
           onSave={saveInstruction}
           title="Editar Instruções — Projeto 3D"
+        />
+      )}
+
+      {/* 3D Versions Modal */}
+      {projectId && (
+        <VersionsListModal
+          projectId={projectId}
+          open={versionsOpen}
+          onOpenChange={setVersionsOpen}
         />
       )}
     </div>

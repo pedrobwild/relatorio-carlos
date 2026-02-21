@@ -1578,6 +1578,121 @@ export type Database = {
         }
         Relationships: []
       }
+      project_3d_comments: {
+        Row: {
+          author_user_id: string
+          created_at: string
+          id: string
+          image_id: string
+          text: string
+          updated_at: string
+          x_percent: number
+          y_percent: number
+        }
+        Insert: {
+          author_user_id: string
+          created_at?: string
+          id?: string
+          image_id: string
+          text: string
+          updated_at?: string
+          x_percent: number
+          y_percent: number
+        }
+        Update: {
+          author_user_id?: string
+          created_at?: string
+          id?: string
+          image_id?: string
+          text?: string
+          updated_at?: string
+          x_percent?: number
+          y_percent?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_3d_comments_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "project_3d_images"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_3d_images: {
+        Row: {
+          created_at: string
+          id: string
+          sort_order: number
+          storage_path: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          storage_path: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sort_order?: number
+          storage_path?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_3d_images_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "project_3d_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_3d_versions: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          project_id: string
+          stage_key: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          project_id: string
+          stage_key?: string
+          version_number?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          project_id?: string
+          stage_key?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_3d_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_3d_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_activities: {
         Row: {
           actual_end: string | null
