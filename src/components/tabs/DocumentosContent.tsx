@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, memo } from "react";
 import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, ChevronRight, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
@@ -45,17 +46,27 @@ const DocumentCard = ({
   const [open, setOpen] = useState(false);
 
   const handleDownload = async () => {
-    if (!doc.url) return;
-    const response = await fetch(doc.url);
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = doc.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    if (!doc.url) {
+      toast.error("URL do documento não disponível. Tente recarregar a página.");
+      return;
+    }
+    try {
+      const response = await fetch(doc.url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = doc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("[Documents] Fetch download failed, falling back to direct link:", err);
+      // Fallback: open in new tab for direct download
+      window.open(doc.url, '_blank');
+    }
   };
 
   return (
