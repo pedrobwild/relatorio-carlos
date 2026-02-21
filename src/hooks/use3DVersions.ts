@@ -35,8 +35,11 @@ export interface Comment3D {
 }
 
 const BUCKET = 'project-documents';
+const MAX_FILE_SIZE_MB = 20;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const MAX_FILES_PER_VERSION = 30;
 
-function queryKeys(projectId: string | undefined) {
+export function queryKeys3D(projectId: string | undefined) {
   return {
     versions: ['3d-versions', projectId] as const,
     images: (versionId: string) => ['3d-images', versionId] as const,
@@ -44,10 +47,34 @@ function queryKeys(projectId: string | undefined) {
   };
 }
 
+/**
+ * Validates files before upload: PNG only, size limit, count limit.
+ */
+function validateFiles(files: File[]): string | null {
+  if (files.length === 0) return 'Selecione ao menos uma imagem.';
+  if (files.length > MAX_FILES_PER_VERSION) return `Máximo de ${MAX_FILES_PER_VERSION} imagens por versão.`;
+
+  for (const file of files) {
+    // Accept .png extension OR image/png MIME (some systems set wrong MIME)
+    const isPngExt = file.name.toLowerCase().endsWith('.png');
+    const isPngMime = file.type === 'image/png';
+    if (!isPngExt && !isPngMime) {
+      return `Arquivo "${file.name}" não é PNG. Apenas .png é aceito.`;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return `Arquivo "${file.name}" excede ${MAX_FILE_SIZE_MB}MB.`;
+    }
+    if (file.size === 0) {
+      return `Arquivo "${file.name}" está vazio.`;
+    }
+  }
+  return null;
+}
+
 export function use3DVersions(projectId: string | undefined) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const keys = queryKeys(projectId);
+  const keys = queryKeys3D(projectId);
 
   const versionsQuery = useQuery({
     queryKey: keys.versions,
@@ -59,14 +86,7 @@ export function use3DVersions(projectId: string | undefined) {
         .eq('stage_key', 'projeto_3d')
         .order('version_number', { ascending: false });
       if (error) throw error;
-
-      // For each version, get image count
-      const versions: Version3D[] = (data || []).map((v: any) => ({
-        ...v,
-        images: [],
-      }));
-
-      return versions;
+      return (data || []).map((v: any) => ({ ...v, images: [] })) as Version3D[];
     },
     enabled: !!projectId && !!user,
   });
@@ -75,7 +95,10 @@ export function use3DVersions(projectId: string | undefined) {
     mutationFn: async (files: File[]) => {
       if (!projectId || !user) throw new Error('Missing context');
 
-      // 1. Get next version number
+      const validationErr = validateFiles(files);
+      if (validationErr) throw new Error(validationErr);
+
+      // 1. Get next version number (DB unique constraint protects against races)
       const { data: existing } = await supabase
         .from('project_3d_versions')
         .select('version_number')
@@ -98,32 +121,50 @@ export function use3DVersions(projectId: string | undefined) {
         .select()
         .single();
 
-      if (vErr) throw vErr;
-
-      // 3. Upload files and create image records
-      const imageInserts = [];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const storagePath = `projects/${projectId}/3d/${version.id}/${Date.now()}_${i}.png`;
-
-        const { error: uploadErr } = await supabase.storage
-          .from(BUCKET)
-          .upload(storagePath, file, { contentType: 'image/png' });
-
-        if (uploadErr) throw uploadErr;
-
-        imageInserts.push({
-          version_id: version.id,
-          storage_path: storagePath,
-          sort_order: i,
-        });
+      if (vErr) {
+        // Race condition: retry with incremented number
+        if (vErr.code === '23505') {
+          throw new Error('Conflito de versão. Tente novamente.');
+        }
+        throw vErr;
       }
 
-      if (imageInserts.length > 0) {
-        const { error: imgErr } = await supabase
-          .from('project_3d_images')
-          .insert(imageInserts);
-        if (imgErr) throw imgErr;
+      // 3. Upload files and create image records; cleanup on failure
+      const uploadedPaths: string[] = [];
+      try {
+        const imageInserts = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const storagePath = `projects/${projectId}/3d/${version.id}/${Date.now()}_${i}.png`;
+
+          const { error: uploadErr } = await supabase.storage
+            .from(BUCKET)
+            .upload(storagePath, file, { contentType: 'image/png' });
+
+          if (uploadErr) throw uploadErr;
+          uploadedPaths.push(storagePath);
+
+          imageInserts.push({
+            version_id: version.id,
+            storage_path: storagePath,
+            sort_order: i,
+          });
+        }
+
+        if (imageInserts.length > 0) {
+          const { error: imgErr } = await supabase
+            .from('project_3d_images')
+            .insert(imageInserts);
+          if (imgErr) throw imgErr;
+        }
+      } catch (uploadError) {
+        // Cleanup: remove uploaded files
+        if (uploadedPaths.length > 0) {
+          try { await supabase.storage.from(BUCKET).remove(uploadedPaths); } catch {}
+        }
+        // Cleanup: remove orphan version record
+        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch {}
+        throw uploadError;
       }
 
       return version;
@@ -134,7 +175,7 @@ export function use3DVersions(projectId: string | undefined) {
     },
     onError: (err: any) => {
       console.error('[3D Versions] Upload error:', err);
-      toast.error('Erro ao criar versão');
+      toast.error(err?.message || 'Erro ao criar versão');
     },
   });
 
@@ -148,7 +189,7 @@ export function use3DVersions(projectId: string | undefined) {
 }
 
 export function use3DImages(versionId: string | undefined) {
-  const keys = queryKeys(undefined);
+  const keys = queryKeys3D(undefined);
 
   return useQuery({
     queryKey: keys.images(versionId!),
@@ -160,15 +201,12 @@ export function use3DImages(versionId: string | undefined) {
         .order('sort_order');
       if (error) throw error;
 
-      // Get signed URLs
-      const images: Image3D[] = await Promise.all(
-        (data || []).map(async (img: any) => {
-          const { data: urlData } = supabase.storage
-            .from(BUCKET)
-            .getPublicUrl(img.storage_path);
-          return { ...img, url: urlData?.publicUrl };
-        })
-      );
+      const images: Image3D[] = (data || []).map((img: any) => {
+        const { data: urlData } = supabase.storage
+          .from(BUCKET)
+          .getPublicUrl(img.storage_path);
+        return { ...img, url: urlData?.publicUrl };
+      });
 
       return images;
     },
@@ -180,7 +218,7 @@ export function use3DImages(versionId: string | undefined) {
 export function use3DComments(imageId: string | undefined) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const keys = queryKeys(undefined);
+  const keys = queryKeys3D(undefined);
 
   const commentsQuery = useQuery({
     queryKey: keys.comments(imageId!),
@@ -192,7 +230,6 @@ export function use3DComments(imageId: string | undefined) {
         .order('created_at');
       if (error) throw error;
 
-      // Get author names
       const userIds = [...new Set((data || []).map((c: any) => c.author_user_id))];
       let profileMap: Record<string, string> = {};
       if (userIds.length > 0) {
@@ -222,8 +259,8 @@ export function use3DComments(imageId: string | undefined) {
         image_id: params.imageId,
         author_user_id: user.id,
         text: params.text,
-        x_percent: Math.max(0, Math.min(100, params.x)),
-        y_percent: Math.max(0, Math.min(100, params.y)),
+        x_percent: clamp(params.x),
+        y_percent: clamp(params.y),
       });
       if (error) throw error;
     },
@@ -238,8 +275,8 @@ export function use3DComments(imageId: string | undefined) {
       const { error } = await supabase
         .from('project_3d_comments')
         .update({
-          x_percent: Math.max(0, Math.min(100, params.x)),
-          y_percent: Math.max(0, Math.min(100, params.y)),
+          x_percent: clamp(params.x),
+          y_percent: clamp(params.y),
         })
         .eq('id', params.commentId);
       if (error) throw error;
@@ -271,4 +308,9 @@ export function use3DComments(imageId: string | undefined) {
     updateComment: updateComment.mutateAsync,
     deleteComment: deleteComment.mutateAsync,
   };
+}
+
+/** Clamp value between 0 and 100 */
+function clamp(v: number): number {
+  return Math.max(0, Math.min(100, v));
 }
