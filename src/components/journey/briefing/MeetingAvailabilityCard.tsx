@@ -16,7 +16,7 @@ import {
   useSubmitMeetingAvailability,
   deriveMeetingState,
 } from '@/hooks/useMeetingAvailability';
-import { useCreateStageRecord } from '@/hooks/useStageRecords';
+// Stage record creation removed — RLS restricts to staff only
 import { useAuth } from '@/hooks/useAuth';
 import { MeetingAwaitingCard } from './MeetingAwaitingCard';
 import { MeetingScheduledCard } from './MeetingScheduledCard';
@@ -45,7 +45,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
   const { user } = useAuth();
   const { data: existing, isLoading } = useMeetingAvailability(stageId, projectId);
   const submitAvailability = useSubmitMeetingAvailability();
-  const createRecord = useCreateStageRecord();
+  // createRecord removed — only staff can insert stage records
 
   const [isEditing, setIsEditing] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -133,15 +133,6 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
       {
         onSuccess: () => {
           setIsEditing(false);
-          createRecord.mutate({
-            stage_id: stageId,
-            project_id: projectId,
-            category: 'decision',
-            title: 'Disponibilidade enviada para Reunião de Briefing',
-            description: `Intervalo: ${format(startDate!, 'dd/MM/yyyy')} a ${format(endDate!, 'dd/MM/yyyy')} • Horários: ${selectedSlots.map(s => TIME_SLOTS.find(ts => ts.key === s)?.label).join(', ')} • Dias preferidos: ${selectedWeekdays.map(wd => WEEKDAYS.find(w => w.key === wd)?.label).join(', ') || 'Nenhum'}`,
-            responsible: 'client',
-            created_by: user.id,
-          });
         },
       },
     );
