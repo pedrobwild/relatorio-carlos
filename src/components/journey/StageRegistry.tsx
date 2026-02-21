@@ -169,9 +169,21 @@ export function StageRegistry({ stageId, projectId, isAdmin, minutesOnly = false
 
 function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin: boolean; stageId: string }) {
   const deleteRecord = useDeleteStageRecord();
+  const [expanded, setExpanded] = useState(false);
+  const hasLongContent = !!record.description && record.description.length > 120;
 
   return (
-    <li className="group flex items-start gap-3 rounded-lg border border-border/60 bg-card p-3 transition-colors hover:bg-muted/20 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-1">
+    <li
+      className={cn(
+        'group flex items-start gap-3 rounded-lg border border-border/60 bg-card p-3 transition-colors hover:bg-muted/20 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-1',
+        hasLongContent && 'cursor-pointer',
+      )}
+      onClick={() => hasLongContent && setExpanded(prev => !prev)}
+      role={hasLongContent ? 'button' : undefined}
+      tabIndex={hasLongContent ? 0 : undefined}
+      onKeyDown={hasLongContent ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(prev => !prev); } } : undefined}
+      aria-expanded={hasLongContent ? expanded : undefined}
+    >
       {/* Responsible indicator */}
       <div
         className={cn(
@@ -197,13 +209,22 @@ function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin
               rel="noopener noreferrer"
               className="shrink-0 text-primary hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-primary rounded"
               aria-label={`Ver evidência: ${record.title}`}
+              onClick={e => e.stopPropagation()}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           )}
         </div>
         {record.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{record.description}</p>
+          <p className={cn(
+            'text-xs text-muted-foreground whitespace-pre-wrap',
+            !expanded && 'line-clamp-2',
+          )}>
+            {record.description}
+          </p>
+        )}
+        {hasLongContent && !expanded && (
+          <span className="text-xs text-primary font-medium">Ver mais</span>
         )}
         <div className="flex items-center gap-3 pt-0.5">
           <span className="text-[11px] text-muted-foreground tabular-nums">
@@ -220,7 +241,7 @@ function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin
           size="icon"
           variant="ghost"
           className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 md:transition-opacity text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px]"
-          onClick={() => deleteRecord.mutate({ id: record.id, stageId })}
+          onClick={(e) => { e.stopPropagation(); deleteRecord.mutate({ id: record.id, stageId }); }}
           disabled={deleteRecord.isPending}
           aria-label={`Remover registro: ${record.title}`}
         >
