@@ -283,7 +283,7 @@ export default function FormalizacaoDetalhe() {
             <p className="text-sm text-muted-foreground mb-6">
               Esta formalização não existe ou você não tem acesso.
             </p>
-            <Button onClick={() => navigate('/formalizacoes')} className="w-full">
+            <Button onClick={() => navigate(paths?.formalizacoes || '/formalizacoes')} className="w-full">
               Voltar para lista
             </Button>
           </CardContent>
@@ -302,7 +302,7 @@ export default function FormalizacaoDetalhe() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => navigate('/formalizacoes')}
+                onClick={() => navigate(paths?.formalizacoes || '/formalizacoes')}
                 aria-label="Voltar para lista"
                 className="rounded-full min-h-[44px] min-w-[44px] h-11 w-11 shrink-0 hover:bg-primary/10"
               >
@@ -474,7 +474,7 @@ export default function FormalizacaoDetalhe() {
             {/* Content */}
             <Card>
               <CardContent className="p-6">
-                {isAdmin && !formalizacao.locked_at && (
+                {isAdmin && acknowledgements.length === 0 && (
                   <div className="flex justify-end mb-3">
                     <Button
                       variant="outline"
