@@ -54,6 +54,11 @@ const formatDate = (dateString: string | null) => {
   return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
 function FormalizacaoSkeleton() {
   return (
     <Card><CardContent className="p-4">
@@ -171,18 +176,22 @@ const FormalizacoesContent = () => {
                         {FORMALIZATION_STATUS_LABELS[formalizacao.status as FormalizationStatus]}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                       <Badge variant="outline" className="text-xs font-normal gap-1 px-1.5 py-0 bg-background">
                         <span role="img" aria-label={formalizacao.type || ''}>{getTypeIcon(formalizacao.type as FormalizationType)}</span>
                         {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
                       </Badge>
                       <span>•</span>
-                      <span>{formalizacao.locked_at ? `Travado ${formatDate(formalizacao.locked_at)}` : formatDate(formalizacao.created_at)}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formalizacao.locked_at 
+                          ? `Enviado ${formatDateTime(formalizacao.locked_at)}` 
+                          : `Criado ${formatDateTime(formalizacao.created_at)}`}
+                      </span>
                       {formalizacao.parties_signed !== null && formalizacao.parties_total !== null && (
                         <><span>•</span><span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{formalizacao.parties_signed}/{formalizacao.parties_total}</span></>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{formalizacao.summary}</p>
                   </div>
                 </CardContent>
               </Card>
