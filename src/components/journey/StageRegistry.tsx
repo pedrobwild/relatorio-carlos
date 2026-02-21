@@ -23,7 +23,7 @@ import {
   type StageRecord,
 } from '@/hooks/useStageRecords';
 import { useAuth } from '@/hooks/useAuth';
-import { useCompleteStage } from '@/hooks/useProjectJourney';
+
 
 /* ─── Tab config ─── */
 
@@ -268,8 +268,6 @@ function AddRecordForm({
 }) {
   const { user } = useAuth();
   const create = useCreateStageRecord();
-  const completeStage = useCompleteStage();
-  const isBriefingStage = stageName?.toLowerCase().includes('briefing') ?? false;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [responsible, setResponsible] = useState<'client' | 'bwild'>('bwild');
@@ -328,10 +326,6 @@ function AddRecordForm({
       },
       {
         onSuccess: () => {
-          if (isBriefingStage) {
-            completeStage.mutate({ stageId, projectId });
-            toast.success('Ata salva! Etapa de Briefing concluída.');
-          }
           onClose();
         },
       },
