@@ -349,6 +349,7 @@ export function DocumentViewer({
             <Document
               file={url}
               onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={(error) => console.error('[DocumentViewer] PDF load error:', error?.message || error)}
               loading={
                 <div className="flex items-center justify-center h-64">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -357,14 +358,16 @@ export function DocumentViewer({
               error={
                 <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                   <p>Erro ao carregar PDF</p>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline mt-2"
-                  >
-                    Abrir em nova aba
-                  </a>
+                  <div className="flex gap-2 mt-4">
+                    <Button onClick={handleDownload} className="gap-2">
+                      <Download className="w-4 h-4" />
+                      Baixar arquivo
+                    </Button>
+                    <Button variant="outline" onClick={() => window.open(url, '_blank')} className="gap-2">
+                      <ExternalLink className="w-4 h-4" />
+                      Abrir em nova aba
+                    </Button>
+                  </div>
                 </div>
               }
             >
@@ -398,10 +401,16 @@ export function DocumentViewer({
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <p>Pré-visualização não disponível</p>
-              <Button onClick={handleDownload} className="mt-4 gap-2">
-                <Download className="w-4 h-4" />
-                Baixar arquivo
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={handleDownload} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Baixar arquivo
+                </Button>
+                <Button variant="outline" onClick={() => window.open(url, '_blank')} className="gap-2">
+                  <ExternalLink className="w-4 h-4" />
+                  Abrir em nova aba
+                </Button>
+              </div>
             </div>
           )}
         </div>

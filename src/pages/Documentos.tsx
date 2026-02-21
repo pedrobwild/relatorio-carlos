@@ -148,10 +148,14 @@ const DocumentCard = ({
               <div className="text-center">
                 <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
                 <p className="text-body text-muted-foreground">Pré-visualização não disponível</p>
-                <Button onClick={handleDownload} className="mt-4 gap-2">
-                  <Download className="w-4 h-4" />
-                  Baixar arquivo
-                </Button>
+                <p className="text-xs text-muted-foreground mt-1">O link do documento pode ter expirado.</p>
+                <div className="flex gap-2 mt-4 justify-center">
+                  <Button onClick={handleDownload} className="gap-2">
+                    <Download className="w-4 h-4" />
+                    Baixar arquivo
+                  </Button>
+                  <Button variant="outline" onClick={() => window.location.reload()} className="gap-2">Recarregar</Button>
+                </div>
               </div>
             </div>
           )}

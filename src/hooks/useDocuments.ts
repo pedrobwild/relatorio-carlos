@@ -81,6 +81,10 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
           url = publicData?.publicUrl || undefined;
         }
 
+        if (!url) {
+          console.error(`[Documents] No URL generated for ${doc.name} (bucket: ${doc.storage_bucket}, path: ${doc.storage_path})`);
+        }
+
         return {
           ...doc,
           document_type: doc.document_type as DocumentCategory,
@@ -104,9 +108,16 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
   );
 
   // Extract successful results
-  return results
+  const docs = results
     .filter((r): r is PromiseFulfilledResult<ProjectDocument> => r.status === 'fulfilled')
     .map(r => r.value);
+  
+  const withoutUrl = docs.filter(d => !d.url);
+  if (withoutUrl.length > 0) {
+    console.warn(`[Documents] ${withoutUrl.length} documents without URL:`, withoutUrl.map(d => d.name));
+  }
+  
+  return docs;
 }
 
 export function useDocuments(projectId: string | undefined) {
