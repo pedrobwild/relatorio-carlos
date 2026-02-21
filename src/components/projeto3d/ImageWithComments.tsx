@@ -200,7 +200,7 @@ export function ImageWithComments({ image }: Props) {
                 💬
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3" side="top" align="center">
+            <PopoverContent className="w-64 p-3 z-[200]" side="top" align="center">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-medium text-foreground">{comment.author_name}</p>
