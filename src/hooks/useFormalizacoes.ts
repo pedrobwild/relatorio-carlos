@@ -182,14 +182,16 @@ export function useUpdateFormalizacao() {
         .from('formalizations')
         .select('customer_org_id, project_id, title, summary, status')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       const { data: result, error } = await supabase
         .from('formalizations')
         .update(data)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
+
+      if (!result) throw new Error('Formalização não encontrada ou sem permissão de acesso');
 
       if (error) throw error;
 
