@@ -146,7 +146,8 @@ export function useDeleteDocumentMutation() {
       toast.success('Documento excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: documentKeys.lists() });
     },
-    onError: () => {
+    onError: (err) => {
+      console.error('[Documents] Delete failed:', err);
       toast.error('Erro ao excluir documento');
     },
   });
