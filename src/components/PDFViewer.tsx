@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,15 +34,24 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
     setNumPages(numPages);
   };
 
+  const measuredRef = useRef<HTMLDivElement | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
   const containerRef = useCallback((node: HTMLDivElement | null) => {
+    // Cleanup previous observer
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+      resizeObserverRef.current = null;
+    }
+    measuredRef.current = node;
     if (node) {
-      const resizeObserver = new ResizeObserver((entries) => {
+      const observer = new ResizeObserver((entries) => {
         for (const entry of entries) {
           setContainerWidth(entry.contentRect.width);
         }
       });
-      resizeObserver.observe(node);
-      return () => resizeObserver.disconnect();
+      observer.observe(node);
+      resizeObserverRef.current = observer;
     }
   }, []);
 
@@ -212,7 +221,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
       <div
         ref={(node) => {
           containerRef(node);
-          (scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          scrollContainerRef.current = node;
         }}
         className={`flex-1 overflow-auto ${scale > 1 ? 'cursor-grab' : ''} ${isPanning ? 'cursor-grabbing' : ''}`}
         style={{ 

@@ -2693,57 +2693,64 @@ export type Database = {
       files_cleanup_candidates: {
         Row: {
           bucket: string | null
-          cleanup_reason: string | null
-          created_at: string | null
           deleted_at: string | null
           expires_at: string | null
           id: string | null
-          retention_days: number | null
+          original_name: string | null
+          owner_id: string | null
+          project_id: string | null
+          size_bytes: number | null
           status: Database["public"]["Enums"]["file_status"] | null
           storage_path: string | null
         }
         Insert: {
           bucket?: string | null
-          cleanup_reason?: never
-          created_at?: string | null
           deleted_at?: string | null
           expires_at?: string | null
           id?: string | null
-          retention_days?: number | null
+          original_name?: string | null
+          owner_id?: string | null
+          project_id?: string | null
+          size_bytes?: number | null
           status?: Database["public"]["Enums"]["file_status"] | null
           storage_path?: string | null
         }
         Update: {
           bucket?: string | null
-          cleanup_reason?: never
-          created_at?: string | null
           deleted_at?: string | null
           expires_at?: string | null
           id?: string | null
-          retention_days?: number | null
+          original_name?: string | null
+          owner_id?: string | null
+          project_id?: string | null
+          size_bytes?: number | null
           status?: Database["public"]["Enums"]["file_status"] | null
           storage_path?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       files_summary: {
         Row: {
           bucket: string | null
-          category: string | null
-          created_at: string | null
-          entity_id: string | null
-          entity_type: string | null
-          id: string | null
-          mime_type: string | null
-          original_name: string | null
-          owner_id: string | null
-          owner_name: string | null
+          file_count: number | null
           project_id: string | null
-          project_name: string | null
-          size_bytes: number | null
           status: Database["public"]["Enums"]["file_status"] | null
-          storage_path: string | null
-          visibility: Database["public"]["Enums"]["file_visibility"] | null
+          total_size_bytes: number | null
         }
         Relationships: [
           {
@@ -2925,12 +2932,13 @@ export type Database = {
       }
       system_error_stats: {
         Row: {
-          affected_requests: number | null
-          affected_users: number | null
           error_code: string | null
-          error_count: number | null
-          hour: string | null
+          first_occurrence: string | null
+          last_24h: number | null
+          last_hour: number | null
+          last_occurrence: string | null
           source: string | null
+          total_count: number | null
         }
         Relationships: []
       }

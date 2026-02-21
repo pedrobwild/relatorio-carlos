@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { DOCUMENT_CATEGORIES, DocumentCategory } from "@/hooks/useDocuments";
 import { z } from "zod";
 
@@ -85,29 +85,17 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
 
   const handleFileSelect = (selectedFile: File) => {
     if (selectedFile.size === 0) {
-      toast({
-        title: "Arquivo vazio",
-        description: "Selecione um arquivo com conteúdo antes de enviar.",
-        variant: "destructive",
-      });
+      toast.error("Selecione um arquivo com conteúdo antes de enviar.");
       return;
     }
 
     if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 500MB.",
-        variant: "destructive",
-      });
+      toast.error("O tamanho máximo permitido é 500MB.");
       return;
     }
 
     if (!isAllowedFile(selectedFile)) {
-      toast({
-        title: "Tipo de arquivo não suportado",
-        description: "Envie PDF, Word, Excel, ZIP ou imagens (PNG, JPG, GIF, WEBP).",
-        variant: "destructive",
-      });
+      toast.error("Envie PDF, Word, Excel, ZIP ou imagens (PNG, JPG, GIF, WEBP).");
       return;
     }
 
@@ -199,22 +187,14 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
         throw new Error(result.error || 'Falha no upload');
       }
 
-      toast({
-        title: "Documento enviado",
-        description: `Documento verificado (checksum: ${result.document?.checksum?.substring(0, 8)}...)`,
-      });
+      toast.success(`Documento enviado e verificado (checksum: ${result.document?.checksum?.substring(0, 8)}...)`);
 
       resetForm();
       setOpen(false);
       onSuccess?.();
     } catch (error: unknown) {
-      console.error("Upload error:", error);
       const errorMessage = error instanceof Error ? error.message : "Não foi possível enviar o documento";
-      toast({
-        title: "Erro ao enviar",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(`Erro ao enviar: ${errorMessage}`);
     } finally {
       setUploading(false);
     }
