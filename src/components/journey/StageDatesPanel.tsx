@@ -295,30 +295,41 @@ function StageDateRow({
           <p className="text-sm font-semibold text-foreground truncate">{sd.title}</p>
           <p className="text-[11px] text-muted-foreground">{tl.label}</p>
         </div>
-        {hasDate ? (
-          <Badge variant="outline" className={cn("text-[10px] gap-1 border", statusConfig.confirmed.badgeClass)}>
-            <CalendarIcon className="h-3 w-3" aria-hidden />
-            {format(parseISO(sd.bwild_confirmed_at!), "dd/MM/yyyy", { locale: ptBR })}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className={cn("text-[10px] gap-1 border", statusConfig.empty.badgeClass)}>
-            <CalendarIcon className="h-3 w-3" aria-hidden />
-            Sem data
-          </Badge>
-        )}
+        {(() => {
+          const status = getDateStatus(sd);
+          const cfg = statusConfig[status];
+          const StatusIcon = cfg.icon;
+          return (
+            <Badge variant="outline" className={cn("text-[10px] gap-1 border", cfg.badgeClass)}>
+              <StatusIcon className="h-3 w-3" aria-hidden />
+              {cfg.label}
+            </Badge>
+          );
+        })()}
       </div>
 
-      {/* Date display — single confirmed date */}
-      {hasDate && (
+      {/* Date display — single date block */}
+      {sd.bwild_confirmed_at && (
         <div className="px-4 pb-3">
-          <div className={cn(
-            "flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg bg-[hsl(var(--success-light))]"
-          )}>
+          <div className="flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg bg-[hsl(var(--success-light))]">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-[hsl(var(--success))]" aria-hidden />
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Prazo definido</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{journeyCopy.dates.row.confirmedLabel}</p>
               <p className="text-sm font-semibold text-[hsl(var(--success))]">
-                {format(parseISO(sd.bwild_confirmed_at!), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
+                {format(parseISO(sd.bwild_confirmed_at), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {!sd.bwild_confirmed_at && sd.customer_proposed_at && (
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg bg-[hsl(var(--warning-light))]">
+            <Clock className="h-4 w-4 shrink-0 text-[hsl(var(--warning))]" aria-hidden />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{journeyCopy.dates.row.proposedLabel}</p>
+              <p className="text-sm font-semibold text-[hsl(var(--warning))]">
+                {format(parseISO(sd.customer_proposed_at), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
               </p>
             </div>
           </div>
@@ -621,8 +632,10 @@ export function StageDatesPanel({ stageId, projectId, isAdmin, stageName }: Stag
         )}
       </div>
 
-      {/* Mini Timeline */}
-      {hasGranularDates && <MiniTimeline dates={granularDates!} />}
+      {/* Mini Timeline — only when multiple items have dates */}
+      {hasGranularDates && (granularDates!.filter(sd => sd.bwild_confirmed_at || sd.customer_proposed_at).length >= 2) && (
+        <MiniTimeline dates={granularDates!} />
+      )}
 
       {/* Granular date cards */}
       {isLoading ? (

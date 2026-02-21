@@ -103,6 +103,10 @@ export const journeyCopy = {
       empty_body_admin: 'Adicione um prazo de entrega para esta etapa.',
       newDate: 'Nova data',
     },
+    row: {
+      confirmedLabel: 'Prazo definido',
+      proposedLabel: 'Data sugerida pelo cliente',
+    },
     status: {
       confirmed: 'Confirmada pela Bwild',
       proposed: 'Proposta pelo cliente',
