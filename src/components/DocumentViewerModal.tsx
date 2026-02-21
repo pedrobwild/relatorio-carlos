@@ -121,7 +121,7 @@ export function DocumentViewerModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 flex flex-col gap-0">
+      <DialogContent className="max-w-6xl w-[95vw] h-[95dvh] sm:h-[90vh] p-0 flex flex-col gap-0">
         {/* Header */}
         <DialogHeader className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between gap-4">

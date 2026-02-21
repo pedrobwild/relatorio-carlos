@@ -233,7 +233,7 @@ function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 md:transition-opacity text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px]"
+          className="h-8 w-8 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity text-muted-foreground hover:text-destructive min-h-[44px] min-w-[44px]"
           onClick={(e) => { e.stopPropagation(); deleteRecord.mutate({ id: record.id, stageId }); }}
           disabled={deleteRecord.isPending}
           aria-label={`Remover registro: ${record.title}`}

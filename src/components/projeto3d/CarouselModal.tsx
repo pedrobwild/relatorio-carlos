@@ -52,7 +52,7 @@ export function CarouselModal({ versionId, open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col gap-0"
+        className="max-w-[95vw] w-[95vw] h-[95dvh] sm:h-[90vh] p-0 flex flex-col gap-0"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
         aria-label="Carrossel de imagens do Projeto 3D"
@@ -88,7 +88,7 @@ export function CarouselModal({ versionId, open, onOpenChange }: Props) {
                   <Button
                     variant="secondary"
                     size="icon"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg h-10 w-10"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg h-11 w-11"
                     onClick={handlePrev}
                     aria-label="Imagem anterior"
                   >
@@ -97,7 +97,7 @@ export function CarouselModal({ versionId, open, onOpenChange }: Props) {
                   <Button
                     variant="secondary"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg h-10 w-10"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 rounded-full shadow-lg h-11 w-11"
                     onClick={handleNext}
                     aria-label="Próxima imagem"
                   >

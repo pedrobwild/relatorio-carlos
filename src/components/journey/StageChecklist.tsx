@@ -83,7 +83,7 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
         <Button
           size="icon"
           variant="ghost"
-          className="h-11 w-11 min-h-[44px] min-w-[44px] opacity-0 group-hover:opacity-100 md:transition-opacity shrink-0"
+          className="h-11 w-11 min-h-[44px] min-w-[44px] opacity-100 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity shrink-0"
           onClick={() => setIsEditing(true)}
         >
           <Edit2 className="h-3.5 w-3.5" />

@@ -117,7 +117,7 @@ export function PageHeader({
                   variant="ghost"
                   size="icon"
                   onClick={onBack}
-                  className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10"
+                  className="shrink-0 h-11 w-11 sm:h-9 sm:w-9 rounded-full hover:bg-primary/10"
                   aria-label="Voltar"
                 >
                   <ArrowLeft className="w-4 h-4" />
