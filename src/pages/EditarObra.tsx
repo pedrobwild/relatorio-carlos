@@ -58,6 +58,7 @@ interface Project {
   date_official_start: string | null;
   date_official_delivery: string | null;
   date_mobilization_start: string | null;
+  contract_signing_date: string | null;
 }
 
 interface Customer {
@@ -310,6 +311,7 @@ export default function EditarObra() {
           date_official_start: project.date_official_start || null,
           date_official_delivery: project.date_official_delivery || null,
           date_mobilization_start: project.date_mobilization_start || null,
+          contract_signing_date: project.contract_signing_date || null,
         } as any)
         .eq('id', project.id);
 
@@ -851,6 +853,14 @@ export default function EditarObra() {
                       type="date"
                       value={project.date_official_delivery || ''}
                       onChange={(e) => handleProjectChange('date_official_delivery', e.target.value || null)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Assinatura do Contrato</Label>
+                    <Input
+                      type="date"
+                      value={project.contract_signing_date || ''}
+                      onChange={(e) => handleProjectChange('contract_signing_date', e.target.value || null)}
                     />
                   </div>
                 </div>
