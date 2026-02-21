@@ -11,9 +11,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { isWeekend, countBusinessDaysInclusive, getMinStartDate } from '@/lib/businessDays';
-import { useMeetingAvailability, useSubmitMeetingAvailability } from '@/hooks/useMeetingAvailability';
+import {
+  useMeetingAvailability,
+  useSubmitMeetingAvailability,
+  deriveMeetingState,
+} from '@/hooks/useMeetingAvailability';
 import { useCreateStageRecord } from '@/hooks/useStageRecords';
 import { useAuth } from '@/hooks/useAuth';
+import { MeetingAwaitingCard } from './MeetingAwaitingCard';
+import { MeetingScheduledCard } from './MeetingScheduledCard';
 
 const WEEKDAYS = [
   { key: 'MON', label: 'Seg' },
@@ -50,15 +56,14 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
   const [errors, setErrors] = useState<string[]>([]);
 
   const minDate = useMemo(() => getMinStartDate(), []);
-  const showForm = !existing || isEditing;
+  const meetingState = deriveMeetingState(existing);
 
+  // ── Disabled day matchers ──
   const disabledStartDays = useMemo(() => {
     return (date: Date) => {
       if (isWeekend(date)) return true;
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      const min = new Date(minDate);
-      min.setHours(0, 0, 0, 0);
+      const d = new Date(date); d.setHours(0, 0, 0, 0);
+      const min = new Date(minDate); min.setHours(0, 0, 0, 0);
       return d < min;
     };
   }, [minDate]);
@@ -66,35 +71,31 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
   const disabledEndDays = useMemo(() => {
     return (date: Date) => {
       if (isWeekend(date)) return true;
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      const min = new Date(minDate);
-      min.setHours(0, 0, 0, 0);
+      const d = new Date(date); d.setHours(0, 0, 0, 0);
+      const min = new Date(minDate); min.setHours(0, 0, 0, 0);
       if (d < min) return true;
       if (startDate) {
-        const minEnd = new Date(startDate);
-        minEnd.setHours(0, 0, 0, 0);
-        minEnd.setDate(minEnd.getDate() + 3); // block next 2 days after start
+        const minEnd = new Date(startDate); minEnd.setHours(0, 0, 0, 0);
+        minEnd.setDate(minEnd.getDate() + 3);
         if (d < minEnd) return true;
       }
       return false;
     };
   }, [minDate, startDate]);
 
+  // ── Validation ──
   const validate = (): boolean => {
     const errs: string[] = [];
     if (!startDate) errs.push('Selecione uma data inicial.');
     if (!endDate) errs.push('Selecione uma data final.');
     if (startDate && endDate) {
       const bdays = countBusinessDaysInclusive(startDate, endDate);
-      if (bdays > 7) errs.push('Selecione no máximo 7 dias úteis (fins de semana não contam).');
+      if (bdays > 7) errs.push('Selecione no máximo 7 dias úteis.');
       if (bdays === 0) errs.push('O intervalo deve conter pelo menos 1 dia útil.');
     }
     if (startDate) {
-      const min = new Date(minDate);
-      min.setHours(0, 0, 0, 0);
-      const s = new Date(startDate);
-      s.setHours(0, 0, 0, 0);
+      const min = new Date(minDate); min.setHours(0, 0, 0, 0);
+      const s = new Date(startDate); s.setHours(0, 0, 0, 0);
       if (s < min) errs.push('Escolha uma data a partir de 2 dias úteis de hoje.');
     }
     if (selectedSlots.length === 0) errs.push('Selecione pelo menos um período de horário.');
@@ -102,7 +103,6 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
     return errs.length === 0;
   };
 
-  // Check if selected weekdays fall outside the date range
   const weekdayWarning = useMemo(() => {
     if (!startDate || !endDate || selectedWeekdays.length === 0) return null;
     const dayMap: Record<string, number> = { MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5 };
@@ -133,7 +133,6 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
       {
         onSuccess: () => {
           setIsEditing(false);
-          // Auto-create decision record
           createRecord.mutate({
             stage_id: stageId,
             project_id: projectId,
@@ -152,6 +151,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
     setList(list.includes(key) ? list.filter(k => k !== key) : [...list, key]);
   };
 
+  // ── Loading ──
   if (isLoading) {
     return (
       <Card>
@@ -164,89 +164,94 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
     );
   }
 
-  // Show summary if submitted and not editing
-  if (existing && !isEditing) {
-    return (
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
-                <CalendarIcon className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Sua disponibilidade para a Reunião de Briefing</h3>
-                <Badge variant="secondary" className="mt-1.5 text-xs">
-                  {existing.status === 'confirmed' ? '✅ Reunião confirmada' : '⏳ Aguardando confirmação da Bwild'}
-                </Badge>
-              </div>
-            </div>
-            {existing.status === 'pending_confirmation' && !isAdmin && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-10 gap-1.5 text-xs min-h-[44px] shrink-0"
-                onClick={() => {
-                  setStartDate(new Date(existing.start_date + 'T00:00:00'));
-                  setEndDate(new Date(existing.end_date + 'T00:00:00'));
-                  setSelectedWeekdays(existing.preferred_weekdays);
-                  setSelectedSlots(existing.time_slots);
-                  setNotes(existing.notes || '');
-                  setIsEditing(true);
-                }}
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-                Editar
-              </Button>
-            )}
-          </div>
+  // ── STATE: scheduled — show scheduled card only ──
+  if (meetingState === 'scheduled' && existing) {
+    return <MeetingScheduledCard availability={existing} />;
+  }
 
-          <div className="grid gap-3 sm:grid-cols-2 pl-11">
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Intervalo</p>
-              <p className="text-sm mt-0.5">
-                {format(new Date(existing.start_date + 'T00:00:00'), "dd MMM", { locale: ptBR })} – {format(new Date(existing.end_date + 'T00:00:00'), "dd MMM yyyy", { locale: ptBR })}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Horários</p>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {existing.time_slots.map(s => (
-                  <Badge key={s} variant="outline" className="text-xs">
-                    {TIME_SLOTS.find(ts => ts.key === s)?.label || s}
-                  </Badge>
-                ))}
+  // ── STATE: awaiting_scheduling — show summary + awaiting card ──
+  if (meetingState === 'awaiting_scheduling' && existing && !isEditing) {
+    return (
+      <div className="space-y-4">
+        {/* Summary card */}
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                  <CalendarIcon className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Sua disponibilidade para a Reunião de Briefing</h3>
+                  <Badge variant="secondary" className="mt-1.5 text-xs">⏳ Aguardando agendamento</Badge>
+                </div>
               </div>
+              {!isAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-10 gap-1.5 text-xs min-h-[44px] shrink-0"
+                  onClick={() => {
+                    setStartDate(new Date(existing.start_date + 'T00:00:00'));
+                    setEndDate(new Date(existing.end_date + 'T00:00:00'));
+                    setSelectedWeekdays(existing.preferred_weekdays);
+                    setSelectedSlots(existing.time_slots);
+                    setNotes(existing.notes || '');
+                    setIsEditing(true);
+                  }}
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  Editar
+                </Button>
+              )}
             </div>
-            {existing.preferred_weekdays.length > 0 && (
+
+            <div className="grid gap-3 sm:grid-cols-2 pl-11">
               <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Dias preferidos</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Intervalo</p>
+                <p className="text-sm mt-0.5">
+                  {format(new Date(existing.start_date + 'T00:00:00'), "dd MMM", { locale: ptBR })} – {format(new Date(existing.end_date + 'T00:00:00'), "dd MMM yyyy", { locale: ptBR })}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Horários</p>
                 <div className="flex flex-wrap gap-1.5 mt-1">
-                  {existing.preferred_weekdays.map(wd => (
-                    <Badge key={wd} variant="outline" className="text-xs">
-                      {WEEKDAYS.find(w => w.key === wd)?.label || wd}
+                  {existing.time_slots.map(s => (
+                    <Badge key={s} variant="outline" className="text-xs">
+                      {TIME_SLOTS.find(ts => ts.key === s)?.label || s}
                     </Badge>
                   ))}
                 </div>
               </div>
-            )}
-            {existing.notes && (
-              <div className="sm:col-span-2">
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Observações</p>
-                <p className="text-sm text-muted-foreground mt-0.5">{existing.notes}</p>
-              </div>
-            )}
-          </div>
+              {existing.preferred_weekdays.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Dias preferidos</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {existing.preferred_weekdays.map(wd => (
+                      <Badge key={wd} variant="outline" className="text-xs">
+                        {WEEKDAYS.find(w => w.key === wd)?.label || wd}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {existing.notes && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Observações</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{existing.notes}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-          <p className="text-xs text-muted-foreground pl-11 italic">
-            A equipe de Arquitetura vai agendar conforme disponibilidade e confirmar aqui.
-          </p>
-        </CardContent>
-      </Card>
+        {/* Awaiting card */}
+        <MeetingAwaitingCard />
+      </div>
     );
   }
 
-  // Form mode
+  // ── STATE: needs_availability (or editing) — show form ──
   return (
     <Card>
       <CardContent className="pt-6 space-y-5">
@@ -291,20 +296,8 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
 
         {/* Date pickers */}
         <div className="grid gap-3 sm:grid-cols-2">
-          <DatePickerField
-            label="Data inicial"
-            date={startDate}
-            onSelect={(d) => { setStartDate(d); setErrors([]); }}
-            disabled={disabledStartDays}
-            minDate={minDate}
-          />
-          <DatePickerField
-            label="Data final"
-            date={endDate}
-            onSelect={(d) => { setEndDate(d); setErrors([]); }}
-            disabled={disabledEndDays}
-            minDate={startDate || minDate}
-          />
+          <DatePickerField label="Data inicial" date={startDate} onSelect={d => { setStartDate(d); setErrors([]); }} disabled={disabledStartDays} minDate={minDate} />
+          <DatePickerField label="Data final" date={endDate} onSelect={d => { setEndDate(d); setErrors([]); }} disabled={disabledEndDays} minDate={startDate || minDate} />
         </div>
         <p className="text-xs text-muted-foreground -mt-2">
           Fins de semana aparecem bloqueados e não entram na contagem do período.
@@ -371,7 +364,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
             id="availability-notes"
             placeholder="Ex.: prefiro vídeo / tenho restrição após 19h / etc."
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={e => setNotes(e.target.value)}
             rows={2}
             className="text-sm"
             maxLength={500}
@@ -390,11 +383,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
         {/* CTA */}
         <div className="flex gap-2">
           {isEditing && (
-            <Button
-              variant="outline"
-              className="h-12 min-h-[44px]"
-              onClick={() => setIsEditing(false)}
-            >
+            <Button variant="outline" className="h-12 min-h-[44px]" onClick={() => setIsEditing(false)}>
               Cancelar
             </Button>
           )}
@@ -403,11 +392,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
             onClick={handleSubmit}
             disabled={submitAvailability.isPending}
           >
-            {submitAvailability.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
+            {submitAvailability.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             {isEditing ? 'Atualizar disponibilidade' : 'Registrar disponibilidade'}
           </Button>
         </div>
@@ -419,11 +404,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
 /* ─── DatePicker Field ─── */
 
 function DatePickerField({
-  label,
-  date,
-  onSelect,
-  disabled,
-  minDate,
+  label, date, onSelect, disabled, minDate,
 }: {
   label: string;
   date: Date | undefined;
@@ -438,24 +419,14 @@ function DatePickerField({
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className={cn(
-              'w-full justify-start text-left font-normal h-11 min-h-[44px]',
-              !date && 'text-muted-foreground',
-            )}
+            className={cn('w-full justify-start text-left font-normal h-11 min-h-[44px]', !date && 'text-muted-foreground')}
           >
             <CalendarIcon className="h-4 w-4 mr-2" />
             {date ? format(date, "dd 'de' MMMM", { locale: ptBR }) : 'Selecionar data'}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={onSelect}
-            disabled={disabled}
-            defaultMonth={minDate}
-            className="p-3 pointer-events-auto"
-          />
+          <Calendar mode="single" selected={date} onSelect={onSelect} disabled={disabled} defaultMonth={minDate} className="p-3 pointer-events-auto" />
         </PopoverContent>
       </Popover>
     </div>
