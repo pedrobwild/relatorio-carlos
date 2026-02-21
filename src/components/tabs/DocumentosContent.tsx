@@ -190,7 +190,11 @@ const DocumentosContent = () => {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    deleteDocMutation.mutate(deleteTarget.id);
+    deleteDocMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        refetch();
+      },
+    });
     setDeleteTarget(null);
   };
 
