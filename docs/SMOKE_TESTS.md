@@ -2,20 +2,29 @@
 
 Manual verification checklist for pre-deploy sanity checks (10-15 min).
 
-## Automated Smoke (`npm run smoke`)
+## Automated Smoke
 
-Run these 5 critical tests before every deploy:
+Run the full quality pipeline before every deploy:
 
 ```bash
-npm run smoke
+# Step 1: Lint
+npm run lint
+
+# Step 2: Type check
+npx tsc -b
+
+# Step 3: Unit tests
+npx vitest run
+
+# Step 4: Build
+npm run build
+
+# Step 5: E2E smoke (requires Playwright + running app)
+npx playwright test smoke.spec.ts
 ```
 
-This runs:
-1. Build + typecheck + lint
-2. Auth page renders
-3. Protected routes redirect
-4. 404 handling works
-5. No JS errors on home
+> **Nota**: Quando o script `smoke` for adicionado ao `package.json`,
+> basta rodar `npm run smoke` para executar todos os passos acima.
 
 ## Manual Smoke Checklist
 
