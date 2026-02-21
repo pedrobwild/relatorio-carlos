@@ -1927,6 +1927,7 @@ export type Database = {
           installment_number: number
           notification_sent_at: string | null
           paid_at: string | null
+          payment_method: string | null
           payment_proof_path: string | null
           project_id: string
         }
@@ -1940,6 +1941,7 @@ export type Database = {
           installment_number: number
           notification_sent_at?: string | null
           paid_at?: string | null
+          payment_method?: string | null
           payment_proof_path?: string | null
           project_id: string
         }
@@ -1953,6 +1955,7 @@ export type Database = {
           installment_number?: number
           notification_sent_at?: string | null
           paid_at?: string | null
+          payment_method?: string | null
           payment_proof_path?: string | null
           project_id?: string
         }
