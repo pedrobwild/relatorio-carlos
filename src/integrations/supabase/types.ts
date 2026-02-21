@@ -1919,6 +1919,36 @@ export type Database = {
           },
         ]
       }
+      project_page_instructions: {
+        Row: {
+          content_html: string
+          created_at: string
+          id: string
+          page_key: string
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content_html?: string
+          created_at?: string
+          id?: string
+          page_key: string
+          project_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content_html?: string
+          created_at?: string
+          id?: string
+          page_key?: string
+          project_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       project_payments: {
         Row: {
           amount: number
