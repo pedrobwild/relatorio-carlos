@@ -39,6 +39,7 @@ interface StageDetailInlineProps {
   projectId: string;
   isAdmin: boolean;
   nextStageName?: string | null;
+  onStageCompleted?: (nextStageId?: string) => void;
 }
 
 export function StageDetailInline({
@@ -46,6 +47,7 @@ export function StageDetailInline({
   projectId,
   isAdmin,
   nextStageName,
+  onStageCompleted,
 }: StageDetailInlineProps) {
   const [isEditing, setIsEditing] = useState(false);
   const completeStage = useCompleteStage();
@@ -68,7 +70,7 @@ export function StageDetailInline({
         )}
 
         {!isEditing && (
-          <BriefingStageLayout stage={stage} projectId={projectId} isAdmin={isAdmin} />
+          <BriefingStageLayout stage={stage} projectId={projectId} isAdmin={isAdmin} onStageCompleted={onStageCompleted} />
         )}
 
         {/* Admin footer actions */}
