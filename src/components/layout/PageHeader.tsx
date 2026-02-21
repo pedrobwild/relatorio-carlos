@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/layout/UserMenu";
-import bwildLogo from "@/assets/bwild-logo.png";
+import bwildLogo from "@/assets/bwild-logo-transparent.png";
 
 export interface BreadcrumbItem {
   label: string;
@@ -72,7 +72,7 @@ export function PageHeader({
           )}
           {showLogo && (
             <>
-              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0 mix-blend-multiply dark:mix-blend-normal" />
+              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
               <span className="text-muted-foreground/40 shrink-0">|</span>
             </>
           )}

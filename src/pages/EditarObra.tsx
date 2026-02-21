@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
  import { useUserRole } from '@/hooks/useUserRole';
  import { useDeleteProject } from '@/hooks/useDeleteProject';
 import { format } from 'date-fns';
-import bwildLogo from '@/assets/bwild-logo.png';
+import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import { useProjectMembers, ProjectRole } from '@/hooks/useProjectMembers';
 import {
   AlertDialog,

@@ -28,7 +28,7 @@ import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { pdfLogger } from "@/lib/devLogger";
 import { perf } from "@/lib/perf";
 import { prefetchForTab } from "@/lib/prefetch";
-import bwildLogo from "@/assets/bwild-logo.png";
+import bwildLogo from "@/assets/bwild-logo-transparent.png";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { format } from "date-fns";
 

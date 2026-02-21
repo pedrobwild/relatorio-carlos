@@ -12,7 +12,7 @@ import {
   AlertCircle, ShieldCheck, HelpCircle,
 } from 'lucide-react';
 import authBg from '@/assets/auth-bg.png';
-import bwildLogo from '@/assets/bwild-logo.png';
+import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import { z } from 'zod';
 import { logError, logInfo } from '@/lib/errorLogger';
 
@@ -177,7 +177,7 @@ export default function Auth() {
       <img
         src={bwildLogo}
         alt="Bwild"
-        className="absolute top-6 right-6 h-8 md:hidden object-contain mix-blend-multiply"
+        className="absolute top-6 right-6 h-8 md:hidden object-contain"
       />
 
       {/* Form – centered on mobile, left on desktop */}

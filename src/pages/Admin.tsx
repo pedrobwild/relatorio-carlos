@@ -7,7 +7,7 @@ import { UsersTab } from '@/components/admin/UsersTab';
 import { ObrasTab } from '@/components/admin/ObrasTab';
 import { TemplatesTab } from '@/components/admin/TemplatesTab';
 import { FilesCleanupCard } from '@/components/admin/FilesCleanupCard';
-import bwildLogo from '@/assets/bwild-logo.png';
+import bwildLogo from '@/assets/bwild-logo-transparent.png';
 
 export default function Admin() {
   const navigate = useNavigate();
