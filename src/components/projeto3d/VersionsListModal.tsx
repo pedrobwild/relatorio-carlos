@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,52 +26,64 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
   const [imageCountsCache, setImageCountsCache] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load image counts for versions
-  const loadImageCounts = async () => {
-    if (versions.length === 0) return;
-    const ids = versions.map(v => v.id);
-    const { data } = await supabase
-      .from('project_3d_images')
-      .select('version_id')
-      .in('version_id', ids);
-    if (data) {
-      const counts: Record<string, number> = {};
-      data.forEach((row: any) => {
-        counts[row.version_id] = (counts[row.version_id] || 0) + 1;
-      });
-      setImageCountsCache(counts);
-    }
-  };
+  // Load image counts in useEffect (not during render)
+  useEffect(() => {
+    if (!open || versions.length === 0) return;
+    let cancelled = false;
 
-  // Load counts when versions change
-  if (open && versions.length > 0 && Object.keys(imageCountsCache).length === 0) {
-    loadImageCounts();
-  }
+    const loadCounts = async () => {
+      const ids = versions.map(v => v.id);
+      const { data } = await supabase
+        .from('project_3d_images')
+        .select('version_id')
+        .in('version_id', ids);
+      if (data && !cancelled) {
+        const counts: Record<string, number> = {};
+        data.forEach((row: any) => {
+          counts[row.version_id] = (counts[row.version_id] || 0) + 1;
+        });
+        setImageCountsCache(counts);
+      }
+    };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    loadCounts();
+    return () => { cancelled = true; };
+  }, [open, versions]);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const invalid = files.filter(f => f.type !== 'image/png');
+    const invalid = files.filter(f => {
+      const isPngExt = f.name.toLowerCase().endsWith('.png');
+      const isPngMime = f.type === 'image/png';
+      return !isPngExt && !isPngMime;
+    });
     if (invalid.length > 0) {
-      toast.error('Apenas arquivos .png são aceitos');
+      toast.error(`Apenas arquivos .png são aceitos. Rejeitados: ${invalid.map(f => f.name).join(', ')}`);
       return;
     }
     setSelectedFiles(prev => [...prev, ...files]);
-  };
+    // Reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, []);
 
-  const handleRemoveFile = (index: number) => {
+  const handleRemoveFile = useCallback((index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
-  const handleUpload = async () => {
+  const handleUpload = useCallback(async () => {
     if (selectedFiles.length === 0) {
       toast.error('Selecione ao menos uma imagem .png');
       return;
     }
-    await createVersion(selectedFiles);
-    setSelectedFiles([]);
-    setUploadMode(false);
-    setImageCountsCache({});
-  };
+    try {
+      await createVersion(selectedFiles);
+      setSelectedFiles([]);
+      setUploadMode(false);
+      setImageCountsCache({});
+    } catch {
+      // Error already handled in hook
+    }
+  }, [selectedFiles, createVersion]);
 
   return (
     <>
@@ -121,10 +133,13 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
                 {selectedFiles.length > 0 && (
                   <div className="space-y-1.5">
                     {selectedFiles.map((file, i) => (
-                      <div key={i} className="flex items-center justify-between bg-card rounded px-3 py-2 text-sm">
+                      <div key={`${file.name}-${i}`} className="flex items-center justify-between bg-card rounded px-3 py-2 text-sm">
                         <div className="flex items-center gap-2 min-w-0">
                           <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span className="truncate">{file.name}</span>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            ({(file.size / 1024 / 1024).toFixed(1)}MB)
+                          </span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => handleRemoveFile(i)}>
                           <X className="h-3 w-3" />

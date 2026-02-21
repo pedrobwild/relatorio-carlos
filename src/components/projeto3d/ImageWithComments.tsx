@@ -14,6 +14,37 @@ interface Props {
   image: Image3D;
 }
 
+/** Clamp value between 0 and 100 */
+function clamp(v: number): number {
+  return Math.max(0, Math.min(100, v));
+}
+
+function getPercentFromEvent(
+  e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent,
+  container: HTMLElement,
+): { x: number; y: number } | null {
+  const rect = container.getBoundingClientRect();
+  let clientX: number, clientY: number;
+
+  if ('touches' in e && e.touches.length > 0) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX;
+    clientY = e.changedTouches[0].clientY;
+  } else if ('clientX' in e) {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  } else {
+    return null;
+  }
+
+  return {
+    x: clamp(((clientX - rect.left) / rect.width) * 100),
+    y: clamp(((clientY - rect.top) / rect.height) * 100),
+  };
+}
+
 export function ImageWithComments({ image }: Props) {
   const { comments, loading, addComment, updateComment, deleteComment } = use3DComments(image.id);
   const { user } = useAuth();
@@ -26,22 +57,13 @@ export function ImageWithComments({ image }: Props) {
   const [dragging, setDragging] = useState<string | null>(null);
   const [activePopover, setActivePopover] = useState<string | null>(null);
 
-  const getPercentFromEvent = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const container = containerRef.current;
-    if (!container) return null;
-    const rect = container.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
-    return { x, y };
-  }, []);
-
   const handleContainerClick = useCallback((e: React.MouseEvent) => {
-    if (!addingComment) return;
-    const pos = getPercentFromEvent(e);
+    if (!addingComment || dragging) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const pos = getPercentFromEvent(e, container);
     if (pos) setPendingPin(pos);
-  }, [addingComment, getPercentFromEvent]);
+  }, [addingComment, dragging]);
 
   const handleSaveComment = useCallback(async () => {
     if (!pendingPin || !commentText.trim()) return;
@@ -61,7 +83,9 @@ export function ImageWithComments({ image }: Props) {
     }
   }, [pendingPin, commentText, addComment, image.id]);
 
-  const handleDragStart = useCallback((commentId: string) => {
+  const handleDragStart = useCallback((commentId: string, e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     setDragging(commentId);
     setActivePopover(null);
   }, []);
@@ -69,25 +93,29 @@ export function ImageWithComments({ image }: Props) {
   const handleDragMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!dragging) return;
     e.preventDefault();
-    const pos = getPercentFromEvent(e);
+    const container = containerRef.current;
+    if (!container) return;
+    const pos = getPercentFromEvent(e, container);
     if (!pos) return;
 
-    // Optimistic UI: move the pin visually
+    // Optimistic visual update
     const el = document.getElementById(`pin-${dragging}`);
     if (el) {
       el.style.left = `${pos.x}%`;
       el.style.top = `${pos.y}%`;
     }
-  }, [dragging, getPercentFromEvent]);
+  }, [dragging]);
 
   const handleDragEnd = useCallback(async (e: React.MouseEvent | React.TouchEvent) => {
     if (!dragging) return;
-    const pos = getPercentFromEvent(e);
+    const container = containerRef.current;
+    if (!container) return;
+    const pos = getPercentFromEvent(e, container);
     if (pos) {
       await updateComment({ commentId: dragging, x: pos.x, y: pos.y });
     }
     setDragging(null);
-  }, [dragging, getPercentFromEvent, updateComment]);
+  }, [dragging, updateComment]);
 
   const canDeleteComment = useCallback((comment: Comment3D) => {
     return comment.author_user_id === user?.id || isStaff;
@@ -106,6 +134,7 @@ export function ImageWithComments({ image }: Props) {
             setPendingPin(null);
             setCommentText('');
           }}
+          aria-pressed={addingComment}
         >
           <MessageSquarePlus className="h-4 w-4" />
           {addingComment ? 'Cancelar' : 'Comentar'}
@@ -153,16 +182,15 @@ export function ImageWithComments({ image }: Props) {
                   left: `${comment.x_percent}%`,
                   top: `${comment.y_percent}%`,
                 }}
+                aria-label={`Comentário de ${comment.author_name}`}
                 onMouseDown={(e) => {
                   if (comment.author_user_id === user?.id) {
-                    e.stopPropagation();
-                    handleDragStart(comment.id);
+                    handleDragStart(comment.id, e);
                   }
                 }}
                 onTouchStart={(e) => {
                   if (comment.author_user_id === user?.id) {
-                    e.stopPropagation();
-                    handleDragStart(comment.id);
+                    handleDragStart(comment.id, e);
                   }
                 }}
               >
@@ -179,6 +207,7 @@ export function ImageWithComments({ image }: Props) {
                       size="icon"
                       className="h-6 w-6 text-muted-foreground hover:text-destructive"
                       onClick={() => deleteComment(comment.id)}
+                      aria-label="Remover comentário"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -201,13 +230,14 @@ export function ImageWithComments({ image }: Props) {
               left: `${pendingPin.x}%`,
               top: `${pendingPin.y}%`,
             }}
+            aria-label="Novo comentário"
           >
             +
           </div>
         )}
       </div>
 
-      {/* Comment input form (shown when pending pin is placed) */}
+      {/* Comment input form */}
       {pendingPin && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 w-72 bg-card border border-border rounded-lg shadow-xl p-3 space-y-2">
           <Textarea
