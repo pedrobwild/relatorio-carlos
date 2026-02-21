@@ -9,6 +9,7 @@ import { JourneyHero } from '@/hooks/useProjectJourney';
 import { useJourneyTeamMembers, JourneyTeamMember } from '@/hooks/useJourneyTeamMembers';
 import { TeamMemberEditModal } from '@/components/journey/TeamMemberEditModal';
 import { WelcomeGuideCard } from '@/components/journey/WelcomeGuideCard';
+import { WelcomeEnergyCard } from '@/components/journey/WelcomeEnergyCard';
 import { WelcomeContractCard } from '@/components/journey/WelcomeContractCard';
 
 interface JourneyWelcomeStageProps {
@@ -144,7 +145,10 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextS
         </AnimatePresence>
       </Card>
 
-      {/* Block 3: Resumo do Contrato */}
+      {/* Block 3: Ligação de Energia */}
+      <WelcomeEnergyCard />
+
+      {/* Block 4: Resumo do Contrato */}
       <WelcomeContractCard />
 
       {/* Advance button */}
