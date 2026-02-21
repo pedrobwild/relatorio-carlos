@@ -1,0 +1,296 @@
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
+import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
+import { useProject } from "@/contexts/ProjectContext";
+import { useProjectActivities } from "@/hooks/useProjectActivities";
+import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useCan } from "@/hooks/useCan";
+import { isDemoMode } from "@/config/flags";
+import { getPortalViewState, patchPortalViewState } from "@/lib/portalViewState";
+import { useWeeklyReports } from "@/hooks/useWeeklyReports";
+import { generateWeeklyReports, ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
+import type { MilestoneKey } from "@/components/ReportHeader";
+import { format } from "date-fns";
+
+// Demo data for projects without real data yet
+const demoReportData: ReportData = {
+  projectName: "Hub Brooklyn",
+  unitName: "502",
+  clientName: "Pedro Alves",
+  startDate: "2025-07-01",
+  endDate: "2025-09-14",
+  reportDate: "2025-09-08",
+  activities: [
+    { description: "Preparação e Mobilização", plannedStart: "2025-07-01", plannedEnd: "2025-07-05", actualStart: "2025-07-01", actualEnd: "2025-07-04", weight: 5 },
+    { description: "Proteções, demolições e infraestrutura", plannedStart: "2025-07-07", plannedEnd: "2025-07-18", actualStart: "2025-07-05", actualEnd: "2025-07-19", weight: 15 },
+    { description: "Pisos, revestimentos, bancadas e box", plannedStart: "2025-07-21", plannedEnd: "2025-08-03", actualStart: "2025-07-21", actualEnd: "2025-08-03", weight: 20 },
+    { description: "Pinturas e metais", plannedStart: "2025-08-04", plannedEnd: "2025-08-10", actualStart: "2025-08-06", actualEnd: "2025-08-12", weight: 10 },
+    { description: "Instalações e elétrica", plannedStart: "2025-08-11", plannedEnd: "2025-08-17", actualStart: "2025-08-14", actualEnd: "2025-08-17", weight: 10 },
+    { description: "Marcenaria", plannedStart: "2025-08-20", plannedEnd: "2025-09-05", actualStart: "2025-08-20", actualEnd: "2025-09-05", weight: 33 },
+    { description: "Etapa atual: Instalação de mobiliário e eletros", plannedStart: "2025-09-08", plannedEnd: "2025-09-10", actualStart: "2025-09-08", actualEnd: "", weight: 3 },
+    { description: "Limpeza fina", plannedStart: "2025-09-11", plannedEnd: "2025-09-11", actualStart: "", actualEnd: "", weight: 2 },
+    { description: "Vistoria de qualidade", plannedStart: "2025-09-12", plannedEnd: "2025-09-12", actualStart: "", actualEnd: "", weight: 1 },
+    { description: "Conclusão", plannedStart: "2025-09-14", plannedEnd: "2025-09-14", actualStart: "", actualEnd: "", weight: 1 },
+  ],
+};
+
+const milestoneKeyToColumn: Record<MilestoneKey, string> = {
+  dateBriefingArch: 'date_briefing_arch',
+  dateApproval3d: 'date_approval_3d',
+  dateApprovalExec: 'date_approval_exec',
+  dateApprovalObra: 'date_approval_obra',
+  dateMobilizationStart: 'date_mobilization_start',
+  contractSigningDate: 'contract_signing_date',
+};
+
+function calculateEndDateFromActivities(activities: ActivityType[]): string | null {
+  if (activities.length === 0) return null;
+  const dates = activities
+    .map(a => a.plannedEnd)
+    .filter(d => d)
+    .map(d => new Date(d + 'T00:00:00').getTime());
+  if (dates.length === 0) return null;
+  return new Date(Math.max(...dates)).toISOString().split('T')[0];
+}
+
+export function useProjectPortal() {
+  const navigate = useNavigate();
+  const { project, loading: projectLoading, error: projectError, setProject } = useProject();
+  const { projectId, paths } = useProjectNavigation();
+  const { isStaff, isCustomer, isAdmin } = useUserRole();
+  const { can } = useCan();
+  const { activities: dbActivities, loading: activitiesLoading, updateActivity } = useProjectActivities(projectId);
+  const {
+    reportDataByWeek,
+    saveReport: saveWeeklyReport,
+    isSaving: isSavingReport,
+    savingWeek,
+  } = useWeeklyReports({ projectId });
+
+  const canEditSchedule = can('schedule:edit');
+
+  // --- View state persistence ---
+  const viewStateKey = useMemo(
+    () => `portal:view:${projectId ?? "sem-projeto"}`,
+    [projectId]
+  );
+
+  const [activeTab, setActiveTab] = useState("cronograma");
+  const [isExporting, setIsExporting] = useState(false);
+  const [selectedWeeklyReport, setSelectedWeeklyReport] = useState<WeeklyReport | null>(null);
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(() => {
+    const idx = getPortalViewState(viewStateKey).weeklyReport?.index;
+    return typeof idx === "number" ? idx : 0;
+  });
+  const [showFullChart, setShowFullChart] = useState(true);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+
+  // Sync view state on key change
+  const hasSyncedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (hasSyncedKeyRef.current === viewStateKey) return;
+    hasSyncedKeyRef.current = viewStateKey;
+    const saved = getPortalViewState(viewStateKey);
+    if (saved.activeTab) setActiveTab(saved.activeTab);
+    const idx = saved.weeklyReport?.index;
+    if (typeof idx === "number") setSelectedWeekIndex(idx);
+  }, [viewStateKey]);
+
+  useEffect(() => {
+    patchPortalViewState(viewStateKey, { activeTab });
+  }, [viewStateKey, activeTab]);
+
+  useEffect(() => {
+    patchPortalViewState(viewStateKey, {
+      weeklyReport: { open: !!selectedWeeklyReport, index: selectedWeekIndex },
+    });
+  }, [viewStateKey, selectedWeeklyReport, selectedWeekIndex]);
+
+  // --- Data transforms ---
+  const formattedActivities = useMemo(() => {
+    return dbActivities.map(act => ({
+      id: act.id,
+      description: act.description,
+      plannedStart: act.planned_start,
+      plannedEnd: act.planned_end,
+      actualStart: act.actual_start || '',
+      actualEnd: act.actual_end || '',
+      weight: act.weight,
+      predecessorIds: act.predecessor_ids || [],
+      baselineStart: act.baseline_start,
+      baselineEnd: act.baseline_end,
+    }));
+  }, [dbActivities]);
+
+  const milestoneDates = useMemo(() => {
+    if (!project) return undefined;
+    const p = project as any;
+    return {
+      dateBriefingArch: p.date_briefing_arch ?? null,
+      dateApproval3d: p.date_approval_3d ?? null,
+      dateApprovalExec: p.date_approval_exec ?? null,
+      dateApprovalObra: p.date_approval_obra ?? null,
+      dateOfficialStart: p.date_official_start ?? null,
+      dateOfficialDelivery: p.date_official_delivery ?? null,
+      dateMobilizationStart: p.date_mobilization_start ?? null,
+      contractSigningDate: p.contract_signing_date ?? null,
+    };
+  }, [project]);
+
+  const reportData: ReportData | null = useMemo(() => {
+    if (project) {
+      if (formattedActivities.length > 0) {
+        const activitiesEndDate = calculateEndDateFromActivities(formattedActivities);
+        return {
+          projectName: project.name,
+          unitName: project.unit_name || '',
+          clientName: project.customer_name || '',
+          startDate: project.planned_start_date,
+          endDate: activitiesEndDate || project.planned_end_date,
+          reportDate: new Date().toISOString().split('T')[0],
+          activities: formattedActivities,
+        };
+      }
+      if (isDemoMode) {
+        const demoEndDate = calculateEndDateFromActivities(demoReportData.activities);
+        return {
+          projectName: project.name,
+          unitName: project.unit_name || '',
+          clientName: project.customer_name || '',
+          startDate: project.planned_start_date,
+          endDate: demoEndDate || project.planned_end_date,
+          reportDate: new Date().toISOString().split('T')[0],
+          activities: demoReportData.activities,
+        };
+      }
+      return {
+        projectName: project.name,
+        unitName: project.unit_name || '',
+        clientName: project.customer_name || '',
+        startDate: project.planned_start_date,
+        endDate: project.planned_end_date,
+        reportDate: new Date().toISOString().split('T')[0],
+        activities: [],
+      };
+    }
+    if (isDemoMode) return demoReportData;
+    return null;
+  }, [project, formattedActivities]);
+
+  const allWeeklyReports = useMemo(() => {
+    if (!reportData || reportData.activities.length === 0) return [];
+    return generateWeeklyReports(reportData.startDate, reportData.reportDate, reportData.activities);
+  }, [reportData]);
+
+  const reportsChronological = useMemo(() => [...allWeeklyReports].reverse(), [allWeeklyReports]);
+
+  // Restore weekly report state
+  const hasRestoredWeeklyRef = useRef(false);
+  useEffect(() => {
+    if (hasRestoredWeeklyRef.current) return;
+    if (reportsChronological.length === 0) return;
+    const saved = getPortalViewState(viewStateKey);
+    if (saved.weeklyReport?.open && typeof saved.weeklyReport?.index === "number" && reportsChronological[saved.weeklyReport.index]) {
+      setActiveTab("evolucao");
+      setSelectedWeekIndex(saved.weeklyReport.index);
+      setSelectedWeeklyReport(reportsChronological[saved.weeklyReport.index]);
+    }
+    hasRestoredWeeklyRef.current = true;
+  }, [reportsChronological, viewStateKey]);
+
+  // --- Handlers ---
+  const handleMilestoneDateChange = useCallback(async (key: MilestoneKey, date: string | null) => {
+    if (!projectId) return;
+    const column = milestoneKeyToColumn[key];
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { error } = await supabase.from('projects').update({ [column]: date } as any).eq('id', projectId);
+    if (error) { toast.error('Erro ao salvar data do marco'); throw error; }
+    if (project) setProject({ ...project, [column]: date } as any);
+    toast.success('Data do marco atualizada');
+  }, [projectId, project, setProject]);
+
+  const handleActivityDateChange = useCallback(async (activityId: string, newPlannedStart: string, newPlannedEnd: string) => {
+    if (!isStaff) return;
+    if (newPlannedEnd < newPlannedStart) { toast.error('Data de término deve ser igual ou posterior ao início'); return; }
+    const success = await updateActivity(activityId, { planned_start: newPlannedStart, planned_end: newPlannedEnd });
+    if (!success) toast.error('Erro ao atualizar datas. Tente novamente.');
+  }, [isStaff, updateActivity]);
+
+  const handleReportClick = useCallback((report: WeeklyReport, index: number) => {
+    setSelectedWeeklyReport(report);
+    setSelectedWeekIndex(index);
+    patchPortalViewState(viewStateKey, { activeTab: "evolucao", weeklyReport: { open: true, index } });
+  }, [viewStateKey]);
+
+  const handleBackToList = useCallback(() => {
+    setSelectedWeeklyReport(null);
+    patchPortalViewState(viewStateKey, { weeklyReport: { open: false } });
+  }, [viewStateKey]);
+
+  const handlePreviousWeek = useCallback(() => {
+    if (selectedWeekIndex > 0) {
+      const newIndex = selectedWeekIndex - 1;
+      setSelectedWeekIndex(newIndex);
+      setSelectedWeeklyReport(reportsChronological[newIndex]);
+      patchPortalViewState(viewStateKey, { weeklyReport: { open: true, index: newIndex } });
+    }
+  }, [selectedWeekIndex, reportsChronological, viewStateKey]);
+
+  const handleNextWeek = useCallback(() => {
+    if (selectedWeekIndex < reportsChronological.length - 1) {
+      const newIndex = selectedWeekIndex + 1;
+      setSelectedWeekIndex(newIndex);
+      setSelectedWeeklyReport(reportsChronological[newIndex]);
+      patchPortalViewState(viewStateKey, { weeklyReport: { open: true, index: newIndex } });
+    }
+  }, [selectedWeekIndex, reportsChronological, viewStateKey]);
+
+  // Redirect to journey for "fase de projeto"
+  useEffect(() => {
+    if (!projectLoading && project?.is_project_phase && projectId) {
+      navigate(`/obra/${projectId}/jornada`, { replace: true });
+    }
+  }, [projectLoading, project?.is_project_phase, projectId, navigate]);
+
+  return {
+    // State
+    project,
+    projectId,
+    projectLoading,
+    projectError,
+    activitiesLoading,
+    isStaff,
+    isCustomer,
+    isAdmin,
+    canEditSchedule,
+    paths,
+    reportData,
+    milestoneDates,
+    activeTab,
+    setActiveTab,
+    isExporting,
+    setIsExporting,
+    selectedWeeklyReport,
+    selectedWeekIndex,
+    showFullChart,
+    setShowFullChart,
+    selectedActivityId,
+    setSelectedActivityId,
+    reportsChronological,
+    reportDataByWeek,
+    isSavingReport,
+    savingWeek,
+    updateActivity,
+    // Handlers
+    handleMilestoneDateChange,
+    handleActivityDateChange,
+    handleReportClick,
+    handleBackToList,
+    handlePreviousWeek,
+    handleNextWeek,
+    saveWeeklyReport,
+  };
+}
