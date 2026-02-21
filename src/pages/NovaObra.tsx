@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Calendar, DollarSign, Send, LayoutTemplate, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Building2, User, Calendar, DollarSign, Send, LayoutTemplate, ChevronDown, ChevronUp, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,16 +21,21 @@ import { z } from 'zod';
 
 // Validation schema
 const formSchema = z.object({
-  name: z.string().trim().min(1, 'Nome do projeto é obrigatório').max(200),
+  name: z.string().trim().min(1, 'Condomínio é obrigatório').max(200),
   unit_name: z.string().trim().max(100).optional(),
   address: z.string().trim().max(300).optional(),
+  bairro: z.string().trim().max(100).optional(),
+  cep: z.string().trim().max(10).optional(),
   planned_start_date: z.string().optional(),
   planned_end_date: z.string().optional(),
+  contract_signing_date: z.string().optional(),
   contract_value: z.string().optional(),
   customer_name: z.string().trim().min(1, 'Nome do cliente é obrigatório').max(200),
   customer_email: z.string().trim().email('E-mail inválido').max(255),
   customer_phone: z.string().trim().max(20).optional(),
+  customer_password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres').max(72),
   is_project_phase: z.boolean(),
+  create_user: z.boolean(),
 }).refine((data) => {
   // If not in project phase, dates are required
   if (!data.is_project_phase) {
@@ -47,15 +52,21 @@ interface FormData {
   name: string;
   unit_name: string;
   address: string;
+  bairro: string;
+  cep: string;
   planned_start_date: string;
   planned_end_date: string;
+  contract_signing_date: string;
   contract_value: string;
   // Customer info
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  customer_password: string;
   // Project phase
   is_project_phase: boolean;
+  // Create user
+  create_user: boolean;
 }
 
 export default function NovaObra() {
@@ -70,18 +81,24 @@ export default function NovaObra() {
   const [showActivityPreview, setShowActivityPreview] = useState(false);
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState('__all__');
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState<FormData>({
     name: '',
     unit_name: '',
     address: '',
+    bairro: '',
+    cep: '',
     planned_start_date: '',
     planned_end_date: '',
+    contract_signing_date: '',
     contract_value: '',
     customer_name: '',
     customer_email: '',
     customer_phone: '',
+    customer_password: '',
     is_project_phase: false,
+    create_user: true,
   });
 
   // Calculate total business days from template activities
@@ -138,6 +155,36 @@ export default function NovaObra() {
     setErrors({});
 
     try {
+      // 0. Create user account if enabled
+      let createdUserId: string | null = null;
+      if (formData.create_user) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${sessionData.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              email: formData.customer_email.trim().toLowerCase(),
+              password: formData.customer_password,
+              display_name: formData.customer_name.trim(),
+              role: 'customer',
+            }),
+          }
+        );
+
+        const userResult = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(userResult.error || 'Falha ao criar usuário');
+        }
+        
+        createdUserId = userResult.user?.id || null;
+      }
+
       // 1. Create project
       const { data: project, error: projectError } = await supabase
         .from('projects')
@@ -145,8 +192,11 @@ export default function NovaObra() {
           name: formData.name.trim(),
           unit_name: formData.unit_name.trim() || null,
           address: formData.address.trim() || null,
+          bairro: formData.bairro.trim() || null,
+          cep: formData.cep.trim() || null,
           planned_start_date: formData.planned_start_date || null,
           planned_end_date: formData.planned_end_date || null,
+          contract_signing_date: formData.contract_signing_date || null,
           contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
           created_by: user.id,
           is_project_phase: formData.is_project_phase,
@@ -170,7 +220,6 @@ export default function NovaObra() {
 
       if (engineerError) {
         console.error('Engineer assignment error:', engineerError);
-        // Don't throw - project is created, just log
       }
 
       // 3. Add current user to project_members as owner (required for can_manage_project)
@@ -184,7 +233,6 @@ export default function NovaObra() {
 
       if (memberError) {
         console.error('Member assignment error:', memberError);
-        // Don't throw - project is created, just log
       }
 
       // 4. Add customer
@@ -195,15 +243,29 @@ export default function NovaObra() {
           customer_name: formData.customer_name.trim(),
           customer_email: formData.customer_email.trim().toLowerCase(),
           customer_phone: formData.customer_phone.trim() || null,
+          customer_user_id: createdUserId || null,
           invitation_sent_at: sendInvite ? new Date().toISOString() : null,
         });
 
       if (customerError) {
         console.error('Customer creation error:', customerError);
-        // Don't throw - project is created, just log
       }
 
-      // 5. Initialize project journey if in project phase
+      // 5. If user was created, also add as project member viewer
+      if (createdUserId) {
+        const { error: viewerError } = await supabase
+          .from('project_members')
+          .insert({
+            project_id: project.id,
+            user_id: createdUserId,
+            role: 'viewer',
+          });
+        if (viewerError) {
+          console.error('Viewer assignment error:', viewerError);
+        }
+      }
+
+      // 6. Initialize project journey if in project phase
       if (formData.is_project_phase) {
         const { error: journeyError } = await supabase
           .rpc('initialize_project_journey', { p_project_id: project.id });
@@ -213,7 +275,7 @@ export default function NovaObra() {
         }
       }
 
-      // 6. Create activities from template if selected (with auto-predecessors)
+      // 7. Create activities from template if selected (with auto-predecessors)
       if (selectedTemplate && Array.isArray(selectedTemplate.default_activities) && selectedTemplate.default_activities.length > 0) {
         const activities = selectedTemplate.default_activities as { description: string; durationDays: number; weight: number }[];
         const startDate = formData.planned_start_date ? new Date(formData.planned_start_date + 'T00:00:00') : new Date();
@@ -245,7 +307,6 @@ export default function NovaObra() {
             weight: act.weight,
             sort_order: idx,
             created_by: user!.id,
-            // Auto-predecessor: each activity depends on the previous one
             predecessor_ids: idx > 0 ? [activityIds[idx - 1]] : [],
           };
         });
@@ -258,7 +319,7 @@ export default function NovaObra() {
         }
       }
 
-      // 7. Increment template usage counter
+      // 8. Increment template usage counter
       if (selectedTemplate) {
         const { error: usageError } = await supabase.rpc('increment_template_usage', { p_template_id: selectedTemplate.id });
         if (usageError) console.error('Usage tracking error:', usageError);
@@ -266,9 +327,11 @@ export default function NovaObra() {
 
       toast({ 
         title: 'Obra cadastrada!', 
-        description: sendInvite 
-          ? `Convite enviado para ${formData.customer_email}` 
-          : 'Cliente cadastrado sem envio de convite'
+        description: formData.create_user 
+          ? `Usuário criado e obra cadastrada com sucesso`
+          : sendInvite 
+            ? `Convite enviado para ${formData.customer_email}` 
+            : 'Cliente cadastrado sem envio de convite'
       });
 
       navigate('/gestao');
@@ -530,7 +593,7 @@ export default function NovaObra() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2 space-y-1">
-                  <Label htmlFor="name">Nome do Projeto *</Label>
+                  <Label htmlFor="name">Condomínio *</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -540,7 +603,7 @@ export default function NovaObra() {
                   />
                   {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
                 </div>
-                <div>
+                <div className="space-y-1">
                   <Label htmlFor="unit_name">Unidade</Label>
                   <Input
                     id="unit_name"
@@ -549,13 +612,32 @@ export default function NovaObra() {
                     placeholder="Ex: Apartamento 502"
                   />
                 </div>
-                <div>
+                <div className="space-y-1">
                   <Label htmlFor="address">Endereço</Label>
                   <Input
                     id="address"
                     value={formData.address}
                     onChange={(e) => handleChange('address', e.target.value)}
                     placeholder="Endereço completo"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="bairro">Bairro</Label>
+                  <Input
+                    id="bairro"
+                    value={formData.bairro}
+                    onChange={(e) => handleChange('bairro', e.target.value)}
+                    placeholder="Ex: Pinheiros"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="cep">CEP</Label>
+                  <Input
+                    id="cep"
+                    value={formData.cep}
+                    onChange={(e) => handleChange('cep', e.target.value)}
+                    placeholder="00000-000"
+                    maxLength={9}
                   />
                 </div>
               </div>
@@ -569,34 +651,52 @@ export default function NovaObra() {
                 <Calendar className="h-5 w-5" />
                 Cronograma
               </CardTitle>
-              <CardDescription>Datas previstas de início e término</CardDescription>
+              <CardDescription>
+                {formData.is_project_phase 
+                  ? 'Datas macro do projeto e assinatura do contrato' 
+                  : 'Datas previstas de início e término'}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-          {formData.is_project_phase && (
-            <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg mb-4">
-              <p>Obra em fase de projeto. As datas podem ser definidas agora ou marcadas como "Em definição".</p>
-            </div>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="planned_start_date">
-                Data de Início {!formData.is_project_phase && '*'}
-              </Label>
               {formData.is_project_phase && (
-                <div className="flex items-center gap-2 mb-2">
-                  <input
-                    type="checkbox"
-                    id="start_date_undefined"
-                    checked={formData.planned_start_date === ''}
-                    onChange={(e) => handleChange('planned_start_date', e.target.checked ? '' : '')}
-                    className="h-4 w-4 rounded border-border"
-                  />
-                  <Label htmlFor="start_date_undefined" className="text-caption cursor-pointer text-muted-foreground">
-                    Em definição
-                  </Label>
+                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg mb-4">
+                  <p>Obra em fase de projeto. As datas podem ser definidas agora ou marcadas como "Em definição".</p>
                 </div>
               )}
-              {(!formData.is_project_phase || formData.planned_start_date !== '') && (
+
+              {/* Contract signing date - only for project phase */}
+              {formData.is_project_phase && (
+                <div className="space-y-2">
+                  <Label htmlFor="contract_signing_date">Data de Assinatura do Contrato</Label>
+                  <Input
+                    id="contract_signing_date"
+                    type="date"
+                    value={formData.contract_signing_date}
+                    onChange={(e) => handleChange('contract_signing_date', e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="planned_start_date">
+                    Data de Início {!formData.is_project_phase && '*'}
+                  </Label>
+                  {formData.is_project_phase && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="checkbox"
+                        id="start_date_undefined"
+                        checked={formData.planned_start_date === ''}
+                        onChange={(e) => handleChange('planned_start_date', e.target.checked ? '' : '')}
+                        className="h-4 w-4 rounded border-border"
+                      />
+                      <Label htmlFor="start_date_undefined" className="text-caption cursor-pointer text-muted-foreground">
+                        Em definição
+                      </Label>
+                    </div>
+                  )}
+                  {(!formData.is_project_phase || formData.planned_start_date !== '') && (
                     <Input
                       id="planned_start_date"
                       type="date"
@@ -604,32 +704,32 @@ export default function NovaObra() {
                       onChange={(e) => handleChange('planned_start_date', e.target.value)}
                       required={!formData.is_project_phase}
                     />
-              )}
-              {formData.is_project_phase && formData.planned_start_date === '' && (
-                <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">
-                  Em definição
+                  )}
+                  {formData.is_project_phase && formData.planned_start_date === '' && (
+                    <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">
+                      Em definição
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="planned_end_date">
-                Data de Término {!formData.is_project_phase && '*'}
-              </Label>
-              {formData.is_project_phase && (
-                <div className="flex items-center gap-2 mb-2">
-                  <input
-                    type="checkbox"
-                    id="end_date_undefined"
-                    checked={formData.planned_end_date === ''}
-                    onChange={(e) => handleChange('planned_end_date', e.target.checked ? '' : '')}
-                    className="h-4 w-4 rounded border-border"
-                  />
-                  <Label htmlFor="end_date_undefined" className="text-caption cursor-pointer text-muted-foreground">
-                    Em definição
+                <div className="space-y-2">
+                  <Label htmlFor="planned_end_date">
+                    Data de Término {!formData.is_project_phase && '*'}
                   </Label>
-                </div>
-              )}
-              {(!formData.is_project_phase || formData.planned_end_date !== '') && (
+                  {formData.is_project_phase && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="checkbox"
+                        id="end_date_undefined"
+                        checked={formData.planned_end_date === ''}
+                        onChange={(e) => handleChange('planned_end_date', e.target.checked ? '' : '')}
+                        className="h-4 w-4 rounded border-border"
+                      />
+                      <Label htmlFor="end_date_undefined" className="text-caption cursor-pointer text-muted-foreground">
+                        Em definição
+                      </Label>
+                    </div>
+                  )}
+                  {(!formData.is_project_phase || formData.planned_end_date !== '') && (
                     <Input
                       id="planned_end_date"
                       type="date"
@@ -637,14 +737,14 @@ export default function NovaObra() {
                       onChange={(e) => handleChange('planned_end_date', e.target.value)}
                       required={!formData.is_project_phase}
                     />
-              )}
-              {formData.is_project_phase && formData.planned_end_date === '' && (
-                <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">
-                  Em definição
+                  )}
+                  {formData.is_project_phase && formData.planned_end_date === '' && (
+                    <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">
+                      Em definição
+                    </div>
+                  )}
                 </div>
-              )}
-                </div>
-          </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -680,7 +780,7 @@ export default function NovaObra() {
                 Dados do Cliente
               </CardTitle>
               <CardDescription>
-                O cliente receberá um convite para acessar o portal
+                Informações do cliente e criação de acesso ao portal
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -721,18 +821,66 @@ export default function NovaObra() {
 
               <Separator />
 
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="send_invite"
-                  checked={sendInvite}
-                  onChange={(e) => setSendInvite(e.target.checked)}
-                  className="h-4 w-4 rounded border-border"
+              {/* Create User Toggle */}
+              <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
+                <div className="space-y-0.5">
+                  <Label htmlFor="create_user" className="text-sm font-medium flex items-center gap-2">
+                    <KeyRound className="h-4 w-4" />
+                    Criar acesso ao portal
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Cria automaticamente o login do cliente com e-mail e senha definidos
+                  </p>
+                </div>
+                <Switch
+                  id="create_user"
+                  checked={formData.create_user}
+                  onCheckedChange={(checked) => handleChange('create_user', checked)}
                 />
-                <Label htmlFor="send_invite" className="text-caption cursor-pointer">
-                  Enviar convite de acesso por e-mail ao cadastrar
-                </Label>
               </div>
+
+              {formData.create_user && (
+                <div className="space-y-1">
+                  <Label htmlFor="customer_password">Senha do Cliente *</Label>
+                  <div className="relative">
+                    <Input
+                      id="customer_password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.customer_password}
+                      onChange={(e) => handleChange('customer_password', e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className={errors.customer_password ? 'border-destructive pr-10' : 'pr-10'}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                    </Button>
+                  </div>
+                  {errors.customer_password && <p className="text-xs text-destructive">{errors.customer_password}</p>}
+                </div>
+              )}
+
+              {!formData.create_user && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="send_invite"
+                      checked={sendInvite}
+                      onChange={(e) => setSendInvite(e.target.checked)}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    <Label htmlFor="send_invite" className="text-caption cursor-pointer">
+                      Enviar convite de acesso por e-mail ao cadastrar
+                    </Label>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
