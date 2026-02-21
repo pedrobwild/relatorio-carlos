@@ -55,14 +55,25 @@ export function StageDetailInline({
   // Detect briefing stage by name pattern
   const isBriefingStage = stage.name.toLowerCase().includes('briefing');
 
-  if (isBriefingStage && !isEditing) {
+  if (isBriefingStage) {
     return (
       <div className="space-y-6">
-        <BriefingStageLayout stage={stage} projectId={projectId} isAdmin={isAdmin} />
+        {/* Admin Edit Form - shown above briefing layout */}
+        {isEditing && (
+          <AdminEditForm
+            stage={stage}
+            projectId={projectId}
+            onClose={() => setIsEditing(false)}
+          />
+        )}
+
+        {!isEditing && (
+          <BriefingStageLayout stage={stage} projectId={projectId} isAdmin={isAdmin} />
+        )}
 
         {/* Admin footer actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          {isAdmin && (
+          {isAdmin && !isEditing && (
             <Button
               size="sm"
               variant="outline"
