@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/queryKeys";
+import { QUERY_TIMING } from "@/lib/queryClient";
 
 export interface ProjectPayment {
   id: string;
@@ -21,7 +23,7 @@ export function useProjectPayments(projectId: string | undefined) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["project-payments", projectId],
+    queryKey: queryKeys.payments.list(projectId),
     queryFn: async () => {
       if (!projectId) return [];
       
@@ -35,6 +37,8 @@ export function useProjectPayments(projectId: string | undefined) {
       return (data || []) as ProjectPayment[];
     },
     enabled: !!user && !!projectId,
+    staleTime: QUERY_TIMING.payments.staleTime,
+    gcTime: QUERY_TIMING.payments.gcTime,
   });
 }
 
@@ -53,7 +57,7 @@ export function useMarkPaymentPaid() {
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["project-payments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
       toast.success(variables.paid ? "Pagamento marcado como pago" : "Pagamento desmarcado");
     },
     onError: (error: any) => {
@@ -89,8 +93,8 @@ export function useMarkPaymentPaid() {
  
        if (error) throw error;
      },
-     onSuccess: () => {
-       queryClient.invalidateQueries({ queryKey: ["project-payments"] });
+      onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
        toast.success("Parcela atualizada");
      },
      onError: (error: any) => {

@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { useMemo, useEffect } from 'react';
+import { queryKeys } from '@/lib/queryKeys';
+import { QUERY_TIMING } from '@/lib/queryClient';
 
 export type PurchaseStatus = 'pending' | 'ordered' | 'in_transit' | 'delivered' | 'cancelled';
 
@@ -64,7 +66,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   const { user } = useAuth();
 
   const { data: purchases = [], isLoading, error } = useQuery({
-    queryKey: ['project-purchases', projectId],
+    queryKey: queryKeys.purchases.list(projectId),
     queryFn: async () => {
       if (!projectId) return [];
       
@@ -78,6 +80,8 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
       return data as ProjectPurchase[];
     },
     enabled: !!projectId,
+    staleTime: QUERY_TIMING.purchases.staleTime,
+    gcTime: QUERY_TIMING.purchases.gcTime,
   });
 
   // Calculate today's date at midnight for consistent comparisons
@@ -164,7 +168,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-purchases', projectId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.purchases.list(projectId) });
       toast.success('Item de compra adicionado');
     },
     onError: (error) => {
@@ -186,7 +190,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-purchases', projectId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.purchases.list(projectId) });
       toast.success('Item de compra atualizado');
     },
     onError: (error) => {
@@ -205,7 +209,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-purchases', projectId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.purchases.list(projectId) });
       toast.success('Item de compra removido');
     },
     onError: (error) => {
@@ -241,7 +245,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project-purchases', projectId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.purchases.list(projectId) });
       toast.success('Status atualizado');
     },
     onError: (error) => {
