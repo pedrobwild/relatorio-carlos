@@ -71,8 +71,8 @@ export default function JornadaProjeto() {
   }, [searchParams, setSearchParams]);
   // Derive welcomeCompleted from actual stage data — if any stage is not 'pending', welcome is done
   const welcomeKey = projectId ? `journey_welcome_${projectId}` : '';
-  // Welcome is only "done" when at least one stage has been completed or explicitly advanced beyond initial state
-  const hasRealProgress = journey?.stages?.some(s => s.status === 'completed' || s.status === 'waiting_action') ?? false;
+  // Welcome is only "done" when at least one stage has progressed beyond 'pending'
+  const hasRealProgress = journey?.stages?.some(s => s.status !== 'pending') ?? false;
   const [welcomeCompleted, setWelcomeCompleted] = useState(() => {
     if (welcomeKey && localStorage.getItem(welcomeKey)) return true;
     return false;
