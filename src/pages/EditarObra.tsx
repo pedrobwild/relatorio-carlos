@@ -88,6 +88,7 @@ interface Payment {
   amount: number;
   due_date: string | null;
   paid_at: string | null;
+  payment_method: string | null;
 }
 
 interface Engineer {
@@ -133,7 +134,7 @@ export default function EditarObra() {
   
   // New item forms
   const [newActivity, setNewActivity] = useState({ description: '', planned_start: '', planned_end: '', weight: '5' });
-  const [newPayment, setNewPayment] = useState({ description: '', amount: '', due_date: '', dueDatePending: false });
+  const [newPayment, setNewPayment] = useState({ description: '', amount: '', due_date: '', dueDatePending: false, payment_method: '' });
 
   useEffect(() => {
     if (projectId) {
@@ -424,14 +425,15 @@ export default function EditarObra() {
           description: newPayment.description,
           amount: parseFloat(newPayment.amount),
           due_date: newPayment.dueDatePending ? null : newPayment.due_date,
-        })
+          payment_method: newPayment.payment_method || null,
+        } as any)
         .select()
         .single();
 
       if (error) throw error;
       
       setPayments([...payments, data]);
-      setNewPayment({ description: '', amount: '', due_date: '', dueDatePending: false });
+      setNewPayment({ description: '', amount: '', due_date: '', dueDatePending: false, payment_method: '' });
       toast({ title: 'Parcela adicionada!' });
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
@@ -1106,7 +1108,7 @@ export default function EditarObra() {
               </CardHeader>
               <CardContent>
                 {/* Add new payment form */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6 p-4 bg-muted/50 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-6 p-4 bg-muted/50 rounded-lg">
                   <div className="sm:col-span-2">
                     <Label className="text-xs">Descrição</Label>
                     <Input
@@ -1124,6 +1126,21 @@ export default function EditarObra() {
                       value={newPayment.amount}
                       onChange={(e) => setNewPayment({ ...newPayment, amount: e.target.value })}
                     />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Forma de Pagamento</Label>
+                    <Select value={newPayment.payment_method} onValueChange={(v) => setNewPayment({ ...newPayment, payment_method: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="boleto">Boleto</SelectItem>
+                        <SelectItem value="pix">PIX</SelectItem>
+                        <SelectItem value="transferencia">Transferência</SelectItem>
+                        <SelectItem value="cartao">Cartão</SelectItem>
+                        <SelectItem value="cheque">Cheque</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label className="text-xs">Vencimento</Label>
@@ -1146,7 +1163,7 @@ export default function EditarObra() {
                       </label>
                     </div>
                   </div>
-                  <div className="sm:col-span-4 flex justify-end">
+                  <div className="sm:col-span-5 flex justify-end">
                     <Button onClick={addPayment}>
                       <Plus className="h-4 w-4 mr-1" />
                       Adicionar Parcela
@@ -1162,6 +1179,7 @@ export default function EditarObra() {
                         <TableHead className="w-16">Parcela</TableHead>
                         <TableHead>Descrição</TableHead>
                         <TableHead className="w-28">Valor</TableHead>
+                        <TableHead>Forma Pgto</TableHead>
                         <TableHead>Vencimento</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="w-12"></TableHead>
@@ -1186,6 +1204,23 @@ export default function EditarObra() {
                               onChange={(e) => updatePayment(payment.id, 'amount', parseFloat(e.target.value))}
                               className="h-8 w-28"
                             />
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={payment.payment_method || ''} 
+                              onValueChange={(v) => updatePayment(payment.id, 'payment_method', v || null)}
+                            >
+                              <SelectTrigger className="h-8 w-32">
+                                <SelectValue placeholder="—" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="boleto">Boleto</SelectItem>
+                                <SelectItem value="pix">PIX</SelectItem>
+                                <SelectItem value="transferencia">Transferência</SelectItem>
+                                <SelectItem value="cartao">Cartão</SelectItem>
+                                <SelectItem value="cheque">Cheque</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
