@@ -177,7 +177,7 @@ export default function Auth() {
       <img
         src={bwildLogo}
         alt="Bwild"
-        className="absolute top-6 right-6 h-8 md:hidden object-contain"
+        className="absolute top-6 right-6 h-8 md:hidden object-contain mix-blend-multiply"
       />
 
       {/* Form – centered on mobile, left on desktop */}
