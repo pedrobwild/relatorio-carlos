@@ -817,87 +817,20 @@ export default function NovaObra() {
               <CardDescription>Dados financeiros e condições de pagamento</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="contract_value">Valor Total do Contrato (R$)</Label>
-                  <Input
-                    id="contract_value"
-                    type="number"
-                    step="0.01"
-                    value={formData.contract_value}
-                    onChange={(e) => handleChange('contract_value', e.target.value)}
-                    placeholder="0,00"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="num_installments">Número de Parcelas</Label>
-                  <Input
-                    id="num_installments"
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={formData.num_installments}
-                    onChange={(e) => {
-                      handleChange('num_installments', e.target.value);
-                      // Auto-calculate installment value
-                      if (formData.contract_value && e.target.value) {
-                        const total = parseFloat(formData.contract_value);
-                        const n = parseInt(e.target.value);
-                        if (total > 0 && n > 0) {
-                          handleChange('installment_value', (total / n).toFixed(2));
-                        }
-                      }
-                    }}
-                    placeholder="Ex: 12"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="installment_value">Valor da Parcela (R$)</Label>
-                  <Input
-                    id="installment_value"
-                    type="number"
-                    step="0.01"
-                    value={formData.installment_value}
-                    onChange={(e) => handleChange('installment_value', e.target.value)}
-                    placeholder="0,00"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="payment_method">Forma de Pagamento</Label>
-                  <Select
-                    value={formData.payment_method}
-                    onValueChange={(v) => handleChange('payment_method', v)}
-                  >
-                    <SelectTrigger id="payment_method">
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="boleto">Boleto</SelectItem>
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="transferencia">Transferência</SelectItem>
-                      <SelectItem value="cartao">Cartão de Crédito</SelectItem>
-                      <SelectItem value="financiamento">Financiamento</SelectItem>
-                      <SelectItem value="outro">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="payment_status">Status do Pagamento</Label>
-                  <Select
-                    value={formData.payment_status}
-                    onValueChange={(v) => handleChange('payment_status', v)}
-                  >
-                    <SelectTrigger id="payment_status">
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="partial">Parcialmente Pago</SelectItem>
-                      <SelectItem value="paid">Pago</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="contract_value">Valor Total do Contrato (R$)</Label>
+                <Input
+                  id="contract_value"
+                  type="number"
+                  step="0.01"
+                  value={formData.contract_value}
+                  onChange={(e) => handleChange('contract_value', e.target.value)}
+                  placeholder="0,00"
+                />
               </div>
+              <p className="text-xs text-muted-foreground">
+                Parcelas, forma e status de pagamento podem ser configurados na edição da obra.
+              </p>
             </CardContent>
           </Card>
 
