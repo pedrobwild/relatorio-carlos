@@ -171,13 +171,9 @@ export function useDocumentCategoryLabel(category: DocumentCategory): string {
  * Helper to check if a document needs approval
  */
 export function documentNeedsApproval(
-  category: DocumentCategory,
-  status: DocumentStatus
+  _category: DocumentCategory,
+  _status: DocumentStatus
 ): boolean {
-  const approvalCategories: DocumentCategory[] = [
-    'projeto_3d',
-    'executivo',
-    'plano_reforma',
-  ];
-  return approvalCategories.includes(category) && status === 'pending';
+  // Documents attached to a project do not require approval
+  return false;
 }
