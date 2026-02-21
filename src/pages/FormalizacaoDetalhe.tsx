@@ -390,29 +390,16 @@ export default function FormalizacaoDetalhe() {
         {/* Document header */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant={getStatusBadgeVariant(formalizacao.status as FormalizationStatus)}>
-                    {FORMALIZATION_STATUS_LABELS[formalizacao.status as FormalizationStatus]}
-                  </Badge>
-                  <Badge variant="outline">
-                    {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
-                  </Badge>
-                </div>
-                <h1 className="text-xl font-semibold">{formalizacao.title}</h1>
-                <p className="text-muted-foreground">{formalizacao.summary}</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge variant={getStatusBadgeVariant(formalizacao.status as FormalizationStatus)}>
+                  {FORMALIZATION_STATUS_LABELS[formalizacao.status as FormalizationStatus]}
+                </Badge>
+                <Badge variant="outline">
+                  {FORMALIZATION_TYPE_LABELS[formalizacao.type as FormalizationType]}
+                </Badge>
               </div>
-              
-              {formalizacao.locked_hash && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
-                  <Shield className="h-4 w-4" />
-                  <div>
-                    <p className="font-mono text-xs">{formatShortHash(formalizacao.locked_hash)}</p>
-                    <p className="text-xs">Travado em {formatDate(formalizacao.locked_at)}</p>
-                  </div>
-                </div>
-              )}
+              <h1 className="text-xl font-semibold">{formalizacao.title}</h1>
             </div>
           </CardContent>
         </Card>
