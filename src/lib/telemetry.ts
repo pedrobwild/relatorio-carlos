@@ -89,7 +89,7 @@ export async function track(
   };
 
   // Always log to console in development
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.log('[Telemetry]', event, eventData);
   }
 

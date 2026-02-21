@@ -43,14 +43,47 @@
 
 ---
 
+## Fase 2 — Auditoria Técnica Profunda (2026-02-21)
+
+### 6. Segurança: Remover leitura de localStorage incorreta em errorMonitoring (P0)
+
+**Arquivo**: `src/lib/errorMonitoring.ts`  
+**O que mudou**: Removida função `getCurrentContext()` que lia `localStorage.getItem('sb-auth-token')` — esta chave não existe no formato usado pelo Supabase SDK. A função agora retorna apenas a rota atual; userId/role devem ser fornecidos pelo caller via `ErrorContext`.  
+**Por quê**: A chave correta seria `sb-{project_id}-auth-token`, mas depender de internals do SDK é frágil e pode expor dados de sessão em relatórios de erro. Melhor receber dados explicitamente.  
+**Como testar**: `captureError(new Error('test'), { feature: 'general' })` — deve logar sem userId/role (a menos que fornecido pelo caller).
+
+### 7. Bug: Corrigir detecção de ambiente em telemetry.ts (P0)
+
+**Arquivo**: `src/lib/telemetry.ts`  
+**O que mudou**: `process.env.NODE_ENV === 'development'` → `import.meta.env.DEV`  
+**Por quê**: Projetos Vite não definem `process.env.NODE_ENV` por padrão. `import.meta.env.DEV` é a forma correta e consistente com o restante do codebase.  
+**Como testar**: Em modo dev, logs de telemetria devem aparecer no console. Em build de produção, não.
+
+### 8. Dead Code: Remover debugAuthNav.ts (P1)
+
+**Arquivo**: `src/lib/debugAuthNav.ts` (deletado)  
+**O que mudou**: Arquivo removido — não havia nenhum import em todo o codebase.  
+**Por quê**: Dead code. Funcionalidade duplicada com `debugAuth.ts` que é efetivamente usada.  
+**Como testar**: Build + lint devem passar sem erro.
+
+### 9. Dead Code: Remover useProjects.ts legado (P1)
+
+**Arquivo**: `src/hooks/useProjects.ts` (deletado)  
+**O que mudou**: Hook legado removido — já estava marcado como `@deprecated` e não tinha importações. Substituído por `useProjectsQuery.ts`.  
+**Por quê**: Código morto que confundia devs e violava padrão de repositories.  
+**Como testar**: Build deve passar. Nenhum componente referenciava este hook.
+
+---
+
 ## Itens Documentados para Implementação Futura (P1/P2)
 
 | Item | Prioridade | Detalhes |
 |------|-----------|---------|
 | Adicionar scripts `typecheck`, `test`, `smoke`, `test:e2e`, `seed` ao package.json | P1 | Requer edição direta do package.json |
-| Habilitar `strict: true` no tsconfig gradualmente | P1 | Alto impacto, requer fix de muitos erros |
+| Habilitar `strict: true` no tsconfig gradualmente | P2 | Alto impacto, requer fix de muitos erros |
 | Mover `@playwright/test` para devDependencies | P1 | Reduz bundle de produção |
-| Migrar acessos diretos ao supabase para repositories | P1 | Aderência à arquitetura documentada |
-| Migrar hooks legados para TanStack Query | P2 | Refactor gradual |
-| Remover dead code | P2 | Análise de uso necessária |
+| Migrar `useDocuments.ts` para usar documents.repository | P1 | Aderência à arquitetura |
+| Consolidar corsHeaders em Edge Functions (usar _shared/cors.ts) | P2 | 10 funções duplicam o padrão |
+| Reduzir 535 usos de `as any` | P2 | Maioria em testes ou casts Supabase |
+| Refatorar `useAuth.ts` localStorage cleanup (L140) | P2 | Depende de internals do SDK |
 | Habilitar `noFallthroughCasesInSwitch` | P2 | Baixo risco |

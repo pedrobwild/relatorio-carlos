@@ -66,24 +66,9 @@ export function initErrorMonitoring(): void {
  * Get current user context
  */
 function getCurrentContext(): Partial<ErrorContext> {
-  // Try to get user info from localStorage or session
-  let userId: string | undefined;
-  let role: string | undefined;
-
-  try {
-    const sessionStr = localStorage.getItem('sb-auth-token');
-    if (sessionStr) {
-      const session = JSON.parse(sessionStr);
-      userId = session?.user?.id;
-      role = session?.user?.user_metadata?.role;
-    }
-  } catch {
-    // Ignore parsing errors
-  }
-
+  // Only use the route; user info is injected by callers via ErrorContext.
+  // Avoids reading internal Supabase localStorage keys that may change.
   return {
-    userId,
-    role,
     route: window.location.pathname,
   };
 }

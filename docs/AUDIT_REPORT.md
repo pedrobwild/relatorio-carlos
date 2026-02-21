@@ -90,23 +90,36 @@ O projeto é bem estruturado (camada Repositories, TanStack Query, ErrorBoundary
 
 ## Plano de Execução
 
-### Onda 1 — Quick Wins (P0) ✅ Aplicar agora
+### Onda 1 — Quick Wins (P0) ✅ Concluída
 
-1. Adicionar scripts: `typecheck`, `test`, `test:e2e`, `test:e2e:ui`, `smoke`, `seed`
-2. Alinhar documentação com scripts reais
-3. Validar que CI passa com os novos scripts
+1. ~~Alinhar CI com comandos reais~~ ✅
+2. ~~Alinhar documentação com scripts reais~~ ✅
+3. ~~Validar que CI passa com os novos scripts~~ ✅
 
-### Onda 2 — Hardening (P1) — Próxima iteração
+### Onda 2 — Auditoria Técnica (P0/P1) ✅ Concluída
 
-1. Habilitar flags incrementais no tsconfig (`noImplicitAny`, etc.)
-2. Mover deps de teste para devDependencies
-3. Auditar e corrigir acessos diretos ao supabase
+1. ~~Remover dead code: `debugAuthNav.ts` (sem importações)~~ ✅
+2. ~~Remover hook legado: `useProjects.ts` (deprecated, sem consumidores)~~ ✅
+3. ~~Corrigir segurança: `errorMonitoring.ts` lia chave localStorage incorreta (`sb-auth-token`)~~ ✅
+4. ~~Corrigir bug: `telemetry.ts` usava `process.env.NODE_ENV` em vez de `import.meta.env.DEV`~~ ✅
+
+#### Achados documentados (P1/P2 — não implementados):
+
+| Achado | Prioridade | Detalhes |
+|--------|-----------|---------|
+| 535 usos de `as any` em 26 arquivos | P2 | Maioria em testes ou casts Supabase p/ tabelas fora do types gerado |
+| Edge functions duplicam `corsHeaders` localmente | P2 | Devem importar de `_shared/cors.ts` |
+| `useAuth.ts` constrói chave localStorage manualmente (L140) | P2 | Frágil — depende de naming interno do SDK |
+| `useDocuments.ts` acessa supabase diretamente | P1 | Deveria usar documents.repository |
+| Todas `dangerouslySetInnerHTML` usam DOMPurify ✅ | — | Sem vulnerabilidades XSS encontradas |
+| CORS `*` nas Edge Functions | — | Padrão correto p/ funções atrás de auth |
 
 ### Onda 3 — Refactors Seguros (P2) — Backlog
 
 1. Migração gradual de hooks para TanStack Query
-2. Limpeza de dead code
-3. Documentar "do/don't" no CONTRIBUTING.md
+2. Consolidar corsHeaders nas Edge Functions
+3. Habilitar `strict: true` gradualmente
+4. Documentar "do/don't" no CONTRIBUTING.md
 
 ---
 
