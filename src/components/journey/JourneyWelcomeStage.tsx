@@ -146,7 +146,7 @@ export function JourneyWelcomeStage({ hero, projectId, isAdmin, onAdvance, nextS
       </Card>
 
       {/* Block 3: Ligação de Energia */}
-      <WelcomeEnergyCard />
+      <WelcomeEnergyCard projectId={projectId} isAdmin={isAdmin} />
 
       {/* Block 4: Resumo do Contrato */}
       <WelcomeContractCard />
