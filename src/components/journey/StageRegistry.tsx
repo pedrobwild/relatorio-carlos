@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -22,6 +23,7 @@ import {
   type StageRecord,
 } from '@/hooks/useStageRecords';
 import { useAuth } from '@/hooks/useAuth';
+import { useCompleteStage } from '@/hooks/useProjectJourney';
 
 /* ─── Tab config ─── */
 
@@ -39,11 +41,13 @@ interface StageRegistryProps {
   isAdmin: boolean;
   /** When true, only shows conversation/minutes records with direct minutes form */
   minutesOnly?: boolean;
+  /** Stage name — used to detect briefing stage for auto-completion */
+  stageName?: string;
 }
 
 /* ─── Main ─── */
 
-export function StageRegistry({ stageId, projectId, isAdmin, minutesOnly = false }: StageRegistryProps) {
+export function StageRegistry({ stageId, projectId, isAdmin, minutesOnly = false, stageName }: StageRegistryProps) {
   const { data: records, isLoading, isError, refetch } = useStageRecords(stageId, projectId);
   const [activeTab, setActiveTab] = useState<RecordCategory>(minutesOnly ? 'conversation' : 'decision');
   const [showForm, setShowForm] = useState(false);
@@ -111,6 +115,7 @@ export function StageRegistry({ stageId, projectId, isAdmin, minutesOnly = false
                 category={value}
                 onClose={() => setShowForm(false)}
                 minutesOnly={minutesOnly}
+                stageName={stageName}
               />
             )}
 
@@ -252,15 +257,19 @@ function AddRecordForm({
   category,
   onClose,
   minutesOnly,
+  stageName,
 }: {
   stageId: string;
   projectId: string;
   category: RecordCategory;
   onClose: () => void;
   minutesOnly?: boolean;
+  stageName?: string;
 }) {
   const { user } = useAuth();
   const create = useCreateStageRecord();
+  const completeStage = useCompleteStage();
+  const isBriefingStage = stageName?.toLowerCase().includes('briefing') ?? false;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [responsible, setResponsible] = useState<'client' | 'bwild'>('bwild');
@@ -317,7 +326,15 @@ function AddRecordForm({
         created_by: user.id,
         record_date: meetingDate,
       },
-      { onSuccess: () => onClose() },
+      {
+        onSuccess: () => {
+          if (isBriefingStage) {
+            completeStage.mutate({ stageId, projectId });
+            toast.success('Ata salva! Etapa de Briefing concluída.');
+          }
+          onClose();
+        },
+      },
     );
   };
 
