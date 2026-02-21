@@ -42,6 +42,8 @@ const DocumentCard = ({
   canDelete: boolean;
   onRequestDelete: (doc: ProjectDocument) => void;
 }) => {
+  const [open, setOpen] = useState(false);
+
   const handleDownload = async () => {
     if (!doc.url) return;
     const response = await fetch(doc.url);
@@ -57,7 +59,7 @@ const DocumentCard = ({
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <div className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/50 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" tabIndex={0}>
           <div className="flex items-center gap-3">
@@ -116,7 +118,9 @@ const DocumentCard = ({
                   className="gap-1.5 h-11 min-h-[44px] px-3 text-destructive hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRequestDelete(doc);
+                    setOpen(false); // Close viewer first
+                    // Delay to let Dialog unmount before AlertDialog opens
+                    setTimeout(() => onRequestDelete(doc), 150);
                   }}
                 >
                   <Trash2 className="w-4 h-4" /><span className="hidden sm:inline">Excluir</span>
