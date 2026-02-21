@@ -69,10 +69,36 @@ export default function JornadaProjeto() {
     }
     setSearchParams(searchParams, { replace: true });
   }, [searchParams, setSearchParams]);
+  // Derive welcomeCompleted from actual stage data — if any stage is not 'pending', welcome is done
+  const welcomeKey = projectId ? `journey_welcome_${projectId}` : '';
+  const hasRealProgress = journey?.stages?.some(s => s.status !== 'pending') ?? false;
+  const [welcomeCompleted, setWelcomeCompleted] = useState(() => {
+    if (welcomeKey && localStorage.getItem(welcomeKey)) return true;
+    return false;
+  });
+
+  // Determine initial active view: go to current stage if welcome is done
   const [activeView, setActiveView] = useState<string>('welcome');
-  const [welcomeCompleted, setWelcomeCompleted] = useState(false);
   const [timelineSheetOpen, setTimelineSheetOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const hasAutoNavigated = useRef(false);
+
+  // Sync welcomeCompleted when journey data loads & auto-navigate to current stage
+  useEffect(() => {
+    if (hasRealProgress && !welcomeCompleted) {
+      setWelcomeCompleted(true);
+      if (welcomeKey) localStorage.setItem(welcomeKey, '1');
+    }
+    // Auto-navigate to the current active stage once
+    if (hasRealProgress && journey?.stages && !hasAutoNavigated.current) {
+      hasAutoNavigated.current = true;
+      const currentStage = journey.stages.find(s => s.status === 'in_progress' || s.status === 'waiting_action')
+        || journey.stages.find(s => s.status !== 'completed' && s.status !== 'pending');
+      if (currentStage) {
+        setActiveView(currentStage.id);
+      }
+    }
+  }, [hasRealProgress, welcomeCompleted, welcomeKey, journey?.stages]);
 
   const isMobile = useIsMobile();
   const isAdmin = role === 'admin' || role === 'manager' || role === 'engineer';
@@ -161,13 +187,14 @@ export default function JornadaProjeto() {
 
   const handleAdvanceFromWelcome = useCallback(() => {
     setWelcomeCompleted(true);
+    if (welcomeKey) localStorage.setItem(welcomeKey, '1');
     if (journey?.stages && journey.stages.length > 0) {
       setActiveView(journey.stages[0].id);
       setTimeout(() => {
         contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
-  }, [journey?.stages]);
+  }, [journey?.stages, welcomeKey]);
 
   // Welcome toast — once per project
   useEffect(() => {
