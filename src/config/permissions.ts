@@ -8,7 +8,6 @@ import type { AppRole } from '@/hooks/useUserRole';
 export type Feature =
   // Documents
   | 'documents:upload'
-  | 'documents:approve'
   | 'documents:delete'
   | 'documents:view'
   // Formalizations
@@ -148,7 +147,6 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
   admin: [
     // All features
     'documents:upload',
-    'documents:approve',
     'documents:delete',
     'documents:view',
     'formalizations:create',
