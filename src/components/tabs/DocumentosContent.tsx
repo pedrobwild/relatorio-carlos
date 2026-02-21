@@ -100,7 +100,7 @@ const DocumentCard = ({
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-[95vw] sm:w-[95vw] h-[95dvh] sm:h-[90vh] p-0 flex flex-col rounded-t-xl sm:rounded-xl">
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-[95vw] h-[95dvh] sm:h-[90vh] max-h-[95dvh] sm:max-h-[90vh] p-0 !flex flex-col rounded-t-xl sm:rounded-xl overflow-hidden">
         <DialogHeader className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between">
             <div>
