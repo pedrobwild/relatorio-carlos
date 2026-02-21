@@ -449,51 +449,6 @@ export default function FormalizacaoDetalhe() {
           </Card>
         )}
 
-        {/* Signature block for pending signatures */}
-        {formalizacao.status === 'pending_signatures' && pendingPartyForUser && (
-          <Card className="border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <h3 className="font-medium text-amber-900 dark:text-amber-100">
-                      Sua ciência é necessária
-                    </h3>
-                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                      Leia o conteúdo da formalização e confirme sua ciência abaixo.
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Checkbox 
-                      id="acknowledge" 
-                      checked={acknowledged}
-                      onCheckedChange={(checked) => setAcknowledged(checked === true)}
-                      aria-describedby="acknowledge-description"
-                    />
-                    <Label 
-                      htmlFor="acknowledge" 
-                      id="acknowledge-description"
-                      className="text-sm leading-relaxed cursor-pointer"
-                    >
-                      Li e estou ciente do conteúdo desta formalização, concordando com os termos e condições apresentados.
-                    </Label>
-                  </div>
-
-                  <Button 
-                    onClick={handleAcknowledge}
-                    disabled={!acknowledged || acknowledge.isPending}
-                    aria-label="Confirmar ciência"
-                  >
-                    {acknowledge.isPending ? 'Registrando...' : 'Li e estou ciente'}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3 min-h-[44px] h-11">
@@ -520,6 +475,51 @@ export default function FormalizacaoDetalhe() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Signature block for pending signatures - after content, before parties */}
+            {formalizacao.status === 'pending_signatures' && pendingPartyForUser && (
+              <Card className="border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h3 className="font-medium text-amber-900 dark:text-amber-100">
+                          Sua ciência é necessária
+                        </h3>
+                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                          Leia o conteúdo da formalização e confirme sua ciência abaixo.
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <Checkbox 
+                          id="acknowledge" 
+                          checked={acknowledged}
+                          onCheckedChange={(checked) => setAcknowledged(checked === true)}
+                          aria-describedby="acknowledge-description"
+                        />
+                        <Label 
+                          htmlFor="acknowledge" 
+                          id="acknowledge-description"
+                          className="text-sm leading-relaxed cursor-pointer"
+                        >
+                          Li e estou ciente do conteúdo desta formalização, concordando com os termos e condições apresentados.
+                        </Label>
+                      </div>
+
+                      <Button 
+                        onClick={handleAcknowledge}
+                        disabled={!acknowledged || acknowledge.isPending}
+                        aria-label="Confirmar ciência"
+                      >
+                        {acknowledge.isPending ? 'Registrando...' : 'Li e estou ciente'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Parties involved */}
             <Card>
