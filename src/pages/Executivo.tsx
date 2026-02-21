@@ -3,7 +3,7 @@ import { ArrowLeft, Download, ExternalLink, FileText, Award, Ruler, ClipboardLis
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import bwildLogo from "@/assets/bwild-logo-transparent.png";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 import PDFViewer from "@/components/PDFViewer";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";

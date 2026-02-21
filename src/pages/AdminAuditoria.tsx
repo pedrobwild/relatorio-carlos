@@ -53,7 +53,7 @@ import {
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { useAudits, useEntityTypes } from '@/hooks/useAuditoria';
 import { formatAuditsForCSV, type AuditoriaWithUser, type AuditoriaAcao } from '@/infra/repositories/auditoria.repository';
-import bwildLogo from '@/assets/bwild-logo-transparent.png';
+import bwildLogo from '@/assets/bwild-logo-dark.png';
 
 const PAGE_SIZE = 20;
 

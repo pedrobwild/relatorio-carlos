@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import bwildLogo from "@/assets/bwild-logo-transparent.png";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { DocumentComments } from "@/components/DocumentComments";
 import { useProject } from "@/contexts/ProjectContext";
