@@ -907,6 +907,7 @@ export type Database = {
           created_at: string
           end_date: string
           id: string
+          meeting_details_text: string | null
           notes: string | null
           preferred_weekdays: string[]
           project_id: string
@@ -924,6 +925,7 @@ export type Database = {
           created_at?: string
           end_date: string
           id?: string
+          meeting_details_text?: string | null
           notes?: string | null
           preferred_weekdays?: string[]
           project_id: string
@@ -941,6 +943,7 @@ export type Database = {
           created_at?: string
           end_date?: string
           id?: string
+          meeting_details_text?: string | null
           notes?: string | null
           preferred_weekdays?: string[]
           project_id?: string

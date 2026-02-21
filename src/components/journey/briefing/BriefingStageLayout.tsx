@@ -2,9 +2,8 @@ import { Separator } from '@/components/ui/separator';
 import { StageSummary } from '../StageSummary';
 import { StageIntroCard } from './StageIntroCard';
 import { MeetingAvailabilityCard } from './MeetingAvailabilityCard';
-import { MeetingConfirmationCard } from './MeetingConfirmationCard';
+import { AdminMeetingPanel } from './AdminMeetingPanel';
 import { StageLogSection } from './StageLogSection';
-import { useMeetingAvailability } from '@/hooks/useMeetingAvailability';
 import type { JourneyStage } from '@/hooks/useProjectJourney';
 
 interface BriefingStageLayoutProps {
@@ -14,8 +13,6 @@ interface BriefingStageLayoutProps {
 }
 
 export function BriefingStageLayout({ stage, projectId, isAdmin }: BriefingStageLayoutProps) {
-  const { data: availability } = useMeetingAvailability(stage.id, projectId);
-
   return (
     <div className="space-y-6">
       {/* Summary header */}
@@ -24,22 +21,16 @@ export function BriefingStageLayout({ stage, projectId, isAdmin }: BriefingStage
       {/* ① StageIntroCard */}
       <StageIntroCard />
 
-
-      {/* ③ MeetingConfirmationCard (shown above availability when confirmed) */}
-      {availability?.status === 'confirmed' && (
-        <MeetingConfirmationCard availability={availability} />
+      {/* ② Meeting section — admin sees AdminMeetingPanel, client sees MeetingAvailabilityCard */}
+      {isAdmin ? (
+        <AdminMeetingPanel stageId={stage.id} projectId={projectId} />
+      ) : (
+        <MeetingAvailabilityCard stageId={stage.id} projectId={projectId} isAdmin={isAdmin} />
       )}
-
-      {/* ④ MeetingAvailabilityCard */}
-      <MeetingAvailabilityCard
-        stageId={stage.id}
-        projectId={projectId}
-        isAdmin={isAdmin}
-      />
 
       <Separator />
 
-      {/* ⑤ StageLogSection */}
+      {/* ③ StageLogSection */}
       <StageLogSection
         stageId={stage.id}
         projectId={projectId}

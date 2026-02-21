@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export type MeetingStatus = 'pending_confirmation' | 'confirmed' | 'cancelled';
+
 export interface MeetingAvailability {
   id: string;
   stage_id: string;
@@ -13,9 +15,20 @@ export interface MeetingAvailability {
   preferred_weekdays: string[];
   time_slots: string[];
   notes: string | null;
-  status: 'pending_confirmation' | 'confirmed' | 'cancelled';
+  status: MeetingStatus;
   confirmed_datetime: string | null;
   confirmed_by: string | null;
+  meeting_details_text: string | null;
+}
+
+/** Derived state machine status for the 3-state flow */
+export type BriefingMeetingState = 'needs_availability' | 'awaiting_scheduling' | 'scheduled';
+
+export function deriveMeetingState(availability: MeetingAvailability | null): BriefingMeetingState {
+  if (!availability) return 'needs_availability';
+  if (availability.status === 'confirmed') return 'scheduled';
+  // pending_confirmation means client submitted, awaiting admin scheduling
+  return 'awaiting_scheduling';
 }
 
 export function useMeetingAvailability(stageId: string | undefined, projectId: string | undefined) {
@@ -80,6 +93,39 @@ export function useSubmitMeetingAvailability() {
     },
     onError: () => {
       toast.error('Não foi possível enviar sua disponibilidade. Tente novamente.');
+    },
+  });
+}
+
+export function useScheduleMeeting() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      availability_id: string;
+      stage_id: string;
+      confirmed_datetime: string;
+      meeting_details_text: string;
+      confirmed_by: string;
+    }) => {
+      const { error } = await supabase
+        .from('journey_meeting_availability' as any)
+        .update({
+          status: 'confirmed',
+          confirmed_datetime: input.confirmed_datetime,
+          confirmed_by: input.confirmed_by,
+          meeting_details_text: input.meeting_details_text,
+        } as any)
+        .eq('id', input.availability_id);
+      if (error) throw error;
+      return { stageId: input.stage_id };
+    },
+    onSuccess: ({ stageId }) => {
+      qc.invalidateQueries({ queryKey: ['meeting-availability', stageId] });
+      toast.success('Reunião agendada com sucesso.');
+    },
+    onError: () => {
+      toast.error('Não foi possível agendar a reunião. Tente novamente.');
     },
   });
 }
