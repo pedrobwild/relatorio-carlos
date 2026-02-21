@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink, GitBranch, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink, GitBranch, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { useFormalizacao, useAcknowledge, useSendForSignature, useDeleteFormalizacao } from '@/hooks/useFormalizacoes';
+import { useFormalizacao, useAcknowledge, useSendForSignature, useDeleteFormalizacao, useUpdateFormalizacao } from '@/hooks/useFormalizacoes';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import ReactMarkdown from 'react-markdown';
+import DOMPurify from 'dompurify';
+import { RichTextEditorModal } from '@/components/report/RichTextEditorModal';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { 
@@ -80,11 +82,13 @@ export default function FormalizacaoDetalhe() {
   const [acknowledged, setAcknowledged] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [sendingForSignature, setSendingForSignature] = useState(false);
+  const [editingContent, setEditingContent] = useState(false);
 
   const { data: formalizacao, isLoading, refetch } = useFormalizacao(id);
   const acknowledge = useAcknowledge();
   const sendForSignature = useSendForSignature();
   const deleteFormalizacao = useDeleteFormalizacao();
+  const updateFormalizacao = useUpdateFormalizacao();
 
   const isDemo = isSeedData(formalizacao);
 
@@ -470,11 +474,67 @@ export default function FormalizacaoDetalhe() {
             {/* Content */}
             <Card>
               <CardContent className="p-6">
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-foreground prose-li:text-muted-foreground prose-hr:border-border prose-hr:my-6 [&>*+*]:mt-4 [&>h1]:mt-0 [&>h2]:mt-6 [&>h3]:mt-5 [&>p]:mt-2 text-justify">
-                  <ReactMarkdown>{formalizacao.body_md || ''}</ReactMarkdown>
-                </div>
+                {isAdmin && !formalizacao.locked_at && (
+                  <div className="flex justify-end mb-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingContent(true)}
+                      className="gap-1.5"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar conteúdo
+                    </Button>
+                  </div>
+                )}
+                {(() => {
+                  const content = formalizacao.body_md || '';
+                  const isHtml = /<[a-z][\s\S]*>/i.test(content);
+                  if (isHtml) {
+                    return (
+                      <div
+                        className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-foreground prose-li:text-muted-foreground prose-hr:border-border prose-hr:my-6 [&>*+*]:mt-4 [&>h1]:mt-0 [&>h2]:mt-6 [&>h3]:mt-5 [&>p]:mt-2 text-justify"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+                      />
+                    );
+                  }
+                  return (
+                    <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-foreground prose-li:text-muted-foreground prose-hr:border-border prose-hr:my-6 [&>*+*]:mt-4 [&>h1]:mt-0 [&>h2]:mt-6 [&>h3]:mt-5 [&>p]:mt-2 text-justify">
+                      <ReactMarkdown>{content}</ReactMarkdown>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
+
+            {/* Rich Text Editor Modal */}
+            <RichTextEditorModal
+              open={editingContent}
+              onOpenChange={setEditingContent}
+              value={formalizacao.body_md || ''}
+              title="Editar conteúdo da formalização"
+              onSave={async (html) => {
+                if (!id) return;
+                try {
+                  await updateFormalizacao.mutateAsync({
+                    id,
+                    data: { body_md: html },
+                  });
+                  toast({
+                    title: 'Conteúdo atualizado',
+                    description: 'O conteúdo da formalização foi salvo com sucesso.',
+                  });
+                  refetch();
+                } catch (error) {
+                  console.error('Error updating content:', error);
+                  toast({
+                    title: 'Erro',
+                    description: 'Não foi possível salvar o conteúdo.',
+                    variant: 'destructive',
+                  });
+                }
+              }}
+            />
 
             {/* Signature block for pending signatures - after content, before parties */}
             {formalizacao.status === 'pending_signatures' && pendingPartyForUser && (
