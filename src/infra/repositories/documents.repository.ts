@@ -272,6 +272,37 @@ export async function approveDocument(
 }
 
 /**
+ * Delete a document and its storage file
+ */
+export async function deleteDocument(
+  documentId: string
+): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    // First get the document to know its storage path
+    const { data: doc, error: fetchError } = await supabase
+      .from('project_documents')
+      .select('storage_path, storage_bucket')
+      .eq('id', documentId)
+      .single();
+
+    if (fetchError) return { data: null, error: fetchError };
+
+    // Delete from storage
+    if (doc) {
+      await supabase.storage.from(doc.storage_bucket).remove([doc.storage_path]);
+    }
+
+    // Delete from database
+    const { error } = await supabase
+      .from('project_documents')
+      .delete()
+      .eq('id', documentId);
+
+    return { data: null, error };
+  });
+}
+
+/**
  * Get version history for a document
  */
 export async function getDocumentVersionHistory(
