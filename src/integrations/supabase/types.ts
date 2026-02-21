@@ -2229,6 +2229,7 @@ export type Database = {
           address: string | null
           bairro: string | null
           cep: string | null
+          contract_signing_date: string | null
           contract_value: number | null
           created_at: string
           created_by: string
@@ -2255,6 +2256,7 @@ export type Database = {
           address?: string | null
           bairro?: string | null
           cep?: string | null
+          contract_signing_date?: string | null
           contract_value?: number | null
           created_at?: string
           created_by: string
@@ -2281,6 +2283,7 @@ export type Database = {
           address?: string | null
           bairro?: string | null
           cep?: string | null
+          contract_signing_date?: string | null
           contract_value?: number | null
           created_at?: string
           created_by?: string
