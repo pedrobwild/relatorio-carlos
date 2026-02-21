@@ -124,7 +124,7 @@ export function AdminScheduleModal({ open, onOpenChange, availability }: AdminSc
           {/* Date picker */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Data da reunião</label>
-            <Popover>
+            <Popover modal>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -137,7 +137,7 @@ export function AdminScheduleModal({ open, onOpenChange, availability }: AdminSc
                   {selectedDate ? format(selectedDate, "dd 'de' MMMM yyyy", { locale: ptBR }) : 'Selecionar data'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 z-[200]" align="start">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
