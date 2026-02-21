@@ -53,7 +53,7 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
         </span>
       </div>
 
-      {/* Next step hint */}
+      {/* Next step hint — hidden on mobile to avoid redundancy with stepper */}
       <AnimatePresence mode="wait">
         {showNextHint && nextStage && onNextClick && (
           <motion.button
@@ -64,7 +64,7 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
             transition={{ duration: 0.25 }}
             onClick={onNextClick}
             className={cn(
-              "w-full flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5",
+              "hidden md:flex w-full items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5",
               "hover:bg-primary/10 transition-colors text-left group cursor-pointer"
             )}
           >
