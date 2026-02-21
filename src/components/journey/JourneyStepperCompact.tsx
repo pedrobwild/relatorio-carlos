@@ -152,24 +152,6 @@ export function JourneyStepperCompact({
         </CardContent>
       </Card>
 
-      {/* Next stage callout */}
-      {nextStage && (
-        <button
-          onClick={() => onStageClick(nextStage.id)}
-          className={cn(
-            'w-full flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card',
-            'hover:bg-muted/40 active:bg-muted/60 transition-colors text-left',
-            'min-h-[44px] focus-visible:outline-2 focus-visible:outline-primary',
-          )}
-          aria-label={`Próxima etapa: ${nextStage.name}`}
-        >
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground font-medium">Próxima</p>
-            <p className="text-sm font-semibold truncate">{nextStage.name}</p>
-          </div>
-          <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-        </button>
-      )}
     </div>
   );
 }
