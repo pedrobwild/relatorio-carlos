@@ -114,7 +114,7 @@ export async function prefetchPayments(projectId: string | undefined): Promise<v
   prefetchedKeys.add(key);
 
   await queryClient.prefetchQuery({
-    queryKey: ['project-payments', projectId],
+    queryKey: queryKeys.payments.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_payments')
@@ -140,7 +140,7 @@ export async function prefetchPurchases(projectId: string | undefined): Promise<
   prefetchedKeys.add(key);
 
   await queryClient.prefetchQuery({
-    queryKey: ['project-purchases', projectId],
+    queryKey: queryKeys.purchases.list(projectId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_purchases')

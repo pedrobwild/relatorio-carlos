@@ -5,6 +5,7 @@ import { parseISO, differenceInDays } from "date-fns";
 import { useAuth } from "./useAuth";
 import { isDemoMode } from "@/config/flags";
 import type { Json } from "@/integrations/supabase/types";
+import { queryKeys } from "@/lib/queryKeys";
 
 // Database enum mappings
 export type PendingItemType = 
@@ -173,7 +174,7 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
   const queryClient = useQueryClient();
 
   const { data: pendingItems = [], isLoading, error } = useQuery({
-    queryKey: ["pending-items", projectId, includeCompleted],
+    queryKey: queryKeys.pendingItems.list(projectId, includeCompleted),
     queryFn: async () => {
       const { data, error } = await buildPendingItemsQuery(projectId, includeCompleted);
       if (error) {
@@ -213,7 +214,7 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending-items"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingItems.all });
     },
   });
 
@@ -242,7 +243,7 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending-items"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingItems.all });
     },
   });
 
@@ -282,7 +283,7 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending-items"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingItems.all });
     },
   });
 

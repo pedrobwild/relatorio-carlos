@@ -218,16 +218,28 @@ const Index = () => {
                       >
                         <TrendingUp className="w-3.5 h-3.5 mr-1.5" />Evolução de Obra
                       </TabsTrigger>
-                      <TabsTrigger value="financeiro" className="portal-tab-trigger">
+                      <TabsTrigger value="financeiro" className="portal-tab-trigger"
+                        onMouseEnter={() => prefetchForTab('financeiro', projectId)}
+                        onFocus={() => prefetchForTab('financeiro', projectId)}
+                      >
                         <DollarSign className="w-3.5 h-3.5 mr-1.5" />Financeiro
                       </TabsTrigger>
-                      <TabsTrigger value="documentos" className="portal-tab-trigger">
+                      <TabsTrigger value="documentos" className="portal-tab-trigger"
+                        onMouseEnter={() => prefetchForTab('documentos', projectId)}
+                        onFocus={() => prefetchForTab('documentos', projectId)}
+                      >
                         <FolderOpen className="w-3.5 h-3.5 mr-1.5" />Documentos
                       </TabsTrigger>
-                      <TabsTrigger value="formalizacoes" className="portal-tab-trigger">
+                      <TabsTrigger value="formalizacoes" className="portal-tab-trigger"
+                        onMouseEnter={() => prefetchForTab('formalizacoes', projectId)}
+                        onFocus={() => prefetchForTab('formalizacoes', projectId)}
+                      >
                         <ClipboardSignature className="w-3.5 h-3.5 mr-1.5" />Formalizações
                       </TabsTrigger>
-                      <TabsTrigger value="pendencias" className="portal-tab-trigger">
+                      <TabsTrigger value="pendencias" className="portal-tab-trigger"
+                        onMouseEnter={() => prefetchForTab('pendencias', projectId)}
+                        onFocus={() => prefetchForTab('pendencias', projectId)}
+                      >
                         <AlertCircle className="w-3.5 h-3.5 mr-1.5" />Pendências
                       </TabsTrigger>
                     </TabsList>
