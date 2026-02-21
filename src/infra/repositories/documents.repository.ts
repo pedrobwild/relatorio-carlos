@@ -283,13 +283,16 @@ export async function deleteDocument(
       .from('project_documents')
       .select('storage_path, storage_bucket')
       .eq('id', documentId)
-      .single();
+      .maybeSingle();
 
     if (fetchError) return { data: null, error: fetchError };
+    if (!doc) return { data: null, error: { message: 'Documento não encontrado', details: '', hint: '', code: 'NOT_FOUND' } as any };
 
-    // Delete from storage
-    if (doc) {
+    // Delete from storage (ignore errors — file may already be gone)
+    try {
       await supabase.storage.from(doc.storage_bucket).remove([doc.storage_path]);
+    } catch (storageErr) {
+      console.warn('[Documents] Storage delete failed (continuing):', storageErr);
     }
 
     // Delete from database
