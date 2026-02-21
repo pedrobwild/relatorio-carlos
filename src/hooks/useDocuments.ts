@@ -65,27 +65,39 @@ async function fetchDocuments(projectId: string): Promise<ProjectDocument[]> {
   const results = await Promise.allSettled(
     (data || []).map(async (doc) => {
       try {
+        // Try signed URL first
         const { data: urlData, error: urlError } = await supabase.storage
           .from(doc.storage_bucket)
           .createSignedUrl(doc.storage_path, 3600); // 1 hour
 
-        if (urlError) {
-          console.warn(`[Documents] Failed to get signed URL for ${doc.name}:`, urlError.message);
+        let url = urlData?.signedUrl;
+
+        // Fallback to public URL if signed URL fails (bucket is public)
+        if (!url || urlError) {
+          console.warn(`[Documents] Signed URL failed for ${doc.name}, trying public URL:`, urlError?.message);
+          const { data: publicData } = supabase.storage
+            .from(doc.storage_bucket)
+            .getPublicUrl(doc.storage_path);
+          url = publicData?.publicUrl || undefined;
         }
 
         return {
           ...doc,
           document_type: doc.document_type as DocumentCategory,
           status: doc.status as DocumentStatus,
-          url: urlData?.signedUrl || undefined,
+          url,
         } as ProjectDocument;
       } catch (err) {
         console.warn(`[Documents] Error fetching URL for ${doc.name}:`, err);
+        // Final fallback to public URL
+        const { data: publicData } = supabase.storage
+          .from(doc.storage_bucket)
+          .getPublicUrl(doc.storage_path);
         return {
           ...doc,
           document_type: doc.document_type as DocumentCategory,
           status: doc.status as DocumentStatus,
-          url: undefined,
+          url: publicData?.publicUrl || undefined,
         } as ProjectDocument;
       }
     })
@@ -268,16 +280,24 @@ export function useDocument(documentId: string | undefined) {
       if (error) throw error;
       if (!data) return null;
 
-      // Get signed URL
-      const { data: urlData } = await supabase.storage
+      // Get signed URL, fallback to public URL
+      const { data: urlData, error: urlError } = await supabase.storage
         .from(data.storage_bucket)
         .createSignedUrl(data.storage_path, 3600);
+
+      let url = urlData?.signedUrl;
+      if (!url || urlError) {
+        const { data: publicData } = supabase.storage
+          .from(data.storage_bucket)
+          .getPublicUrl(data.storage_path);
+        url = publicData?.publicUrl || undefined;
+      }
 
       return {
         ...data,
         document_type: data.document_type as DocumentCategory,
         status: data.status as DocumentStatus,
-        url: urlData?.signedUrl || undefined,
+        url,
       } as ProjectDocument;
     },
     enabled: !!documentId,
