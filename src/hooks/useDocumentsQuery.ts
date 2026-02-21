@@ -145,6 +145,8 @@ export function useDeleteDocumentMutation() {
     onSuccess: () => {
       toast.success('Documento excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: documentKeys.lists() });
+      // Also invalidate the legacy queryKeys used by useDocuments hook
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
     onError: (err) => {
       console.error('[Documents] Delete failed:', err);
