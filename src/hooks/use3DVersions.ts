@@ -10,6 +10,8 @@ export interface Version3D {
   version_number: number;
   created_at: string;
   created_by: string;
+  revision_requested_at: string | null;
+  revision_requested_by: string | null;
   images: Image3D[];
 }
 

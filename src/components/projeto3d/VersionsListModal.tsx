@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ImageIcon, Loader2, Upload, X, Eye } from 'lucide-react';
+import { Plus, ImageIcon, Loader2, Upload, X, Eye, MessageSquareWarning } from 'lucide-react';
 import { use3DVersions, type Version3D } from '@/hooks/use3DVersions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { format } from 'date-fns';
@@ -18,12 +19,14 @@ interface Props {
 }
 
 export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
-  const { versions, loading, createVersion, isCreating } = use3DVersions(projectId);
+  const { versions, loading, createVersion, isCreating, refetch } = use3DVersions(projectId);
   const { isStaff } = useUserRole();
   const [uploadMode, setUploadMode] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [carouselVersionId, setCarouselVersionId] = useState<string | null>(null);
   const [imageCountsCache, setImageCountsCache] = useState<Record<string, number>>({});
+  const [revisionTarget, setRevisionTarget] = useState<string | null>(null);
+  const [isRequesting, setIsRequesting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load image counts in useEffect (not during render)
@@ -62,7 +65,6 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
       return;
     }
     setSelectedFiles(prev => [...prev, ...files]);
-    // Reset input so same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
@@ -84,6 +86,32 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
       // Error already handled in hook
     }
   }, [selectedFiles, createVersion]);
+
+  const handleRequestRevision = useCallback(async () => {
+    if (!revisionTarget) return;
+    setIsRequesting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Não autenticado');
+
+      const { error } = await supabase
+        .from('project_3d_versions')
+        .update({
+          revision_requested_at: new Date().toISOString(),
+          revision_requested_by: user.id,
+        })
+        .eq('id', revisionTarget);
+
+      if (error) throw error;
+      toast.success('Solicitação de revisão enviada');
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao solicitar revisão');
+    } finally {
+      setIsRequesting(false);
+      setRevisionTarget(null);
+    }
+  }, [revisionTarget, refetch]);
 
   return (
     <>
@@ -174,10 +202,17 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
               versions.map((version) => (
                 <div
                   key={version.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors"
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors gap-2"
                 >
-                  <div>
-                    <p className="font-medium text-sm">Versão {version.version_number}</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm">Versão {version.version_number}</p>
+                      {version.revision_requested_at && (
+                        <Badge variant="outline" className="text-[10px] bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.2)]">
+                          Revisão solicitada
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(version.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       {imageCountsCache[version.id] != null && (
@@ -185,21 +220,53 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
                       )}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => setCarouselVersionId(version.id)}
-                  >
-                    <Eye className="h-4 w-4" />
-                    Abrir
-                  </Button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {!isStaff && !version.revision_requested_at && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.3)] hover:bg-[hsl(var(--warning-light))]"
+                        onClick={() => setRevisionTarget(version.id)}
+                      >
+                        <MessageSquareWarning className="h-4 w-4" />
+                        <span className="hidden sm:inline">Solicitar revisão</span>
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setCarouselVersionId(version.id)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Abrir
+                    </Button>
+                  </div>
                 </div>
               ))
             )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation AlertDialog — mounted at root to avoid nested dialog issues */}
+      <AlertDialog open={!!revisionTarget} onOpenChange={(open) => { if (!open) setRevisionTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Solicitar revisão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você já fez todos os apontamentos que gostaria? Ao confirmar, a equipe será notificada para revisar esta versão.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRequesting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRequestRevision} disabled={isRequesting}>
+              {isRequesting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              Confirmar solicitação
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Carousel Modal */}
       {carouselVersionId && (
