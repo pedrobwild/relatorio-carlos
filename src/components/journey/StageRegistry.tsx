@@ -202,18 +202,6 @@ function RecordItem({ record, isAdmin, stageId }: { record: StageRecord; isAdmin
       <div className="flex-1 min-w-0 space-y-0.5">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground truncate">{record.title}</span>
-          {record.evidence_url && (
-            <a
-              href={record.evidence_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-primary hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-primary rounded"
-              aria-label={`Ver evidência: ${record.title}`}
-              onClick={e => e.stopPropagation()}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          )}
         </div>
         {record.description && (
           <p className={cn(
