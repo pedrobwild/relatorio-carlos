@@ -48,22 +48,52 @@ function ProjectCard({
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow"
+      className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
       onClick={onClick}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-body font-semibold">{project.name}</CardTitle>
+      <CardHeader className="p-3 md:p-4 pb-0 md:pb-0">
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-body font-semibold truncate">{project.name}</CardTitle>
             {project.unit_name && (
-              <p className="text-caption text-muted-foreground">{project.unit_name}</p>
+              <p className="text-caption text-muted-foreground truncate">{project.unit_name}</p>
             )}
           </div>
+          <Badge variant="outline" className={`${statusColors[project.status]} shrink-0 whitespace-nowrap text-[10px] md:text-xs`}>
+            {statusLabels[project.status]}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="p-3 md:p-4 pt-2 md:pt-2 space-y-2">
+        {project.customer_name && (
+          <div className="flex items-center gap-2 text-caption text-muted-foreground">
+            <User className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{project.customer_name}</span>
+          </div>
+        )}
+        
+        <div className="flex items-center gap-2 text-caption text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5 shrink-0" />
+          <span className="tabular-nums">
+            {(project.planned_start_date || project.planned_end_date) ? (
+              <>
+                {project.planned_start_date 
+                  ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
+                  : 'A definir'} – {project.planned_end_date 
+                  ? format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR }) 
+                  : 'A definir'}
+              </>
+            ) : 'Datas em definição'}
+          </span>
+        </div>
+
+        {/* Actions row + days remaining */}
+        <div className="flex items-center justify-between pt-1 border-t border-border">
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 min-h-[36px]"
               title="Duplicar obra"
               onClick={(e) => {
                 e.stopPropagation();
@@ -75,7 +105,7 @@ function ProjectCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 min-h-[36px]"
               title="Editar obra"
               onClick={(e) => {
                 e.stopPropagation();
@@ -84,46 +114,13 @@ function ProjectCard({
             >
               <Settings className="h-4 w-4" />
             </Button>
-            <Badge variant="outline" className={statusColors[project.status]}>
-              {statusLabels[project.status]}
-            </Badge>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {project.customer_name && (
-          <div className="flex items-center gap-2 text-caption text-muted-foreground">
-            <User className="h-3.5 w-3.5" />
-            <span>{project.customer_name}</span>
-          </div>
-        )}
-        
-        {(project.planned_start_date || project.planned_end_date) ? (
-          <div className="flex items-center gap-2 text-caption text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>
-              {project.planned_start_date 
-                ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR }) 
-                : 'A definir'} - {' '}
-              {project.planned_end_date 
-                ? format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR }) 
-                : 'A definir'}
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-caption text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>Datas em definição</span>
-          </div>
-        )}
-
-        {project.status === 'active' && daysRemaining !== null && daysRemaining > 0 && (
-          <div className="pt-2 border-t">
+          {project.status === 'active' && daysRemaining !== null && daysRemaining > 0 && (
             <p className="text-tiny text-muted-foreground">
-              <span className="font-medium text-foreground">{daysRemaining}</span> dias restantes
+              <span className="font-medium text-foreground">{daysRemaining}</span>d restantes
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -177,14 +174,9 @@ export default function GestaoObras() {
     return matchesSearch && matchesStatus && matchesEngineer && matchesPhase;
   }), [projects, searchTerm, statusFilter, engineerFilter, phaseFilter]);
 
-  const { activeCount, completedCount, thisMonthCount } = useMemo(() => ({
+  const { activeCount, completedCount } = useMemo(() => ({
     activeCount: projects.filter(p => p.status === 'active').length,
     completedCount: projects.filter(p => p.status === 'completed').length,
-    thisMonthCount: projects.filter(p => {
-      const created = new Date(p.created_at);
-      const now = new Date();
-      return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
-    }).length,
   }), [projects]);
 
   return (
@@ -196,139 +188,95 @@ export default function GestaoObras() {
         </div>
       </AppHeader>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        {/* Action Button */}
-        <div className="flex justify-end mb-6">
-          <Button onClick={() => navigate('/gestao/nova-obra')}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Obra
+      <main className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+        {/* Stats + Action row */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-card-value">{projects.length}</span>
+              <span className="text-tiny uppercase tracking-wider">Total</span>
+            </div>
+            <div className="w-px h-6 bg-border shrink-0" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-card-value text-success">{activeCount}</span>
+              <span className="text-tiny uppercase tracking-wider">Ativas</span>
+            </div>
+            <div className="w-px h-6 bg-border shrink-0" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-card-value text-primary">{completedCount}</span>
+              <span className="text-tiny uppercase tracking-wider">Concluídas</span>
+            </div>
+          </div>
+          <Button onClick={() => navigate('/gestao/nova-obra')} size="sm" className="shrink-0 ml-2">
+            <Plus className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Nova Obra</span>
+            <span className="sm:hidden">Nova</span>
           </Button>
         </div>
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <Card className={`p-4 ${projects.length === 0 ? 'border-dashed bg-muted/30' : ''}`}>
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Total</p>
-            <p className="text-h2 font-bold">{projects.length}</p>
-          </Card>
-          <Card className={`p-4 ${activeCount === 0 ? 'border-dashed bg-muted/30' : ''}`}>
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Em andamento</p>
-            <p className="text-h2 font-bold text-success">{activeCount}</p>
-          </Card>
-          <Card className={`p-4 ${completedCount === 0 ? 'border-dashed bg-muted/30' : ''}`}>
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Concluídas</p>
-            <p className="text-h2 font-bold text-primary">{completedCount}</p>
-          </Card>
-          <Card className={`p-4 ${thisMonthCount === 0 ? 'border-dashed bg-muted/30' : ''}`}>
-            <p className="text-tiny text-muted-foreground uppercase tracking-wider">Este mês</p>
-            <p className="text-h2 font-bold">{thisMonthCount}</p>
-          </Card>
+
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, cliente ou unidade..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
-        {/* Engineer Filter */}
+        {/* Filters — horizontal scroll on mobile */}
+        <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+          <Button variant={statusFilter === null ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter(null)}>
+            Todas
+          </Button>
+          <Button variant={statusFilter === 'active' ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter('active')}>
+            Ativas
+          </Button>
+          <Button variant={statusFilter === 'paused' ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter('paused')}>
+            Pausadas
+          </Button>
+          <Button variant={statusFilter === 'completed' ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter('completed')}>
+            Concluídas
+          </Button>
+          <Button variant={statusFilter === 'cancelled' ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter('cancelled')}>
+            Canceladas
+          </Button>
+          <div className="w-px h-7 bg-border shrink-0 self-center" />
+          <Button variant={phaseFilter === 'all' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('all')}>
+            Todas
+          </Button>
+          <Button variant={phaseFilter === 'project' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('project')}>
+            🏗️ Projeto
+          </Button>
+          <Button variant={phaseFilter === 'execution' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('execution')}>
+            🔨 Execução
+          </Button>
+        </div>
+
+        {/* Engineer Filter — compact pills */}
         {engineers.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Filtrar por Engenheiro</span>
+          <div className="flex gap-1.5 mb-4 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex items-center gap-1.5 mr-1 shrink-0">
+              <Users className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground font-medium">Eng:</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <Button variant={engineerFilter === null ? 'default' : 'outline'} size="sm" className="shrink-0 h-7 min-h-[28px] text-xs px-2.5" onClick={() => setEngineerFilter(null)}>
+              Todos
+            </Button>
+            {engineers.map(engineer => (
               <Button
-                variant={engineerFilter === null ? 'default' : 'outline'}
+                key={engineer.id}
+                variant={engineerFilter === engineer.id ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setEngineerFilter(null)}
+                className="shrink-0 h-7 min-h-[28px] text-xs px-2.5"
+                onClick={() => setEngineerFilter(engineer.id)}
               >
-                Todos
+                {engineer.name.split(' ')[0]}
               </Button>
-              {engineers.map(engineer => (
-                <Button
-                  key={engineer.id}
-                  variant={engineerFilter === engineer.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setEngineerFilter(engineer.id)}
-                >
-                  {engineer.name}
-                </Button>
-              ))}
-            </div>
+            ))}
           </div>
         )}
-
-        {/* Filters */}
-        <div className="flex flex-col gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, cliente ou unidade..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {/* Status filters */}
-            <Button
-              variant={statusFilter === null ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter(null)}
-            >
-              Todas
-            </Button>
-            <Button
-              variant={statusFilter === 'active' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('active')}
-            >
-              Em andamento
-            </Button>
-            <Button
-              variant={statusFilter === 'paused' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('paused')}
-            >
-              Pausadas
-            </Button>
-            <Button
-              variant={statusFilter === 'completed' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('completed')}
-            >
-              Concluídas
-            </Button>
-            <Button
-              variant={statusFilter === 'cancelled' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter('cancelled')}
-            >
-              Canceladas
-            </Button>
-            
-            {/* Divider */}
-            <div className="w-px h-8 bg-border mx-1 hidden sm:block" />
-            
-            {/* Phase filter */}
-            <Button
-              variant={phaseFilter === 'all' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setPhaseFilter('all')}
-            >
-              Todas fases
-            </Button>
-            <Button
-              variant={phaseFilter === 'project' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setPhaseFilter('project')}
-            >
-              🏗️ Fase Projeto
-            </Button>
-            <Button
-              variant={phaseFilter === 'execution' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setPhaseFilter('execution')}
-            >
-              🔨 Execução
-            </Button>
-          </div>
-        </div>
 
         {/* Projects Grid */}
         {loading ? (

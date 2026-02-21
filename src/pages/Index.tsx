@@ -30,10 +30,10 @@ const FormalizacoesContent = lazy(() => import("@/components/tabs/FormalizacoesC
 const PendenciasContent = lazy(() => import("@/components/tabs/PendenciasContent"));
 
 const MobileHeader = () => (
-  <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2.5">
-    <div className="flex items-center justify-between">
-      <img src={bwildLogo} alt="Bwild" className="h-8 w-auto" />
-      <h1 className="font-bold text-xl text-foreground">Portal do Cliente</h1>
+  <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/5 via-background to-background border-b border-border md:hidden px-3 py-2">
+    <div className="flex items-center justify-between gap-2">
+      <img src={bwildLogo} alt="Bwild" className="h-7 w-auto shrink-0" />
+      <h1 className="font-bold text-sm text-foreground truncate flex-1 text-center">Portal do Cliente</h1>
       <UserMenu />
     </div>
   </div>
@@ -246,7 +246,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                <div className="p-4 md:p-4 lg:p-6">
+                <div className="p-3 md:p-4 lg:p-6">
                   <div className="flex gap-4">
                     <div className={selectedActivityId ? "flex-1 min-w-0" : "w-full"}>
                       <TabsContent value="cronograma" className="mt-0 focus-visible:outline-none">
