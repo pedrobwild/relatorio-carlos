@@ -1,12 +1,11 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { useState, useCallback, useRef } from "react";
+import { Document, Page } from "react-pdf";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import "@/lib/pdfWorker";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-
-// Set worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PDFViewerProps {
   url: string;
@@ -34,7 +33,6 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
     setNumPages(numPages);
   };
 
-  const measuredRef = useRef<HTMLDivElement | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const containerRef = useCallback((node: HTMLDivElement | null) => {
@@ -43,7 +41,6 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
       resizeObserverRef.current.disconnect();
       resizeObserverRef.current = null;
     }
-    measuredRef.current = node;
     if (node) {
       const observer = new ResizeObserver((entries) => {
         for (const entry of entries) {
@@ -223,7 +220,7 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
           containerRef(node);
           scrollContainerRef.current = node;
         }}
-        className={`flex-1 overflow-auto ${scale > 1 ? 'cursor-grab' : ''} ${isPanning ? 'cursor-grabbing' : ''}`}
+        className={cn("flex-1 overflow-auto", scale > 1 && "cursor-grab", isPanning && "cursor-grabbing")}
         style={{ 
           WebkitOverflowScrolling: "touch",
           maxHeight: "calc(100vh - 200px)",
