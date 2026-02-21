@@ -7,14 +7,14 @@ Quality gate for production releases. Complete ALL items before deploying.
 ## Pre-Release (Before Merge)
 
 ### 1. Code Quality
-- [ ] All TypeScript errors resolved (`npm run typecheck`)
+- [ ] All TypeScript errors resolved (`npx tsc -b`)
 - [ ] ESLint passes (`npm run lint`)
 - [ ] Build succeeds (`npm run build`)
 - [ ] No console.log/debugger statements in production code
 
 ### 2. Testing
-- [ ] Smoke tests pass (`npm run smoke`)
-- [ ] E2E critical paths pass (`npx playwright test`)
+- [ ] Unit tests pass (`npx vitest run`)
+- [ ] E2E smoke tests pass (`npx playwright test smoke.spec.ts`)
 - [ ] Manual verification of changed features
 
 ### 3. Database/Backend

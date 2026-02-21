@@ -5,22 +5,47 @@ This document describes the QA infrastructure for the Portal BWild Beta.
 ## Quick Start
 
 ```bash
-# Run smoke tests (build + lint + typecheck + critical E2E)
-npm run smoke
+# Type check
+npx tsc -b
+
+# Run linter
+npm run lint
+
+# Run unit tests
+npx vitest run
 
 # Run all E2E tests
-npm run test:e2e
+npx playwright test
+
+# Run E2E smoke only (fastest)
+npx playwright test smoke.spec.ts
 
 # Run E2E with visual UI
-npm run test:e2e:ui
+npx playwright test --ui
 
-# Seed test data (requires service role key)
-npm run seed
+# Build
+npm run build
 ```
+
+> **Nota**: Os comandos acima usam `npx` diretamente porque os scripts correspondentes
+> ainda não foram adicionados ao `package.json`. Quando disponíveis, use:
+> `npm run typecheck`, `npm run test`, `npm run test:e2e`, etc.
 
 ## Test Structure
 
 ```
+src/
+├── components/__tests__/    # Component tests (Vitest)
+├── hooks/__tests__/         # Hook tests (Vitest)
+├── lib/__tests__/           # Utility tests (Vitest)
+├── config/__tests__/        # Config tests (Vitest)
+├── infra/repositories/__tests__/  # Repository tests (Vitest)
+└── test/
+    ├── setup.ts             # Vitest setup
+    ├── smoke.test.ts        # Smoke test
+    └── mocks/
+        └── supabase.ts      # Supabase mock
+
 tests/
 ├── e2e/
 │   ├── fixtures/
@@ -30,13 +55,20 @@ tests/
 │   ├── documents.spec.ts    # Document management tests
 │   ├── weekly-reports.spec.ts
 │   ├── cronograma.spec.ts
+│   ├── formalizacoes-pendencias.spec.ts
+│   ├── jornada.spec.ts
 │   ├── pdf-export.spec.ts
+│   ├── projeto3d-revision-request.spec.ts
 │   └── smoke.spec.ts        # Quick sanity checks
+
 scripts/
 ├── seed.ts                  # Test data seeding
+
 docs/
 ├── SMOKE_TESTS.md          # Manual verification checklist
 ├── RELEASE_CHECKLIST.md    # Deploy quality gate
+├── AUDIT_REPORT.md         # Audit findings
+├── AUDIT_CHANGELOG.md      # Audit changes log
 └── QA.md                   # This file
 ```
 
@@ -79,6 +111,19 @@ See `playwright.config.ts` for full configuration. Key settings:
 - **Parallel**: Enabled locally, single-threaded in CI
 - **Artifacts**: Screenshots, videos, traces on failure only
 
+## CI Pipeline
+
+The CI workflow (`.github/workflows/ci.yml`) runs:
+
+1. **Build job** (on all pushes/PRs to main):
+   - `npm run lint`
+   - `npx tsc -b` (typecheck)
+   - `npx vitest run` (unit tests)
+   - `npm run build`
+
+2. **E2E job** (on push to main only):
+   - `npx playwright test smoke.spec.ts`
+
 ## Test IDs
 
 Critical components have `data-testid` attributes for stable selectors:
@@ -118,22 +163,6 @@ captureError(error, { feature: 'documents', action: 'upload' });
 documentErrors.capture(error, { action: 'upload', projectId });
 ```
 
-### Error Context
-
-All errors include:
-- Feature (auth, documents, weekly-reports, cronograma, formalizacoes, export-pdf)
-- Route
-- User ID (if available)
-- Role (if available)
-- Timestamp
-- User agent
-- Custom context
-
-### Production Monitoring
-
-The system is ready for external monitoring integration (Sentry, DataDog, etc.).
-See `sendReport()` in `errorMonitoring.ts`.
-
 ## Adding New Tests
 
 ### E2E Test Template
@@ -150,50 +179,15 @@ test.describe('Feature Name', () => {
 
     await staffPage.goto(`/obra/${testProjectId}/feature`);
     
-    // Wait for content
     await expect(
       staffPage.locator('[data-testid="feature-element"]')
     ).toBeVisible({ timeout: 10000 });
     
-    // Interact
     await staffPage.click('[data-testid="action-button"]');
     
-    // Assert
     await expect(staffPage.locator('.success')).toBeVisible();
   });
 });
-```
-
-### Adding Test IDs
-
-When adding new features, include test IDs:
-
-```tsx
-<Button data-testid="my-new-feature-button">
-  Click me
-</Button>
-```
-
-## CI Integration
-
-Add to your CI pipeline:
-
-```yaml
-- name: Install Playwright
-  run: npx playwright install --with-deps chromium
-
-- name: Run Smoke Tests
-  run: npm run smoke
-
-- name: Run E2E Tests
-  run: npm run test:e2e
-  env:
-    PLAYWRIGHT_BASE_URL: ${{ secrets.STAGING_URL }}
-    TEST_CUSTOMER_EMAIL: ${{ secrets.TEST_CUSTOMER_EMAIL }}
-    TEST_CUSTOMER_PASSWORD: ${{ secrets.TEST_CUSTOMER_PASSWORD }}
-    TEST_STAFF_EMAIL: ${{ secrets.TEST_STAFF_EMAIL }}
-    TEST_STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
-    TEST_PROJECT_ID: ${{ secrets.TEST_PROJECT_ID }}
 ```
 
 ## Troubleshooting

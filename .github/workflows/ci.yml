@@ -27,7 +27,7 @@ jobs:
         run: npm run lint
 
       - name: Run type check
-        run: npm run typecheck
+        run: npx tsc -b
 
       - name: Run unit tests
         run: npx vitest run
