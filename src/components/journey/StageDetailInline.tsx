@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Edit2, Check, X, CheckCircle2, ChevronDown, Loader2, Info, Pencil,
+  Edit2, Check, X, CheckCircle2, ChevronDown, Loader2, Info, Pencil, ImageIcon, Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ import { StageDatesPanel } from './StageDatesPanel';
 import { MeetingCTA } from './MeetingCTA';
 import { StageRegistry } from './StageRegistry';
 import { BriefingStageLayout } from './briefing/BriefingStageLayout';
+import { VersionsListModal } from '@/components/projeto3d/VersionsListModal';
 import { usePageInstructions } from '@/hooks/usePageInstructions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { RichTextEditorModal } from '@/components/report/RichTextEditorModal';
@@ -55,6 +56,7 @@ export function StageDetailInline({
 }: StageDetailInlineProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [instrEditorOpen, setInstrEditorOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
   const completeStage = useCompleteStage();
   const { isStaff } = useUserRole();
 
@@ -65,8 +67,9 @@ export function StageDetailInline({
 
   const canComplete = isAdmin && stage.status !== 'completed' && stage.status !== 'pending';
 
-  // Detect briefing stage by name pattern
+  // Detect stage types by name pattern
   const isBriefingStage = stage.name.toLowerCase().includes('briefing');
+  const isProjeto3DStage = stage.name.toLowerCase().includes('projeto 3d');
 
   if (isBriefingStage) {
     return (
@@ -186,6 +189,27 @@ export function StageDetailInline({
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3D Versions — only for Projeto 3D stage */}
+      {isProjeto3DStage && (
+        <div className="bg-card rounded-xl border border-border shadow-sm p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <ImageIcon className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Versões do Projeto 3D</h3>
+                <p className="text-xs text-muted-foreground">Imagens com comentários posicionáveis</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setVersionsOpen(true)} className="gap-1.5">
+              <Eye className="h-4 w-4" />
+              {isStaff ? 'Gerenciar' : 'Visualizar'}
+            </Button>
           </div>
         </div>
       )}
@@ -351,6 +375,15 @@ export function StageDetailInline({
           value={instruction?.content_html || ''}
           onSave={saveInstruction}
           title={`Editar Instruções — ${stage.name}`}
+        />
+      )}
+
+      {/* 3D Versions Modal */}
+      {isProjeto3DStage && (
+        <VersionsListModal
+          projectId={projectId}
+          open={versionsOpen}
+          onOpenChange={setVersionsOpen}
         />
       )}
     </div>
