@@ -31,6 +31,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const GestaoObras = lazy(() => import("./pages/GestaoObras"));
 const NovaObra = lazy(() => import("./pages/NovaObra"));
 const EditarObra = lazy(() => import("./pages/EditarObra"));
+const Arquivos = lazy(() => import("./pages/Arquivos"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminAuditoria = lazy(() => import("./pages/AdminAuditoria"));
 const AdminHealth = lazy(() => import("./pages/AdminHealth"));
@@ -132,6 +133,7 @@ const App = () => (
             <Route path="/gestao" element={<StaffRoute>{withSuspense(<GestaoObras />)}</StaffRoute>} />
             <Route path="/gestao/nova-obra" element={<StaffRoute>{withSuspense(<NovaObra />)}</StaffRoute>} />
             <Route path="/gestao/obra/:projectId" element={<StaffRoute>{withSuspense(<EditarObra />)}</StaffRoute>} />
+            <Route path="/gestao/arquivos" element={<StaffRoute>{withSuspense(<Arquivos />)}</StaffRoute>} />
             
             {/* Admin-only routes */}
             <Route path="/admin" element={<AdminRoute>{withSuspense(<Admin />)}</AdminRoute>} />
