@@ -30,14 +30,27 @@ export interface StageDateEvent {
 
 async function callStageDates(body: Record<string, unknown>) {
   const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Sessão expirada. Faça login novamente.');
+  }
   const res = await supabase.functions.invoke('stage-dates', {
     body,
-    headers: session?.access_token
-      ? { Authorization: `Bearer ${session.access_token}` }
-      : undefined,
+    headers: { Authorization: `Bearer ${session.access_token}` },
   });
-  if (res.error) throw new Error(res.error.message || 'Erro ao processar datas');
-  if (!res.data?.success) throw new Error(res.data?.error?.message || 'Erro desconhecido');
+  if (res.error) {
+    // Handle auth errors gracefully
+    if (res.error.message?.includes('401') || res.error.message?.includes('UNAUTHORIZED')) {
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    throw new Error(res.error.message || 'Erro ao processar datas');
+  }
+  if (!res.data?.success) {
+    const errorMsg = res.data?.error?.message || 'Erro desconhecido';
+    if (res.data?.error?.code === 'UNAUTHORIZED') {
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    throw new Error(errorMsg);
+  }
   return res.data.data;
 }
 
@@ -46,6 +59,11 @@ export function useStageDates(projectId: string, stageKey?: string) {
     queryKey: ['stage-dates', projectId, stageKey],
     queryFn: () => callStageDates({ action: 'list', project_id: projectId, stage_key: stageKey }),
     enabled: !!projectId,
+    retry: (failureCount, error) => {
+      // Don't retry on auth errors
+      if (error?.message?.includes('Sessão expirada')) return false;
+      return failureCount < 2;
+    },
   });
 }
 
