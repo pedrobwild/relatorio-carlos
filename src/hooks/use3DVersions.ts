@@ -35,8 +35,6 @@ export interface Comment3D {
 }
 
 const BUCKET = 'project-documents';
-const MAX_FILE_SIZE_MB = 20;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const MAX_FILES_PER_VERSION = 30;
 
 export function queryKeys3D(projectId: string | undefined) {
@@ -60,9 +58,6 @@ function validateFiles(files: File[]): string | null {
     const isPngMime = file.type === 'image/png';
     if (!isPngExt && !isPngMime) {
       return `Arquivo "${file.name}" não é PNG. Apenas .png é aceito.`;
-    }
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      return `Arquivo "${file.name}" excede ${MAX_FILE_SIZE_MB}MB.`;
     }
     if (file.size === 0) {
       return `Arquivo "${file.name}" está vazio.`;
