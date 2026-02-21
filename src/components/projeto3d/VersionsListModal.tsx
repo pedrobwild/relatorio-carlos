@@ -87,7 +87,8 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
     }
   }, [selectedFiles, createVersion]);
 
-  const handleRequestRevision = useCallback(async () => {
+  const handleRequestRevision = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent AlertDialogAction from auto-closing
     if (!revisionTarget) return;
     setIsRequesting(true);
     try {
