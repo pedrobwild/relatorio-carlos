@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Link2, History, Download, Shield, CheckCircle2, Clock, AlertTriangle, Loader2, Users, Send, UserPlus, Share2, ExternalLink, GitBranch, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import ReactMarkdown from 'react-markdown';
 import DOMPurify from 'dompurify';
 import { RichTextEditorModal } from '@/components/report/RichTextEditorModal';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { patchPortalViewState } from '@/lib/portalViewState';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   FORMALIZATION_TYPE_LABELS, 
@@ -74,7 +75,16 @@ const isSeedData = (formalization: any) => {
 export default function FormalizacaoDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { paths } = useProjectNavigation();
+  const { paths, projectId } = useProjectNavigation();
+
+  const goBackToList = useCallback(() => {
+    if (projectId) {
+      patchPortalViewState(`portal_${projectId}`, { activeTab: 'formalizacoes' });
+      navigate(`/obra/${projectId}`);
+    } else {
+      navigate(paths?.formalizacoes || '/formalizacoes');
+    }
+  }, [projectId, navigate, paths]);
   const { toast } = useToast();
   const { user } = useAuth();
   const { isAdmin, isStaff } = useUserRole();
@@ -283,7 +293,7 @@ export default function FormalizacaoDetalhe() {
             <p className="text-sm text-muted-foreground mb-6">
               Esta formalização não existe ou você não tem acesso.
             </p>
-            <Button onClick={() => navigate(paths?.formalizacoes || '/formalizacoes')} className="w-full">
+            <Button onClick={goBackToList} className="w-full">
               Voltar para lista
             </Button>
           </CardContent>
@@ -302,7 +312,7 @@ export default function FormalizacaoDetalhe() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => navigate(paths?.formalizacoes || '/formalizacoes')}
+                onClick={goBackToList}
                 aria-label="Voltar para lista"
                 className="rounded-full min-h-[44px] min-w-[44px] h-11 w-11 shrink-0 hover:bg-primary/10"
               >
