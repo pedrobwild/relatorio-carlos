@@ -24,16 +24,16 @@ export function MeetingScheduledCard({ availability }: MeetingScheduledCardProps
   };
 
   return (
-    <Card className="border-[hsl(var(--success)/0.3)] bg-[hsl(var(--success)/0.03)]">
+    <Card className="border-green-200 dark:border-green-800/40 bg-green-50/50 dark:bg-green-950/20">
       <CardContent className="pt-6 space-y-4">
         <div className="flex items-start gap-3">
-          <div className="shrink-0 w-8 h-8 rounded-full bg-[hsl(var(--success)/0.1)] flex items-center justify-center mt-0.5">
-            <CalendarCheck className="h-4 w-4 text-[hsl(var(--success))]" />
+            <div className="shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mt-0.5">
+            <CalendarCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               Reunião Agendada
-              <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
+              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Confira os detalhes da sua Reunião de Briefing abaixo.

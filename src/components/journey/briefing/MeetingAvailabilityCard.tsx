@@ -325,7 +325,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
             ))}
           </div>
           {weekdayWarning && (
-            <p className="text-xs text-[hsl(var(--warning))]">{weekdayWarning}</p>
+            <p className="text-xs text-amber-600 dark:text-amber-400">{weekdayWarning}</p>
           )}
         </div>
 
