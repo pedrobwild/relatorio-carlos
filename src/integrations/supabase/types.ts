@@ -1657,6 +1657,8 @@ export type Database = {
           created_by: string
           id: string
           project_id: string
+          revision_requested_at: string | null
+          revision_requested_by: string | null
           stage_key: string
           version_number: number
         }
@@ -1665,6 +1667,8 @@ export type Database = {
           created_by: string
           id?: string
           project_id: string
+          revision_requested_at?: string | null
+          revision_requested_by?: string | null
           stage_key?: string
           version_number?: number
         }
@@ -1673,6 +1677,8 @@ export type Database = {
           created_by?: string
           id?: string
           project_id?: string
+          revision_requested_at?: string | null
+          revision_requested_by?: string | null
           stage_key?: string
           version_number?: number
         }
