@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Edit2, Check, X, CheckCircle2, ChevronDown, Loader2,
+  Edit2, Check, X, CheckCircle2, ChevronDown, Loader2, Info, Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,10 @@ import { StageDatesPanel } from './StageDatesPanel';
 import { MeetingCTA } from './MeetingCTA';
 import { StageRegistry } from './StageRegistry';
 import { BriefingStageLayout } from './briefing/BriefingStageLayout';
+import { usePageInstructions } from '@/hooks/usePageInstructions';
+import { useUserRole } from '@/hooks/useUserRole';
+import { RichTextEditorModal } from '@/components/report/RichTextEditorModal';
+import DOMPurify from 'dompurify';
 
 interface StageDetailInlineProps {
   stage: JourneyStage;
@@ -50,7 +54,14 @@ export function StageDetailInline({
   onStageCompleted,
 }: StageDetailInlineProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [instrEditorOpen, setInstrEditorOpen] = useState(false);
   const completeStage = useCompleteStage();
+  const { isStaff } = useUserRole();
+
+  // Derive page_key from stage name for instructions
+  const pageKey = stage.name.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const { instruction, save: saveInstruction } = usePageInstructions(projectId, pageKey);
+  const hasInstructions = !!instruction?.content_html && instruction.content_html !== '<p><br></p>';
 
   const canComplete = isAdmin && stage.status !== 'completed' && stage.status !== 'pending';
 
@@ -137,6 +148,47 @@ export function StageDetailInline({
     <div className="space-y-6">
       {/* Summary header */}
       <StageSummary stage={stage} isExpanded={true} hideChevron />
+
+      {/* Instructions Card */}
+      {(hasInstructions || isStaff) && !isBriefingStage && (
+        <div className="bg-card rounded-xl border border-border shadow-sm">
+          <div className="pt-6 px-6 pb-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                <Info className="h-4 w-4 text-primary" />
+              </div>
+              <div className="space-y-3 flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Instruções</h3>
+                  {isStaff && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      onClick={() => setInstrEditorOpen(true)}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </div>
+                {hasInstructions ? (
+                  <div
+                    className="prose prose-sm max-w-none text-muted-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1 [&_li]:leading-relaxed [&_*]:!text-sm [&_strong]:text-foreground"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(instruction!.content_html) }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setInstrEditorOpen(true)}
+                    className="w-full py-6 text-sm text-muted-foreground hover:text-foreground border-2 border-dashed border-border rounded-lg transition-colors hover:border-primary/30"
+                  >
+                    Clique para adicionar instruções
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin Edit */}
       {isEditing && (
@@ -290,6 +342,17 @@ export function StageDetailInline({
           </div>
         )}
       </div>
+
+      {/* Rich Text Editor Modal for Instructions */}
+      {isStaff && (
+        <RichTextEditorModal
+          open={instrEditorOpen}
+          onOpenChange={setInstrEditorOpen}
+          value={instruction?.content_html || ''}
+          onSave={saveInstruction}
+          title={`Editar Instruções — ${stage.name}`}
+        />
+      )}
     </div>
   );
 }
