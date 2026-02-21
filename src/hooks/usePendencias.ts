@@ -290,8 +290,18 @@ export const usePendencias = (options: UsePendenciasOptions = {}) => {
         projectId
       );
 
-      // Combine both sources
-      return [...regularItems, ...formalizationItems];
+      // Deduplicate: if a regular pending_item already references a formalization,
+      // skip the dynamically-generated formalization pendency for that same reference_id
+      const existingFormalizationRefIds = new Set(
+        regularItems
+          .filter(item => item.referenceType === 'formalization' && item.referenceId)
+          .map(item => item.referenceId)
+      );
+      const uniqueFormalizationItems = formalizationItems.filter(
+        fi => !existingFormalizationRefIds.has(fi.referenceId)
+      );
+
+      return [...regularItems, ...uniqueFormalizationItems];
     },
     enabled: !!user,
   });
