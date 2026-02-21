@@ -23,8 +23,9 @@ export function ProtectedRoute({
   if (authLoading || roleLoading) {
     debugNav('ProtectedRoute: loading', { authLoading, roleLoading, path: location.pathname });
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Carregando autenticação">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <span className="sr-only">Verificando autenticação...</span>
       </div>
     );
   }

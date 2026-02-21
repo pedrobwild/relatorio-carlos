@@ -145,8 +145,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
         duration: 5000,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showAlerts, isLoading, purchases.length > 0]);
+  }, [showAlerts, isLoading, purchases.length, alertThresholds]);
 
   const addPurchase = useMutation({
     mutationFn: async (input: PurchaseInput) => {
