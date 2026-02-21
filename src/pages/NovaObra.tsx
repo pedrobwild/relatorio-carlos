@@ -14,6 +14,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+import { projectKeys } from '@/hooks/useProjectsQuery';
 import { useProjectTemplates, type ProjectTemplate, type TemplateActivity, type TemplateCustomField } from '@/hooks/useProjectTemplates';
 import { addBusinessDays, isWeekend } from '@/lib/businessDays';
 
@@ -81,6 +83,7 @@ export default function NovaObra() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: templates } = useProjectTemplates();
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
@@ -370,6 +373,7 @@ export default function NovaObra() {
             : 'Cliente cadastrado sem envio de convite'
       });
 
+      await queryClient.invalidateQueries({ queryKey: projectKeys.all });
       navigate('/gestao');
     } catch (err: unknown) {
       console.error('Error creating project:', err);
