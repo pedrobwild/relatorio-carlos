@@ -85,6 +85,7 @@ const Index = () => {
     dateApprovalExec: 'date_approval_exec',
     dateApprovalObra: 'date_approval_obra',
     dateMobilizationStart: 'date_mobilization_start',
+    contractSigningDate: 'contract_signing_date',
   };
 
   const handleMilestoneDateChange = useCallback(async (key: MilestoneKey, date: string | null) => {
@@ -198,6 +199,7 @@ const Index = () => {
       dateOfficialStart: p.date_official_start ?? null,
       dateOfficialDelivery: p.date_official_delivery ?? null,
       dateMobilizationStart: p.date_mobilization_start ?? null,
+      contractSigningDate: p.contract_signing_date ?? null,
     };
   }, [project]);
 
