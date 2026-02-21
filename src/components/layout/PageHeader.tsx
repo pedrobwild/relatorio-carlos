@@ -72,7 +72,7 @@ export function PageHeader({
           )}
           {showLogo && (
             <>
-              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
+              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0 mix-blend-multiply dark:mix-blend-normal" />
               <span className="text-muted-foreground/40 shrink-0">|</span>
             </>
           )}
