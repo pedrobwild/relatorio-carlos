@@ -1,193 +1,105 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsResponse, jsonResponse } from "../_shared/cors.ts";
+import { authenticateRequest } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return corsResponse();
 
   try {
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    const { user, supabaseAdmin } = await authenticateRequest(req);
+
+    // Check staff access
+    const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: user.id });
+    if (!isStaff) {
+      return jsonResponse({ error: 'Staff access required' }, 403);
     }
 
-    // Create client with user's token to verify they're admin
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    })
-
-    // Verify the requesting user is an admin
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Check if user has admin or engineer role (staff access)
-    const { data: rolesData, error: roleError } = await userClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-
-    const userRoles = (rolesData || []).map(r => r.role)
-    const hasStaffAccess = userRoles.includes('admin') || userRoles.includes('engineer')
-
-    if (roleError || !hasStaffAccess) {
-      return new Response(
-        JSON.stringify({ error: 'Staff access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Parse request body
-    const { email, password, display_name, role, cpf, project_ids } = await req.json()
+    const { email, password, display_name, role, cpf, project_ids } = await req.json();
 
     if (!email || !password || !role) {
-      return new Response(
-        JSON.stringify({ error: 'Email, password, and role are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return jsonResponse({ error: 'Email, password, and role are required' }, 400);
     }
 
-    // Validate role - include all valid app_role values
-    const validRoles = ['admin', 'engineer', 'customer', 'manager', 'suprimentos', 'financeiro', 'gestor']
+    const validRoles = ['admin', 'engineer', 'customer', 'manager', 'suprimentos', 'financeiro', 'gestor'];
     if (!validRoles.includes(role)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid role' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return jsonResponse({ error: 'Invalid role' }, 400);
     }
-
-    // Create admin client with service role
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
 
     // Check if user already exists
-    const { data: existingUsers } = await adminClient
+    const { data: existingUsers } = await supabaseAdmin
       .from('users_profile')
       .select('id')
       .eq('email', email)
-      .limit(1)
-    
+      .limit(1);
+
     if (existingUsers && existingUsers.length > 0) {
-      return new Response(
-        JSON.stringify({ error: 'Usuário já existe com este email' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return jsonResponse({ error: 'Usuário já existe com este email' }, 400);
     }
 
     // Create the user
-    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email
+      email_confirm: true,
       user_metadata: {
         display_name: display_name || email.split('@')[0],
         role,
         cpf: cpf || null,
-      }
-    })
+      },
+    });
 
     if (createError) {
-      console.error('Error creating user:', createError)
-      
-      // Handle specific error cases
+      console.error('Error creating user:', createError);
       if (createError.message?.includes('already been registered')) {
-        return new Response(
-          JSON.stringify({ error: 'Email já cadastrado no sistema' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
+        return jsonResponse({ error: 'Email já cadastrado no sistema' }, 400);
       }
-      
-      return new Response(
-        JSON.stringify({ error: createError.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return jsonResponse({ error: createError.message }, 400);
     }
 
     if (!newUser.user) {
-      return new Response(
-        JSON.stringify({ error: 'Falha ao criar usuário' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return jsonResponse({ error: 'Falha ao criar usuário' }, 500);
     }
 
-    // Update user_roles table with correct role (trigger creates with 'customer' by default)
+    // Update user_roles if not customer
     if (role !== 'customer') {
-      const { error: updateRoleError } = await adminClient
+      const { error: updateRoleError } = await supabaseAdmin
         .from('user_roles')
         .update({ role })
-        .eq('user_id', newUser.user.id)
-
-      if (updateRoleError) {
-        console.error('Error updating user_roles:', updateRoleError)
-      }
+        .eq('user_id', newUser.user.id);
+      if (updateRoleError) console.error('Error updating user_roles:', updateRoleError);
     }
 
-    // Update users_profile table with correct role (trigger creates with metadata role)
-    const { error: updateProfileError } = await adminClient
+    // Update users_profile
+    const { error: updateProfileError } = await supabaseAdmin
       .from('users_profile')
-      .update({ 
-        perfil: role,
-        nome: display_name || email.split('@')[0],
-      })
-      .eq('id', newUser.user.id)
+      .update({ perfil: role, nome: display_name || email.split('@')[0] })
+      .eq('id', newUser.user.id);
+    if (updateProfileError) console.error('Error updating users_profile:', updateProfileError);
 
-    if (updateProfileError) {
-      console.error('Error updating users_profile:', updateProfileError)
-    }
-
-    // Add user to selected projects as viewer
+    // Add user to selected projects
     if (project_ids && Array.isArray(project_ids) && project_ids.length > 0) {
       const projectMemberRecords = project_ids.map((projectId: string) => ({
         project_id: projectId,
         user_id: newUser.user!.id,
         role: 'viewer',
-      }))
+      }));
 
-      const { error: projectMembersError } = await adminClient
+      const { error: projectMembersError } = await supabaseAdmin
         .from('project_members')
-        .insert(projectMemberRecords)
-
-      if (projectMembersError) {
-        console.error('Error adding user to projects:', projectMembersError)
-        // Don't fail the request, user was created successfully
-      }
+        .insert(projectMemberRecords);
+      if (projectMembersError) console.error('Error adding user to projects:', projectMembersError);
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        user: {
-          id: newUser.user?.id,
-          email: newUser.user?.email,
-        }
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
-  } catch (error) {
-    console.error('Unexpected error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return jsonResponse({
+      success: true,
+      user: { id: newUser.user?.id, email: newUser.user?.email },
+    });
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
+      const authErr = error as { status: number; message: string };
+      return jsonResponse({ error: authErr.message }, authErr.status);
+    }
+    console.error('Unexpected error:', error);
+    return jsonResponse({ error: 'Internal server error' }, 500);
   }
-})
+});

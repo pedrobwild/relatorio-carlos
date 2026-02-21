@@ -1,109 +1,45 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsResponse, jsonResponse } from "../_shared/cors.ts";
+import { authenticateRequest } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return corsResponse();
 
   try {
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('No authorization header provided');
-      return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const { user, supabaseAdmin } = await authenticateRequest(req);
+
+    // Check staff access
+    const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: user.id });
+    if (!isStaff) {
+      return jsonResponse({ error: 'Staff access required' }, 403);
     }
 
-    // Create a Supabase client with the user's token to verify they're an admin
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Get the requesting user
-    const { data: { user: requestingUser }, error: userError } = await userClient.auth.getUser();
-    if (userError || !requestingUser) {
-      console.error('Failed to get requesting user:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check if requesting user is admin or engineer (staff access)
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-    
-    const { data: rolesData, error: roleError } = await adminClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', requestingUser.id);
-
-    const userRoles = (rolesData || []).map(r => r.role);
-    const hasStaffAccess = userRoles.includes('admin') || userRoles.includes('engineer');
-
-    if (roleError || !hasStaffAccess) {
-      console.error('User does not have staff access:', roleError);
-      return new Response(
-        JSON.stringify({ error: 'Staff access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get the user ID to delete from the request body
     const { user_id } = await req.json();
-    
+
     if (!user_id) {
-      return new Response(
-        JSON.stringify({ error: 'user_id is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'user_id is required' }, 400);
     }
 
-    // Prevent admin from deleting themselves
-    if (user_id === requestingUser.id) {
-      return new Response(
-        JSON.stringify({ error: 'You cannot delete your own account' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (user_id === user.id) {
+      return jsonResponse({ error: 'You cannot delete your own account' }, 400);
     }
 
     console.log('Deleting user:', user_id);
 
-    // Delete user using admin API
-    const { error: deleteError } = await adminClient.auth.admin.deleteUser(user_id);
-
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
     if (deleteError) {
       console.error('Error deleting user:', deleteError);
-      return new Response(
-        JSON.stringify({ error: deleteError.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: deleteError.message }, 400);
     }
 
     console.log('User deleted successfully:', user_id);
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
+    return jsonResponse({ success: true });
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
+      const authErr = error as { status: number; message: string };
+      return jsonResponse({ error: authErr.message }, authErr.status);
+    }
     console.error('Unexpected error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
   }
 });
