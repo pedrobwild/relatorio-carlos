@@ -55,7 +55,8 @@ export function PageHeader({
         className
       )}
     >
-      <div className={cn("mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-3", maxWidthMap[maxWidth])}>
+      {/* ── Desktop: single row ── */}
+      <div className={cn("mx-auto px-4 sm:px-6 md:px-8 py-3 hidden sm:flex items-center justify-between gap-3", maxWidthMap[maxWidth])}>
         <div className="flex items-center gap-3 min-w-0">
           {(backTo || onBack) && (
             <BackWrapper {...(backProps as any)}>
@@ -72,8 +73,8 @@ export function PageHeader({
           )}
           {showLogo && (
             <>
-              <img src={bwildLogo} alt="Bwild" className="h-7 sm:h-8 w-auto shrink-0" />
-              <span className="text-muted-foreground/40 shrink-0 hidden sm:block">|</span>
+              <img src={bwildLogo} alt="Bwild" className="h-8 w-auto shrink-0" />
+              <span className="text-muted-foreground/40 shrink-0">|</span>
             </>
           )}
           <div className="min-w-0">
@@ -102,6 +103,58 @@ export function PageHeader({
         <div className="flex items-center gap-2 shrink-0">
           {children}
           <UserMenu />
+        </div>
+      </div>
+
+      {/* ── Mobile: two-row layout ── */}
+      <div className={cn("mx-auto px-4 py-2 sm:hidden space-y-1", maxWidthMap[maxWidth])}>
+        {/* Row 1: nav + logo + project meta + user menu */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {(backTo || onBack) && (
+              <BackWrapper {...(backProps as any)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="shrink-0 h-9 w-9 rounded-full hover:bg-primary/10"
+                  aria-label="Voltar"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              </BackWrapper>
+            )}
+            {showLogo && (
+              <img src={bwildLogo} alt="Bwild" className="h-7 w-auto shrink-0" />
+            )}
+          </div>
+          <div className="flex items-center gap-2 min-w-0 shrink">
+            {children && <div className="min-w-0">{children}</div>}
+            <UserMenu />
+          </div>
+        </div>
+        {/* Row 2: full-width title + breadcrumb */}
+        <div className="min-w-0">
+          {breadcrumbs && breadcrumbs.length > 0 && (
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 overflow-hidden">
+              {breadcrumbs.map((crumb, i) => (
+                <span key={i} className="flex items-center gap-1 shrink-0">
+                  {i > 0 && <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />}
+                  {crumb.href ? (
+                    <Link
+                      to={crumb.href}
+                      className="hover:text-foreground transition-colors truncate max-w-[120px]"
+                    >
+                      {crumb.label}
+                    </Link>
+                  ) : (
+                    <span className="truncate max-w-[120px]">{crumb.label}</span>
+                  )}
+                </span>
+              ))}
+            </nav>
+          )}
+          <h1 className="text-page-title">{title}</h1>
         </div>
       </div>
     </div>
