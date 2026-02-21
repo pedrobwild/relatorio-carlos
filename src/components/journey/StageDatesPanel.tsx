@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon, Check, X, Clock, CheckCircle2, Plus, History,
-  AlertTriangle, Calendar as CalendarIconSolid, Sparkles,
+  AlertTriangle, Calendar as CalendarIconSolid,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -252,58 +252,36 @@ function StageDateRow({
   isStaff: boolean;
   projectId: string;
 }) {
-  const [mode, setMode] = useState<'idle' | 'propose' | 'confirm'>('idle');
+  const [mode, setMode] = useState<'idle' | 'confirm'>('idle');
   const [pickerDate, setPickerDate] = useState<Date | undefined>();
   const [pickerTime, setPickerTime] = useState('09:00');
   const [notes, setNotes] = useState('');
   const [showHistory, setShowHistory] = useState(false);
 
-  const propose = useProposeStageDate(projectId);
   const confirm = useConfirmStageDate(projectId);
   const { data: events, isLoading: eventsLoading } = useStageDateEvents(showHistory ? sd.id : null);
 
-  const status = getDateStatus(sd);
-  const cfg = statusConfig[status];
-  const StatusIcon = cfg.icon;
+  const hasDate = !!sd.bwild_confirmed_at;
   const tl = typeLabels[sd.date_type] || { emoji: '📌', label: sd.date_type };
-
-  const hasDivergence =
-    sd.customer_proposed_at &&
-    sd.bwild_confirmed_at &&
-    sd.customer_proposed_at !== sd.bwild_confirmed_at;
 
   const handleSubmit = () => {
     if (!pickerDate) return;
     const iso = buildISO(pickerDate, pickerTime);
 
-    if (mode === 'propose') {
-      propose.mutate(
-        { stage_date_id: sd.id, datetime: iso, notes: notes || undefined },
-        {
-          onSuccess: () => setMode('idle'),
-          onError: (err: Error) => {
-            toast.error(journeyCopy.errors.save_suggestion, {
-              action: { label: journeyCopy.errors.retry, onClick: handleSubmit },
-            });
-          },
+    confirm.mutate(
+      { stage_date_id: sd.id, datetime: iso, notes: notes || undefined },
+      {
+        onSuccess: () => setMode('idle'),
+        onError: () => {
+          toast.error(journeyCopy.errors.confirm_date, {
+            action: { label: journeyCopy.errors.retry, onClick: handleSubmit },
+          });
         },
-      );
-    } else if (mode === 'confirm') {
-      confirm.mutate(
-        { stage_date_id: sd.id, datetime: iso, notes: notes || undefined },
-        {
-          onSuccess: () => setMode('idle'),
-          onError: (err: Error) => {
-            toast.error(journeyCopy.errors.confirm_date, {
-              action: { label: journeyCopy.errors.retry, onClick: handleSubmit },
-            });
-          },
-        },
-      );
-    }
+      },
+    );
   };
 
-  const isPending = propose.isPending || confirm.isPending;
+  const isPending = confirm.isPending;
 
   return (
     <article
@@ -317,52 +295,33 @@ function StageDateRow({
           <p className="text-sm font-semibold text-foreground truncate">{sd.title}</p>
           <p className="text-[11px] text-muted-foreground">{tl.label}</p>
         </div>
-        <Badge variant="outline" className={cn("text-[10px] gap-1 border", cfg.badgeClass)}>
-          <StatusIcon className="h-3 w-3" aria-hidden />
-          {cfg.label}
-        </Badge>
+        {hasDate ? (
+          <Badge variant="outline" className={cn("text-[10px] gap-1 border", statusConfig.confirmed.badgeClass)}>
+            <CalendarIcon className="h-3 w-3" aria-hidden />
+            {format(parseISO(sd.bwild_confirmed_at!), "dd/MM/yyyy", { locale: ptBR })}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className={cn("text-[10px] gap-1 border", statusConfig.empty.badgeClass)}>
+            <CalendarIcon className="h-3 w-3" aria-hidden />
+            Sem data
+          </Badge>
+        )}
       </div>
 
-      {/* Date display — stacks vertically on mobile */}
-      <div className="px-4 pb-3 grid gap-2 grid-cols-1 sm:grid-cols-2">
-        {/* Proposed */}
-        <div className="flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg bg-muted/40">
-          <Clock className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{journeyCopy.dates.status.proposed}</p>
-            {sd.customer_proposed_at ? (
-              <p className="text-sm font-medium text-foreground">
-                {format(parseISO(sd.customer_proposed_at), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground/60 italic">{journeyCopy.dates.status.notProposed}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Confirmed */}
-        <div className={cn(
-          "flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg",
-          sd.bwild_confirmed_at ? "bg-[hsl(var(--success-light))]" : "bg-muted/40"
-        )}>
-          <CheckCircle2 className={cn("h-4 w-4 shrink-0", sd.bwild_confirmed_at ? "text-[hsl(var(--success))]" : "text-muted-foreground")} aria-hidden />
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{journeyCopy.dates.status.confirmed}</p>
-            {sd.bwild_confirmed_at ? (
-              <p className="text-sm font-semibold text-[hsl(var(--success))]">
-                {format(parseISO(sd.bwild_confirmed_at), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground/60 italic">{journeyCopy.dates.status.awaitingConfirmation}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Divergence warning */}
-      {hasDivergence && (
+      {/* Date display — single confirmed date */}
+      {hasDate && (
         <div className="px-4 pb-3">
-          <DivergenceWarning proposed={sd.customer_proposed_at!} confirmed={sd.bwild_confirmed_at!} />
+          <div className={cn(
+            "flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg bg-[hsl(var(--success-light))]"
+          )}>
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-[hsl(var(--success))]" aria-hidden />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Prazo definido</p>
+              <p className="text-sm font-semibold text-[hsl(var(--success))]">
+                {format(parseISO(sd.bwild_confirmed_at!), "dd 'de' MMM, yyyy · HH:mm", { locale: ptBR })}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -375,55 +334,24 @@ function StageDateRow({
         </div>
       )}
 
-      {/* Actions bar */}
+      {/* Actions bar — only for staff */}
       {mode === 'idle' && (
         <div className="flex items-center gap-1.5 px-4 pb-3 flex-wrap">
-          {!isStaff && (
+          {isStaff && (
             <Button
-              variant="outline"
               size="sm"
               className="h-11 text-xs gap-1.5 min-w-[44px]"
               onClick={() => {
-                setPickerDate(sd.customer_proposed_at ? parseISO(sd.customer_proposed_at) : undefined);
-                setPickerTime(sd.customer_proposed_at ? format(parseISO(sd.customer_proposed_at), 'HH:mm') : '09:00');
+                const ref = sd.bwild_confirmed_at;
+                setPickerDate(ref ? parseISO(ref) : undefined);
+                setPickerTime(ref ? format(parseISO(ref), 'HH:mm') : '09:00');
                 setNotes('');
-                setMode('propose');
+                setMode('confirm');
               }}
             >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              {sd.customer_proposed_at ? journeyCopy.dates.meeting.changeSuggestion : journeyCopy.dates.form.suggestDate}
+              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              {hasDate ? 'Alterar prazo' : 'Definir prazo'}
             </Button>
-          )}
-          {isStaff && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-11 text-xs gap-1.5 min-w-[44px]"
-                onClick={() => {
-                  setPickerDate(sd.customer_proposed_at ? parseISO(sd.customer_proposed_at) : undefined);
-                  setPickerTime(sd.customer_proposed_at ? format(parseISO(sd.customer_proposed_at), 'HH:mm') : '09:00');
-                  setNotes('');
-                  setMode('propose');
-                }}
-              >
-                {journeyCopy.dates.form.adjustProposal}
-              </Button>
-              <Button
-                size="sm"
-                className="h-11 text-xs gap-1.5 min-w-[44px]"
-                onClick={() => {
-                  const ref = sd.customer_proposed_at || sd.bwild_confirmed_at;
-                  setPickerDate(ref ? parseISO(ref) : undefined);
-                  setPickerTime(ref ? format(parseISO(ref), 'HH:mm') : '09:00');
-                  setNotes('');
-                  setMode('confirm');
-                }}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                {journeyCopy.dates.form.submitConfirm}
-              </Button>
-            </>
           )}
           <Button
             variant="ghost"
@@ -447,11 +375,11 @@ function StageDateRow({
         isLoading={eventsLoading}
       />
 
-      {/* Propose/Confirm form */}
-      {mode !== 'idle' && (
+      {/* Confirm form — staff only */}
+      {mode !== 'idle' && isStaff && (
         <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
           <p className="text-xs font-medium text-foreground">
-            {mode === 'propose' ? journeyCopy.dates.form.proposeTitle : journeyCopy.dates.form.confirmTitle}
+            📅 Definir prazo de entrega
           </p>
 
           <DateTimePicker
@@ -461,7 +389,7 @@ function StageDateRow({
             onTimeChange={setPickerTime}
             label={journeyCopy.dates.form.chooseDate}
             disabled={isPending}
-            disablePastDates={sd.date_type === 'meeting'}
+            disablePastDates={false}
           />
 
           <Input
@@ -472,13 +400,6 @@ function StageDateRow({
             disabled={isPending}
             aria-label="Observação"
           />
-
-          {/* Customer microcopy */}
-          {mode === 'propose' && !isStaff && sd.bwild_confirmed_at && (
-            <p className="text-xs text-muted-foreground bg-muted/40 rounded-md px-3 py-2">
-              ✨ {journeyCopy.dates.meeting.customerMicrocopy}
-            </p>
-          )}
 
           <div className="flex items-center gap-2">
             <Button
@@ -492,7 +413,7 @@ function StageDateRow({
               ) : (
                 <Check className="h-3.5 w-3.5" aria-hidden />
               )}
-              {mode === 'propose' ? journeyCopy.dates.form.submitPropose : journeyCopy.dates.form.submitConfirm}
+              {journeyCopy.dates.form.submitConfirm}
             </Button>
             <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={() => setMode('idle')} disabled={isPending}>
               <X className="h-3.5 w-3.5 mr-1" aria-hidden /> {journeyCopy.dates.form.cancel}
@@ -507,50 +428,45 @@ function StageDateRow({
 
 // ─── Create New Stage Date Form ───
 
+const ORDINALS = ['primeira', 'segunda', 'terceira', 'quarta', 'quinta', 'sexta', 'sétima', 'oitava', 'nona', 'décima'];
+
+function getNextDeliveryTitle(existingCount: number): string {
+  const ordinal = ORDINALS[existingCount] || `${existingCount + 1}ª`;
+  return `Entrega da ${ordinal} versão`;
+}
+
 function CreateStageDateForm({
   projectId,
   stageKey,
+  existingCount,
   onClose,
 }: {
   projectId: string;
   stageKey: string;
+  existingCount: number;
   onClose: () => void;
 }) {
-  const [title, setTitle] = useState('');
-  const [dateType, setDateType] = useState<StageDate['date_type']>('meeting');
+  const autoTitle = getNextDeliveryTitle(existingCount);
   const create = useCreateStageDate(projectId);
 
   return (
-    <div className="p-4 rounded-xl border border-dashed border-primary/30 bg-accent/30 space-y-3" role="form" aria-label="Nova data importante">
+    <div className="p-4 rounded-xl border border-dashed border-primary/30 bg-accent/30 space-y-3" role="form" aria-label="Novo prazo de entrega">
       <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
         <Plus className="h-3.5 w-3.5 text-primary" aria-hidden />
-        {journeyCopy.dates.create.title}
+        Novo prazo de entrega
       </p>
-      <Input
-        placeholder={journeyCopy.dates.create.titlePlaceholder}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="h-11 text-sm"
-        aria-label="Título da data"
-      />
-      <select
-        className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        value={dateType}
-        onChange={(e) => setDateType(e.target.value as StageDate['date_type'])}
-        aria-label="Tipo de data"
-      >
-        {Object.entries(journeyCopy.dates.types).map(([key, { emoji, label }]) => (
-          <option key={key} value={key}>{emoji} {label}</option>
-        ))}
-      </select>
+      <div className="px-3 py-2 rounded-md bg-muted/40 border border-border/50">
+        <p className="text-xs text-muted-foreground">Título automático:</p>
+        <p className="text-sm font-medium text-foreground">{autoTitle}</p>
+      </div>
       <div className="flex gap-2">
         <Button
           size="sm"
           className="h-11 gap-1.5 min-w-[44px]"
-          disabled={!title.trim() || create.isPending}
+          disabled={create.isPending}
           onClick={() => {
             create.mutate(
-              { stage_key: stageKey, date_type: dateType, title: title.trim() },
+              { stage_key: stageKey, date_type: 'end_planned', title: autoTitle },
               {
                 onSuccess: () => onClose(),
                 onError: () => toast.error(journeyCopy.errors.create_date),
@@ -563,7 +479,7 @@ function CreateStageDateForm({
           ) : (
             <Check className="h-3.5 w-3.5" aria-hidden />
           )}
-          {journeyCopy.dates.create.create}
+          Criar prazo
         </Button>
         <Button variant="ghost" size="sm" className="h-11 min-w-[44px]" onClick={onClose}>{journeyCopy.dates.create.cancel}</Button>
       </div>
@@ -688,7 +604,7 @@ export function StageDatesPanel({ stageId, projectId, isAdmin, stageName }: Stag
   return (
     <section
       className="space-y-4 p-4 md:p-5 bg-card rounded-xl border border-border/50 shadow-[var(--shadow-sm)]"
-      aria-label="Datas importantes da etapa"
+      aria-label="Prazo de entrega da etapa"
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
@@ -723,7 +639,7 @@ export function StageDatesPanel({ stageId, projectId, isAdmin, stageName }: Stag
 
       {/* Create form */}
       {showCreate && (
-        <CreateStageDateForm projectId={projectId} stageKey={stageKey} onClose={() => setShowCreate(false)} />
+        <CreateStageDateForm projectId={projectId} stageKey={stageKey} existingCount={granularDates?.length ?? 0} onClose={() => setShowCreate(false)} />
       )}
     </section>
   );
