@@ -193,26 +193,6 @@ export function StageDetailInline({
         </div>
       )}
 
-      {/* 3D Versions — only for Projeto 3D stage */}
-      {isProjeto3DStage && (
-        <div className="bg-card rounded-xl border border-border shadow-sm p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <ImageIcon className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Versões do Projeto 3D</h3>
-                <p className="text-xs text-muted-foreground">Imagens com comentários posicionáveis</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setVersionsOpen(true)} className="gap-1.5">
-              <Eye className="h-4 w-4" />
-              {isStaff ? 'Gerenciar' : 'Visualizar'}
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Admin Edit */}
       {isEditing && (
@@ -276,6 +256,30 @@ export function StageDetailInline({
       </div>
 
       <Separator />
+
+      {/* 3D Versions — only for Projeto 3D stage */}
+      {isProjeto3DStage && (
+        <>
+          <div className="bg-card rounded-xl border border-border shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ImageIcon className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Versões do Projeto 3D</h3>
+                  <p className="text-xs text-muted-foreground">Imagens com comentários posicionáveis</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setVersionsOpen(true)} className="gap-1.5">
+                <Eye className="h-4 w-4" />
+                {isStaff ? 'Gerenciar' : 'Visualizar'}
+              </Button>
+            </div>
+          </div>
+          <Separator />
+        </>
+      )}
 
       {/* ④ Stage Registry */}
       <StageRegistry
