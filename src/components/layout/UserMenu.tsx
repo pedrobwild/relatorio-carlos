@@ -42,7 +42,7 @@ export function UserMenu() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 rounded-full hover:bg-primary/10 shrink-0"
+          className="h-11 w-11 sm:h-9 sm:w-9 rounded-full hover:bg-primary/10 shrink-0"
           aria-label="Menu do usuário"
         >
           <User className="h-4 w-4" />

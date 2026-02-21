@@ -35,12 +35,14 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
 
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
+  const containerNodeRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useCallback((node: HTMLDivElement | null) => {
     // Cleanup previous observer
     if (resizeObserverRef.current) {
       resizeObserverRef.current.disconnect();
       resizeObserverRef.current = null;
     }
+    containerNodeRef.current = node;
     if (node) {
       const observer = new ResizeObserver((entries) => {
         for (const entry of entries) {
@@ -148,7 +150,8 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
   };
 
   // Calculate page width based on container and scale
-  const pageWidth = Math.min(containerWidth - 32, 800) * scale;
+  const safeContainerWidth = containerWidth > 0 ? containerWidth : 320;
+  const pageWidth = Math.min(safeContainerWidth - 32, 800) * scale;
 
   return (
     <div className="flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full">
@@ -224,11 +227,9 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
           containerRef(node);
           scrollContainerRef.current = node;
         }}
-        className={cn("flex-1 overflow-auto", scale > 1 && "cursor-grab", isPanning && "cursor-grabbing")}
+        className={cn("flex-1 min-h-0 overflow-auto", scale > 1 && "cursor-grab", isPanning && "cursor-grabbing")}
         style={{ 
           WebkitOverflowScrolling: "touch",
-          maxHeight: "calc(100vh - 200px)",
-          minHeight: "400px",
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}

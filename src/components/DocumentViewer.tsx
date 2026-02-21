@@ -10,9 +10,18 @@ import {
   ExternalLink,
   Maximize2,
   Minimize2,
+  MoreHorizontal,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import "@/lib/pdfWorker";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -40,6 +49,7 @@ export function DocumentViewer({
   showDownload = true,
   className,
 }: DocumentViewerProps) {
+  const isMobile = useIsMobile();
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1);
@@ -200,7 +210,8 @@ export function DocumentViewer({
     touchEndX.current = 0;
   };
 
-  const pageWidth = Math.min(containerWidth - 32, 800) * scale;
+  const safeContainerWidth = containerWidth > 0 ? containerWidth : 320;
+  const pageWidth = Math.min(safeContainerWidth - 32, 800) * scale;
 
   return (
     <div 
@@ -212,7 +223,7 @@ export function DocumentViewer({
     >
 
       {/* Controls */}
-      <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-2 sm:px-3 py-2 bg-card border-b border-border shrink-0">
         {isPdf ? (
           <div className="flex items-center gap-1">
             <Button
@@ -225,7 +236,7 @@ export function DocumentViewer({
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <span className="text-sm font-medium min-w-[80px] text-center">
+            <span className="text-sm font-medium min-w-[60px] sm:min-w-[80px] text-center tabular-nums">
               {pageNumber} / {numPages}
             </span>
             <Button
@@ -243,80 +254,71 @@ export function DocumentViewer({
           <div className="flex items-center gap-2" />
         )}
 
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={zoomOut}
-            disabled={scale <= 0.5}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-            aria-label="Diminuir zoom"
-          >
+        {/* Desktop toolbar */}
+        <div className="hidden sm:flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={zoomOut} disabled={scale <= 0.5} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Diminuir zoom">
             <ZoomOut className="w-5 h-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={resetZoom}
-            className="h-11 min-h-[44px] px-2 touch-manipulation text-xs"
-          >
+          <Button variant="ghost" size="sm" onClick={resetZoom} className="h-11 min-h-[44px] px-2 touch-manipulation text-xs">
             {Math.round(scale * 100)}%
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={zoomIn}
-            disabled={scale >= 3}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-            aria-label="Aumentar zoom"
-          >
+          <Button variant="ghost" size="icon" onClick={zoomIn} disabled={scale >= 3} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Aumentar zoom">
             <ZoomIn className="w-5 h-5" />
           </Button>
-          
           {scale > 1 && (
             <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
               <Move className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Arraste</span>
             </div>
           )}
-
           <div className="border-l border-border h-6 mx-2" />
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleFullscreen}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-            aria-label={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-          >
-            {isFullscreen ? (
-              <Minimize2 className="w-4 h-4" />
-            ) : (
-              <Maximize2 className="w-4 h-4" />
-            )}
+          <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}>
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </Button>
-
           {showDownload && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDownload}
-              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-              aria-label="Baixar documento"
-            >
+            <Button variant="ghost" size="icon" onClick={handleDownload} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Baixar documento">
               <Download className="w-4 h-4" />
             </Button>
           )}
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => window.open(url, '_blank')}
-            className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-            aria-label="Abrir em nova aba"
-          >
+          <Button variant="ghost" size="icon" onClick={() => window.open(url, '_blank')} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Abrir em nova aba">
             <ExternalLink className="w-4 h-4" />
           </Button>
+        </div>
+
+        {/* Mobile toolbar — compact "⋯" menu */}
+        <div className="flex sm:hidden items-center gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Mais opções">
+                <MoreHorizontal className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={zoomIn} disabled={scale >= 3}>
+                <ZoomIn className="w-4 h-4 mr-2" /> Aumentar zoom
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={zoomOut} disabled={scale <= 0.5}>
+                <ZoomOut className="w-4 h-4 mr-2" /> Diminuir zoom
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={resetZoom}>
+                <RotateCcw className="w-4 h-4 mr-2" /> Zoom {Math.round(scale * 100)}% → 100%
+              </DropdownMenuItem>
+              {showDownload && (
+                <DropdownMenuItem onClick={handleDownload}>
+                  <Download className="w-4 h-4 mr-2" /> Baixar
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => window.open(url, '_blank')}>
+                <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
+              </DropdownMenuItem>
+              {typeof document !== 'undefined' && document.fullscreenEnabled && (
+                <DropdownMenuItem onClick={toggleFullscreen}>
+                  {isFullscreen ? <Minimize2 className="w-4 h-4 mr-2" /> : <Maximize2 className="w-4 h-4 mr-2" />}
+                  {isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -324,14 +326,12 @@ export function DocumentViewer({
       <div
         ref={scrollContainerRef}
         className={cn(
-          "flex-1 overflow-auto",
+          "flex-1 min-h-0 overflow-auto",
           scale > 1 && "cursor-grab",
           isPanning && "cursor-grabbing"
         )}
         style={{ 
           WebkitOverflowScrolling: "touch",
-          maxHeight: "calc(100vh - 200px)",
-          minHeight: "400px",
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -374,8 +374,8 @@ export function DocumentViewer({
               <Page
                 pageNumber={pageNumber}
                 width={pageWidth}
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
+                renderTextLayer={!isMobile}
+                renderAnnotationLayer={!isMobile}
                 className="shadow-lg"
               />
             </Document>
