@@ -3,7 +3,7 @@ import { LogOut, User, Settings, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import bwildLogo from '@/assets/bwild-logo-transparent.png';
+import bwildLogo from '@/assets/bwild-logo-dark.png';
 
 interface AppHeaderProps {
   showBackButton?: boolean;

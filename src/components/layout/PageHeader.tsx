@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/layout/UserMenu";
-import bwildLogo from "@/assets/bwild-logo-transparent.png";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 
 export interface BreadcrumbItem {
   label: string;

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import bwildLogo from "@/assets/bwild-logo-transparent.png";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 import {
   FileText, DollarSign, ClipboardSignature, User, Phone, Mail,
   ChevronDown, Calendar as CalendarIcon, Clock, CheckCircle2, AlertTriangle, Activity as ActivityIcon,

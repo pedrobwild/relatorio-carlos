@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import bwildLogo from "@/assets/bwild-logo-transparent.png";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { 
   FormalizationStatus, 
   FormalizationType,

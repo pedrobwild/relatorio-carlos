@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import bwildLogo from '@/assets/bwild-logo-transparent.png';
+import bwildLogo from '@/assets/bwild-logo-dark.png';
 
 interface VerificationResult {
   valid: boolean;

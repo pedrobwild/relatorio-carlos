@@ -16,7 +16,7 @@ import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { pdfLogger } from "@/lib/devLogger";
 import { prefetchForTab } from "@/lib/prefetch";
-import bwildLogo from "@/assets/bwild-logo-transparent.png";
+import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { format } from "date-fns";
 import { useProjectPortal } from "@/hooks/useProjectPortal";
