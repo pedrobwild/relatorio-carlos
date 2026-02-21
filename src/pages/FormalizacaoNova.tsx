@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, FileText, Users, Send, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import bwildLogo from '@/assets/bwild-logo.png';
+import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import { TemplateSelector } from '@/components/formalizacao/TemplateSelector';
 import { BudgetItemSwapForm } from '@/components/formalizacao/BudgetItemSwapForm';
 import { MeetingMinutesForm } from '@/components/formalizacao/MeetingMinutesForm';

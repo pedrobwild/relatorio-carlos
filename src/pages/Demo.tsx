@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
 import { ReportData, WeeklyReport, Activity as ActivityType } from "@/types/report";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
-import bwildLogo from "@/assets/bwild-logo.png";
+import bwildLogo from "@/assets/bwild-logo-transparent.png";
 import { format } from "date-fns";
 
 // Demo data - Hub Brooklyn 502

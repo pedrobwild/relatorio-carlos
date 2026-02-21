@@ -13,7 +13,7 @@ import { useFormalizacao, useAcknowledge, useSendForSignature, useDeleteFormaliz
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import bwildLogo from '@/assets/bwild-logo.png';
+import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import ReactMarkdown from 'react-markdown';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useAuth } from '@/hooks/useAuth';

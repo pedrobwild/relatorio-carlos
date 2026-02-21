@@ -12,7 +12,7 @@ import { useFormalizacoes } from '@/hooks/useFormalizacoes';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCan } from '@/hooks/useCan';
 import { EmptyState } from '@/components/EmptyState';
-import bwildLogo from '@/assets/bwild-logo.png';
+import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { PageContainer } from '@/components/layout/PageContainer';

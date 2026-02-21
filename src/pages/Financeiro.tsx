@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
-import bwildLogo from "@/assets/bwild-logo.png";
+import bwildLogo from "@/assets/bwild-logo-transparent.png";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
