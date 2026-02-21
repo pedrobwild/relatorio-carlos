@@ -446,6 +446,8 @@ export function useAcknowledge() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(result.formalization_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
+      // Invalidate pending items so the Pendências tab updates immediately
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingItems.all });
     },
   });
 }
