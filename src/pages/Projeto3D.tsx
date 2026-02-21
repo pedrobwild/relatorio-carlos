@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Download, ExternalLink, FileText, Box, Play, Loader2, Info, Pencil, Layers } from "lucide-react";
+import { Download, ExternalLink, FileText, Box, Play, Loader2, Info, Pencil, Layers, MessageSquareWarning, X } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PDFViewer from "@/components/PDFViewer";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
@@ -13,6 +14,9 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { RichTextEditorModal } from "@/components/report/RichTextEditorModal";
 import { VersionsListModal } from "@/components/projeto3d/VersionsListModal";
+import { use3DVersions } from "@/hooks/use3DVersions";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import DOMPurify from "dompurify";
 
 const Projeto3D = () => {
@@ -24,6 +28,10 @@ const Projeto3D = () => {
   const { instruction, loading: instrLoading, save: saveInstruction } = usePageInstructions(projectId, 'projeto_3d');
   const [editorOpen, setEditorOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
+  const [revisionDetailVersion, setRevisionDetailVersion] = useState<number | null>(null);
+
+  const { versions } = use3DVersions(projectId);
+  const pendingRevisions = versions.filter(v => v.revision_requested_at);
 
   const projeto3dDoc = getLatestByCategory('projeto_3d')[0];
   const loading = projectLoading || docsLoading;
@@ -171,6 +179,36 @@ const Projeto3D = () => {
             </div>
           </div>
 
+          {/* Revision Request Banners — visible to staff */}
+          {isStaff && pendingRevisions.length > 0 && (
+            <div className="space-y-3">
+              {pendingRevisions.map((version) => (
+                <div
+                  key={version.id}
+                  className="flex items-center gap-3 p-4 bg-[hsl(var(--warning-light))] border border-[hsl(var(--warning)/0.2)] rounded-xl"
+                >
+                  <MessageSquareWarning className="h-5 w-5 text-[hsl(var(--warning))] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">
+                      Solicitação de Revisão — Versão {version.version_number}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Solicitada em {format(new Date(version.revision_requested_at!), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                    onClick={() => setRevisionDetailVersion(version.version_number)}
+                  >
+                    Ver detalhes
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {!hasDocument && !hasVideo ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Box className="w-16 h-16 text-muted-foreground/30 mb-4" />
@@ -250,6 +288,43 @@ const Projeto3D = () => {
           onOpenChange={setVersionsOpen}
         />
       )}
+
+      {/* Revision Detail Modal */}
+      <Dialog open={revisionDetailVersion !== null} onOpenChange={(open) => { if (!open) setRevisionDetailVersion(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquareWarning className="h-5 w-5 text-[hsl(var(--warning))]" />
+              Solicitação de Revisão
+            </DialogTitle>
+          </DialogHeader>
+          {revisionDetailVersion !== null && (() => {
+            const version = pendingRevisions.find(v => v.version_number === revisionDetailVersion);
+            if (!version) return <p className="text-sm text-muted-foreground">Versão não encontrada.</p>;
+            return (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                  <p className="text-sm font-medium">Versão {version.version_number}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Solicitada em {format(new Date(version.revision_requested_at!), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  O cliente finalizou os apontamentos e solicitou a revisão desta versão do Projeto 3D. 
+                  Acesse a versão para conferir os comentários e realizar os ajustes necessários.
+                </p>
+                <Button className="w-full gap-2" onClick={() => {
+                  setRevisionDetailVersion(null);
+                  setVersionsOpen(true);
+                }}>
+                  <Layers className="h-4 w-4" />
+                  Abrir versões
+                </Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
