@@ -5,7 +5,7 @@
  * Staff-only page accessible from /gestao/arquivos.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Search, FileText, Image, Film, File, Eye, Download, Trash2, Archive, Filter } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { AppHeader } from '@/components/AppHeader';
@@ -105,10 +105,13 @@ function FilePreviewModal({
     [onOpenChange]
   );
 
-  // Trigger load when file changes
-  if (open && file && !url && !loading) {
-    loadUrl(file);
-  }
+  // Trigger load when file changes via useEffect (not during render)
+  useEffect(() => {
+    if (open && file && !url && !loading) {
+      loadUrl(file);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, file?.id]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -357,7 +360,7 @@ export default function Arquivos() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     {canPreview(file.mime_type) && (
                       <Button
                         variant="ghost"
