@@ -210,11 +210,6 @@ export function DocumentViewerModal({
                     url={document.url}
                     title={document.name}
                     mimeType={document.mime_type}
-                    approval={{
-                      approved_at: document.approved_at ?? null,
-                      approved_by: document.approved_by ?? null,
-                      approver_name: document.approver_name,
-                    }}
                     onPageChange={handlePageChange}
                     className="h-full rounded-none border-0"
                   />
@@ -242,11 +237,6 @@ export function DocumentViewerModal({
                   url={document.url}
                   title={document.name}
                   mimeType={document.mime_type}
-                  approval={{
-                    approved_at: document.approved_at ?? null,
-                    approved_by: document.approved_by ?? null,
-                    approver_name: document.approver_name,
-                  }}
                   onPageChange={handlePageChange}
                   className="h-full rounded-none border-0 border-r"
                 />

@@ -5,8 +5,7 @@ import {
   ChevronRight, 
   ZoomIn, 
   ZoomOut, 
-  Move, 
-  CheckCircle2, 
+  Move,
   Download,
   ExternalLink,
   Maximize2,
@@ -23,18 +22,10 @@ import "react-pdf/dist/Page/TextLayer.css";
 // Set worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export interface ApprovalInfo {
-  approved_at: string | null;
-  approved_by: string | null;
-  approver_name?: string | null;
-}
-
 interface DocumentViewerProps {
   url: string;
   title?: string;
   mimeType?: string | null;
-  /** Approval information for stamp display */
-  approval?: ApprovalInfo;
   /** Current page callback for comment linking */
   onPageChange?: (page: number) => void;
   /** Show download button */
@@ -50,7 +41,6 @@ export function DocumentViewer({
   url, 
   title,
   mimeType,
-  approval,
   onPageChange,
   showDownload = true,
   className,
@@ -76,7 +66,7 @@ export function DocumentViewer({
 
   const isPdf = mimeType === 'application/pdf' || url?.toLowerCase().includes('.pdf');
   const isImage = mimeType?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url || '');
-  const isApproved = approval?.approved_at != null;
+  
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -218,21 +208,6 @@ export function DocumentViewer({
         className
       )}
     >
-      {/* Approval Stamp Overlay */}
-      {isApproved && (
-        <div className="absolute top-4 right-4 z-20 pointer-events-none">
-          <div className="bg-[hsl(var(--success))]/90 text-success-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transform rotate-[-3deg]">
-            <CheckCircle2 className="h-5 w-5" />
-            <div className="text-sm">
-              <div className="font-semibold">APROVADO</div>
-              <div className="text-xs opacity-90">
-                {approval?.approved_at && format(new Date(approval.approved_at), "dd/MM/yyyy", { locale: ptBR })}
-                {approval?.approver_name && ` • ${approval.approver_name}`}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Controls */}
       <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border shrink-0">
@@ -263,14 +238,7 @@ export function DocumentViewer({
             </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            {isApproved && (
-              <Badge variant="default" className="bg-[hsl(var(--success))] gap-1">
-                <CheckCircle2 className="h-3 w-3" />
-                Aprovado
-              </Badge>
-            )}
-          </div>
+          <div className="flex items-center gap-2" />
         )}
 
         <div className="flex items-center gap-1">

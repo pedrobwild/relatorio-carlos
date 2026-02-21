@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo, memo } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, Clock, CheckCircle2, History, ShieldCheck, CheckCheck, Plus, MessageSquare, ChevronRight } from "lucide-react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, MessageSquare, ChevronRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
 import bwildLogo from "@/assets/bwild-logo-transparent.png";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { DocumentComments } from "@/components/DocumentComments";
@@ -43,16 +43,12 @@ const DocumentCard = ({
   doc, 
   onViewHistory,
   onVersionUploaded,
-  onApprove,
   isStaff,
-  isApproving,
 }: { 
   doc: ProjectDocument; 
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
-  onApprove: (docId: string) => Promise<boolean>;
   isStaff: boolean;
-  isApproving: boolean;
 }) => {
   const handleDownload = async () => {
     if (!doc.url) return;
@@ -82,16 +78,6 @@ const DocumentCard = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-body font-semibold line-clamp-1">{doc.name}</h3>
-                <Badge 
-                  variant={doc.status === 'approved' ? 'default' : 'secondary'}
-                  className="shrink-0 text-xs"
-                >
-                  {doc.status === 'approved' ? (
-                    <><CheckCircle2 className="w-3 h-3 mr-1" />Aprovado</>
-                  ) : (
-                    <><Clock className="w-3 h-3 mr-1" />Pendente</>
-                  )}
-                </Badge>
               </div>
               <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                 <span>v{doc.version}</span>
@@ -122,12 +108,6 @@ const DocumentCard = ({
               <DialogTitle className="text-base">{doc.name}</DialogTitle>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs text-muted-foreground">Versão {doc.version}</span>
-                <Badge 
-                  variant={doc.status === 'approved' ? 'default' : 'secondary'}
-                  className="text-xs"
-                >
-                  {doc.status === 'approved' ? 'Aprovado' : 'Pendente'}
-                </Badge>
                 {doc.checksum && (
                   <span className="text-xs text-muted-foreground font-mono" title={doc.checksum}>
                     SHA256: {doc.checksum.substring(0, 8)}...
@@ -145,30 +125,6 @@ const DocumentCard = ({
                 <History className="w-4 h-4" />
                 <span className="hidden sm:inline">Histórico</span>
               </Button>
-              {isStaff && doc.status === 'pending' && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2" disabled={isApproving}>
-                      <CheckCheck className="w-4 h-4" />
-                      <span className="hidden sm:inline">Aprovar</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Aprovar documento?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Você está prestes a aprovar "{doc.name}". Esta ação marcará o documento como aprovado e resolverá automaticamente quaisquer pendências relacionadas.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onApprove(doc.id)}>
-                        Aprovar documento
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
               {isStaff && (
                 <DocumentVersionUpload document={doc} onSuccess={onVersionUploaded} />
               )}
@@ -185,10 +141,6 @@ const DocumentCard = ({
               url={doc.url} 
               title={doc.name}
               mimeType={doc.mime_type}
-              approval={{
-                approved_at: doc.approved_at,
-                approved_by: doc.approved_by,
-              }}
               className="h-full rounded-none border-0"
             />
           ) : (
@@ -214,17 +166,13 @@ const CategorySection = ({
   documents,
   onViewHistory,
   onVersionUploaded,
-  onApprove,
   isStaff,
-  isApproving,
 }: { 
   category: DocumentCategory; 
   documents: ProjectDocument[];
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
-  onApprove: (docId: string) => Promise<boolean>;
   isStaff: boolean;
-  isApproving: boolean;
 }) => {
   if (documents.length === 0) return null;
 
@@ -244,9 +192,7 @@ const CategorySection = ({
             doc={doc} 
             onViewHistory={onViewHistory}
             onVersionUploaded={onVersionUploaded}
-            onApprove={onApprove}
             isStaff={isStaff}
-            isApproving={isApproving}
           />
         ))}
       </div>
@@ -258,31 +204,16 @@ const Documentos = () => {
   const { projectId } = useParams();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { paths } = useProjectNavigation();
-  const { documents, loading, error, getLatestByCategory, getVersionHistory, approveDocument, refetch } = useDocuments(projectId);
+  const { documents, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
   const { isStaff } = useUserRole();
   const { can } = useCan();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
-  const [isApproving, setIsApproving] = useState(false);
   
   const canUpload = can('documents:upload');
-  const canApprove = can('documents:approve');
 
   const handleViewHistory = (docId: string) => {
     setHistoryDocId(docId);
-  };
-
-  const handleApprove = async (docId: string): Promise<boolean> => {
-    setIsApproving(true);
-    try {
-      const success = await approveDocument(docId);
-      return success;
-    } catch (error) {
-      console.error('[Documentos] Approval failed:', error);
-      return false;
-    } finally {
-      setIsApproving(false);
-    }
   };
 
   const historyDocs = historyDocId ? getVersionHistory(historyDocId) : [];
@@ -392,9 +323,7 @@ const Documentos = () => {
                     documents={getLatestByCategory(cat)}
                     onViewHistory={handleViewHistory}
                     onVersionUploaded={refetch}
-                    onApprove={handleApprove}
                     isStaff={isStaff}
-                    isApproving={isApproving}
                   />
                 ))}
               </TabsContent>
@@ -408,9 +337,7 @@ const Documentos = () => {
                         doc={doc} 
                         onViewHistory={handleViewHistory}
                         onVersionUploaded={refetch}
-                        onApprove={handleApprove}
                         isStaff={isStaff}
-                        isApproving={isApproving}
                       />
                     ))}
                   </div>
@@ -446,13 +373,10 @@ const Documentos = () => {
                       {format(new Date(doc.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </p>
                   </div>
-                  <Badge variant={doc.status === 'approved' ? 'default' : 'secondary'}>
-                    {doc.status === 'approved' ? 'Aprovado' : 'Pendente'}
-                  </Badge>
                 </div>
                 {doc.checksum && (
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono bg-muted/50 rounded px-2 py-1">
-                    <ShieldCheck className="w-3 h-3 text-green-600" />
+                    <ShieldCheck className="w-3 h-3 text-[hsl(var(--success))]" />
                     <span className="truncate" title={doc.checksum}>
                       SHA256: {doc.checksum}
                     </span>
