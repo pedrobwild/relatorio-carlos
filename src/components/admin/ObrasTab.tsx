@@ -369,9 +369,12 @@ function ObraCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const daysRemaining = Math.ceil(
-    (new Date(project.planned_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const daysRemaining = useMemo(() => {
+    if (!project.planned_end_date) return null;
+    return Math.ceil(
+      (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
+  }, [project.planned_end_date]);
 
   return (
     <Card>
