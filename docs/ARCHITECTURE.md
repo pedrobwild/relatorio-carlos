@@ -226,9 +226,17 @@ src/
 ### Executar Testes
 
 ```bash
-npm run test
-# ou
-bun run test
+# Unit tests (Vitest)
+npx vitest run
+
+# Type check
+npx tsc -b
+
+# E2E (Playwright)
+npx playwright test
+
+# E2E smoke only
+npx playwright test smoke.spec.ts
 ```
 
 ## Debug

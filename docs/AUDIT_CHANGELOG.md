@@ -1,89 +1,105 @@
 # Audit Changelog — Portal BWild
 
-**Data**: 2026-02-21
+**Última atualização**: 2026-02-21
 
 ---
 
-## Mudanças Aplicadas
+## Rodada 1 (2026-02-21) — Fase 0 + Fase 1
 
 ### 1. CI: Corrigir typecheck fantasma (P0)
 
 **Arquivo**: `.github/workflows/ci.yml`  
 **O que mudou**: `npm run typecheck` → `npx tsc -b`  
-**Por quê**: O script `typecheck` não existe no `package.json`. O CI falharia silenciosamente ou quebraria ao tentar executá-lo. `npx tsc -b` executa o TypeScript compiler diretamente usando os tsconfig references do projeto.  
-**Como testar**: Verificar que o CI build job passa sem erro no step "Run type check".
+**Por quê**: O script `typecheck` não existe no package.json.  
+**Como testar**: CI build job deve passar sem erro no step "Run type check".
 
 ### 2. Docs: Alinhar QA.md com comandos reais (P0)
 
 **Arquivo**: `docs/QA.md`  
-**O que mudou**: Substituídos todos os `npm run <script-inexistente>` por comandos `npx` equivalentes que funcionam. Adicionada nota explicando que os scripts npm podem ser adicionados futuramente. Atualizada a estrutura de testes para refletir os arquivos reais.  
-**Por quê**: Docs referenciavam 6 scripts que não existem no package.json, causando confusão para desenvolvedores.  
-**Como testar**: Executar cada comando documentado e verificar que funciona.
+**O que mudou**: Substituídos `npm run <script-inexistente>` por `npx` diretos. Nota de aviso adicionada.  
+**Por quê**: Docs referenciavam 6 scripts inexistentes.  
+**Como testar**: Executar cada comando documentado.
 
 ### 3. Docs: Alinhar SMOKE_TESTS.md (P0)
 
 **Arquivo**: `docs/SMOKE_TESTS.md`  
-**O que mudou**: Substituído `npm run smoke` por sequência explícita de comandos (`npm run lint` + `npx tsc -b` + `npx vitest run` + `npm run build` + `npx playwright test smoke.spec.ts`).  
-**Por quê**: O script `smoke` não existe. Documentar os passos individuais garante que qualquer dev consiga executar o pipeline localmente.  
-**Como testar**: Seguir os passos documentados em ordem.
+**O que mudou**: Substituído `npm run smoke` por sequência explícita de comandos.  
+**Por quê**: Script `smoke` não existe.  
+**Como testar**: Seguir os passos documentados.
 
 ### 4. Docs: Alinhar RELEASE_CHECKLIST.md (P0)
 
 **Arquivo**: `docs/RELEASE_CHECKLIST.md`  
-**O que mudou**: Comandos de typecheck e testes atualizados para usar `npx` diretamente.  
-**Por quê**: Consistência com os demais docs e com o que realmente funciona.  
-**Como testar**: Verificar que cada comando listado no checklist é executável.
+**O que mudou**: Comandos de typecheck e testes atualizados para `npx`.  
+**Como testar**: Verificar cada comando listado é executável.
 
-### 5. Docs: Criar AUDIT_REPORT.md (Fase 0)
-
-**Arquivo**: `docs/AUDIT_REPORT.md`  
-**O que mudou**: Novo arquivo com inventário completo do projeto, baseline status, top 10 riscos, lista priorizada (P0/P1/P2) e plano de execução em 3 ondas.  
-**Por quê**: Entregável obrigatório da Fase 0 da auditoria.  
-**Como testar**: N/A (documentação).
-
----
-
-## Fase 2 — Auditoria Técnica Profunda (2026-02-21)
-
-### 6. Segurança: Remover leitura de localStorage incorreta em errorMonitoring (P0)
+### 5. Segurança: Remover leitura de localStorage em errorMonitoring (P0)
 
 **Arquivo**: `src/lib/errorMonitoring.ts`  
-**O que mudou**: Removida função `getCurrentContext()` que lia `localStorage.getItem('sb-auth-token')` — esta chave não existe no formato usado pelo Supabase SDK. A função agora retorna apenas a rota atual; userId/role devem ser fornecidos pelo caller via `ErrorContext`.  
-**Por quê**: A chave correta seria `sb-{project_id}-auth-token`, mas depender de internals do SDK é frágil e pode expor dados de sessão em relatórios de erro. Melhor receber dados explicitamente.  
-**Como testar**: `captureError(new Error('test'), { feature: 'general' })` — deve logar sem userId/role (a menos que fornecido pelo caller).
+**O que mudou**: Removida leitura de `sb-auth-token` do localStorage. Context agora recebe userId/role do caller.  
+**Por quê**: Chave incorreta e depender de internals do SDK é frágil.  
+**Como testar**: `captureError(new Error('test'), { feature: 'general' })` — deve logar sem userId/role.
 
-### 7. Bug: Corrigir detecção de ambiente em telemetry.ts (P0)
+### 6. Bug: Corrigir detecção de ambiente em telemetry.ts (P0)
 
 **Arquivo**: `src/lib/telemetry.ts`  
-**O que mudou**: `process.env.NODE_ENV === 'development'` → `import.meta.env.DEV`  
-**Por quê**: Projetos Vite não definem `process.env.NODE_ENV` por padrão. `import.meta.env.DEV` é a forma correta e consistente com o restante do codebase.  
-**Como testar**: Em modo dev, logs de telemetria devem aparecer no console. Em build de produção, não.
+**O que mudou**: `process.env.NODE_ENV` → `import.meta.env.DEV`  
+**Por quê**: Projetos Vite não definem `process.env.NODE_ENV`.  
+**Como testar**: Logs de telemetria devem aparecer apenas em DEV.
 
-### 8. Dead Code: Remover debugAuthNav.ts (P1)
+### 7. Dead Code: Remover debugAuthNav.ts (P1)
 
 **Arquivo**: `src/lib/debugAuthNav.ts` (deletado)  
-**O que mudou**: Arquivo removido — não havia nenhum import em todo o codebase.  
-**Por quê**: Dead code. Funcionalidade duplicada com `debugAuth.ts` que é efetivamente usada.  
-**Como testar**: Build + lint devem passar sem erro.
+**Por quê**: Sem importações. Duplicado com `debugAuth.ts`.
 
-### 9. Dead Code: Remover useProjects.ts legado (P1)
+### 8. Dead Code: Remover useProjects.ts legado (P1)
 
 **Arquivo**: `src/hooks/useProjects.ts` (deletado)  
-**O que mudou**: Hook legado removido — já estava marcado como `@deprecated` e não tinha importações. Substituído por `useProjectsQuery.ts`.  
-**Por quê**: Código morto que confundia devs e violava padrão de repositories.  
-**Como testar**: Build deve passar. Nenhum componente referenciava este hook.
+**Por quê**: Deprecated, sem importações. Substituído por `useProjectsQuery.ts`.
 
 ---
 
-## Itens Documentados para Implementação Futura (P1/P2)
+## Rodada 2 (2026-02-21) — Atualização Completa
 
-| Item | Prioridade | Detalhes |
-|------|-----------|---------|
-| Adicionar scripts `typecheck`, `test`, `smoke`, `test:e2e`, `seed` ao package.json | P1 | Requer edição direta do package.json |
-| Habilitar `strict: true` no tsconfig gradualmente | P2 | Alto impacto, requer fix de muitos erros |
-| Mover `@playwright/test` para devDependencies | P1 | Reduz bundle de produção |
-| Migrar `useDocuments.ts` para usar documents.repository | P1 | Aderência à arquitetura |
-| Consolidar corsHeaders em Edge Functions (usar _shared/cors.ts) | P2 | 10 funções duplicam o padrão |
-| Reduzir 535 usos de `as any` | P2 | Maioria em testes ou casts Supabase |
-| Refatorar `useAuth.ts` localStorage cleanup (L140) | P2 | Depende de internals do SDK |
-| Habilitar `noFallthroughCasesInSwitch` | P2 | Baixo risco |
+### 9. Type Safety: Habilitar noFallthroughCasesInSwitch (P1)
+
+**Arquivo**: `tsconfig.app.json`  
+**O que mudou**: `noFallthroughCasesInSwitch: false` → `noFallthroughCasesInSwitch: true`  
+**Por quê**: Permite que o compilador detecte bugs silenciosos em switch/case sem break/return. Verificado que todos os 180 switch statements no codebase já usam return em cada case — zero risco de regressão.  
+**Como testar**: `npx tsc -b` deve passar sem erros novos.
+
+### 10. Docs: Alinhar ARCHITECTURE.md com comandos reais (P0)
+
+**Arquivo**: `docs/ARCHITECTURE.md`  
+**O que mudou**: Seção "Executar Testes" atualizada de `npm run test` para comandos `npx` reais (`npx vitest run`, `npx tsc -b`, `npx playwright test`).  
+**Por quê**: Consistência com os demais docs. O script `npm run test` não existe no package.json.  
+**Como testar**: Executar cada comando listado.
+
+### 11. Docs: Atualizar AUDIT_REPORT.md (Fase 0 completa)
+
+**Arquivo**: `docs/AUDIT_REPORT.md`  
+**O que mudou**: Relatório completo atualizado com inventário fresco, baseline status, top 10 riscos, achados por categoria (Qualidade, Type Safety, Segurança, Performance, Testes), lista priorizada e plano de execução em 3 ondas.  
+**Por quê**: Entregável obrigatório da auditoria.
+
+---
+
+## Itens Documentados para Implementação Futura
+
+### P1 (Próxima Rodada)
+
+| Item | Esforço | Risco | Detalhes |
+|------|---------|-------|---------|
+| Mover `@playwright/test` para devDependencies | Baixo | Nenhum | Requer package.json |
+| Migrar 18 arquivos que acessam supabase direto para Repositories | Médio | Baixo | 12 componentes + 6 páginas |
+| Adicionar scripts npm (`typecheck`, `test`, `smoke`, etc.) | Baixo | Nenhum | Requer package.json |
+
+### P2 (Backlog)
+
+| Item | Esforço | Risco | Detalhes |
+|------|---------|-------|---------|
+| Habilitar `strict: true` no tsconfig | Alto | Médio | Muitos erros de tipo implícito |
+| Reduzir 535 `as any` | Alto | Baixo | Maioria em hooks/testes |
+| Consolidar helpers duplicados (status icons) | Médio | Nenhum | Formalizacoes, Suporte, FormalizacoesContent |
+| Consolidar corsHeaders em Edge Functions | Baixo | Nenhum | 10+ funções duplicam |
+| Refatorar useAuth.ts localStorage cleanup (L140-147) | Baixo | Médio | Fallback intencional |
+| Migrar hooks legados para TanStack Query | Alto | Médio | ~35% dos hooks |

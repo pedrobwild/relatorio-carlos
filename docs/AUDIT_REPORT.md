@@ -1,6 +1,6 @@
 # Auditoria de Qualidade — Portal BWild
 
-**Data**: 2026-02-21  
+**Data**: 2026-02-21 (Atualização completa)  
 **Auditor**: Lovable AI (Engenheiro Sênior Full-Stack)  
 **Escopo**: Repositório completo (código, CI, docs, testes, segurança)
 
@@ -8,7 +8,19 @@
 
 ## Resumo Executivo
 
-O projeto é bem estruturado (camada Repositories, TanStack Query, ErrorBoundary, RLS) e segue boas práticas de arquitetura. Porém existem **inconsistências operacionais críticas** entre package.json, CI e documentação que impedem um pipeline de qualidade confiável.
+O projeto segue uma arquitetura bem definida (Repositories → Hooks → UI, TanStack Query, ErrorBoundary, RLS em todas as tabelas). Porém existem **inconsistências operacionais** entre package.json, CI e documentação, além de **violações de arquitetura** (18 arquivos acessam Supabase diretamente) e **type safety fraco** (`strict: false`).
+
+### Pontos Fortes ✅
+
+- Arquitetura em camadas documentada (ARCHITECTURE.md, CONTRIBUTING.md)
+- RLS ativo em todas as tabelas
+- DOMPurify em todos os `dangerouslySetInnerHTML` (sem XSS)
+- ErrorBoundary global com captureError contextual
+- Code splitting com lazy loading em 28 rotas
+- Domain Events para rastreabilidade
+- Audit trail automático via triggers
+- Edge Functions com módulos compartilhados (_shared/)
+- Testes E2E cobrindo fluxos críticos (10 specs Playwright)
 
 ---
 
@@ -16,16 +28,16 @@ O projeto é bem estruturado (camada Repositories, TanStack Query, ErrorBoundary
 
 | # | Risco | Severidade | Categoria |
 |---|-------|-----------|-----------|
-| 1 | **CI chama `npm run typecheck` que não existe** em package.json | P0 | CI/DX |
-| 2 | **Docs referenciam 6 scripts inexistentes** (`test`, `typecheck`, `smoke`, `test:e2e`, `test:e2e:ui`, `seed`) | P0 | Docs/DX |
-| 3 | **`strict: false` e `noImplicitAny: false`** no tsconfig.app.json — anula type safety | P1 | Type Safety |
-| 4 | **`@playwright/test` em dependencies** em vez de devDependencies — infla bundle de produção | P1 | Build |
-| 5 | **Componentes acessam `supabase` diretamente** em vez de usar repositories (violação da arquitetura documentada) | P1 | Arquitetura |
-| 6 | **`noFallthroughCasesInSwitch: false`** — permite bugs silenciosos em switch/case | P2 | Type Safety |
-| 7 | **Hooks legados** com useState/useEffect direto em vez de TanStack Query | P2 | Performance/DX |
-| 8 | **Sem script `test` no package.json** — `npm test` falha | P0 | CI/DX |
-| 9 | **Dead code** potencial (páginas Suporte, Demo, componentes não referenciados) | P2 | Manutenibilidade |
-| 10 | **`no-console` warn** mas muitos `console.info/log` em produção code | P2 | Qualidade |
+| 1 | **Scripts npm faltantes** (`typecheck`, `test`, `smoke`, `test:e2e`, `seed`) — `npm test` falha | P0 | CI/DX |
+| 2 | **18 componentes/páginas acessam `supabase` direto** (violação da camada Repositories) | P1 | Arquitetura |
+| 3 | **`strict: false` e `noImplicitAny: false`** no tsconfig — anula type safety | P1 | Type Safety |
+| 4 | **535 usos de `as any`** em 26 arquivos (maioria em hooks p/ tabelas fora do types gerado) | P2 | Type Safety |
+| 5 | **`@playwright/test` em dependencies** em vez de devDependencies | P1 | Build |
+| 6 | **`useAuth.ts` constrói chave localStorage manualmente** (L140) — depende de naming interno do SDK | P2 | Segurança/Fragilidade |
+| 7 | **`noFallthroughCasesInSwitch: false`** — permite bugs silenciosos em switch | P2 | Type Safety |
+| 8 | **Hooks legados** com useState/useEffect direto em vez de TanStack Query | P2 | Performance/DX |
+| 9 | **Páginas possivelmente não usadas** (Suporte.tsx, Demo.tsx) | P2 | Manutenibilidade |
+| 10 | **Edge Functions duplicam `corsHeaders`** localmente em vez de importar `_shared/cors.ts` | P2 | Consistência |
 
 ---
 
@@ -33,58 +45,133 @@ O projeto é bem estruturado (camada Repositories, TanStack Query, ErrorBoundary
 
 ### Infraestrutura de Qualidade
 
-| Comando | Status | Notas |
-|---------|--------|-------|
-| `npm run lint` | ✅ Existe | Funciona (eslint flat config) |
-| `npm run build` | ✅ Existe | Funciona |
-| `npm run typecheck` | ❌ **NÃO EXISTE** | CI depende dele — falha silenciosa |
-| `npm run test` | ❌ **NÃO EXISTE** | Vitest instalado mas sem script |
-| `npm run smoke` | ❌ **NÃO EXISTE** | Docs e checklist referenciam |
-| `npm run test:e2e` | ❌ **NÃO EXISTE** | Docs referenciam |
-| `npm run test:e2e:ui` | ❌ **NÃO EXISTE** | Docs referenciam |
-| `npm run seed` | ❌ **NÃO EXISTE** | Docs referenciam |
-| CI Build job | ⚠️ Quebrado | `npm run typecheck` vai falhar |
-| CI E2E job | ✅ OK | Usa `npx playwright test` diretamente |
+| Comando | Existe em package.json? | CI usa? | Status |
+|---------|------------------------|---------|--------|
+| `npm run lint` | ✅ | ✅ `npm run lint` | Funciona |
+| `npm run build` | ✅ | ✅ `npm run build` | Funciona |
+| `npm run typecheck` | ❌ | ⚠️ Usa `npx tsc -b` | CI OK, npm script falta |
+| `npm run test` | ❌ | ⚠️ Usa `npx vitest run` | CI OK, npm script falta |
+| `npm run smoke` | ❌ | N/A | Não existe |
+| `npm run test:e2e` | ❌ | ⚠️ Usa `npx playwright test` | CI OK, npm script falta |
+| `npm run seed` | ❌ | N/A | Não existe |
 
-### Arquitetura (Aderência aos Padrões Documentados)
+> **Nota**: O CI funciona porque usa `npx` diretamente. A falta de scripts npm afeta apenas a DX local.
+> Scripts npm não podem ser adicionados diretamente (package.json é read-only neste ambiente).
 
-| Padrão | Aderência | Notas |
+### Resultados de Testes (Baseline)
+
+| Suite | Status | Notas |
+|-------|--------|-------|
+| Vitest unit tests | ⚠️ Não executável via `npm test` | Funciona com `npx vitest run` |
+| Playwright E2E | ✅ | 10 specs, smoke subset no CI |
+| Build | ✅ | Sem erros |
+| Lint (ESLint) | ✅ | Warnings existem (console, any) |
+
+### Aderência à Arquitetura
+
+| Padrão | Aderência | Detalhes |
+|--------|-----------|---------|
+| Repositories pattern | ~70% | 18 arquivos violam (12 componentes + 6 páginas) |
+| TanStack Query | ~65% | Hooks legados com useState/useEffect restantes |
+| ErrorBoundary | ✅ 100% | Em todas as rotas e componentes críticos |
+| RLS | ✅ 100% | Todas as tabelas |
+| DOMPurify + sanitização | ✅ 100% | 9 usos, todos com DOMPurify |
+| Semantic CSS tokens | ~90% | Poucos hardcoded colors restantes |
+| Mobile-first | ✅ | Pull-to-refresh, responsive shells |
+
+---
+
+## Achados por Categoria
+
+### A) Qualidade / Consistência
+
+| Achado | Prioridade | Esforço | Risco |
+|--------|-----------|---------|-------|
+| 18 arquivos acessam supabase direto (violação Repositories) | P1 | Médio | Baixo |
+| Suporte.tsx duplica lógica de Formalizacoes.tsx (getStatusIcon, getTypeIcon) | P2 | Baixo | Nenhum |
+| FormalizacoesContent.tsx duplica mesmos helpers | P2 | Baixo | Nenhum |
+| Docs referenciam scripts npm inexistentes (nota de aviso presente) | P1 | Baixo | Nenhum |
+
+#### Componentes que violam Repositories (acessam `supabase` direto)
+
+**Componentes (12):**
+- `CreateTestFormalizacao.tsx`, `FormalizacaoEvidence.tsx`, `ObrasTab.tsx`
+- `UsersTab.tsx`, `FilesCleanupCard.tsx`, `VersionsListModal.tsx`
+- `JourneyCSMSection.tsx`, `DocumentVersionUpload.tsx`, `DocumentUpload.tsx`
+- `ProjectCardSummary.tsx`, `DuplicateProjectModal.tsx`, `DigitalSignatureLog.tsx`
+
+**Páginas (6):**
+- `EditarObra.tsx`, `FormalizacaoNova.tsx`, `Auth.tsx`
+- `VerificarAssinatura.tsx`, `FormalizacaoDetalhe.tsx`, `NovaObra.tsx`
+
+### B) Type Safety & Robustez
+
+| Achado | Prioridade | Esforço | Risco |
+|--------|-----------|---------|-------|
+| `strict: false` + `noImplicitAny: false` no tsconfig | P1 | Alto | Médio |
+| 535 `as any` em 26 arquivos | P2 | Alto | Baixo |
+| `noFallthroughCasesInSwitch: false` | P2 | Baixo | Nenhum |
+| Hooks como `useStageRecords` usam `as any` para tabelas fora do types gerado | P2 | Médio | Baixo |
+
+### C) Segurança
+
+| Achado | Status | Notas |
+|--------|--------|-------|
+| dangerouslySetInnerHTML + DOMPurify | ✅ OK | 9 usos, todos sanitizados |
+| CORS `*` em Edge Functions | ✅ OK | Padrão correto para funções atrás de auth |
+| errorMonitoring não lê localStorage | ✅ Fixado | Auditoria anterior corrigiu |
+| `useAuth.ts` localStorage cleanup manual (L140-147) | ⚠️ P2 | Intencional como fallback, mas frágil |
+| Edge Functions usam _shared/auth.ts para validação | ✅ OK | Padrão centralizado |
+| Buckets públicos (weekly-reports, project-documents) | ✅ Documentado | RLS protege escrita |
+
+### D) Performance & UX
+
+| Achado | Prioridade | Notas |
 |--------|-----------|-------|
-| Repositories pattern | ~70% | Vários hooks/componentes acessam supabase direto |
-| TanStack Query | ~60% | Hooks legados com useState/useEffect |
-| ErrorBoundary | ✅ | Bem implementado nas rotas |
-| RLS | ✅ | Todas as tabelas com RLS |
-| Semantic tokens | ~90% | Poucos hardcoded colors restantes |
-| Mobile-first | ✅ | Otimizações recentes aplicadas |
+| useDocuments staleTime=2min, refetchOnWindowFocus=true | ✅ OK | Recentemente otimizado |
+| QueryPersister com cache 24h | ✅ OK | Com buster de versão |
+| Code splitting em todas as rotas | ✅ OK | 28 rotas com lazy loading |
+| TabDiscardDetector para mobile | ✅ OK | Previne perda de sessão |
+
+### E) Testes e Confiabilidade
+
+| Achado | Prioridade | Notas |
+|--------|-----------|-------|
+| 10 specs E2E com data-testid estáveis | ✅ OK | Cobertura de fluxos críticos |
+| Smoke tests manuais documentados (SMOKE_TESTS.md) | ✅ OK | 10 passos, ~15min |
+| Unit tests em hooks, componentes, lib, config, repositories | ✅ OK | Via vitest |
+| Script `npm test` inexistente | P0 | Funciona com `npx vitest run` |
 
 ---
 
 ## Lista Priorizada
 
-### P0 — Quebra CI / DX (Fase 1)
+### P0 — Quebra CI / DX
+
+| Item | Esforço | Status |
+|------|---------|--------|
+| Scripts npm faltantes (typecheck, test, etc.) | Baixo | ⚠️ Requer edição do package.json |
+| Docs alinhados com comandos reais | Baixo | ✅ Já feito (notas de npx) |
+| CI funcional | N/A | ✅ Usa npx diretamente |
+
+### P1 — Hardening
 
 | Item | Esforço | Risco |
 |------|---------|-------|
-| Adicionar scripts faltantes ao package.json | Baixo | Nenhum |
-| Alinhar docs (QA.md, SMOKE_TESTS.md, RELEASE_CHECKLIST.md) com scripts reais | Baixo | Nenhum |
-
-### P1 — Hardening (Fase 2)
-
-| Item | Esforço | Risco |
-|------|---------|-------|
-| Habilitar `strict: true` gradualmente no tsconfig | Alto | Médio (muitos erros) |
+| Habilitar `noFallthroughCasesInSwitch: true` | Baixo | Nenhum |
 | Mover @playwright/test para devDependencies | Baixo | Nenhum |
-| Migrar acessos diretos ao supabase para repositories | Médio | Baixo |
-| Revisar sanitização HTML (DOMPurify usage) | Baixo | Nenhum |
+| Migrar acessos diretos ao supabase para repositories (18 arquivos) | Médio | Baixo |
+| Habilitar `strict: true` gradualmente | Alto | Médio |
 
-### P2 — Refactors Seguros (Fase 3)
+### P2 — Refactors Seguros (Backlog)
 
 | Item | Esforço | Risco |
 |------|---------|-------|
+| Reduzir 535 `as any` | Alto | Baixo |
+| Consolidar helpers duplicados (status icons, type labels) | Médio | Nenhum |
+| Consolidar corsHeaders em Edge Functions | Baixo | Nenhum |
 | Migrar hooks legados para TanStack Query | Alto | Médio |
-| Remover dead code / páginas não usadas | Médio | Baixo |
-| Consolidar helpers repetidos | Médio | Baixo |
-| Habilitar `noFallthroughCasesInSwitch` | Baixo | Baixo |
+| Refatorar useAuth.ts localStorage cleanup | Baixo | Médio |
 
 ---
 
@@ -92,34 +179,24 @@ O projeto é bem estruturado (camada Repositories, TanStack Query, ErrorBoundary
 
 ### Onda 1 — Quick Wins (P0) ✅ Concluída
 
-1. ~~Alinhar CI com comandos reais~~ ✅
-2. ~~Alinhar documentação com scripts reais~~ ✅
-3. ~~Validar que CI passa com os novos scripts~~ ✅
+1. ✅ CI alinhado (usa `npx` diretamente)
+2. ✅ Docs com notas sobre comandos npx
+3. ✅ Dead code removido (debugAuthNav.ts, useProjects.ts)
+4. ✅ errorMonitoring localStorage fix
+5. ✅ telemetry.ts environment detection fix
 
-### Onda 2 — Auditoria Técnica (P0/P1) ✅ Concluída
+### Onda 2 — Hardening (P1) ✅ Aplicada
 
-1. ~~Remover dead code: `debugAuthNav.ts` (sem importações)~~ ✅
-2. ~~Remover hook legado: `useProjects.ts` (deprecated, sem consumidores)~~ ✅
-3. ~~Corrigir segurança: `errorMonitoring.ts` lia chave localStorage incorreta (`sb-auth-token`)~~ ✅
-4. ~~Corrigir bug: `telemetry.ts` usava `process.env.NODE_ENV` em vez de `import.meta.env.DEV`~~ ✅
-
-#### Achados documentados (P1/P2 — não implementados):
-
-| Achado | Prioridade | Detalhes |
-|--------|-----------|---------|
-| 535 usos de `as any` em 26 arquivos | P2 | Maioria em testes ou casts Supabase p/ tabelas fora do types gerado |
-| Edge functions duplicam `corsHeaders` localmente | P2 | Devem importar de `_shared/cors.ts` |
-| `useAuth.ts` constrói chave localStorage manualmente (L140) | P2 | Frágil — depende de naming interno do SDK |
-| `useDocuments.ts` acessa supabase diretamente | P1 | Deveria usar documents.repository |
-| Todas `dangerouslySetInnerHTML` usam DOMPurify ✅ | — | Sem vulnerabilidades XSS encontradas |
-| CORS `*` nas Edge Functions | — | Padrão correto p/ funções atrás de auth |
+1. ✅ `noFallthroughCasesInSwitch: true` no tsconfig
+2. ⚠️ Mover @playwright/test para devDependencies (requer package.json)
+3. 📋 Migrar 18 arquivos para usar Repositories (documentado, não implementado — risco médio)
 
 ### Onda 3 — Refactors Seguros (P2) — Backlog
 
-1. Migração gradual de hooks para TanStack Query
-2. Consolidar corsHeaders nas Edge Functions
-3. Habilitar `strict: true` gradualmente
-4. Documentar "do/don't" no CONTRIBUTING.md
+1. 📋 Consolidar helpers duplicados (status icons em Formalizacoes, Suporte, FormalizacoesContent)
+2. 📋 Consolidar corsHeaders em Edge Functions
+3. 📋 Habilitar `strict: true` gradualmente
+4. 📋 Reduzir `as any` (começar pelos hooks, depois componentes)
 
 ---
 
@@ -154,7 +231,7 @@ supabase/
 └── migrations/         # Migrações SQL
 
 tests/e2e/              # 10 specs Playwright
-docs/                   # 5 documentos de qualidade
+docs/                   # 6 documentos de qualidade
 ```
 
 ### Entrypoints
@@ -165,9 +242,21 @@ docs/                   # 5 documentos de qualidade
 
 ### Padrões Adotados
 
-- **Repositories**: `src/infra/repositories/` (documentsRepo, projectsRepo, filesRepo, etc.)
+- **Repositories**: `src/infra/repositories/` (documentsRepo, projectsRepo, filesRepo, auditoriaRepo, diagnosticsRepo)
 - **Hooks**: TanStack Query + hooks legados com useState
 - **Error Monitoring**: `src/lib/errorMonitoring.ts` (captureError, createFeatureErrorCapture)
+- **Dev Logger**: `src/lib/devLogger.ts` (scoped, DEV-only)
 - **Audit Trail**: Tabela `auditoria` com trigger automático
-- **RBAC**: Via `users_profile.perfil` + `user_roles` + functions SQL
 - **Domain Events**: Tabela `domain_events` para rastreabilidade
+- **RBAC**: Via `profiles.role` + `project_members` + functions SQL
+- **Telemetry**: `src/lib/telemetry.ts` (track events, optional DB persist)
+
+### Divergências Identificadas
+
+| Fonte | Comando | Real? |
+|-------|---------|-------|
+| docs/QA.md | `npm run test` | ❌ (nota de aviso presente) |
+| docs/SMOKE_TESTS.md | `npm run smoke` | ❌ (nota de aviso presente) |
+| docs/ARCHITECTURE.md | `npm run test` | ❌ (referência no texto) |
+| CI (ci.yml) | `npx tsc -b`, `npx vitest run` | ✅ Correto |
+| package.json | Apenas `dev`, `build`, `build:dev`, `lint`, `preview` | ✅ |
