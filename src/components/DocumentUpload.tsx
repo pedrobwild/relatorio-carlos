@@ -219,12 +219,22 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
         <div className="space-y-4 mt-4">
           {/* File Drop Zone */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={file ? `Arquivo selecionado: ${file.name}` : "Área de upload. Arraste um arquivo ou clique para selecionar"}
             className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
               dragOver ? "border-primary bg-primary/5" : "border-border"
             } ${file ? "bg-primary/5 border-primary" : ""}`}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const input = e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement;
+                input?.click();
+              }
+            }}
           >
             {file ? (
               <div className="flex items-center gap-3">

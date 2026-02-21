@@ -196,6 +196,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
       {!isPlaying && (
         <button
           onClick={togglePlay}
+          aria-label="Reproduzir vídeo"
           className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity"
         >
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/90 flex items-center justify-center hover:bg-primary transition-colors hover:scale-105 active:scale-95">
@@ -214,6 +215,12 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
         {/* Progress bar */}
         <div
           ref={progressRef}
+          role="slider"
+          aria-label="Progresso do vídeo"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          tabIndex={0}
           className="relative h-1.5 sm:h-2 bg-white/20 rounded-full cursor-pointer mb-3 group/progress"
           onClick={handleProgressClick}
         >
@@ -240,6 +247,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
             {/* Play/Pause */}
             <button
               onClick={togglePlay}
+              aria-label={isPlaying ? "Pausar" : "Reproduzir"}
               className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
               {isPlaying ? (
@@ -252,6 +260,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
             {/* Mute */}
             <button
               onClick={toggleMute}
+              aria-label={isMuted ? "Ativar som" : "Silenciar"}
               className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
               {isMuted ? (
@@ -278,6 +287,7 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
+              aria-label={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
               className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
               {isFullscreen ? (
