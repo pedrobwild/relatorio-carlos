@@ -528,7 +528,7 @@ export default function FormalizacaoDetalhe() {
             {/* Content */}
             <Card>
               <CardContent className="p-6">
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground">
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-headings:font-bold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-foreground prose-li:text-muted-foreground prose-hr:border-border prose-hr:my-6 [&>*+*]:mt-4 [&>h1]:mt-0 [&>h2]:mt-6 [&>h3]:mt-5 [&>p]:mt-2 text-justify">
                   <ReactMarkdown>{formalizacao.body_md || ''}</ReactMarkdown>
                 </div>
               </CardContent>
