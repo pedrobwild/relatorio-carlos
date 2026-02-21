@@ -74,37 +74,41 @@ const Projeto3D = () => {
     if (!hasInstructions && !isStaff) return null;
 
     return (
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border bg-primary-dark">
-          <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-white" />
-            <h2 className="text-h3 text-white">Instruções</h2>
+      <div className="bg-card rounded-xl border border-border shadow-sm">
+        <div className="pt-6 px-6 pb-6 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+              <Info className="h-4 w-4 text-primary" />
+            </div>
+            <div className="space-y-3 flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">Instruções</h3>
+                {isStaff && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    onClick={() => setEditorOpen(true)}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+              {hasInstructions ? (
+                <div
+                  className="prose prose-sm max-w-none text-muted-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1 [&_li]:leading-relaxed [&_*]:!text-sm [&_strong]:text-foreground"
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(instruction!.content_html) }}
+                />
+              ) : (
+                <button
+                  onClick={() => setEditorOpen(true)}
+                  className="w-full py-6 text-sm text-muted-foreground hover:text-foreground border-2 border-dashed border-border rounded-lg transition-colors hover:border-primary/30"
+                >
+                  Clique para adicionar instruções
+                </button>
+              )}
+            </div>
           </div>
-          {isStaff && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/10"
-              onClick={() => setEditorOpen(true)}
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </Button>
-          )}
-        </div>
-        <div className="p-4">
-          {hasInstructions ? (
-            <div
-              className="prose prose-sm max-w-none text-foreground [&_p]:mb-2 [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-0.5 [&_*]:!text-sm"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(instruction!.content_html) }}
-            />
-          ) : (
-            <button
-              onClick={() => setEditorOpen(true)}
-              className="w-full py-6 text-sm text-muted-foreground hover:text-foreground border-2 border-dashed border-border rounded-lg transition-colors hover:border-primary/30"
-            >
-              Clique para adicionar instruções
-            </button>
-          )}
         </div>
       </div>
     );
