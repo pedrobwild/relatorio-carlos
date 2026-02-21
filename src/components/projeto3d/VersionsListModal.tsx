@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, ImageIcon, Loader2, Upload, X, Eye, MessageSquareWarning } from 'lucide-react';
@@ -29,7 +28,6 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
   const [isRequesting, setIsRequesting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load image counts in useEffect (not during render)
   useEffect(() => {
     if (!open || versions.length === 0) return;
     let cancelled = false;
@@ -200,73 +198,85 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
               </div>
             ) : (
               versions.map((version) => (
-                <div
-                  key={version.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors gap-2"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm">Versão {version.version_number}</p>
-                      {version.revision_requested_at && (
-                        <Badge variant="outline" className="text-[10px] bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.2)]">
-                          Revisão solicitada
-                        </Badge>
-                      )}
+                <div key={version.id} className="space-y-2">
+                  <div
+                    className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors gap-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">Versão {version.version_number}</p>
+                        {version.revision_requested_at && (
+                          <Badge variant="outline" className="text-[10px] bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.2)]">
+                            Revisão solicitada
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(version.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        {imageCountsCache[version.id] != null && (
+                          <> • {imageCountsCache[version.id]} imagen{imageCountsCache[version.id] !== 1 ? 's' : ''}</>
+                        )}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(version.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      {imageCountsCache[version.id] != null && (
-                        <> • {imageCountsCache[version.id]} imagen{imageCountsCache[version.id] !== 1 ? 's' : ''}</>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {!isStaff && !version.revision_requested_at && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.3)] hover:bg-[hsl(var(--warning-light))]"
+                          onClick={() => setRevisionTarget(version.id)}
+                        >
+                          <MessageSquareWarning className="h-4 w-4" />
+                          <span className="hidden sm:inline">Solicitar revisão</span>
+                        </Button>
                       )}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {!isStaff && !version.revision_requested_at && (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="gap-1.5 text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.3)] hover:bg-[hsl(var(--warning-light))]"
-                        onClick={() => setRevisionTarget(version.id)}
+                        className="gap-1.5"
+                        onClick={() => setCarouselVersionId(version.id)}
                       >
-                        <MessageSquareWarning className="h-4 w-4" />
-                        <span className="hidden sm:inline">Solicitar revisão</span>
+                        <Eye className="h-4 w-4" />
+                        Abrir
                       </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => setCarouselVersionId(version.id)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Abrir
-                    </Button>
+                    </div>
                   </div>
+
+                  {/* Inline revision confirmation */}
+                  {revisionTarget === version.id && (
+                    <div className="rounded-lg border border-[hsl(var(--warning)/0.3)] bg-[hsl(var(--warning-light))] p-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Solicitar revisão</p>
+                        <p className="text-xs text-muted-foreground">
+                          Você já fez todos os apontamentos que gostaria? Ao confirmar, a equipe será notificada para revisar esta versão.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isRequesting}
+                          onClick={() => setRevisionTarget(null)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={isRequesting}
+                          onClick={handleRequestRevision}
+                        >
+                          {isRequesting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+                          Confirmar solicitação
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Confirmation AlertDialog — mounted at root to avoid nested dialog issues */}
-      <AlertDialog open={!!revisionTarget} onOpenChange={(open) => { if (!open) setRevisionTarget(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Solicitar revisão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você já fez todos os apontamentos que gostaria? Ao confirmar, a equipe será notificada para revisar esta versão.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRequesting}>Cancelar</AlertDialogCancel>
-            <Button onClick={handleRequestRevision} disabled={isRequesting}>
-              {isRequesting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
-              Confirmar solicitação
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Carousel Modal */}
       {carouselVersionId && (
