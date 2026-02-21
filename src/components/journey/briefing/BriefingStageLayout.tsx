@@ -26,9 +26,10 @@ interface BriefingStageLayoutProps {
   stage: JourneyStage;
   projectId: string;
   isAdmin: boolean;
+  onStageCompleted?: () => void;
 }
 
-export function BriefingStageLayout({ stage, projectId, isAdmin }: BriefingStageLayoutProps) {
+export function BriefingStageLayout({ stage, projectId, isAdmin, onStageCompleted }: BriefingStageLayoutProps) {
   const { data: records } = useStageRecords(stage.id, projectId);
   const completeStage = useCompleteStage();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -43,6 +44,7 @@ export function BriefingStageLayout({ stage, projectId, isAdmin }: BriefingStage
         onSuccess: () => {
           setConfirmOpen(false);
           toast.success('Etapa de Briefing concluída! Projeto 3D liberado.');
+          onStageCompleted?.();
         },
       },
     );

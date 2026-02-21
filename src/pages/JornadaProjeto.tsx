@@ -152,7 +152,7 @@ export default function JornadaProjeto() {
   };
 
   const adjustedStages = journey?.stages
-    ? journey.stages.map(s => welcomeCompleted ? s : { ...s, status: 'pending' as JourneyStageStatus })
+    ? journey.stages.map(s => (welcomeCompleted || hasRealProgress) ? s : { ...s, status: 'pending' as JourneyStageStatus })
     : [];
 
   const allStagesForStepper = journey?.stages ? [welcomeVirtualStage, ...adjustedStages] : [];
@@ -422,6 +422,16 @@ export default function JornadaProjeto() {
                       projectId={projectId!}
                       isAdmin={isAdmin}
                       nextStageName={selectedStageNextName}
+                      onStageCompleted={() => {
+                        // Navigate to the next stage after completing current
+                        const idx = journey.stages.findIndex(s => s.id === selectedStage.id);
+                        const next = journey.stages[idx + 1];
+                        if (next) {
+                          setTimeout(() => {
+                            handleTimelineClick(next.id);
+                          }, 500);
+                        }
+                      }}
                     />
                   </motion.div>
                 ) : null}
