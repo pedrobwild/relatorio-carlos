@@ -147,8 +147,8 @@ export default function JornadaProjeto() {
       setActiveView('welcome');
       return;
     }
-    if (!welcomeCompleted) return;
-    if (journey?.stages) {
+    if (!welcomeCompleted && !isAdmin) return;
+    if (!isAdmin && journey?.stages) {
       const idx = journey.stages.findIndex(s => s.id === stageId);
       if (idx >= 0 && isStageBlocked(journey.stages[idx], idx, journey.stages)) return;
     }
@@ -157,7 +157,7 @@ export default function JornadaProjeto() {
     setTimeout(() => {
       contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
-  }, [journey?.stages, welcomeCompleted]);
+  }, [journey?.stages, welcomeCompleted, isAdmin]);
 
   const handleAdvanceFromWelcome = useCallback(() => {
     setWelcomeCompleted(true);
