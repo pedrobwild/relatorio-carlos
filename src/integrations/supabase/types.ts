@@ -3151,6 +3151,10 @@ export type Database = {
       }
       user_is_admin: { Args: { p_user_id: string }; Returns: boolean }
       user_is_staff_or_above: { Args: { p_user_id: string }; Returns: boolean }
+      user_must_sign_formalization: {
+        Args: { p_formalization_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
