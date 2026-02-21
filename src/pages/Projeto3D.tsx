@@ -18,6 +18,7 @@ import { use3DVersions } from "@/hooks/use3DVersions";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DOMPurify from "dompurify";
+import { PROJETO_3D_INSTRUCTIONS_TEMPLATE } from "@/constants/projeto3dInstructionsTemplate";
 
 const Projeto3D = () => {
   const { projectId } = useParams();
@@ -274,7 +275,7 @@ const Projeto3D = () => {
         <RichTextEditorModal
           open={editorOpen}
           onOpenChange={setEditorOpen}
-          value={instruction?.content_html || ''}
+          value={instruction?.content_html || PROJETO_3D_INSTRUCTIONS_TEMPLATE}
           onSave={saveInstruction}
           title="Editar Instruções — Projeto 3D"
         />
