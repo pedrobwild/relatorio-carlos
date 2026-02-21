@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsResponse, jsonResponse } from "../_shared/cors.ts";
+import { authenticateRequest } from "../_shared/auth.ts";
+import { logSystemError } from "../_shared/errorLogger.ts";
 
 const FUNCTION_NAME = 'document-upload';
 
@@ -14,90 +11,27 @@ async function computeSHA256(data: ArrayBuffer): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function logError(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabaseAdmin: any,
-  errorCode: string,
-  errorMessage: string,
-  context: {
-    requestId: string;
-    userId?: string;
-    projectId?: string;
-    errorStack?: string;
-    requestPath?: string;
-    requestMethod?: string;
-    metadata?: Record<string, unknown>;
-  }
-) {
-  try {
-    await supabaseAdmin.rpc('log_system_error', {
-      p_error_code: errorCode,
-      p_error_message: errorMessage,
-      p_source: 'edge_function',
-      p_function_name: FUNCTION_NAME,
-      p_request_id: context.requestId,
-      p_user_id: context.userId || null,
-      p_project_id: context.projectId || null,
-      p_error_stack: context.errorStack || null,
-      p_request_path: context.requestPath || null,
-      p_request_method: context.requestMethod || null,
-      p_metadata: context.metadata || {},
-    });
-  } catch (logError) {
-    console.error('Failed to log error to system_errors:', logError);
-  }
-}
-
 serve(async (req) => {
   const requestId = crypto.randomUUID();
   const requestPath = new URL(req.url).pathname;
   const requestMethod = req.method;
 
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return corsResponse();
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
+  // deno-lint-ignore no-explicit-any
+  let supabaseAdmin: any;
   let userId: string | undefined;
   let projectId: string | undefined;
 
   try {
-    // Get authorization header for user context
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authorization required', requestId }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Create client with user's token for RLS
-    const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Get user from token
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-    if (userError || !user) {
-      console.error(`[${requestId}] Auth error:`, userError);
-      return new Response(
-        JSON.stringify({ error: 'Invalid token', requestId }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    userId = user.id;
+    const auth = await authenticateRequest(req);
+    supabaseAdmin = auth.supabaseAdmin;
+    userId = auth.user.id;
 
     // Check if user is staff
-    const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: user.id });
+    const { data: isStaff } = await supabaseAdmin.rpc('is_staff', { _user_id: auth.user.id });
     if (!isStaff) {
-      return new Response(
-        JSON.stringify({ error: 'Only staff can upload documents', requestId }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Only staff can upload documents', requestId }, 403);
     }
 
     // Parse multipart form data
@@ -109,28 +43,22 @@ serve(async (req) => {
     const description = formData.get('description') as string | null;
 
     if (!file || !projectId || !documentType || !name) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: file, projectId, documentType, name', requestId }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Missing required fields: file, projectId, documentType, name', requestId }, 400);
     }
 
     // Check project access
-    const { data: hasAccess } = await supabaseAdmin.rpc('has_project_access', { 
-      _user_id: user.id, 
-      _project_id: projectId 
+    const { data: hasAccess } = await supabaseAdmin.rpc('has_project_access', {
+      _user_id: auth.user.id,
+      _project_id: projectId,
     });
     if (!hasAccess) {
-      return new Response(
-        JSON.stringify({ error: 'No access to this project', requestId }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'No access to this project', requestId }, 403);
     }
 
     // Read file and compute checksum
     const fileBuffer = await file.arrayBuffer();
     const checksum = await computeSHA256(fileBuffer);
-    
+
     console.log(`[${requestId}] File: ${file.name}, Size: ${file.size}, Checksum: ${checksum}`);
 
     // Generate storage path
@@ -138,40 +66,34 @@ serve(async (req) => {
     const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const storagePath = `${projectId}/${documentType}/${timestamp}_${sanitizedFilename}`;
 
-    // Upload to storage using admin client (bypasses RLS for service operations)
+    // Upload to storage
     const { error: uploadError } = await supabaseAdmin.storage
       .from('project-documents')
-      .upload(storagePath, fileBuffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+      .upload(storagePath, fileBuffer, { contentType: file.type, upsert: false });
 
     if (uploadError) {
       console.error(`[${requestId}] Upload error:`, uploadError);
-      await logError(supabaseAdmin, 'STORAGE_UPLOAD_FAILED', uploadError.message, {
+      await logSystemError(supabaseAdmin, FUNCTION_NAME, 'STORAGE_UPLOAD_FAILED', uploadError.message, {
         requestId, userId, projectId, requestPath, requestMethod,
         metadata: { documentType, fileName: file.name, fileSize: file.size },
       });
-      return new Response(
-        JSON.stringify({ error: `Upload failed: ${uploadError.message}`, requestId }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: `Upload failed: ${uploadError.message}`, requestId }, 500);
     }
 
-    // Create document record with checksum
+    // Create document record
     const { data: document, error: dbError } = await supabaseAdmin
       .from('project_documents')
       .insert({
         project_id: projectId,
         document_type: documentType,
-        name: name,
-        description: description,
+        name,
+        description,
         storage_path: storagePath,
         storage_bucket: 'project-documents',
         mime_type: file.type,
         size_bytes: file.size,
-        uploaded_by: user.id,
-        checksum: checksum,
+        uploaded_by: auth.user.id,
+        checksum,
         status: 'pending',
         version: 1,
       })
@@ -180,19 +102,15 @@ serve(async (req) => {
 
     if (dbError) {
       console.error(`[${requestId}] DB error:`, dbError);
-      // Rollback: delete uploaded file
       await supabaseAdmin.storage.from('project-documents').remove([storagePath]);
-      await logError(supabaseAdmin, 'DB_INSERT_FAILED', dbError.message, {
+      await logSystemError(supabaseAdmin, FUNCTION_NAME, 'DB_INSERT_FAILED', dbError.message, {
         requestId, userId, projectId, requestPath, requestMethod,
         metadata: { documentType, fileName: file.name },
       });
-      return new Response(
-        JSON.stringify({ error: `Database error: ${dbError.message}`, requestId }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: `Database error: ${dbError.message}`, requestId }, 500);
     }
 
-    // Log domain event
+    // Log domain event (best-effort)
     try {
       const { data: project } = await supabaseAdmin
         .from('projects')
@@ -209,8 +127,8 @@ serve(async (req) => {
           _event_type: 'DOCUMENT_UPLOADED',
           _payload: {
             document_type: documentType,
-            name: name,
-            checksum: checksum,
+            name,
+            checksum,
             size_bytes: file.size,
             request_id: requestId,
           },
@@ -222,32 +140,33 @@ serve(async (req) => {
 
     console.log(`[${requestId}] Document uploaded successfully: ${document.id}`);
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        requestId,
-        document: {
-          id: document.id,
-          name: document.name,
-          checksum: document.checksum,
-          storage_path: document.storage_path,
-        }
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return jsonResponse({
+      success: true,
+      requestId,
+      document: {
+        id: document.id,
+        name: document.name,
+        checksum: document.checksum,
+        storage_path: document.storage_path,
+      },
+    });
   } catch (error: unknown) {
+    // Handle auth errors thrown by authenticateRequest
+    if (error && typeof error === 'object' && 'status' in error && 'message' in error) {
+      const authErr = error as { status: number; message: string };
+      return jsonResponse({ error: authErr.message, requestId }, authErr.status);
+    }
+
     console.error(`[${requestId}] Unexpected error:`, error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    
-    await logError(supabaseAdmin, 'UNEXPECTED_ERROR', errorMessage, {
-      requestId, userId, projectId, errorStack, requestPath, requestMethod,
-    });
-    
-    return new Response(
-      JSON.stringify({ error: errorMessage, requestId }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+
+    if (supabaseAdmin) {
+      await logSystemError(supabaseAdmin, FUNCTION_NAME, 'UNEXPECTED_ERROR', errorMessage, {
+        requestId, userId, projectId, errorStack, requestPath, requestMethod,
+      });
+    }
+
+    return jsonResponse({ error: errorMessage, requestId }, 500);
   }
 });
