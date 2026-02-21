@@ -33,14 +33,14 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
 };
 
 const DocumentCard = ({ 
-  doc, onViewHistory, onVersionUploaded, isStaff, canDelete, onDelete,
+  doc, onViewHistory, onVersionUploaded, isStaff, canDelete, onRequestDelete,
 }: { 
   doc: ProjectDocument; 
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
   isStaff: boolean;
   canDelete: boolean;
-  onDelete: (docId: string) => void;
+  onRequestDelete: (doc: ProjectDocument) => void;
 }) => {
   const handleDownload = async () => {
     if (!doc.url) return;
@@ -110,38 +110,17 @@ const DocumentCard = ({
                 <Download className="w-4 h-4" />Download
               </Button>
               {canDelete && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="gap-1.5 h-11 min-h-[44px] px-3 text-destructive hover:text-destructive"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Trash2 className="w-4 h-4" /><span className="hidden sm:inline">Excluir</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir documento</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tem certeza que deseja excluir &quot;{doc.name}&quot;? Esta ação não pode ser desfeita.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(doc.id);
-                        }} 
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Excluir
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-1.5 h-11 min-h-[44px] px-3 text-destructive hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRequestDelete(doc);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" /><span className="hidden sm:inline">Excluir</span>
+                </Button>
               )}
             </div>
           </div>
@@ -168,11 +147,11 @@ const DocumentCard = ({
 };
 
 const CategorySection = ({ 
-  category, documents, onViewHistory, onVersionUploaded, isStaff, canDelete, onDelete,
+  category, documents, onViewHistory, onVersionUploaded, isStaff, canDelete, onRequestDelete,
 }: { 
   category: DocumentCategory; documents: ProjectDocument[];
   onViewHistory: (docId: string) => void; onVersionUploaded: () => void;
-  isStaff: boolean; canDelete: boolean; onDelete: (docId: string) => void;
+  isStaff: boolean; canDelete: boolean; onRequestDelete: (doc: ProjectDocument) => void;
 }) => {
   if (documents.length === 0) return null;
   return (
@@ -184,7 +163,7 @@ const CategorySection = ({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {documents.map(doc => (
-          <DocumentCard key={doc.id} doc={doc} onViewHistory={onViewHistory} onVersionUploaded={onVersionUploaded} isStaff={isStaff} canDelete={canDelete} onDelete={onDelete} />
+          <DocumentCard key={doc.id} doc={doc} onViewHistory={onViewHistory} onVersionUploaded={onVersionUploaded} isStaff={isStaff} canDelete={canDelete} onRequestDelete={onRequestDelete} />
         ))}
       </div>
     </div>
@@ -203,9 +182,16 @@ const DocumentosContent = () => {
 
   const canUpload = can('documents:upload');
   const canDelete = can('documents:delete');
+  const [deleteTarget, setDeleteTarget] = useState<ProjectDocument | null>(null);
 
-  const handleDelete = (docId: string) => {
-    deleteDocMutation.mutate(docId);
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    deleteDocMutation.mutate(deleteTarget.id);
+    setDeleteTarget(null);
+  };
+
+  const handleRequestDelete = (doc: ProjectDocument) => {
+    setDeleteTarget(doc);
   };
 
   const historyDocs = historyDocId ? getVersionHistory(historyDocId) : [];
@@ -246,7 +232,7 @@ const DocumentosContent = () => {
           <TabsContent value="all" className="space-y-8 mt-6">
             {categoriesWithDocs.map(cat => (
               <CategorySection key={cat} category={cat} documents={getLatestByCategory(cat)}
-                onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onDelete={handleDelete} />
+                onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
             ))}
           </TabsContent>
 
@@ -254,7 +240,7 @@ const DocumentosContent = () => {
             <TabsContent key={cat} value={cat} className="mt-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {getLatestByCategory(cat).map(doc => (
-                  <DocumentCard key={doc.id} doc={doc} onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onDelete={handleDelete} />
+                  <DocumentCard key={doc.id} doc={doc} onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
                 ))}
               </div>
             </TabsContent>
@@ -301,6 +287,27 @@ const DocumentosContent = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation - rendered outside Dialog to avoid focus trap conflict */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir documento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir &quot;{deleteTarget?.name}&quot;? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
