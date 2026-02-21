@@ -78,6 +78,9 @@ export function ImageWithComments({ image }: Props) {
       setPendingPin(null);
       setCommentText('');
       setAddingComment(false);
+    } catch (err) {
+      console.error('[ImageWithComments] Failed to save comment:', err);
+      // Toast is already shown by the hook's onError
     } finally {
       setSaving(false);
     }
