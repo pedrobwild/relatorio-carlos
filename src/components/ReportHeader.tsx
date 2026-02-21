@@ -54,9 +54,10 @@ interface MilestoneDates {
   dateOfficialStart?: string | null;
   dateOfficialDelivery?: string | null;
   dateMobilizationStart?: string | null;
+  contractSigningDate?: string | null;
 }
 
-export type MilestoneKey = 'dateBriefingArch' | 'dateApproval3d' | 'dateApprovalExec' | 'dateApprovalObra' | 'dateMobilizationStart';
+export type MilestoneKey = 'dateBriefingArch' | 'dateApproval3d' | 'dateApprovalExec' | 'dateApprovalObra' | 'dateMobilizationStart' | 'contractSigningDate';
 
 interface ReportHeaderProps {
   projectName: string;
@@ -287,6 +288,7 @@ const ReportHeader = ({
       { label: "Aprov. Executivo", value: milestoneDates?.dateApprovalExec, key: 'dateApprovalExec' },
       { label: "Aprov. Obra", value: milestoneDates?.dateApprovalObra, key: 'dateApprovalObra' },
       { label: "Início Mobilização", value: milestoneDates?.dateMobilizationStart, key: 'dateMobilizationStart' },
+      { label: "Assin. Contrato", value: milestoneDates?.contractSigningDate, key: 'contractSigningDate' },
     ];
     return items;
   }, [milestoneDates]);
