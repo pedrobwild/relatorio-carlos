@@ -30,6 +30,10 @@ const formSchema = z.object({
   planned_end_date: z.string().optional(),
   contract_signing_date: z.string().optional(),
   contract_value: z.string().optional(),
+  num_installments: z.string().optional(),
+  installment_value: z.string().optional(),
+  payment_method: z.string().optional(),
+  payment_status: z.string().optional(),
   customer_name: z.string().trim().min(1, 'Nome do cliente é obrigatório').max(200),
   customer_email: z.string().trim().email('E-mail inválido').max(255),
   customer_phone: z.string().trim().max(20).optional(),
@@ -58,6 +62,10 @@ interface FormData {
   planned_end_date: string;
   contract_signing_date: string;
   contract_value: string;
+  num_installments: string;
+  installment_value: string;
+  payment_method: string;
+  payment_status: string;
   // Customer info
   customer_name: string;
   customer_email: string;
@@ -93,6 +101,10 @@ export default function NovaObra() {
     planned_end_date: '',
     contract_signing_date: '',
     contract_value: '',
+    num_installments: '',
+    installment_value: '',
+    payment_method: '',
+    payment_status: 'pending',
     customer_name: '',
     customer_email: '',
     customer_phone: '',
@@ -319,7 +331,31 @@ export default function NovaObra() {
         }
       }
 
-      // 8. Increment template usage counter
+      // 8. Create payment installments if financial info provided
+      if (formData.num_installments && parseInt(formData.num_installments) > 0) {
+        const numInstallments = parseInt(formData.num_installments);
+        const installmentAmount = formData.installment_value 
+          ? parseFloat(formData.installment_value) 
+          : (formData.contract_value ? parseFloat(formData.contract_value) / numInstallments : 0);
+        
+        const paymentRows = Array.from({ length: numInstallments }, (_, i) => ({
+          project_id: project.id,
+          installment_number: i + 1,
+          description: `Parcela ${i + 1}/${numInstallments}${formData.payment_method ? ` - ${formData.payment_method}` : ''}`,
+          amount: installmentAmount,
+          due_date: null,
+          paid_at: formData.payment_status === 'paid' ? new Date().toISOString() : null,
+        }));
+
+        const { error: paymentError } = await supabase
+          .from('project_payments')
+          .insert(paymentRows);
+        if (paymentError) {
+          console.error('Payment creation error:', paymentError);
+        }
+      }
+
+      // 9. Increment template usage counter
       if (selectedTemplate) {
         const { error: usageError } = await supabase.rpc('increment_template_usage', { p_template_id: selectedTemplate.id });
         if (usageError) console.error('Usage tracking error:', usageError);
@@ -755,19 +791,89 @@ export default function NovaObra() {
                 <DollarSign className="h-5 w-5" />
                 Financeiro
               </CardTitle>
-              <CardDescription>Valor do contrato (opcional)</CardDescription>
+              <CardDescription>Dados financeiros e condições de pagamento</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div>
-                <Label htmlFor="contract_value">Valor do Contrato (R$)</Label>
-                <Input
-                  id="contract_value"
-                  type="number"
-                  step="0.01"
-                  value={formData.contract_value}
-                  onChange={(e) => handleChange('contract_value', e.target.value)}
-                  placeholder="0,00"
-                />
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="contract_value">Valor Total do Contrato (R$)</Label>
+                  <Input
+                    id="contract_value"
+                    type="number"
+                    step="0.01"
+                    value={formData.contract_value}
+                    onChange={(e) => handleChange('contract_value', e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="num_installments">Número de Parcelas</Label>
+                  <Input
+                    id="num_installments"
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={formData.num_installments}
+                    onChange={(e) => {
+                      handleChange('num_installments', e.target.value);
+                      // Auto-calculate installment value
+                      if (formData.contract_value && e.target.value) {
+                        const total = parseFloat(formData.contract_value);
+                        const n = parseInt(e.target.value);
+                        if (total > 0 && n > 0) {
+                          handleChange('installment_value', (total / n).toFixed(2));
+                        }
+                      }
+                    }}
+                    placeholder="Ex: 12"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="installment_value">Valor da Parcela (R$)</Label>
+                  <Input
+                    id="installment_value"
+                    type="number"
+                    step="0.01"
+                    value={formData.installment_value}
+                    onChange={(e) => handleChange('installment_value', e.target.value)}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="payment_method">Forma de Pagamento</Label>
+                  <Select
+                    value={formData.payment_method}
+                    onValueChange={(v) => handleChange('payment_method', v)}
+                  >
+                    <SelectTrigger id="payment_method">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="boleto">Boleto</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="transferencia">Transferência</SelectItem>
+                      <SelectItem value="cartao">Cartão de Crédito</SelectItem>
+                      <SelectItem value="financiamento">Financiamento</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="payment_status">Status do Pagamento</Label>
+                  <Select
+                    value={formData.payment_status}
+                    onValueChange={(v) => handleChange('payment_status', v)}
+                  >
+                    <SelectTrigger id="payment_status">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="partial">Parcialmente Pago</SelectItem>
+                      <SelectItem value="paid">Pago</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
