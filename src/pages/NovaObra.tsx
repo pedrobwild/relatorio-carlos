@@ -198,6 +198,13 @@ export default function NovaObra() {
         }
         
         createdUserId = userResult.user?.id || null;
+        
+        if (userResult.already_existed) {
+          toast({
+            title: 'Usuário já existente',
+            description: `O e-mail ${formData.customer_email} já possui cadastro. Vinculando ao projeto.`,
+          });
+        }
       }
 
       // 1. Create project

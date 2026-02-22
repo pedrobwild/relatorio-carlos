@@ -25,15 +25,19 @@ serve(async (req) => {
       return jsonResponse({ error: 'Invalid role' }, 400);
     }
 
-    // Check if user already exists
+    // Check if user already exists — return their ID so project creation can continue
     const { data: existingUsers } = await supabaseAdmin
       .from('users_profile')
-      .select('id')
+      .select('id, email')
       .eq('email', email)
       .limit(1);
 
     if (existingUsers && existingUsers.length > 0) {
-      return jsonResponse({ error: 'Usuário já existe com este email' }, 400);
+      return jsonResponse({
+        success: true,
+        already_existed: true,
+        user: { id: existingUsers[0].id, email: existingUsers[0].email },
+      });
     }
 
     // Create the user
