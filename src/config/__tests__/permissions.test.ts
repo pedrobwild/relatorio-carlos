@@ -15,8 +15,8 @@ describe('permissions', () => {
       expect(can('customer', 'documents:upload')).toBe(false);
     });
 
-    it('allows engineer to upload documents', () => {
-      expect(can('engineer', 'documents:upload')).toBe(true);
+    it('denies engineer from uploading documents (admin-only)', () => {
+      expect(can('engineer', 'documents:upload')).toBe(false);
     });
 
     it('allows admin all features', () => {
@@ -40,7 +40,7 @@ describe('permissions', () => {
 
   describe('canAny()', () => {
     it('returns true if any role has permission', () => {
-      expect(canAny(['customer', 'engineer'], 'documents:upload')).toBe(true);
+      expect(canAny(['customer', 'engineer'], 'schedule:edit')).toBe(true);
     });
 
     it('returns false if no role has permission', () => {
@@ -62,7 +62,7 @@ describe('permissions', () => {
     });
 
     it('handles multi-role users', () => {
-      expect(canAll(['customer', 'engineer'], ['documents:view', 'documents:upload'])).toBe(true);
+      expect(canAll(['customer', 'engineer'], ['documents:view', 'schedule:edit'])).toBe(true);
     });
   });
 
