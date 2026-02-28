@@ -29,7 +29,17 @@ export type TelemetryEvent =
   | 'delete_project'
   | 'login'
   | 'logout'
-  | 'page_view';
+  | 'page_view'
+  // New foundation events
+  | 'search_used'
+  | 'filter_changed'
+  | 'bulk_action_used'
+  | 'role_changed'
+  | 'invitation_sent'
+  | 'invitation_resent'
+  | 'invitation_revoked'
+  | 'feature_flag_toggled'
+  | 'permission_override_set';
 
 export interface TelemetryPayload {
   /** Event-specific properties */
