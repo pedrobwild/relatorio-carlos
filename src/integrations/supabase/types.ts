@@ -1880,6 +1880,155 @@ export type Database = {
           },
         ]
       }
+      project_document_review_comments: {
+        Row: {
+          author_id: string
+          author_role: string | null
+          created_at: string
+          document_id: string
+          id: string
+          message: string
+          page_number: number
+          parent_id: string | null
+          project_id: string
+          rect_h: number | null
+          rect_w: number | null
+          resolved_at: string | null
+          resolved_by: string | null
+          review_id: string
+          status: Database["public"]["Enums"]["review_comment_status"]
+          tags: string[]
+          x: number
+          y: number
+        }
+        Insert: {
+          author_id: string
+          author_role?: string | null
+          created_at?: string
+          document_id: string
+          id?: string
+          message: string
+          page_number: number
+          parent_id?: string | null
+          project_id: string
+          rect_h?: number | null
+          rect_w?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_id: string
+          status?: Database["public"]["Enums"]["review_comment_status"]
+          tags?: string[]
+          x: number
+          y: number
+        }
+        Update: {
+          author_id?: string
+          author_role?: string | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          message?: string
+          page_number?: number
+          parent_id?: string | null
+          project_id?: string
+          rect_h?: number | null
+          rect_w?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_id?: string
+          status?: Database["public"]["Enums"]["review_comment_status"]
+          tags?: string[]
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_document_review_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "project_document_review_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_document_review_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_document_review_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_document_review_comments_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "project_document_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_document_reviews: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string
+          document_id: string
+          file_path: string | null
+          id: string
+          project_id: string
+          revision_number: number
+          status: Database["public"]["Enums"]["review_status"]
+          submitted_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by: string
+          document_id: string
+          file_path?: string | null
+          id?: string
+          project_id: string
+          revision_number?: number
+          status?: Database["public"]["Enums"]["review_status"]
+          submitted_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          file_path?: string | null
+          id?: string
+          project_id?: string
+          revision_number?: number
+          status?: Database["public"]["Enums"]["review_status"]
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_document_reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_document_reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_documents: {
         Row: {
           approved_at: string | null
@@ -3380,6 +3529,8 @@ export type Database = {
         | "invoice"
         | "extra_purchase"
       project_role: "owner" | "engineer" | "viewer" | "customer"
+      review_comment_status: "open" | "resolved"
+      review_status: "draft" | "in_review" | "approved" | "archived"
       user_status: "ativo" | "inativo"
     }
     CompositeTypes: {
@@ -3577,6 +3728,8 @@ export const Constants = {
         "extra_purchase",
       ],
       project_role: ["owner", "engineer", "viewer", "customer"],
+      review_comment_status: ["open", "resolved"],
+      review_status: ["draft", "in_review", "approved", "archived"],
       user_status: ["ativo", "inativo"],
     },
   },
