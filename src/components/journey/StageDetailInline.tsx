@@ -38,6 +38,7 @@ import { usePageInstructions } from '@/hooks/usePageInstructions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { RichTextEditorModal } from '@/components/report/RichTextEditorModal';
 import DOMPurify from 'dompurify';
+import { STAGE_INSTRUCTIONS_DEFAULTS } from '@/constants/stageInstructionsTemplates';
 
 interface StageDetailInlineProps {
   stage: JourneyStage;
@@ -63,7 +64,9 @@ export function StageDetailInline({
   // Derive page_key from stage name for instructions
   const pageKey = stage.name.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const { instruction, save: saveInstruction } = usePageInstructions(projectId, pageKey);
-  const hasInstructions = !!instruction?.content_html && instruction.content_html !== '<p><br></p>';
+  const defaultTemplate = STAGE_INSTRUCTIONS_DEFAULTS[pageKey] || '';
+  const displayHtml = instruction?.content_html || defaultTemplate;
+  const hasInstructions = !!displayHtml && displayHtml !== '<p><br></p>';
 
   const canComplete = isAdmin && stage.status !== 'completed' && stage.status !== 'pending';
 
@@ -177,7 +180,7 @@ export function StageDetailInline({
                 {hasInstructions ? (
                   <div
                     className="prose prose-sm max-w-none text-muted-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1 [&_li]:leading-relaxed [&_*]:!text-sm [&_strong]:text-foreground"
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(instruction!.content_html) }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayHtml) }}
                   />
                 ) : (
                   <button
@@ -376,7 +379,7 @@ export function StageDetailInline({
         <RichTextEditorModal
           open={instrEditorOpen}
           onOpenChange={setInstrEditorOpen}
-          value={instruction?.content_html || ''}
+          value={displayHtml}
           onSave={saveInstruction}
           title={`Editar Instruções — ${stage.name}`}
         />
