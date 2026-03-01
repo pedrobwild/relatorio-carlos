@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Download, ExternalLink, FileText, Award, Ruler, ClipboardList, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, FileText, Award, Ruler, ClipboardList, CheckCircle2, Loader2, Layers, MessageSquareWarning } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -8,14 +8,21 @@ import PDFViewer from "@/components/PDFViewer";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useExecutivoVersions } from "@/hooks/useExecutivoVersions";
+import { ExecutivoVersionsModal } from "@/components/executivo/ExecutivoVersionsModal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Executivo = () => {
   const { projectId } = useParams();
   const { paths } = useProjectNavigation();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { documents, loading: docsLoading, getLatestByCategory } = useDocuments(projectId);
+  const { isStaff } = useUserRole();
+  const { versions } = useExecutivoVersions(projectId);
   
   const executivoDoc = getLatestByCategory('executivo')[0];
   const artDoc = getLatestByCategory('art_rrt')[0];
@@ -25,6 +32,10 @@ const Executivo = () => {
   
   const [artModalOpen, setArtModalOpen] = useState(false);
   const [planoReformaModalOpen, setPlanoReformaModalOpen] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  const [revisionDetailVersion, setRevisionDetailVersion] = useState<number | null>(null);
+
+  const pendingRevisions = versions.filter(v => v.revision_requested_at);
 
   const handleDownload = async (doc: ProjectDocument) => {
     if (!doc.url) return;
@@ -105,7 +116,57 @@ const Executivo = () => {
       {/* Content */}
       {hasDocument ? (
         <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto w-full">
+          <div className="max-w-7xl mx-auto w-full space-y-6">
+            {/* Executivo Versions Card */}
+            <div className="bg-card rounded-xl border border-border shadow-sm p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Layers className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Versões do Projeto Executivo</h3>
+                    <p className="text-xs text-muted-foreground">PDFs com comentários e revisão</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setVersionsOpen(true)} className="gap-1.5">
+                  <Layers className="h-4 w-4" />
+                  Gerenciar
+                </Button>
+              </div>
+            </div>
+
+            {/* Revision Request Banners — visible to staff */}
+            {isStaff && pendingRevisions.length > 0 && (
+              <div className="space-y-3">
+                {pendingRevisions.map((version) => (
+                  <div
+                    key={version.id}
+                    className="flex items-center gap-3 p-4 bg-[hsl(var(--warning-light))] border border-[hsl(var(--warning)/0.2)] rounded-xl"
+                  >
+                    <MessageSquareWarning className="h-5 w-5 text-[hsl(var(--warning))] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        Solicitação de Revisão — Versão {version.version_number}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Solicitada em {format(new Date(version.revision_requested_at!), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1.5"
+                      onClick={() => {
+                        setRevisionDetailVersion(version.version_number);
+                      }}
+                    >
+                      Ver detalhes
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
             {/* Desktop: Two-column layout */}
             <div className="hidden lg:grid lg:grid-cols-[1fr_340px] lg:gap-6">
               {/* Left: Main PDF */}
@@ -147,7 +208,6 @@ const Executivo = () => {
                   <div className="bg-card border border-border rounded-lg p-4">
                     <h2 className="text-h2 mb-4">Documentos Relacionados</h2>
                     <div className="space-y-3">
-                      {/* ART */}
                       {hasArt && (
                         <Dialog open={artModalOpen} onOpenChange={setArtModalOpen}>
                           <DialogTrigger asChild>
@@ -183,7 +243,6 @@ const Executivo = () => {
                         </Dialog>
                       )}
 
-                      {/* Plano de Reforma */}
                       {hasPlanoReforma && (
                         <Dialog open={planoReformaModalOpen} onOpenChange={setPlanoReformaModalOpen}>
                           <DialogTrigger asChild>
@@ -222,7 +281,6 @@ const Executivo = () => {
                   </div>
                 )}
 
-                {/* Quick Info */}
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                   <p className="text-caption text-foreground/80">
                     <strong>Dica:</strong> Clique em um documento para visualizá-lo ou fazer download.
@@ -374,6 +432,52 @@ const Executivo = () => {
           </div>
         </div>
       )}
+
+      {/* Executivo Versions Modal */}
+      {projectId && (
+        <ExecutivoVersionsModal
+          projectId={projectId}
+          open={versionsOpen}
+          onOpenChange={setVersionsOpen}
+        />
+      )}
+
+      {/* Revision Detail Modal */}
+      <Dialog open={revisionDetailVersion !== null} onOpenChange={(o) => { if (!o) setRevisionDetailVersion(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquareWarning className="h-5 w-5 text-[hsl(var(--warning))]" />
+              Solicitação de Revisão
+            </DialogTitle>
+          </DialogHeader>
+          {revisionDetailVersion !== null && (() => {
+            const version = pendingRevisions.find(v => v.version_number === revisionDetailVersion);
+            if (!version) return <p className="text-sm text-muted-foreground">Versão não encontrada.</p>;
+            return (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                  <p className="text-sm font-medium">Versão {version.version_number}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Solicitada em {format(new Date(version.revision_requested_at!), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  O cliente finalizou os apontamentos e solicitou a revisão desta versão do Projeto Executivo.
+                  Acesse a versão para conferir os comentários e realizar os ajustes necessários.
+                </p>
+                <Button className="w-full gap-2" onClick={() => {
+                  setRevisionDetailVersion(null);
+                  setVersionsOpen(true);
+                }}>
+                  <Layers className="h-4 w-4" />
+                  Abrir versões
+                </Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
