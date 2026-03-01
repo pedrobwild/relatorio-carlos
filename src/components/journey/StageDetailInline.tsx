@@ -356,7 +356,10 @@ export function StageDetailInline({
                 <AlertDialogAction
                   className="min-h-[44px]"
                   onClick={() => {
-                    completeStage.mutate({ stageId: stage.id, projectId });
+                    completeStage.mutate(
+                      { stageId: stage.id, projectId },
+                      { onSuccess: () => onStageCompleted?.() },
+                    );
                   }}
                 >
                   Sim, concluir
