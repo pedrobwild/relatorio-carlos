@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Edit2, Check, X, CheckCircle2, ChevronDown, Loader2, Info, Pencil, ImageIcon, Eye,
+  Edit2, Check, X, CheckCircle2, ChevronDown, Loader2, Info, Pencil, ImageIcon, Eye, FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,7 @@ import { MeetingCTA } from './MeetingCTA';
 import { StageRegistry } from './StageRegistry';
 import { BriefingStageLayout } from './briefing/BriefingStageLayout';
 import { VersionsListModal } from '@/components/projeto3d/VersionsListModal';
+import { ExecutivoVersionsModal } from '@/components/executivo/ExecutivoVersionsModal';
 import { usePageInstructions } from '@/hooks/usePageInstructions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { RichTextEditorModal } from '@/components/report/RichTextEditorModal';
@@ -58,6 +59,7 @@ export function StageDetailInline({
   const [isEditing, setIsEditing] = useState(false);
   const [instrEditorOpen, setInstrEditorOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
+  const [executivoVersionsOpen, setExecutivoVersionsOpen] = useState(false);
   const completeStage = useCompleteStage();
   const { isStaff } = useUserRole();
 
@@ -73,6 +75,7 @@ export function StageDetailInline({
   // Detect stage types by name pattern
   const isBriefingStage = stage.name.toLowerCase().includes('briefing');
   const isProjeto3DStage = stage.name.toLowerCase().includes('projeto 3d');
+  const isProjetoExecutivoStage = stage.name.toLowerCase().includes('projeto executivo');
 
   if (isBriefingStage) {
     return (
@@ -284,6 +287,30 @@ export function StageDetailInline({
         </>
       )}
 
+      {/* Executivo Versions — only for Projeto Executivo stage */}
+      {isProjetoExecutivoStage && (
+        <>
+          <div className="bg-card rounded-xl border border-border shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Versões do Projeto Executivo</h3>
+                  <p className="text-xs text-muted-foreground">PDFs com comentários por página</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setExecutivoVersionsOpen(true)} className="gap-1.5">
+                <Eye className="h-4 w-4" />
+                {isStaff ? 'Gerenciar' : 'Visualizar'}
+              </Button>
+            </div>
+          </div>
+          <Separator />
+        </>
+      )}
+
       {/* ④ Stage Registry */}
       <StageRegistry
         stageId={stage.id}
@@ -394,6 +421,15 @@ export function StageDetailInline({
           projectId={projectId}
           open={versionsOpen}
           onOpenChange={setVersionsOpen}
+        />
+      )}
+
+      {/* Executivo Versions Modal */}
+      {isProjetoExecutivoStage && (
+        <ExecutivoVersionsModal
+          projectId={projectId}
+          open={executivoVersionsOpen}
+          onOpenChange={setExecutivoVersionsOpen}
         />
       )}
     </div>
