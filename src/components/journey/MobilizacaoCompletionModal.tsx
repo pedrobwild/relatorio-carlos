@@ -54,6 +54,14 @@ export function MobilizacaoCompletionModal({
     customer_name: string;
     customer_email: string;
     customer_phone: string | null;
+    milestoneDates: {
+      contract_signing_date: string | null;
+      date_briefing_arch: string | null;
+      date_approval_3d: string | null;
+      date_approval_exec: string | null;
+      date_approval_obra: string | null;
+      date_mobilization_start: string | null;
+    };
   } | null>(null);
 
   // Load project data when modal opens
@@ -64,13 +72,28 @@ export function MobilizacaoCompletionModal({
     setPlannedStartDate(formatDateForInput(defaultDate));
 
     (async () => {
-      const [projectRes, customerRes] = await Promise.all([
+      const [projectRes, customerRes, stagesRes] = await Promise.all([
         supabase.from('projects').select('*').eq('id', projectId).single(),
         supabase.from('project_customers').select('*').eq('project_id', projectId).limit(1),
+        supabase.from('journey_stages').select('name, confirmed_end, sort_order').eq('project_id', projectId).order('sort_order'),
       ]);
 
       if (projectRes.data) {
         const customer = customerRes.data?.[0];
+
+        // Map journey stage completion dates to project milestone columns
+        const stages = stagesRes.data ?? [];
+        const stageMap = new Map(stages.map(s => [s.name.toLowerCase(), s.confirmed_end]));
+
+        const milestoneDates = {
+          contract_signing_date: projectRes.data.contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
+          date_briefing_arch: stageMap.get('briefing arquitetônico') ?? null,
+          date_approval_3d: stageMap.get('projeto 3d') ?? null,
+          date_approval_exec: stageMap.get('projeto executivo') ?? null,
+          date_approval_obra: stageMap.get('liberação da obra') ?? null,
+          date_mobilization_start: stageMap.get('mobilização') ?? null,
+        };
+
         setProjectData({
           name: projectRes.data.name,
           unit_name: projectRes.data.unit_name,
@@ -82,6 +105,7 @@ export function MobilizacaoCompletionModal({
           customer_name: customer?.customer_name || '',
           customer_email: customer?.customer_email || '',
           customer_phone: customer?.customer_phone || null,
+          milestoneDates,
         });
       }
     })();
@@ -111,6 +135,12 @@ export function MobilizacaoCompletionModal({
           status: 'active',
           created_by: user.id,
           is_project_phase: false,
+          contract_signing_date: projectData.milestoneDates.contract_signing_date,
+          date_briefing_arch: projectData.milestoneDates.date_briefing_arch,
+          date_approval_3d: projectData.milestoneDates.date_approval_3d,
+          date_approval_exec: projectData.milestoneDates.date_approval_exec,
+          date_approval_obra: projectData.milestoneDates.date_approval_obra,
+          date_mobilization_start: projectData.milestoneDates.date_mobilization_start,
         })
         .select()
         .single();
