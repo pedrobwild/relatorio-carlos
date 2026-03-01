@@ -73,7 +73,7 @@ export function StageDetailInline({
   const [editingMember, setEditingMember] = useState<JourneyTeamMember | null>(null);
   const completeStage = useCompleteStage();
   const { isStaff } = useUserRole();
-  const { members, addMember, updateMember, removeMember, uploadPhoto, isAdding, isUpdating, isUploading } = useJourneyTeamMembers(projectId, 'mobilizacao');
+  const { members, addMember, updateMember, removeMember, uploadPhoto, isAdding, isUpdating, isUploading } = useJourneyTeamMembers(projectId);
 
   const handleSaveTeamMember = async (data: {
     display_name: string; role_title: string; description: string;
