@@ -35,6 +35,7 @@ const Arquivos = lazy(() => import("./pages/Arquivos"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminAuditoria = lazy(() => import("./pages/AdminAuditoria"));
 const AdminHealth = lazy(() => import("./pages/AdminHealth"));
+const AdminUxInsights = lazy(() => import("./pages/AdminUxInsights"));
 const Demo = lazy(() => import("./pages/Demo"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
@@ -142,6 +143,7 @@ const App = () => (
             <Route path="/admin" element={<AdminRoute>{withSuspense(<Admin />)}</AdminRoute>} />
             <Route path="/admin/auditoria" element={<AdminRoute>{withSuspense(<AdminAuditoria />)}</AdminRoute>} />
             <Route path="/admin/health" element={<AdminRoute>{withSuspense(<AdminHealth />)}</AdminRoute>} />
+            <Route path="/admin/ux-insights" element={<AdminRoute>{withSuspense(<AdminUxInsights />)}</AdminRoute>} />
             <Route path="/demo" element={<AdminRoute>{withSuspense(<Demo />)}</AdminRoute>} />
             
             {/* Customer-only routes */}
