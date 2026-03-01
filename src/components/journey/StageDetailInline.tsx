@@ -34,6 +34,7 @@ import {
 import { useJourneyTeamMembers, JourneyTeamMember } from '@/hooks/useJourneyTeamMembers';
 import { TeamMemberEditModal } from './TeamMemberEditModal';
 import { StageSummary } from './StageSummary';
+import { MobilizacaoCompletionModal } from './MobilizacaoCompletionModal';
 import { StageDetailsSections } from './StageDetailsSections';
 import { StageChecklist } from './StageChecklist';
 import { StageDatesPanel } from './StageDatesPanel';
@@ -71,6 +72,7 @@ export function StageDetailInline({
   const [teamExpanded, setTeamExpanded] = useState(false);
   const [teamEditModalOpen, setTeamEditModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<JourneyTeamMember | null>(null);
+  const [mobilizacaoModalOpen, setMobilizacaoModalOpen] = useState(false);
   const completeStage = useCompleteStage();
   const { isStaff } = useUserRole();
   const { members, addMember, updateMember, removeMember, uploadPhoto, isAdding, isUpdating, isUploading } = useJourneyTeamMembers(projectId);
@@ -405,7 +407,27 @@ export function StageDetailInline({
           </Button>
         )}
 
-        {canComplete && (
+        {canComplete && isMobilizacaoStage && (
+          <>
+            <Button
+              size="sm"
+              className="h-12 sm:h-10 gap-1.5 text-xs min-h-[44px] w-full sm:w-auto sm:ml-auto"
+              onClick={() => setMobilizacaoModalOpen(true)}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Concluir etapa
+            </Button>
+            <MobilizacaoCompletionModal
+              open={mobilizacaoModalOpen}
+              onOpenChange={setMobilizacaoModalOpen}
+              stageId={stage.id}
+              projectId={projectId}
+              onSuccess={() => onStageCompleted?.()}
+            />
+          </>
+        )}
+
+        {canComplete && !isMobilizacaoStage && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
