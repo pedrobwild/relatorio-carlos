@@ -37,7 +37,37 @@ const MEDICAO_TECNICA_TEMPLATE = `
 <p>Você será notificado quando esta etapa for concluída.</p>
 `.trim();
 
-/** Map of page_key → default HTML template */
+/**
+ * Build the "Liberação da Obra" template dynamically,
+ * injecting the previous stage's confirmed_end date.
+ */
+export function buildLiberacaoTemplate(previousStageConfirmedEnd: string | null): string {
+  const dateStr = previousStageConfirmedEnd
+    ? new Date(previousStageConfirmedEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : '[data a definir]';
+
+  return `
+<p><strong>Liberação da Obra – O que acontece nesta etapa</strong></p>
+<br/>
+<p>Estamos quase lá! Agora que seu projeto executivo foi aprovado, no dia <strong>${dateStr}</strong>, realizaremos os trâmites para liberação da sua obra.</p>
+<br/>
+<p><strong>Etapas:</strong></p>
+<br/>
+<p><strong>1) Emissão da ART:</strong></p>
+<p style="padding-left: 20px;">Seu Projeto Executivo será submetido ao CREA para recebermos o documento oficial que atesta nossa capacidade técnica de execução da obra.</p>
+<p style="padding-left: 20px;">📅 <strong>Prazo para emissão:</strong> 2 dias úteis após aprovação do executivo</p>
+<br/>
+<p><strong>2) Aprovação do Condomínio:</strong></p>
+<p style="padding-left: 20px;">Enviaremos a ART e o Projeto Executivo para seu condomínio emitir o atestado que nos permite executar e iniciar sua reforma.</p>
+<p style="padding-left: 20px;">📅 <strong>Prazo para submissão da documentação:</strong> 1 dia útil após recebimento da ART</p>
+<br/>
+<p>⚠️ <strong>Atenção:</strong> Cada condomínio possui um prazo específico de análise e aprovação da documentação, etapa que não podemos controlar. Contudo, acompanharemos o processo de perto e cobraremos o retorno com agilidade.</p>
+<br/>
+<p>Assim que recebermos o comunicado de liberação da sua obra, no dia seguinte se inicia o período de <strong>5 dias úteis de mobilização da equipe técnica</strong>, que antecede a data oficial de início do cronograma da obra.</p>
+`.trim();
+}
+
+/** Map of page_key → default HTML template (static templates only) */
 export const STAGE_INSTRUCTIONS_DEFAULTS: Record<string, string> = {
   projeto_3d: PROJETO_3D_INSTRUCTIONS_TEMPLATE,
   medicao_tecnica: MEDICAO_TECNICA_TEMPLATE,
