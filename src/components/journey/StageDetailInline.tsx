@@ -244,37 +244,43 @@ export function StageDetailInline({
         </div>
       )}
 
-      {/* ② Dates Panel */}
-      <StageDatesPanel
-        stageId={stage.id}
-        projectId={projectId}
-        isAdmin={isAdmin}
-        stageName={stage.name}
-      />
+      {/* ② Dates Panel — hidden for Projeto Executivo */}
+      {!isProjetoExecutivoStage && (
+        <>
+          <StageDatesPanel
+            stageId={stage.id}
+            projectId={projectId}
+            isAdmin={isAdmin}
+            stageName={stage.name}
+          />
+          <Separator />
+        </>
+      )}
 
-      <Separator />
-
-      {/* ③ Checklists */}
-      <div className="grid gap-5 md:gap-6 md:grid-cols-2">
-        <StageChecklist
-          todos={stage.todos}
-          owner="client"
-          label="✔️ To-dos do Cliente"
-          projectId={projectId}
-          stageId={stage.id}
-          isAdmin={isAdmin}
-        />
-        <StageChecklist
-          todos={stage.todos}
-          owner="bwild"
-          label="🧰 To-dos Bwild"
-          projectId={projectId}
-          stageId={stage.id}
-          isAdmin={isAdmin}
-        />
-      </div>
-
-      <Separator />
+      {/* ③ Checklists — hidden for Projeto Executivo */}
+      {!isProjetoExecutivoStage && (
+        <>
+          <div className="grid gap-5 md:gap-6 md:grid-cols-2">
+            <StageChecklist
+              todos={stage.todos}
+              owner="client"
+              label="✔️ To-dos do Cliente"
+              projectId={projectId}
+              stageId={stage.id}
+              isAdmin={isAdmin}
+            />
+            <StageChecklist
+              todos={stage.todos}
+              owner="bwild"
+              label="🧰 To-dos Bwild"
+              projectId={projectId}
+              stageId={stage.id}
+              isAdmin={isAdmin}
+            />
+          </div>
+          <Separator />
+        </>
+      )}
 
       {/* 3D Versions — only for Projeto 3D stage */}
       {isProjeto3DStage && (
@@ -324,14 +330,17 @@ export function StageDetailInline({
         </>
       )}
 
-      {/* ④ Stage Registry */}
-      <StageRegistry
-        stageId={stage.id}
-        projectId={projectId}
-        isAdmin={isAdmin}
-      />
-
-      <Separator />
+      {/* ④ Stage Registry — hidden for Projeto Executivo */}
+      {!isProjetoExecutivoStage && (
+        <>
+          <StageRegistry
+            stageId={stage.id}
+            projectId={projectId}
+            isAdmin={isAdmin}
+          />
+          <Separator />
+        </>
+      )}
 
       {/* ⑤ "Sobre esta etapa" — collapsible */}
       {!isEditing && stage.description && (
