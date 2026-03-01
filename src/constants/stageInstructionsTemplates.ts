@@ -37,35 +37,21 @@ const MEDICAO_TECNICA_TEMPLATE = `
 <p>Você será notificado quando esta etapa for concluída.</p>
 `.trim();
 
-/**
- * Build the "Liberação da Obra" template dynamically,
- * injecting the previous stage's confirmed_end date.
- */
-export function buildLiberacaoTemplate(previousStageConfirmedEnd: string | null): string {
-  const dateStr = previousStageConfirmedEnd
-    ? new Date(previousStageConfirmedEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    : '[data a definir]';
-
-  return `
-<p><strong>Liberação da Obra – O que acontece nesta etapa</strong></p>
+const MOBILIZACAO_TEMPLATE = `
+<p><strong>Mobilização – O que acontece nesta etapa</strong></p>
 <br/>
-<p>Estamos quase lá! Agora que seu projeto executivo foi aprovado, no dia <strong>${dateStr}</strong>, realizaremos os trâmites para liberação da sua obra.</p>
+<p>Obra aprovado pelo condomínio! Agora entramos na <strong>mobilização da equipe técnica</strong>.</p>
 <br/>
-<p><strong>Etapas:</strong></p>
+<p><strong>O que acontece aqui:</strong></p>
 <br/>
-<p><strong>1) Emissão da ART:</strong></p>
-<p style="padding-left: 20px;">Seu Projeto Executivo será submetido ao CREA para recebermos o documento oficial que atesta nossa capacidade técnica de execução da obra.</p>
-<p style="padding-left: 20px;">📅 <strong>Prazo para emissão:</strong> 2 dias úteis após aprovação do executivo</p>
+<p style="padding-left: 20px;">📋 Em até <strong>2 dias úteis</strong>, você terá acesso ao cronograma de obra em um novo ambiente de acompanhamento das próximas etapas.</p>
 <br/>
-<p><strong>2) Aprovação do Condomínio:</strong></p>
-<p style="padding-left: 20px;">Enviaremos a ART e o Projeto Executivo para seu condomínio emitir o atestado que nos permite executar e iniciar sua reforma.</p>
-<p style="padding-left: 20px;">📅 <strong>Prazo para submissão da documentação:</strong> 1 dia útil após recebimento da ART</p>
+<p style="padding-left: 20px;">🛠️ Em até <strong>5 dias úteis</strong>, mobilizamos o time e preparamos tudo para o início (equipe, acessos, logística e alinhamentos).</p>
 <br/>
-<p>⚠️ <strong>Atenção:</strong> Cada condomínio possui um prazo específico de análise e aprovação da documentação, etapa que não podemos controlar. Contudo, acompanharemos o processo de perto e cobraremos o retorno com agilidade.</p>
+<p>O <strong>Engenheiro responsável</strong> pela gestão da sua reforma entrará em contato para alguns alinhamentos iniciais e solicitar a liberação de nossos prestadores em sua unidade.</p>
 <br/>
-<p>Assim que recebermos o comunicado de liberação da sua obra, no dia seguinte se inicia o período de <strong>5 dias úteis de mobilização da equipe técnica</strong>, que antecede a data oficial de início do cronograma da obra.</p>
+<p>⚠️ <strong>Atenção:</strong> quando chegar a data de início, passa a contar oficialmente 1º dia útil do cronograma, e o prazo total de entrega seguirá o que foi definido em contrato.</p>
 `.trim();
-}
 
 const PROJETO_EXECUTIVO_TEMPLATE = `
 <p><strong>Projeto Executivo – O que acontece nesta etapa</strong></p>
@@ -91,4 +77,5 @@ export const STAGE_INSTRUCTIONS_DEFAULTS: Record<string, string> = {
   projeto_3d: PROJETO_3D_INSTRUCTIONS_TEMPLATE,
   medicao_tecnica: MEDICAO_TECNICA_TEMPLATE,
   projeto_executivo: PROJETO_EXECUTIVO_TEMPLATE,
+  mobilizacao: MOBILIZACAO_TEMPLATE,
 };

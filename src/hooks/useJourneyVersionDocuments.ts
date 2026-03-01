@@ -41,12 +41,12 @@ export function useJourneyVersionDocuments(projectId: string | undefined) {
 
       if (!stages) return [];
 
-      const liberacaoStage = stages.find(s => {
+      const mobilizacaoStage = stages.find(s => {
         const name = s.name.toLowerCase();
-        return name.includes('liberação') || name.includes('liberacao');
+        return name.includes('mobilização') || name.includes('mobilizacao') || name.includes('liberação') || name.includes('liberacao');
       });
 
-      if (!liberacaoStage || liberacaoStage.status !== 'completed') {
+      if (!mobilizacaoStage || mobilizacaoStage.status !== 'completed') {
         return [];
       }
 
