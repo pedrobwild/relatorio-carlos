@@ -283,12 +283,12 @@ const ReportHeader = ({
   // Milestones that have values
   const milestoneItems = useMemo(() => {
     const items: { label: string; value: string | null | undefined; key: MilestoneKey }[] = [
+      { label: "Assin. Contrato", value: milestoneDates?.contractSigningDate, key: 'contractSigningDate' },
       { label: "Briefing Arq.", value: milestoneDates?.dateBriefingArch, key: 'dateBriefingArch' },
       { label: "Aprov. 3D", value: milestoneDates?.dateApproval3d, key: 'dateApproval3d' },
       { label: "Aprov. Executivo", value: milestoneDates?.dateApprovalExec, key: 'dateApprovalExec' },
       { label: "Aprov. Obra", value: milestoneDates?.dateApprovalObra, key: 'dateApprovalObra' },
       { label: "Início Mobilização", value: milestoneDates?.dateMobilizationStart, key: 'dateMobilizationStart' },
-      { label: "Assin. Contrato", value: milestoneDates?.contractSigningDate, key: 'contractSigningDate' },
     ];
     return items;
   }, [milestoneDates]);
@@ -511,7 +511,7 @@ const ReportHeader = ({
                             onInteractOutside={(e) => e.preventDefault()}
                           >
                             <div className="p-2 border-b border-border flex items-center justify-between gap-2">
-                              <span className="text-xs font-semibold text-foreground">{m.label}</span>
+                              <span className="text-xs font-semibold text-foreground">Marco: {m.label}</span>
                               <div className="flex items-center gap-1">
                                 {m.value && (
                                   <Button
@@ -744,7 +744,7 @@ const ReportHeader = ({
                               onInteractOutside={(e) => e.preventDefault()}
                             >
                               <div className="p-2 border-b border-border flex items-center justify-between gap-2">
-                                <span className="text-xs font-semibold text-foreground">{m.label}</span>
+                                <span className="text-xs font-semibold text-foreground">Marco: {m.label}</span>
                                 <div className="flex items-center gap-1">
                                   {m.value && (
                                     <Button
