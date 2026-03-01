@@ -1329,6 +1329,7 @@ export type Database = {
           project_id: string
           role_title: string
           sort_order: number
+          stage_context: string
           updated_at: string
         }
         Insert: {
@@ -1342,6 +1343,7 @@ export type Database = {
           project_id: string
           role_title?: string
           sort_order?: number
+          stage_context?: string
           updated_at?: string
         }
         Update: {
@@ -1355,6 +1357,7 @@ export type Database = {
           project_id?: string
           role_title?: string
           sort_order?: number
+          stage_context?: string
           updated_at?: string
         }
         Relationships: [

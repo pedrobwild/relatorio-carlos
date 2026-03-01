@@ -19,11 +19,11 @@ export interface JourneyTeamMember {
 export type JourneyTeamMemberInput = Pick<
   JourneyTeamMember,
   'project_id' | 'display_name' | 'role_title' | 'description' | 'email' | 'phone' | 'photo_url'
->;
+> & { stage_context?: string };
 
-export function useJourneyTeamMembers(projectId: string | undefined) {
+export function useJourneyTeamMembers(projectId: string | undefined, stageContext: string = 'welcome') {
   const queryClient = useQueryClient();
-  const queryKey = ['journey-team-members', projectId];
+  const queryKey = ['journey-team-members', projectId, stageContext];
 
   const query = useQuery({
     queryKey,
@@ -33,6 +33,7 @@ export function useJourneyTeamMembers(projectId: string | undefined) {
         .from('journey_team_members')
         .select('*')
         .eq('project_id', projectId)
+        .eq('stage_context', stageContext)
         .order('sort_order', { ascending: true });
       if (error) throw error;
       return (data || []) as JourneyTeamMember[];
@@ -54,7 +55,7 @@ export function useJourneyTeamMembers(projectId: string | undefined) {
 
       const { data, error } = await supabase
         .from('journey_team_members')
-        .insert({ ...input, sort_order: sortOrder })
+        .insert({ ...input, sort_order: sortOrder, stage_context: input.stage_context || stageContext })
         .select()
         .single();
       if (error) throw error;
