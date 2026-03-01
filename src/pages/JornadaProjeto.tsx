@@ -423,6 +423,7 @@ export default function JornadaProjeto() {
                       projectId={projectId!}
                       isAdmin={isAdmin}
                       nextStageName={selectedStageNextName}
+                      allStages={journey.stages}
                       onStageCompleted={() => {
                         // Navigate to the next stage after completing current
                         const idx = journey.stages.findIndex(s => s.id === selectedStage.id);
