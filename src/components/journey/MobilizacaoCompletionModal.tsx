@@ -247,6 +247,11 @@ export function MobilizacaoCompletionModal({
           })),
         );
       }
+      // 10. Mark original journey project as completed
+      await supabase
+        .from('projects')
+        .update({ status: 'completed' })
+        .eq('id', projectId);
 
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['projects'] });
