@@ -14,6 +14,7 @@ import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { toast } from "sonner";
 import { createEmptyReportTemplate } from "@/data/emptyReportTemplate";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { useProjectLayout } from "@/components/layout/ProjectLayoutContext";
 import { pdfLogger } from "@/lib/devLogger";
 import { prefetchForTab } from "@/lib/prefetch";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
@@ -42,6 +43,7 @@ const MobileHeader = () => (
 const Index = () => {
   const navigate = useNavigate();
   const reportRef = useRef<HTMLDivElement>(null);
+  const { hasShell } = useProjectLayout();
 
   const {
     project, projectId, projectLoading, projectError, activitiesLoading,
@@ -89,7 +91,7 @@ const Index = () => {
   if (projectLoading || activitiesLoading) {
     return (
       <div className="min-h-screen min-h-[100dvh] pb-safe">
-        <MobileHeader />
+        {!hasShell && <MobileHeader />}
         <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
             <ContentSkeleton variant="cards" rows={3} />
@@ -149,7 +151,7 @@ const Index = () => {
   if (reportData.activities.length === 0) {
     return (
       <div className="min-h-screen min-h-[100dvh] pb-safe">
-        <MobileHeader />
+        {!hasShell && <MobileHeader />}
         <div className="px-4 md:p-4 lg:p-6 xl:p-8">
           <div className="max-w-[1600px] mx-auto space-y-6">
             <ReportHeader
@@ -183,24 +185,41 @@ const Index = () => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe">
-      <MobileHeader />
+      {!hasShell && <MobileHeader />}
       <div className="px-4 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">
           <div ref={reportRef}>
             <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-              <ReportHeader
-                projectName={reportData.projectName}
-                unitName={reportData.unitName}
-                clientName={reportData.clientName}
-                startDate={reportData.startDate}
-                endDate={reportData.endDate}
-                reportDate={reportData.reportDate}
-                activities={reportData.activities}
-                isProjectPhase={project?.is_project_phase}
-                milestoneDates={milestoneDates}
-                canEditMilestones={isAdmin}
-                onMilestoneDateChange={isAdmin ? handleMilestoneDateChange : undefined}
-              />
+              {!hasShell && (
+                <ReportHeader
+                  projectName={reportData.projectName}
+                  unitName={reportData.unitName}
+                  clientName={reportData.clientName}
+                  startDate={reportData.startDate}
+                  endDate={reportData.endDate}
+                  reportDate={reportData.reportDate}
+                  activities={reportData.activities}
+                  isProjectPhase={project?.is_project_phase}
+                  milestoneDates={milestoneDates}
+                  canEditMilestones={isAdmin}
+                  onMilestoneDateChange={isAdmin ? handleMilestoneDateChange : undefined}
+                />
+              )}
+              {hasShell && (
+                <ReportHeader
+                  projectName={reportData.projectName}
+                  unitName={reportData.unitName}
+                  clientName={reportData.clientName}
+                  startDate={reportData.startDate}
+                  endDate={reportData.endDate}
+                  reportDate={reportData.reportDate}
+                  activities={reportData.activities}
+                  isProjectPhase={project?.is_project_phase}
+                  milestoneDates={milestoneDates}
+                  canEditMilestones={isAdmin}
+                  onMilestoneDateChange={isAdmin ? handleMilestoneDateChange : undefined}
+                />
+              )}
               <ProjectSubNav className="mt-3 -mx-3 md:mx-0 rounded-none md:rounded-xl" />
             </div>
 
@@ -209,39 +228,53 @@ const Index = () => {
                 <div className="portal-tabs-bar">
                   <div className="px-3 md:px-5">
                     <TabsList className="bg-transparent h-auto p-0 gap-0 w-full md:w-auto overflow-x-auto scrollbar-hide">
-                      <TabsTrigger value="cronograma" className="portal-tab-trigger">
-                        <GanttChartSquare className="w-3.5 h-3.5 mr-1.5" />Cronograma
-                      </TabsTrigger>
-                      <TabsTrigger value="evolucao" className="portal-tab-trigger"
-                        onMouseEnter={() => prefetchForTab('relatorio', projectId)}
-                        onFocus={() => prefetchForTab('relatorio', projectId)}
-                      >
-                        <TrendingUp className="w-3.5 h-3.5 mr-1.5" />Evolução de Obra
-                      </TabsTrigger>
-                      <TabsTrigger value="financeiro" className="portal-tab-trigger"
-                        onMouseEnter={() => prefetchForTab('financeiro', projectId)}
-                        onFocus={() => prefetchForTab('financeiro', projectId)}
-                      >
-                        <DollarSign className="w-3.5 h-3.5 mr-1.5" />Financeiro
-                      </TabsTrigger>
-                      <TabsTrigger value="documentos" className="portal-tab-trigger"
-                        onMouseEnter={() => prefetchForTab('documentos', projectId)}
-                        onFocus={() => prefetchForTab('documentos', projectId)}
-                      >
-                        <FolderOpen className="w-3.5 h-3.5 mr-1.5" />Documentos
-                      </TabsTrigger>
-                      <TabsTrigger value="formalizacoes" className="portal-tab-trigger"
-                        onMouseEnter={() => prefetchForTab('formalizacoes', projectId)}
-                        onFocus={() => prefetchForTab('formalizacoes', projectId)}
-                      >
-                        <ClipboardSignature className="w-3.5 h-3.5 mr-1.5" />Formalizações
-                      </TabsTrigger>
-                      <TabsTrigger value="pendencias" className="portal-tab-trigger"
-                        onMouseEnter={() => prefetchForTab('pendencias', projectId)}
-                        onFocus={() => prefetchForTab('pendencias', projectId)}
-                      >
-                        <AlertCircle className="w-3.5 h-3.5 mr-1.5" />Pendências
-                      </TabsTrigger>
+                      {/* Staff with sidebar: only dashboard tabs */}
+                      {hasShell ? (
+                        <>
+                          <TabsTrigger value="cronograma" className="portal-tab-trigger">
+                            <GanttChartSquare className="w-3.5 h-3.5 mr-1.5" />Cronograma
+                          </TabsTrigger>
+                          <TabsTrigger value="evolucao" className="portal-tab-trigger">
+                            <TrendingUp className="w-3.5 h-3.5 mr-1.5" />Evolução
+                          </TabsTrigger>
+                        </>
+                      ) : (
+                        <>
+                          <TabsTrigger value="cronograma" className="portal-tab-trigger">
+                            <GanttChartSquare className="w-3.5 h-3.5 mr-1.5" />Cronograma
+                          </TabsTrigger>
+                          <TabsTrigger value="evolucao" className="portal-tab-trigger"
+                            onMouseEnter={() => prefetchForTab('relatorio', projectId)}
+                            onFocus={() => prefetchForTab('relatorio', projectId)}
+                          >
+                            <TrendingUp className="w-3.5 h-3.5 mr-1.5" />Evolução de Obra
+                          </TabsTrigger>
+                          <TabsTrigger value="financeiro" className="portal-tab-trigger"
+                            onMouseEnter={() => prefetchForTab('financeiro', projectId)}
+                            onFocus={() => prefetchForTab('financeiro', projectId)}
+                          >
+                            <DollarSign className="w-3.5 h-3.5 mr-1.5" />Financeiro
+                          </TabsTrigger>
+                          <TabsTrigger value="documentos" className="portal-tab-trigger"
+                            onMouseEnter={() => prefetchForTab('documentos', projectId)}
+                            onFocus={() => prefetchForTab('documentos', projectId)}
+                          >
+                            <FolderOpen className="w-3.5 h-3.5 mr-1.5" />Documentos
+                          </TabsTrigger>
+                          <TabsTrigger value="formalizacoes" className="portal-tab-trigger"
+                            onMouseEnter={() => prefetchForTab('formalizacoes', projectId)}
+                            onFocus={() => prefetchForTab('formalizacoes', projectId)}
+                          >
+                            <ClipboardSignature className="w-3.5 h-3.5 mr-1.5" />Formalizações
+                          </TabsTrigger>
+                          <TabsTrigger value="pendencias" className="portal-tab-trigger"
+                            onMouseEnter={() => prefetchForTab('pendencias', projectId)}
+                            onFocus={() => prefetchForTab('pendencias', projectId)}
+                          >
+                            <AlertCircle className="w-3.5 h-3.5 mr-1.5" />Pendências
+                          </TabsTrigger>
+                        </>
+                      )}
                     </TabsList>
                   </div>
                 </div>

@@ -20,6 +20,8 @@ interface EmptyStateProps {
   title: string;
   /** Description text */
   description?: string;
+  /** Contextual hint explaining WHY something isn't available yet (evolutionary empty state) */
+  hint?: string;
   /** Primary action button */
   action?: {
     label: string;
@@ -53,6 +55,7 @@ export function EmptyState({
   icon,
   title,
   description,
+  hint,
   action,
   secondaryAction,
   children,
@@ -107,7 +110,14 @@ export function EmptyState({
         </p>
       )}
 
-      {children && <div className="mt-4">{children}</div>}
+      {hint && (
+        <div className={cn(
+          "mt-3 max-w-sm rounded-lg bg-info-light border border-info/10 text-info",
+          compact ? "px-3 py-2 text-xs" : "px-4 py-2.5 text-sm"
+        )}>
+          <p className="leading-relaxed">{hint}</p>
+        </div>
+      )}
 
       {(action || secondaryAction) && (
         <div className="flex flex-col sm:flex-row items-center gap-3 mt-6">
