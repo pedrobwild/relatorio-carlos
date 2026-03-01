@@ -67,8 +67,28 @@ export function buildLiberacaoTemplate(previousStageConfirmedEnd: string | null)
 `.trim();
 }
 
+const PROJETO_EXECUTIVO_TEMPLATE = `
+<p><strong>Projeto Executivo – O que acontece nesta etapa</strong></p>
+<br/>
+<p>Nesta fase, nossa equipe de engenharia desenvolve o <strong>Projeto Executivo completo</strong>, que é o conjunto de documentos técnicos necessários para a execução da sua obra com precisão e segurança.</p>
+<br/>
+<p><strong>O que está incluso:</strong></p>
+<p style="padding-left: 20px;">📐 Plantas detalhadas com dimensões exatas</p>
+<p style="padding-left: 20px;">⚡ Projeto elétrico e hidráulico</p>
+<p style="padding-left: 20px;">🧱 Especificações de materiais e acabamentos</p>
+<p style="padding-left: 20px;">📋 Detalhamento de marcenaria e mobiliário sob medida</p>
+<br/>
+<p><strong>Como acompanhar e revisar:</strong></p>
+<p style="padding-left: 20px;">1. Clique em <strong>"Visualizar"</strong> para acessar os PDFs do projeto</p>
+<p style="padding-left: 20px;">2. Navegue pelas páginas e adicione <strong>comentários</strong> nos pontos que desejar ajustar</p>
+<p style="padding-left: 20px;">3. Nossa equipe analisará seu feedback e enviará uma versão revisada</p>
+<br/>
+<p>⚠️ <strong>Importante:</strong> A aprovação do Projeto Executivo é necessária para prosseguirmos com a emissão da ART e a liberação da obra.</p>
+`.trim();
+
 /** Map of page_key → default HTML template (static templates only) */
 export const STAGE_INSTRUCTIONS_DEFAULTS: Record<string, string> = {
   projeto_3d: PROJETO_3D_INSTRUCTIONS_TEMPLATE,
   medicao_tecnica: MEDICAO_TECNICA_TEMPLATE,
+  projeto_executivo: PROJETO_EXECUTIVO_TEMPLATE,
 };
