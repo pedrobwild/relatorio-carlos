@@ -39,7 +39,7 @@ import { usePageInstructions } from '@/hooks/usePageInstructions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { RichTextEditorModal } from '@/components/report/RichTextEditorModal';
 import DOMPurify from 'dompurify';
-import { STAGE_INSTRUCTIONS_DEFAULTS, buildLiberacaoTemplate } from '@/constants/stageInstructionsTemplates';
+import { STAGE_INSTRUCTIONS_DEFAULTS } from '@/constants/stageInstructionsTemplates';
 
 interface StageDetailInlineProps {
   stage: JourneyStage;
@@ -69,16 +69,7 @@ export function StageDetailInline({
   const pageKey = stage.name.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const { instruction, save: saveInstruction } = usePageInstructions(projectId, pageKey);
 
-  // Dynamic template for "Liberação da Obra" — uses previous stage's confirmed_end
-  const isLiberacaoStage = pageKey === 'liberacao_da_obra';
-  const defaultTemplate = (() => {
-    if (isLiberacaoStage) {
-      const currentIdx = allStages.findIndex(s => s.id === stage.id);
-      const prevStage = currentIdx > 0 ? allStages[currentIdx - 1] : null;
-      return buildLiberacaoTemplate(prevStage?.confirmed_end ?? null);
-    }
-    return STAGE_INSTRUCTIONS_DEFAULTS[pageKey] || '';
-  })();
+  const defaultTemplate = STAGE_INSTRUCTIONS_DEFAULTS[pageKey] || '';
 
   const displayHtml = instruction?.content_html || defaultTemplate;
   const hasInstructions = !!displayHtml && displayHtml !== '<p><br></p>';
@@ -89,7 +80,7 @@ export function StageDetailInline({
   const isBriefingStage = stage.name.toLowerCase().includes('briefing');
   const isProjeto3DStage = stage.name.toLowerCase().includes('projeto 3d');
   const isProjetoExecutivoStage = stage.name.toLowerCase().includes('projeto executivo');
-  const isLiberacaoObraStage = stage.name.toLowerCase().includes('liberação') || stage.name.toLowerCase().includes('liberacao');
+  const isMobilizacaoStage = stage.name.toLowerCase().includes('mobilização') || stage.name.toLowerCase().includes('mobilizacao');
 
   if (isBriefingStage) {
     return (
@@ -246,7 +237,7 @@ export function StageDetailInline({
       )}
 
       {/* ② Dates Panel — hidden for Projeto Executivo */}
-      {!isProjetoExecutivoStage && !isLiberacaoObraStage && (
+      {!isProjetoExecutivoStage && !isMobilizacaoStage && (
         <>
           <StageDatesPanel
             stageId={stage.id}
@@ -259,7 +250,7 @@ export function StageDetailInline({
       )}
 
       {/* ③ Checklists — hidden for Projeto Executivo */}
-      {!isProjetoExecutivoStage && !isLiberacaoObraStage && (
+      {!isProjetoExecutivoStage && !isMobilizacaoStage && (
         <>
           <div className="grid gap-5 md:gap-6 md:grid-cols-2">
             <StageChecklist
@@ -332,7 +323,7 @@ export function StageDetailInline({
       )}
 
       {/* ④ Stage Registry — hidden for Projeto Executivo */}
-      {!isProjetoExecutivoStage && !isLiberacaoObraStage && (
+      {!isProjetoExecutivoStage && !isMobilizacaoStage && (
         <>
           <StageRegistry
             stageId={stage.id}
