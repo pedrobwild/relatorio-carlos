@@ -79,14 +79,17 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
   const { data: journeyStageName } = useCurrentJourneyStage(project.id, isProjectPhase && isActive);
   const { data: obraEtapa } = useCurrentObraEtapa(project.id, !isProjectPhase && isActive);
 
+  const isCompletedJourney = isProjectPhase && project.status === 'completed';
+
   // Current stage label
   const currentStageLabel = useMemo(() => {
+    if (isCompletedJourney) return null;
     if (!isActive) return null;
     if (isProjectPhase) {
       return journeyStageName ? `Etapa atual: ${journeyStageName}` : 'Em acompanhamento';
     }
     return obraEtapa ? `Etapa atual: ${obraEtapa}` : 'Em acompanhamento';
-  }, [isActive, isProjectPhase, journeyStageName, obraEtapa]);
+  }, [isActive, isProjectPhase, isCompletedJourney, journeyStageName, obraEtapa]);
 
   // Progress (only for obra in execution)
   const progress = useMemo(() => {
@@ -105,6 +108,7 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
 
   // Time info
   const timeInfo = useMemo(() => {
+    if (isCompletedJourney) return 'Jornada de Projeto Concluída';
     if (isProjectPhase) {
       const start = safeFormat(project.planned_start_date);
       const end = safeFormat(project.planned_end_date);
@@ -118,7 +122,7 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
     const start = safeFormat(project.planned_start_date);
     if (start) return `Início estimado: ${start}`;
     return 'Datas em alinhamento';
-  }, [isProjectPhase, project.planned_start_date, project.planned_end_date]);
+  }, [isProjectPhase, isCompletedJourney, project.planned_start_date, project.planned_end_date]);
 
   // Sub-label (unit / code)
   const subLabel = project.unit_name || undefined;
@@ -172,7 +176,11 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
           </div>
         )}
 
-        {(isProjectPhase || !isActive) && (
+        {isCompletedJourney && (
+          <p className="text-tiny font-medium text-[hsl(var(--success))]">{timeInfo}</p>
+        )}
+
+        {!isCompletedJourney && (isProjectPhase || !isActive) && (
           <p className="text-tiny text-muted-foreground">{timeInfo}</p>
         )}
       </CardContent>
