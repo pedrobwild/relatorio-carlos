@@ -12,6 +12,7 @@ import { queryClient } from "@/lib/queryClient";
 import { createQueryPersister, QUERY_CACHE_VERSION } from "@/lib/queryPersister";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { AuthRedirect } from "@/components/AuthRedirect";
+import { ProjectShell } from "@/components/layout/ProjectShell";
 
 /** Thin wrapper: shows AuthRedirect (which navigates away) + a spinner while it resolves. */
 const AuthRedirectPage = () => {
@@ -61,10 +62,12 @@ const persister = createQueryPersister();
 // Cache max age: 24 hours
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
-// Wrapper component to provide project context
+// Wrapper component to provide project context + staff sidebar shell
 const ProjectPage = ({ children }: { children: React.ReactNode }) => (
   <ErrorBoundary name="ProjectPage" feature="general">
-    <ProjectProvider>{children}</ProjectProvider>
+    <ProjectProvider>
+      <ProjectShell>{children}</ProjectShell>
+    </ProjectProvider>
   </ErrorBoundary>
 );
 

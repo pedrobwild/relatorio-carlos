@@ -1,6 +1,7 @@
 import { NavLink } from "@/components/NavLink";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
+import { useProjectLayout } from "@/components/layout/ProjectLayoutContext";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -29,6 +30,10 @@ interface ProjectSubNavProps {
 export function ProjectSubNav({ className, showStaffItems = false }: ProjectSubNavProps) {
   const { paths, projectId } = useProjectNavigation();
   const { project } = useProject();
+  const { hasShell } = useProjectLayout();
+
+  // When sidebar shell is active, sub-nav is redundant
+  if (hasShell) return null;
 
   if (!projectId) return null;
 
