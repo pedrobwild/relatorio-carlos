@@ -13,6 +13,7 @@ import { DocumentComments } from "@/components/DocumentComments";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
+import { useJourneyVersionDocuments } from "@/hooks/useJourneyVersionDocuments";
 import { useDocumentComments } from "@/hooks/useDocumentComments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCan } from "@/hooks/useCan";
@@ -208,7 +209,19 @@ const Documentos = () => {
   const { projectId } = useParams();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { paths } = useProjectNavigation();
-  const { documents, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
+  const { documents: dbDocuments, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
+  const { data: journeyDocs = [] } = useJourneyVersionDocuments(projectId);
+
+  const documents = useMemo(() => {
+    if (journeyDocs.length === 0) return dbDocuments;
+    return [...dbDocuments, ...journeyDocs];
+  }, [dbDocuments, journeyDocs]);
+
+  const getLatestByCategoryMerged = useCallback((category: DocumentCategory) => {
+    const base = getLatestByCategory(category);
+    const extra = journeyDocs.filter(d => d.document_type === category);
+    return extra.length > 0 ? [...base, ...extra] : base;
+  }, [getLatestByCategory, journeyDocs]);
   const { isStaff } = useUserRole();
   const { can } = useCan();
   const [selectedTab, setSelectedTab] = useState<string>("all");
@@ -260,7 +273,7 @@ const Documentos = () => {
   }
 
   const categories = Object.keys(DOCUMENT_CATEGORIES) as DocumentCategory[];
-  const categoriesWithDocs = categories.filter(cat => getLatestByCategory(cat).length > 0);
+  const categoriesWithDocs = categories.filter(cat => getLatestByCategoryMerged(cat).length > 0);
 
   return (
     <div className="min-h-screen min-h-[100dvh] pb-safe bg-background flex flex-col" data-testid="documents-page">
@@ -324,7 +337,7 @@ const Documentos = () => {
                   <CategorySection 
                     key={cat} 
                     category={cat} 
-                    documents={getLatestByCategory(cat)}
+                    documents={getLatestByCategoryMerged(cat)}
                     onViewHistory={handleViewHistory}
                     onVersionUploaded={refetch}
                     isStaff={isStaff}
@@ -335,7 +348,7 @@ const Documentos = () => {
               {categoriesWithDocs.map(cat => (
                 <TabsContent key={cat} value={cat} className="mt-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {getLatestByCategory(cat).map(doc => (
+                    {getLatestByCategoryMerged(cat).map(doc => (
                       <DocumentCard 
                         key={doc.id} 
                         doc={doc} 

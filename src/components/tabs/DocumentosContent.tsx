@@ -12,6 +12,7 @@ import { DocumentViewer } from "@/components/DocumentViewer";
 import { useProject } from "@/contexts/ProjectContext";
 import { useDocuments, DOCUMENT_CATEGORIES, DocumentCategory, ProjectDocument } from "@/hooks/useDocuments";
 import { useDeleteDocumentMutation } from "@/hooks/useDocumentsQuery";
+import { useJourneyVersionDocuments } from "@/hooks/useJourneyVersionDocuments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useCan } from "@/hooks/useCan";
 import { DocumentUpload } from "@/components/DocumentUpload";
@@ -192,7 +193,22 @@ const CategorySection = ({
 const DocumentosContent = () => {
   const { projectId } = useParams();
   const { project, loading: projectLoading } = useProject();
-  const { documents, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
+  const { documents: dbDocuments, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
+  const { data: journeyDocs = [] } = useJourneyVersionDocuments(projectId);
+
+  // Merge: add journey version docs that don't already exist in project_documents
+  const documents = useMemo(() => {
+    if (journeyDocs.length === 0) return dbDocuments;
+    // Avoid duplicates: journey docs have ids starting with "journey-"
+    return [...dbDocuments, ...journeyDocs];
+  }, [dbDocuments, journeyDocs]);
+
+  // Extended getLatestByCategory that includes journey docs
+  const getLatestByCategoryMerged = useCallback((category: DocumentCategory) => {
+    const base = getLatestByCategory(category);
+    const extra = journeyDocs.filter(d => d.document_type === category);
+    return extra.length > 0 ? [...base, ...extra] : base;
+  }, [getLatestByCategory, journeyDocs]);
   const { isStaff } = useUserRole();
   const { can } = useCan();
   const deleteDocMutation = useDeleteDocumentMutation();
@@ -224,7 +240,7 @@ const DocumentosContent = () => {
   }
 
   const categories = Object.keys(DOCUMENT_CATEGORIES) as DocumentCategory[];
-  const categoriesWithDocs = categories.filter(cat => getLatestByCategory(cat).length > 0);
+  const categoriesWithDocs = categories.filter(cat => getLatestByCategoryMerged(cat).length > 0);
 
   return (
     <div>
@@ -254,7 +270,7 @@ const DocumentosContent = () => {
 
           <TabsContent value="all" className="space-y-8 mt-6">
             {categoriesWithDocs.map(cat => (
-              <CategorySection key={cat} category={cat} documents={getLatestByCategory(cat)}
+              <CategorySection key={cat} category={cat} documents={getLatestByCategoryMerged(cat)}
                 onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
             ))}
           </TabsContent>
@@ -262,7 +278,7 @@ const DocumentosContent = () => {
           {categoriesWithDocs.map(cat => (
             <TabsContent key={cat} value={cat} className="mt-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {getLatestByCategory(cat).map(doc => (
+                {getLatestByCategoryMerged(cat).map(doc => (
                   <DocumentCard key={doc.id} doc={doc} onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
                 ))}
               </div>
