@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Loader2, Upload, X, Eye, MessageSquareWarning } from 'lucide-react';
+import { Plus, FileText, Loader2, Upload, X, Eye, MessageSquareWarning, Download } from 'lucide-react';
 import { useExecutivoVersions, type ExecutivoVersion } from '@/hooks/useExecutivoVersions';
 import { useUserRole } from '@/hooks/useUserRole';
 import { format } from 'date-fns';
@@ -25,6 +25,7 @@ export function ExecutivoVersionsModal({ projectId, open, onOpenChange }: Props)
   const [viewerVersionId, setViewerVersionId] = useState<string | null>(null);
   const [revisionTarget, setRevisionTarget] = useState<string | null>(null);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +76,37 @@ export function ExecutivoVersionsModal({ projectId, open, onOpenChange }: Props)
       setRevisionTarget(null);
     }
   }, [revisionTarget, refetch]);
+
+  const handleDownload = useCallback(async (version: ExecutivoVersion) => {
+    setDownloadingId(version.id);
+    try {
+      const { data: files, error } = await supabase
+        .from('project_3d_images')
+        .select('storage_path')
+        .eq('version_id', version.id)
+        .order('sort_order')
+        .limit(1);
+      if (error || !files?.length) throw new Error('Arquivo não encontrado');
+
+      const { data: blob, error: dlErr } = await supabase.storage
+        .from('project-documents')
+        .download(files[0].storage_path);
+      if (dlErr || !blob) throw new Error('Erro ao baixar arquivo');
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `projeto-executivo-v${version.version_number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao baixar arquivo');
+    } finally {
+      setDownloadingId(null);
+    }
+  }, []);
 
   return (
     <>
@@ -187,6 +219,16 @@ export function ExecutivoVersionsModal({ projectId, open, onOpenChange }: Props)
                           <span className="hidden sm:inline">Solicitar revisão</span>
                         </Button>
                       )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        disabled={downloadingId === version.id}
+                        onClick={() => handleDownload(version)}
+                      >
+                        {downloadingId === version.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                        <span className="hidden sm:inline">Baixar</span>
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

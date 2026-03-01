@@ -2,8 +2,10 @@ import { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, FileText, Send, Trash2, MessageSquare, User } from 'lucide-react';
+import { Loader2, FileText, Send, Trash2, MessageSquare, User, Download } from 'lucide-react';
 import { useExecutivoFile, useExecutivoComments } from '@/hooks/useExecutivoVersions';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { format } from 'date-fns';
@@ -24,6 +26,7 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
   const { isStaff } = useUserRole();
   const [commentText, setCommentText] = useState('');
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const handleSendComment = useCallback(async () => {
     if (!commentText.trim() || !fileId) return;
@@ -39,6 +42,29 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
     return authorId === user?.id || isStaff;
   }, [user, isStaff]);
 
+  const handleDownload = useCallback(async () => {
+    if (!file?.storage_path) return;
+    setDownloading(true);
+    try {
+      const { data: blob, error } = await supabase.storage
+        .from('project-documents')
+        .download(file.storage_path);
+      if (error || !blob) throw new Error('Erro ao baixar');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `projeto-executivo.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao baixar arquivo');
+    } finally {
+      setDownloading(false);
+    }
+  }, [file]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -47,10 +73,24 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader className="p-3 border-b border-border shrink-0">
-          <DialogTitle className="text-sm flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            Projeto Executivo
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              Projeto Executivo
+            </DialogTitle>
+            {file?.storage_path && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={downloading}
+                onClick={handleDownload}
+              >
+                {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Baixar PDF
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
