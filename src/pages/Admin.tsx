@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsersTab } from '@/components/admin/UsersTab';
@@ -97,6 +97,26 @@ export default function Admin() {
                   </div>
                   <Button onClick={() => navigate('/admin/health')} variant="outline">
                     Ver Status
+                  </Button>
+                </div>
+              </div>
+              
+              {/* UX Insights Link */}
+              <div className="border rounded-lg p-4 bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">UX Insights com IA</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Sugestões de melhorias de hierarquia, copy e UX
+                      </p>
+                    </div>
+                  </div>
+                  <Button onClick={() => navigate('/admin/ux-insights')} variant="outline">
+                    Gerar Insights
                   </Button>
                 </div>
               </div>

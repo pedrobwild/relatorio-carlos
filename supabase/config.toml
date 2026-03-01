@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.stage-dates]
 verify_jwt = true
+
+[functions.ux-insights]
+verify_jwt = false
