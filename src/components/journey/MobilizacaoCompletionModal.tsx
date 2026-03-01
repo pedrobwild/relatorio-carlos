@@ -277,7 +277,133 @@ export function MobilizacaoCompletionModal({
           })),
         );
       }
-      // 10. Mark original journey project as completed
+
+      // 10. Copy activities (cronograma)
+      const { data: activities } = await supabase
+        .from('project_activities')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (activities && activities.length > 0) {
+        await supabase.from('project_activities').insert(
+          activities.map((a) => ({
+            project_id: newProject.id,
+            description: a.description,
+            planned_start: a.planned_start,
+            planned_end: a.planned_end,
+            actual_start: a.actual_start,
+            actual_end: a.actual_end,
+            weight: a.weight,
+            sort_order: a.sort_order,
+            created_by: a.created_by,
+            predecessor_ids: [], // reset predecessors since IDs change
+            baseline_start: a.baseline_start,
+            baseline_end: a.baseline_end,
+            baseline_saved_at: a.baseline_saved_at,
+          })),
+        );
+      }
+
+      // 11. Copy purchases (compras)
+      const { data: purchases } = await supabase
+        .from('project_purchases')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (purchases && purchases.length > 0) {
+        await supabase.from('project_purchases').insert(
+          purchases.map((p) => ({
+            project_id: newProject.id,
+            item_name: p.item_name,
+            description: p.description,
+            quantity: p.quantity,
+            unit: p.unit,
+            estimated_cost: p.estimated_cost,
+            lead_time_days: p.lead_time_days,
+            required_by_date: p.required_by_date,
+            order_date: p.order_date,
+            expected_delivery_date: p.expected_delivery_date,
+            actual_delivery_date: p.actual_delivery_date,
+            supplier_name: p.supplier_name,
+            supplier_contact: p.supplier_contact,
+            invoice_number: p.invoice_number,
+            status: p.status,
+            notes: p.notes,
+            created_by: p.created_by,
+          })),
+        );
+      }
+
+      // 12. Copy team contacts
+      const { data: teamContacts } = await supabase
+        .from('project_team_contacts')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (teamContacts && teamContacts.length > 0) {
+        await supabase.from('project_team_contacts').insert(
+          teamContacts.map((tc) => ({
+            project_id: newProject.id,
+            display_name: tc.display_name,
+            role_type: tc.role_type,
+            phone: tc.phone,
+            email: tc.email,
+            photo_url: tc.photo_url,
+            crea: tc.crea,
+          })),
+        );
+      }
+
+      // 13. Copy 3D versions and images
+      const { data: versions3d } = await supabase
+        .from('project_3d_versions')
+        .select('*, project_3d_images(*)')
+        .eq('project_id', projectId);
+
+      if (versions3d && versions3d.length > 0) {
+        for (const v of versions3d) {
+          const { data: newVersion } = await supabase
+            .from('project_3d_versions')
+            .insert({
+              project_id: newProject.id,
+              version_number: v.version_number,
+              created_by: v.created_by,
+              stage_key: v.stage_key,
+            })
+            .select()
+            .single();
+
+          if (newVersion && v.project_3d_images?.length > 0) {
+            await supabase.from('project_3d_images').insert(
+              v.project_3d_images.map((img: any) => ({
+                version_id: newVersion.id,
+                storage_path: img.storage_path,
+                sort_order: img.sort_order,
+              })),
+            );
+          }
+        }
+      }
+
+      // 14. Copy member permissions
+      const { data: permissions } = await supabase
+        .from('project_member_permissions')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (permissions && permissions.length > 0) {
+        await supabase.from('project_member_permissions').insert(
+          permissions.map((p) => ({
+            project_id: newProject.id,
+            user_id: p.user_id,
+            permission: p.permission,
+            granted: p.granted,
+            granted_by: p.granted_by,
+          })),
+        );
+      }
+
+      // 15. Mark original journey project as completed
       await supabase
         .from('projects')
         .update({ status: 'completed' })
@@ -360,11 +486,15 @@ export function MobilizacaoCompletionModal({
               {[
                 'Dados do cliente',
                 'Dados do empreendimento',
+                'Cronograma (atividades)',
                 'Financeiro (parcelas)',
                 'Documentos',
                 'Formalizações',
                 'Pendências',
+                'Compras',
                 'Equipe do projeto',
+                'Projeto 3D',
+                'Marcos do projeto',
               ].map((item) => (
                 <div key={item} className="flex items-center gap-1.5 text-xs text-foreground">
                   <ArrowRight className="h-3 w-3 text-primary shrink-0" />
