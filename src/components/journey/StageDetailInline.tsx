@@ -89,6 +89,7 @@ export function StageDetailInline({
   const isBriefingStage = stage.name.toLowerCase().includes('briefing');
   const isProjeto3DStage = stage.name.toLowerCase().includes('projeto 3d');
   const isProjetoExecutivoStage = stage.name.toLowerCase().includes('projeto executivo');
+  const isLiberacaoObraStage = stage.name.toLowerCase().includes('liberação') || stage.name.toLowerCase().includes('liberacao');
 
   if (isBriefingStage) {
     return (
@@ -245,7 +246,7 @@ export function StageDetailInline({
       )}
 
       {/* ② Dates Panel — hidden for Projeto Executivo */}
-      {!isProjetoExecutivoStage && (
+      {!isProjetoExecutivoStage && !isLiberacaoObraStage && (
         <>
           <StageDatesPanel
             stageId={stage.id}
@@ -258,7 +259,7 @@ export function StageDetailInline({
       )}
 
       {/* ③ Checklists — hidden for Projeto Executivo */}
-      {!isProjetoExecutivoStage && (
+      {!isProjetoExecutivoStage && !isLiberacaoObraStage && (
         <>
           <div className="grid gap-5 md:gap-6 md:grid-cols-2">
             <StageChecklist
@@ -331,7 +332,7 @@ export function StageDetailInline({
       )}
 
       {/* ④ Stage Registry — hidden for Projeto Executivo */}
-      {!isProjetoExecutivoStage && (
+      {!isProjetoExecutivoStage && !isLiberacaoObraStage && (
         <>
           <StageRegistry
             stageId={stage.id}
