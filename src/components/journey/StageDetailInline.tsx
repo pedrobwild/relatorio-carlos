@@ -192,43 +192,12 @@ export function StageDetailInline({
 
       {/* Instructions Card */}
       {(hasInstructions || isStaff) && !isBriefingStage && (
-        <div className="bg-card rounded-xl border border-border shadow-sm">
-          <div className="pt-6 px-6 pb-6 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
-                <Info className="h-4 w-4 text-primary" />
-              </div>
-              <div className="space-y-3 flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">Instruções</h3>
-                  {isStaff && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      onClick={() => setInstrEditorOpen(true)}
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                </div>
-                {hasInstructions ? (
-                  <div
-                    className="prose prose-sm max-w-none text-muted-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1 [&_li]:leading-relaxed [&_*]:!text-sm [&_strong]:text-foreground"
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayHtml) }}
-                  />
-                ) : (
-                  <button
-                    onClick={() => setInstrEditorOpen(true)}
-                    className="w-full py-6 text-sm text-muted-foreground hover:text-foreground border-2 border-dashed border-border rounded-lg transition-colors hover:border-primary/30"
-                  >
-                    Clique para adicionar instruções
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <InstructionsCollapsible
+          hasInstructions={hasInstructions}
+          displayHtml={displayHtml}
+          isStaff={isStaff}
+          onEditClick={() => setInstrEditorOpen(true)}
+        />
       )}
 
       {/* Team section for Mobilização */}
@@ -794,5 +763,64 @@ function MobilizacaoTeamMemberCard({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ─── Collapsible Instructions Card ─── */
+
+function InstructionsCollapsible({
+  hasInstructions,
+  displayHtml,
+  isStaff,
+  onEditClick,
+}: {
+  hasInstructions: boolean;
+  displayHtml: string;
+  isStaff: boolean;
+  onEditClick: () => void;
+}) {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <Card className="rounded-xl shadow-sm">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center gap-3 pt-6 px-6 pb-3 text-left">
+            <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Info className="h-4 w-4 text-primary" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground flex-1">Instruções</h3>
+            {isStaff && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                onClick={(e) => { e.stopPropagation(); onEditClick(); }}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </Button>
+            )}
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0 pl-[4.25rem] pr-6 pb-6">
+            {hasInstructions ? (
+              <div
+                className="prose prose-sm max-w-none text-muted-foreground [&_p]:mb-2 [&_p]:leading-relaxed [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:mb-1 [&_li]:leading-relaxed [&_*]:!text-sm [&_strong]:text-foreground"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayHtml) }}
+              />
+            ) : (
+              <button
+                onClick={onEditClick}
+                className="w-full py-6 text-sm text-muted-foreground hover:text-foreground border-2 border-dashed border-border rounded-lg transition-colors hover:border-primary/30"
+              >
+                Clique para adicionar instruções
+              </button>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 }
