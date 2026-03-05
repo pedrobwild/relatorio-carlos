@@ -1,18 +1,26 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Info } from 'lucide-react';
+import { Info, ChevronDown } from 'lucide-react';
 import { ExpandableText } from '@/components/journey/ExpandableText';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export function StageIntroCard() {
+  const [open, setOpen] = useState(true);
+
   return (
     <Card className="rounded-xl shadow-sm">
-      <CardContent className="pt-6 space-y-4">
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
-            <Info className="h-4 w-4 text-primary" />
-          </div>
-          <div className="space-y-4 flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-foreground">Instruções</h3>
-
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center gap-3 pt-6 px-6 pb-3 text-left">
+            <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Info className="h-4 w-4 text-primary" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground flex-1">Instruções</h3>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0 pl-[4.25rem] space-y-4">
             <ExpandableText lines={5}>
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -46,9 +54,9 @@ export function StageIntroCard() {
                 </ul>
               </ExpandableText>
             </div>
-          </div>
-        </div>
-      </CardContent>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
