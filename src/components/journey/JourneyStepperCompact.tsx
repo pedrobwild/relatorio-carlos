@@ -108,5 +108,16 @@ export function JourneyStepperCompact({
   const vs = deriveVisualState(currentStage, currentIndex, stages);
   const Icon = vsIconMap[vs];
 
-  return null;
+  return (
+    <div className="lg:hidden space-y-3">
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <Progress value={progressPct} className="h-2 flex-1 mr-3" />
+          <span className="text-xs font-semibold tabular-nums text-muted-foreground whitespace-nowrap">
+            Etapa {completedCount} de {stages.length}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
