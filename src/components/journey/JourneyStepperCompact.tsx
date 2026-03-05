@@ -109,7 +109,7 @@ export function JourneyStepperCompact({
   const Icon = vsIconMap[vs];
 
   return (
-    <div className="lg:hidden space-y-3">
+    <div className="space-y-3">
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <Progress value={progressPct} className="h-2 flex-1 mr-3" />
