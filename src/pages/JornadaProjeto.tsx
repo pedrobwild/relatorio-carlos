@@ -366,18 +366,7 @@ export default function JornadaProjeto() {
             {/* Main content */}
             <div ref={contentRef} className="space-y-4 md:space-y-8 min-w-0">
 
-              {/* Global progress indicator — hide during welcome */}
-              {journey.stages.length > 0 && activeView !== 'welcome' && (
-                <JourneyProgressBar
-                  stages={journey.stages}
-                  activeStageId={activeView}
-                  onNextClick={() => {
-                    const idx = journey.stages.findIndex(s => s.id === activeView);
-                    const next = journey.stages[idx + 1];
-                    if (next && next.status !== 'completed') handleTimelineClick(next.id);
-                  }}
-                />
-              )}
+              {/* Global progress indicator — disabled */}
 
               {/* Mobile Stepper Compact */}
               <JourneyStepperCompact
