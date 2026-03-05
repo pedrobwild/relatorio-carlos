@@ -108,6 +108,7 @@ export function StageDetailInline({
   const isProjeto3DStage = stage.name.toLowerCase().includes('projeto 3d');
   const isProjetoExecutivoStage = stage.name.toLowerCase().includes('projeto executivo');
   const isMobilizacaoStage = stage.name.toLowerCase().includes('mobilização') || stage.name.toLowerCase().includes('mobilizacao');
+  const isMedicaoTecnicaStage = stage.name.toLowerCase().includes('medição técnica') || stage.name.toLowerCase().includes('medicao tecnica');
 
   if (isBriefingStage) {
     return (
@@ -343,7 +344,7 @@ export function StageDetailInline({
       )}
 
       {/* ⑤ "Sobre esta etapa" — collapsible */}
-      {!isEditing && stage.description && (
+      {!isEditing && stage.description && !isMedicaoTecnicaStage && (
         <Collapsible>
           <CollapsibleTrigger asChild>
             <Button
