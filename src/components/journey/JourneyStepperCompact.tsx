@@ -110,47 +110,15 @@ export function JourneyStepperCompact({
 
   return (
     <div className="lg:hidden space-y-3">
-      {/* Progress block */}
-      <Card className="shadow-sm">
-        <CardContent className="p-4 space-y-3">
-          {/* Current stage label */}
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              'flex items-center justify-center w-9 h-9 rounded-full shrink-0',
-              vsDotBg[vs],
-              (vs === 'current' || vs === 'validating') && 'ring-2 ring-primary/20 ring-offset-2 ring-offset-background',
-            )}>
-              <Icon className={cn('h-4 w-4', vsIconColor[vs])} strokeWidth={vs === 'completed' ? 3 : 2} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground font-medium">Etapa atual</p>
-              <p className="text-base font-semibold truncate">{currentStage.name}</p>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Progresso</span>
-              <span className="text-xs font-semibold tabular-nums text-foreground">
-                {completedCount}/{stages.length}
-              </span>
-            </div>
-            <Progress value={progressPct} className="h-2" />
-          </div>
-
-          {/* CTA: Ver linha do tempo */}
-          <Button
-            variant="outline"
-            className="w-full min-h-[44px] gap-2 text-sm font-medium"
-            onClick={onOpenTimeline}
-            aria-label={journeyCopy.a11y.stagesNav}
-          >
-            <List className="h-4 w-4" />
-            Ver linha do tempo
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Progress bar only */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <Progress value={progressPct} className="h-2 flex-1 mr-3" />
+          <span className="text-xs font-semibold tabular-nums text-muted-foreground whitespace-nowrap">
+            Etapa {completedCount} de {stages.length}
+          </span>
+        </div>
+      </div>
 
     </div>
   );
