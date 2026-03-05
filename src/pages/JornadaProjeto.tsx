@@ -22,6 +22,7 @@ import { PullToRefreshIndicator } from '@/components/journey/PullToRefreshIndica
 import { TabOnboardingTip } from '@/components/journey/TabOnboardingTip';
 
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useProjectLayout } from '@/components/layout/ProjectLayoutContext';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { prefetchForTab } from '@/lib/prefetch';
 import { useTabKeyboardNav } from '@/hooks/useKeyboardShortcuts';
@@ -51,6 +52,7 @@ export default function JornadaProjeto() {
 
   const { project, loading: projectLoading } = useProject();
   const { role, loading: roleLoading } = useUserRole();
+  const { hasShell } = useProjectLayout();
   const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
   const initializeJourney = useInitializeJourney();
 
@@ -256,7 +258,8 @@ export default function JornadaProjeto() {
         </div>
       </PageHeader>
 
-      {/* Tabs bar — horizontal scroll, 44px touch targets */}
+      {/* Tabs bar — horizontal scroll, 44px touch targets (hidden when staff sidebar is active) */}
+      {!hasShell && (
       <div className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-5xl mx-auto">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
@@ -305,6 +308,7 @@ export default function JornadaProjeto() {
           </Tabs>
         </div>
       </div>
+      )}
 
       <main
         className={cn(
