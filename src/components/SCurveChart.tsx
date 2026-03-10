@@ -392,6 +392,16 @@ const SCurveChart = ({
   // Get last data point for comparison
   const lastPoint = chartData[chartData.length - 1];
 
+  // Find realizado % at today's timestamp
+  const todayRealizado = useMemo(() => {
+    const todayPoint = chartData.reduce((closest, point) => {
+      if (point.realizado === null) return closest;
+      if (!closest) return point;
+      return Math.abs(point.timestamp - milestones.today) < Math.abs(closest.timestamp - milestones.today) ? point : closest;
+    }, null as (typeof chartData)[0] | null);
+    return todayPoint?.realizado ?? 0;
+  }, [chartData, milestones.today]);
+
   // Toggle between 30-day window and full view (controlled or uncontrolled)
   const [internalShowFull, setInternalShowFull] = useState(false);
   const showFullChart = controlledShowFull !== undefined ? controlledShowFull : internalShowFull;
@@ -530,18 +540,11 @@ const SCurveChart = ({
                 label={<ReferenceLabel label="Início" />}
               />
               <ReferenceLine
-                x={milestones.half}
-                stroke="hsl(var(--muted-foreground))"
-                strokeDasharray="4 4"
-                strokeOpacity={0.4}
-                label={<ReferenceLabel label="50%" />}
-              />
-              <ReferenceLine
                 x={milestones.today}
                 stroke="hsl(var(--primary))"
                 strokeDasharray="4 4"
                 strokeOpacity={0.8}
-                label={<ReferenceLabel label="Hoje" />}
+                label={<ReferenceLabel label={`${todayRealizado}% · Hoje`} />}
               />
               <ReferenceLine
                 x={milestones.end}
@@ -568,12 +571,6 @@ const SCurveChart = ({
                 }}
                 animationDuration={150}
                 animationEasing="ease-out"
-              />
-              <ReferenceLine 
-                y={50} 
-                stroke="hsl(var(--border))" 
-                strokeDasharray="6 6"
-                strokeOpacity={0.4}
               />
               {/* Linha de Previsto - roxo claro tracejado */}
               <Line
