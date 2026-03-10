@@ -34,7 +34,7 @@ const FinanceiroContent = () => {
   const getUrgency = (payment: ProjectPayment): "overdue" | "urgent" | "approaching" | "normal" => {
     if (payment.paid_at) return "normal";
     if (!payment.due_date) return "normal";
-    const dueDate = new Date(payment.due_date);
+    const dueDate = parseLocal(payment.due_date);
     const daysUntilDue = differenceInDays(dueDate, today);
     if (daysUntilDue < 0) return "overdue";
     if (daysUntilDue <= 2) return "urgent";
