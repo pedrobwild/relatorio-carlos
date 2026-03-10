@@ -562,12 +562,6 @@ const SCurveChart = ({
                 animationDuration={150}
                 animationEasing="ease-out"
               />
-              <ReferenceLine 
-                y={50} 
-                stroke="hsl(var(--border))" 
-                strokeDasharray="6 6"
-                strokeOpacity={0.4}
-              />
               {/* Linha de Previsto - roxo claro tracejado */}
               <Line
                 type="monotone"
