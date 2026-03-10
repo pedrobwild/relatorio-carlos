@@ -1,11 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database, Json } from '@/integrations/supabase/types';
-import { isDemoMode } from '@/config/flags';
-import {
-  formalizacoesSeedData,
-  getFormalizacaoSeedById,
-} from '@/data/formalizacoesSeedData';
 import { EVENT_TYPES } from './useDomainEvents';
 import { queryKeys, invalidateFormalizacaoQueries } from '@/lib/queryKeys';
 import { QUERY_TIMING } from '@/lib/queryClient';
