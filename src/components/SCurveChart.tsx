@@ -611,7 +611,7 @@ const SCurveChart = ({
               {/* Linha de Realizado - verde sólido com offset para evitar sobreposição */}
               <Line
                 type="monotone"
-                dataKey="realizadoDisplay"
+                dataKey="realizado"
                 name="realizado"
                 stroke="#22c55e"
                 strokeWidth={3.5}
