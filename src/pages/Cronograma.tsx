@@ -4,6 +4,8 @@ import { Plus, Trash2, GripVertical, Save, Loader2, AlertCircle, Link2, Upload, 
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DatePickerField } from '@/components/DatePickerField';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
