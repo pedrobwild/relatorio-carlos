@@ -334,8 +334,7 @@ const WeeklyReportsHistory = ({
                       {/* Actual progress - Green if ahead or on-track, red if behind */}
                       <div 
                         className={cn(
-                          "h-full rounded-full transition-all duration-500",
-                          report.variance >= 0 ? "bg-[hsl(var(--success))]" : "bg-destructive"
+                          "h-full rounded-full transition-all duration-500 bg-[hsl(var(--success))]"
                         )}
                         style={{ width: `${report.completionPercentage}%` }}
                       />
