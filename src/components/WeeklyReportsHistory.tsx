@@ -322,14 +322,6 @@ const WeeklyReportsHistory = ({
                     <div className="flex items-center justify-between text-tiny mb-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground">Progresso</span>
-                        {canAccess && report.variance !== 0 && (
-                          <span className={cn(
-                            "font-medium",
-                            report.variance > 0 ? "text-[hsl(var(--success))]" : "text-destructive"
-                          )}>
-                            ({report.variance > 0 ? '+' : ''}{report.variance}% vs previsto)
-                          </span>
-                        )}
                       </div>
                       <span className="font-medium">{report.completionPercentage}%</span>
                     </div>
@@ -342,8 +334,7 @@ const WeeklyReportsHistory = ({
                       {/* Actual progress - Green if ahead or on-track, red if behind */}
                       <div 
                         className={cn(
-                          "h-full rounded-full transition-all duration-500",
-                          report.variance >= 0 ? "bg-[hsl(var(--success))]" : "bg-destructive"
+                          "h-full rounded-full transition-all duration-500 bg-[hsl(var(--success))]"
                         )}
                         style={{ width: `${report.completionPercentage}%` }}
                       />
