@@ -322,14 +322,6 @@ const WeeklyReportsHistory = ({
                     <div className="flex items-center justify-between text-tiny mb-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-muted-foreground">Progresso</span>
-                        {canAccess && report.variance !== 0 && (
-                          <span className={cn(
-                            "font-medium",
-                            report.variance > 0 ? "text-[hsl(var(--success))]" : "text-destructive"
-                          )}>
-                            ({report.variance > 0 ? '+' : ''}{report.variance}% vs previsto)
-                          </span>
-                        )}
                       </div>
                       <span className="font-medium">{report.completionPercentage}%</span>
                     </div>
