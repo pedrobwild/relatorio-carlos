@@ -110,19 +110,11 @@ export function useFormalizacao(id: string | undefined) {
         .eq('id', id)
         .maybeSingle();
 
-      if (!error && data) {
-        return data as FormalizationWithDetails;
-      }
-
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
-      if (isDemoMode) {
-        return (getFormalizacaoSeedById(id) as unknown as FormalizationWithDetails) ?? null;
-      }
-
-      return null;
+      return (data as FormalizationWithDetails) ?? null;
     },
     enabled: !!id,
   });
