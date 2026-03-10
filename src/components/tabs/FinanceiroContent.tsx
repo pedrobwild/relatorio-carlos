@@ -26,7 +26,7 @@ const FinanceiroContent = () => {
   const getPaymentStatus = (payment: ProjectPayment): "paid" | "pending" | "upcoming" => {
     if (payment.paid_at) return "paid";
     if (!payment.due_date) return "pending";
-    const dueDate = new Date(payment.due_date);
+    const dueDate = parseLocal(payment.due_date);
     if (dueDate <= today) return "pending";
     return "upcoming";
   };
