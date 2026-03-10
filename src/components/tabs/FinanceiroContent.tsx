@@ -64,12 +64,12 @@ const FinanceiroContent = () => {
   };
 
   const formatDate = (date: Date | string) => {
-    const d = typeof date === "string" ? new Date(date) : date;
+    const d = typeof date === "string" ? parseLocal(date) : date;
     return format(d, "dd/MM/yyyy", { locale: ptBR });
   };
 
   const formatShortDate = (date: Date | string) => {
-    const d = typeof date === "string" ? new Date(date) : date;
+    const d = typeof date === "string" ? parseLocal(date) : date;
     return format(d, "dd/MM", { locale: ptBR });
   };
 
