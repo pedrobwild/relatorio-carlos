@@ -20,10 +20,13 @@ const FinanceiroContent = () => {
 
   const today = new Date();
 
+  /** Parse YYYY-MM-DD as local date (avoids UTC off-by-one in BRT) */
+  const parseLocal = (d: string) => new Date(d + "T00:00:00");
+
   const getPaymentStatus = (payment: ProjectPayment): "paid" | "pending" | "upcoming" => {
     if (payment.paid_at) return "paid";
     if (!payment.due_date) return "pending";
-    const dueDate = new Date(payment.due_date);
+    const dueDate = parseLocal(payment.due_date);
     if (dueDate <= today) return "pending";
     return "upcoming";
   };
@@ -31,7 +34,7 @@ const FinanceiroContent = () => {
   const getUrgency = (payment: ProjectPayment): "overdue" | "urgent" | "approaching" | "normal" => {
     if (payment.paid_at) return "normal";
     if (!payment.due_date) return "normal";
-    const dueDate = new Date(payment.due_date);
+    const dueDate = parseLocal(payment.due_date);
     const daysUntilDue = differenceInDays(dueDate, today);
     if (daysUntilDue < 0) return "overdue";
     if (daysUntilDue <= 2) return "urgent";
@@ -42,7 +45,7 @@ const FinanceiroContent = () => {
   const getDaysLabel = (payment: ProjectPayment) => {
     if (payment.paid_at) return null;
     if (!payment.due_date) return { text: "Em definição", color: "text-muted-foreground" };
-    const dueDate = new Date(payment.due_date);
+    const dueDate = parseLocal(payment.due_date);
     const days = differenceInDays(dueDate, today);
     if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-destructive" };
     if (days === 0) return { text: "Vence hoje", color: "text-destructive" };
@@ -61,12 +64,12 @@ const FinanceiroContent = () => {
   };
 
   const formatDate = (date: Date | string) => {
-    const d = typeof date === "string" ? new Date(date) : date;
+    const d = typeof date === "string" ? parseLocal(date) : date;
     return format(d, "dd/MM/yyyy", { locale: ptBR });
   };
 
   const formatShortDate = (date: Date | string) => {
-    const d = typeof date === "string" ? new Date(date) : date;
+    const d = typeof date === "string" ? parseLocal(date) : date;
     return format(d, "dd/MM", { locale: ptBR });
   };
 
