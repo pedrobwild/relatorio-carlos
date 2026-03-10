@@ -20,6 +20,9 @@ const FinanceiroContent = () => {
 
   const today = new Date();
 
+  /** Parse YYYY-MM-DD as local date (avoids UTC off-by-one in BRT) */
+  const parseLocal = (d: string) => new Date(d + "T00:00:00");
+
   const getPaymentStatus = (payment: ProjectPayment): "paid" | "pending" | "upcoming" => {
     if (payment.paid_at) return "paid";
     if (!payment.due_date) return "pending";
