@@ -88,19 +88,11 @@ export function useFormalizacoes(filters?: {
 
       const { data, error } = await query;
 
-      if (!error && data && data.length > 0) {
-        return data as FormalizationWithDetails[];
-      }
-
       if (error) {
         throw error;
       }
 
-      if (isDemoMode) {
-        return filterSeed(filters) as unknown as FormalizationWithDetails[];
-      }
-
-      return [] as FormalizationWithDetails[];
+      return (data ?? []) as FormalizationWithDetails[];
     },
   });
 }
