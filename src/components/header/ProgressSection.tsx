@@ -183,16 +183,6 @@ export function ProgressSection({
             ))}
           </TooltipProvider>
 
-          {/* Today indicator */}
-          {todayPosition !== null && (
-            <div
-              className="absolute top-0 flex flex-col items-center pointer-events-none"
-              style={{ left: `${todayPosition}%`, transform: "translateX(-50%)" }}
-            >
-              <div className="w-0.5 h-3 bg-primary" />
-              <span className="text-[8px] text-primary font-bold mt-0.5">HOJE</span>
-            </div>
-          )}
         </div>
 
         {/* Labels */}
