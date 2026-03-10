@@ -311,7 +311,7 @@ const Cronograma = () => {
         </div>
       </PageHeader>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-4">
+      <div className="max-w-7xl mx-auto p-4 space-y-4">
         {/* Weight summary */}
         <Card>
           <CardContent className="py-4">
@@ -329,200 +329,102 @@ const Cronograma = () => {
           </CardContent>
         </Card>
 
-        {/* Activities list */}
-        <div className="space-y-3">
-          {activities.map((activity, index) => (
-            <Card key={activity.id} className="relative">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
-                      {index + 1}
-                    </span>
-                    Atividade
-                  </CardTitle>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-11 w-11 min-h-[44px] min-w-[44px]"
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                      aria-label="Mover para cima"
-                    >
-                      <GripVertical className="h-4 w-4 rotate-90" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-11 w-11 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
-                      onClick={() => handleRemoveActivity(activity.id)}
-                      disabled={activities.length === 1}
-                      aria-label="Remover atividade"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor={`desc-${activity.id}`}>Descrição *</Label>
-                  <Textarea
-                    id={`desc-${activity.id}`}
-                    placeholder="Ex: Preparação e Mobilização"
-                    value={activity.description}
-                    onChange={(e) => handleActivityChange(activity.id, 'description', e.target.value)}
-                    rows={2}
-                    className="resize-none"
-                  />
-                </div>
-
-                {/* Planned dates */}
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor={`ps-${activity.id}`}>Início Previsto *</Label>
+        {/* Table layout */}
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left px-3 py-3 font-medium text-muted-foreground w-12">#</th>
+                  <th className="text-left px-3 py-3 font-medium text-muted-foreground min-w-[160px]">Descrição</th>
+                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Início Prev.</th>
+                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Término Prev.</th>
+                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Início Real</th>
+                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Término Real</th>
+                  <th className="text-left px-3 py-3 font-medium text-muted-foreground w-20">Peso</th>
+                  <th className="w-12"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {activities.map((activity, index) => (
+                  <tr
+                    key={activity.id}
+                    className={cn(
+                      "border-b border-border last:border-0 transition-colors hover:bg-muted/50",
+                      (dateValidationErrors[activity.id]?.plannedDates || dateValidationErrors[activity.id]?.actualDates) && "bg-destructive/5"
+                    )}
+                  >
+                    <td className="px-3 py-3 text-muted-foreground tabular-nums">{index}</td>
+                    <td className="px-3 py-3">
+                      <Textarea
+                        value={activity.description}
+                        onChange={(e) => handleActivityChange(activity.id, 'description', e.target.value)}
+                        placeholder="Ex: Mobilização"
+                        rows={1}
+                        className="resize-none min-h-[36px] border-border bg-transparent text-sm"
+                      />
+                    </td>
+                    <td className="px-3 py-3">
                       <DatePickerField
-                        id={`ps-${activity.id}`}
                         value={activity.plannedStart}
                         onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
-                        placeholder="Selecionar"
+                        placeholder="dd/mm/aaaa"
                         hasError={!!dateValidationErrors[activity.id]?.plannedDates}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`pe-${activity.id}`}>Término Previsto *</Label>
+                    </td>
+                    <td className="px-3 py-3">
                       <DatePickerField
-                        id={`pe-${activity.id}`}
                         value={activity.plannedEnd}
                         onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
-                        placeholder="Selecionar"
+                        placeholder="dd/mm/aaaa"
                         hasError={!!dateValidationErrors[activity.id]?.plannedDates}
                       />
-                    </div>
-                  </div>
-                  {dateValidationErrors[activity.id]?.plannedDates && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {dateValidationErrors[activity.id].plannedDates}
-                    </p>
-                  )}
-                </div>
-
-                {/* Actual dates */}
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor={`as-${activity.id}`}>Início Real</Label>
+                    </td>
+                    <td className="px-3 py-3">
                       <DatePickerField
-                        id={`as-${activity.id}`}
                         value={activity.actualStart}
                         onChange={(val) => handleActivityChange(activity.id, 'actualStart', val)}
-                        placeholder="Selecionar"
+                        placeholder="dd/mm/aaaa"
                         hasError={!!dateValidationErrors[activity.id]?.actualDates}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`ae-${activity.id}`}>Término Real</Label>
+                    </td>
+                    <td className="px-3 py-3">
                       <DatePickerField
-                        id={`ae-${activity.id}`}
                         value={activity.actualEnd}
                         onChange={(val) => handleActivityChange(activity.id, 'actualEnd', val)}
-                        placeholder="Selecionar"
+                        placeholder="dd/mm/aaaa"
                         hasError={!!dateValidationErrors[activity.id]?.actualDates}
                       />
-                    </div>
-                  </div>
-                  {dateValidationErrors[activity.id]?.actualDates && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {dateValidationErrors[activity.id].actualDates}
-                    </p>
-                  )}
-                </div>
-
-                {/* Weight */}
-                <div className="space-y-2">
-                  <Label htmlFor={`weight-${activity.id}`}>Peso (%)</Label>
-                  <Input
-                    id={`weight-${activity.id}`}
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    placeholder="Ex: 10"
-                    value={activity.weight}
-                    onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
-                    className="w-32"
-                  />
-                </div>
-
-                {/* Predecessors */}
-                {index > 0 && (
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Link2 className="h-4 w-4" />
-                      Dependências (Predecessoras)
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
-                      {activity.predecessorIds.length > 0 && activity.predecessorIds.map(predId => (
-                        <Badge 
-                          key={predId} 
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-destructive/20"
-                          onClick={() => togglePredecessor(activity.id, predId)}
-                        >
-                          {getActivityLabel(predId)}
-                          <span className="ml-1 text-destructive">×</span>
-                        </Badge>
-                      ))}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-7">
-                            <Plus className="h-3 w-3 mr-1" />
-                            Adicionar
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 p-2" align="start">
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground mb-2">Selecione atividades predecessoras:</p>
-                            {activities.slice(0, index).map((pred, predIndex) => (
-                              <div 
-                                key={pred.id}
-                                className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer"
-                                onClick={() => togglePredecessor(activity.id, pred.id)}
-                              >
-                                <Checkbox 
-                                  checked={activity.predecessorIds.includes(pred.id)}
-                                  onCheckedChange={() => togglePredecessor(activity.id, pred.id)}
-                                />
-                                <span className="text-sm truncate">
-                                  {predIndex + 1}. {pred.description || 'Sem descrição'}
-                                </span>
-                              </div>
-                            ))}
-                            {activities.slice(0, index).length === 0 && (
-                              <p className="text-xs text-muted-foreground text-center py-2">
-                                Nenhuma atividade anterior disponível
-                              </p>
-                            )}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    {activity.predecessorIds.length === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Nenhuma dependência definida. Esta atividade pode iniciar a qualquer momento.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={activity.weight}
+                        onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
+                        className="w-20 text-sm"
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleRemoveActivity(activity.id)}
+                        disabled={activities.length === 1}
+                        aria-label="Remover atividade"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
         {/* Add activity button */}
         <Button
