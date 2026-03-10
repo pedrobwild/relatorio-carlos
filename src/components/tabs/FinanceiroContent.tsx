@@ -21,7 +21,10 @@ const FinanceiroContent = () => {
   const today = new Date();
 
   /** Parse YYYY-MM-DD as local date (avoids UTC off-by-one in BRT) */
-  const parseLocal = (d: string) => new Date(d + "T00:00:00");
+  const parseLocal = (d: string) => {
+    const [year, month, day] = d.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   const getPaymentStatus = (payment: ProjectPayment): "paid" | "pending" | "upcoming" => {
     if (payment.paid_at) return "paid";
