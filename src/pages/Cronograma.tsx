@@ -416,29 +416,23 @@ const Cronograma = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label htmlFor={`as-${activity.id}`}>Início Real</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`as-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.actualDates ? 'border-destructive' : ''}`}
-                          value={activity.actualStart}
-                          onChange={(e) => handleActivityChange(activity.id, 'actualStart', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`as-${activity.id}`}
+                        value={activity.actualStart}
+                        onChange={(val) => handleActivityChange(activity.id, 'actualStart', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.actualDates}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`ae-${activity.id}`}>Término Real</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`ae-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.actualDates ? 'border-destructive' : ''}`}
-                          value={activity.actualEnd}
-                          onChange={(e) => handleActivityChange(activity.id, 'actualEnd', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`ae-${activity.id}`}
+                        value={activity.actualEnd}
+                        onChange={(val) => handleActivityChange(activity.id, 'actualEnd', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.actualDates}
+                      />
                     </div>
                   </div>
                   {dateValidationErrors[activity.id]?.actualDates && (
