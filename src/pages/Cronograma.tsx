@@ -384,29 +384,23 @@ const Cronograma = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label htmlFor={`ps-${activity.id}`}>Início Previsto *</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`ps-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.plannedDates ? 'border-destructive' : ''}`}
-                          value={activity.plannedStart}
-                          onChange={(e) => handleActivityChange(activity.id, 'plannedStart', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`ps-${activity.id}`}
+                        value={activity.plannedStart}
+                        onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.plannedDates}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`pe-${activity.id}`}>Término Previsto *</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`pe-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.plannedDates ? 'border-destructive' : ''}`}
-                          value={activity.plannedEnd}
-                          onChange={(e) => handleActivityChange(activity.id, 'plannedEnd', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`pe-${activity.id}`}
+                        value={activity.plannedEnd}
+                        onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.plannedDates}
+                      />
                     </div>
                   </div>
                   {dateValidationErrors[activity.id]?.plannedDates && (
