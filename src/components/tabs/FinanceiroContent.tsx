@@ -45,7 +45,7 @@ const FinanceiroContent = () => {
   const getDaysLabel = (payment: ProjectPayment) => {
     if (payment.paid_at) return null;
     if (!payment.due_date) return { text: "Em definição", color: "text-muted-foreground" };
-    const dueDate = new Date(payment.due_date);
+    const dueDate = parseLocal(payment.due_date);
     const days = differenceInDays(dueDate, today);
     if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-destructive" };
     if (days === 0) return { text: "Vence hoje", color: "text-destructive" };
