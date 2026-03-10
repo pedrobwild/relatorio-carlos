@@ -35,26 +35,6 @@ async function logDomainEvent(params: {
   }
 }
 
-function filterSeed(
-  filters?: {
-    status?: string;
-    type?: string;
-    projectId?: string;
-  }
-) {
-  return formalizacoesSeedData
-    .filter((f) => {
-      if (filters?.status && f.status !== (filters.status as any)) return false;
-      if (filters?.type && f.type !== (filters.type as any)) return false;
-      if (filters?.projectId && f.project_id !== filters.projectId) return false;
-      return true;
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.last_activity_at || b.created_at || '').getTime() -
-        new Date(a.last_activity_at || a.created_at || '').getTime()
-    );
-}
 
 export function useFormalizacoes(filters?: {
   status?: string;
