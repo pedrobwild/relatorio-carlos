@@ -530,13 +530,6 @@ const SCurveChart = ({
                 label={<ReferenceLabel label="Início" />}
               />
               <ReferenceLine
-                x={milestones.half}
-                stroke="hsl(var(--muted-foreground))"
-                strokeDasharray="4 4"
-                strokeOpacity={0.4}
-                label={<ReferenceLabel label="50%" />}
-              />
-              <ReferenceLine
                 x={milestones.today}
                 stroke="hsl(var(--primary))"
                 strokeDasharray="4 4"
