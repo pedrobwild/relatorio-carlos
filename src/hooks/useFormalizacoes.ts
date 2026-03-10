@@ -1,11 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database, Json } from '@/integrations/supabase/types';
-import { isDemoMode } from '@/config/flags';
-import {
-  formalizacoesSeedData,
-  getFormalizacaoSeedById,
-} from '@/data/formalizacoesSeedData';
 import { EVENT_TYPES } from './useDomainEvents';
 import { queryKeys, invalidateFormalizacaoQueries } from '@/lib/queryKeys';
 import { QUERY_TIMING } from '@/lib/queryClient';
@@ -40,26 +35,6 @@ async function logDomainEvent(params: {
   }
 }
 
-function filterSeed(
-  filters?: {
-    status?: string;
-    type?: string;
-    projectId?: string;
-  }
-) {
-  return formalizacoesSeedData
-    .filter((f) => {
-      if (filters?.status && f.status !== (filters.status as any)) return false;
-      if (filters?.type && f.type !== (filters.type as any)) return false;
-      if (filters?.projectId && f.project_id !== filters.projectId) return false;
-      return true;
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.last_activity_at || b.created_at || '').getTime() -
-        new Date(a.last_activity_at || a.created_at || '').getTime()
-    );
-}
 
 export function useFormalizacoes(filters?: {
   status?: string;
@@ -88,19 +63,11 @@ export function useFormalizacoes(filters?: {
 
       const { data, error } = await query;
 
-      if (!error && data && data.length > 0) {
-        return data as FormalizationWithDetails[];
-      }
-
       if (error) {
         throw error;
       }
 
-      if (isDemoMode) {
-        return filterSeed(filters) as unknown as FormalizationWithDetails[];
-      }
-
-      return [] as FormalizationWithDetails[];
+      return (data ?? []) as FormalizationWithDetails[];
     },
   });
 }
@@ -118,19 +85,11 @@ export function useFormalizacao(id: string | undefined) {
         .eq('id', id)
         .maybeSingle();
 
-      if (!error && data) {
-        return data as FormalizationWithDetails;
-      }
-
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
-      if (isDemoMode) {
-        return (getFormalizacaoSeedById(id) as unknown as FormalizationWithDetails) ?? null;
-      }
-
-      return null;
+      return (data as FormalizationWithDetails) ?? null;
     },
     enabled: !!id,
   });
