@@ -534,7 +534,7 @@ const SCurveChart = ({
                 stroke="hsl(var(--primary))"
                 strokeDasharray="4 4"
                 strokeOpacity={0.8}
-                label={<ReferenceLabel label="Hoje" />}
+                label={<ReferenceLabel label={`${todayRealizado}% · Hoje`} />}
               />
               <ReferenceLine
                 x={milestones.end}
