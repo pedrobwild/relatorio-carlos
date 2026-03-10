@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, GripVertical, Save, Loader2, Calendar, AlertCircle, Link2, Upload, Bookmark, ShoppingCart } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Loader2, AlertCircle, Link2, Upload, Bookmark, ShoppingCart } from 'lucide-react';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DatePickerField } from '@/components/DatePickerField';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
@@ -367,11 +369,13 @@ const Cronograma = () => {
                 {/* Description */}
                 <div className="space-y-2">
                   <Label htmlFor={`desc-${activity.id}`}>Descrição *</Label>
-                  <Input
+                  <Textarea
                     id={`desc-${activity.id}`}
                     placeholder="Ex: Preparação e Mobilização"
                     value={activity.description}
                     onChange={(e) => handleActivityChange(activity.id, 'description', e.target.value)}
+                    rows={2}
+                    className="resize-none"
                   />
                 </div>
 
@@ -380,29 +384,23 @@ const Cronograma = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label htmlFor={`ps-${activity.id}`}>Início Previsto *</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`ps-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.plannedDates ? 'border-destructive' : ''}`}
-                          value={activity.plannedStart}
-                          onChange={(e) => handleActivityChange(activity.id, 'plannedStart', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`ps-${activity.id}`}
+                        value={activity.plannedStart}
+                        onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.plannedDates}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`pe-${activity.id}`}>Término Previsto *</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`pe-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.plannedDates ? 'border-destructive' : ''}`}
-                          value={activity.plannedEnd}
-                          onChange={(e) => handleActivityChange(activity.id, 'plannedEnd', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`pe-${activity.id}`}
+                        value={activity.plannedEnd}
+                        onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.plannedDates}
+                      />
                     </div>
                   </div>
                   {dateValidationErrors[activity.id]?.plannedDates && (
@@ -418,29 +416,23 @@ const Cronograma = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label htmlFor={`as-${activity.id}`}>Início Real</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`as-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.actualDates ? 'border-destructive' : ''}`}
-                          value={activity.actualStart}
-                          onChange={(e) => handleActivityChange(activity.id, 'actualStart', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`as-${activity.id}`}
+                        value={activity.actualStart}
+                        onChange={(val) => handleActivityChange(activity.id, 'actualStart', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.actualDates}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`ae-${activity.id}`}>Término Real</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id={`ae-${activity.id}`}
-                          type="date"
-                          className={`pl-10 ${dateValidationErrors[activity.id]?.actualDates ? 'border-destructive' : ''}`}
-                          value={activity.actualEnd}
-                          onChange={(e) => handleActivityChange(activity.id, 'actualEnd', e.target.value)}
-                        />
-                      </div>
+                      <DatePickerField
+                        id={`ae-${activity.id}`}
+                        value={activity.actualEnd}
+                        onChange={(val) => handleActivityChange(activity.id, 'actualEnd', val)}
+                        placeholder="Selecionar"
+                        hasError={!!dateValidationErrors[activity.id]?.actualDates}
+                      />
                     </div>
                   </div>
                   {dateValidationErrors[activity.id]?.actualDates && (
