@@ -369,11 +369,13 @@ const Cronograma = () => {
                 {/* Description */}
                 <div className="space-y-2">
                   <Label htmlFor={`desc-${activity.id}`}>Descrição *</Label>
-                  <Input
+                  <Textarea
                     id={`desc-${activity.id}`}
                     placeholder="Ex: Preparação e Mobilização"
                     value={activity.description}
                     onChange={(e) => handleActivityChange(activity.id, 'description', e.target.value)}
+                    rows={2}
+                    className="resize-none"
                   />
                 </div>
 
