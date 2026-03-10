@@ -419,13 +419,13 @@ const SCurveChart = ({
   const lastPoint = chartData[chartData.length - 1];
 
   // Find realizado % at today's timestamp
+  // Find the latest realizado value up to today (execution progress, not planned)
   const todayRealizado = useMemo(() => {
-    const todayPoint = chartData.reduce((closest, point) => {
-      if (point.realizado === null) return closest;
-      if (!closest) return point;
-      return Math.abs(point.timestamp - milestones.today) < Math.abs(closest.timestamp - milestones.today) ? point : closest;
-    }, null as (typeof chartData)[0] | null);
-    return todayPoint?.realizado ?? 0;
+    const pointsUpToToday = chartData
+      .filter(p => p.timestamp <= milestones.today && p.realizado !== null);
+    if (pointsUpToToday.length === 0) return 0;
+    // Pick the last one (closest to today)
+    return pointsUpToToday[pointsUpToToday.length - 1].realizado ?? 0;
   }, [chartData, milestones.today]);
 
   // Toggle between 30-day window and full view (controlled or uncontrolled)
