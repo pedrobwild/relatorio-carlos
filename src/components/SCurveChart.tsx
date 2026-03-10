@@ -285,9 +285,35 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
 };
 
 // Custom reference line label component
-const ReferenceLabel = ({ viewBox, label, position = 'top' }: { viewBox?: any; label: string; position?: 'top' | 'bottom' }) => {
+const ReferenceLabel = ({ viewBox, label, position = 'top', highlight = false }: { viewBox?: any; label: string; position?: 'top' | 'bottom'; highlight?: boolean }) => {
   if (!viewBox) return null;
   const { x } = viewBox;
+  
+  if (highlight) {
+    return (
+      <g>
+        <rect
+          x={x - 28}
+          y={2}
+          width={56}
+          height={18}
+          rx={4}
+          fill="hsl(var(--primary))"
+        />
+        <text
+          x={x}
+          y={14}
+          fill="white"
+          fontSize={9}
+          textAnchor="middle"
+          fontWeight={700}
+        >
+          {label}
+        </text>
+      </g>
+    );
+  }
+  
   return (
     <text
       x={x}
