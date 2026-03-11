@@ -1464,24 +1464,57 @@ export default function EditarObra() {
               </Card>
             )}
 
-            {customer && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Cliente</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary" />
+            {/* Customer Access Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link2 className="h-5 w-5" />
+                  Acesso do Cliente
+                </CardTitle>
+                <CardDescription>
+                  Vincule o cliente à obra para que ele acesse o portal
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {customer ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{customer.customer_name}</p>
+                          <p className="text-sm text-muted-foreground">{customer.customer_email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {customer.customer_user_id ? (
+                          <Badge className="bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Acesso vinculado
+                          </Badge>
+                        ) : (
+                          <CustomerLinkButton
+                            customer={customer}
+                            projectId={projectId!}
+                            onLinked={(updatedCustomer) => setCustomer(updatedCustomer)}
+                          />
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{customer.customer_name}</p>
-                      <p className="text-sm text-muted-foreground">{customer.customer_email}</p>
-                    </div>
+                    {!customer.customer_user_id && (
+                      <p className="text-xs text-muted-foreground">
+                        <Mail className="h-3 w-3 inline mr-1" />
+                        O cliente ainda não tem acesso ao portal. Clique em "Vincular Acesso" para buscar a conta pelo e-mail cadastrado, ou o acesso será vinculado automaticamente quando o cliente fizer login.
+                      </p>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                ) : (
+                  <AddCustomerSection projectId={projectId!} onAdded={(newCustomer) => setCustomer(newCustomer)} />
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
