@@ -7,6 +7,7 @@ import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { calcWeightedProgress } from '@/lib/progressCalc';
 
 type ProjectData = ProjectWithCustomer & { is_project_phase?: boolean };
 
