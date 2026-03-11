@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Calendar, DollarSign, Users, Save, Trash2, Plus, Loader2, UserPlus, X, Map } from 'lucide-react';
+import { ArrowLeft, Building2, User, Calendar, DollarSign, Users, Save, Trash2, Plus, Loader2, UserPlus, X, Map, Mail, CheckCircle2, Link2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
