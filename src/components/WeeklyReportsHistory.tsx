@@ -168,6 +168,15 @@ export const generateWeeklyReports = (
     // Check availability for customers
     const { isAvailable, availableAt } = isReportAvailableForCustomer(weekEnd);
     
+    // Also unlock if all overlapping activities for this week are completed
+    // (actualEnd filled with a date <= weekEndDate means the stage finished early)
+    const allOverlappingCompleted = overlappingActivities.length > 0 &&
+      overlappingActivities.every(a => {
+        if (!a.actualEnd) return false;
+        const actualEnd = parseLocalDate(a.actualEnd);
+        return isBefore(actualEnd, weekEndDate) || actualEnd.getTime() === weekEndDate.getTime();
+      });
+    
     reports.push({
       weekNumber,
       startDate: weekStart,
@@ -177,7 +186,7 @@ export const generateWeeklyReports = (
       status,
       variance,
       currentActivityName: currentActivity?.description || null,
-      isAvailableForCustomer: isAvailable,
+      isAvailableForCustomer: isAvailable || allOverlappingCompleted,
       availableAt,
     });
     
