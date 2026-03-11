@@ -291,19 +291,22 @@ const ReferenceLabel = ({ viewBox, label, position = 'top', highlight = false }:
   const { x } = viewBox;
   
   if (highlight) {
+    // Estimate width based on label length (approx 5.5px per char at fontSize 9)
+    const estimatedWidth = Math.max(64, label.length * 5.5 + 16);
+    const rectHeight = 20;
     return (
       <g>
         <rect
-          x={x - 28}
-          y={2}
-          width={56}
-          height={18}
-          rx={4}
+          x={x - estimatedWidth / 2}
+          y={1}
+          width={estimatedWidth}
+          height={rectHeight}
+          rx={5}
           fill="hsl(var(--primary))"
         />
         <text
           x={x}
-          y={14}
+          y={14.5}
           fill="white"
           fontSize={9}
           textAnchor="middle"
