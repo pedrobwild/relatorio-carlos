@@ -77,8 +77,10 @@ const FinanceiroContent = () => {
     return format(d, "dd/MM/yyyy", { locale: ptBR });
   };
 
-  const formatShortDate = (date: Date | string) => {
+  const formatShortDate = (date: Date | string | null | undefined) => {
+    if (!date) return "—";
     const d = typeof date === "string" ? parseLocal(date) : date;
+    if (isNaN(d.getTime())) return "—";
     return format(d, "dd/MM", { locale: ptBR });
   };
 
