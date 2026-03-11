@@ -618,8 +618,9 @@ export function ObrasTab() {
                     <TableCell>{project.customer_name || '—'}</TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - {' '}
-                        {format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}
+                        {project.planned_start_date && project.planned_end_date
+                          ? `${format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - ${format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}`
+                          : '—'}
                       </span>
                     </TableCell>
                     <TableCell>
