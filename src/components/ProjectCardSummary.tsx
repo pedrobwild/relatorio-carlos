@@ -7,6 +7,7 @@ import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { calcWeightedProgress } from '@/lib/progressCalc';
 
 type ProjectData = ProjectWithCustomer & { is_project_phase?: boolean };
 
@@ -70,6 +71,23 @@ function useCurrentObraEtapa(projectId: string, enabled: boolean) {
   });
 }
 
+// ── Fetch activity-based progress ──────────────────────────────────────
+function useActivityProgress(projectId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['project-activity-progress', projectId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('project_activities')
+        .select('weight, actual_end')
+        .eq('project_id', projectId);
+      if (!data || data.length === 0) return 0;
+      return calcWeightedProgress(data.map(a => ({ weight: Number(a.weight) || 0, actualEnd: a.actual_end })));
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // ── Component ──────────────────────────────────────────────────────────
 export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps) {
   const isProjectPhase = !!project.is_project_phase;
@@ -78,6 +96,9 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
   // Fetch current stage info
   const { data: journeyStageName } = useCurrentJourneyStage(project.id, isProjectPhase && isActive);
   const { data: obraEtapa } = useCurrentObraEtapa(project.id, !isProjectPhase && isActive);
+  
+  // Fetch activity-based progress (unified calculation)
+  const { data: progress = 0 } = useActivityProgress(project.id, !isProjectPhase && isActive);
 
   const isCompletedJourney = isProjectPhase && project.status === 'completed';
 
@@ -90,21 +111,6 @@ export function ProjectCardSummary({ project, onClick }: ProjectCardSummaryProps
     }
     return obraEtapa ? `Etapa atual: ${obraEtapa}` : 'Em acompanhamento';
   }, [isActive, isProjectPhase, isCompletedJourney, journeyStageName, obraEtapa]);
-
-  // Progress (only for obra in execution)
-  const progress = useMemo(() => {
-    if (isProjectPhase || !isActive) return 0;
-    const rawStart = project.actual_start_date || project.planned_start_date;
-    const rawEnd = project.planned_end_date;
-    if (!rawStart || !rawEnd) return 0;
-    const start = parseLocalDate(rawStart);
-    const end = parseLocalDate(rawEnd);
-    const now = Date.now();
-    if (now < start.getTime()) return 0;
-    const total = end.getTime() - start.getTime();
-    if (total <= 0) return 0;
-    return Math.min(100, Math.max(0, ((now - start.getTime()) / total) * 100));
-  }, [isProjectPhase, isActive, project.actual_start_date, project.planned_start_date, project.planned_end_date]);
 
   // Time info
   const timeInfo = useMemo(() => {

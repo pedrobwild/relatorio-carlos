@@ -169,7 +169,7 @@ const ReportHeader = ({
     }, 0);
     const completedActivities = activities.filter(a => a.actualEnd).length;
     const totalActivities = activities.length;
-    const actualProgress = totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
+    const actualProgress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
 
     const plannedWeight = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");

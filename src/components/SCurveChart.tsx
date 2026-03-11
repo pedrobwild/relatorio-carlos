@@ -13,6 +13,7 @@ import { Activity } from "@/types/report";
 import { TrendingUp, Maximize2, Minimize2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { calcWeightedProgress } from "@/lib/progressCalc";
 
 interface SCurveChartProps {
   activities: Activity[];
@@ -418,15 +419,12 @@ const SCurveChart = ({
   // Get last data point for comparison
   const lastPoint = chartData[chartData.length - 1];
 
-  // Find realizado % at today's timestamp
-  // Find the latest realizado value up to today (execution progress, not planned)
+  // Use unified progress calculation (same as header and card)
   const todayRealizado = useMemo(() => {
-    const pointsUpToToday = chartData
-      .filter(p => p.timestamp <= milestones.today && p.realizado !== null);
-    if (pointsUpToToday.length === 0) return 0;
-    // Pick the last one (closest to today)
-    return pointsUpToToday[pointsUpToToday.length - 1].realizado ?? 0;
-  }, [chartData, milestones.today]);
+    return calcWeightedProgress(
+      activities.map(a => ({ weight: (a as any).weight, actualEnd: a.actualEnd }))
+    );
+  }, [activities]);
 
   // Toggle between 30-day window and full view (controlled or uncontrolled)
   const [internalShowFull, setInternalShowFull] = useState(false);
