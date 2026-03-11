@@ -337,7 +337,7 @@ const FinanceiroContent = () => {
                           Boleto
                         </Button>
                       ) : (
-                        <span className="text-tiny text-muted-foreground">Aguardando boleto</span>
+                        <span className="text-tiny text-muted-foreground">Aguardando pagamento</span>
                       )}
                       {isAdmin && !payment.paid_at && (
                         <div className="mt-1">
