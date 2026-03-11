@@ -13,6 +13,7 @@ import { Activity } from "@/types/report";
 import { TrendingUp, Maximize2, Minimize2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { calcWeightedProgress } from "@/lib/progressCalc";
 
 interface SCurveChartProps {
   activities: Activity[];
