@@ -20,10 +20,16 @@ const FinanceiroContent = () => {
 
   const today = new Date();
 
-  /** Parse YYYY-MM-DD as local date (avoids UTC off-by-one in BRT) */
-  const parseLocal = (d: string) => {
-    const [year, month, day] = d.split('-').map(Number);
-    return new Date(year, month - 1, day);
+  /** Parse date string safely – handles YYYY-MM-DD and full ISO timestamps */
+  const parseLocal = (d: string): Date => {
+    if (!d) return new Date(NaN);
+    // If it's a plain YYYY-MM-DD, parse as local to avoid UTC off-by-one in BRT
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      const [year, month, day] = d.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    // Otherwise parse as-is (ISO timestamp, etc.)
+    return new Date(d);
   };
 
   const getPaymentStatus = (payment: ProjectPayment): "paid" | "pending" | "upcoming" => {
