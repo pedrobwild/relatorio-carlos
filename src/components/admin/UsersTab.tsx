@@ -487,6 +487,13 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
     }
 
     if (!password) {
+      toast({
+        title: 'Erro',
+        description: 'Senha é obrigatória',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     if (password.length < 6) {
       toast({
