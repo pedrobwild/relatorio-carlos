@@ -107,6 +107,151 @@ interface AvailableEngineer {
   role: string;
 }
 
+/** Button to link a customer's user account by looking up their email in profiles */
+function CustomerLinkButton({ 
+  customer, 
+  projectId, 
+  onLinked 
+}: { 
+  customer: Customer; 
+  projectId: string; 
+  onLinked: (c: Customer) => void;
+}) {
+  const [linking, setLinking] = useState(false);
+  const { toast } = useToast();
+
+  const handleLink = async () => {
+    setLinking(true);
+    try {
+      // Look up user by email in profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', customer.customer_email.toLowerCase().trim())
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (!profile) {
+        toast({
+          title: 'Usuário não encontrado',
+          description: `Nenhuma conta encontrada para ${customer.customer_email}. O cliente precisa criar uma conta primeiro.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Link the user to the project customer record
+      const { error: updateError } = await supabase
+        .from('project_customers')
+        .update({ customer_user_id: profile.user_id })
+        .eq('id', customer.id);
+
+      if (updateError) throw updateError;
+
+      onLinked({ ...customer, customer_user_id: profile.user_id });
+      toast({ title: 'Acesso vinculado!', description: `${customer.customer_name} agora tem acesso ao portal da obra.` });
+    } catch (err: any) {
+      console.error('Error linking customer:', err);
+      toast({ title: 'Erro ao vincular', description: err.message, variant: 'destructive' });
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleLink} disabled={linking}>
+      {linking ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Link2 className="h-3 w-3 mr-1" />}
+      Vincular Acesso
+    </Button>
+  );
+}
+
+/** Section to add a new customer to a project that has none */
+function AddCustomerSection({ 
+  projectId, 
+  onAdded 
+}: { 
+  projectId: string; 
+  onAdded: (c: Customer) => void;
+}) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [adding, setAdding] = useState(false);
+  const { toast } = useToast();
+
+  const handleAdd = async () => {
+    if (!name || !email) {
+      toast({ title: 'Preencha nome e e-mail do cliente', variant: 'destructive' });
+      return;
+    }
+
+    setAdding(true);
+    try {
+      // Check if user already exists
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+
+      const { data: newCustomer, error } = await supabase
+        .from('project_customers')
+        .insert({
+          project_id: projectId,
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone || null,
+          customer_user_id: profile?.user_id || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      onAdded(newCustomer);
+      toast({
+        title: 'Cliente adicionado!',
+        description: profile?.user_id
+          ? `${name} foi adicionado e já possui acesso ao portal.`
+          : `${name} foi adicionado. O acesso será vinculado quando ele fizer login.`,
+      });
+    } catch (err: any) {
+      console.error('Error adding customer:', err);
+      toast({ title: 'Erro ao adicionar cliente', description: err.message, variant: 'destructive' });
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Nenhum cliente vinculado a esta obra. Adicione um cliente para que ele possa acessar o portal.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="sm:col-span-2">
+          <Label>Nome completo *</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do cliente" />
+        </div>
+        <div>
+          <Label>E-mail *</Label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cliente@email.com" />
+        </div>
+        <div>
+          <Label>Telefone</Label>
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 00000-0000" />
+        </div>
+      </div>
+      <Button onClick={handleAdd} disabled={adding || !name || !email}>
+        {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+        Adicionar Cliente
+      </Button>
+    </div>
+  );
+}
+
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
