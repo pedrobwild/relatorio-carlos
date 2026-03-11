@@ -546,7 +546,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
       setIdentifier('');
       setPassword('');
       setDisplayName('');
-      setRole('customer');
+      setRole(undefined);
       setIdentifierType('email');
       setSelectedProjects([]);
       setOpen(false);
