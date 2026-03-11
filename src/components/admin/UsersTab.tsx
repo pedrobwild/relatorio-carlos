@@ -397,7 +397,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [role, setRole] = useState<AppRole>('customer');
+  const [role, setRole] = useState<AppRole | undefined>(undefined);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
@@ -477,6 +477,15 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
     
     if (!validateIdentifier()) return;
 
+    if (!role) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione uma permissão',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!password) {
       toast({
         title: 'Erro',
@@ -537,7 +546,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
       setIdentifier('');
       setPassword('');
       setDisplayName('');
-      setRole('customer');
+      setRole(undefined);
       setIdentifierType('email');
       setSelectedProjects([]);
       setOpen(false);
@@ -634,7 +643,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
               <Label htmlFor="role">Permissão *</Label>
               <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione uma permissão" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="customer">Cliente</SelectItem>
