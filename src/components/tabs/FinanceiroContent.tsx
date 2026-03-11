@@ -224,7 +224,7 @@ const FinanceiroContent = () => {
                             Boleto
                           </Button>
                         ) : (
-                          <Badge variant="outline" className="text-tiny text-muted-foreground">Aguardando boleto</Badge>
+                          <Badge variant="outline" className="text-tiny text-muted-foreground">Aguardando pagamento</Badge>
                         )}
                         {isAdmin && !payment.paid_at && (
                           <BoletoUploadButton
