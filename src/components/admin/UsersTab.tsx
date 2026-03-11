@@ -637,26 +637,10 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="customer">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={roleColors.customer}>Cliente</Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="engineer">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={roleColors.engineer}>Engenheiro</Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="manager">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={roleColors.manager}>Gestor de Engenharia</Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="admin">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={roleColors.admin}>Administrador</Badge>
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="customer">Cliente</SelectItem>
+                  <SelectItem value="engineer">Engenheiro</SelectItem>
+                  <SelectItem value="manager">Gestor de Engenharia</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
             </div>
