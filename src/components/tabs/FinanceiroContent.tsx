@@ -57,7 +57,7 @@ const FinanceiroContent = () => {
     const dueDate = parseLocal(payment.due_date);
     const days = differenceInDays(dueDate, today);
     if (days < 0) return { text: `${Math.abs(days)} dias em atraso`, color: "text-destructive" };
-    if (days === 0) return { text: "Vence hoje", color: "text-destructive" };
+    if (days === 0) return { text: "Vence hoje", color: "text-[hsl(var(--warning))]" };
     if (days === 1) return { text: "Vence amanhã", color: "text-[hsl(var(--warning))]" };
     if (days <= 5) return { text: `Vence em ${days} dias`, color: "text-[hsl(var(--warning))]" };
     return null;
