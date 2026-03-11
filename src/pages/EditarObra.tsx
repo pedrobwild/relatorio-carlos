@@ -1065,7 +1065,7 @@ export default function EditarObra() {
                       />
                     </div>
                   </div>
-                  {customer.invitation_accepted_at ? (
+                  {customer.customer_user_id || customer.invitation_accepted_at ? (
                     <Badge className="bg-green-500/10 text-green-600">
                       Cadastrado no portal
                     </Badge>
@@ -1073,11 +1073,7 @@ export default function EditarObra() {
                     <Badge variant="outline">
                       Convite enviado em {format(new Date(customer.invitation_sent_at), 'dd/MM/yyyy')}
                     </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-muted-foreground">
-                      Convite não enviado
-                    </Badge>
-                  )}
+                  ) : null}
                 </CardContent>
               </Card>
             )}
