@@ -362,6 +362,31 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
                         </div>
                       ))}
                     </div>
+                  ) : (
+                    <div className="space-y-2 pb-4">
+                      {(plan.budgetRiskAlerts || []).map((alert, i) => {
+                        const severityColors: Record<string, string> = {
+                          alta: 'border-destructive/40 bg-destructive/5',
+                          media: 'border-amber-500/40 bg-amber-500/5',
+                          baixa: 'border-muted bg-muted/30',
+                        };
+                        return (
+                          <div key={i} className={cn('p-3 rounded-lg border text-sm', severityColors[alert.severity])}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <AlertTriangle className={cn('h-4 w-4', alert.severity === 'alta' ? 'text-destructive' : 'text-amber-600')} />
+                              <span className="font-medium text-xs">{alert.message}</span>
+                              <Badge variant="outline" className={cn('text-[10px] h-5 ml-auto', priorityColors[alert.severity])}>
+                                {alert.severity}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">💡 {alert.recommendation}</p>
+                            {alert.affectedItems && alert.affectedItems.length > 0 && (
+                              <p className="text-[11px] text-muted-foreground ml-6 mt-1">Itens: {alert.affectedItems.join(', ')}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </ScrollArea>
 
