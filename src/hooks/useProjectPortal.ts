@@ -127,16 +127,17 @@ export function useProjectPortal() {
 
   const milestoneDates = useMemo(() => {
     if (!project) return undefined;
-    const p = project as any;
+    // Access milestone date columns that exist on the projects table but aren't in the base TS type
+    const p = project as unknown as Record<string, unknown>;
     return {
-      dateBriefingArch: p.date_briefing_arch ?? null,
-      dateApproval3d: p.date_approval_3d ?? null,
-      dateApprovalExec: p.date_approval_exec ?? null,
-      dateApprovalObra: p.date_approval_obra ?? null,
-      dateOfficialStart: p.date_official_start ?? null,
-      dateOfficialDelivery: p.date_official_delivery ?? null,
-      dateMobilizationStart: p.date_mobilization_start ?? null,
-      contractSigningDate: p.contract_signing_date ?? null,
+      dateBriefingArch: (p.date_briefing_arch as string) ?? null,
+      dateApproval3d: (p.date_approval_3d as string) ?? null,
+      dateApprovalExec: (p.date_approval_exec as string) ?? null,
+      dateApprovalObra: (p.date_approval_obra as string) ?? null,
+      dateOfficialStart: (p.date_official_start as string) ?? null,
+      dateOfficialDelivery: (p.date_official_delivery as string) ?? null,
+      dateMobilizationStart: (p.date_mobilization_start as string) ?? null,
+      contractSigningDate: (p.contract_signing_date as string) ?? null,
     };
   }, [project]);
 
@@ -206,9 +207,9 @@ export function useProjectPortal() {
     if (!projectId) return;
     const column = milestoneKeyToColumn[key];
     const { supabase } = await import('@/integrations/supabase/client');
-    const { error } = await supabase.from('projects').update({ [column]: date } as any).eq('id', projectId);
+    const { error } = await supabase.from('projects').update({ [column]: date }).eq('id', projectId);
     if (error) { toast.error('Erro ao salvar data do marco'); throw error; }
-    if (project) setProject({ ...project, [column]: date } as any);
+    if (project) setProject({ ...project, [column]: date } as typeof project);
     toast.success('Data do marco atualizada');
   }, [projectId, project, setProject]);
 

@@ -27,7 +27,6 @@ export type BriefingMeetingState = 'needs_availability' | 'awaiting_scheduling' 
 export function deriveMeetingState(availability: MeetingAvailability | null): BriefingMeetingState {
   if (!availability) return 'needs_availability';
   if (availability.status === 'confirmed') return 'scheduled';
-  // pending_confirmation means client submitted, awaiting admin scheduling
   return 'awaiting_scheduling';
 }
 
@@ -36,15 +35,15 @@ export function useMeetingAvailability(stageId: string | undefined, projectId: s
     queryKey: ['meeting-availability', stageId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('journey_meeting_availability' as any)
+        .from('journey_meeting_availability')
         .select('*')
         .eq('stage_id', stageId!)
         .eq('project_id', projectId!)
         .order('submitted_at', { ascending: false })
         .limit(1);
       if (error) throw error;
-      const row = (data as unknown as MeetingAvailability[])?.[0] || null;
-      return row;
+      const row = data?.[0] ?? null;
+      return row as MeetingAvailability | null;
     },
     enabled: !!stageId && !!projectId,
   });
@@ -66,14 +65,14 @@ export function useSubmitMeetingAvailability() {
     }) => {
       // Upsert: delete previous pending then insert
       await supabase
-        .from('journey_meeting_availability' as any)
+        .from('journey_meeting_availability')
         .delete()
         .eq('stage_id', input.stage_id)
         .eq('project_id', input.project_id)
         .eq('status', 'pending_confirmation');
 
       const { error } = await supabase
-        .from('journey_meeting_availability' as any)
+        .from('journey_meeting_availability')
         .insert({
           stage_id: input.stage_id,
           project_id: input.project_id,
@@ -83,7 +82,7 @@ export function useSubmitMeetingAvailability() {
           preferred_weekdays: input.preferred_weekdays,
           time_slots: input.time_slots,
           notes: input.notes || null,
-        } as any);
+        });
       if (error) throw error;
       return { stageId: input.stage_id };
     },
@@ -109,13 +108,13 @@ export function useScheduleMeeting() {
       confirmed_by: string;
     }) => {
       const { error } = await supabase
-        .from('journey_meeting_availability' as any)
+        .from('journey_meeting_availability')
         .update({
           status: 'confirmed',
           confirmed_datetime: input.confirmed_datetime,
           confirmed_by: input.confirmed_by,
           meeting_details_text: input.meeting_details_text,
-        } as any)
+        })
         .eq('id', input.availability_id);
       if (error) throw error;
       return { stageId: input.stage_id };

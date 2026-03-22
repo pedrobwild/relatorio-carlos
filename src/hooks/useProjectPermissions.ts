@@ -11,7 +11,7 @@ import { useAuth } from './useAuth';
 import { useCallback, useMemo } from 'react';
 import { hasProjectPermission, type PermissionContext, checkPermission } from '@/lib/permissionGuard';
 import { useUserRole } from './useUserRole';
-import type { ProjectPermission } from '@/types/permissions';
+import type { ModulePermission, ProjectPermission } from '@/types/permissions';
 
 export function useProjectPermissions(projectId: string | undefined) {
   const { user } = useAuth();
@@ -66,7 +66,7 @@ export function useProjectPermissions(projectId: string | undefined) {
   );
 
   const check = useCallback(
-    (permission: string) => checkPermission(ctx, permission as any),
+    (permission: ModulePermission | ProjectPermission) => checkPermission(ctx, permission),
     [ctx],
   );
 

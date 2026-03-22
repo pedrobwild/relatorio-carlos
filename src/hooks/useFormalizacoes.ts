@@ -37,8 +37,8 @@ async function logDomainEvent(params: {
 
 
 export function useFormalizacoes(filters?: {
-  status?: string;
-  type?: string;
+  status?: Database['public']['Enums']['formalization_status'];
+  type?: Database['public']['Enums']['formalization_type'];
   projectId?: string;
 }) {
   return useQuery({
@@ -52,10 +52,10 @@ export function useFormalizacoes(filters?: {
         .order('last_activity_at', { ascending: false });
 
       if (filters?.status) {
-        query = query.eq('status', filters.status as any);
+        query = query.eq('status', filters.status);
       }
       if (filters?.type) {
-        query = query.eq('type', filters.type as any);
+        query = query.eq('type', filters.type);
       }
       if (filters?.projectId) {
         query = query.eq('project_id', filters.projectId);
