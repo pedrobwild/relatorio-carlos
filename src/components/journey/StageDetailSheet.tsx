@@ -155,7 +155,16 @@ export function StageDetailSheet({
 
             <Separator />
 
-            {/* ④.5 Chat contextual */}
+            {/* ④.5 Photo Gallery */}
+            <StagePhotoGallery
+              stageId={stage.id}
+              projectId={projectId}
+              isAdmin={isAdmin}
+            />
+
+            <Separator />
+
+            {/* ⑤ Chat contextual */}
             <StageChat
               stageId={stage.id}
               projectId={projectId}
