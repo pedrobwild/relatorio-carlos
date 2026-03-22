@@ -647,9 +647,8 @@ const ReportHeader = ({
                       {clientName && (
                         <p className="text-caption mt-0.5">Cliente: {clientName}</p>
                       )}
-                      {(() => {
-                        const p = currentProject as any;
-                        const addressParts = [p?.address, p?.bairro, p?.cep].filter(Boolean);
+                       {(() => {
+                         const addressParts = [currentProject?.address, currentProject?.bairro, currentProject?.cep].filter(Boolean);
                         return addressParts.length > 0 ? (
                           <p className="text-xs text-muted-foreground truncate">{addressParts.join(' · ')}</p>
                         ) : null;

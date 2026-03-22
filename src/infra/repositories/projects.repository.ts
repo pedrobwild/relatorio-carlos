@@ -25,6 +25,8 @@ export interface Project {
   name: string;
   unit_name: string | null;
   address: string | null;
+  bairro: string | null;
+  cep: string | null;
   planned_start_date: string | null;
   planned_end_date: string | null;
   actual_start_date: string | null;
@@ -36,6 +38,7 @@ export interface Project {
   updated_at: string;
   org_id: string | null;
   is_project_phase?: boolean;
+  contract_signing_date?: string | null;
 }
 
 export interface ProjectWithCustomer extends Project {

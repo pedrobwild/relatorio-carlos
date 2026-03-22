@@ -133,7 +133,7 @@ export function PageHeader({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             {(backTo || onBack) && (
-              <BackWrapper {...(backProps as any)}>
+              <BackWrapper {...(backProps as Record<string, string>)}>
                 <Button
                   variant="ghost"
                   size="icon"

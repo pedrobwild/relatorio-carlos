@@ -681,8 +681,8 @@ export default function FormalizacaoDetalhe() {
           <TabsContent value="evidencias" className="mt-4">
             <FormalizacaoEvidence 
               formalizationId={id!}
-              attachments={(formalizacao.attachments as any[]) || []}
-              evidenceLinks={(formalizacao.evidence_links as any[]) || []}
+              attachments={(formalizacao.attachments as Record<string, unknown>[]) || []}
+              evidenceLinks={(formalizacao.evidence_links as Record<string, unknown>[]) || []}
               isLocked={!!formalizacao.locked_at}
             />
           </TabsContent>
