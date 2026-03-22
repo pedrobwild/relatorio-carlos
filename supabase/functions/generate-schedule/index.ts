@@ -170,12 +170,14 @@ Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
                     type: "object",
                     properties: {
                       totalWeeks: { type: "number" },
+                      bufferWeeks: { type: "number", description: "Semanas reservadas como buffer (20% do total)" },
                       totalActivities: { type: "number" },
                       totalPurchaseItems: { type: "number" },
                       criticalPath: { type: "array", items: { type: "string" }, description: "Atividades do caminho crítico" },
-                      recommendations: { type: "array", items: { type: "string" }, description: "Recomendações gerais para o engenheiro" },
+                      budgetConcentration: { type: "string", description: "Ex: Marcenaria + Eletros = 52% do orçamento" },
+                      recommendations: { type: "array", items: { type: "string" }, description: "Recomendações baseadas nas regras Bwild" },
                     },
-                    required: ["totalWeeks", "totalActivities", "totalPurchaseItems"],
+                    required: ["totalWeeks", "bufferWeeks", "totalActivities", "totalPurchaseItems"],
                     additionalProperties: false,
                   },
                   budgetRiskAlerts: {
