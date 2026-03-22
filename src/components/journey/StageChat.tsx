@@ -18,7 +18,7 @@ interface StageChatProps {
 
 export function StageChat({ stageId, projectId, isAdmin }: StageChatProps) {
   const { messages, isLoading, sendMessage } = useStageChat(stageId, projectId);
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [text, setText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
