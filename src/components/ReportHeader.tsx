@@ -163,7 +163,7 @@ const ReportHeader = ({
 
     const completedWeight = activities.reduce((sum, a) => {
       if (a.actualEnd) {
-        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        return sum + (hasWeights ? (a.weight || 0) : 1);
       }
       return sum;
     }, 0);
