@@ -10,29 +10,52 @@ import RisksSection from "./editor/RisksSection";
 import DecisionsSection from "./editor/DecisionsSection";
 import IncidentsSection from "./editor/IncidentsSection";
 import GallerySection from "./editor/GallerySection";
+import { AIReportGenerator } from "./AIReportGenerator";
 
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
+  projectId?: string;
   onAutoSave?: (updatedData: WeeklyReportData) => void | Promise<void>;
   onSaveAndClose?: (updatedData: WeeklyReportData) => void;
   onCancel?: () => void;
   isSaving?: boolean;
 }
 
-const WeeklyReportEditor = ({ data, onAutoSave, onSaveAndClose, onCancel, isSaving: externalIsSaving }: WeeklyReportEditorProps) => {
+const WeeklyReportEditor = ({ data, projectId, onAutoSave, onSaveAndClose, onCancel, isSaving: externalIsSaving }: WeeklyReportEditorProps) => {
   const state = useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSaving });
+
+  const handleAIGenerated = (updatedData: WeeklyReportData) => {
+    state.setFormData(updatedData);
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <EditorHeader
-        weekNumber={state.formData.weekNumber}
-        periodStart={state.formData.periodStart}
-        periodEnd={state.formData.periodEnd}
-        isSaving={state.isSaving}
-        lastSaved={state.lastSaved}
-        onSave={state.handleSave}
-        onCancel={onCancel}
-      />
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <EditorHeader
+            weekNumber={state.formData.weekNumber}
+            periodStart={state.formData.periodStart}
+            periodEnd={state.formData.periodEnd}
+            isSaving={state.isSaving}
+            lastSaved={state.lastSaved}
+            onSave={state.handleSave}
+            onCancel={onCancel}
+          />
+        </div>
+      </div>
+
+      {projectId && (
+        <div className="flex justify-end">
+          <AIReportGenerator
+            projectId={projectId}
+            weekNumber={state.formData.weekNumber}
+            weekStart={state.formData.periodStart}
+            weekEnd={state.formData.periodEnd}
+            currentData={state.formData}
+            onGenerated={handleAIGenerated}
+          />
+        </div>
+      )}
 
       <Accordion type="multiple" defaultValue={["summary", "lookahead"]} className="space-y-2">
         <SummarySection

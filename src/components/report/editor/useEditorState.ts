@@ -200,7 +200,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   return {
-    formData,
+    formData, setFormData,
     richTextOpen, setRichTextOpen,
     isSaving, lastSaved,
     handleSave,
