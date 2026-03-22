@@ -40,7 +40,7 @@ export function FilesCleanupCard() {
     setLastResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('files-cleanup');
+      const { data, error } = await invokeFunction('files-cleanup');
 
       if (error) {
         console.error('[FilesCleanup] Error:', error);
