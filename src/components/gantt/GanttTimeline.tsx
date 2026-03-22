@@ -61,7 +61,7 @@ export function GanttTimeline({
 
   return (
     <div className="flex-1 overflow-x-auto">
-      <div style={{ minWidth: `${chartWidth}%` }} ref={chartRef}>
+      <div style={{ minWidth: `${chartWidth}%` }} ref={chartRef as React.RefObject<HTMLDivElement>}>
         {/* Month headers */}
         <div className="h-8 flex border-b border-border bg-muted/20">
           {months.map((month, idx) => {

@@ -1,3 +1,4 @@
+import { differenceInDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/activityStatus';
 import type { BarStyle, TaskDisplayData, GanttTask } from './types';
 
@@ -35,7 +36,6 @@ export function createGetBarStyle(startDate: Date, totalDays: number) {
       return { left: '0%', width: '0%', isVisible: false };
     }
 
-    const { differenceInDays } = require('date-fns');
     const leftDays = differenceInDays(startD, startDate);
     const widthDays = Math.max(0, differenceInDays(endD, startD) + 1);
 
