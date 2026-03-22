@@ -53,7 +53,7 @@ export default function Demo() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const allWeeklyReports = generateWeeklyReports(
-    demoReportData.startDate, 
+    demoReportData.startDate ?? '', 
     demoReportData.reportDate, 
     demoReportData.activities
   );
