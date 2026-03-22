@@ -51,6 +51,7 @@ import {
 import { useUsers, UserWithRole } from '@/hooks/useUsers';
 import { AppRole } from '@/hooks/useUserRole';
 import { getAccessToken } from '@/infra/edgeFunctions';
+import { projectsRepo } from '@/infra/repositories';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
