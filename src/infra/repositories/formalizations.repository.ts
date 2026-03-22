@@ -17,11 +17,19 @@ import type { Json } from '@/integrations/supabase/types';
 // Types
 // ============================================================================
 
+import type { Database } from '@/integrations/supabase/types';
+
+type FormalizationType = Database['public']['Enums']['formalization_type'];
+type FormalizationStatus = Database['public']['Enums']['formalization_status'];
+type FormalizationEventType = Database['public']['Enums']['formalization_event_type'];
+type PartyType = Database['public']['Enums']['party_type'];
+type EvidenceLinkKind = Database['public']['Enums']['evidence_link_kind'];
+
 export interface CreateFormalizationInput {
   customer_org_id: string;
   created_by: string;
-  type: string;
-  status?: string;
+  type: FormalizationType;
+  status?: FormalizationStatus;
   title: string;
   summary: string;
   body_md: string;
