@@ -23,7 +23,7 @@ const statusVariants: Record<string, string> = {
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
-export function ProjectDashboardCard({ project, onClick }: ProjectDashboardCardProps) {
+export function ProjectDashboardCard({ project, onClick, activities }: ProjectDashboardCardProps) {
   const isActive = project.status === 'active';
   const progress = project.progress_percentage || 0;
 
