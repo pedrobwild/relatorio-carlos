@@ -187,7 +187,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     return dateA.getTime() - dateB.getTime();
   });
 
-  const firstDate = minDate;
+  const firstDate = resolvedMin;
   const lastPlannedDate = activities.reduce((latest, a) => {
     const plannedEnd = parseDate(a.plannedEnd);
     if (plannedEnd && (!latest || plannedEnd > latest)) return plannedEnd;
