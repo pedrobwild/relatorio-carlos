@@ -136,7 +136,7 @@ export const ProjectInfoFields = ({
       date={reportDate}
       onSelect={(d) => d && setReportDate(d)}
       className="md:w-auto"
-      hint="Define até onde a linha "realizado" aparece na Curva S"
+      hint={'Define até onde a linha "realizado" aparece na Curva S'}
     />
   </div>
 );
