@@ -75,7 +75,7 @@ export function MobilizacaoCompletionModal({
       const { project, customer, stages } = await projectsRepo.getProjectWithCustomerAndStages(projectId);
 
       if (project) {
-        const stageMap = new Map(stages.map((s: any) => [s.name.toLowerCase(), s.confirmed_end]));
+        const stageMap = new Map(stages.map((s: { name: string; confirmed_end: string | null }) => [s.name.toLowerCase(), s.confirmed_end]));
 
         const milestoneDates = {
           contract_signing_date: (project as any).contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
