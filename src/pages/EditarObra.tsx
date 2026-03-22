@@ -307,7 +307,7 @@ export default function EditarObra() {
       const { data: customerData } = await supabase
         .from('project_customers')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId!)
         .single();
       
       setCustomer(customerData || null);
