@@ -93,7 +93,7 @@ export async function track(
   const eventData = {
     event,
     timestamp,
-    userId,
+    userId: userId ?? undefined,
     projectId: options.projectId,
     ...payload,
   };
