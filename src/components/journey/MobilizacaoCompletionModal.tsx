@@ -78,7 +78,7 @@ export function MobilizacaoCompletionModal({
         const stageMap = new Map(stages.map((s: { name: string; confirmed_end: string | null }) => [s.name.toLowerCase(), s.confirmed_end]));
 
         const milestoneDates = {
-          contract_signing_date: (project as any).contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
+          contract_signing_date: project.contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
           date_briefing_arch: stageMap.get('briefing arquitetônico') as string | null ?? null,
           date_approval_3d: stageMap.get('projeto 3d') as string | null ?? null,
           date_approval_exec: stageMap.get('projeto executivo') as string | null ?? null,
