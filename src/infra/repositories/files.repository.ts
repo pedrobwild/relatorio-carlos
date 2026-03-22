@@ -422,8 +422,8 @@ export async function findDuplicateByChecksum(
 ): Promise<FileMetadata | null> {
   const { data, error } = await supabase.rpc('find_duplicate_file', {
     p_checksum: checksum,
-    p_owner_id: ownerId ?? null,
-    p_project_id: projectId ?? null,
+    p_owner_id: ownerId,
+    p_project_id: projectId,
   });
 
   if (error || !data || data.length === 0) {

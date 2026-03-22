@@ -132,13 +132,13 @@ export function useDomainEvents(params?: QueryEventsParams) {
     }: LogEventParams) => {
       const { data, error } = await supabase.rpc('log_domain_event', {
         _org_id: orgId,
-        _project_id: (projectId ?? null) as string | null,
+        _project_id: projectId ?? '',
         _entity_type: entityType,
         _entity_id: entityId,
         _event_type: eventType,
         _payload: (payload ?? {}) as Json,
-        _ip_address: null as string | null,
-        _user_agent: (typeof navigator !== 'undefined' ? navigator.userAgent : null) as string | null,
+        _ip_address: undefined,
+        _user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
       });
 
       if (error) throw error;

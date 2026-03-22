@@ -712,7 +712,7 @@ const ReportHeader = ({
                   <div className="flex-1 h-px bg-border mx-2" />
                   <div className="text-right">
                     <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Entrega</span>
-                    <span className="text-sm font-bold tabular-nums text-foreground">{endDate ? formatDateShort(displayEndDate) : '—'}</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{displayEndDate ? formatDateShort(displayEndDate) : '—'}</span>
                   </div>
                 </div>
 
