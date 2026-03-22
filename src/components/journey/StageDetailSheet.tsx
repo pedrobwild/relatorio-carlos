@@ -154,7 +154,14 @@ export function StageDetailSheet({
 
             <Separator />
 
-            {/* ⑤ "Sobre esta etapa" — collapsible */}
+            {/* ④.5 Chat contextual */}
+            <StageChat
+              stageId={stage.id}
+              projectId={projectId}
+              isAdmin={isAdmin}
+            />
+
+            <Separator />
             {!isEditing && stage.description && (
               <Collapsible>
                 <CollapsibleTrigger asChild>
