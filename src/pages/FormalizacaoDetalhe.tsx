@@ -102,9 +102,15 @@ export default function FormalizacaoDetalhe() {
 
   const isDemo = isSeedData(formalizacao);
 
-  const parties = (formalizacao?.parties as Record<string, unknown>[] | null) || [];
-  const acknowledgements = (formalizacao?.acknowledgements as Record<string, unknown>[] | null) || [];
-  const events = (formalizacao?.events as Record<string, unknown>[] | null) || [];
+  interface PartyRow { id: string; user_id: string | null; email: string | null; party_type: string; must_sign: boolean; display_name: string; role_label: string | null; }
+  interface AckRow { id: string; party_id: string; acknowledged: boolean; acknowledged_at: string; acknowledged_by_email: string | null; acknowledged_by_user_id: string | null; signature_hash: string | null; signature_text: string | null; user_agent: string | null; ip_address: string | null; }
+  interface EventRow { id: string; event_type: string; actor_user_id: string | null; meta: Record<string, unknown>; created_at: string; }
+  interface AttachmentRow { id: string; original_filename: string; storage_path: string; mime_type: string; size_bytes: number; created_at: string; }
+  interface EvidenceLinkRow { id: string; kind: string; url: string; description: string | null; created_at: string; }
+
+  const parties = (formalizacao?.parties as unknown as PartyRow[] | null) || [];
+  const acknowledgements = (formalizacao?.acknowledgements as unknown as AckRow[] | null) || [];
+  const events = (formalizacao?.events as unknown as EventRow[] | null) || [];
 
   const isDraft = formalizacao?.status === 'draft';
   const hasParties = parties.length >= 2;
