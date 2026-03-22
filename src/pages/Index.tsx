@@ -326,6 +326,7 @@ const Index = () => {
                                   <WeeklyReportTemplate
                                     data={templateData}
                                     isStaff={isStaff}
+                                    projectId={projectId}
                                     isSaving={isSavingReport && savingWeek === weekNum}
                                     onSaveReport={(updated) => saveWeeklyReport(weekNum, weekStart, weekEnd, updated)}
                                   />
