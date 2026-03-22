@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, ImageIcon, Loader2, Upload, X, Eye, MessageSquareWarning } from 'lucide-react';
 import { use3DVersions, type Version3D } from '@/hooks/use3DVersions';
+import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
