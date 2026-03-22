@@ -578,7 +578,7 @@ export default function EditarObra() {
           amount: parseFloat(newPayment.amount),
           due_date: newPayment.dueDatePending ? null : newPayment.due_date,
           payment_method: newPayment.payment_method || null,
-        } as any)
+        })
         .select()
         .single();
 
