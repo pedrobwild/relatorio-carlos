@@ -15,7 +15,7 @@ import type { Customer, Engineer, AvailableEngineer } from './types';
 interface ProjectMember {
   id: string;
   user_id: string;
-  user_name: string | null;
+  user_name: string | undefined;
   user_email: string;
   role: string;
 }
