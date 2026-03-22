@@ -454,7 +454,7 @@ const WeeklyReportEditor = ({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">Tipo</Label>
-                      <Select value={risk.type} onValueChange={(v) => updateRiskIssue(index, { type: v as any })}>
+                      <Select value={risk.type} onValueChange={(v) => updateRiskIssue(index, { type: v as RiskIssue['type'] })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -467,7 +467,7 @@ const WeeklyReportEditor = ({
                     </div>
                     <div>
                       <Label className="text-xs">Severidade</Label>
-                      <Select value={risk.severity} onValueChange={(v) => updateRiskIssue(index, { severity: v as any })}>
+                      <Select value={risk.severity} onValueChange={(v) => updateRiskIssue(index, { severity: v as RiskIssue['severity'] })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>

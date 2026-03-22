@@ -44,6 +44,8 @@ interface Project {
   name: string;
   unit_name: string | null;
   address: string | null;
+  bairro: string | null;
+  cep: string | null;
   planned_start_date: string | null;
   planned_end_date: string | null;
   actual_start_date: string | null;
@@ -334,11 +336,14 @@ export default function EditarObra() {
         .select('*, profiles:engineer_user_id(display_name, email)')
         .eq('project_id', projectId);
       
-      setEngineers((engineersData || []).map(e => ({
-        ...e,
-        display_name: (e.profiles as any)?.display_name,
-        email: (e.profiles as any)?.email,
-      })));
+      setEngineers((engineersData || []).map(e => {
+        const profiles = (e as Record<string, unknown>).profiles as { display_name: string | null; email: string | null } | null;
+        return {
+          ...e,
+          display_name: profiles?.display_name,
+          email: profiles?.email,
+        };
+      }));
 
       // Fetch available engineers (staff users not already in this project)
       const { data: staffProfiles } = await supabase
@@ -440,8 +445,8 @@ export default function EditarObra() {
           name: project.name,
           unit_name: project.unit_name,
           address: project.address,
-          bairro: (project as any).bairro || null,
-          cep: (project as any).cep || null,
+          bairro: project.bairro || null,
+          cep: project.cep || null,
           planned_start_date: project.planned_start_date || null,
           planned_end_date: project.planned_end_date || null,
           actual_start_date: project.actual_start_date,
@@ -457,7 +462,7 @@ export default function EditarObra() {
           date_official_delivery: project.date_official_delivery || null,
           date_mobilization_start: project.date_mobilization_start || null,
           contract_signing_date: project.contract_signing_date || null,
-        } as any)
+        })
         .eq('id', project.id);
 
       if (error) throw error;
@@ -573,7 +578,7 @@ export default function EditarObra() {
           amount: parseFloat(newPayment.amount),
           due_date: newPayment.dueDatePending ? null : newPayment.due_date,
           payment_method: newPayment.payment_method || null,
-        } as any)
+        })
         .select()
         .single();
 
@@ -795,15 +800,15 @@ export default function EditarObra() {
                   <div>
                     <Label>Bairro</Label>
                     <Input
-                      value={(project as any).bairro || ''}
-                      onChange={(e) => handleProjectChange('bairro' as any, e.target.value || null)}
+                      value={project.bairro || ''}
+                      onChange={(e) => handleProjectChange('bairro', e.target.value || null)}
                     />
                   </div>
                   <div>
                     <Label>CEP</Label>
                     <Input
-                      value={(project as any).cep || ''}
-                      onChange={(e) => handleProjectChange('cep' as any, e.target.value || null)}
+                      value={project.cep || ''}
+                      onChange={(e) => handleProjectChange('cep', e.target.value || null)}
                       placeholder="00000-000"
                     />
                   </div>

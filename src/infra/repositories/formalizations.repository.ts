@@ -17,11 +17,19 @@ import type { Json } from '@/integrations/supabase/types';
 // Types
 // ============================================================================
 
+import type { Database } from '@/integrations/supabase/types';
+
+type FormalizationType = Database['public']['Enums']['formalization_type'];
+type FormalizationStatus = Database['public']['Enums']['formalization_status'];
+type FormalizationEventType = Database['public']['Enums']['formalization_event_type'];
+type PartyType = Database['public']['Enums']['party_type'];
+type EvidenceLinkKind = Database['public']['Enums']['evidence_link_kind'];
+
 export interface CreateFormalizationInput {
   customer_org_id: string;
   created_by: string;
-  type: string;
-  status?: string;
+  type: FormalizationType;
+  status?: FormalizationStatus;
   title: string;
   summary: string;
   body_md: string;
@@ -33,7 +41,7 @@ export interface CreatePartyInput {
   formalization_id: string;
   display_name: string;
   email?: string | null;
-  party_type: string;
+  party_type: PartyType;
   role_label?: string | null;
   must_sign?: boolean;
   user_id?: string | null;
@@ -41,7 +49,7 @@ export interface CreatePartyInput {
 
 export interface CreateEvidenceLinkInput {
   formalization_id: string;
-  kind: string;
+  kind: EvidenceLinkKind;
   url: string;
   description?: string | null;
   created_by: string;
@@ -63,8 +71,8 @@ export async function createFormalization(
       .insert({
         customer_org_id: input.customer_org_id,
         created_by: input.created_by,
-        type: input.type as any,
-        status: (input.status ?? 'draft') as any,
+        type: input.type,
+        status: input.status ?? 'draft',
         title: input.title,
         summary: input.summary,
         body_md: input.body_md,
@@ -90,7 +98,7 @@ export async function addParty(
         formalization_id: input.formalization_id,
         display_name: input.display_name,
         email: input.email ?? null,
-        party_type: input.party_type as any,
+        party_type: input.party_type,
         role_label: input.role_label ?? null,
         must_sign: input.must_sign ?? true,
         user_id: input.user_id ?? null,
@@ -106,7 +114,7 @@ export async function addParty(
  */
 export async function addEvent(
   formalizationId: string,
-  eventType: string,
+  eventType: FormalizationEventType,
   actorUserId: string | null,
   meta: Json = {}
 ): Promise<RepositoryResult<null>> {
@@ -115,7 +123,7 @@ export async function addEvent(
       .from('formalization_events')
       .insert({
         formalization_id: formalizationId,
-        event_type: eventType as any,
+        event_type: eventType,
         actor_user_id: actorUserId,
         meta,
       });
@@ -134,7 +142,7 @@ export async function addEvidenceLink(
       .from('formalization_evidence_links')
       .insert({
         formalization_id: input.formalization_id,
-        kind: input.kind as any,
+        kind: input.kind,
         url: input.url,
         description: input.description ?? null,
         created_by: input.created_by,

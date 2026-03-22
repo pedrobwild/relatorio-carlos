@@ -156,14 +156,14 @@ const ReportHeader = ({
       ? totalWorkingDays
       : (today < end ? calculateWorkingDays(today, end) : 0);
 
-    const hasWeights = activities.some(a => (a as any).weight !== undefined);
+    const hasWeights = activities.some(a => a.weight !== undefined);
     const totalWeight = hasWeights
-      ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+      ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
       : activities.length;
 
     const completedWeight = activities.reduce((sum, a) => {
       if (a.actualEnd) {
-        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        return sum + (hasWeights ? (a.weight || 0) : 1);
       }
       return sum;
     }, 0);
@@ -174,7 +174,7 @@ const ReportHeader = ({
     const plannedWeight = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       if (plannedEnd <= report) {
-        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        return sum + (hasWeights ? (a.weight || 0) : 1);
       }
       return sum;
     }, 0);
@@ -351,9 +351,8 @@ const ReportHeader = ({
                       {clientName && (
                         <p className="text-caption mt-0.5 truncate">Cliente: {clientName}</p>
                       )}
-                      {(() => {
-                        const p = currentProject as any;
-                        const addressParts = [p?.address, p?.bairro, p?.cep].filter(Boolean);
+                       {(() => {
+                         const addressParts = [currentProject?.address, currentProject?.bairro, currentProject?.cep].filter(Boolean);
                         return addressParts.length > 0 ? (
                           <p className="text-xs text-muted-foreground truncate">{addressParts.join(' · ')}</p>
                         ) : null;
@@ -648,9 +647,8 @@ const ReportHeader = ({
                       {clientName && (
                         <p className="text-caption mt-0.5">Cliente: {clientName}</p>
                       )}
-                      {(() => {
-                        const p = currentProject as any;
-                        const addressParts = [p?.address, p?.bairro, p?.cep].filter(Boolean);
+                       {(() => {
+                         const addressParts = [currentProject?.address, currentProject?.bairro, currentProject?.cep].filter(Boolean);
                         return addressParts.length > 0 ? (
                           <p className="text-xs text-muted-foreground truncate">{addressParts.join(' · ')}</p>
                         ) : null;

@@ -130,7 +130,7 @@ export default function FormalizacaoNova() {
         title: formData.title,
         summary: formData.summary,
         body_md: formData.body_md,
-        data: formData.data as any,
+        data: formData.data as import('@/integrations/supabase/types').Json,
         status: 'draft',
         customer_org_id: profile.customer_org_id,
         created_by: user.id,

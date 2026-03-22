@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { logError, logInfo } from './errorLogger';
 
 export interface AuditEntry {
@@ -36,7 +37,7 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
       entidade_id: entry.entityId,
       obra_id: entry.projectId ?? null,
       por_user_id: user.id,
-      diff: diff as any,
+      diff: diff as Json | null,
     }]);
 
     if (error) {

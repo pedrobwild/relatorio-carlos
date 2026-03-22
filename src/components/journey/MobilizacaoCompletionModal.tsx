@@ -75,10 +75,10 @@ export function MobilizacaoCompletionModal({
       const { project, customer, stages } = await projectsRepo.getProjectWithCustomerAndStages(projectId);
 
       if (project) {
-        const stageMap = new Map(stages.map((s: any) => [s.name.toLowerCase(), s.confirmed_end]));
+        const stageMap = new Map(stages.map((s: { name: string; confirmed_end: string | null }) => [s.name.toLowerCase(), s.confirmed_end]));
 
         const milestoneDates = {
-          contract_signing_date: (project as any).contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
+          contract_signing_date: project.contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
           date_briefing_arch: stageMap.get('briefing arquitetônico') as string | null ?? null,
           date_approval_3d: stageMap.get('projeto 3d') as string | null ?? null,
           date_approval_exec: stageMap.get('projeto executivo') as string | null ?? null,
@@ -90,8 +90,8 @@ export function MobilizacaoCompletionModal({
           name: project.name,
           unit_name: project.unit_name,
           address: project.address,
-          bairro: (project as any).bairro,
-          cep: (project as any).cep,
+          bairro: project.bairro,
+          cep: project.cep,
           contract_value: project.contract_value,
           org_id: project.org_id,
           customer_name: customer?.customer_name || '',

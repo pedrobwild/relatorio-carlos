@@ -73,7 +73,7 @@ export function DuplicateProjectModal({
       setAddress(project.address || '');
       setPlannedStartDate(project.planned_start_date || '');
       setPlannedEndDate(project.planned_end_date || '');
-      setIsProjectPhase((project as any).is_project_phase || false);
+      setIsProjectPhase(project.is_project_phase || false);
       setStartDateUndefined(!project.planned_start_date);
       setEndDateUndefined(!project.planned_end_date);
       setCustomerName(project.customer_name || '');

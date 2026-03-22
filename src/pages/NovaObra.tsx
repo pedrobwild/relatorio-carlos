@@ -335,7 +335,7 @@ export default function NovaObra() {
 
         const { error: actError } = await supabase
           .from('project_activities')
-          .insert(rows as any);
+          .insert(rows);
         if (actError) {
           console.error('Activities creation error:', actError);
         }

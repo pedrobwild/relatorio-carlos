@@ -2,6 +2,23 @@ import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Maximize, Minimize, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Vendor-prefixed fullscreen APIs (Safari, older IE/Edge)
+interface VendorDocument {
+  webkitFullscreenElement?: Element | null;
+  msFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+  msExitFullscreen?: () => Promise<void>;
+}
+
+interface VendorHTMLElement {
+  webkitRequestFullscreen?: () => Promise<void>;
+  msRequestFullscreen?: () => Promise<void>;
+}
+
+interface VendorVideoElement {
+  webkitEnterFullscreen?: () => void;
+}
+
 interface VideoPlayerProps {
   src: string;
   title?: string;
@@ -57,28 +74,27 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
         // Try container fullscreen first (for custom controls)
         if (container.requestFullscreen) {
           await container.requestFullscreen();
-        } else if ((container as any).webkitRequestFullscreen) {
-          await (container as any).webkitRequestFullscreen();
-        } else if ((container as any).msRequestFullscreen) {
-          await (container as any).msRequestFullscreen();
-        } else if (video && (video as any).webkitEnterFullscreen) {
-          // iOS Safari fallback - uses native video fullscreen
-          (video as any).webkitEnterFullscreen();
+        } else if ((container as unknown as VendorHTMLElement).webkitRequestFullscreen) {
+          await (container as unknown as VendorHTMLElement).webkitRequestFullscreen!();
+        } else if ((container as unknown as VendorHTMLElement).msRequestFullscreen) {
+          await (container as unknown as VendorHTMLElement).msRequestFullscreen!();
+        } else if (video && (video as unknown as VendorVideoElement).webkitEnterFullscreen) {
+          (video as unknown as VendorVideoElement).webkitEnterFullscreen!();
         }
       } else {
+        const doc = document as Document & VendorDocument;
         if (document.exitFullscreen) {
           await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen();
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen();
+        } else if (doc.msExitFullscreen) {
+          await doc.msExitFullscreen();
         }
       }
     } catch (error) {
       console.log("Fullscreen not supported or blocked:", error);
-      // Fallback: try native video fullscreen
-      if (video && (video as any).webkitEnterFullscreen) {
-        (video as any).webkitEnterFullscreen();
+      if (video && (video as unknown as VendorVideoElement).webkitEnterFullscreen) {
+        (video as unknown as VendorVideoElement).webkitEnterFullscreen!();
       }
     }
   };
@@ -141,10 +157,11 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
     };
 
     const handleFullscreenChange = () => {
+      const doc = document as Document & VendorDocument;
       const isFs = !!(
         document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).msFullscreenElement
+        doc.webkitFullscreenElement ||
+        doc.msFullscreenElement
       );
       setIsFullscreen(isFs);
     };

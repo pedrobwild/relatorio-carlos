@@ -30,11 +30,11 @@ export function BudgetItemSwapForm({ onComplete, initialData }: BudgetItemSwapFo
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      removedItemName: (initialData?.data?.removed_item as any)?.name || '',
-      removedItemValue: (initialData?.data?.removed_item as any)?.value || 0,
+      removedItemName: ((initialData?.data?.removed_item as Record<string, unknown> | undefined)?.name as string) || '',
+      removedItemValue: ((initialData?.data?.removed_item as Record<string, unknown> | undefined)?.value as number) || 0,
       reason: (initialData?.data?.reason as string) || '',
-      newItemName: (initialData?.data?.added_item as any)?.name || '',
-      newItemValue: (initialData?.data?.added_item as any)?.value || 0,
+      newItemName: ((initialData?.data?.added_item as Record<string, unknown> | undefined)?.name as string) || '',
+      newItemValue: ((initialData?.data?.added_item as Record<string, unknown> | undefined)?.value as number) || 0,
       impactOnSchedule: 'no',
       observations: '',
     },

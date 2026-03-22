@@ -102,16 +102,16 @@ export function ProgressSection({
     const start = new Date(projectStartDate + "T00:00:00");
     if (now < start) return null;
 
-    const hasWeights = activities.some(a => (a as any).weight !== undefined);
+    const hasWeights = activities.some(a => a.weight !== undefined);
     const totalWeight = hasWeights
-      ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+      ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
       : activities.length;
     if (totalWeight === 0) return null;
 
     const plannedWeightByNow = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       if (plannedEnd <= now) {
-        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        return sum + (hasWeights ? (a.weight || 0) : 1);
       }
       return sum;
     }, 0);

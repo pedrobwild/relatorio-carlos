@@ -118,11 +118,11 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     : new Date();
 
   // Check if any activity has weight defined
-  const hasWeights = activities.some(a => (a as any).weight !== undefined);
+  const hasWeights = activities.some(a => a.weight !== undefined);
   
   // Calculate total weight (should be 100, but normalize if not)
   const totalWeight = hasWeights 
-    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
     : activities.length;
 
   // Find project date range
@@ -215,7 +215,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     });
   
   for (const activity of sortedActivitiesByPlannedEnd) {
-    cumulativeWeight += hasWeights ? ((activity as any).weight || 0) : 1;
+    cumulativeWeight += hasWeights ? (activity.weight || 0) : 1;
     if ((cumulativeWeight / totalWeight) >= 0.5) {
       const plannedEnd = parseDate(activity.plannedEnd);
       if (plannedEnd && firstDate) {
@@ -246,7 +246,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     const plannedProgress = activities.reduce((sum, a) => {
       const plannedEnd = parseDate(a.plannedEnd);
       if (plannedEnd && plannedEnd <= currentDate) {
-        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        return sum + (hasWeights ? (a.weight || 0) : 1);
       }
       return sum;
     }, 0);
@@ -263,7 +263,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       const actualSum = activities.reduce((sum, a) => {
         const actualEnd = parseDate(a.actualEnd);
         if (actualEnd && actualEnd <= currentDate) {
-          return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+          return sum + (hasWeights ? (a.weight || 0) : 1);
         }
         return sum;
       }, 0);
@@ -425,7 +425,7 @@ const SCurveChart = ({
   // Use unified progress calculation (same as header and card)
   const todayRealizado = useMemo(() => {
     return calcWeightedProgress(
-      activities.map(a => ({ weight: (a as any).weight, actualEnd: a.actualEnd }))
+      activities.map(a => ({ weight: a.weight, actualEnd: a.actualEnd }))
     );
   }, [activities]);
 

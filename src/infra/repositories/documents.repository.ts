@@ -286,7 +286,7 @@ export async function deleteDocument(
       .maybeSingle();
 
     if (fetchError) return { data: null, error: fetchError };
-    if (!doc) return { data: null, error: { message: 'Documento não encontrado', details: '', hint: '', code: 'NOT_FOUND' } as any };
+    if (!doc) return { data: null, error: { message: 'Documento não encontrado', details: '', hint: '', code: 'NOT_FOUND' } as unknown as import('@supabase/supabase-js').PostgrestError };
 
     // Delete from storage (ignore errors — file may already be gone)
     try {

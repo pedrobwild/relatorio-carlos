@@ -12,6 +12,7 @@ import {
   type RepositoryResult,
   type RepositoryListResult,
 } from './base.repository';
+import type { Database } from '@/integrations/supabase/types';
 
 // ============================================================================
 // Types
@@ -24,6 +25,8 @@ export interface Project {
   name: string;
   unit_name: string | null;
   address: string | null;
+  bairro: string | null;
+  cep: string | null;
   planned_start_date: string | null;
   planned_end_date: string | null;
   actual_start_date: string | null;
@@ -35,6 +38,7 @@ export interface Project {
   updated_at: string;
   org_id: string | null;
   is_project_phase?: boolean;
+  contract_signing_date?: string | null;
 }
 
 export interface ProjectWithCustomer extends Project {
@@ -323,7 +327,7 @@ export async function cloneProjectForConstruction(
     // 1. Create project
     const { data: newProject, error: projectError } = await supabase
       .from('projects')
-      .insert(newProjectData as any)
+      .insert(newProjectData as Database['public']['Tables']['projects']['Insert'])
       .select()
       .single();
 
