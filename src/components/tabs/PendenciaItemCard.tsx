@@ -63,22 +63,8 @@ const formatDate = (dateStr: string) => {
   return format(parseISO(dateStr), "dd/MM", { locale: ptBR });
 };
 
-// ---- types ----
-
-interface PendenciaItem {
-  id: string;
-  type: PendingType;
-  title: string;
-  description: string;
-  dueDate: string;
-  amount?: number;
-  options?: string[];
-  impact?: string;
-  actionUrl?: string;
-}
-
 interface PendenciaItemCardProps {
-  item: PendenciaItem;
+  item: PendingItem;
   index: number;
   actionUrl: string;
   compact?: boolean;
