@@ -1,4 +1,5 @@
 import { lazy, Suspense, useRef, useCallback, useMemo, useState, useEffect } from 'react';
+import { ActivityTimelineCompact } from '@/components/ActivityTimeline';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -167,6 +168,10 @@ export function JornadaTabContent({
               <div>
                 <h2 className="text-sm font-medium text-muted-foreground mb-4">{journeyCopy.page.sidebarTitle}</h2>
                 <JourneyTimeline stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
+              </div>
+              <div>
+                <h2 className="text-sm font-medium text-muted-foreground mb-3">Atividade Recente</h2>
+                <ActivityTimelineCompact projectId={projectId} maxItems={5} />
               </div>
             </div>
           </aside>
