@@ -26,7 +26,8 @@ import {
   getFileTypeLabel,
   isImageFile,
 } from '@/lib/formalizationStorage';
-import { supabase } from '@/integrations/supabase/client';
+import { formalizationsRepo } from '@/infra/repositories';
+import { getAccessToken } from '@/infra/edgeFunctions';
 import { useQueryClient } from '@tanstack/react-query';
 import { EVIDENCE_LINK_KIND_LABELS, type EvidenceLinkKind } from '@/types/formalization';
 
