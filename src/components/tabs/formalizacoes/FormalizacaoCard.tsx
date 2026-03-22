@@ -50,7 +50,7 @@ export function FormalizacaoCard({ formalizacao, basePath, index = 0, showStatus
     >
       <Card className="h-full group-hover:border-primary/50 group-hover:shadow-sm transition-all duration-200 overflow-hidden">
         <CardContent className="p-0">
-          <div className={`h-1 ${statusColorMap[formalizacao.status] || 'bg-muted'}`} />
+          <div className={`h-1 ${(formalizacao.status && statusColorMap[formalizacao.status]) || 'bg-muted'}`} />
 
           <div className="p-4">
             <div className="flex items-center justify-between gap-2 mb-2">
