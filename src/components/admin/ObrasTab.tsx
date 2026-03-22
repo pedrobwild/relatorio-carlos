@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/table';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import type { ProjectWithCustomer } from '@/infra/repositories';
-import { supabase } from '@/integrations/supabase/client';
+import { projectsRepo } from '@/infra/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';

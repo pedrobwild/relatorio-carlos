@@ -50,7 +50,7 @@ import {
 } from '@/components/ui/table';
 import { useUsers, UserWithRole } from '@/hooks/useUsers';
 import { AppRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
+import { getAccessToken } from '@/infra/edgeFunctions';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
-import { supabase } from '@/integrations/supabase/client';
+import { getAccessToken } from '@/infra/edgeFunctions';
 
 const AREAS = [
   { value: 'jornada', label: 'Jornada do Projeto', description: 'Timeline, etapas, checklist do cliente' },

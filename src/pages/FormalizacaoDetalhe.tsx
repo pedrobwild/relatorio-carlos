@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useFormalizacao, useAcknowledge, useSendForSignature, useDeleteFormalizacao, useUpdateFormalizacao } from '@/hooks/useFormalizacoes';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/infra/edgeFunctions';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
 import ReactMarkdown from 'react-markdown';
 import DOMPurify from 'dompurify';

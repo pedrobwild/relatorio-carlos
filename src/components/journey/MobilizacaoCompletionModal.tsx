@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { projectsRepo } from '@/infra/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompleteStage } from '@/hooks/useProjectJourney';
 import { addBusinessDays } from '@/lib/businessDays';
