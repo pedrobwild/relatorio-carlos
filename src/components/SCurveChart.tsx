@@ -263,7 +263,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       const actualSum = activities.reduce((sum, a) => {
         const actualEnd = parseDate(a.actualEnd);
         if (actualEnd && actualEnd <= currentDate) {
-          return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+          return sum + (hasWeights ? (a.weight || 0) : 1);
         }
         return sum;
       }, 0);
