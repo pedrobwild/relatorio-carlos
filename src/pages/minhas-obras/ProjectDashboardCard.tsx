@@ -78,6 +78,10 @@ export function ProjectDashboardCard({ project, onClick, activities }: ProjectDa
         {/* Row 2: Progress bar (only for active non-project-phase) */}
         {isActive && (
           <div className="space-y-1.5">
+            {/* S-Curve Sparkline */}
+            {activities && activities.length > 0 && (
+              <SCurveSparkline activities={activities} height={44} />
+            )}
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500"
