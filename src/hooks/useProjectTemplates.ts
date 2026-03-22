@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface TemplateActivity {
   description: string;
@@ -51,7 +52,7 @@ interface CreateTemplateInput {
   name: string;
   description?: string;
   is_project_phase: boolean;
-  default_activities?: any[];
+  default_activities?: TemplateActivity[];
   default_contract_value?: number | null;
   category?: string;
   custom_fields?: TemplateCustomField[];
@@ -98,11 +99,11 @@ export function useRestoreTemplateVersion() {
           name: version.name,
           description: version.description,
           is_project_phase: version.is_project_phase,
-          default_activities: version.default_activities,
+          default_activities: (version.default_activities ?? []) as unknown as Json,
           default_contract_value: version.default_contract_value,
           category: version.category,
-          custom_fields: version.custom_fields,
-        } as any)
+          custom_fields: (version.custom_fields ?? []) as unknown as Json,
+        })
         .eq('id', templateId)
         .select()
         .single();
@@ -125,11 +126,15 @@ export function useCreateProjectTemplate() {
       const { data, error } = await supabase
         .from('project_templates')
         .insert({
-          ...input,
-          default_activities: input.default_activities ?? [],
-          custom_fields: input.custom_fields ?? [],
+          name: input.name,
+          description: input.description ?? null,
+          is_project_phase: input.is_project_phase,
+          default_activities: (input.default_activities ?? []) as unknown as Json,
+          default_contract_value: input.default_contract_value ?? null,
+          category: input.category ?? null,
+          custom_fields: (input.custom_fields ?? []) as unknown as Json,
           created_by: user.id,
-        } as any)
+        })
         .select()
         .single();
       if (error) throw error;
@@ -143,9 +148,18 @@ export function useUpdateProjectTemplate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...input }: Partial<CreateTemplateInput> & { id: string }) => {
+      const updateData: Record<string, unknown> = {};
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.description !== undefined) updateData.description = input.description;
+      if (input.is_project_phase !== undefined) updateData.is_project_phase = input.is_project_phase;
+      if (input.default_activities !== undefined) updateData.default_activities = input.default_activities as unknown as Json;
+      if (input.default_contract_value !== undefined) updateData.default_contract_value = input.default_contract_value;
+      if (input.category !== undefined) updateData.category = input.category;
+      if (input.custom_fields !== undefined) updateData.custom_fields = input.custom_fields as unknown as Json;
+
       const { data, error } = await supabase
         .from('project_templates')
-        .update(input as any)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();

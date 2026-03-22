@@ -52,10 +52,10 @@ export function useFormalizacoes(filters?: {
         .order('last_activity_at', { ascending: false });
 
       if (filters?.status) {
-        query = query.eq('status', filters.status as any);
+        query = query.eq('status', filters.status);
       }
       if (filters?.type) {
-        query = query.eq('type', filters.type as any);
+        query = query.eq('type', filters.type);
       }
       if (filters?.projectId) {
         query = query.eq('project_id', filters.projectId);

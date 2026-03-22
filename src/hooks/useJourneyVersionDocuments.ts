@@ -103,7 +103,7 @@ export function useJourneyVersionDocuments(projectId: string | undefined) {
           virtualDocs.push({
             id: `journey-${file.id}`,
             project_id: projectId,
-            document_type: category as any,
+            document_type: category,
             name: fileName,
             description: `Versão final aprovada na Jornada do Projeto`,
             storage_path: file.storage_path,
@@ -111,7 +111,7 @@ export function useJourneyVersionDocuments(projectId: string | undefined) {
             mime_type: isPdf ? 'application/pdf' : 'image/png',
             size_bytes: null,
             version: version.version_number,
-            status: 'approved' as any,
+            status: 'approved',
             uploaded_by: version.created_by,
             approved_at: version.created_at,
             approved_by: null,

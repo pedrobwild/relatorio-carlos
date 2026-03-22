@@ -24,12 +24,12 @@ export function useStageRecords(stageId: string | undefined, projectId: string |
     queryKey: ['stage-records', stageId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('journey_stage_records' as any)
+        .from('journey_stage_records')
         .select('*')
         .eq('stage_id', stageId!)
         .order('record_date', { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as StageRecord[];
+      return (data || []) as StageRecord[];
     },
     enabled: !!stageId && !!projectId,
     retry: 2,
@@ -52,8 +52,18 @@ export function useCreateStageRecord() {
       created_by: string;
     }) => {
       const { error } = await supabase
-        .from('journey_stage_records' as any)
-        .insert(input as any);
+        .from('journey_stage_records')
+        .insert({
+          stage_id: input.stage_id,
+          project_id: input.project_id,
+          category: input.category,
+          title: input.title,
+          description: input.description ?? null,
+          record_date: input.record_date ?? new Date().toISOString().split('T')[0],
+          responsible: input.responsible ?? 'bwild',
+          evidence_url: input.evidence_url ?? null,
+          created_by: input.created_by,
+        });
       if (error) throw error;
       return { stageId: input.stage_id };
     },
@@ -73,7 +83,7 @@ export function useDeleteStageRecord() {
   return useMutation({
     mutationFn: async ({ id, stageId }: { id: string; stageId: string }) => {
       const { error } = await supabase
-        .from('journey_stage_records' as any)
+        .from('journey_stage_records')
         .delete()
         .eq('id', id);
       if (error) throw error;

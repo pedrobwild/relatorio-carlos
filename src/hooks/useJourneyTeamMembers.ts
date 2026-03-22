@@ -51,7 +51,7 @@ export function useJourneyTeamMembers(projectId: string | undefined, stageContex
         .order('sort_order', { ascending: false })
         .limit(1);
 
-      const sortOrder = existing && existing.length > 0 ? (existing[0] as any).sort_order + 1 : 0;
+      const sortOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
 
       const { data, error } = await supabase
         .from('journey_team_members')

@@ -66,7 +66,7 @@ export function useProjectPermissions(projectId: string | undefined) {
   );
 
   const check = useCallback(
-    (permission: string) => checkPermission(ctx, permission as any),
+    (permission: string) => checkPermission(ctx, permission),
     [ctx],
   );
 
