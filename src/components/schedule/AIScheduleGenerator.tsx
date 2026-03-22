@@ -277,7 +277,7 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
               /* Results */
               <div className="flex flex-col h-full overflow-hidden">
                 {/* Summary cards */}
-                <div className="grid grid-cols-3 gap-3 py-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3">
                   <Card className="p-3">
                     <div className="text-2xl font-bold text-primary">{plan.summary.totalWeeks}</div>
                     <p className="text-xs text-muted-foreground">Semanas</p>
@@ -290,7 +290,19 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
                     <div className="text-2xl font-bold text-primary">{plan.summary.totalPurchaseItems}</div>
                     <p className="text-xs text-muted-foreground">Itens de Compra</p>
                   </Card>
+                  {plan.summary.bufferWeeks != null && (
+                    <Card className="p-3">
+                      <div className="text-2xl font-bold text-amber-600">{plan.summary.bufferWeeks}</div>
+                      <p className="text-xs text-muted-foreground">Buffer</p>
+                    </Card>
+                  )}
                 </div>
+
+                {plan.summary.budgetConcentration && (
+                  <div className="px-3 py-2 rounded-md bg-muted/50 text-xs text-muted-foreground mb-3">
+                    <span className="font-medium text-foreground">Concentração orçamentária:</span> {plan.summary.budgetConcentration}
+                  </div>
+                )}
 
                 {/* Tab toggle */}
                 <div className="flex gap-1 bg-muted rounded-lg p-1 mb-3">
@@ -306,6 +318,15 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
                   >
                     <ShoppingCart className="h-3.5 w-3.5" /> Compras
                   </button>
+                  {plan.budgetRiskAlerts && plan.budgetRiskAlerts.length > 0 && (
+                    <button
+                      className={cn('flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors', activeTab === 'alerts' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+                      onClick={() => setActiveTab('alerts')}
+                    >
+                      <AlertTriangle className="h-3.5 w-3.5" /> Alertas
+                      <Badge variant="destructive" className="text-[10px] h-4 px-1.5">{plan.budgetRiskAlerts.length}</Badge>
+                    </button>
+                  )}
                 </div>
 
                 <ScrollArea className="flex-1 pr-2">
@@ -315,7 +336,7 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
                         <WeekCard key={week.week} week={week} />
                       ))}
                     </div>
-                  ) : (
+                  ) : activeTab === 'purchases' ? (
                     <div className="space-y-2 pb-4">
                       {plan.purchaseList.map((purchase, i) => (
                         <div key={i} className="flex items-start gap-3 p-3 rounded-lg border bg-card text-sm">
