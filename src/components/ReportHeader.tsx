@@ -174,7 +174,7 @@ const ReportHeader = ({
     const plannedWeight = activities.reduce((sum, a) => {
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
       if (plannedEnd <= report) {
-        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        return sum + (hasWeights ? (a.weight || 0) : 1);
       }
       return sum;
     }, 0);
