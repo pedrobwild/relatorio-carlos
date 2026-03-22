@@ -27,7 +27,7 @@ interface GanttTimelineProps {
   onActivitySelect?: (activityId: string | null) => void;
   dragState: DragState | null;
   onDragStart: (e: React.MouseEvent, index: number, dragType: DragState['dragType']) => void;
-  chartRef: RefObject<HTMLDivElement | null>;
+  chartRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export function GanttTimeline({
