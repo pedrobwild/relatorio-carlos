@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, GripVertical, Save, Loader2, AlertCircle, Link2, Upload, Bookmark, ShoppingCart } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Loader2, AlertCircle, Link2, Upload, Bookmark, ShoppingCart, Wand2 } from 'lucide-react';
+import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -275,6 +276,7 @@ const Cronograma = () => {
         ]}
       >
         <div className="flex items-center gap-2 flex-wrap">
+          <AIScheduleGenerator projectId={projectId || ''} projectName={project?.name || 'Obra'} />
           <Link to={paths.compras}>
             <Button variant="outline" size="sm" className="text-xs">
               <ShoppingCart className="w-4 h-4 mr-1.5" />
