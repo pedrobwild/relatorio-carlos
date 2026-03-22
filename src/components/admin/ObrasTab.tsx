@@ -440,10 +440,7 @@ export function ObrasTab() {
 
   const handleDelete = async (projectId: string) => {
     try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId);
+      const { error } = await projectsRepo.deleteProject(projectId);
 
       if (error) throw error;
 

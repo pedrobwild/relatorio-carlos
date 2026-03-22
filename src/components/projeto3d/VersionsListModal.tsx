@@ -81,20 +81,10 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
   }, [selectedFiles, createVersion]);
 
   const handleRequestRevision = useCallback(async () => {
-    if (!revisionTarget) return;
+    if (!revisionTarget || !user) return;
     setIsRequesting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
-
-      const { error } = await supabase
-        .from('project_3d_versions')
-        .update({
-          revision_requested_at: new Date().toISOString(),
-          revision_requested_by: user.id,
-        })
-        .eq('id', revisionTarget);
-
+      const { error } = await requestRevision(revisionTarget, user.id);
       if (error) throw error;
       toast.success('Solicitação de revisão enviada');
       refetch();
@@ -104,7 +94,7 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
       setIsRequesting(false);
       setRevisionTarget(null);
     }
-  }, [revisionTarget, refetch]);
+  }, [revisionTarget, user, refetch]);
 
   return (
     <>
