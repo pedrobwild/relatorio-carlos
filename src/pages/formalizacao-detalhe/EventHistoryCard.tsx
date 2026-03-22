@@ -33,10 +33,10 @@ export function EventHistoryCard({ events }: EventHistoryCardProps) {
                     <p className="text-xs text-muted-foreground mt-1">{formatDate(event.created_at)}</p>
                     {event.event_type === 'signed_by_party' && event.meta && (
                       <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                        {event.meta.email && <p>E-mail: {String(event.meta.email)}</p>}
-                        {event.meta.ip_address && <p>IP: {String(event.meta.ip_address)}</p>}
-                        {event.meta.signature_hash && (
-                          <p className="font-mono text-[10px] mt-1 break-all">Hash: {String(event.meta.signature_hash)}</p>
+                        {(event.meta as any).email && <p>E-mail: {String((event.meta as any).email)}</p>}
+                        {(event.meta as any).ip_address && <p>IP: {String((event.meta as any).ip_address)}</p>}
+                        {(event.meta as any).signature_hash && (
+                          <p className="font-mono text-[10px] mt-1 break-all">Hash: {String((event.meta as any).signature_hash)}</p>
                         )}
                       </div>
                     )}
