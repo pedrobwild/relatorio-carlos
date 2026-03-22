@@ -128,7 +128,7 @@ export function useProjectPortal() {
   const milestoneDates = useMemo(() => {
     if (!project) return undefined;
     // Access milestone date columns that exist on the projects table but aren't in the base TS type
-    const p = project as Record<string, unknown>;
+    const p = project as unknown as Record<string, unknown>;
     return {
       dateBriefingArch: (p.date_briefing_arch as string) ?? null,
       dateApproval3d: (p.date_approval_3d as string) ?? null,
