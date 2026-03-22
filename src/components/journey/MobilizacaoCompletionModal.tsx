@@ -72,36 +72,28 @@ export function MobilizacaoCompletionModal({
     setPlannedStartDate(formatDateForInput(defaultDate));
 
     (async () => {
-      const [projectRes, customerRes, stagesRes] = await Promise.all([
-        supabase.from('projects').select('*').eq('id', projectId).single(),
-        supabase.from('project_customers').select('*').eq('project_id', projectId).limit(1),
-        supabase.from('journey_stages').select('name, confirmed_end, sort_order').eq('project_id', projectId).order('sort_order'),
-      ]);
+      const { project, customer, stages } = await projectsRepo.getProjectWithCustomerAndStages(projectId);
 
-      if (projectRes.data) {
-        const customer = customerRes.data?.[0];
-
-        // Map journey stage completion dates to project milestone columns
-        const stages = stagesRes.data ?? [];
-        const stageMap = new Map(stages.map(s => [s.name.toLowerCase(), s.confirmed_end]));
+      if (project) {
+        const stageMap = new Map(stages.map((s: any) => [s.name.toLowerCase(), s.confirmed_end]));
 
         const milestoneDates = {
-          contract_signing_date: projectRes.data.contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
-          date_briefing_arch: stageMap.get('briefing arquitetônico') ?? null,
-          date_approval_3d: stageMap.get('projeto 3d') ?? null,
-          date_approval_exec: stageMap.get('projeto executivo') ?? null,
-          date_approval_obra: stageMap.get('liberação da obra') ?? null,
-          date_mobilization_start: stageMap.get('mobilização') ?? null,
+          contract_signing_date: (project as any).contract_signing_date ?? stageMap.get('boas-vindas') ?? null,
+          date_briefing_arch: stageMap.get('briefing arquitetônico') as string | null ?? null,
+          date_approval_3d: stageMap.get('projeto 3d') as string | null ?? null,
+          date_approval_exec: stageMap.get('projeto executivo') as string | null ?? null,
+          date_approval_obra: stageMap.get('liberação da obra') as string | null ?? null,
+          date_mobilization_start: stageMap.get('mobilização') as string | null ?? null,
         };
 
         setProjectData({
-          name: projectRes.data.name,
-          unit_name: projectRes.data.unit_name,
-          address: projectRes.data.address,
-          bairro: (projectRes.data as any).bairro,
-          cep: (projectRes.data as any).cep,
-          contract_value: projectRes.data.contract_value,
-          org_id: projectRes.data.org_id,
+          name: project.name,
+          unit_name: project.unit_name,
+          address: project.address,
+          bairro: (project as any).bairro,
+          cep: (project as any).cep,
+          contract_value: project.contract_value,
+          org_id: project.org_id,
           customer_name: customer?.customer_name || '',
           customer_email: customer?.customer_email || '',
           customer_phone: customer?.customer_phone || null,
