@@ -215,7 +215,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     });
   
   for (const activity of sortedActivitiesByPlannedEnd) {
-    cumulativeWeight += hasWeights ? ((activity as any).weight || 0) : 1;
+    cumulativeWeight += hasWeights ? (activity.weight || 0) : 1;
     if ((cumulativeWeight / totalWeight) >= 0.5) {
       const plannedEnd = parseDate(activity.plannedEnd);
       if (plannedEnd && firstDate) {
