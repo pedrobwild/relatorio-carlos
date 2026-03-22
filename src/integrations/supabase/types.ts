@@ -1160,6 +1160,61 @@ export type Database = {
           },
         ]
       }
+      journey_stage_messages: {
+        Row: {
+          author_id: string
+          author_name: string
+          author_role: string
+          created_at: string
+          id: string
+          message: string
+          project_id: string
+          stage_id: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          message: string
+          project_id: string
+          stage_id: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          message?: string
+          project_id?: string
+          stage_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_stage_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "journey_stage_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_stage_messages_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "journey_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journey_stage_records: {
         Row: {
           category: string

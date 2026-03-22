@@ -36,6 +36,7 @@ import { StageChecklist } from './StageChecklist';
 import { StageDatesPanel } from './StageDatesPanel';
 import { MeetingCTA } from './MeetingCTA';
 import { StageRegistry } from './StageRegistry';
+import { StageChat } from './StageChat';
 
 interface StageDetailSheetProps {
   stage: JourneyStage | null;
@@ -153,7 +154,14 @@ export function StageDetailSheet({
 
             <Separator />
 
-            {/* ⑤ "Sobre esta etapa" — collapsible */}
+            {/* ④.5 Chat contextual */}
+            <StageChat
+              stageId={stage.id}
+              projectId={projectId}
+              isAdmin={isAdmin}
+            />
+
+            <Separator />
             {!isEditing && stage.description && (
               <Collapsible>
                 <CollapsibleTrigger asChild>
