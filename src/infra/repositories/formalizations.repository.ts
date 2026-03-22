@@ -98,7 +98,7 @@ export async function addParty(
         formalization_id: input.formalization_id,
         display_name: input.display_name,
         email: input.email ?? null,
-        party_type: input.party_type as any,
+        party_type: input.party_type,
         role_label: input.role_label ?? null,
         must_sign: input.must_sign ?? true,
         user_id: input.user_id ?? null,
