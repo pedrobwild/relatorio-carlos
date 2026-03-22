@@ -16,6 +16,8 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 export default function MinhasObras() {
   const navigate = useNavigate();
   const { projects, stats, upcomingPayments, isLoading, error } = useClientDashboard();
+  const activeIds = useMemo(() => projects.filter(p => p.status === 'active').map(p => p.id), [projects]);
+  const { data: activitiesMap } = useDashboardActivities(activeIds);
 
   const handleProjectClick = useCallback((project: ProjectSummary) => {
     sessionStorage.setItem('selectedProjectId', project.id);
