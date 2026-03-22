@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeFunctionRaw } from "@/infra/edgeFunctions";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { DOCUMENT_CATEGORIES, DocumentCategory } from "@/hooks/useDocuments";
@@ -153,12 +153,6 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
     setUploading(true);
 
     try {
-      // Get auth session for authorization header
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Sessão expirada. Faça login novamente.');
-      }
-
       // Create form data for edge function
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
@@ -170,16 +164,10 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
       }
 
       // Upload via edge function (computes SHA256 checksum server-side)
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/document-upload`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: uploadFormData,
-        }
-      );
+      const response = await invokeFunctionRaw('document-upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
 
       const result = await response.json();
 

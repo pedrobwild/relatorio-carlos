@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/integrations/supabase/client';
+import { journeyRepo } from '@/infra/repositories';
 import { toast } from 'sonner';
 import defaultCsmPhoto from '@/assets/csm-victorya.png';
 
@@ -40,16 +40,13 @@ export function JourneyCSMSection({ csm, projectId, isAdmin, onUpdate }: Journey
 
   const handleSave = async () => {
     try {
-      const { error } = await supabase
-        .from('journey_csm')
-        .update({
-          name: formData.name,
-          role_title: formData.role_title,
-          description: formData.description,
-          email: formData.email || null,
-          phone: formData.phone || null,
-        })
-        .eq('id', csm.id);
+      const { error } = await journeyRepo.updateCSM(csm.id, {
+        name: formData.name,
+        role_title: formData.role_title,
+        description: formData.description,
+        email: formData.email || null,
+        phone: formData.phone || null,
+      });
 
       if (error) throw error;
       toast.success('Informações atualizadas');
@@ -88,24 +85,10 @@ export function JourneyCSMSection({ csm, projectId, isAdmin, onUpdate }: Journey
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `csm-photos/${projectId}/${Date.now()}.${fileExt}`;
+      const photoUrl = await journeyRepo.uploadCSMPhoto(projectId, file);
+      if (!photoUrl) throw new Error('Upload failed');
 
-      const { error: uploadError } = await supabase.storage
-        .from('project-documents')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('project-documents')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('journey_csm')
-        .update({ photo_url: publicUrl })
-        .eq('id', csm.id);
-
+      const { error: updateError } = await journeyRepo.updateCSMPhoto(csm.id, photoUrl);
       if (updateError) throw updateError;
 
       toast.success('Foto atualizada');

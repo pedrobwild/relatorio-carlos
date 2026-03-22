@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeFunctionRaw } from "@/infra/edgeFunctions";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import type { ProjectDocument } from "@/hooks/useDocuments";
@@ -61,11 +61,6 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
     setUploading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Sessão expirada. Faça login novamente.');
-      }
-
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
       uploadFormData.append('parentDocumentId', document.id);
@@ -73,16 +68,10 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
         uploadFormData.append('changeNotes', changeNotes.trim());
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/document-version-upload`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: uploadFormData,
-        }
-      );
+      const response = await invokeFunctionRaw('document-version-upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
 
       const result = await response.json();
 

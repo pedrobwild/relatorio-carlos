@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { journeyRepo } from '@/infra/repositories';
 import { calcWeightedProgress } from '@/lib/progressCalc';
 
 type ProjectData = ProjectWithCustomer & { is_project_phase?: boolean };
@@ -30,18 +30,7 @@ function safeFormat(dateStr: string | null | undefined, fmt = 'dd/MM/yy'): strin
 function useCurrentJourneyStage(projectId: string, enabled: boolean) {
   return useQuery({
     queryKey: ['project-current-stage', projectId],
-    queryFn: async () => {
-      // Get the first non-completed stage (current stage)
-      const { data } = await supabase
-        .from('journey_stages')
-        .select('name, status')
-        .eq('project_id', projectId)
-        .order('sort_order', { ascending: true });
-
-      if (!data || data.length === 0) return null;
-      const current = data.find(s => s.status !== 'completed');
-      return current?.name ?? data[data.length - 1]?.name ?? null;
-    },
+    queryFn: () => journeyRepo.getCurrentStageName(projectId),
     enabled,
     staleTime: 5 * 60 * 1000,
   });
@@ -51,21 +40,7 @@ function useCurrentJourneyStage(projectId: string, enabled: boolean) {
 function useCurrentObraEtapa(projectId: string, enabled: boolean) {
   return useQuery({
     queryKey: ['project-current-etapa', projectId],
-    queryFn: async () => {
-      // Get in-progress activities, or the next planned one
-      const { data } = await supabase
-        .from('atividades')
-        .select('titulo, etapa, status, data_prevista_fim')
-        .eq('obra_id', projectId)
-        .in('status', ['em_andamento', 'nao_iniciada'])
-        .order('data_prevista_fim', { ascending: true })
-        .limit(1);
-
-      if (data && data.length > 0) {
-        return data[0].etapa || data[0].titulo;
-      }
-      return null;
-    },
+    queryFn: () => journeyRepo.getCurrentObraEtapa(projectId),
     enabled,
     staleTime: 5 * 60 * 1000,
   });
@@ -76,12 +51,9 @@ function useActivityProgress(projectId: string, enabled: boolean) {
   return useQuery({
     queryKey: ['project-activity-progress', projectId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('project_activities')
-        .select('weight, actual_end')
-        .eq('project_id', projectId);
-      if (!data || data.length === 0) return 0;
-      return calcWeightedProgress(data.map(a => ({ weight: Number(a.weight) || 0, actualEnd: a.actual_end })));
+      const data = await journeyRepo.getActivityProgressData(projectId);
+      if (data.length === 0) return 0;
+      return calcWeightedProgress(data);
     },
     enabled,
     staleTime: 5 * 60 * 1000,

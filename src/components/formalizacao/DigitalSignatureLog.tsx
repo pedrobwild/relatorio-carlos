@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { formalizationsRepo } from '@/infra/repositories';
 
 interface SignatureData {
   id: string;
@@ -107,9 +107,7 @@ export function DigitalSignatureLog({ formalizationId, signatures, parties, docu
     
     setDownloadingPartyId(partyId);
     try {
-      const { data, error } = await supabase.functions.invoke('signature-certificate', {
-        body: { formalization_id: formalizationId, party_id: partyId },
-      });
+      const { data, error } = await formalizationsRepo.downloadSignatureCertificate(formalizationId, partyId);
 
       if (error) throw error;
 

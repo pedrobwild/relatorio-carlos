@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/infra/edgeFunctions';
 
 interface CleanupResult {
   success: boolean;
@@ -40,7 +40,7 @@ export function FilesCleanupCard() {
     setLastResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('files-cleanup');
+      const { data, error } = await invokeFunction('files-cleanup');
 
       if (error) {
         console.error('[FilesCleanup] Error:', error);

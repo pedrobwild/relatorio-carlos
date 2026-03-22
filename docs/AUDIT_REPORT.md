@@ -88,21 +88,31 @@ O projeto segue uma arquitetura bem definida (Repositories → Hooks → UI, Tan
 | Achado | Prioridade | Esforço | Risco |
 |--------|-----------|---------|-------|
 | 18 arquivos acessam supabase direto (violação Repositories) | P1 | Médio | Baixo |
-| Suporte.tsx duplica lógica de Formalizacoes.tsx (getStatusIcon, getTypeIcon) | P2 | Baixo | Nenhum |
-| FormalizacoesContent.tsx duplica mesmos helpers | P2 | Baixo | Nenhum |
+| Suporte.tsx duplica lógica de Formalizacoes.tsx (getStatusIcon, getTypeIcon) | ✅ Resolvido | — | — |
+| FormalizacoesContent.tsx duplica mesmos helpers | ✅ Resolvido | — | — |
 | Docs referenciam scripts npm inexistentes (nota de aviso presente) | P1 | Baixo | Nenhum |
 
 #### Componentes que violam Repositories (acessam `supabase` direto)
 
-**Componentes (12):**
-- `CreateTestFormalizacao.tsx`, `FormalizacaoEvidence.tsx`, `ObrasTab.tsx`
-- `UsersTab.tsx`, `FilesCleanupCard.tsx`, `VersionsListModal.tsx`
-- `JourneyCSMSection.tsx`, `DocumentVersionUpload.tsx`, `DocumentUpload.tsx`
-- `ProjectCardSummary.tsx`, `DuplicateProjectModal.tsx`, `DigitalSignatureLog.tsx`
+**✅ Migrados (7):**
+- `ProjectCardSummary.tsx` → `journeyRepo`
+- `JourneyCSMSection.tsx` → `journeyRepo`
+- `DigitalSignatureLog.tsx` → `formalizationsRepo`
+- `FormalizacaoEvidence.tsx` → `formalizationsRepo`
+- `FilesCleanupCard.tsx` → `invokeFunction`
+- `DocumentUpload.tsx` → `invokeFunctionRaw`
+- `DocumentVersionUpload.tsx` → `invokeFunctionRaw`
 
-**Páginas (6):**
-- `EditarObra.tsx`, `FormalizacaoNova.tsx`, `Auth.tsx`
-- `VerificarAssinatura.tsx`, `FormalizacaoDetalhe.tsx`, `NovaObra.tsx`
+**📋 Pendentes - Componentes (5):**
+- `CreateTestFormalizacao.tsx`, `ObrasTab.tsx`, `UsersTab.tsx`
+- `DuplicateProjectModal.tsx`, `VersionsListModal.tsx`
+
+**📋 Pendentes - Páginas (5):**
+- `EditarObra.tsx`, `FormalizacaoNova.tsx`, `FormalizacaoDetalhe.tsx`
+- `VerificarAssinatura.tsx`, `NovaObra.tsx`
+
+**✅ Aceito (usa supabase.auth diretamente):**
+- `Auth.tsx`
 
 ### B) Type Safety & Robustez
 
