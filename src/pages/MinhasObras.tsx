@@ -94,6 +94,7 @@ export default function MinhasObras() {
                       key={project.id}
                       project={project}
                       onClick={() => handleProjectClick(project)}
+                      activities={activitiesMap?.get(project.id)}
                     />
                   ))}
                 </div>
