@@ -2,6 +2,23 @@ import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Maximize, Minimize, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Vendor-prefixed fullscreen APIs (Safari, older IE/Edge)
+interface VendorDocument {
+  webkitFullscreenElement?: Element | null;
+  msFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+  msExitFullscreen?: () => Promise<void>;
+}
+
+interface VendorHTMLElement {
+  webkitRequestFullscreen?: () => Promise<void>;
+  msRequestFullscreen?: () => Promise<void>;
+}
+
+interface VendorVideoElement {
+  webkitEnterFullscreen?: () => void;
+}
+
 interface VideoPlayerProps {
   src: string;
   title?: string;
