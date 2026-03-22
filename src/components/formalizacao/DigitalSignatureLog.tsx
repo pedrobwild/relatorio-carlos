@@ -107,9 +107,7 @@ export function DigitalSignatureLog({ formalizationId, signatures, parties, docu
     
     setDownloadingPartyId(partyId);
     try {
-      const { data, error } = await supabase.functions.invoke('signature-certificate', {
-        body: { formalization_id: formalizationId, party_id: partyId },
-      });
+      const { data, error } = await formalizationsRepo.downloadSignatureCertificate(formalizationId, partyId);
 
       if (error) throw error;
 
