@@ -10,7 +10,7 @@ import { useDocuments, type ProjectDocument } from "@/hooks/useDocuments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useExecutivoVersions } from "@/hooks/useExecutivoVersions";
 import { ExecutivoVersionsModal } from "@/components/executivo/ExecutivoVersionsModal";
-import { ExecutivoPDFViewerModal } from "@/components/executivo/ExecutivoPDFViewerModal";
+import { RelatedDocPDFModal } from "@/components/executivo/RelatedDocPDFModal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
 import { format } from "date-fns";
