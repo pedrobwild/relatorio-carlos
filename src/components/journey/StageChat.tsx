@@ -32,7 +32,7 @@ export function StageChat({ stageId, projectId, isAdmin }: StageChatProps) {
 
     sendMessage.mutate({
       message: trimmed,
-      authorName: profile?.display_name || profile?.email || user.email || 'Usuário',
+      authorName: user.user_metadata?.display_name || user.email || 'Usuário',
       authorRole: isAdmin ? 'admin' : 'customer',
     });
     setText('');
