@@ -157,10 +157,11 @@ const VideoPlayer = ({ src, title, poster }: VideoPlayerProps) => {
     };
 
     const handleFullscreenChange = () => {
+      const doc = document as Document & VendorDocument;
       const isFs = !!(
         document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).msFullscreenElement
+        doc.webkitFullscreenElement ||
+        doc.msFullscreenElement
       );
       setIsFullscreen(isFs);
     };
