@@ -20,6 +20,7 @@ interface Props {
 
 export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
   const { versions, loading, createVersion, isCreating, refetch } = use3DVersions(projectId);
+  const { user } = useAuth();
   const { isStaff } = useUserRole();
   const [uploadMode, setUploadMode] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
