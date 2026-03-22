@@ -800,8 +800,8 @@ export default function EditarObra() {
                   <div>
                     <Label>Bairro</Label>
                     <Input
-                      value={(project as any).bairro || ''}
-                      onChange={(e) => handleProjectChange('bairro' as any, e.target.value || null)}
+                      value={project.bairro || ''}
+                      onChange={(e) => handleProjectChange('bairro', e.target.value || null)}
                     />
                   </div>
                   <div>
