@@ -191,10 +191,10 @@ O projeto segue uma arquitetura bem definida (Repositories → Hooks → UI, Tan
 2. ⚠️ Mover @playwright/test para devDependencies (requer package.json)
 3. 📋 Migrar 18 arquivos para usar Repositories (documentado, não implementado — risco médio)
 
-### Onda 3 — Refactors Seguros (P2) — Backlog
+### Onda 3 — Refactors Seguros (P2) — Parcialmente Aplicada
 
-1. 📋 Consolidar helpers duplicados (status icons em Formalizacoes, Suporte, FormalizacoesContent)
-2. 📋 Consolidar corsHeaders em Edge Functions
+1. ✅ Consolidar helpers duplicados (status icons em Formalizacoes, Suporte, FormalizacoesContent) → `src/lib/formalizationHelpers.tsx`
+2. ✅ Consolidar corsHeaders em Edge Functions → todas importam de `_shared/cors.ts`
 3. 📋 Habilitar `strict: true` gradualmente
 4. 📋 Reduzir `as any` (começar pelos hooks, depois componentes)
 

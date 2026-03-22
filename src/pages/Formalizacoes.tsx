@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, FileText, Search, Filter, Clock, CheckCircle2, XCircle, FileCheck, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Filter, ChevronRight, Sparkles, FileCheck, Clock, CheckCircle2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,58 +23,12 @@ import {
   type FormalizationType,
   type FormalizationStatus 
 } from '@/types/formalization';
-
-const getStatusIcon = (status: FormalizationStatus) => {
-  switch (status) {
-    case 'signed':
-      return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-    case 'pending_signatures':
-      return <Clock className="h-4 w-4 text-amber-600" />;
-    case 'draft':
-      return <FileText className="h-4 w-4 text-muted-foreground" />;
-    case 'voided':
-      return <XCircle className="h-4 w-4 text-destructive" />;
-    default:
-      return <FileText className="h-4 w-4" />;
-  }
-};
-
-const getStatusBadgeVariant = (status: FormalizationStatus): "default" | "secondary" | "destructive" | "outline" => {
-  switch (status) {
-    case 'signed':
-      return 'default';
-    case 'pending_signatures':
-      return 'secondary';
-    case 'voided':
-      return 'destructive';
-    default:
-      return 'outline';
-  }
-};
-
-const getTypeIcon = (type: FormalizationType) => {
-  switch (type) {
-    case 'budget_item_swap':
-      return '💰';
-    case 'meeting_minutes':
-      return '📝';
-    case 'exception_custody':
-      return '📦';
-    case 'scope_change':
-      return '🔄';
-    default:
-      return '📄';
-  }
-};
-
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-};
+import {
+  getStatusIcon,
+  getStatusBadgeVariant,
+  getTypeIcon,
+  formatFormalizationDate as formatDate,
+} from '@/lib/formalizationHelpers';
 
 function FormalizacaoSkeleton() {
   return (

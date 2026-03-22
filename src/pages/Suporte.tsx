@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, Plus, Filter, Search, FileSignature, Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Filter, Search, FileSignature, ChevronRight, CheckCircle2, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,12 @@ import {
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS 
 } from "@/types/formalization";
+import {
+  getStatusIcon,
+  getStatusBadgeVariant,
+  getTypeIcon,
+  formatFormalizationDate as formatDate,
+} from "@/lib/formalizationHelpers";
 
 // Mock data for demonstration
 const mockFormalizations = [
@@ -50,54 +56,6 @@ const mockFormalizations = [
   },
 ];
 
-const getStatusIcon = (status: FormalizationStatus) => {
-  switch (status) {
-    case "signed":
-      return <CheckCircle2 className="w-4 h-4 text-[hsl(var(--success))]" />;
-    case "pending_signatures":
-      return <Clock className="w-4 h-4 text-[hsl(var(--warning))]" />;
-    case "voided":
-      return <XCircle className="w-4 h-4 text-destructive" />;
-    default:
-      return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
-  }
-};
-
-const getStatusBadgeVariant = (status: FormalizationStatus): "default" | "secondary" | "destructive" | "outline" => {
-  switch (status) {
-    case "signed":
-      return "default";
-    case "pending_signatures":
-      return "secondary";
-    case "voided":
-      return "destructive";
-    default:
-      return "outline";
-  }
-};
-
-const getTypeIcon = (type: FormalizationType) => {
-  switch (type) {
-    case "budget_item_swap":
-      return "💱";
-    case "meeting_minutes":
-      return "📋";
-    case "exception_custody":
-      return "📦";
-    case "scope_change":
-      return "🔄";
-    default:
-      return "📄";
-  }
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
 
 const Suporte = () => {
   const signedCount = mockFormalizations.filter(f => f.status === "signed").length;

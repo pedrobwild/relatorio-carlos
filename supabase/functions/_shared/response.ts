@@ -7,11 +7,8 @@
  * - Structured error formats
  * - Logging utilities
  */
-
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-correlation-id',
-};
+import { corsHeaders } from './cors.ts';
+export { corsHeaders };
 
 /**
  * Generate a correlation ID for request tracing
