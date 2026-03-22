@@ -504,7 +504,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
 
     setLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const token = await getAccessToken();
       
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
@@ -512,7 +512,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionData.session?.access_token}`,
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             email,

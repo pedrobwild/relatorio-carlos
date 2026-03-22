@@ -90,9 +90,7 @@ export default function VerificarAssinatura() {
 
       try {
         // Call verification edge function
-        const { data, error } = await supabase.functions.invoke('verify-signature', {
-          body: { signature_hash: hash },
-        });
+        const { data, error } = await invokeFunction('verify-signature', { signature_hash: hash });
 
         if (error) throw error;
         setResult(data);

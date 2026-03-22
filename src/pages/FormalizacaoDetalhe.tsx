@@ -234,9 +234,7 @@ export default function FormalizacaoDetalhe() {
 
     setDownloadingPdf(true);
     try {
-      const { data, error } = await supabase.functions.invoke('formalization-pdf', {
-        body: { formalization_id: id },
-      });
+      const { data, error } = await invokeFunction('formalization-pdf', { formalization_id: id });
 
       if (error) throw error;
 
