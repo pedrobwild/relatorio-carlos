@@ -316,7 +316,7 @@ export default function EditarObra() {
       const { data: activitiesData } = await supabase
         .from('project_activities')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId!)
         .order('sort_order', { ascending: true });
       
       setActivities(activitiesData || []);
