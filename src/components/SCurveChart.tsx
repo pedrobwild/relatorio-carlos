@@ -118,11 +118,11 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     : new Date();
 
   // Check if any activity has weight defined
-  const hasWeights = activities.some(a => (a as any).weight !== undefined);
+  const hasWeights = activities.some(a => a.weight !== undefined);
   
   // Calculate total weight (should be 100, but normalize if not)
   const totalWeight = hasWeights 
-    ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
     : activities.length;
 
   // Find project date range
