@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/infra/edgeFunctions';
 
 interface CleanupResult {
   success: boolean;
