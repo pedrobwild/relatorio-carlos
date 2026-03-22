@@ -44,6 +44,8 @@ interface Project {
   name: string;
   unit_name: string | null;
   address: string | null;
+  bairro: string | null;
+  cep: string | null;
   planned_start_date: string | null;
   planned_end_date: string | null;
   actual_start_date: string | null;
