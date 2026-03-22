@@ -58,6 +58,7 @@ Regra de ouro: "De cima para baixo, do bruto para o fino."
 - Box de vidro: 15-20 dias após medição
 - Marmoraria (bancadas, soleiras): 10-15 dias após medição
 - Marcenaria/móveis planejados: 30-45 dias de produção — medição deve ser antecipada (semana 5-6, não semana 8+)
+- **REGRA CRÍTICA DE BANCADA DE GRANITO/MÁRMORE + MARCENARIA**: Se o orçamento contiver bancada de granito, mármore ou pedra natural, a MEDIÇÃO DA MARCENARIA só pode ocorrer APÓS a instalação da bancada. Isso porque a marcenaria precisa se ajustar às dimensões reais da bancada instalada. Sequência obrigatória: Medição Marmoraria → Fabricação Bancada → Instalação Bancada → Medição Marcenaria → Fabricação Marcenaria → Montagem Marcenaria.
 - Eletrodomésticos: 7-15 dias — coordenar com instalação elétrica
 - Ar condicionado: 7-15 dias — coordenar compra com infraestrutura
 - Porcelanatos/revestimentos especiais: 15-30 dias
