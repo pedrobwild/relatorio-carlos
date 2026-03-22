@@ -17,13 +17,13 @@ import {
 } from '@/lib/formalizationHelpers';
 
 interface FormalizacaoData {
-  id: string;
-  title: string;
-  summary: string;
-  status: string;
-  type: string;
+  id: string | null;
+  title: string | null;
+  summary: string | null;
+  status: string | null;
+  type: string | null;
   locked_at: string | null;
-  created_at: string;
+  created_at: string | null;
   parties_signed: number | null;
   parties_total: number | null;
 }
