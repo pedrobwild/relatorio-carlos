@@ -84,7 +84,7 @@ export function PageHeader({
       <div className={cn("mx-auto px-4 sm:px-6 md:px-8 py-3 hidden sm:flex items-center justify-between gap-3", maxWidthMap[maxWidth])}>
         <div className="flex items-center gap-3 min-w-0">
           {(backTo || onBack) && (
-            <BackWrapper {...(backProps as any)}>
+            <BackWrapper {...(backProps as Record<string, string>)}>
               <Button
                 variant="ghost"
                 size="icon"
