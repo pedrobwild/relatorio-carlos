@@ -38,6 +38,8 @@ describe('Project Types', () => {
       name: 'Test Project',
       unit_name: null,
       address: null,
+      bairro: null,
+      cep: null,
       planned_start_date: '2024-01-01',
       planned_end_date: '2024-12-31',
       actual_start_date: null,
