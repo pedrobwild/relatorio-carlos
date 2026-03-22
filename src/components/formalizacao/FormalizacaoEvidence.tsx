@@ -155,14 +155,15 @@ export function FormalizacaoEvidence({
     }
 
     try {
-      const user = (await supabase.auth.getUser()).data.user;
-      
-      const { error } = await supabase.from('formalization_evidence_links').insert({
+      const { data: { session } } = await (await import('@/integrations/supabase/client')).supabase.auth.getSession();
+      const userId = session?.user?.id || '';
+
+      const { error } = await formalizationsRepo.addEvidenceLink({
         formalization_id: formalizationId,
         kind: newLink.kind,
         url: newLink.url,
         description: newLink.description || null,
-        created_by: user?.id || '',
+        created_by: userId,
       });
 
       if (error) throw error;
