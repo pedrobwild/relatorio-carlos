@@ -50,7 +50,8 @@ import {
 } from '@/components/ui/table';
 import { useUsers, UserWithRole } from '@/hooks/useUsers';
 import { AppRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
+import { getAccessToken } from '@/infra/edgeFunctions';
+import { projectsRepo } from '@/infra/repositories';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -412,13 +413,8 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
   const fetchProjects = async () => {
     setLoadingProjects(true);
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .order('name');
-      
-      if (error) throw error;
-      setProjects(data || []);
+      const { data } = await projectsRepo.getStaffProjects();
+      setProjects(data?.map(p => ({ id: p.id, name: p.name })) ?? []);
     } catch (err) {
       console.error('Error fetching projects:', err);
     } finally {
@@ -508,7 +504,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
 
     setLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const token = await getAccessToken();
       
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
@@ -516,7 +512,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionData.session?.access_token}`,
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             email,

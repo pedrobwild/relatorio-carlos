@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
-import { supabase } from '@/integrations/supabase/client';
+import { getAccessToken } from '@/infra/edgeFunctions';
 
 const AREAS = [
   { value: 'jornada', label: 'Jornada do Projeto', description: 'Timeline, etapas, checklist do cliente' },
@@ -45,8 +45,8 @@ export default function AdminUxInsights() {
     abortRef.current = new AbortController();
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Sessão expirada');
+      const token = await getAccessToken();
+      if (!token) throw new Error('Sessão expirada');
 
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ux-insights`,
@@ -54,7 +54,7 @@ export default function AdminUxInsights() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({

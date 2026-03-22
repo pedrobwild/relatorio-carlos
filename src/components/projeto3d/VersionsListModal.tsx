@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, ImageIcon, Loader2, Upload, X, Eye, MessageSquareWarning } from 'lucide-react';
 import { use3DVersions, type Version3D } from '@/hooks/use3DVersions';
+import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { CarouselModal } from './CarouselModal';
-import { supabase } from '@/integrations/supabase/client';
+import { get3DImageCounts, requestRevision } from '@/infra/repositories/journey.repository';
 
 interface Props {
   projectId: string;
@@ -19,6 +20,7 @@ interface Props {
 
 export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
   const { versions, loading, createVersion, isCreating, refetch } = use3DVersions(projectId);
+  const { user } = useAuth();
   const { isStaff } = useUserRole();
   const [uploadMode, setUploadMode] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -34,15 +36,8 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
 
     const loadCounts = async () => {
       const ids = versions.map(v => v.id);
-      const { data } = await supabase
-        .from('project_3d_images')
-        .select('version_id')
-        .in('version_id', ids);
-      if (data && !cancelled) {
-        const counts: Record<string, number> = {};
-        data.forEach((row: any) => {
-          counts[row.version_id] = (counts[row.version_id] || 0) + 1;
-        });
+      const counts = await get3DImageCounts(ids);
+      if (!cancelled) {
         setImageCountsCache(counts);
       }
     };
@@ -86,20 +81,10 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
   }, [selectedFiles, createVersion]);
 
   const handleRequestRevision = useCallback(async () => {
-    if (!revisionTarget) return;
+    if (!revisionTarget || !user) return;
     setIsRequesting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
-
-      const { error } = await supabase
-        .from('project_3d_versions')
-        .update({
-          revision_requested_at: new Date().toISOString(),
-          revision_requested_by: user.id,
-        })
-        .eq('id', revisionTarget);
-
+      const { error } = await requestRevision(revisionTarget, user.id);
       if (error) throw error;
       toast.success('Solicitação de revisão enviada');
       refetch();
@@ -109,7 +94,7 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
       setIsRequesting(false);
       setRevisionTarget(null);
     }
-  }, [revisionTarget, refetch]);
+  }, [revisionTarget, user, refetch]);
 
   return (
     <>

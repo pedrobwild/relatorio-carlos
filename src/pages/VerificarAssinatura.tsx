@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/infra/edgeFunctions';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
 
 interface VerificationResult {
@@ -90,12 +90,10 @@ export default function VerificarAssinatura() {
 
       try {
         // Call verification edge function
-        const { data, error } = await supabase.functions.invoke('verify-signature', {
-          body: { signature_hash: hash },
-        });
+        const { data, error } = await invokeFunction('verify-signature', { signature_hash: hash });
 
         if (error) throw error;
-        setResult(data);
+        setResult(data as VerificationResult);
       } catch (err) {
         console.error('Verification error:', err);
         setResult({ valid: false, error: 'Erro ao verificar assinatura' });

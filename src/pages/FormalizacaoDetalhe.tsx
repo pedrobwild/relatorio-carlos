@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useFormalizacao, useAcknowledge, useSendForSignature, useDeleteFormalizacao, useUpdateFormalizacao } from '@/hooks/useFormalizacoes';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeFunction } from '@/infra/edgeFunctions';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
 import ReactMarkdown from 'react-markdown';
 import DOMPurify from 'dompurify';
@@ -234,14 +234,12 @@ export default function FormalizacaoDetalhe() {
 
     setDownloadingPdf(true);
     try {
-      const { data, error } = await supabase.functions.invoke('formalization-pdf', {
-        body: { formalization_id: id },
-      });
+      const { data, error } = await invokeFunction('formalization-pdf', { formalization_id: id });
 
       if (error) throw error;
 
       // Create blob and download
-      const blob = new Blob([data], { type: 'application/pdf' });
+      const blob = new Blob([data as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

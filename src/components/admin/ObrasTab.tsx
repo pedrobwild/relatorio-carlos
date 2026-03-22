@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/table';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import type { ProjectWithCustomer } from '@/infra/repositories';
-import { supabase } from '@/integrations/supabase/client';
+import { projectsRepo } from '@/infra/repositories';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -128,46 +128,21 @@ function CreateObraDialog({ onCreated }: { onCreated: () => void }) {
     setLoading(true);
 
     try {
-      // 1. Create project
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: formData.name,
-          unit_name: formData.unit_name || null,
-          address: formData.address || null,
-          planned_start_date: formData.planned_start_date,
-          planned_end_date: formData.planned_end_date,
-          contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      const { error } = await projectsRepo.createProjectWithCustomer({
+        name: formData.name,
+        unit_name: formData.unit_name || null,
+        address: formData.address || null,
+        planned_start_date: formData.planned_start_date,
+        planned_end_date: formData.planned_end_date,
+        contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
+        created_by: user.id,
+        customer_name: formData.customer_name,
+        customer_email: formData.customer_email,
+        customer_phone: formData.customer_phone || null,
+        invitation_sent_at: sendInvite ? new Date().toISOString() : null,
+      });
 
-      if (projectError) throw projectError;
-
-      // 2. Add current user as engineer
-      const { error: engineerError } = await supabase
-        .from('project_engineers')
-        .insert({
-          project_id: project.id,
-          engineer_user_id: user.id,
-          is_primary: true,
-        });
-
-      if (engineerError) throw engineerError;
-
-      // 3. Add customer
-      const { error: customerError } = await supabase
-        .from('project_customers')
-        .insert({
-          project_id: project.id,
-          customer_name: formData.customer_name,
-          customer_email: formData.customer_email,
-          customer_phone: formData.customer_phone || null,
-          invitation_sent_at: sendInvite ? new Date().toISOString() : null,
-        });
-
-      if (customerError) throw customerError;
+      if (error) throw error;
 
       toast({ 
         title: 'Obra cadastrada!', 
@@ -465,10 +440,7 @@ export function ObrasTab() {
 
   const handleDelete = async (projectId: string) => {
     try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId);
+      const { error } = await projectsRepo.deleteProject(projectId);
 
       if (error) throw error;
 
