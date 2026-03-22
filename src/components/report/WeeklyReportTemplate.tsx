@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 interface WeeklyReportTemplateProps {
   data: WeeklyReportData;
   isStaff?: boolean;
+  projectId?: string;
   onSaveReport?: (updatedData: WeeklyReportData) => void;
   isSaving?: boolean;
 }
@@ -22,6 +23,7 @@ interface WeeklyReportTemplateProps {
 const WeeklyReportTemplate = ({
   data,
   isStaff = false,
+  projectId,
   onSaveReport,
   isSaving = false,
 }: WeeklyReportTemplateProps) => {
