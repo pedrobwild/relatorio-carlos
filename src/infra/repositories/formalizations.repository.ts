@@ -41,7 +41,7 @@ export interface CreatePartyInput {
   formalization_id: string;
   display_name: string;
   email?: string | null;
-  party_type: string;
+  party_type: PartyType;
   role_label?: string | null;
   must_sign?: boolean;
   user_id?: string | null;
