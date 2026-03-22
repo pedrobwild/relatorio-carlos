@@ -169,6 +169,10 @@ export function JornadaTabContent({
                 <h2 className="text-sm font-medium text-muted-foreground mb-4">{journeyCopy.page.sidebarTitle}</h2>
                 <JourneyTimeline stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
               </div>
+              <div>
+                <h2 className="text-sm font-medium text-muted-foreground mb-3">Atividade Recente</h2>
+                <ActivityTimelineCompact projectId={projectId} maxItems={5} />
+              </div>
             </div>
           </aside>
 
