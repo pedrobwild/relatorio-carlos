@@ -336,10 +336,13 @@ export default function EditarObra() {
         .select('*, profiles:engineer_user_id(display_name, email)')
         .eq('project_id', projectId);
       
+      const profileData = (engData: typeof engineersData extends (infer T)[] | null ? T : never) => {
+        const p = engData.profiles as { display_name: string | null; email: string | null } | null;
+        return { display_name: p?.display_name, email: p?.email };
+      };
       setEngineers((engineersData || []).map(e => ({
         ...e,
-        display_name: (e.profiles as any)?.display_name,
-        email: (e.profiles as any)?.email,
+        ...profileData(e),
       })));
 
       // Fetch available engineers (staff users not already in this project)
