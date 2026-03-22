@@ -1,15 +1,16 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, Loader2, Upload, X, Eye, MessageSquareWarning, Download } from 'lucide-react';
 import { useExecutivoVersions, type ExecutivoVersion } from '@/hooks/useExecutivoVersions';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { ExecutivoPDFViewerModal } from './ExecutivoPDFViewerModal';
-import { supabase } from '@/integrations/supabase/client';
+import { journeyRepo, projectsRepo } from '@/infra/repositories';
 
 interface Props {
   projectId: string;
@@ -20,6 +21,7 @@ interface Props {
 export function ExecutivoVersionsModal({ projectId, open, onOpenChange }: Props) {
   const { versions, loading, createVersion, isCreating, refetch } = useExecutivoVersions(projectId);
   const { isStaff } = useUserRole();
+  const { user } = useAuth();
   const [uploadMode, setUploadMode] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [viewerVersionId, setViewerVersionId] = useState<string | null>(null);
@@ -52,20 +54,10 @@ export function ExecutivoVersionsModal({ projectId, open, onOpenChange }: Props)
   }, [selectedFile, createVersion]);
 
   const handleRequestRevision = useCallback(async () => {
-    if (!revisionTarget) return;
+    if (!revisionTarget || !user) return;
     setIsRequesting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
-
-      const { error } = await supabase
-        .from('project_3d_versions')
-        .update({
-          revision_requested_at: new Date().toISOString(),
-          revision_requested_by: user.id,
-        })
-        .eq('id', revisionTarget);
-
+      const { error } = await journeyRepo.requestRevision(revisionTarget, user.id);
       if (error) throw error;
       toast.success('Solicitação de revisão enviada');
       refetch();
@@ -75,23 +67,16 @@ export function ExecutivoVersionsModal({ projectId, open, onOpenChange }: Props)
       setIsRequesting(false);
       setRevisionTarget(null);
     }
-  }, [revisionTarget, refetch]);
+  }, [revisionTarget, user, refetch]);
 
   const handleDownload = useCallback(async (version: ExecutivoVersion) => {
     setDownloadingId(version.id);
     try {
-      const { data: files, error } = await supabase
-        .from('project_3d_images')
-        .select('storage_path')
-        .eq('version_id', version.id)
-        .order('sort_order')
-        .limit(1);
-      if (error || !files?.length) throw new Error('Arquivo não encontrado');
+      const storagePath = await projectsRepo.get3DFilePaths(version.id);
+      if (!storagePath) throw new Error('Arquivo não encontrado');
 
-      const { data: blob, error: dlErr } = await supabase.storage
-        .from('project-documents')
-        .download(files[0].storage_path);
-      if (dlErr || !blob) throw new Error('Erro ao baixar arquivo');
+      const blob = await projectsRepo.downloadStorageFile('project-documents', storagePath);
+      if (!blob) throw new Error('Erro ao baixar arquivo');
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

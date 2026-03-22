@@ -469,3 +469,151 @@ export async function cloneProjectForConstruction(
     return { data: { ...newProject, status: newProject.status as ProjectStatus }, error: null };
   });
 }
+
+/**
+ * Duplicate a project with selective data copying
+ */
+export async function duplicateProject(input: {
+  source: { id: string; contract_value?: number | null; org_id?: string | null };
+  newName: string;
+  unitName: string | null;
+  address: string | null;
+  plannedStartDate: string | null;
+  plannedEndDate: string | null;
+  contractValue: number | null;
+  isProjectPhase: boolean;
+  orgId: string | null;
+  createdBy: string;
+  customer: { name: string; email: string; phone: string | null };
+  options: {
+    includeActivities: boolean;
+    includeProgress: boolean;
+    includePayments: boolean;
+    includeJourney: boolean;
+  };
+}): Promise<RepositoryResult<Project>> {
+  return executeQuery(async () => {
+    const { data: newProject, error: projectError } = await supabase
+      .from('projects')
+      .insert({
+        name: input.newName,
+        unit_name: input.unitName,
+        address: input.address,
+        planned_start_date: input.plannedStartDate,
+        planned_end_date: input.plannedEndDate,
+        contract_value: input.contractValue,
+        status: 'active' as const,
+        created_by: input.createdBy,
+        org_id: input.orgId,
+        is_project_phase: input.isProjectPhase,
+      })
+      .select()
+      .single();
+
+    if (projectError) return { data: null, error: projectError };
+
+    await supabase.from('project_engineers').insert({
+      project_id: newProject.id, engineer_user_id: input.createdBy, is_primary: true,
+    });
+    await supabase.from('project_members').insert({
+      project_id: newProject.id, user_id: input.createdBy, role: 'owner',
+    });
+    await supabase.from('project_customers').insert({
+      project_id: newProject.id,
+      customer_name: input.customer.name,
+      customer_email: input.customer.email.toLowerCase(),
+      customer_phone: input.customer.phone,
+    });
+
+    if (input.options.includeActivities) {
+      const { data: activities } = await supabase
+        .from('project_activities').select('*').eq('project_id', input.source.id).order('sort_order');
+      if (activities?.length) {
+        await supabase.from('project_activities').insert(
+          activities.map((a, i) => ({
+            project_id: newProject.id, description: a.description,
+            planned_start: a.planned_start, planned_end: a.planned_end,
+            actual_start: input.options.includeProgress ? a.actual_start : null,
+            actual_end: input.options.includeProgress ? a.actual_end : null,
+            baseline_start: input.options.includeProgress ? a.baseline_start : null,
+            baseline_end: input.options.includeProgress ? a.baseline_end : null,
+            baseline_saved_at: input.options.includeProgress ? a.baseline_saved_at : null,
+            weight: a.weight, sort_order: i + 1, created_by: input.createdBy, predecessor_ids: [],
+          }))
+        );
+      }
+    }
+
+    if (input.options.includePayments) {
+      const { data: payments } = await supabase
+        .from('project_payments').select('*').eq('project_id', input.source.id).order('installment_number');
+      if (payments?.length) {
+        await supabase.from('project_payments').insert(
+          payments.map(p => ({
+            project_id: newProject.id, installment_number: p.installment_number,
+            description: p.description, amount: p.amount, due_date: p.due_date,
+          }))
+        );
+      }
+    }
+
+    if (input.options.includeJourney) {
+      await supabase.rpc('initialize_project_journey', { p_project_id: newProject.id });
+    }
+
+    return { data: { ...newProject, status: newProject.status as ProjectStatus }, error: null };
+  });
+}
+
+/**
+ * Get a project with customer info
+ */
+export async function getProjectWithCustomer(projectId: string): Promise<RepositoryResult<ProjectWithCustomer>> {
+  return executeQuery(async () => {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`*, project_customers (customer_name, customer_email)`)
+      .eq('id', projectId)
+      .maybeSingle();
+
+    if (error) return { data: null, error };
+    if (!data) return { data: null, error: null };
+
+    const customer = Array.isArray(data.project_customers) && data.project_customers.length > 0
+      ? data.project_customers[0] : null;
+
+    return {
+      data: {
+        ...data,
+        status: data.status as ProjectStatus,
+        customer_name: customer?.customer_name ?? undefined,
+        customer_email: customer?.customer_email ?? undefined,
+        is_project_phase: data.is_project_phase,
+      },
+      error: null,
+    };
+  });
+}
+
+/**
+ * Download a file from storage
+ */
+export async function downloadStorageFile(bucket: string, path: string): Promise<Blob | null> {
+  const { data, error } = await supabase.storage.from(bucket).download(path);
+  if (error) { console.error('Download error:', error); return null; }
+  return data;
+}
+
+/**
+ * Get file storage paths for a 3D version
+ */
+export async function get3DFilePaths(versionId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('project_3d_images')
+    .select('storage_path')
+    .eq('version_id', versionId)
+    .order('sort_order')
+    .limit(1);
+  if (error || !data?.length) return null;
+  return data[0].storage_path;
+}

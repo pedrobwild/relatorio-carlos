@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import type { ProjectWithCustomer } from '@/infra/repositories';
+import { projectsRepo, type ProjectWithCustomer } from '@/infra/repositories';
 
 // Re-export for backwards compatibility
 export type Project = ProjectWithCustomer;
@@ -24,7 +23,6 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [project, setProject] = useState<(Project & { is_project_phase?: boolean }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,17 +38,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       try {
-        const { data, error: fetchError } = await supabase
-          .from('projects')
-          .select(`
-            *,
-            project_customers (
-              customer_name,
-              customer_email
-            )
-          `)
-          .eq('id', projectId)
-          .maybeSingle();
+        const { data, error: fetchError } = await projectsRepo.getProjectWithCustomer(projectId);
 
         if (fetchError) throw fetchError;
 
@@ -58,18 +46,7 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           setError('Projeto não encontrado');
           setProject(null);
         } else {
-          // BUG FIX: Safe access to nested array with explicit fallback
-          const customer = Array.isArray(data.project_customers) && data.project_customers.length > 0
-            ? data.project_customers[0]
-            : null;
-          
-          setProject({
-            ...data,
-            status: data.status as Project['status'],
-            customer_name: customer?.customer_name ?? undefined,
-            customer_email: customer?.customer_email ?? undefined,
-            is_project_phase: data.is_project_phase,
-          });
+          setProject(data);
         }
       } catch (err: any) {
         console.error('Error fetching project:', err);
