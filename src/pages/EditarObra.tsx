@@ -503,7 +503,7 @@ export default function EditarObra() {
       const { data, error } = await supabase
         .from('project_activities')
         .insert({
-          project_id: projectId,
+          project_id: projectId!,
           description: newActivity.description,
           planned_start: newActivity.planned_start,
           planned_end: newActivity.planned_end,
