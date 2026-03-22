@@ -578,8 +578,8 @@ const ReportHeader = ({
               cronogramaPath={paths.cronograma}
               isProjectPhase={isProjectPhase}
               activities={activities}
-              projectStartDate={startDate}
-              projectEndDate={effectiveEndDate}
+              projectStartDate={startDate ?? undefined}
+              projectEndDate={effectiveEndDate ?? undefined}
             />
           </div>
         )}
