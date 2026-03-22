@@ -412,12 +412,8 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
   const fetchProjects = async () => {
     setLoadingProjects(true);
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name')
-        .order('name');
-      
-      if (error) throw error;
+      const { data } = await projectsRepo.getStaffProjects();
+      setAvailableProjects(data?.map(p => ({ id: p.id, name: p.name })) ?? []);
       setProjects(data || []);
     } catch (err) {
       console.error('Error fetching projects:', err);
