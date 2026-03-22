@@ -176,3 +176,35 @@ export async function uploadCSMPhoto(
 
   return data.publicUrl;
 }
+
+/**
+ * Get image counts per 3D version
+ */
+export async function get3DImageCounts(versionIds: string[]): Promise<Record<string, number>> {
+  const { data } = await supabase
+    .from('project_3d_images')
+    .select('version_id')
+    .in('version_id', versionIds);
+
+  const counts: Record<string, number> = {};
+  data?.forEach((row: any) => {
+    counts[row.version_id] = (counts[row.version_id] || 0) + 1;
+  });
+  return counts;
+}
+
+/**
+ * Request revision on a 3D version
+ */
+export async function requestRevision(versionId: string, userId: string): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase
+      .from('project_3d_versions')
+      .update({
+        revision_requested_at: new Date().toISOString(),
+        revision_requested_by: userId,
+      })
+      .eq('id', versionId);
+    return { data: null, error };
+  });
+}

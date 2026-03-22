@@ -232,3 +232,240 @@ export async function checkProjectAccess(
 
   return !!data;
 }
+
+/**
+ * Delete a project by ID
+ */
+export async function deleteProject(projectId: string): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+    return { data: null, error };
+  });
+}
+
+/**
+ * Create a new project with customer and engineer
+ */
+export async function createProjectWithCustomer(input: {
+  name: string;
+  unit_name?: string | null;
+  address?: string | null;
+  planned_start_date: string;
+  planned_end_date: string;
+  contract_value?: number | null;
+  created_by: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string | null;
+  invitation_sent_at?: string | null;
+}): Promise<RepositoryResult<Project>> {
+  return executeQuery(async () => {
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .insert({
+        name: input.name,
+        unit_name: input.unit_name ?? null,
+        address: input.address ?? null,
+        planned_start_date: input.planned_start_date,
+        planned_end_date: input.planned_end_date,
+        contract_value: input.contract_value ?? null,
+        created_by: input.created_by,
+      })
+      .select()
+      .single();
+
+    if (projectError) return { data: null, error: projectError };
+
+    // Add creator as engineer
+    await supabase.from('project_engineers').insert({
+      project_id: project.id,
+      engineer_user_id: input.created_by,
+      is_primary: true,
+    });
+
+    // Add customer
+    await supabase.from('project_customers').insert({
+      project_id: project.id,
+      customer_name: input.customer_name,
+      customer_email: input.customer_email,
+      customer_phone: input.customer_phone ?? null,
+      invitation_sent_at: input.invitation_sent_at ?? null,
+    });
+
+    return { data: { ...project, status: project.status as ProjectStatus }, error: null };
+  });
+}
+
+/**
+ * Get project data with customer for mobilization completion
+ */
+export async function getProjectWithCustomerAndStages(projectId: string) {
+  const [projectRes, customerRes, stagesRes] = await Promise.all([
+    supabase.from('projects').select('*').eq('id', projectId).single(),
+    supabase.from('project_customers').select('*').eq('project_id', projectId).limit(1),
+    supabase.from('journey_stages').select('name, confirmed_end, sort_order').eq('project_id', projectId).order('sort_order'),
+  ]);
+  return { project: projectRes.data, customer: customerRes.data?.[0], stages: stagesRes.data ?? [] };
+}
+
+/**
+ * Clone a project and all its related data for construction phase
+ */
+export async function cloneProjectForConstruction(
+  sourceProjectId: string,
+  newProjectData: Record<string, unknown>,
+  createdBy: string
+): Promise<RepositoryResult<Project>> {
+  return executeQuery(async () => {
+    // 1. Create project
+    const { data: newProject, error: projectError } = await supabase
+      .from('projects')
+      .insert(newProjectData)
+      .select()
+      .single();
+
+    if (projectError) return { data: null, error: projectError };
+
+    // 2. Copy members
+    const { data: members } = await supabase.from('project_members').select('*').eq('project_id', sourceProjectId);
+    if (members?.length) {
+      await supabase.from('project_members').insert(members.map(m => ({
+        project_id: newProject.id, user_id: m.user_id, role: m.role,
+      })));
+    }
+
+    // 3. Copy engineers
+    const { data: engineers } = await supabase.from('project_engineers').select('*').eq('project_id', sourceProjectId);
+    if (engineers?.length) {
+      await supabase.from('project_engineers').insert(engineers.map(e => ({
+        project_id: newProject.id, engineer_user_id: e.engineer_user_id, is_primary: e.is_primary,
+      })));
+    }
+
+    // 4. Copy customer
+    const { data: customers } = await supabase.from('project_customers').select('*').eq('project_id', sourceProjectId).limit(1);
+    if (customers?.length) {
+      await supabase.from('project_customers').insert({
+        project_id: newProject.id,
+        customer_name: customers[0].customer_name,
+        customer_email: customers[0].customer_email,
+        customer_phone: customers[0].customer_phone,
+      });
+    }
+
+    // 5. Copy payments
+    const { data: payments } = await supabase.from('project_payments').select('*').eq('project_id', sourceProjectId);
+    if (payments?.length) {
+      await supabase.from('project_payments').insert(payments.map(p => ({
+        project_id: newProject.id, installment_number: p.installment_number,
+        description: p.description, amount: p.amount, due_date: p.due_date,
+        paid_at: p.paid_at, boleto_path: p.boleto_path,
+        payment_method: p.payment_method, payment_proof_path: p.payment_proof_path,
+      })));
+    }
+
+    // 6. Copy documents
+    const { data: documents } = await supabase.from('project_documents').select('*').eq('project_id', sourceProjectId);
+    if (documents?.length) {
+      await supabase.from('project_documents').insert(documents.map(d => ({
+        project_id: newProject.id, document_type: d.document_type, name: d.name,
+        storage_path: d.storage_path, storage_bucket: d.storage_bucket,
+        mime_type: d.mime_type, size_bytes: d.size_bytes, status: d.status,
+        description: d.description, uploaded_by: d.uploaded_by,
+        version: d.version, checksum: d.checksum,
+      })));
+    }
+
+    // 7. Copy formalizations (update project_id)
+    const { data: formalizations } = await supabase.from('formalizations').select('id').eq('project_id', sourceProjectId);
+    if (formalizations?.length) {
+      await supabase.from('formalizations').update({ project_id: newProject.id }).eq('project_id', sourceProjectId);
+    }
+
+    // 8. Copy pending items
+    const { data: pendingItems } = await supabase.from('pending_items').select('*').eq('project_id', sourceProjectId);
+    if (pendingItems?.length) {
+      await supabase.from('pending_items').insert(pendingItems.map(pi => ({
+        project_id: newProject.id, customer_org_id: pi.customer_org_id,
+        title: pi.title, type: pi.type, description: pi.description,
+        due_date: pi.due_date, status: pi.status, impact: pi.impact,
+        amount: pi.amount, options: pi.options, action_url: pi.action_url,
+        reference_id: pi.reference_id, reference_type: pi.reference_type,
+        resolution_notes: pi.resolution_notes, resolution_payload: pi.resolution_payload,
+        resolved_at: pi.resolved_at, resolved_by: pi.resolved_by,
+      })));
+    }
+
+    // 9. Copy activities
+    const { data: activities } = await supabase.from('project_activities').select('*').eq('project_id', sourceProjectId);
+    if (activities?.length) {
+      await supabase.from('project_activities').insert(activities.map(a => ({
+        project_id: newProject.id, description: a.description,
+        planned_start: a.planned_start, planned_end: a.planned_end,
+        actual_start: a.actual_start, actual_end: a.actual_end,
+        weight: a.weight, sort_order: a.sort_order, created_by: a.created_by,
+        predecessor_ids: [], baseline_start: a.baseline_start,
+        baseline_end: a.baseline_end, baseline_saved_at: a.baseline_saved_at,
+      })));
+    }
+
+    // 10. Copy purchases
+    const { data: purchases } = await supabase.from('project_purchases').select('*').eq('project_id', sourceProjectId);
+    if (purchases?.length) {
+      await supabase.from('project_purchases').insert(purchases.map(p => ({
+        project_id: newProject.id, item_name: p.item_name, description: p.description,
+        quantity: p.quantity, unit: p.unit, estimated_cost: p.estimated_cost,
+        lead_time_days: p.lead_time_days, required_by_date: p.required_by_date,
+        order_date: p.order_date, expected_delivery_date: p.expected_delivery_date,
+        actual_delivery_date: p.actual_delivery_date, supplier_name: p.supplier_name,
+        supplier_contact: p.supplier_contact, invoice_number: p.invoice_number,
+        status: p.status, notes: p.notes, created_by: p.created_by,
+      })));
+    }
+
+    // 11. Copy team contacts
+    const { data: teamContacts } = await supabase.from('project_team_contacts').select('*').eq('project_id', sourceProjectId);
+    if (teamContacts?.length) {
+      await supabase.from('project_team_contacts').insert(teamContacts.map(tc => ({
+        project_id: newProject.id, display_name: tc.display_name,
+        role_type: tc.role_type, phone: tc.phone, email: tc.email,
+        photo_url: tc.photo_url, crea: tc.crea,
+      })));
+    }
+
+    // 12. Copy 3D versions and images
+    const { data: versions3d } = await supabase.from('project_3d_versions')
+      .select('*, project_3d_images(*)').eq('project_id', sourceProjectId);
+    if (versions3d?.length) {
+      for (const v of versions3d) {
+        const { data: newVersion } = await supabase.from('project_3d_versions')
+          .insert({ project_id: newProject.id, version_number: v.version_number, created_by: v.created_by, stage_key: v.stage_key })
+          .select().single();
+        if (newVersion && v.project_3d_images?.length > 0) {
+          await supabase.from('project_3d_images').insert(
+            v.project_3d_images.map((img: any) => ({
+              version_id: newVersion.id, storage_path: img.storage_path, sort_order: img.sort_order,
+            }))
+          );
+        }
+      }
+    }
+
+    // 13. Copy member permissions
+    const { data: permissions } = await supabase.from('project_member_permissions').select('*').eq('project_id', sourceProjectId);
+    if (permissions?.length) {
+      await supabase.from('project_member_permissions').insert(permissions.map(p => ({
+        project_id: newProject.id, user_id: p.user_id, permission: p.permission,
+        granted: p.granted, granted_by: p.granted_by,
+      })));
+    }
+
+    // 14. Mark original project as completed
+    await supabase.from('projects').update({ status: 'completed' }).eq('id', sourceProjectId);
+
+    return { data: { ...newProject, status: newProject.status as ProjectStatus }, error: null };
+  });
+}
