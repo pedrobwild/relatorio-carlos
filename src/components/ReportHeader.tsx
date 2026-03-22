@@ -156,9 +156,9 @@ const ReportHeader = ({
       ? totalWorkingDays
       : (today < end ? calculateWorkingDays(today, end) : 0);
 
-    const hasWeights = activities.some(a => (a as any).weight !== undefined);
+    const hasWeights = activities.some(a => a.weight !== undefined);
     const totalWeight = hasWeights
-      ? activities.reduce((sum, a) => sum + ((a as any).weight || 0), 0)
+      ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
       : activities.length;
 
     const completedWeight = activities.reduce((sum, a) => {
