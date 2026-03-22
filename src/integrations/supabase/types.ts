@@ -3463,6 +3463,17 @@ export type Database = {
         Args: { p_formalization_id: string }
         Returns: string
       }
+      create_notification: {
+        Args: {
+          _action_url?: string
+          _body?: string
+          _project_id?: string
+          _title: string
+          _type: Database["public"]["Enums"]["notification_type"]
+          _user_id: string
+        }
+        Returns: string
+      }
       find_duplicate_file: {
         Args: { p_checksum: string; p_owner_id?: string; p_project_id?: string }
         Returns: {
