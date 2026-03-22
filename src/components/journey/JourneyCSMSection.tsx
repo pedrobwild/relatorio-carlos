@@ -39,16 +39,13 @@ export function JourneyCSMSection({ csm, projectId, isAdmin, onUpdate }: Journey
 
   const handleSave = async () => {
     try {
-      const { error } = await supabase
-        .from('journey_csm')
-        .update({
-          name: formData.name,
-          role_title: formData.role_title,
-          description: formData.description,
-          email: formData.email || null,
-          phone: formData.phone || null,
-        })
-        .eq('id', csm.id);
+      const { error } = await journeyRepo.updateCSM(csm.id, {
+        name: formData.name,
+        role_title: formData.role_title,
+        description: formData.description,
+        email: formData.email || null,
+        phone: formData.phone || null,
+      });
 
       if (error) throw error;
       toast.success('Informações atualizadas');
