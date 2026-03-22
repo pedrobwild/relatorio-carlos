@@ -3,7 +3,7 @@ import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, ShoppingC
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getStatus, getDaysOverdue, getDaysRemaining, type PendingType, type PendingStatus } from "@/hooks/usePendencias";
+import { getStatus, getDaysOverdue, getDaysRemaining, type PendingType, type PendingStatus, type PendingItem } from "@/hooks/usePendencias";
 import { cn } from "@/lib/utils";
 
 // ---- helpers ----
