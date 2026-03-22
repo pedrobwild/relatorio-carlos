@@ -339,7 +339,7 @@ const Index = () => {
                             />
                             <div className="mt-6">
                               <WeeklyReportsHistory
-                                projectStartDate={reportData.startDate}
+                                projectStartDate={reportData.startDate ?? ''}
                                 reportDate={reportData.reportDate}
                                 activities={reportData.activities}
                                 onReportClick={handleReportClick}

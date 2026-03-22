@@ -138,8 +138,8 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     ].filter(Boolean) as Date[];
     
     dates.forEach(d => {
-      if (!minDate || d < minDate) minDate = d;
-      if (!maxDate || d > maxDate) maxDate = d;
+      if (minDate === undefined || d < minDate) minDate = d;
+      if (maxDate === undefined || d > maxDate) maxDate = d;
     });
   });
 

@@ -32,7 +32,7 @@ interface FormData {
     party_type: 'customer' | 'company';
     display_name: string;
     email: string;
-    role_label: string;
+    role_label: string | undefined;
     must_sign: boolean;
   }>;
 }

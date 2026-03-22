@@ -137,7 +137,7 @@ export function usePendingItemsWithContext(projectId?: string, includeCompleted 
     queryKey: ["pending-items-context", projectId, includeCompleted],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_pending_items_with_context", {
-        p_project_id: (projectId || null) as string | null,
+        p_project_id: (projectId ?? null) as string | null,
         p_include_completed: includeCompleted,
       });
 
