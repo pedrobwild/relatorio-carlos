@@ -15,9 +15,8 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { ProjectWithCustomer } from '@/infra/repositories';
+import { projectsRepo, type ProjectWithCustomer } from '@/infra/repositories';
 
 interface DuplicateProjectModalProps {
   project: ProjectWithCustomer | null;
@@ -99,115 +98,26 @@ export function DuplicateProjectModal({
     setLoading(true);
 
     try {
-      // 1. Create the new project
-      const { data: newProject, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: projectName.trim(),
-          unit_name: unitName.trim() || null,
-          address: address.trim() || null,
-          planned_start_date: startDateUndefined ? null : (plannedStartDate || null),
-          planned_end_date: endDateUndefined ? null : (plannedEndDate || null),
-          contract_value: project.contract_value,
-          status: 'active',
-          created_by: user.id,
-          org_id: project.org_id,
-          is_project_phase: isProjectPhase,
-        })
-        .select()
-        .single();
-
-      if (projectError) throw projectError;
-
-      // 2. Add current user as engineer (legacy table for backwards compatibility)
-      const { error: engineerError } = await supabase.from('project_engineers').insert({
-        project_id: newProject.id,
-        engineer_user_id: user.id,
-        is_primary: true,
+      const { error } = await projectsRepo.duplicateProject({
+        source: project,
+        newName: projectName.trim(),
+        unitName: unitName.trim() || null,
+        address: address.trim() || null,
+        plannedStartDate: startDateUndefined ? null : (plannedStartDate || null),
+        plannedEndDate: endDateUndefined ? null : (plannedEndDate || null),
+        contractValue: project.contract_value,
+        isProjectPhase,
+        orgId: project.org_id,
+        createdBy: user.id,
+        customer: {
+          name: customerName.trim(),
+          email: customerEmail.trim(),
+          phone: customerPhone.trim() || null,
+        },
+        options,
       });
-      
-      if (engineerError) {
-        console.error('Engineer assignment error:', engineerError);
-      }
 
-      // 3. Add current user to project_members as owner (required for can_manage_project)
-      const { error: memberError } = await supabase.from('project_members').insert({
-        project_id: newProject.id,
-        user_id: user.id,
-        role: 'owner',
-      });
-      
-      if (memberError) {
-        console.error('Member assignment error:', memberError);
-      }
-
-      // 4. Add customer
-      const { error: customerError } = await supabase.from('project_customers').insert({
-        project_id: newProject.id,
-        customer_name: customerName.trim(),
-        customer_email: customerEmail.trim().toLowerCase(),
-        customer_phone: customerPhone.trim() || null,
-      });
-      
-      if (customerError) {
-        console.error('Customer creation error:', customerError);
-      }
-
-      // 5. Copy activities if selected
-      if (options.includeActivities) {
-        const { data: activities } = await supabase
-          .from('project_activities')
-          .select('*')
-          .eq('project_id', project.id)
-          .order('sort_order');
-
-        if (activities && activities.length > 0) {
-          const activitiesToInsert = activities.map((a, index) => ({
-            project_id: newProject.id,
-            description: a.description,
-            planned_start: a.planned_start,
-            planned_end: a.planned_end,
-            // Conditionally include progress data
-            actual_start: options.includeProgress ? a.actual_start : null,
-            actual_end: options.includeProgress ? a.actual_end : null,
-            baseline_start: options.includeProgress ? a.baseline_start : null,
-            baseline_end: options.includeProgress ? a.baseline_end : null,
-            baseline_saved_at: options.includeProgress ? a.baseline_saved_at : null,
-            weight: a.weight,
-            sort_order: index + 1,
-            created_by: user.id,
-            predecessor_ids: null, // Reset predecessors for new project
-          }));
-
-          await supabase.from('project_activities').insert(activitiesToInsert);
-        }
-      }
-
-      // 6. Copy payments if selected
-      if (options.includePayments) {
-        const { data: payments } = await supabase
-          .from('project_payments')
-          .select('*')
-          .eq('project_id', project.id)
-          .order('installment_number');
-
-        if (payments && payments.length > 0) {
-          const paymentsToInsert = payments.map((p) => ({
-            project_id: newProject.id,
-            installment_number: p.installment_number,
-            description: p.description,
-            amount: p.amount,
-            due_date: p.due_date, // Keep same dates or reset?
-          }));
-
-          await supabase.from('project_payments').insert(paymentsToInsert);
-        }
-      }
-
-      // 7. Initialize journey if selected
-      if (options.includeJourney) {
-        await supabase.rpc('initialize_project_journey', { p_project_id: newProject.id });
-      }
+      if (error) throw error;
 
       toast({
         title: 'Obra duplicada com sucesso!',
