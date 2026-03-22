@@ -297,7 +297,7 @@ export default function EditarObra() {
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
-        .eq('id', projectId)
+        .eq('id', projectId!)
         .single();
       
       if (projectError) throw projectError;
