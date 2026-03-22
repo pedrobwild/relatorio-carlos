@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { journeyRepo } from '@/infra/repositories';
+import { toast } from 'sonner';
 import defaultCsmPhoto from '@/assets/csm-victorya.png';
 
 export interface JourneyCSM {
