@@ -126,10 +126,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     : activities.length;
 
   // Find project date range
-  let minDate: Date | undefined = undefined;
-  let maxDate: Date | undefined = undefined;
-  
-  activities.forEach(a => {
+  const dateRange = activities.reduce<{ min: Date | null; max: Date | null }>((acc, a) => {
     const dates = [
       parseDate(a.plannedStart),
       parseDate(a.plannedEnd),
@@ -137,14 +134,15 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       parseDate(a.actualEnd)
     ].filter(Boolean) as Date[];
     
-    dates.forEach(d => {
-      if (minDate === undefined || d < minDate) minDate = d;
-      if (maxDate === undefined || d > maxDate) maxDate = d;
-    });
-  });
+    for (const d of dates) {
+      if (!acc.min || d < acc.min) acc.min = d;
+      if (!acc.max || d > acc.max) acc.max = d;
+    }
+    return acc;
+  }, { min: null, max: null });
 
-  const resolvedMin: Date | undefined = minDate;
-  const resolvedMax: Date | undefined = maxDate;
+  const resolvedMin = dateRange.min;
+  const resolvedMax = dateRange.max;
   
   if (!resolvedMin || !resolvedMax) {
     return { 
