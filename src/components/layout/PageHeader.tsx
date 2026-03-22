@@ -40,7 +40,7 @@ export function PageHeader({
   breadcrumbs,
 }: PageHeaderProps) {
   const { hasShell } = useProjectLayout();
-  const BackWrapper = backTo ? Link : "div";
+  const BackWrapper = backTo ? Link : ("div" as React.ElementType);
   const backProps = backTo ? { to: backTo } : {};
 
   // When inside ProjectShell (staff sidebar), render simplified inline header
