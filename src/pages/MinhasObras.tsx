@@ -7,6 +7,7 @@ import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useClientDashboard } from '@/hooks/useClientDashboard';
+import { useDashboardActivities } from '@/hooks/useDashboardActivities';
 import { DashboardStatsCards } from '@/pages/minhas-obras/DashboardStatsCards';
 import { UpcomingPaymentsCard } from '@/pages/minhas-obras/UpcomingPaymentsCard';
 import { ProjectDashboardCard } from '@/pages/minhas-obras/ProjectDashboardCard';
