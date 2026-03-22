@@ -143,7 +143,10 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     });
   });
 
-  if (!minDate || !maxDate) {
+  const resolvedMin: Date | undefined = minDate;
+  const resolvedMax: Date | undefined = maxDate;
+  
+  if (!resolvedMin || !resolvedMax) {
     return { 
       data: [{ date: "Início", previsto: 0, realizado: null, timestamp: 0, activity: null }],
       milestones: { start: 0, end: 0, today: 0, half: 0 }
@@ -153,16 +156,16 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
   // Generate dates at regular intervals (every 3 days) for smoother curve
   const INTERVAL_DAYS = 3;
   const allDates: string[] = [];
-  const currentDate = new Date(minDate);
+  const currentDate = new Date(resolvedMin);
   
-  while (currentDate <= maxDate) {
+  while (currentDate <= resolvedMax) {
     const isoDate = currentDate.toISOString().split('T')[0];
     allDates.push(isoDate);
     currentDate.setDate(currentDate.getDate() + INTERVAL_DAYS);
   }
   
   // Always include the last date
-  const maxIsoDate = maxDate.toISOString().split('T')[0];
+  const maxIsoDate = resolvedMax.toISOString().split('T')[0];
   if (!allDates.includes(maxIsoDate)) {
     allDates.push(maxIsoDate);
   }

@@ -502,15 +502,15 @@ export default function EditarObra() {
       
       const { data, error } = await supabase
         .from('project_activities')
-        .insert({
+        .insert([{
           project_id: projectId!,
           description: newActivity.description,
           planned_start: newActivity.planned_start,
           planned_end: newActivity.planned_end,
           weight: parseFloat(newActivity.weight) || 5,
           sort_order: nextOrder,
-          created_by: user?.id,
-        })
+          created_by: user?.id ?? '',
+        }])
         .select()
         .single();
 
