@@ -7,6 +7,7 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 interface ProjectDashboardCardProps {
   project: ProjectSummary;
   onClick: () => void;
+  activities?: Activity[];
 }
 
 const statusLabels: Record<string, string> = {
