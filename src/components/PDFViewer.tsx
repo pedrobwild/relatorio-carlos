@@ -223,9 +223,9 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
 
       {/* PDF Document with Scroll/Pan */}
       <div
-        ref={(node) => {
+        ref={(node: HTMLDivElement | null) => {
           containerRef(node);
-          scrollContainerRef.current = node;
+          (scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }}
         className={cn("flex-1 min-h-0 overflow-auto", scale > 1 && "cursor-grab", isPanning && "cursor-grabbing")}
         style={{ 

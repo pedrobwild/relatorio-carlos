@@ -18,7 +18,7 @@ interface ReviewStepProps {
       party_type: 'customer' | 'company';
       display_name: string;
       email: string;
-      role_label: string;
+      role_label?: string;
       must_sign: boolean;
     }>;
   };

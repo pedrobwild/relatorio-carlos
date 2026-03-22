@@ -31,7 +31,7 @@ export function AdminMeetingPanel({ stageId, projectId }: AdminMeetingPanelProps
   const { data: availability, isLoading } = useMeetingAvailability(stageId, projectId);
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
-  const state = deriveMeetingState(availability);
+  const state = deriveMeetingState(availability ?? null);
   const badge = STATUS_BADGE[state];
 
   if (isLoading) {

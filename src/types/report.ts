@@ -46,8 +46,8 @@ export interface ReportData {
   projectName: string;
   unitName: string;
   clientName: string;
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   reportDate: string; // Data de geração do relatório
   activities: Activity[];
   incidents?: ReportIncident[];

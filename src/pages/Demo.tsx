@@ -53,7 +53,7 @@ export default function Demo() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const allWeeklyReports = generateWeeklyReports(
-    demoReportData.startDate, 
+    demoReportData.startDate ?? '', 
     demoReportData.reportDate, 
     demoReportData.activities
   );
@@ -242,7 +242,7 @@ export default function Demo() {
                           </>
                         ) : (
                           <WeeklyReportsHistory
-                            projectStartDate={demoReportData.startDate}
+                            projectStartDate={demoReportData.startDate ?? ''}
                             reportDate={demoReportData.reportDate}
                             activities={demoReportData.activities}
                             onReportClick={handleReportClick}

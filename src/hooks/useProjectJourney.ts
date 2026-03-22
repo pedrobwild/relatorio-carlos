@@ -33,7 +33,7 @@ export interface JourneyStage {
   project_id: string;
   sort_order: number;
   name: string;
-  icon: string;
+  icon: string | null;
   status: JourneyStageStatus;
   description: string | null;
   warning_text: string | null;

@@ -62,7 +62,7 @@ const generateWeeklyProgressData = (
   currentWeek: number,
   projectStartDate: string
 ) => {
-  const data = [];
+  const data: Array<{ week: string; previsto: number; realizado: number; desvio: number }> = [];
   const startDate = parseLocalDate(projectStartDate);
   
   for (let week = 1; week <= currentWeek; week++) {

@@ -183,7 +183,7 @@ export function useProjectPortal() {
 
   const allWeeklyReports = useMemo(() => {
     if (!reportData || reportData.activities.length === 0) return [];
-    return generateWeeklyReports(reportData.startDate, reportData.reportDate, reportData.activities);
+    return generateWeeklyReports(reportData.startDate ?? '', reportData.reportDate, reportData.activities);
   }, [reportData]);
 
   const reportsChronological = useMemo(() => [...allWeeklyReports].reverse(), [allWeeklyReports]);

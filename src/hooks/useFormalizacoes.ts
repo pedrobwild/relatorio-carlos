@@ -22,13 +22,13 @@ async function logDomainEvent(params: {
   try {
     await supabase.rpc('log_domain_event', {
       _org_id: params.orgId,
-      _project_id: params.projectId || null,
+      _project_id: params.projectId ?? '',
       _entity_type: params.entityType,
       _entity_id: params.entityId,
       _event_type: params.eventType,
-      _payload: (params.payload || {}) as Json,
-      _ip_address: null,
-      _user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      _payload: (params.payload ?? {}) as Json,
+      _ip_address: undefined,
+      _user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
     });
   } catch (e) {
     console.warn('Failed to log domain event:', e);

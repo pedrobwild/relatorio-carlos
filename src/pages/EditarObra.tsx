@@ -297,7 +297,7 @@ export default function EditarObra() {
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
-        .eq('id', projectId)
+        .eq('id', projectId!)
         .single();
       
       if (projectError) throw projectError;
@@ -307,7 +307,7 @@ export default function EditarObra() {
       const { data: customerData } = await supabase
         .from('project_customers')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId!)
         .single();
       
       setCustomer(customerData || null);
@@ -316,7 +316,7 @@ export default function EditarObra() {
       const { data: activitiesData } = await supabase
         .from('project_activities')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId!)
         .order('sort_order', { ascending: true });
       
       setActivities(activitiesData || []);
@@ -325,7 +325,7 @@ export default function EditarObra() {
       const { data: paymentsData } = await supabase
         .from('project_payments')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId!)
         .order('installment_number', { ascending: true });
       
       setPayments(paymentsData || []);
@@ -334,14 +334,14 @@ export default function EditarObra() {
       const { data: engineersData } = await supabase
         .from('project_engineers')
         .select('*, profiles:engineer_user_id(display_name, email)')
-        .eq('project_id', projectId);
+        .eq('project_id', projectId!);
       
       setEngineers((engineersData || []).map(e => {
         const profiles = (e as Record<string, unknown>).profiles as { display_name: string | null; email: string | null } | null;
         return {
           ...e,
-          display_name: profiles?.display_name,
-          email: profiles?.email,
+          display_name: profiles?.display_name ?? undefined,
+          email: profiles?.email ?? undefined,
         };
       }));
 
@@ -502,15 +502,15 @@ export default function EditarObra() {
       
       const { data, error } = await supabase
         .from('project_activities')
-        .insert({
-          project_id: projectId,
+        .insert([{
+          project_id: projectId!,
           description: newActivity.description,
           planned_start: newActivity.planned_start,
           planned_end: newActivity.planned_end,
           weight: parseFloat(newActivity.weight) || 5,
           sort_order: nextOrder,
-          created_by: user?.id,
-        })
+          created_by: user?.id ?? '',
+        }])
         .select()
         .single();
 
@@ -572,7 +572,7 @@ export default function EditarObra() {
       const { data, error } = await supabase
         .from('project_payments')
         .insert({
-          project_id: projectId,
+           project_id: projectId!,
           installment_number: nextInstallment,
           description: newPayment.description,
           amount: parseFloat(newPayment.amount),

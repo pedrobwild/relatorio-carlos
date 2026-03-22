@@ -422,8 +422,8 @@ export async function findDuplicateByChecksum(
 ): Promise<FileMetadata | null> {
   const { data, error } = await supabase.rpc('find_duplicate_file', {
     p_checksum: checksum,
-    p_owner_id: ownerId ?? null,
-    p_project_id: projectId ?? null,
+    p_owner_id: ownerId,
+    p_project_id: projectId,
   });
 
   if (error || !data || data.length === 0) {
@@ -444,8 +444,8 @@ export async function generateStoragePath(
   filename: string
 ): Promise<string> {
   const { data, error } = await supabase.rpc('generate_file_storage_path', {
-    p_org_id: orgId,
-    p_project_id: projectId,
+     p_org_id: orgId as string,
+     p_project_id: projectId as string,
     p_filename: sanitizeFilename(filename),
   });
 

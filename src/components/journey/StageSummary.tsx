@@ -84,8 +84,8 @@ const stageIconMap: Record<string, React.ComponentType<{ className?: string }>> 
   'circle': Circle,
 };
 
-function getStageIcon(iconName: string): React.ComponentType<{ className?: string }> {
-  return stageIconMap[iconName] || Circle;
+function getStageIcon(iconName: string | null): React.ComponentType<{ className?: string }> {
+  return (iconName && stageIconMap[iconName]) || Circle;
 }
 
 function getDisplayDate(stage: JourneyStage): string | null {

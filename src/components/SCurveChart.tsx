@@ -126,10 +126,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     : activities.length;
 
   // Find project date range
-  let minDate: Date | null = null;
-  let maxDate: Date | null = null;
-  
-  activities.forEach(a => {
+  const dateRange = activities.reduce<{ min: Date | null; max: Date | null }>((acc, a) => {
     const dates = [
       parseDate(a.plannedStart),
       parseDate(a.plannedEnd),
@@ -137,13 +134,17 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
       parseDate(a.actualEnd)
     ].filter(Boolean) as Date[];
     
-    dates.forEach(d => {
-      if (!minDate || d < minDate) minDate = d;
-      if (!maxDate || d > maxDate) maxDate = d;
-    });
-  });
+    for (const d of dates) {
+      if (!acc.min || d < acc.min) acc.min = d;
+      if (!acc.max || d > acc.max) acc.max = d;
+    }
+    return acc;
+  }, { min: null, max: null });
 
-  if (!minDate || !maxDate) {
+  const resolvedMin = dateRange.min;
+  const resolvedMax = dateRange.max;
+  
+  if (!resolvedMin || !resolvedMax) {
     return { 
       data: [{ date: "Início", previsto: 0, realizado: null, timestamp: 0, activity: null }],
       milestones: { start: 0, end: 0, today: 0, half: 0 }
@@ -153,16 +154,16 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
   // Generate dates at regular intervals (every 3 days) for smoother curve
   const INTERVAL_DAYS = 3;
   const allDates: string[] = [];
-  const currentDate = new Date(minDate);
+  const currentDate = new Date(resolvedMin);
   
-  while (currentDate <= maxDate) {
+  while (currentDate <= resolvedMax) {
     const isoDate = currentDate.toISOString().split('T')[0];
     allDates.push(isoDate);
     currentDate.setDate(currentDate.getDate() + INTERVAL_DAYS);
   }
   
   // Always include the last date
-  const maxIsoDate = maxDate.toISOString().split('T')[0];
+  const maxIsoDate = resolvedMax.toISOString().split('T')[0];
   if (!allDates.includes(maxIsoDate)) {
     allDates.push(maxIsoDate);
   }
@@ -186,7 +187,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     return dateA.getTime() - dateB.getTime();
   });
 
-  const firstDate = minDate;
+  const firstDate = resolvedMin;
   const lastPlannedDate = activities.reduce((latest, a) => {
     const plannedEnd = parseDate(a.plannedEnd);
     if (plannedEnd && (!latest || plannedEnd > latest)) return plannedEnd;
@@ -639,9 +640,10 @@ const SCurveChart = ({
                 name="realizado"
                 stroke="#22c55e"
                 strokeWidth={3.5}
-                dot={(props: any) => {
-                  const { cx, cy, payload } = props;
-                  if (payload.realizado === null) return null;
+                dot={(props: Record<string, unknown>) => {
+                  const { cx, cy, payload } = props as { cx: number; cy: number; payload: { realizado: number | null } };
+                  if (payload.realizado === null) return <></>;
+
                   return (
                     <circle
                       cx={cx}
