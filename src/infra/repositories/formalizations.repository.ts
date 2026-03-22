@@ -142,7 +142,7 @@ export async function addEvidenceLink(
       .from('formalization_evidence_links')
       .insert({
         formalization_id: input.formalization_id,
-        kind: input.kind as any,
+        kind: input.kind,
         url: input.url,
         description: input.description ?? null,
         created_by: input.created_by,

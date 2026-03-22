@@ -467,7 +467,7 @@ const WeeklyReportEditor = ({
                     </div>
                     <div>
                       <Label className="text-xs">Severidade</Label>
-                      <Select value={risk.severity} onValueChange={(v) => updateRiskIssue(index, { severity: v as any })}>
+                      <Select value={risk.severity} onValueChange={(v) => updateRiskIssue(index, { severity: v as RiskIssue['severity'] })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>

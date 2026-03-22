@@ -807,8 +807,8 @@ export default function EditarObra() {
                   <div>
                     <Label>CEP</Label>
                     <Input
-                      value={(project as any).cep || ''}
-                      onChange={(e) => handleProjectChange('cep' as any, e.target.value || null)}
+                      value={project.cep || ''}
+                      onChange={(e) => handleProjectChange('cep', e.target.value || null)}
                       placeholder="00000-000"
                     />
                   </div>

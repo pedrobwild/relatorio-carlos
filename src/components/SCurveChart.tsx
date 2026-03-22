@@ -425,7 +425,7 @@ const SCurveChart = ({
   // Use unified progress calculation (same as header and card)
   const todayRealizado = useMemo(() => {
     return calcWeightedProgress(
-      activities.map(a => ({ weight: (a as any).weight, actualEnd: a.actualEnd }))
+      activities.map(a => ({ weight: a.weight, actualEnd: a.actualEnd }))
     );
   }, [activities]);
 
