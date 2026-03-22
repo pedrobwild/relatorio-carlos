@@ -37,8 +37,8 @@ async function logDomainEvent(params: {
 
 
 export function useFormalizacoes(filters?: {
-  status?: string;
-  type?: string;
+  status?: Database['public']['Enums']['formalization_status'];
+  type?: Database['public']['Enums']['formalization_type'];
   projectId?: string;
 }) {
   return useQuery({
