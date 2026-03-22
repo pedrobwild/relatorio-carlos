@@ -3,6 +3,7 @@ import { LogOut, User, Settings, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
 
 interface AppHeaderProps {
