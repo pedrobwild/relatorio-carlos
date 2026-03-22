@@ -19,6 +19,7 @@ import { pdfLogger } from "@/lib/devLogger";
 import { prefetchForTab } from "@/lib/prefetch";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { format } from "date-fns";
 import { useProjectPortal } from "@/hooks/useProjectPortal";
 
@@ -35,7 +36,10 @@ const MobileHeader = () => (
     <div className="flex items-center justify-between gap-2">
       <img src={bwildLogo} alt="Bwild" className="h-7 w-auto shrink-0" />
       <h1 className="font-bold text-sm text-foreground truncate flex-1 text-center">Portal do Cliente</h1>
-      <UserMenu />
+      <div className="flex items-center gap-1">
+        <NotificationBell />
+        <UserMenu />
+      </div>
     </div>
   </div>
 );

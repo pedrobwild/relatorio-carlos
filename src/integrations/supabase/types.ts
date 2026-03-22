@@ -1462,6 +1462,57 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          body: string | null
+          created_at: string
+          id: string
+          project_id: string | null
+          read_at: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          read_at?: string | null
+          title: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string | null
+          read_at?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "notifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obras: {
         Row: {
           codigo_interno: string | null
@@ -3412,6 +3463,17 @@ export type Database = {
         Args: { p_formalization_id: string }
         Returns: string
       }
+      create_notification: {
+        Args: {
+          _action_url?: string
+          _body?: string
+          _project_id?: string
+          _title: string
+          _type: Database["public"]["Enums"]["notification_type"]
+          _user_id: string
+        }
+        Returns: string
+      }
       find_duplicate_file: {
         Args: { p_checksum: string; p_owner_id?: string; p_project_id?: string }
         Returns: {
@@ -3662,6 +3724,15 @@ export type Database = {
         | "in_progress"
         | "completed"
       marco_status: "pendente" | "em_andamento" | "concluido" | "atrasado"
+      notification_type:
+        | "payment_due"
+        | "payment_overdue"
+        | "formalization_pending"
+        | "document_uploaded"
+        | "stage_changed"
+        | "pending_item_created"
+        | "report_published"
+        | "general"
       obra_status:
         | "planejamento"
         | "em_andamento"
@@ -3860,6 +3931,16 @@ export const Constants = {
         "completed",
       ],
       marco_status: ["pendente", "em_andamento", "concluido", "atrasado"],
+      notification_type: [
+        "payment_due",
+        "payment_overdue",
+        "formalization_pending",
+        "document_uploaded",
+        "stage_changed",
+        "pending_item_created",
+        "report_published",
+        "general",
+      ],
       obra_status: [
         "planejamento",
         "em_andamento",
