@@ -102,7 +102,7 @@ function DesktopDocCard({
   setModalOpen: (v: boolean) => void;
 }) {
   return (
-    <ExecutivoPDFViewerModal
+    <RelatedDocPDFModal
       doc={doc}
       icon={Icon}
       open={modalOpen}
