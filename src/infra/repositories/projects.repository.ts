@@ -12,6 +12,7 @@ import {
   type RepositoryResult,
   type RepositoryListResult,
 } from './base.repository';
+import type { Database } from '@/integrations/supabase/types';
 
 // ============================================================================
 // Types
