@@ -69,7 +69,7 @@ function RelatedDocCard({
             <p className="text-caption">{subtitle}</p>
           </div>
         </div>
-        <ExecutivoPDFViewerModal
+        <RelatedDocPDFModal
           doc={doc}
           icon={Icon}
           open={modalOpen}
