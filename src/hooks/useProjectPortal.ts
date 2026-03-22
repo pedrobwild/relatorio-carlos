@@ -207,9 +207,9 @@ export function useProjectPortal() {
     if (!projectId) return;
     const column = milestoneKeyToColumn[key];
     const { supabase } = await import('@/integrations/supabase/client');
-    const { error } = await supabase.from('projects').update({ [column]: date } as any).eq('id', projectId);
+    const { error } = await supabase.from('projects').update({ [column]: date }).eq('id', projectId);
     if (error) { toast.error('Erro ao salvar data do marco'); throw error; }
-    if (project) setProject({ ...project, [column]: date } as any);
+    if (project) setProject({ ...project, [column]: date } as typeof project);
     toast.success('Data do marco atualizada');
   }, [projectId, project, setProject]);
 
