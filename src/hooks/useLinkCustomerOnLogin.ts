@@ -30,7 +30,7 @@ export function useLinkCustomerOnLogin(user: User | null) {
         const { data: unlinkedProjects, error: fetchError } = await supabase
           .from('project_customers')
           .select('id, project_id, customer_name')
-          .eq('customer_email', user.email)
+          .eq('customer_email', user.email!)
           .is('customer_user_id', null);
 
         if (fetchError) {
