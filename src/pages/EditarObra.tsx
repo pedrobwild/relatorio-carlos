@@ -445,8 +445,8 @@ export default function EditarObra() {
           name: project.name,
           unit_name: project.unit_name,
           address: project.address,
-          bairro: (project as any).bairro || null,
-          cep: (project as any).cep || null,
+          bairro: project.bairro || null,
+          cep: project.cep || null,
           planned_start_date: project.planned_start_date || null,
           planned_end_date: project.planned_end_date || null,
           actual_start_date: project.actual_start_date,
@@ -462,7 +462,7 @@ export default function EditarObra() {
           date_official_delivery: project.date_official_delivery || null,
           date_mobilization_start: project.date_mobilization_start || null,
           contract_signing_date: project.contract_signing_date || null,
-        } as any)
+        })
         .eq('id', project.id);
 
       if (error) throw error;
