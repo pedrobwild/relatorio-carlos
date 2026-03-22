@@ -81,7 +81,7 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
   const [startDate, setStartDate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
-  const [activeTab, setActiveTab] = useState<'schedule' | 'purchases'>('schedule');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'purchases' | 'alerts'>('schedule');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const parseFile = useCallback((file: File) => {
