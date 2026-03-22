@@ -414,8 +414,7 @@ function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void }) {
     setLoadingProjects(true);
     try {
       const { data } = await projectsRepo.getStaffProjects();
-      setAvailableProjects(data?.map(p => ({ id: p.id, name: p.name })) ?? []);
-      setProjects(data || []);
+      setProjects(data?.map(p => ({ id: p.id, name: p.name })) ?? []);
     } catch (err) {
       console.error('Error fetching projects:', err);
     } finally {

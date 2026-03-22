@@ -93,7 +93,7 @@ export default function VerificarAssinatura() {
         const { data, error } = await invokeFunction('verify-signature', { signature_hash: hash });
 
         if (error) throw error;
-        setResult(data);
+        setResult(data as VerificationResult);
       } catch (err) {
         console.error('Verification error:', err);
         setResult({ valid: false, error: 'Erro ao verificar assinatura' });

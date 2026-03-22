@@ -239,7 +239,7 @@ export default function FormalizacaoDetalhe() {
       if (error) throw error;
 
       // Create blob and download
-      const blob = new Blob([data], { type: 'application/pdf' });
+      const blob = new Blob([data as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
