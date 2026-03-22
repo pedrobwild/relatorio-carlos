@@ -34,15 +34,8 @@ export function VersionsListModal({ projectId, open, onOpenChange }: Props) {
 
     const loadCounts = async () => {
       const ids = versions.map(v => v.id);
-      const { data } = await supabase
-        .from('project_3d_images')
-        .select('version_id')
-        .in('version_id', ids);
-      if (data && !cancelled) {
-        const counts: Record<string, number> = {};
-        data.forEach((row: any) => {
-          counts[row.version_id] = (counts[row.version_id] || 0) + 1;
-        });
+      const counts = await get3DImageCounts(ids);
+      if (!cancelled) {
         setImageCountsCache(counts);
       }
     };
