@@ -224,7 +224,7 @@ export function TemplatesTab() {
     const validActivities = activities.filter((a) => a.description.trim());
     const payload = {
       name: form.name.trim(),
-      description: form.description.trim() || null,
+      description: form.description.trim() || undefined,
       is_project_phase: form.is_project_phase,
       default_activities: validActivities,
       default_contract_value: form.default_contract_value ? parseFloat(form.default_contract_value) : null,

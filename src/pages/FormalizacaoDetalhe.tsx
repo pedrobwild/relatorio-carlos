@@ -697,8 +697,8 @@ export default function FormalizacaoDetalhe() {
             {/* Version History */}
             <VersionHistory
               formalizationId={id!}
-              currentTitle={formalizacao.title}
-              currentSummary={formalizacao.summary}
+              currentTitle={formalizacao.title ?? ''}
+              currentSummary={formalizacao.summary ?? ''}
               currentBodyMd={formalizacao.body_md || ''}
             />
 

@@ -57,7 +57,7 @@ const createAcknowledgements = (
   customerDaysAgo: number = 5,
   companyDaysAgo: number = 5
 ) => {
-  const acks = [];
+  const acks: Array<Record<string, unknown>> = [];
   if (customerSigned) {
     acks.push({
       id: seedUuid("ack-c", formalizationId),

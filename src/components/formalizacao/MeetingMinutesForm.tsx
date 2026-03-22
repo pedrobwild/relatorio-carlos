@@ -62,7 +62,7 @@ export function MeetingMinutesForm({ onComplete, initialData }: MeetingMinutesFo
   });
 
   const onSubmit = (values: FormValues) => {
-    const sensitiveList = [];
+    const sensitiveList: string[] = [];
     if (values.sensitiveTopics.additives) sensitiveList.push('Aditivos');
     if (values.sensitiveTopics.scope) sensitiveList.push('Escopo');
     if (values.sensitiveTopics.deadlines) sensitiveList.push('Prazos');

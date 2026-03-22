@@ -106,6 +106,7 @@ export async function track(
   // Log to structured logger
   logInfo(`Telemetry: ${event}`, {
     component: 'telemetry',
+    userId: userId ?? undefined,
     ...eventData,
   });
 

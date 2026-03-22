@@ -63,8 +63,8 @@ interface ReportHeaderProps {
   projectName: string;
   unitName: string;
   clientName: string;
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   reportDate: string;
   activities: Activity[];
   isProjectPhase?: boolean;

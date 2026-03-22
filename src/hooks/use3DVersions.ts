@@ -129,7 +129,7 @@ export function use3DVersions(projectId: string | undefined) {
       // 3. Upload files and create image records; cleanup on failure
       const uploadedPaths: string[] = [];
       try {
-        const imageInserts = [];
+        const imageInserts: Array<{ version_id: string; storage_path: string; sort_order: number }> = [];
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const storagePath = `projects/${projectId}/3d/${version.id}/${Date.now()}_${i}.png`;

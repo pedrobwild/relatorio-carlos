@@ -572,7 +572,7 @@ export default function EditarObra() {
       const { data, error } = await supabase
         .from('project_payments')
         .insert({
-          project_id: projectId,
+           project_id: projectId!,
           installment_number: nextInstallment,
           description: newPayment.description,
           amount: parseFloat(newPayment.amount),
