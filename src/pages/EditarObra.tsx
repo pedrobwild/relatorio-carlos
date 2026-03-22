@@ -334,14 +334,14 @@ export default function EditarObra() {
       const { data: engineersData } = await supabase
         .from('project_engineers')
         .select('*, profiles:engineer_user_id(display_name, email)')
-        .eq('project_id', projectId);
+        .eq('project_id', projectId!);
       
       setEngineers((engineersData || []).map(e => {
         const profiles = (e as Record<string, unknown>).profiles as { display_name: string | null; email: string | null } | null;
         return {
           ...e,
-          display_name: profiles?.display_name,
-          email: profiles?.email,
+          display_name: profiles?.display_name ?? undefined,
+          email: profiles?.email ?? undefined,
         };
       }));
 
