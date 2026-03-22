@@ -7,6 +7,7 @@ import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useClientDashboard } from '@/hooks/useClientDashboard';
+import { useDashboardActivities } from '@/hooks/useDashboardActivities';
 import { DashboardStatsCards } from '@/pages/minhas-obras/DashboardStatsCards';
 import { UpcomingPaymentsCard } from '@/pages/minhas-obras/UpcomingPaymentsCard';
 import { ProjectDashboardCard } from '@/pages/minhas-obras/ProjectDashboardCard';
@@ -15,6 +16,8 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 export default function MinhasObras() {
   const navigate = useNavigate();
   const { projects, stats, upcomingPayments, isLoading, error } = useClientDashboard();
+  const activeIds = useMemo(() => projects.filter(p => p.status === 'active').map(p => p.id), [projects]);
+  const { data: activitiesMap } = useDashboardActivities(activeIds);
 
   const handleProjectClick = useCallback((project: ProjectSummary) => {
     sessionStorage.setItem('selectedProjectId', project.id);
@@ -91,6 +94,7 @@ export default function MinhasObras() {
                       key={project.id}
                       project={project}
                       onClick={() => handleProjectClick(project)}
+                      activities={activitiesMap?.get(project.id)}
                     />
                   ))}
                 </div>

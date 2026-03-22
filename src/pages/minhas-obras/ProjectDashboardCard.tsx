@@ -2,11 +2,15 @@ import { useMemo } from 'react';
 import { ChevronRight, AlertCircle, ClipboardSignature, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
+import { SCurveSparkline } from '@/components/scurve/SCurveSparkline';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
+import type { Activity } from '@/types/report';
 
 interface ProjectDashboardCardProps {
   project: ProjectSummary;
   onClick: () => void;
+  activities?: Activity[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -23,7 +27,7 @@ const statusVariants: Record<string, string> = {
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
-export function ProjectDashboardCard({ project, onClick }: ProjectDashboardCardProps) {
+export function ProjectDashboardCard({ project, onClick, activities }: ProjectDashboardCardProps) {
   const isActive = project.status === 'active';
   const progress = project.progress_percentage || 0;
 
@@ -74,6 +78,10 @@ export function ProjectDashboardCard({ project, onClick }: ProjectDashboardCardP
         {/* Row 2: Progress bar (only for active non-project-phase) */}
         {isActive && (
           <div className="space-y-1.5">
+            {/* S-Curve Sparkline */}
+            {activities && activities.length > 0 && (
+              <SCurveSparkline activities={activities} height={44} />
+            )}
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500"
