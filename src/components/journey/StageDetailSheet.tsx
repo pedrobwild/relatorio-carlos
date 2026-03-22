@@ -37,6 +37,7 @@ import { StageDatesPanel } from './StageDatesPanel';
 import { MeetingCTA } from './MeetingCTA';
 import { StageRegistry } from './StageRegistry';
 import { StageChat } from './StageChat';
+import { StagePhotoGallery } from './StagePhotoGallery';
 
 interface StageDetailSheetProps {
   stage: JourneyStage | null;
