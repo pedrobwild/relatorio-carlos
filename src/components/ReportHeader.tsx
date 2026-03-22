@@ -707,7 +707,7 @@ const ReportHeader = ({
                 <div className="flex items-center justify-between gap-3 mb-3 px-1">
                   <div>
                     <span className="text-meta font-semibold uppercase tracking-wider block mb-0.5">Início</span>
-                    <span className="text-sm font-bold tabular-nums text-foreground">{formatDateShort(displayStartDate)}</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{startDate ? formatDateShort(displayStartDate) : '—'}</span>
                   </div>
                   <div className="flex-1 h-px bg-border mx-2" />
                   <div className="text-right">
