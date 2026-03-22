@@ -336,14 +336,14 @@ export default function EditarObra() {
         .select('*, profiles:engineer_user_id(display_name, email)')
         .eq('project_id', projectId);
       
-      const profileData = (engData: typeof engineersData extends (infer T)[] | null ? T : never) => {
-        const p = engData.profiles as { display_name: string | null; email: string | null } | null;
-        return { display_name: p?.display_name, email: p?.email };
-      };
-      setEngineers((engineersData || []).map(e => ({
-        ...e,
-        ...profileData(e),
-      })));
+      setEngineers((engineersData || []).map(e => {
+        const profiles = (e as Record<string, unknown>).profiles as { display_name: string | null; email: string | null } | null;
+        return {
+          ...e,
+          display_name: profiles?.display_name,
+          email: profiles?.email,
+        };
+      }));
 
       // Fetch available engineers (staff users not already in this project)
       const { data: staffProfiles } = await supabase
