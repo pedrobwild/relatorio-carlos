@@ -49,7 +49,7 @@ export interface CreatePartyInput {
 
 export interface CreateEvidenceLinkInput {
   formalization_id: string;
-  kind: string;
+  kind: EvidenceLinkKind;
   url: string;
   description?: string | null;
   created_by: string;
