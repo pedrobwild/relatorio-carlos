@@ -126,8 +126,8 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     : activities.length;
 
   // Find project date range
-  let minDate: Date | null = null;
-  let maxDate: Date | null = null;
+  let minDate: Date | undefined = undefined;
+  let maxDate: Date | undefined = undefined;
   
   activities.forEach(a => {
     const dates = [
