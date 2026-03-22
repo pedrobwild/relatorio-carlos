@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, Plus, Filter, Search, FileSignature, ChevronRight } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Filter, Search, FileSignature, ChevronRight, CheckCircle2, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
