@@ -47,13 +47,24 @@ interface PurchaseItem {
   notes?: string;
 }
 
+interface BudgetRiskAlert {
+  type: string;
+  severity: 'alta' | 'media' | 'baixa';
+  message: string;
+  affectedItems?: string[];
+  recommendation: string;
+}
+
 interface GeneratedPlan {
   weeklySchedule: WeeklyScheduleItem[];
   purchaseList: PurchaseItem[];
+  budgetRiskAlerts?: BudgetRiskAlert[];
   summary: {
     totalWeeks: number;
+    bufferWeeks?: number;
     totalActivities: number;
     totalPurchaseItems: number;
+    budgetConcentration?: string;
     criticalPath?: string[];
     recommendations?: string[];
   };
