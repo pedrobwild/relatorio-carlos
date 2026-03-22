@@ -10,9 +10,11 @@ import RisksSection from "./editor/RisksSection";
 import DecisionsSection from "./editor/DecisionsSection";
 import IncidentsSection from "./editor/IncidentsSection";
 import GallerySection from "./editor/GallerySection";
+import { AIReportGenerator } from "./AIReportGenerator";
 
 interface WeeklyReportEditorProps {
   data: WeeklyReportData;
+  projectId?: string;
   onAutoSave?: (updatedData: WeeklyReportData) => void | Promise<void>;
   onSaveAndClose?: (updatedData: WeeklyReportData) => void;
   onCancel?: () => void;
