@@ -325,7 +325,7 @@ export default function EditarObra() {
       const { data: paymentsData } = await supabase
         .from('project_payments')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId!)
         .order('installment_number', { ascending: true });
       
       setPayments(paymentsData || []);
