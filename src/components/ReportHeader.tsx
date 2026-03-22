@@ -464,7 +464,7 @@ const ReportHeader = ({
                           : "text-foreground cursor-default"
                       )}
                     >
-                      {endDate ? formatDateShort(displayEndDate) : '—'}
+                      {displayEndDate ? formatDateShort(displayEndDate) : '—'}
                     </button>
                     {endDate === dateChangeInfo.originalDate && (
                       <AlertCircle className="w-3 h-3 text-warning" />
