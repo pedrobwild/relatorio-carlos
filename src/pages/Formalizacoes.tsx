@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Search, Filter, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Filter, ChevronRight, Sparkles, FileCheck, Clock, CheckCircle2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

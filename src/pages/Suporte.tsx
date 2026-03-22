@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, Plus, Filter, Search, FileSignature, Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Filter, Search, FileSignature, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,12 @@ import {
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS 
 } from "@/types/formalization";
+import {
+  getStatusIcon,
+  getStatusBadgeVariant,
+  getTypeIcon,
+  formatFormalizationDate as formatDate,
+} from "@/lib/formalizationHelpers";
 
 // Mock data for demonstration
 const mockFormalizations = [
@@ -49,7 +55,6 @@ const mockFormalizations = [
     parties_total: 2,
   },
 ];
-
 const getStatusIcon = (status: FormalizationStatus) => {
   switch (status) {
     case "signed":
