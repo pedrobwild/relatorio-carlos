@@ -102,9 +102,9 @@ export default function FormalizacaoDetalhe() {
 
   const isDemo = isSeedData(formalizacao);
 
-  const parties = (formalizacao?.parties as any[] | null) || [];
-  const acknowledgements = (formalizacao?.acknowledgements as any[] | null) || [];
-  const events = (formalizacao?.events as any[] | null) || [];
+  const parties = (formalizacao?.parties as Record<string, unknown>[] | null) || [];
+  const acknowledgements = (formalizacao?.acknowledgements as Record<string, unknown>[] | null) || [];
+  const events = (formalizacao?.events as Record<string, unknown>[] | null) || [];
 
   const isDraft = formalizacao?.status === 'draft';
   const hasParties = parties.length >= 2;
