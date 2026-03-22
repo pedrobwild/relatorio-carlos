@@ -26,7 +26,7 @@ export interface ProjectActivity {
   created_at: string;
   updated_at: string;
   created_by: string;
-  predecessor_ids: string[];
+  predecessor_ids: string[] | null;
   baseline_start: string | null;
   baseline_end: string | null;
   baseline_saved_at: string | null;

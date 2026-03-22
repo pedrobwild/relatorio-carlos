@@ -51,7 +51,7 @@ export function useLinkCustomerOnLogin(user: User | null) {
         const { error: updateError } = await supabase
           .from('project_customers')
           .update({ customer_user_id: user.id })
-          .eq('customer_email', user.email)
+          .eq('customer_email', user.email!)
           .is('customer_user_id', null);
 
         if (updateError) {

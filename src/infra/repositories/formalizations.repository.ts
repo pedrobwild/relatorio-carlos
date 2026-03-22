@@ -156,7 +156,7 @@ export async function addEvidenceLink(
  */
 export async function getUserProfile(
   userId: string
-): Promise<RepositoryResult<{ customer_org_id: string; display_name: string; email: string }>> {
+): Promise<RepositoryResult<{ customer_org_id: string; display_name: string | null; email: string | null }>> {
   return executeQuery(async () => {
     const { data, error } = await supabase
       .from('profiles')

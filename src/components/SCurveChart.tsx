@@ -639,9 +639,10 @@ const SCurveChart = ({
                 name="realizado"
                 stroke="#22c55e"
                 strokeWidth={3.5}
-                dot={(props: any) => {
-                  const { cx, cy, payload } = props;
-                  if (payload.realizado === null) return null;
+                dot={(props: Record<string, unknown>) => {
+                  const { cx, cy, payload } = props as { cx: number; cy: number; payload: { realizado: number | null } };
+                  if (payload.realizado === null) return <></>;
+
                   return (
                     <circle
                       cx={cx}

@@ -444,8 +444,8 @@ export async function generateStoragePath(
   filename: string
 ): Promise<string> {
   const { data, error } = await supabase.rpc('generate_file_storage_path', {
-    p_org_id: orgId,
-    p_project_id: projectId,
+     p_org_id: orgId as string,
+     p_project_id: projectId as string,
     p_filename: sanitizeFilename(filename),
   });
 

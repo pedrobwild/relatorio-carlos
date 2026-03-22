@@ -61,8 +61,8 @@ export function DocumentViewer({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   
   // Swipe handling
   const touchStartX = useRef<number>(0);

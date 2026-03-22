@@ -56,7 +56,7 @@ export function MeetingAvailabilityCard({ stageId, projectId, isAdmin }: Meeting
   const [errors, setErrors] = useState<string[]>([]);
 
   const minDate = useMemo(() => getMinStartDate(), []);
-  const meetingState = deriveMeetingState(existing);
+  const meetingState = deriveMeetingState(existing ?? null);
 
   // ── Disabled day matchers ──
   const disabledStartDays = useMemo(() => {
