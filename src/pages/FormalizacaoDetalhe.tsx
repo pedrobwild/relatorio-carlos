@@ -207,7 +207,7 @@ export default function FormalizacaoDetalhe() {
     } catch (error) {
       console.error('Error acknowledging:', error);
 
-      const errorMessage = (error as any)?.message ?? '';
+      const errorMessage = (error as Error)?.message ?? '';
       const isRls =
         typeof errorMessage === 'string' && errorMessage.includes('row-level security');
 
