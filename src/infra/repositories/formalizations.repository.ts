@@ -71,8 +71,8 @@ export async function createFormalization(
       .insert({
         customer_org_id: input.customer_org_id,
         created_by: input.created_by,
-        type: input.type as any,
-        status: (input.status ?? 'draft') as any,
+        type: input.type,
+        status: input.status ?? 'draft',
         title: input.title,
         summary: input.summary,
         body_md: input.body_md,
