@@ -449,7 +449,7 @@ const ReportHeader = ({
                   <div className="flex items-center gap-1.5">
                     <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-caption">Início</span>
-                    <span className="text-sm font-bold tabular-nums text-foreground">{startDate ? formatDateShort(displayStartDate) : '—'}</span>
+                    <span className="text-sm font-bold tabular-nums text-foreground">{displayStartDate ? formatDateShort(displayStartDate) : '—'}</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
                   <div className="flex items-center gap-1.5">
