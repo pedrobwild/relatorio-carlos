@@ -36,7 +36,10 @@ const MobileHeader = () => (
     <div className="flex items-center justify-between gap-2">
       <img src={bwildLogo} alt="Bwild" className="h-7 w-auto shrink-0" />
       <h1 className="font-bold text-sm text-foreground truncate flex-1 text-center">Portal do Cliente</h1>
-      <UserMenu />
+      <div className="flex items-center gap-1">
+        <NotificationBell />
+        <UserMenu />
+      </div>
     </div>
   </div>
 );

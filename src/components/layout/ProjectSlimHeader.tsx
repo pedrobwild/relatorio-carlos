@@ -142,6 +142,9 @@ export function ProjectSlimHeader() {
         </Badge>
       </Link>
 
+      {/* Notifications */}
+      <NotificationBell />
+
       {/* User menu */}
       <UserMenu />
     </header>
