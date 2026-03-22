@@ -276,6 +276,7 @@ const Cronograma = () => {
         ]}
       >
         <div className="flex items-center gap-2 flex-wrap">
+          <AIScheduleGenerator projectId={projectId || ''} projectName={project?.name || 'Obra'} />
           <Link to={paths.compras}>
             <Button variant="outline" size="sm" className="text-xs">
               <ShoppingCart className="w-4 h-4 mr-1.5" />
