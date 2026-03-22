@@ -60,6 +60,7 @@ const WeeklyReportTemplate = ({
     return (
       <WeeklyReportEditor
         data={data}
+        projectId={projectId}
         onAutoSave={handleAutoSave}
         onSaveAndClose={handleSaveAndClose}
         onCancel={() => setIsEditing(false)}
