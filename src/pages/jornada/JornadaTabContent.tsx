@@ -1,4 +1,5 @@
 import { lazy, Suspense, useRef, useCallback, useMemo, useState, useEffect } from 'react';
+import { ActivityTimelineCompact } from '@/components/ActivityTimeline';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
