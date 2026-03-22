@@ -72,8 +72,8 @@ export default function FormalizacaoDetalhe() {
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-6">
       <FormalizacaoHeader
-        title={formalizacao.title}
-        status={formalizacao.status}
+        title={formalizacao.title ?? ''}
+        status={formalizacao.status ?? ''}
         isAdmin={isAdmin}
         downloadingPdf={downloadingPdf}
         isDeleting={deleteFormalizacao.isPending}
