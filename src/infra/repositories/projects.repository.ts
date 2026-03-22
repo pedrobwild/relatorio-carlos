@@ -323,7 +323,7 @@ export async function cloneProjectForConstruction(
     // 1. Create project
     const { data: newProject, error: projectError } = await supabase
       .from('projects')
-      .insert(newProjectData)
+      .insert(newProjectData as any)
       .select()
       .single();
 
