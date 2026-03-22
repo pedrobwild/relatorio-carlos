@@ -123,7 +123,7 @@ export async function addEvent(
       .from('formalization_events')
       .insert({
         formalization_id: formalizationId,
-        event_type: eventType as any,
+        event_type: eventType,
         actor_user_id: actorUserId,
         meta,
       });
