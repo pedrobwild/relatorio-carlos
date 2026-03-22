@@ -114,7 +114,7 @@ export async function addParty(
  */
 export async function addEvent(
   formalizationId: string,
-  eventType: string,
+  eventType: FormalizationEventType,
   actorUserId: string | null,
   meta: Json = {}
 ): Promise<RepositoryResult<null>> {
