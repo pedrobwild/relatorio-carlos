@@ -1,0 +1,178 @@
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { projectKeys } from '@/hooks/useProjectsQuery';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { addBusinessDays, isWeekend } from '@/lib/businessDays';
+import type { ProjectTemplate, TemplateActivity } from '@/hooks/useProjectTemplates';
+import type { FormData } from './types';
+
+export function useNovaObraSubmit() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const submit = async (
+    formData: FormData,
+    selectedTemplate: ProjectTemplate | null,
+    sendInvite: boolean,
+  ) => {
+    if (!user) throw new Error('Você precisa estar logado');
+
+    // 0. Create user account if enabled
+    let createdUserId: string | null = null;
+    if (formData.create_user) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionData.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            email: formData.customer_email.trim().toLowerCase(),
+            password: formData.customer_password,
+            display_name: formData.customer_name.trim(),
+            role: 'customer',
+          }),
+        }
+      );
+      const userResult = await response.json();
+      if (!response.ok) throw new Error(userResult.error || 'Falha ao criar usuário');
+      createdUserId = userResult.user?.id || null;
+      if (userResult.already_existed) {
+        toast({
+          title: 'Usuário já existente',
+          description: `O e-mail ${formData.customer_email} já possui cadastro. Vinculando ao projeto.`,
+        });
+      }
+    }
+
+    // 1. Create project
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .insert({
+        name: formData.name.trim(),
+        unit_name: formData.unit_name.trim() || null,
+        address: formData.address.trim() || null,
+        bairro: formData.bairro.trim() || null,
+        cep: formData.cep.trim() || null,
+        planned_start_date: formData.planned_start_date || null,
+        planned_end_date: formData.planned_end_date || null,
+        contract_signing_date: formData.contract_signing_date || null,
+        contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
+        created_by: user.id,
+        is_project_phase: formData.is_project_phase,
+      })
+      .select()
+      .single();
+
+    if (projectError) throw new Error('Falha ao criar projeto: ' + projectError.message);
+
+    // 2. Add current user as engineer
+    const { error: engineerError } = await supabase
+      .from('project_engineers')
+      .insert({ project_id: project.id, engineer_user_id: user.id, is_primary: true });
+    if (engineerError) console.error('Engineer assignment error:', engineerError);
+
+    // 3. Add current user to project_members as owner
+    const { error: memberError } = await supabase
+      .from('project_members')
+      .insert({ project_id: project.id, user_id: user.id, role: 'owner' });
+    if (memberError) console.error('Member assignment error:', memberError);
+
+    // 4. Add customer
+    const { error: customerError } = await supabase
+      .from('project_customers')
+      .insert({
+        project_id: project.id,
+        customer_name: formData.customer_name.trim(),
+        customer_email: formData.customer_email.trim().toLowerCase(),
+        customer_phone: formData.customer_phone.trim() || null,
+        customer_user_id: createdUserId || null,
+        invitation_sent_at: sendInvite ? new Date().toISOString() : null,
+      });
+    if (customerError) console.error('Customer creation error:', customerError);
+
+    // 5. If user was created, add as project member viewer
+    if (createdUserId) {
+      const { error: viewerError } = await supabase
+        .from('project_members')
+        .insert({ project_id: project.id, user_id: createdUserId, role: 'viewer' });
+      if (viewerError) console.error('Viewer assignment error:', viewerError);
+    }
+
+    // 6. Initialize project journey if in project phase
+    if (formData.is_project_phase) {
+      const { error: journeyError } = await supabase
+        .rpc('initialize_project_journey', { p_project_id: project.id });
+      if (journeyError) console.error('Journey initialization error:', journeyError);
+    }
+
+    // 7. Create activities from template
+    if (selectedTemplate && Array.isArray(selectedTemplate.default_activities) && selectedTemplate.default_activities.length > 0) {
+      const activities = selectedTemplate.default_activities as { description: string; durationDays: number; weight: number }[];
+      const startDate = formData.planned_start_date ? new Date(formData.planned_start_date + 'T00:00:00') : new Date();
+
+      let currentDate = new Date(startDate);
+      if (isWeekend(currentDate)) {
+        currentDate = addBusinessDays(currentDate, 0);
+        currentDate.setDate(currentDate.getDate() + 1);
+        while (isWeekend(currentDate)) currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const activityIds: string[] = [];
+      const rows = activities.map((act, idx) => {
+        const actId = crypto.randomUUID();
+        activityIds.push(actId);
+        const actStart = new Date(currentDate);
+        const actEnd = addBusinessDays(actStart, act.durationDays - 1);
+        currentDate = addBusinessDays(actEnd, 1);
+        const fmt = (d: Date) => d.toISOString().split('T')[0];
+        return {
+          id: actId, project_id: project.id, description: act.description,
+          planned_start: fmt(actStart), planned_end: fmt(actEnd),
+          weight: act.weight, sort_order: idx, created_by: user!.id,
+          predecessor_ids: idx > 0 ? [activityIds[idx - 1]] : [],
+        };
+      });
+
+      const { error: actError } = await supabase.from('project_activities').insert(rows);
+      if (actError) console.error('Activities creation error:', actError);
+    }
+
+    // 8. Create payment installments
+    if (formData.num_installments && parseInt(formData.num_installments) > 0) {
+      const numInstallments = parseInt(formData.num_installments);
+      const installmentAmount = formData.installment_value
+        ? parseFloat(formData.installment_value)
+        : (formData.contract_value ? parseFloat(formData.contract_value) / numInstallments : 0);
+
+      const paymentRows = Array.from({ length: numInstallments }, (_, i) => ({
+        project_id: project.id,
+        installment_number: i + 1,
+        description: `Parcela ${i + 1}/${numInstallments}${formData.payment_method ? ` - ${formData.payment_method}` : ''}`,
+        amount: installmentAmount,
+        due_date: null,
+        paid_at: formData.payment_status === 'paid' ? new Date().toISOString() : null,
+      }));
+
+      const { error: paymentError } = await supabase.from('project_payments').insert(paymentRows);
+      if (paymentError) console.error('Payment creation error:', paymentError);
+    }
+
+    // 9. Increment template usage counter
+    if (selectedTemplate) {
+      const { error: usageError } = await supabase.rpc('increment_template_usage', { p_template_id: selectedTemplate.id });
+      if (usageError) console.error('Usage tracking error:', usageError);
+    }
+
+    await queryClient.invalidateQueries({ queryKey: projectKeys.all });
+
+    return { project, createdUserId };
+  };
+
+  return { submit, user };
+}
