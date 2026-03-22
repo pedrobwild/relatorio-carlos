@@ -246,7 +246,7 @@ const generateChartData = (activities: Activity[], reportDate?: string) => {
     const plannedProgress = activities.reduce((sum, a) => {
       const plannedEnd = parseDate(a.plannedEnd);
       if (plannedEnd && plannedEnd <= currentDate) {
-        return sum + (hasWeights ? ((a as any).weight || 0) : 1);
+        return sum + (hasWeights ? (a.weight || 0) : 1);
       }
       return sum;
     }, 0);
