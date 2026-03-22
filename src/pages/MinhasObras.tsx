@@ -3,33 +3,40 @@ import { useNavigate } from 'react-router-dom';
 import { Building2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { AppHeader } from '@/components/AppHeader';
-import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { ProjectCardSummary } from '@/components/ProjectCardSummary';
-import type { ProjectWithCustomer } from '@/infra/repositories';
-
-type ProjectData = ProjectWithCustomer & { is_project_phase?: boolean };
+import { useClientDashboard } from '@/hooks/useClientDashboard';
+import { DashboardStatsCards } from '@/pages/minhas-obras/DashboardStatsCards';
+import { UpcomingPaymentsCard } from '@/pages/minhas-obras/UpcomingPaymentsCard';
+import { ProjectDashboardCard } from '@/pages/minhas-obras/ProjectDashboardCard';
+import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 export default function MinhasObras() {
   const navigate = useNavigate();
-  const { data: projects = [], isLoading: loading, error } = useProjectsQuery();
+  const { projects, stats, upcomingPayments, isLoading, error } = useClientDashboard();
 
-  const handleProjectClick = useCallback((project: ProjectData) => {
+  const handleProjectClick = useCallback((project: ProjectSummary) => {
     sessionStorage.setItem('selectedProjectId', project.id);
-    if (project.is_project_phase) {
-      navigate(`/obra/${project.id}/jornada`);
-    } else {
-      navigate(`/obra/${project.id}`);
-    }
+    navigate(`/obra/${project.id}/jornada`);
   }, [navigate]);
 
-  // Soft sort: active first, then completed, then rest
+  const handlePaymentClick = useCallback((projectId: string) => {
+    sessionStorage.setItem('selectedProjectId', projectId);
+    navigate(`/obra/${projectId}?tab=financeiro`);
+  }, [navigate]);
+
+  // Sort: active first, then by progress desc
   const sortedProjects = useMemo(() => {
     const statusOrder: Record<string, number> = { active: 0, paused: 1, completed: 2, cancelled: 3 };
-    return [...projects].sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
+    return [...projects].sort((a, b) => {
+      const statusDiff = (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
+      if (statusDiff !== 0) return statusDiff;
+      return (b.progress_percentage || 0) - (a.progress_percentage || 0);
+    });
   }, [projects]);
+
+  const hasMultipleProjects = projects.length > 1;
 
   return (
     <div className="min-h-screen min-h-[100dvh] overflow-x-hidden bg-gradient-to-b from-primary/5 via-background to-background pb-safe">
@@ -40,19 +47,26 @@ export default function MinhasObras() {
       </AppHeader>
 
       <main className="py-6">
-        <PageContainer maxWidth="sm">
+        <PageContainer maxWidth="md">
           <div className="mb-6">
-            <h2 className="text-h2 font-bold mb-1">Minhas Obras</h2>
+            <h2 className="text-h2 font-bold mb-1">Meu Painel</h2>
             <p className="text-caption text-muted-foreground">
-              Selecione uma obra para acompanhar o progresso
+              Visão geral dos seus projetos e ações pendentes
             </p>
           </div>
 
-          {loading ? (
-            <ContentSkeleton variant="list" rows={3} />
+          {isLoading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map(i => (
+                  <Card key={i} className="p-4"><div className="h-14 bg-muted animate-pulse rounded-lg" /></Card>
+                ))}
+              </div>
+              <ContentSkeleton variant="list" rows={3} />
+            </div>
           ) : error ? (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Erro ao carregar obras. Tente novamente.</p>
+              <p className="text-muted-foreground">Erro ao carregar dados. Tente novamente.</p>
             </Card>
           ) : sortedProjects.length === 0 ? (
             <EmptyState
@@ -61,14 +75,36 @@ export default function MinhasObras() {
               description="Você ainda não possui obras vinculadas ao seu cadastro. Entre em contato com a equipe Bwild."
             />
           ) : (
-            <div className="space-y-3" data-testid="obras-list">
-              {sortedProjects.map((project) => (
-                <ProjectCardSummary
-                  key={project.id}
-                  project={project}
-                  onClick={() => handleProjectClick(project)}
-                />
-              ))}
+            <div className="space-y-6">
+              {/* Stats Cards - only show if multiple projects for a richer overview */}
+              {hasMultipleProjects && <DashboardStatsCards stats={stats} />}
+
+              {/* Main layout: projects list + sidebar */}
+              <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+                {/* Projects List */}
+                <div className="space-y-3">
+                  <h3 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
+                    {hasMultipleProjects ? 'Meus Projetos' : 'Meu Projeto'}
+                  </h3>
+                  {sortedProjects.map((project) => (
+                    <ProjectDashboardCard
+                      key={project.id}
+                      project={project}
+                      onClick={() => handleProjectClick(project)}
+                    />
+                  ))}
+                </div>
+
+                {/* Sidebar: Upcoming Payments */}
+                {upcomingPayments.length > 0 && (
+                  <div className="space-y-3">
+                    <UpcomingPaymentsCard
+                      payments={upcomingPayments}
+                      onPaymentClick={handlePaymentClick}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </PageContainer>
