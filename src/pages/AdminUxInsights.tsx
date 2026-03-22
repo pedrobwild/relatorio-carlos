@@ -45,8 +45,8 @@ export default function AdminUxInsights() {
     abortRef.current = new AbortController();
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Sessão expirada');
+      const token = await getAccessToken();
+      if (!token) throw new Error('Sessão expirada');
 
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ux-insights`,
