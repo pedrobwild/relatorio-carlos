@@ -43,8 +43,11 @@ export default function NovaObra() {
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
-    if (field === 'planned_start_date' && typeof value === 'string' && selectedTemplate) {
+    if (field === 'planned_start_date' && typeof value === 'string') {
       autoCalculateEndDate(value);
+    }
+    if (field === 'business_days_duration' && typeof value === 'string') {
+      autoCalculateEndDate(formData.planned_start_date, value);
     }
   };
 

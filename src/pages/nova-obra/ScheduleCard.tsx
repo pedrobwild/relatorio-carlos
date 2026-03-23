@@ -53,7 +53,7 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="planned_start_date">
               Data de Início {!formData.is_project_phase && '*'}
@@ -71,6 +71,20 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
               <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">Em definição</div>
             )}
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="business_days_duration">Dias Úteis p/ Entrega</Label>
+            <Input
+              id="business_days_duration"
+              type="number"
+              min="1"
+              placeholder="Ex: 60"
+              value={formData.business_days_duration}
+              onChange={(e) => onChange('business_days_duration', e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">Exclui fins de semana e feriados de SP</p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="planned_end_date">
               Data de Término {!formData.is_project_phase && '*'}
@@ -82,7 +96,14 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
               </div>
             )}
             {(!formData.is_project_phase || formData.planned_end_date !== '') && (
-              <Input id="planned_end_date" type="date" value={formData.planned_end_date} onChange={(e) => onChange('planned_end_date', e.target.value)} required={!formData.is_project_phase} />
+              <Input
+                id="planned_end_date"
+                type="date"
+                value={formData.planned_end_date}
+                onChange={(e) => onChange('planned_end_date', e.target.value)}
+                required={!formData.is_project_phase}
+                className={formData.business_days_duration && formData.planned_start_date ? 'bg-muted/50' : ''}
+              />
             )}
             {formData.is_project_phase && formData.planned_end_date === '' && (
               <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">Em definição</div>
