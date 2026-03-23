@@ -13,6 +13,7 @@ import { ProjectInfoCard } from './nova-obra/ProjectInfoCard';
 import { ScheduleCard } from './nova-obra/ScheduleCard';
 import { FinancialCard } from './nova-obra/FinancialCard';
 import { CustomerCard } from './nova-obra/CustomerCard';
+import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
 
 export default function NovaObra() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function NovaObra() {
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [budgetFile, setBudgetFile] = useState<File | null>(null);
 
   const templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
@@ -73,7 +75,7 @@ export default function NovaObra() {
     setErrors({});
 
     try {
-      await submit(formData, selectedTemplate, sendInvite);
+      await submit(formData, selectedTemplate, sendInvite, budgetFile);
       toast({
         title: 'Obra cadastrada!',
         description: formData.create_user
@@ -124,6 +126,7 @@ export default function NovaObra() {
 
           <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
           <ScheduleCard formData={formData} onChange={handleChange} />
+          <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
           <FinancialCard formData={formData} onChange={handleChange} />
           <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
 
