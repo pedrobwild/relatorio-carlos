@@ -39,6 +39,7 @@ export interface FormData {
   cep: string;
   planned_start_date: string;
   planned_end_date: string;
+  business_days_duration: string;
   contract_signing_date: string;
   contract_value: string;
   num_installments: string;
