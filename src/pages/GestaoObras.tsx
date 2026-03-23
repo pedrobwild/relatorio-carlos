@@ -207,11 +207,17 @@ export default function GestaoObras() {
               <span className="text-tiny uppercase tracking-wider">Concluídas</span>
             </div>
           </div>
-          <Button onClick={() => navigate('/gestao/nova-obra')} size="sm" className="shrink-0 ml-2">
-            <Plus className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Nova Obra</span>
-            <span className="sm:hidden">Nova</span>
-          </Button>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/gestao/calendario-compras')}>
+              <span className="hidden sm:inline">Calendário Compras</span>
+              <span className="sm:hidden">Compras</span>
+            </Button>
+            <Button onClick={() => navigate('/gestao/nova-obra')} size="sm">
+              <Plus className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Nova Obra</span>
+              <span className="sm:hidden">Nova</span>
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
