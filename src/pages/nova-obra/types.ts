@@ -8,6 +8,7 @@ export const formSchema = z.object({
   cep: z.string().trim().max(10).optional(),
   planned_start_date: z.string().optional(),
   planned_end_date: z.string().optional(),
+  business_days_duration: z.string().optional(),
   contract_signing_date: z.string().optional(),
   contract_value: z.string().optional(),
   num_installments: z.string().optional(),
