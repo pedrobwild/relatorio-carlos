@@ -57,24 +57,8 @@ export interface PurchaseInput {
   status?: PurchaseStatus;
   notes?: string | null;
 }
-  project_id: string;
-  activity_id?: string | null;
-  item_name: string;
-  description?: string | null;
-  quantity: number;
-  unit: string;
-  estimated_cost?: number | null;
-  supplier_name?: string | null;
-  supplier_contact?: string | null;
-  lead_time_days: number;
-  required_by_date: string;
-  order_date?: string | null;
-  expected_delivery_date?: string | null;
-  actual_delivery_date?: string | null;
-  invoice_number?: string | null;
-  status?: PurchaseStatus;
-  notes?: string | null;
-}
+
+
 
 export type UrgencyLevel = 'overdue' | 'critical' | 'warning' | 'approaching' | 'normal';
 
