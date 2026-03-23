@@ -73,6 +73,8 @@ interface GeneratedPlan {
 interface AIScheduleGeneratorProps {
   projectId: string;
   projectName: string;
+  plannedStartDate?: string | null;
+  plannedEndDate?: string | null;
 }
 
 export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGeneratorProps) {
