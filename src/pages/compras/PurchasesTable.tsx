@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { MessageSquare, CheckCircle2, Clock } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ interface PurchasesTableProps {
   onAddFirst: () => void;
   onUpdateActualCost: (id: string, cost: number | null) => void;
   onUpdateNotes: (id: string, notes: string) => void;
+  onUpdateField: (id: string, field: string, value: string | null) => void;
 }
 
 const fmt = (v: number | null) =>
@@ -29,32 +31,26 @@ const fmt = (v: number | null) =>
 export function PurchasesTable({
   purchases, getActivityName, getDaysUntilRequired,
   onEdit, onDelete, onStatusChange, onAddFirst,
-  onUpdateActualCost, onUpdateNotes,
+  onUpdateActualCost, onUpdateNotes, onUpdateField,
 }: PurchasesTableProps) {
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
 
   // Group purchases by category
   const grouped = useMemo(() => {
     const map = new Map<string, ProjectPurchase[]>();
-    
-    // First, add all categorized items
     for (const p of purchases) {
       const cat = p.category || 'Outros';
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(p);
     }
-    
-    // Sort: item categories first, then services, then uncategorized
     const order = [...ITEM_CATEGORIES, ...SERVICE_CATEGORIES, 'Outros'];
     const sorted = new Map<string, ProjectPurchase[]>();
     for (const cat of order) {
       if (map.has(cat)) sorted.set(cat, map.get(cat)!);
     }
-    // Add any remaining
     for (const [cat, items] of map) {
       if (!sorted.has(cat)) sorted.set(cat, items);
     }
-    
     return sorted;
   }, [purchases]);
 
@@ -76,18 +72,18 @@ export function PurchasesTable({
         {Array.from(grouped.entries()).map(([category, items]) => {
           const isService = isServiceCategory(category);
           const categoryTotal = items.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
-          const categoryActual = items.reduce((sum, p) => sum + ((p as any).actual_cost || 0), 0);
+          const categoryActual = items.reduce((sum, p) => sum + (p.actual_cost || 0), 0);
           const contracted = items.filter(p => p.status !== 'pending' && p.status !== 'cancelled').length;
 
           return (
             <Card key={category}>
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base flex items-center gap-2">
                     {isService ? '🔧' : '📦'} {category}
                     <Badge variant="secondary" className="ml-1">{items.length}</Badge>
                   </CardTitle>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                     <span>Previsto: <strong className="text-foreground">{fmt(categoryTotal)}</strong></span>
                     {categoryActual > 0 && (
                       <span>Real: <strong className="text-foreground">{fmt(categoryActual)}</strong></span>
@@ -100,23 +96,24 @@ export function PurchasesTable({
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[30%]">Item</TableHead>
-                      <TableHead>Qtd</TableHead>
-                      <TableHead>Custo Previsto</TableHead>
-                      <TableHead>Custo Real</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-16">Obs</TableHead>
+                      <TableHead className="min-w-[180px]">Item</TableHead>
+                      <TableHead className="min-w-[60px]">Qtd</TableHead>
+                      <TableHead className="min-w-[110px]">Custo Previsto</TableHead>
+                      <TableHead className="min-w-[110px]">Custo Real</TableHead>
+                      <TableHead className="min-w-[120px]">Data Compra</TableHead>
+                      <TableHead className="min-w-[140px]">Fornecedor</TableHead>
+                      <TableHead className="min-w-[130px]">Status</TableHead>
+                      <TableHead className="w-12">Obs</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {items.map(purchase => {
                       const config = statusConfig[purchase.status];
                       const StatusIcon = config.icon;
-                      const actualCost = (purchase as any).actual_cost as number | null;
 
                       return (
                         <TableRow key={purchase.id}>
@@ -124,7 +121,7 @@ export function PurchasesTable({
                             <div>
                               <p className="font-medium text-sm">{purchase.item_name}</p>
                               {purchase.description && (
-                                <p className="text-xs text-muted-foreground truncate max-w-60">{purchase.description}</p>
+                                <p className="text-xs text-muted-foreground truncate max-w-48">{purchase.description}</p>
                               )}
                             </div>
                           </TableCell>
@@ -141,10 +138,30 @@ export function PurchasesTable({
                               step={0.01}
                               className="h-8 w-28 text-sm"
                               placeholder="0,00"
-                              defaultValue={actualCost ?? ''}
+                              defaultValue={purchase.actual_cost ?? ''}
                               onBlur={(e) => {
                                 const val = parseFloat(e.target.value);
                                 onUpdateActualCost(purchase.id, isNaN(val) ? null : val);
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              className="h-8 w-36 text-sm"
+                              defaultValue={purchase.planned_purchase_date || ''}
+                              onBlur={(e) => {
+                                onUpdateField(purchase.id, 'planned_purchase_date', e.target.value || null);
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              className="h-8 w-36 text-sm"
+                              placeholder="Fornecedor"
+                              defaultValue={purchase.supplier_name || ''}
+                              onBlur={(e) => {
+                                onUpdateField(purchase.id, 'supplier_name', e.target.value || null);
                               }}
                             />
                           </TableCell>
@@ -172,10 +189,7 @@ export function PurchasesTable({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className={cn(
-                                'h-8 w-8',
-                                purchase.notes && 'text-primary'
-                              )}
+                              className={cn('h-8 w-8', purchase.notes && 'text-primary')}
                               onClick={() => setObsModal({ purchase })}
                               aria-label="Observações"
                             >
