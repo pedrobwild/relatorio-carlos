@@ -126,6 +126,7 @@ export default function NovaObra() {
 
           <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
           <ScheduleCard formData={formData} onChange={handleChange} />
+          <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
           <FinancialCard formData={formData} onChange={handleChange} />
           <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
 
