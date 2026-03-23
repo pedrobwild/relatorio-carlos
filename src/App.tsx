@@ -38,6 +38,7 @@ const AdminAuditoria = lazy(() => import("./pages/AdminAuditoria"));
 const AdminHealth = lazy(() => import("./pages/AdminHealth"));
 const AdminUxInsights = lazy(() => import("./pages/AdminUxInsights"));
 const Demo = lazy(() => import("./pages/Demo"));
+const CalendarioCompras = lazy(() => import("./pages/CalendarioCompras"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
