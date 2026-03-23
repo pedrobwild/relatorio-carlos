@@ -77,10 +77,11 @@ interface AIScheduleGeneratorProps {
   plannedEndDate?: string | null;
 }
 
-export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGeneratorProps) {
+export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, plannedEndDate }: AIScheduleGeneratorProps) {
   const [open, setOpen] = useState(false);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
-  const [startDate, setStartDate] = useState('');
+  const [startDate, setStartDate] = useState(plannedStartDate || '');
+  const [endDate, setEndDate] = useState(plannedEndDate || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [activeTab, setActiveTab] = useState<'schedule' | 'purchases' | 'alerts'>('schedule');
