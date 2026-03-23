@@ -32,10 +32,11 @@ export default function NovaObra() {
     return (selectedTemplate.default_activities as TemplateActivity[]).reduce((s, a) => s + a.durationDays, 0);
   }, [selectedTemplate]);
 
-  const autoCalculateEndDate = (startDateStr: string) => {
-    if (!startDateStr || templateTotalDays <= 0) return;
+  const autoCalculateEndDate = (startDateStr: string, durationStr?: string) => {
+    const duration = parseInt(durationStr || formData.business_days_duration);
+    if (!startDateStr || isNaN(duration) || duration <= 0) return;
     const start = new Date(startDateStr + 'T00:00:00');
-    const end = addBusinessDays(start, templateTotalDays - 1);
+    const end = addBusinessDays(start, duration - 1);
     setFormData(prev => ({ ...prev, planned_end_date: end.toISOString().split('T')[0] }));
   };
 
