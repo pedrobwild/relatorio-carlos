@@ -16,6 +16,7 @@ export function useNovaObraSubmit() {
     formData: FormData,
     selectedTemplate: ProjectTemplate | null,
     sendInvite: boolean,
+    budgetFile?: File | null,
   ) => {
     if (!user) throw new Error('Você precisa estar logado');
 
