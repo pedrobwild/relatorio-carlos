@@ -170,6 +170,37 @@ export function useNovaObraSubmit() {
       if (usageError) console.error('Usage tracking error:', usageError);
     }
 
+    // 10. Upload budget file
+    if (budgetFile) {
+      const timestamp = Date.now();
+      const sanitizedName = budgetFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `${project.id}/orcamento/${timestamp}_${sanitizedName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('project-documents')
+        .upload(storagePath, budgetFile, { contentType: budgetFile.type, upsert: false });
+
+      if (uploadError) {
+        console.error('Budget upload error:', uploadError);
+      } else {
+        const { error: docError } = await supabase
+          .from('project_documents')
+          .insert({
+            project_id: project.id,
+            document_type: 'orcamento',
+            name: `Orçamento - ${formData.name.trim()}`,
+            storage_path: storagePath,
+            storage_bucket: 'project-documents',
+            mime_type: budgetFile.type,
+            size_bytes: budgetFile.size,
+            uploaded_by: user!.id,
+            status: 'approved',
+            version: 1,
+          });
+        if (docError) console.error('Budget document record error:', docError);
+      }
+    }
+
     await queryClient.invalidateQueries({ queryKey: projectKeys.all });
 
     return { project, createdUserId };
