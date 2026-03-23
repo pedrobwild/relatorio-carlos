@@ -62,6 +62,7 @@ export const initialFormData: FormData = {
   cep: '',
   planned_start_date: '',
   planned_end_date: '',
+  business_days_duration: '',
   contract_signing_date: '',
   contract_value: '',
   num_installments: '',
