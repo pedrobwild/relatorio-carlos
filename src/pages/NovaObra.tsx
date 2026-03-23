@@ -13,6 +13,7 @@ import { ProjectInfoCard } from './nova-obra/ProjectInfoCard';
 import { ScheduleCard } from './nova-obra/ScheduleCard';
 import { FinancialCard } from './nova-obra/FinancialCard';
 import { CustomerCard } from './nova-obra/CustomerCard';
+import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
 
 export default function NovaObra() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function NovaObra() {
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [budgetFile, setBudgetFile] = useState<File | null>(null);
 
   const templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
