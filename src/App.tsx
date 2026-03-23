@@ -141,6 +141,7 @@ const App = () => (
             <Route path="/gestao/nova-obra" element={<StaffRoute>{withSuspense(<NovaObra />)}</StaffRoute>} />
             <Route path="/gestao/obra/:projectId" element={<StaffRoute>{withSuspense(<EditarObra />)}</StaffRoute>} />
             <Route path="/gestao/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
+            <Route path="/gestao/calendario-compras" element={<StaffRoute>{withSuspense(<CalendarioCompras />)}</StaffRoute>} />
             <Route path="/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
             
             {/* Admin-only routes */}
