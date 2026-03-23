@@ -35,13 +35,13 @@ Regra de ouro: "De cima para baixo, do bruto para o fino."
 4. Revestimentos (backsplash) + Medições (Box, Marmoraria)
 5. Regularização e Nivelamento de Piso + Medição Marcenaria (ANTECIPAR — não deixar para depois)
 6. Emasseamento + Massa Corrida + Lixa
-7. Pintura (1a e 2a demão paredes/teto) — SEMPRE antes do piso
+7. Pintura (1a demão paredes/teto) — SEMPRE antes do piso. A 2a demão fica para DEPOIS da marcenaria (etapa 13).
 8. Instalação Piso Vinílico + Proteção
 9. Instalação Box + Bancadas + Acabamentos Elétricos
 10. Luminárias + Metais + Aquecedor + Ar Condicionado
 11. Entrega e Início Montagem Marcenaria
 12. Finalização Marcenaria + Rodapé (rodapé SEMPRE após marcenaria)
-13. Montagem Móveis + Eletros + Retoque Pintura + Limpeza Grossa
+13. Pintura 2a demão + Retoque Pintura + Montagem Móveis + Eletros + Limpeza Grossa
 14. Limpeza Fina + Vistoria + Conferência + Fotos/Vídeos
 15. BUFFER para imprevistos (15-16 em obras de 16 semanas)
 
