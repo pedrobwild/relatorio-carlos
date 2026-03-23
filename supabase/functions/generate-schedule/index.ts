@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { budgetItems, projectName, startDate, durationWeeks } = await req.json();
+    const { budgetItems, projectName, startDate, endDate, durationWeeks } = await req.json();
 
     if (!budgetItems || !Array.isArray(budgetItems) || budgetItems.length === 0) {
       return new Response(JSON.stringify({ error: "budgetItems é obrigatório" }), {
