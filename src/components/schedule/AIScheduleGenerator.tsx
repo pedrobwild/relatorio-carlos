@@ -266,15 +266,30 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
                   </div>
                 )}
 
-                {/* Start date */}
+                {/* Dates */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">2. Data de início prevista (opcional)</Label>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-48"
-                  />
+                  <Label className="text-sm font-medium">2. Datas da obra</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Data de início</Label>
+                      <Input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Data de término</Label>
+                      <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {startDate && endDate && (
+                    <p className="text-xs text-muted-foreground">O cronograma será distribuído dentro deste intervalo.</p>
+                  )}
                 </div>
               </div>
             ) : (
