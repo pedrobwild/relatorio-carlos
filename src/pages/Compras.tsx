@@ -103,6 +103,8 @@ export default function Compras() {
             onDelete={(id) => state.setDeleteId(id)}
             onStatusChange={state.handleStatusChange}
             onAddFirst={() => state.handleOpenDialog()}
+            onUpdateActualCost={state.handleUpdateActualCost}
+            onUpdateNotes={state.handleUpdateNotes}
           />
         </PageContainer>
       </div>
