@@ -118,6 +118,14 @@ export function useComprasState() {
     await updateStatus.mutateAsync({ id, status: newStatus });
   };
 
+  const handleUpdateActualCost = async (id: string, cost: number | null) => {
+    await updatePurchase.mutateAsync({ id, actual_cost: cost });
+  };
+
+  const handleUpdateNotes = async (id: string, notes: string) => {
+    await updatePurchase.mutateAsync({ id, notes: notes || null });
+  };
+
   const getActivityName = (activityId: string | null) => {
     if (!activityId) return '—';
     const activity = activities.find(a => a.id === activityId);
@@ -153,6 +161,8 @@ export function useComprasState() {
     handleSubmit,
     handleDelete,
     handleStatusChange,
+    handleUpdateActualCost,
+    handleUpdateNotes,
     getActivityName,
     getDaysUntilRequired,
     addPurchase,

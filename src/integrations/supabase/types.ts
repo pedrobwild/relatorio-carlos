@@ -2587,7 +2587,9 @@ export type Database = {
       project_purchases: {
         Row: {
           activity_id: string | null
+          actual_cost: number | null
           actual_delivery_date: string | null
+          category: string | null
           created_at: string
           created_by: string
           description: string | null
@@ -2610,7 +2612,9 @@ export type Database = {
         }
         Insert: {
           activity_id?: string | null
+          actual_cost?: number | null
           actual_delivery_date?: string | null
+          category?: string | null
           created_at?: string
           created_by: string
           description?: string | null
@@ -2633,7 +2637,9 @@ export type Database = {
         }
         Update: {
           activity_id?: string | null
+          actual_cost?: number | null
           actual_delivery_date?: string | null
+          category?: string | null
           created_at?: string
           created_by?: string
           description?: string | null

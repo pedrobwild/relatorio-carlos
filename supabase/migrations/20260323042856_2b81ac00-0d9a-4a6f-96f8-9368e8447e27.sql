@@ -1,0 +1,4 @@
+
+ALTER TABLE public.project_purchases 
+  ADD COLUMN IF NOT EXISTS category TEXT DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS actual_cost NUMERIC DEFAULT NULL;

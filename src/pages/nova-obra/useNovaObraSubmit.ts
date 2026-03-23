@@ -198,6 +198,28 @@ export function useNovaObraSubmit() {
             version: 1,
           });
         if (docError) console.error('Budget document record error:', docError);
+
+        // 11. Parse budget to populate purchases
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-budget-purchases`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionData.session?.access_token}`,
+              },
+              body: JSON.stringify({
+                project_id: project.id,
+                storage_path: storagePath,
+                user_id: user!.id,
+              }),
+            }
+          );
+        } catch (parseError) {
+          console.error('Budget parsing error:', parseError);
+        }
       }
     }
 
