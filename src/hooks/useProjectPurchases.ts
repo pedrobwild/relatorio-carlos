@@ -19,6 +19,7 @@ export interface ProjectPurchase {
   estimated_cost: number | null;
   actual_cost: number | null;
   category: string | null;
+  planned_purchase_date: string | null;
   supplier_name: string | null;
   supplier_contact: string | null;
   lead_time_days: number;
@@ -42,6 +43,9 @@ export interface PurchaseInput {
   quantity: number;
   unit: string;
   estimated_cost?: number | null;
+  actual_cost?: number | null;
+  category?: string | null;
+  planned_purchase_date?: string | null;
   supplier_name?: string | null;
   supplier_contact?: string | null;
   lead_time_days: number;
@@ -53,6 +57,8 @@ export interface PurchaseInput {
   status?: PurchaseStatus;
   notes?: string | null;
 }
+
+
 
 export type UrgencyLevel = 'overdue' | 'critical' | 'warning' | 'approaching' | 'normal';
 

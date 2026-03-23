@@ -105,6 +105,7 @@ export default function Compras() {
             onAddFirst={() => state.handleOpenDialog()}
             onUpdateActualCost={state.handleUpdateActualCost}
             onUpdateNotes={state.handleUpdateNotes}
+            onUpdateField={state.handleUpdateField}
           />
         </PageContainer>
       </div>

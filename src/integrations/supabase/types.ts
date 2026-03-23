@@ -2601,6 +2601,7 @@ export type Database = {
           lead_time_days: number
           notes: string | null
           order_date: string | null
+          planned_purchase_date: string | null
           project_id: string
           quantity: number
           required_by_date: string
@@ -2626,6 +2627,7 @@ export type Database = {
           lead_time_days?: number
           notes?: string | null
           order_date?: string | null
+          planned_purchase_date?: string | null
           project_id: string
           quantity?: number
           required_by_date: string
@@ -2651,6 +2653,7 @@ export type Database = {
           lead_time_days?: number
           notes?: string | null
           order_date?: string | null
+          planned_purchase_date?: string | null
           project_id?: string
           quantity?: number
           required_by_date?: string
