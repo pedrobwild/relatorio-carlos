@@ -17,6 +17,8 @@ export interface ProjectPurchase {
   quantity: number;
   unit: string;
   estimated_cost: number | null;
+  actual_cost: number | null;
+  category: string | null;
   supplier_name: string | null;
   supplier_contact: string | null;
   lead_time_days: number;
