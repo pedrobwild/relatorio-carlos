@@ -22,3 +22,31 @@ export const emptyPurchase: Partial<PurchaseInput> = {
   required_by_date: '',
   notes: '',
 };
+
+export const ITEM_CATEGORIES = [
+  'Eletrodomésticos',
+  'Móveis',
+  'Iluminação',
+  'Vidros e Espelhos',
+  'Acessórios',
+  'Revestimentos',
+  'Pisos',
+  'Enxoval',
+] as const;
+
+export const SERVICE_CATEGORIES = [
+  'Técnico de Ar-Condicionado',
+  'Gesseiro',
+  'Pintor',
+  'Instalador de Piso',
+  'Serviços Gerais',
+  'Eletricista',
+  'Marcenaria',
+  'Empreiteira',
+] as const;
+
+export const ALL_CATEGORIES = [...ITEM_CATEGORIES, ...SERVICE_CATEGORIES] as const;
+
+export function isServiceCategory(category: string): boolean {
+  return (SERVICE_CATEGORIES as readonly string[]).includes(category);
+}
