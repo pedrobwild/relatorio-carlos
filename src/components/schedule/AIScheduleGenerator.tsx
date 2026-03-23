@@ -176,8 +176,8 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
   const handleReset = () => {
     setBudgetItems([]);
     setPlan(null);
-    setStartDate('');
-  };
+    setStartDate(plannedStartDate || '');
+    setEndDate(plannedEndDate || '');
 
   const priorityColors: Record<string, string> = {
     alta: 'bg-destructive/15 text-destructive border-destructive/30',
