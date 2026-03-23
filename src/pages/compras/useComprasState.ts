@@ -167,6 +167,7 @@ export function useComprasState() {
     handleStatusChange,
     handleUpdateActualCost,
     handleUpdateNotes,
+    handleUpdateField,
     getActivityName,
     getDaysUntilRequired,
     addPurchase,
