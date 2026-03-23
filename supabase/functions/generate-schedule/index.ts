@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { budgetItems, projectName, startDate, durationWeeks } = await req.json();
+    const { budgetItems, projectName, startDate, endDate, durationWeeks } = await req.json();
 
     if (!budgetItems || !Array.isArray(budgetItems) || budgetItems.length === 0) {
       return new Response(JSON.stringify({ error: "budgetItems é obrigatório" }), {
@@ -88,9 +88,20 @@ Analise os itens de orçamento fornecidos e gere:
 
 Responda EXCLUSIVAMENTE com JSON válido usando tool calling.`;
 
+    // Build duration context
+    let durationContext = "";
+    if (startDate && endDate) {
+      durationContext = `Data de início: ${startDate}\nData de término: ${endDate}\nIMPORTANTE: O cronograma DEVE ser distribuído dentro deste intervalo de datas. Calcule o número de semanas disponíveis e distribua todas as atividades proporcionalmente, respeitando a sequência técnica obrigatória. Considere apenas dias úteis (segunda a sexta), excluindo feriados nacionais brasileiros e feriados municipais de São Paulo (25/Jan, 9/Jul, 20/Nov).`;
+    } else if (startDate && durationWeeks) {
+      durationContext = `Data de início: ${startDate}\nDuração estimada: ${durationWeeks} semanas`;
+    } else if (startDate) {
+      durationContext = `Data de início: ${startDate}\nDuração: A calcular com base nos itens do orçamento`;
+    } else {
+      durationContext = `Data de início: A definir\nDuração: A calcular com base nos itens do orçamento`;
+    }
+
     const userPrompt = `Projeto: ${projectName || "Obra"}
-Data de início prevista: ${startDate || "A definir"}
-Duração estimada: ${durationWeeks || "A calcular"} semanas
+${durationContext}
 
 Itens do orçamento:
 ${budgetItems.map((item: any, i: number) => 

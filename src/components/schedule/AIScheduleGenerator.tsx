@@ -73,12 +73,15 @@ interface GeneratedPlan {
 interface AIScheduleGeneratorProps {
   projectId: string;
   projectName: string;
+  plannedStartDate?: string | null;
+  plannedEndDate?: string | null;
 }
 
-export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGeneratorProps) {
+export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, plannedEndDate }: AIScheduleGeneratorProps) {
   const [open, setOpen] = useState(false);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
-  const [startDate, setStartDate] = useState('');
+  const [startDate, setStartDate] = useState(plannedStartDate || '');
+  const [endDate, setEndDate] = useState(plannedEndDate || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [activeTab, setActiveTab] = useState<'schedule' | 'purchases' | 'alerts'>('schedule');
@@ -154,6 +157,7 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
         budgetItems,
         projectName,
         startDate: startDate || undefined,
+        endDate: endDate || undefined,
       });
 
       if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Erro ao gerar');
@@ -172,7 +176,8 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
   const handleReset = () => {
     setBudgetItems([]);
     setPlan(null);
-    setStartDate('');
+    setStartDate(plannedStartDate || '');
+    setEndDate(plannedEndDate || '');
   };
 
   const priorityColors: Record<string, string> = {
@@ -262,15 +267,30 @@ export function AIScheduleGenerator({ projectId, projectName }: AIScheduleGenera
                   </div>
                 )}
 
-                {/* Start date */}
+                {/* Dates */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">2. Data de início prevista (opcional)</Label>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-48"
-                  />
+                  <Label className="text-sm font-medium">2. Datas da obra</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Data de início</Label>
+                      <Input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Data de término</Label>
+                      <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {startDate && endDate && (
+                    <p className="text-xs text-muted-foreground">O cronograma será distribuído dentro deste intervalo.</p>
+                  )}
                 </div>
               </div>
             ) : (
