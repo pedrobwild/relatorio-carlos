@@ -75,7 +75,7 @@ export default function NovaObra() {
     setErrors({});
 
     try {
-      await submit(formData, selectedTemplate, sendInvite);
+      await submit(formData, selectedTemplate, sendInvite, budgetFile);
       toast({
         title: 'Obra cadastrada!',
         description: formData.create_user
