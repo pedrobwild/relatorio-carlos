@@ -157,6 +157,7 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
         budgetItems,
         projectName,
         startDate: startDate || undefined,
+        endDate: endDate || undefined,
       });
 
       if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Erro ao gerar');
