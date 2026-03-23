@@ -1,0 +1,1 @@
+ALTER TABLE public.project_purchases ADD COLUMN IF NOT EXISTS planned_purchase_date DATE DEFAULT NULL;
