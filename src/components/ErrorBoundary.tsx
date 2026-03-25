@@ -32,6 +32,21 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const { name = 'Unknown', feature = 'general' } = this.props;
     
+    // Auto-clear corrupted query cache on root boundary catch
+    if (name === 'AppRoot' || !this.props.name) {
+      try {
+        const keys = Object.keys(window.localStorage);
+        keys.forEach(key => {
+          if (key.startsWith('bwild-query-cache-')) {
+            window.localStorage.removeItem(key);
+          }
+        });
+        console.warn('[ErrorBoundary] Cleared query cache after crash');
+      } catch {
+        // Ignore storage errors
+      }
+    }
+    
     // Log to structured logger
     logError('ErrorBoundary caught an error', error, {
       component: `ErrorBoundary[${name}]`,

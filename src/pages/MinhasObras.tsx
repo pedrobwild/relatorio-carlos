@@ -11,6 +11,7 @@ import { useDashboardActivities } from '@/hooks/useDashboardActivities';
 import { DashboardStatsCards } from '@/pages/minhas-obras/DashboardStatsCards';
 import { UpcomingPaymentsCard } from '@/pages/minhas-obras/UpcomingPaymentsCard';
 import { ProjectDashboardCard } from '@/pages/minhas-obras/ProjectDashboardCard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 export default function MinhasObras() {
@@ -99,22 +100,29 @@ export default function MinhasObras() {
                     {hasMultipleProjects ? 'Meus Projetos' : 'Meu Projeto'}
                   </h3>
                   {sortedProjects.map((project) => (
-                    <ProjectDashboardCard
-                      key={project.id}
-                      project={project}
-                      onClick={() => handleProjectClick(project)}
-                      activities={getProjectActivities(project.id)}
-                    />
+                    <ErrorBoundary key={project.id} name={`ProjectCard-${project.id}`} feature="general" fallback={
+                      <Card className="p-4 border-destructive/20">
+                        <p className="text-sm text-muted-foreground">Erro ao exibir projeto. <button className="underline text-primary" onClick={() => handleProjectClick(project)}>Abrir mesmo assim</button></p>
+                      </Card>
+                    }>
+                      <ProjectDashboardCard
+                        project={project}
+                        onClick={() => handleProjectClick(project)}
+                        activities={getProjectActivities(project.id)}
+                      />
+                    </ErrorBoundary>
                   ))}
                 </div>
 
                 {/* Sidebar: Upcoming Payments */}
                 {upcomingPayments.length > 0 && (
                   <div className="space-y-3">
-                    <UpcomingPaymentsCard
-                      payments={upcomingPayments}
-                      onPaymentClick={handlePaymentClick}
-                    />
+                    <ErrorBoundary name="UpcomingPayments" feature="general" fallback={null}>
+                      <UpcomingPaymentsCard
+                        payments={upcomingPayments}
+                        onPaymentClick={handlePaymentClick}
+                      />
+                    </ErrorBoundary>
                   </div>
                 )}
               </div>
