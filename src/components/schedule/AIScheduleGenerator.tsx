@@ -221,15 +221,21 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
               <div className="space-y-5 py-2">
                 {/* Upload area */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">1. Importe o orçamento (Excel ou CSV)</Label>
+                  <Label className="text-sm font-medium">1. Importe o orçamento (PDF, Excel ou CSV)</Label>
                   <div
                     className={cn(
                       'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-primary/5',
-                      budgetItems.length > 0 ? 'border-primary/30 bg-primary/5' : 'border-border'
+                      hasInput ? 'border-primary/30 bg-primary/5' : 'border-border'
                     )}
                     onClick={() => fileRef.current?.click()}
                   >
-                    {budgetItems.length > 0 ? (
+                    {pdfFile ? (
+                      <div className="space-y-1">
+                        <FileSpreadsheet className="h-8 w-8 text-primary mx-auto" />
+                        <p className="text-sm font-medium">{pdfFile.name}</p>
+                        <p className="text-xs text-muted-foreground">PDF carregado — a IA extrairá os itens automaticamente</p>
+                      </div>
+                    ) : budgetItems.length > 0 ? (
                       <div className="space-y-1">
                         <FileSpreadsheet className="h-8 w-8 text-primary mx-auto" />
                         <p className="text-sm font-medium">{budgetItems.length} itens importados</p>
@@ -238,15 +244,15 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
                     ) : (
                       <div className="space-y-1">
                         <Upload className="h-8 w-8 text-muted-foreground mx-auto" />
-                        <p className="text-sm text-muted-foreground">Clique ou arraste sua planilha aqui</p>
-                        <p className="text-xs text-muted-foreground">Aceita .xlsx, .xls ou .csv</p>
+                        <p className="text-sm text-muted-foreground">Clique ou arraste seu arquivo aqui</p>
+                        <p className="text-xs text-muted-foreground">Aceita .pdf, .xlsx, .xls ou .csv</p>
                       </div>
                     )}
                   </div>
                   <input
                     ref={fileRef}
                     type="file"
-                    accept=".xlsx,.xls,.csv"
+                    accept=".pdf,.xlsx,.xls,.csv"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
