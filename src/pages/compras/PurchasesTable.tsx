@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef } from 'react';
-import { MessageSquare, CheckCircle2, Clock, FileText, Upload, ExternalLink } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { statusConfig, isServiceCategory, ITEM_CATEGORIES, SERVICE_CATEGORIES } from './types';
 import { ObservationsModal } from './ObservationsModal';
+import { PaymentFlowModal } from './PaymentFlowModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -90,6 +91,7 @@ export function PurchasesTable({
   onUpdateActualCost, onUpdateNotes, onUpdateField,
 }: PurchasesTableProps) {
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
+  const [flowModal, setFlowModal] = useState<{ purchase: ProjectPurchase } | null>(null);
 
   const grouped = useMemo(() => {
     const map = new Map<string, ProjectPurchase[]>();
@@ -164,6 +166,7 @@ export function PurchasesTable({
                       <TableHead className="min-w-[140px]">Fornecedor</TableHead>
                       <TableHead className="min-w-[130px]">Status</TableHead>
                       <TableHead className="min-w-[80px]">Contrato</TableHead>
+                      <TableHead className="min-w-[90px]">Financeiro</TableHead>
                       <TableHead className="w-12">Obs</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -275,6 +278,17 @@ export function PurchasesTable({
                           </TableCell>
                           <TableCell>
                             <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1"
+                              onClick={() => setFlowModal({ purchase })}
+                            >
+                              <DollarSign className="h-3.5 w-3.5" />
+                              Fluxo
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <Button
                               variant="ghost"
                               size="icon"
                               className={cn('h-8 w-8', purchase.notes && 'text-primary')}
@@ -302,6 +316,16 @@ export function PurchasesTable({
           itemName={obsModal.purchase.item_name}
           notes={obsModal.purchase.notes || ''}
           onSave={(notes) => onUpdateNotes(obsModal.purchase.id, notes)}
+        />
+      )}
+
+      {flowModal && (
+        <PaymentFlowModal
+          open={!!flowModal}
+          onOpenChange={() => setFlowModal(null)}
+          purchaseId={flowModal.purchase.id}
+          projectId={flowModal.purchase.project_id}
+          itemName={flowModal.purchase.item_name}
         />
       )}
     </>
