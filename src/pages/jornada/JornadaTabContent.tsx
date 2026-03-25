@@ -237,6 +237,13 @@ export function JornadaTabContent({
                     <h2 className="text-sm font-medium text-muted-foreground mb-3">{journeyCopy.page.sidebarTitle}</h2>
                     <JourneyTimeline stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
                   </div>
+
+                  {/* Show welcome content inline on overview when no stage is drilled into and welcome not completed */}
+                  {!welcomeCompleted && activeView === 'welcome' && (
+                    <div className="mt-4">
+                      <JourneyWelcomeStage hero={journey.hero} projectId={projectId} isAdmin={isAdmin} onAdvance={handleAdvanceFromWelcome} nextStageName={journey.stages[0]?.name ?? 'próxima etapa'} />
+                    </div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div key={`mobile-detail-${mobileDetailStageId}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
