@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
 
 interface AppHeaderProps {
@@ -68,7 +69,9 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
                   </Button>
                 )}
                 
-                <NotificationBell />
+                <ErrorBoundary name="NotificationBell" feature="general" fallback={null}>
+                  <NotificationBell />
+                </ErrorBoundary>
 
                 <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground ml-2">
                   <User className="h-4 w-4" />
