@@ -153,6 +153,7 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     debugAuth('signOut called');
     clearRoleCache(); // Clear role cache on logout
+    const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
 
     // CRITICAL: We do NOT set loading=true here because:
     // 1. It would trigger ProtectedRoute to show a spinner
