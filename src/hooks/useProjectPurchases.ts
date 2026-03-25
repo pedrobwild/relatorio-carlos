@@ -30,6 +30,9 @@ export interface ProjectPurchase {
   invoice_number: string | null;
   status: PurchaseStatus;
   notes: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  contract_file_path: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -56,6 +59,9 @@ export interface PurchaseInput {
   invoice_number?: string | null;
   status?: PurchaseStatus;
   notes?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  contract_file_path?: string | null;
 }
 
 

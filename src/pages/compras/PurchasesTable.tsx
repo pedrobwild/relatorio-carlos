@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
-import { MessageSquare, CheckCircle2, Clock } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { useMemo, useState, useRef } from 'react';
+import { MessageSquare, CheckCircle2, Clock, FileText, Upload, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,8 @@ import { cn } from '@/lib/utils';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { statusConfig, isServiceCategory, ITEM_CATEGORIES, SERVICE_CATEGORIES } from './types';
 import { ObservationsModal } from './ObservationsModal';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface PurchasesTableProps {
   purchases: ProjectPurchase[];
@@ -28,6 +29,61 @@ interface PurchasesTableProps {
 const fmt = (v: number | null) =>
   v != null ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—';
 
+function ContractCell({ purchase, onUpdateField }: { purchase: ProjectPurchase; onUpdateField: (id: string, field: string, value: string | null) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      toast.error('Apenas arquivos PDF são permitidos');
+      return;
+    }
+    setUploading(true);
+    try {
+      const path = `purchases/${purchase.project_id}/${purchase.id}/${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from('project-documents').upload(path, file);
+      if (error) throw error;
+      onUpdateField(purchase.id, 'contract_file_path', path);
+      toast.success('Contrato anexado');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao enviar contrato');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleView = async () => {
+    if (!purchase.contract_file_path) return;
+    const { data } = await supabase.storage.from('project-documents').createSignedUrl(purchase.contract_file_path, 300);
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleUpload} />
+      {purchase.contract_file_path ? (
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={handleView} title="Ver contrato">
+          <FileText className="h-4 w-4" />
+        </Button>
+      ) : null}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        title={purchase.contract_file_path ? 'Substituir contrato' : 'Anexar contrato'}
+      >
+        <Upload className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function PurchasesTable({
   purchases, getActivityName, getDaysUntilRequired,
   onEdit, onDelete, onStatusChange, onAddFirst,
@@ -35,7 +91,6 @@ export function PurchasesTable({
 }: PurchasesTableProps) {
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
 
-  // Group purchases by category
   const grouped = useMemo(() => {
     const map = new Map<string, ProjectPurchase[]>();
     for (const p of purchases) {
@@ -101,12 +156,14 @@ export function PurchasesTable({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[180px]">Item</TableHead>
-                      <TableHead className="min-w-[60px]">Qtd</TableHead>
                       <TableHead className="min-w-[110px]">Custo Previsto</TableHead>
                       <TableHead className="min-w-[110px]">Custo Real</TableHead>
-                      <TableHead className="min-w-[120px]">Data Compra</TableHead>
+                      <TableHead className="min-w-[120px]">Data Contratação</TableHead>
+                      <TableHead className="min-w-[120px]">Data Início</TableHead>
+                      <TableHead className="min-w-[120px]">Data Conclusão</TableHead>
                       <TableHead className="min-w-[140px]">Fornecedor</TableHead>
                       <TableHead className="min-w-[130px]">Status</TableHead>
+                      <TableHead className="min-w-[80px]">Contrato</TableHead>
                       <TableHead className="w-12">Obs</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -125,11 +182,19 @@ export function PurchasesTable({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm">
-                            {purchase.quantity} {purchase.unit}
-                          </TableCell>
-                          <TableCell className="text-sm font-medium">
-                            {fmt(purchase.estimated_cost)}
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min={0}
+                              step={0.01}
+                              className="h-8 w-28 text-sm"
+                              placeholder="0,00"
+                              defaultValue={purchase.estimated_cost ?? ''}
+                              onBlur={(e) => {
+                                const val = parseFloat(e.target.value);
+                                onUpdateField(purchase.id, 'estimated_cost', isNaN(val) ? null : String(val));
+                              }}
+                            />
                           </TableCell>
                           <TableCell>
                             <Input
@@ -152,6 +217,26 @@ export function PurchasesTable({
                               defaultValue={purchase.planned_purchase_date || ''}
                               onBlur={(e) => {
                                 onUpdateField(purchase.id, 'planned_purchase_date', e.target.value || null);
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              className="h-8 w-36 text-sm"
+                              defaultValue={(purchase as any).start_date || ''}
+                              onBlur={(e) => {
+                                onUpdateField(purchase.id, 'start_date', e.target.value || null);
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              className="h-8 w-36 text-sm"
+                              defaultValue={(purchase as any).end_date || ''}
+                              onBlur={(e) => {
+                                onUpdateField(purchase.id, 'end_date', e.target.value || null);
                               }}
                             />
                           </TableCell>
@@ -184,6 +269,9 @@ export function PurchasesTable({
                                 ))}
                               </SelectContent>
                             </Select>
+                          </TableCell>
+                          <TableCell>
+                            <ContractCell purchase={purchase} onUpdateField={onUpdateField} />
                           </TableCell>
                           <TableCell>
                             <Button
