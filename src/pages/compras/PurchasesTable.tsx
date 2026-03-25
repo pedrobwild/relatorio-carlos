@@ -256,24 +256,15 @@ export function PurchasesTable({
                             />
                           </TableCell>
                           <TableCell>
-                            <Select value={purchase.status} onValueChange={(v) => onStatusChange(purchase.id, v as PurchaseStatus)}>
-                              <SelectTrigger className={cn('h-8 w-32', config.color)}>
-                                <div className="flex items-center gap-1.5">
-                                  <StatusIcon className="h-3.5 w-3.5" />
-                                  <span className="text-xs">{config.label}</span>
-                                </div>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(statusConfig).map(([key, c]) => (
-                                  <SelectItem key={key} value={key}>
-                                    <div className="flex items-center gap-2">
-                                      <c.icon className="h-4 w-4" />
-                                      {c.label}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1"
+                              onClick={() => setCadastroModal({ purchase })}
+                            >
+                              <ClipboardList className="h-3.5 w-3.5" />
+                              Cadastro
+                            </Button>
                           </TableCell>
                           <TableCell>
                             <ContractCell purchase={purchase} onUpdateField={onUpdateField} />
