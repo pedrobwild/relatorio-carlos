@@ -143,9 +143,11 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
       .filter(Boolean) as BudgetItem[];
   };
 
+  const hasInput = budgetItems.length > 0 || pdfFile !== null;
+
   const handleGenerate = async () => {
-    if (budgetItems.length === 0) {
-      toast.error('Importe uma planilha de orçamento primeiro');
+    if (!hasInput) {
+      toast.error('Importe um arquivo de orçamento primeiro');
       return;
     }
 
@@ -153,12 +155,20 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
     setPlan(null);
 
     try {
-      const { data, error } = await invokeFunction<GeneratedPlan>('generate-schedule', {
-        budgetItems,
+      const payload: Record<string, unknown> = {
         projectName,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-      });
+      };
+
+      if (pdfFile) {
+        payload.budgetFileBase64 = pdfFile.base64;
+        payload.budgetFileName = pdfFile.name;
+      } else {
+        payload.budgetItems = budgetItems;
+      }
+
+      const { data, error } = await invokeFunction<GeneratedPlan>('generate-schedule', payload);
 
       if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Erro ao gerar');
       if (!data) throw new Error('Resposta vazia');
