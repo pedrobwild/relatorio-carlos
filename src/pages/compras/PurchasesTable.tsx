@@ -166,6 +166,7 @@ export function PurchasesTable({
                       <TableHead className="min-w-[140px]">Fornecedor</TableHead>
                       <TableHead className="min-w-[130px]">Status</TableHead>
                       <TableHead className="min-w-[80px]">Contrato</TableHead>
+                      <TableHead className="min-w-[90px]">Financeiro</TableHead>
                       <TableHead className="w-12">Obs</TableHead>
                     </TableRow>
                   </TableHeader>
