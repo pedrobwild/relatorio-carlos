@@ -20,31 +20,70 @@ export function useAuth() {
 
   useEffect(() => {
     let isMounted = true;
+    const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
+
+    const clearStaleAuthStorage = () => {
+      try {
+        localStorage.removeItem(authStorageKey);
+        localStorage.removeItem(`${authStorageKey}-code-verifier`);
+        localStorage.removeItem(`${authStorageKey}-user`);
+      } catch {
+        // Ignore storage errors
+      }
+    };
 
     debugAuth('useAuth mount');
 
     // Check for existing session first
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (!isMounted) return;
-      
-      debugAuth('getSession result', { 
-        hasSession: !!initialSession,
-        userId: initialSession?.user?.id 
+    supabase.auth.getSession()
+      .then(({ data: { session: initialSession } }) => {
+        if (!isMounted) return;
+
+        debugAuth('getSession result', {
+          hasSession: !!initialSession,
+          userId: initialSession?.user?.id,
+        });
+
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        setLoading(false);
+        initialSessionSet.current = true;
+        lastSessionId.current = initialSession?.access_token ?? null;
+
+        logAuthState({
+          isAuthenticated: !!initialSession,
+          loading: false,
+          userId: initialSession?.user?.id,
+          event: 'getSession',
+        });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+
+        const message = error instanceof Error ? error.message : String(error);
+        const isInvalidRefreshToken = message.toLowerCase().includes('refresh token not found');
+
+        debugAuth('getSession error', { message, isInvalidRefreshToken });
+
+        // Recover cleanly from stale local tokens so app doesn't crash-loop.
+        if (isInvalidRefreshToken) {
+          clearStaleAuthStorage();
+          clearRoleCache();
+        }
+
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        initialSessionSet.current = true;
+        lastSessionId.current = null;
+
+        logAuthState({
+          isAuthenticated: false,
+          loading: false,
+          userId: undefined,
+          event: 'getSessionError',
+        });
       });
-      
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      setLoading(false);
-      initialSessionSet.current = true;
-      lastSessionId.current = initialSession?.access_token ?? null;
-      
-      logAuthState({
-        isAuthenticated: !!initialSession,
-        loading: false,
-        userId: initialSession?.user?.id,
-        event: 'getSession',
-      });
-    });
 
     // Set up auth state listener - only handle meaningful events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -137,7 +176,6 @@ export function useAuth() {
 
     // Guaranteed local cleanup so logout always "sticks"
     // This runs AFTER the network call completes (or fails)
-    const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
     try {
       localStorage.removeItem(authStorageKey);
       localStorage.removeItem(`${authStorageKey}-code-verifier`);
