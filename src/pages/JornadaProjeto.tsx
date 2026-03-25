@@ -69,10 +69,11 @@ export default function JornadaProjeto() {
   });
 
   useEffect(() => {
-    if (!journeyLoading && journey && !journey.hero && projectId) {
+    if (!journeyLoading && journey && !journey.hero && projectId && !initializeJourney.isPending) {
       initializeJourney.mutate(projectId, { onSuccess: () => refetch() });
     }
-  }, [journeyLoading, journey, projectId, initializeJourney, refetch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journeyLoading, journey?.hero, projectId]);
 
   // Welcome toast
   useEffect(() => {
