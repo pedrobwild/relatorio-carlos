@@ -4,13 +4,16 @@ import { ChartDataPoint, ChartResult } from "./types";
 // Parse ISO date string to Date object
 export const parseDate = (dateStr: string): Date | null => {
   if (!dateStr) return null;
-  return new Date(dateStr + "T00:00:00");
+
+  const normalized = dateStr.includes("T") ? dateStr : `${dateStr}T00:00:00`;
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
 // Format date for display (dd/mm or dd/mm/aa if different year)
 export const formatDisplayDate = (dateStr: string, baseYear?: number): string => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr + "T00:00:00");
+  const date = parseDate(dateStr);
+  if (!date) return "";
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear();
@@ -69,16 +72,23 @@ const EMPTY_RESULT: ChartResult = {
 export function generateChartData(activities: Activity[], reportDate?: string): ChartResult {
   if (activities.length === 0) return EMPTY_RESULT;
 
+  const toNumericWeight = (weight: Activity['weight']): number => {
+    if (typeof weight === 'number') return Number.isFinite(weight) ? weight : 0;
+    const parsed = Number(weight ?? 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
   const baseYear = activities[0].plannedStart
-    ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
+    ? (parseDate(activities[0].plannedStart)?.getFullYear() ?? new Date().getFullYear())
     : new Date().getFullYear();
 
   const reportDateParsed = reportDate ? parseDate(reportDate) : new Date();
 
   const hasWeights = activities.some(a => a.weight !== undefined);
   const totalWeight = hasWeights
-    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
+    ? activities.reduce((sum, a) => sum + toNumericWeight(a.weight), 0)
     : activities.length;
+  const safeTotalWeight = totalWeight > 0 ? totalWeight : 1;
 
   // Find project date range
   const dateRange = activities.reduce<{ min: Date | null; max: Date | null }>((acc, a) => {
@@ -111,7 +121,9 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
   activities.forEach(a => {
     [a.plannedStart, a.plannedEnd, a.actualStart, a.actualEnd]
       .filter(Boolean)
-      .forEach(d => { if (!allDates.includes(d!)) allDates.push(d!); });
+      .forEach(d => {
+        if (d && parseDate(d) && !allDates.includes(d)) allDates.push(d);
+      });
   });
 
   allDates.sort((a, b) => {
@@ -148,8 +160,8 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     });
 
   for (const activity of sortedByPlannedEnd) {
-    cumulativeWeight += hasWeights ? (activity.weight || 0) : 1;
-    if (cumulativeWeight / totalWeight >= 0.5) {
+    cumulativeWeight += hasWeights ? toNumericWeight(activity.weight) : 1;
+    if (cumulativeWeight / safeTotalWeight >= 0.5) {
       const plannedEnd = parseDate(activity.plannedEnd);
       if (plannedEnd) {
         halfTimestamp = Math.floor((plannedEnd.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -171,7 +183,7 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
 
     const plannedProgress = activities.reduce((sum, a) => {
       const plannedEnd = parseDate(a.plannedEnd);
-      if (plannedEnd && plannedEnd <= cur) return sum + (hasWeights ? (a.weight || 0) : 1);
+      if (plannedEnd && plannedEnd <= cur) return sum + (hasWeights ? toNumericWeight(a.weight) : 1);
       return sum;
     }, 0);
 
@@ -180,7 +192,7 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     if (!isFutureDate && hasAnyActualData) {
       actualProgress = activities.reduce((sum, a) => {
         const actualEnd = parseDate(a.actualEnd);
-        if (actualEnd && actualEnd <= cur) return sum + (hasWeights ? (a.weight || 0) : 1);
+        if (actualEnd && actualEnd <= cur) return sum + (hasWeights ? toNumericWeight(a.weight) : 1);
         return sum;
       }, 0);
     }
@@ -188,8 +200,8 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     return {
       date: formatDisplayDate(date, baseYear),
       timestamp: daysSinceStart,
-      previsto: Math.round((plannedProgress / totalWeight) * 100),
-      realizado: actualProgress !== null ? Math.round((actualProgress / totalWeight) * 100) : null,
+      previsto: Math.round((plannedProgress / safeTotalWeight) * 100),
+      realizado: actualProgress !== null ? Math.round((actualProgress / safeTotalWeight) * 100) : null,
       activity: activityAtDate,
     };
   });
