@@ -127,7 +127,14 @@ export function JornadaTabContent({
   }, [selectedStage, journey.stages]);
 
   const handleTimelineClick = useCallback((stageId: string) => {
-    if (stageId === 'welcome') { setActiveView('welcome'); if (isMobile) setMobileDetailStageId(null); return; }
+    if (stageId === 'welcome') {
+      setActiveView('welcome');
+      if (isMobile) {
+        setMobileDetailStageId('welcome');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
     if (!welcomeCompleted && !isAdmin) return;
     if (!isAdmin) {
       const idx = journey.stages.findIndex(s => s.id === stageId);

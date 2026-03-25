@@ -26,14 +26,24 @@ function deriveVisualState(
   stages: JourneyStage[],
 ): VisualState {
   if (stage.status === 'completed') return 'completed';
-  if (stage.status === 'in_progress') return 'current';
-  if (stage.status === 'waiting_action') return 'current';
+
+  // Find the index of the first non-completed stage in the list
+  const firstNonCompletedIdx = stages.findIndex(s => s.status !== 'completed');
+
+  if (stage.status === 'in_progress' || stage.status === 'waiting_action') {
+    // Only the first non-completed stage is visually "current"
+    if (index === firstNonCompletedIdx) return 'current';
+    // Subsequent in_progress/waiting_action stages: show as "next" if right after current, else "future"
+    const prevCompleted = index > 0 && stages[index - 1].status === 'completed';
+    if (prevCompleted) return 'next';
+    return 'future';
+  }
 
   if (stage.status === 'pending') {
     // The first pending stage right after a completed/in_progress/waiting_action is "next"
     if (index > 0 && stages[index - 1].status === 'completed') return 'next';
     if (stage.dependencies_text) return 'blocked';
-    if (index > 0 && stages[index - 1].status === 'pending') return 'blocked';
+    if (index > 0 && (stages[index - 1].status === 'pending' || stages[index - 1].status === 'in_progress' || stages[index - 1].status === 'waiting_action')) return 'blocked';
     return 'future';
   }
 
