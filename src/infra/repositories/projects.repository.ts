@@ -66,6 +66,7 @@ export interface ProjectSummary {
   pending_documents: number;
   progress_percentage: number;
   last_activity_at: string | null;
+  is_project_phase: boolean;
 }
 
 // ============================================================================
