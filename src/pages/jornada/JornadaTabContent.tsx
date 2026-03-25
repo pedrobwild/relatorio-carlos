@@ -67,6 +67,9 @@ export function JornadaTabContent({
   const contentRef = useRef<HTMLDivElement>(null);
   const [timelineSheetOpen, setTimelineSheetOpen] = useState(false);
   const hasAutoNavigated = useRef(false);
+  const isMobile = useIsMobile();
+  // On mobile, null means "show overview", a stageId means "show detail"
+  const [mobileDetailStageId, setMobileDetailStageId] = useState<string | null>(null);
 
   // Determine active view
   const [activeView, setActiveView] = useState<string>('welcome');
