@@ -154,7 +154,10 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     debugAuth('signOut called');
-    clearRoleCache(); // Clear role cache on logout
+    clearRoleCache();
+    // CRITICAL: Clear all query cache to prevent data leaking between users
+    queryClient.clear();
+    clearPersistedCache();
     const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
 
     // CRITICAL: We do NOT set loading=true here because:
