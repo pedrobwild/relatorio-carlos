@@ -18,6 +18,10 @@ export default function MinhasObras() {
   const { projects, stats, upcomingPayments, isLoading, error } = useClientDashboard();
   const activeIds = useMemo(() => projects.filter(p => p.status === 'active').map(p => p.id), [projects]);
   const { data: activitiesMap } = useDashboardActivities(activeIds);
+  const getProjectActivities = useCallback(
+    (projectId: string) => (activitiesMap instanceof Map ? activitiesMap.get(projectId) : undefined),
+    [activitiesMap]
+  );
 
   const handleProjectClick = useCallback((project: ProjectSummary) => {
     sessionStorage.setItem('selectedProjectId', project.id);
@@ -99,7 +103,7 @@ export default function MinhasObras() {
                       key={project.id}
                       project={project}
                       onClick={() => handleProjectClick(project)}
-                      activities={activitiesMap?.get(project.id)}
+                      activities={getProjectActivities(project.id)}
                     />
                   ))}
                 </div>
