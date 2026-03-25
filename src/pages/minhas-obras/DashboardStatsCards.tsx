@@ -57,8 +57,8 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
         icon={AlertTriangle}
         label="Pendências"
         value={stats.totalPending}
-        accent={stats.totalOverdue > 0 ? 'destructive' : stats.totalPending > 0 ? 'warning' : 'default'}
-        subtitle={stats.totalOverdue > 0 ? `${stats.totalOverdue} em atraso` : undefined}
+        accent={stats.totalPending > 0 ? 'warning' : 'default'}
+        subtitle={undefined}
       />
       <StatCard
         icon={ClipboardSignature}

@@ -34,9 +34,7 @@ export function ProjectDashboardCard({ project, onClick, activities }: ProjectDa
 
   const alerts = useMemo(() => {
     const items: Array<{ icon: React.ElementType; label: string; accent: string }> = [];
-    if (project.overdue_count > 0) {
-      items.push({ icon: AlertCircle, label: `${project.overdue_count} em atraso`, accent: 'text-destructive' });
-    } else if (project.pending_count > 0) {
+    if (project.pending_count > 0) {
       items.push({ icon: AlertCircle, label: `${project.pending_count} pendência(s)`, accent: 'text-[hsl(var(--warning))]' });
     }
     if (project.unsigned_formalizations > 0) {
