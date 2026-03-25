@@ -185,6 +185,7 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
 
   const handleReset = () => {
     setBudgetItems([]);
+    setPdfFile(null);
     setPlan(null);
     setStartDate(plannedStartDate || '');
     setEndDate(plannedEndDate || '');
