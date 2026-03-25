@@ -113,6 +113,13 @@ export function useAuth() {
             debugAuth('Ignoring duplicate SIGNED_IN for same session');
             return;
           }
+
+          // CRITICAL: Clear query cache on sign out to prevent data leaking between users
+          if (event === 'SIGNED_OUT') {
+            queryClient.clear();
+            clearPersistedCache();
+            clearRoleCache();
+          }
           
           setSession(newSession);
           setUser(newSession?.user ?? null);
