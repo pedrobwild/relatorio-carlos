@@ -21,7 +21,12 @@ export default function MinhasObras() {
 
   const handleProjectClick = useCallback((project: ProjectSummary) => {
     sessionStorage.setItem('selectedProjectId', project.id);
-    navigate(`/obra/${project.id}/jornada`);
+    // Only route to jornada for projects in "Fase de Projeto"; otherwise go to main portal
+    if (project.is_project_phase) {
+      navigate(`/obra/${project.id}/jornada`);
+    } else {
+      navigate(`/obra/${project.id}`);
+    }
   }, [navigate]);
 
   const handlePaymentClick = useCallback((projectId: string) => {
