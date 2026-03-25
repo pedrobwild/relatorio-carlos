@@ -321,6 +321,16 @@ export function PurchasesTable({
           itemName={flowModal.purchase.item_name}
         />
       )}
+
+      {cadastroModal && (
+        <CadastroModal
+          open={!!cadastroModal}
+          onOpenChange={() => setCadastroModal(null)}
+          purchaseId={cadastroModal.purchase.id}
+          projectId={cadastroModal.purchase.project_id}
+          itemName={cadastroModal.purchase.item_name}
+        />
+      )}
     </>
   );
 }
