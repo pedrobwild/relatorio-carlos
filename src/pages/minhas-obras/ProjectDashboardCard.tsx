@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { ChevronRight, AlertCircle, ClipboardSignature, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { SCurveSparkline } from '@/components/scurve/SCurveSparkline';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -80,7 +81,9 @@ export function ProjectDashboardCard({ project, onClick, activities }: ProjectDa
           <div className="space-y-1.5">
             {/* S-Curve Sparkline */}
             {activities && activities.length > 0 && (
-              <SCurveSparkline activities={activities} height={44} />
+                <ErrorBoundary name="SCurveSparkline" feature="general" fallback={null}>
+                  <SCurveSparkline activities={activities} height={44} />
+                </ErrorBoundary>
             )}
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
