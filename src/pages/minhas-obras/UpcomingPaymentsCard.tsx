@@ -13,20 +13,37 @@ function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 
+function parseDueDate(value: string): Date | null {
+  if (!value) return null;
+  const parsed = parseISO(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getDaysUntilDueDate(dueDate: string): number | null {
+  const parsed = parseDueDate(dueDate);
+  if (!parsed) return null;
+  return differenceInDays(parsed, new Date());
+}
+
 function getUrgencyClass(dueDate: string): string {
-  const days = differenceInDays(parseISO(dueDate), new Date());
-  if (days < 0) return 'text-destructive font-medium';
+  const days = getDaysUntilDueDate(dueDate);
+  if (days === null) return 'text-muted-foreground';
+  if (days < 0) return 'text-muted-foreground';
   if (days <= 2) return 'text-[hsl(var(--warning))] font-medium';
   return 'text-muted-foreground';
 }
 
 function getUrgencyLabel(dueDate: string): string {
-  const days = differenceInDays(parseISO(dueDate), new Date());
-  if (days < 0) return `${Math.abs(days)}d atrasado`;
+  const days = getDaysUntilDueDate(dueDate);
+  if (days === null) return 'Data a confirmar';
+  if (days < 0) return 'Vencimento pendente';
   if (days === 0) return 'Vence hoje';
   if (days === 1) return 'Amanhã';
   if (days <= 7) return `Em ${days} dias`;
-  return format(parseISO(dueDate), "dd 'de' MMM", { locale: ptBR });
+
+  const parsed = parseDueDate(dueDate);
+  if (!parsed) return 'Data a confirmar';
+  return format(parsed, "dd 'de' MMM", { locale: ptBR });
 }
 
 export function UpcomingPaymentsCard({ payments, onPaymentClick }: UpcomingPaymentsCardProps) {

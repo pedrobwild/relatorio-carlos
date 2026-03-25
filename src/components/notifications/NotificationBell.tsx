@@ -25,6 +25,15 @@ const typeConfig: Record<string, { icon: typeof Bell; className: string }> = {
   general: { icon: Info, className: 'text-muted-foreground' },
 };
 
+function formatNotificationTime(createdAt: string): string {
+  const parsedDate = new Date(createdAt);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return 'Agora há pouco';
+  }
+
+  return formatDistanceToNow(parsedDate, { addSuffix: true, locale: ptBR });
+}
+
 function NotificationItem({
   notification,
   onRead,
@@ -62,7 +71,7 @@ function NotificationItem({
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notification.body}</p>
         )}
         <p className="text-[10px] text-muted-foreground/70 mt-1">
-          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: ptBR })}
+          {formatNotificationTime(notification.created_at)}
         </p>
       </div>
       {isUnread && <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
