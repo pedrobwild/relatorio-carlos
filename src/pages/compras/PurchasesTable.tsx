@@ -91,6 +91,7 @@ export function PurchasesTable({
   onUpdateActualCost, onUpdateNotes, onUpdateField,
 }: PurchasesTableProps) {
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
+  const [flowModal, setFlowModal] = useState<{ purchase: ProjectPurchase } | null>(null);
 
   const grouped = useMemo(() => {
     const map = new Map<string, ProjectPurchase[]>();
