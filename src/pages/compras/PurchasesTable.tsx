@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef } from 'react';
-import { MessageSquare, CheckCircle2, Clock, FileText, Upload, ExternalLink } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { statusConfig, isServiceCategory, ITEM_CATEGORIES, SERVICE_CATEGORIES } from './types';
 import { ObservationsModal } from './ObservationsModal';
+import { PaymentFlowModal } from './PaymentFlowModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
