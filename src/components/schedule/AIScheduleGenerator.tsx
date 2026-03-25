@@ -514,11 +514,21 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button onClick={handleGenerate} disabled={isGenerating || !hasInput} className="gap-1.5">
-                  {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-                  {isGenerating ? 'Gerando...' : 'Gerar Cronograma'}
-                </Button>
+                <Button variant="outline" onClick={() => setOpen(false)} disabled={isGenerating}>Cancelar</Button>
+                {isGenerating ? (
+                  <div className="flex items-center gap-3 flex-1">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                    <div className="flex-1 space-y-1">
+                      <p className="text-sm font-medium">{generationProgress || 'Gerando...'}</p>
+                      <Progress value={undefined} className="h-1.5" />
+                    </div>
+                  </div>
+                ) : (
+                  <Button onClick={handleGenerate} disabled={!hasInput} className="gap-1.5">
+                    <Wand2 className="h-4 w-4" />
+                    Gerar Cronograma
+                  </Button>
+                )}
               </>
             )}
           </DialogFooter>
