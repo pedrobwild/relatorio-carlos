@@ -15,6 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePendencias } from '@/hooks/usePendencias';
 import { JornadaTabsBar } from './jornada/JornadaTabsBar';
 import { JornadaTabContent } from './jornada/JornadaTabContent';
+import { MobileNavDrawer } from './jornada/MobileNavDrawer';
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
