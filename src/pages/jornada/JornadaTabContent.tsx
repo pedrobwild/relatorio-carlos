@@ -173,50 +173,97 @@ export function JornadaTabContent({
 
       {/* Jornada tab content */}
       {activeTab === 'jornada' && (
-        <div className="grid gap-4 md:gap-8 lg:grid-cols-[280px_1fr]">
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-6">
-              <div>
-                <h2 className="text-sm font-medium text-muted-foreground mb-4">{journeyCopy.page.sidebarTitle}</h2>
-                <JourneyTimeline stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
+        <>
+          {/* ── Desktop layout (unchanged) ── */}
+          <div className="hidden md:grid gap-8 lg:grid-cols-[280px_1fr]">
+            <aside className="hidden lg:block">
+              <div className="sticky top-24 space-y-6">
+                <div>
+                  <h2 className="text-sm font-medium text-muted-foreground mb-4">{journeyCopy.page.sidebarTitle}</h2>
+                  <JourneyTimeline stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-medium text-muted-foreground mb-3">Atividade Recente</h2>
+                  <ActivityTimelineCompact projectId={projectId} maxItems={5} />
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm font-medium text-muted-foreground mb-3">Atividade Recente</h2>
-                <ActivityTimelineCompact projectId={projectId} maxItems={5} />
-              </div>
+            </aside>
+
+            <div ref={contentRef} className="space-y-4 md:space-y-8 min-w-0">
+              <JourneyStepperCompact stages={allStagesForStepper} activeStageId={activeView} onOpenTimeline={() => setTimelineSheetOpen(true)} onStageClick={handleTimelineClick} />
+              <JourneyTimelineSheet open={timelineSheetOpen} onOpenChange={setTimelineSheetOpen} stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
+
+              <AnimatePresence mode="wait">
+                {activeView === 'welcome' ? (
+                  <motion.div key="welcome" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}>
+                    <JourneyWelcomeStage hero={journey.hero} projectId={projectId} isAdmin={isAdmin} onAdvance={handleAdvanceFromWelcome} nextStageName={journey.stages[0]?.name ?? 'próxima etapa'} />
+                  </motion.div>
+                ) : selectedStage ? (
+                  <motion.div key={selectedStage.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}>
+                    <StageDetailInline
+                      stage={selectedStage}
+                      projectId={projectId}
+                      isAdmin={isAdmin}
+                      nextStageName={selectedStageNextName}
+                      allStages={journey.stages}
+                      onStageCompleted={() => {
+                        const idx = journey.stages.findIndex(s => s.id === selectedStage.id);
+                        const next = journey.stages[idx + 1];
+                        if (next) setTimeout(() => handleTimelineClick(next.id), 500);
+                      }}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
+              <Separator />
             </div>
-          </aside>
-
-          <div ref={contentRef} className="space-y-4 md:space-y-8 min-w-0">
-            <JourneyStepperCompact stages={allStagesForStepper} activeStageId={activeView} onOpenTimeline={() => setTimelineSheetOpen(true)} onStageClick={handleTimelineClick} />
-            <JourneyTimelineSheet open={timelineSheetOpen} onOpenChange={setTimelineSheetOpen} stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
-
-            <AnimatePresence mode="wait">
-              {activeView === 'welcome' ? (
-                <motion.div key="welcome" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}>
-                  <JourneyWelcomeStage hero={journey.hero} projectId={projectId} isAdmin={isAdmin} onAdvance={handleAdvanceFromWelcome} nextStageName={journey.stages[0]?.name ?? 'próxima etapa'} />
-                </motion.div>
-              ) : selectedStage ? (
-                <motion.div key={selectedStage.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}>
-                  <StageDetailInline
-                    stage={selectedStage}
-                    projectId={projectId}
-                    isAdmin={isAdmin}
-                    nextStageName={selectedStageNextName}
-                    allStages={journey.stages}
-                    onStageCompleted={() => {
-                      const idx = journey.stages.findIndex(s => s.id === selectedStage.id);
-                      const next = journey.stages[idx + 1];
-                      if (next) setTimeout(() => handleTimelineClick(next.id), 500);
-                    }}
-                  />
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-
-            <Separator />
           </div>
-        </div>
+
+          {/* ── Mobile layout: overview → drill-down ── */}
+          <div className="md:hidden space-y-4">
+            <AnimatePresence mode="wait">
+              {mobileDetailStageId === null ? (
+                <motion.div key="mobile-overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+                  <JourneyStepperCompact stages={allStagesForStepper} activeStageId={activeView} onOpenTimeline={() => {}} onStageClick={handleTimelineClick} />
+                  <div className="mt-4">
+                    <h2 className="text-sm font-medium text-muted-foreground mb-3">{journeyCopy.page.sidebarTitle}</h2>
+                    <JourneyTimeline stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key={`mobile-detail-${mobileDetailStageId}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMobileDetailStageId(null)}
+                    className="gap-1.5 -ml-2 mb-3 text-muted-foreground"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Voltar às etapas
+                  </Button>
+
+                  {activeView === 'welcome' ? (
+                    <JourneyWelcomeStage hero={journey.hero} projectId={projectId} isAdmin={isAdmin} onAdvance={handleAdvanceFromWelcome} nextStageName={journey.stages[0]?.name ?? 'próxima etapa'} />
+                  ) : selectedStage ? (
+                    <StageDetailInline
+                      stage={selectedStage}
+                      projectId={projectId}
+                      isAdmin={isAdmin}
+                      nextStageName={selectedStageNextName}
+                      allStages={journey.stages}
+                      onStageCompleted={() => {
+                        const idx = journey.stages.findIndex(s => s.id === selectedStage.id);
+                        const next = journey.stages[idx + 1];
+                        if (next) setTimeout(() => handleTimelineClick(next.id), 500);
+                      }}
+                    />
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </>
       )}
 
       {activeTab === 'financeiro' && (
