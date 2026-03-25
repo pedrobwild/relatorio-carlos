@@ -14,7 +14,7 @@ import {
 import authBg from '@/assets/auth-bg.png';
 import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import { z } from 'zod';
-import { logError, logInfo } from '@/lib/errorLogger';
+import { logError, logInfo, logWarn } from '@/lib/errorLogger';
 
 type AppRole = 'engineer' | 'admin' | 'customer';
 
@@ -56,23 +56,43 @@ export default function Auth() {
   useEffect(() => {
     let hasHandledInitialSession = false;
     let isMounted = true;
+    let sessionCheckTimeout: number | null = null;
+
+    const finishSessionCheck = () => {
+      if (!isMounted) return;
+      setCheckingSession(false);
+      if (sessionCheckTimeout !== null) {
+        window.clearTimeout(sessionCheckTimeout);
+        sessionCheckTimeout = null;
+      }
+    };
+
+    // Failsafe: if backend session check hangs, unblock UI and show login form
+    sessionCheckTimeout = window.setTimeout(() => {
+      if (!isMounted) return;
+      logWarn('Session check timeout on /auth, forcing login form display', {
+        component: 'Auth',
+        action: 'session_check_timeout',
+      });
+      setCheckingSession(false);
+    }, 8000);
 
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!isMounted) return;
       if (error) {
         console.warn('Session check failed:', error.message);
         supabase.auth.signOut().catch(() => {});
-        setCheckingSession(false);
+        finishSessionCheck();
         return;
       }
       if (session?.user) {
         hasHandledInitialSession = true;
         redirectBasedOnRole(session.user.id);
       }
-      setCheckingSession(false);
+      finishSessionCheck();
     }).catch((err) => {
       console.warn('Session check error:', err);
-      if (isMounted) setCheckingSession(false);
+      finishSessionCheck();
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -84,11 +104,17 @@ export default function Auth() {
             if (isMounted) redirectBasedOnRole(session.user.id);
           }, 0);
         }
-        if (event === 'SIGNED_OUT') setCheckingSession(false);
+        if (event === 'SIGNED_OUT') finishSessionCheck();
       }
     );
 
-    return () => { isMounted = false; subscription.unsubscribe(); };
+    return () => {
+      isMounted = false;
+      if (sessionCheckTimeout !== null) {
+        window.clearTimeout(sessionCheckTimeout);
+      }
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   function validate(): boolean {
