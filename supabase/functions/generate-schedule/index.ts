@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,26 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  try {
-    const { budgetItems, budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = await req.json();
-
-    const hasBudgetItems = budgetItems && Array.isArray(budgetItems) && budgetItems.length > 0;
-    const hasPdfFile = budgetFileBase64 && typeof budgetFileBase64 === 'string';
-
-    if (!hasBudgetItems && !hasPdfFile) {
-      return new Response(JSON.stringify({ error: "budgetItems ou budgetFileBase64 é obrigatório" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
-
-    const systemPrompt = `Você é um engenheiro civil especialista em planejamento de obras residenciais e comerciais no Brasil, treinado com as melhores práticas da Bwild Reformas.
+const systemPrompt = `Você é um engenheiro civil especialista em planejamento de obras residenciais e comerciais no Brasil, treinado com as melhores práticas da Bwild Reformas.
 
 ## REGRAS DE SEQUENCIAMENTO TÉCNICO
 
@@ -91,49 +72,144 @@ Analise os itens de orçamento fornecidos e gere:
 
 Responda EXCLUSIVAMENTE com JSON válido usando tool calling.`;
 
-    // Build duration context
-    let durationContext = "";
-    if (startDate && endDate) {
-      durationContext = `Data de início: ${startDate}\nData de término: ${endDate}\nIMPORTANTE: O cronograma DEVE ser distribuído dentro deste intervalo de datas. Calcule o número de semanas disponíveis e distribua todas as atividades proporcionalmente, respeitando a sequência técnica obrigatória. Considere apenas dias úteis (segunda a sexta), excluindo feriados nacionais brasileiros e feriados municipais de São Paulo (25/Jan, 9/Jul, 20/Nov).`;
-    } else if (startDate && durationWeeks) {
-      durationContext = `Data de início: ${startDate}\nDuração estimada: ${durationWeeks} semanas`;
-    } else if (startDate) {
-      durationContext = `Data de início: ${startDate}\nDuração: A calcular com base nos itens do orçamento`;
-    } else {
-      durationContext = `Data de início: A definir\nDuração: A calcular com base nos itens do orçamento`;
-    }
+const toolSchema = {
+  type: "function",
+  function: {
+    name: "generate_construction_plan",
+    description: "Gera cronograma semanal e lista de compras para uma obra",
+    parameters: {
+      type: "object",
+      properties: {
+        weeklySchedule: {
+          type: "array",
+          description: "Cronograma distribuído por semana",
+          items: {
+            type: "object",
+            properties: {
+              week: { type: "number" },
+              phase: { type: "string" },
+              activities: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    description: { type: "string" },
+                    estimatedDays: { type: "number" },
+                    dependencies: { type: "array", items: { type: "string" } },
+                    notes: { type: "string" },
+                  },
+                  required: ["description", "estimatedDays"],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ["week", "phase", "activities"],
+            additionalProperties: false,
+          },
+        },
+        purchaseList: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              item: { type: "string" },
+              category: { type: "string" },
+              quantity: { type: "string" },
+              estimatedCost: { type: "string" },
+              leadTimeDays: { type: "number" },
+              orderByWeek: { type: "number" },
+              neededByWeek: { type: "number" },
+              priority: { type: "string", enum: ["alta", "media", "baixa"] },
+              notes: { type: "string" },
+            },
+            required: ["item", "category", "leadTimeDays", "orderByWeek", "neededByWeek", "priority"],
+            additionalProperties: false,
+          },
+        },
+        summary: {
+          type: "object",
+          properties: {
+            totalWeeks: { type: "number" },
+            bufferWeeks: { type: "number" },
+            totalActivities: { type: "number" },
+            totalPurchaseItems: { type: "number" },
+            criticalPath: { type: "array", items: { type: "string" } },
+            budgetConcentration: { type: "string" },
+            recommendations: { type: "array", items: { type: "string" } },
+          },
+          required: ["totalWeeks", "bufferWeeks", "totalActivities", "totalPurchaseItems"],
+          additionalProperties: false,
+        },
+        budgetRiskAlerts: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              type: { type: "string", enum: ["concentracao_orcamentaria", "lead_time_critico", "sequenciamento", "semana_sobrecarregada", "item_sem_cronograma"] },
+              severity: { type: "string", enum: ["alta", "media", "baixa"] },
+              message: { type: "string" },
+              affectedItems: { type: "array", items: { type: "string" } },
+              recommendation: { type: "string" },
+            },
+            required: ["type", "severity", "message", "recommendation"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["weeklySchedule", "purchaseList", "summary", "budgetRiskAlerts"],
+      additionalProperties: false,
+    },
+  },
+};
 
-    let budgetSection = "";
-    if (hasBudgetItems) {
-      budgetSection = `Itens do orçamento:\n${budgetItems.map((item: any, i: number) => 
-        `${i + 1}. ${item.description || item.name}${item.unit ? ` (${item.quantity || ''} ${item.unit})` : ''}${item.value ? ` - R$ ${item.value}` : ''}`
-      ).join("\n")}`;
-    } else {
-      budgetSection = `O orçamento foi enviado como PDF em anexo (${budgetFileName || 'orcamento.pdf'}). Analise o conteúdo completo do PDF para extrair todos os itens, quantidades e valores. Liste cada item encontrado antes de gerar o cronograma.`;
-    }
+function buildUserPrompt(payload: any): string {
+  const { budgetItems, budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = payload;
 
-    const userPrompt = `Projeto: ${projectName || "Obra"}
-${durationContext}
+  let durationContext = "";
+  if (startDate && endDate) {
+    durationContext = `Data de início: ${startDate}\nData de término: ${endDate}\nIMPORTANTE: O cronograma DEVE ser distribuído dentro deste intervalo de datas. Calcule o número de semanas disponíveis e distribua todas as atividades proporcionalmente, respeitando a sequência técnica obrigatória. Considere apenas dias úteis (segunda a sexta), excluindo feriados nacionais brasileiros e feriados municipais de São Paulo (25/Jan, 9/Jul, 20/Nov).`;
+  } else if (startDate && durationWeeks) {
+    durationContext = `Data de início: ${startDate}\nDuração estimada: ${durationWeeks} semanas`;
+  } else if (startDate) {
+    durationContext = `Data de início: ${startDate}\nDuração: A calcular com base nos itens do orçamento`;
+  } else {
+    durationContext = `Data de início: A definir\nDuração: A calcular com base nos itens do orçamento`;
+  }
 
-${budgetSection}
+  const hasBudgetItems = budgetItems && Array.isArray(budgetItems) && budgetItems.length > 0;
+  let budgetSection = "";
+  if (hasBudgetItems) {
+    budgetSection = `Itens do orçamento:\n${budgetItems.map((item: any, i: number) =>
+      `${i + 1}. ${item.description || item.name}${item.unit ? ` (${item.quantity || ''} ${item.unit})` : ''}${item.value ? ` - R$ ${item.value}` : ''}`
+    ).join("\n")}`;
+  } else {
+    budgetSection = `O orçamento foi enviado como PDF em anexo (${budgetFileName || 'orcamento.pdf'}). Analise o conteúdo completo do PDF para extrair todos os itens, quantidades e valores. Liste cada item encontrado antes de gerar o cronograma.`;
+  }
 
-Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
+  return `Projeto: ${projectName || "Obra"}\n${durationContext}\n\n${budgetSection}\n\nGere o cronograma semanal otimizado e a lista de compras com prazos.`;
+}
 
-    // Build messages - include PDF as multimodal content if provided
-    const messages: any[] = [
-      { role: "system", content: systemPrompt },
-    ];
+async function processScheduleJob(jobId: string, payload: any) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+  try {
+    await supabaseAdmin.from("schedule_jobs").update({ status: "processing", updated_at: new Date().toISOString() }).eq("id", jobId);
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
+
+    const userPrompt = buildUserPrompt(payload);
+    const hasPdfFile = payload.budgetFileBase64 && typeof payload.budgetFileBase64 === "string";
+
+    const messages: any[] = [{ role: "system", content: systemPrompt }];
 
     if (hasPdfFile) {
       messages.push({
         role: "user",
         content: [
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:application/pdf;base64,${budgetFileBase64}`,
-            },
-          },
+          { type: "image_url", image_url: { url: `data:application/pdf;base64,${payload.budgetFileBase64}` } },
           { type: "text", text: userPrompt },
         ],
       });
@@ -150,137 +226,116 @@ Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages,
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_construction_plan",
-              description: "Gera cronograma semanal e lista de compras para uma obra",
-              parameters: {
-                type: "object",
-                properties: {
-                  weeklySchedule: {
-                    type: "array",
-                    description: "Cronograma distribuído por semana",
-                    items: {
-                      type: "object",
-                      properties: {
-                        week: { type: "number", description: "Número da semana (1, 2, 3...)" },
-                        phase: { type: "string", description: "Nome da fase (ex: Fundação, Alvenaria)" },
-                        activities: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              description: { type: "string" },
-                              estimatedDays: { type: "number", description: "Duração estimada em dias" },
-                              dependencies: { type: "array", items: { type: "string" }, description: "Atividades que devem ser concluídas antes" },
-                              notes: { type: "string", description: "Observações técnicas" },
-                            },
-                            required: ["description", "estimatedDays"],
-                            additionalProperties: false,
-                          },
-                        },
-                      },
-                      required: ["week", "phase", "activities"],
-                      additionalProperties: false,
-                    },
-                  },
-                  purchaseList: {
-                    type: "array",
-                    description: "Lista de compras com prazos",
-                    items: {
-                      type: "object",
-                      properties: {
-                        item: { type: "string", description: "Nome do material" },
-                        category: { type: "string", description: "Categoria (ex: Elétrica, Hidráulica, Acabamento)" },
-                        quantity: { type: "string", description: "Quantidade estimada com unidade" },
-                        estimatedCost: { type: "string", description: "Custo estimado em R$" },
-                        leadTimeDays: { type: "number", description: "Prazo de entrega em dias" },
-                        orderByWeek: { type: "number", description: "Semana em que deve ser pedido" },
-                        neededByWeek: { type: "number", description: "Semana em que precisa estar disponível" },
-                        priority: { type: "string", enum: ["alta", "media", "baixa"] },
-                        notes: { type: "string" },
-                      },
-                      required: ["item", "category", "leadTimeDays", "orderByWeek", "neededByWeek", "priority"],
-                      additionalProperties: false,
-                    },
-                  },
-                  summary: {
-                    type: "object",
-                    properties: {
-                      totalWeeks: { type: "number" },
-                      bufferWeeks: { type: "number", description: "Semanas reservadas como buffer (20% do total)" },
-                      totalActivities: { type: "number" },
-                      totalPurchaseItems: { type: "number" },
-                      criticalPath: { type: "array", items: { type: "string" }, description: "Atividades do caminho crítico" },
-                      budgetConcentration: { type: "string", description: "Ex: Marcenaria + Eletros = 52% do orçamento" },
-                      recommendations: { type: "array", items: { type: "string" }, description: "Recomendações baseadas nas regras Bwild" },
-                    },
-                    required: ["totalWeeks", "bufferWeeks", "totalActivities", "totalPurchaseItems"],
-                    additionalProperties: false,
-                  },
-                  budgetRiskAlerts: {
-                    type: "array",
-                    description: "Alertas de risco orçamentário e sequenciamento",
-                    items: {
-                      type: "object",
-                      properties: {
-                        type: { type: "string", enum: ["concentracao_orcamentaria", "lead_time_critico", "sequenciamento", "semana_sobrecarregada", "item_sem_cronograma"] },
-                        severity: { type: "string", enum: ["alta", "media", "baixa"] },
-                        message: { type: "string", description: "Descrição do alerta" },
-                        affectedItems: { type: "array", items: { type: "string" }, description: "Itens afetados" },
-                        recommendation: { type: "string", description: "Recomendação para mitigar o risco" },
-                      },
-                      required: ["type", "severity", "message", "recommendation"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["weeklySchedule", "purchaseList", "summary", "budgetRiskAlerts"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
+        tools: [toolSchema],
         tool_choice: { type: "function", function: { name: "generate_construction_plan" } },
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições atingido. Tente novamente em alguns minutos." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione fundos nas configurações." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "Erro ao gerar cronograma" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const errorMsg = response.status === 429
+        ? "Limite de requisições atingido. Tente novamente em alguns minutos."
+        : response.status === 402
+        ? "Créditos insuficientes."
+        : `Erro do gateway IA (${response.status})`;
+      throw new Error(errorMsg);
     }
 
     const aiResponse = await response.json();
     const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall?.function?.arguments) {
-      return new Response(JSON.stringify({ error: "Resposta da IA não contém dados estruturados" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      throw new Error("Resposta da IA não contém dados estruturados");
     }
 
     const plan = JSON.parse(toolCall.function.arguments);
 
-    return new Response(JSON.stringify(plan), {
+    await supabaseAdmin
+      .from("schedule_jobs")
+      .update({ status: "completed", result: plan, updated_at: new Date().toISOString() })
+      .eq("id", jobId);
+
+    console.log(`Job ${jobId} completed successfully`);
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : "Erro desconhecido";
+    console.error(`Job ${jobId} failed:`, errorMessage);
+    await supabaseAdmin
+      .from("schedule_jobs")
+      .update({ status: "failed", error_message: errorMessage, updated_at: new Date().toISOString() })
+      .eq("id", jobId);
+  }
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Authenticate
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Authorization required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseUser = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const payload = await req.json();
+    const { projectId } = payload;
+
+    if (!projectId) {
+      return new Response(JSON.stringify({ error: "projectId é obrigatório" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const hasBudgetItems = payload.budgetItems && Array.isArray(payload.budgetItems) && payload.budgetItems.length > 0;
+    const hasPdfFile = payload.budgetFileBase64 && typeof payload.budgetFileBase64 === "string";
+
+    if (!hasBudgetItems && !hasPdfFile) {
+      return new Response(JSON.stringify({ error: "budgetItems ou budgetFileBase64 é obrigatório" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create job record
+    const { data: job, error: insertError } = await supabaseAdmin
+      .from("schedule_jobs")
+      .insert({
+        project_id: projectId,
+        user_id: user.id,
+        status: "pending",
+        input_payload: { projectName: payload.projectName, startDate: payload.startDate, endDate: payload.endDate, durationWeeks: payload.durationWeeks, hasPdf: hasPdfFile, itemCount: hasBudgetItems ? payload.budgetItems.length : 0 },
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !job) {
+      console.error("Failed to create job:", insertError);
+      return new Response(JSON.stringify({ error: "Falha ao criar job" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Process in background using EdgeRuntime.waitUntil
+    // @ts-ignore - EdgeRuntime is available in Supabase Edge Functions
+    EdgeRuntime.waitUntil(processScheduleJob(job.id, payload));
+
+    return new Response(JSON.stringify({ jobId: job.id, status: "pending" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
