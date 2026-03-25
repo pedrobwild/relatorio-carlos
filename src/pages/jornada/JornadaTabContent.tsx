@@ -1,6 +1,8 @@
 import { lazy, Suspense, useRef, useCallback, useMemo, useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { ActivityTimelineCompact } from '@/components/ActivityTimeline';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { JourneyTimeline } from '@/components/journey/JourneyTimeline';
@@ -11,6 +13,8 @@ import { StageDetailInline } from '@/components/journey/StageDetailInline';
 import { PullToRefreshIndicator } from '@/components/journey/PullToRefreshIndicator';
 import { TabOnboardingTip } from '@/components/journey/TabOnboardingTip';
 import { journeyCopy } from '@/constants/journeyCopy';
+import { useIsMobile } from '@/hooks/use-mobile';
+import type { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 import type { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 
 const FinanceiroContent = lazy(() => import('@/components/tabs/FinanceiroContent'));
