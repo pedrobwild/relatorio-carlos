@@ -119,12 +119,6 @@ ${budgetSection}
 
 Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
     // Build messages - include PDF as multimodal content if provided
     const messages: any[] = [
       { role: "system", content: systemPrompt },
@@ -148,6 +142,12 @@ Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
       messages.push({ role: "user", content: userPrompt });
     }
 
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages,
