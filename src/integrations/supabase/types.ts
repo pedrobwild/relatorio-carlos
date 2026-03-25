@@ -3746,6 +3746,7 @@ export type Database = {
           actual_start_date: string
           contract_value: number
           id: string
+          is_project_phase: boolean
           last_activity_at: string
           name: string
           org_id: string

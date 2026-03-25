@@ -66,6 +66,7 @@ export interface ProjectSummary {
   pending_documents: number;
   progress_percentage: number;
   last_activity_at: string | null;
+  is_project_phase: boolean;
 }
 
 // ============================================================================
@@ -213,7 +214,7 @@ export async function getProjectById(projectId: string): Promise<RepositoryResul
 export async function getUserProjectsSummary(): Promise<RepositoryListResult<ProjectSummary>> {
   return executeListQuery(async () => {
     const { data, error } = await supabase.rpc('get_user_projects_summary');
-    return { data: data ?? null, error };
+    return { data: (data as unknown as ProjectSummary[]) ?? null, error };
   });
 }
 
