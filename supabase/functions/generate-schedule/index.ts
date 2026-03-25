@@ -10,10 +10,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { budgetItems, projectName, startDate, endDate, durationWeeks } = await req.json();
+    const { budgetItems, budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = await req.json();
 
-    if (!budgetItems || !Array.isArray(budgetItems) || budgetItems.length === 0) {
-      return new Response(JSON.stringify({ error: "budgetItems é obrigatório" }), {
+    const hasBudgetItems = budgetItems && Array.isArray(budgetItems) && budgetItems.length > 0;
+    const hasPdfFile = budgetFileBase64 && typeof budgetFileBase64 === 'string';
+
+    if (!hasBudgetItems && !hasPdfFile) {
+      return new Response(JSON.stringify({ error: "budgetItems ou budgetFileBase64 é obrigatório" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
