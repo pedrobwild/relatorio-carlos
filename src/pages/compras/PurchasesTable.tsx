@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef } from 'react';
-import { MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { statusConfig, isServiceCategory, ITEM_CATEGORIES, SERVICE_CATEGORIES } from './types';
 import { ObservationsModal } from './ObservationsModal';
 import { PaymentFlowModal } from './PaymentFlowModal';
+import { CadastroModal } from './CadastroModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -92,6 +93,7 @@ export function PurchasesTable({
 }: PurchasesTableProps) {
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [flowModal, setFlowModal] = useState<{ purchase: ProjectPurchase } | null>(null);
+  const [cadastroModal, setCadastroModal] = useState<{ purchase: ProjectPurchase } | null>(null);
 
   const grouped = useMemo(() => {
     const map = new Map<string, ProjectPurchase[]>();
@@ -164,7 +166,7 @@ export function PurchasesTable({
                       <TableHead className="min-w-[120px]">Data Início</TableHead>
                       <TableHead className="min-w-[120px]">Data Conclusão</TableHead>
                       <TableHead className="min-w-[140px]">Fornecedor</TableHead>
-                      <TableHead className="min-w-[130px]">Status</TableHead>
+                      <TableHead className="min-w-[90px]">Cadastro</TableHead>
                       <TableHead className="min-w-[80px]">Contrato</TableHead>
                       <TableHead className="min-w-[90px]">Financeiro</TableHead>
                       <TableHead className="w-12">Obs</TableHead>
@@ -254,24 +256,15 @@ export function PurchasesTable({
                             />
                           </TableCell>
                           <TableCell>
-                            <Select value={purchase.status} onValueChange={(v) => onStatusChange(purchase.id, v as PurchaseStatus)}>
-                              <SelectTrigger className={cn('h-8 w-32', config.color)}>
-                                <div className="flex items-center gap-1.5">
-                                  <StatusIcon className="h-3.5 w-3.5" />
-                                  <span className="text-xs">{config.label}</span>
-                                </div>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(statusConfig).map(([key, c]) => (
-                                  <SelectItem key={key} value={key}>
-                                    <div className="flex items-center gap-2">
-                                      <c.icon className="h-4 w-4" />
-                                      {c.label}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1"
+                              onClick={() => setCadastroModal({ purchase })}
+                            >
+                              <ClipboardList className="h-3.5 w-3.5" />
+                              Cadastro
+                            </Button>
                           </TableCell>
                           <TableCell>
                             <ContractCell purchase={purchase} onUpdateField={onUpdateField} />
@@ -326,6 +319,16 @@ export function PurchasesTable({
           purchaseId={flowModal.purchase.id}
           projectId={flowModal.purchase.project_id}
           itemName={flowModal.purchase.item_name}
+        />
+      )}
+
+      {cadastroModal && (
+        <CadastroModal
+          open={!!cadastroModal}
+          onOpenChange={() => setCadastroModal(null)}
+          purchaseId={cadastroModal.purchase.id}
+          projectId={cadastroModal.purchase.project_id}
+          itemName={cadastroModal.purchase.item_name}
         />
       )}
     </>
