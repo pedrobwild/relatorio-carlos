@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { debugAuth, logAuthState } from '@/lib/debugAuth';
 import { clearRoleCache } from './useUserRole';
 import { useLinkCustomerOnLogin } from './useLinkCustomerOnLogin';
+import { queryClient } from '@/lib/queryClient';
+import { clearPersistedCache } from '@/lib/queryPersister';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
