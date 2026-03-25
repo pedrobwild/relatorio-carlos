@@ -13,7 +13,7 @@ export function ComprasKPICards({ pendingCount, orderedCount, deliveredCount, ov
   const cards = [
     { label: 'Pendentes', value: pendingCount, icon: Clock, bg: 'bg-amber-500/20', text: 'text-amber-600' },
     { label: 'Em Pedido', value: orderedCount, icon: Package, bg: 'bg-blue-500/20', text: 'text-blue-600' },
-    { label: 'Entregues', value: deliveredCount, icon: CheckCircle2, bg: 'bg-green-500/20', text: 'text-green-600' },
+    { label: 'Concluídas', value: deliveredCount, icon: CheckCircle2, bg: 'bg-green-500/20', text: 'text-green-600' },
     { label: 'Atrasados', value: overdueCount, icon: AlertTriangle, bg: 'bg-destructive/20', text: 'text-destructive', valueClass: 'text-destructive' },
   ];
 
