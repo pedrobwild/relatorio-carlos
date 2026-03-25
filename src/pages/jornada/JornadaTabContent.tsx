@@ -15,7 +15,6 @@ import { TabOnboardingTip } from '@/components/journey/TabOnboardingTip';
 import { journeyCopy } from '@/constants/journeyCopy';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
-import type { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
 
 const FinanceiroContent = lazy(() => import('@/components/tabs/FinanceiroContent'));
 const DocumentosContent = lazy(() => import('@/components/tabs/DocumentosContent'));
