@@ -454,7 +454,7 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
             ) : (
               <>
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button onClick={handleGenerate} disabled={isGenerating || budgetItems.length === 0} className="gap-1.5">
+                <Button onClick={handleGenerate} disabled={isGenerating || !hasInput} className="gap-1.5">
                   {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                   {isGenerating ? 'Gerando...' : 'Gerar Cronograma'}
                 </Button>

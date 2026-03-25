@@ -125,12 +125,32 @@ Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+    // Build messages - include PDF as multimodal content if provided
+    const messages: any[] = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    if (hasPdfFile) {
+      messages.push({
+        role: "user",
+        content: [
+          {
+            type: "file",
+            file: {
+              filename: budgetFileName || "orcamento.pdf",
+              file_data: `data:application/pdf;base64,${budgetFileBase64}`,
+            },
+          },
+          { type: "text", text: userPrompt },
         ],
+      });
+    } else {
+      messages.push({ role: "user", content: userPrompt });
+    }
+
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages,
         tools: [
           {
             type: "function",
