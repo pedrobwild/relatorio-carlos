@@ -14,7 +14,7 @@ import {
 import authBg from '@/assets/auth-bg.png';
 import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import { z } from 'zod';
-import { logError, logInfo } from '@/lib/errorLogger';
+import { logError, logInfo, logWarn } from '@/lib/errorLogger';
 
 type AppRole = 'engineer' | 'admin' | 'customer';
 
