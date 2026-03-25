@@ -2943,6 +2943,53 @@ export type Database = {
           },
         ]
       }
+      purchase_payment_flows: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string | null
+          id: string
+          installment_name: string
+          project_id: string
+          purchase_id: string
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          installment_name: string
+          project_id: string
+          purchase_id: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          installment_name?: string
+          project_id?: string
+          purchase_id?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_payment_flows_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedule_jobs: {
         Row: {
           created_at: string
