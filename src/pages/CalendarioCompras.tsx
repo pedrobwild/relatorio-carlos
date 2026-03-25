@@ -177,7 +177,7 @@ export default function CalendarioCompras() {
                     <SelectItem value="pending">Pendente</SelectItem>
                     <SelectItem value="ordered">Pedido</SelectItem>
                     <SelectItem value="in_transit">Em Trânsito</SelectItem>
-                    <SelectItem value="delivered">Entregue</SelectItem>
+                    <SelectItem value="delivered">Concluído</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={filterProject} onValueChange={setFilterProject}>
