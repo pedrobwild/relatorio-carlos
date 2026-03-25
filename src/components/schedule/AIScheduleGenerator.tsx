@@ -85,10 +85,32 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
   const [isGenerating, setIsGenerating] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [activeTab, setActiveTab] = useState<'schedule' | 'purchases' | 'alerts'>('schedule');
+  const [pdfFile, setPdfFile] = useState<{ name: string; base64: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const parseFile = useCallback((file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
+
+    if (ext === 'pdf') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const arrayBuffer = e.target?.result as ArrayBuffer;
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        setPdfFile({ name: file.name, base64 });
+        setBudgetItems([]);
+        toast.success(`PDF "${file.name}" carregado — a IA irá extrair os itens`);
+      };
+      reader.onerror = () => toast.error('Erro ao ler PDF');
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    setPdfFile(null);
 
     if (ext === 'csv') {
       Papa.parse(file, {
