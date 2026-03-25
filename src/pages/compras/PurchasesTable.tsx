@@ -93,6 +93,7 @@ export function PurchasesTable({
 }: PurchasesTableProps) {
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [flowModal, setFlowModal] = useState<{ purchase: ProjectPurchase } | null>(null);
+  const [cadastroModal, setCadastroModal] = useState<{ purchase: ProjectPurchase } | null>(null);
 
   const grouped = useMemo(() => {
     const map = new Map<string, ProjectPurchase[]>();
@@ -165,7 +166,7 @@ export function PurchasesTable({
                       <TableHead className="min-w-[120px]">Data Início</TableHead>
                       <TableHead className="min-w-[120px]">Data Conclusão</TableHead>
                       <TableHead className="min-w-[140px]">Fornecedor</TableHead>
-                      <TableHead className="min-w-[130px]">Status</TableHead>
+                      <TableHead className="min-w-[90px]">Cadastro</TableHead>
                       <TableHead className="min-w-[80px]">Contrato</TableHead>
                       <TableHead className="min-w-[90px]">Financeiro</TableHead>
                       <TableHead className="w-12">Obs</TableHead>
