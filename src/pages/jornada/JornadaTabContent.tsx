@@ -127,15 +127,20 @@ export function JornadaTabContent({
   }, [selectedStage, journey.stages]);
 
   const handleTimelineClick = useCallback((stageId: string) => {
-    if (stageId === 'welcome') { setActiveView('welcome'); return; }
+    if (stageId === 'welcome') { setActiveView('welcome'); if (isMobile) setMobileDetailStageId(null); return; }
     if (!welcomeCompleted && !isAdmin) return;
     if (!isAdmin) {
       const idx = journey.stages.findIndex(s => s.id === stageId);
       if (idx >= 0 && isStageBlocked(journey.stages[idx], idx, journey.stages)) return;
     }
     setActiveView(stageId);
-    setTimeout(() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-  }, [journey.stages, welcomeCompleted, isAdmin]);
+    if (isMobile) {
+      setMobileDetailStageId(stageId);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setTimeout(() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }, [journey.stages, welcomeCompleted, isAdmin, isMobile]);
 
   const handleAdvanceFromWelcome = useCallback(() => {
     setWelcomeCompleted(true);
