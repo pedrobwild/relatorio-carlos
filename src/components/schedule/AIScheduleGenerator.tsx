@@ -169,6 +169,37 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
 
   const hasInput = budgetItems.length > 0 || pdfFile !== null;
 
+  const [generationProgress, setGenerationProgress] = useState('');
+
+  const pollJobStatus = useCallback(async (jobId: string): Promise<GeneratedPlan> => {
+    const maxAttempts = 90; // ~3 minutes
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+
+      const { data, error } = await supabase
+        .from('schedule_jobs')
+        .select('status, result, error_message')
+        .eq('id', jobId)
+        .single();
+
+      if (error) throw new Error('Erro ao verificar status');
+
+      if (data.status === 'completed' && data.result) {
+        return data.result as unknown as GeneratedPlan;
+      }
+      if (data.status === 'failed') {
+        throw new Error(data.error_message || 'Falha na geração');
+      }
+
+      // Update progress message
+      if (i < 5) setGenerationProgress('Analisando orçamento...');
+      else if (i < 15) setGenerationProgress('Planejando sequenciamento técnico...');
+      else if (i < 30) setGenerationProgress('Calculando lead times e compras...');
+      else setGenerationProgress('Finalizando cronograma...');
+    }
+    throw new Error('Tempo limite excedido. Tente novamente.');
+  }, []);
+
   const handleGenerate = async () => {
     if (!hasInput) {
       toast.error('Importe um arquivo de orçamento primeiro');
@@ -177,9 +208,11 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
 
     setIsGenerating(true);
     setPlan(null);
+    setGenerationProgress('Iniciando geração...');
 
     try {
       const payload: Record<string, unknown> = {
+        projectId,
         projectName,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
@@ -192,18 +225,22 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
         payload.budgetItems = budgetItems;
       }
 
-      const { data, error } = await invokeFunction<GeneratedPlan>('generate-schedule', payload);
+      const { data, error } = await invokeFunction<{ jobId: string; status: string }>('generate-schedule', payload);
 
       if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Erro ao gerar');
-      if (!data) throw new Error('Resposta vazia');
+      if (!data?.jobId) throw new Error('Resposta vazia');
 
-      setPlan(data);
+      // Poll for results
+      const result = await pollJobStatus(data.jobId);
+
+      setPlan(result);
       setActiveTab('schedule');
       toast.success('Cronograma e lista de compras gerados!');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao gerar cronograma');
     } finally {
       setIsGenerating(false);
+      setGenerationProgress('');
     }
   };
 
