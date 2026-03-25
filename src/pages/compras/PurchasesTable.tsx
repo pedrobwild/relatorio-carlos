@@ -278,6 +278,17 @@ export function PurchasesTable({
                           </TableCell>
                           <TableCell>
                             <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1"
+                              onClick={() => setFlowModal({ purchase })}
+                            >
+                              <DollarSign className="h-3.5 w-3.5" />
+                              Fluxo
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <Button
                               variant="ghost"
                               size="icon"
                               className={cn('h-8 w-8', purchase.notes && 'text-primary')}
@@ -305,6 +316,16 @@ export function PurchasesTable({
           itemName={obsModal.purchase.item_name}
           notes={obsModal.purchase.notes || ''}
           onSave={(notes) => onUpdateNotes(obsModal.purchase.id, notes)}
+        />
+      )}
+
+      {flowModal && (
+        <PaymentFlowModal
+          open={!!flowModal}
+          onOpenChange={() => setFlowModal(null)}
+          purchaseId={flowModal.purchase.id}
+          projectId={flowModal.purchase.project_id}
+          itemName={flowModal.purchase.item_name}
         />
       )}
     </>
