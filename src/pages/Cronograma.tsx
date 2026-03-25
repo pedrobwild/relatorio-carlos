@@ -69,7 +69,7 @@ const Cronograma = () => {
     }
   };
 
-  // Load existing activities into form
+  // Load existing activities or auto-generate weekly slots
   useEffect(() => {
     if (existingActivities.length > 0) {
       const formActivities = existingActivities.map(act => ({
@@ -83,8 +83,46 @@ const Cronograma = () => {
         predecessorIds: act.predecessor_ids || [],
       }));
       setActivities(formActivities);
+    } else if (!activitiesLoading && project?.planned_start_date && project?.planned_end_date) {
+      // Auto-generate weekly activities from project dates
+      const start = new Date(project.planned_start_date + 'T00:00:00');
+      const end = new Date(project.planned_end_date + 'T00:00:00');
+      if (start >= end) return;
+
+      const weeks: ActivityFormData[] = [];
+      let weekStart = new Date(start);
+      
+      while (weekStart < end) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6); // 7-day week
+        const cappedEnd = weekEnd > end ? end : weekEnd;
+        
+        const fmt = (d: Date) => d.toISOString().split('T')[0];
+        weeks.push({
+          id: crypto.randomUUID(),
+          description: '',
+          plannedStart: fmt(weekStart),
+          plannedEnd: fmt(cappedEnd),
+          actualStart: '',
+          actualEnd: '',
+          weight: '0', // placeholder, will be set below
+          predecessorIds: [],
+        });
+        
+        weekStart = new Date(cappedEnd);
+        weekStart.setDate(weekStart.getDate() + 1);
+      }
+      
+      if (weeks.length > 0) {
+        const weightPerWeek = parseFloat((100 / weeks.length).toFixed(1));
+        const remainder = parseFloat((100 - weightPerWeek * weeks.length).toFixed(1));
+        weeks.forEach((w, i) => {
+          w.weight = (i === weeks.length - 1 ? (weightPerWeek + remainder).toFixed(1) : weightPerWeek.toFixed(1));
+        });
+        setActivities(weeks);
+      }
     }
-  }, [existingActivities]);
+  }, [existingActivities, activitiesLoading, project]);
 
   // Calculate total weight
   useEffect(() => {
