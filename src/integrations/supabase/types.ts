@@ -2590,9 +2590,11 @@ export type Database = {
           actual_cost: number | null
           actual_delivery_date: string | null
           category: string | null
+          contract_file_path: string | null
           created_at: string
           created_by: string
           description: string | null
+          end_date: string | null
           estimated_cost: number | null
           expected_delivery_date: string | null
           id: string
@@ -2605,6 +2607,7 @@ export type Database = {
           project_id: string
           quantity: number
           required_by_date: string
+          start_date: string | null
           status: string
           supplier_contact: string | null
           supplier_name: string | null
@@ -2616,9 +2619,11 @@ export type Database = {
           actual_cost?: number | null
           actual_delivery_date?: string | null
           category?: string | null
+          contract_file_path?: string | null
           created_at?: string
           created_by: string
           description?: string | null
+          end_date?: string | null
           estimated_cost?: number | null
           expected_delivery_date?: string | null
           id?: string
@@ -2631,6 +2636,7 @@ export type Database = {
           project_id: string
           quantity?: number
           required_by_date: string
+          start_date?: string | null
           status?: string
           supplier_contact?: string | null
           supplier_name?: string | null
@@ -2642,9 +2648,11 @@ export type Database = {
           actual_cost?: number | null
           actual_delivery_date?: string | null
           category?: string | null
+          contract_file_path?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
+          end_date?: string | null
           estimated_cost?: number | null
           expected_delivery_date?: string | null
           id?: string
@@ -2657,6 +2665,7 @@ export type Database = {
           project_id?: string
           quantity?: number
           required_by_date?: string
+          start_date?: string | null
           status?: string
           supplier_contact?: string | null
           supplier_name?: string | null
