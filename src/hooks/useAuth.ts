@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { debugAuth, logAuthState } from '@/lib/debugAuth';
 import { clearRoleCache } from './useUserRole';
 import { useLinkCustomerOnLogin } from './useLinkCustomerOnLogin';
+import { queryClient } from '@/lib/queryClient';
+import { clearPersistedCache } from '@/lib/queryPersister';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -111,6 +113,13 @@ export function useAuth() {
             debugAuth('Ignoring duplicate SIGNED_IN for same session');
             return;
           }
+
+          // CRITICAL: Clear query cache on sign out to prevent data leaking between users
+          if (event === 'SIGNED_OUT') {
+            queryClient.clear();
+            clearPersistedCache();
+            clearRoleCache();
+          }
           
           setSession(newSession);
           setUser(newSession?.user ?? null);
@@ -152,7 +161,10 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     debugAuth('signOut called');
-    clearRoleCache(); // Clear role cache on logout
+    clearRoleCache();
+    // CRITICAL: Clear all query cache to prevent data leaking between users
+    queryClient.clear();
+    clearPersistedCache();
     const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;
 
     // CRITICAL: We do NOT set loading=true here because:
