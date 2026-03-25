@@ -85,10 +85,32 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
   const [isGenerating, setIsGenerating] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [activeTab, setActiveTab] = useState<'schedule' | 'purchases' | 'alerts'>('schedule');
+  const [pdfFile, setPdfFile] = useState<{ name: string; base64: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const parseFile = useCallback((file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
+
+    if (ext === 'pdf') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const arrayBuffer = e.target?.result as ArrayBuffer;
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        setPdfFile({ name: file.name, base64 });
+        setBudgetItems([]);
+        toast.success(`PDF "${file.name}" carregado — a IA irá extrair os itens`);
+      };
+      reader.onerror = () => toast.error('Erro ao ler PDF');
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    setPdfFile(null);
 
     if (ext === 'csv') {
       Papa.parse(file, {
@@ -143,9 +165,11 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
       .filter(Boolean) as BudgetItem[];
   };
 
+  const hasInput = budgetItems.length > 0 || pdfFile !== null;
+
   const handleGenerate = async () => {
-    if (budgetItems.length === 0) {
-      toast.error('Importe uma planilha de orçamento primeiro');
+    if (!hasInput) {
+      toast.error('Importe um arquivo de orçamento primeiro');
       return;
     }
 
@@ -153,12 +177,20 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
     setPlan(null);
 
     try {
-      const { data, error } = await invokeFunction<GeneratedPlan>('generate-schedule', {
-        budgetItems,
+      const payload: Record<string, unknown> = {
         projectName,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-      });
+      };
+
+      if (pdfFile) {
+        payload.budgetFileBase64 = pdfFile.base64;
+        payload.budgetFileName = pdfFile.name;
+      } else {
+        payload.budgetItems = budgetItems;
+      }
+
+      const { data, error } = await invokeFunction<GeneratedPlan>('generate-schedule', payload);
 
       if (error) throw new Error(typeof error === 'string' ? error : error.message || 'Erro ao gerar');
       if (!data) throw new Error('Resposta vazia');
@@ -175,6 +207,7 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
 
   const handleReset = () => {
     setBudgetItems([]);
+    setPdfFile(null);
     setPlan(null);
     setStartDate(plannedStartDate || '');
     setEndDate(plannedEndDate || '');
@@ -210,15 +243,21 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
               <div className="space-y-5 py-2">
                 {/* Upload area */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">1. Importe o orçamento (Excel ou CSV)</Label>
+                  <Label className="text-sm font-medium">1. Importe o orçamento (PDF, Excel ou CSV)</Label>
                   <div
                     className={cn(
                       'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-primary/50 hover:bg-primary/5',
-                      budgetItems.length > 0 ? 'border-primary/30 bg-primary/5' : 'border-border'
+                      hasInput ? 'border-primary/30 bg-primary/5' : 'border-border'
                     )}
                     onClick={() => fileRef.current?.click()}
                   >
-                    {budgetItems.length > 0 ? (
+                    {pdfFile ? (
+                      <div className="space-y-1">
+                        <FileSpreadsheet className="h-8 w-8 text-primary mx-auto" />
+                        <p className="text-sm font-medium">{pdfFile.name}</p>
+                        <p className="text-xs text-muted-foreground">PDF carregado — a IA extrairá os itens automaticamente</p>
+                      </div>
+                    ) : budgetItems.length > 0 ? (
                       <div className="space-y-1">
                         <FileSpreadsheet className="h-8 w-8 text-primary mx-auto" />
                         <p className="text-sm font-medium">{budgetItems.length} itens importados</p>
@@ -227,15 +266,15 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
                     ) : (
                       <div className="space-y-1">
                         <Upload className="h-8 w-8 text-muted-foreground mx-auto" />
-                        <p className="text-sm text-muted-foreground">Clique ou arraste sua planilha aqui</p>
-                        <p className="text-xs text-muted-foreground">Aceita .xlsx, .xls ou .csv</p>
+                        <p className="text-sm text-muted-foreground">Clique ou arraste seu arquivo aqui</p>
+                        <p className="text-xs text-muted-foreground">Aceita .pdf, .xlsx, .xls ou .csv</p>
                       </div>
                     )}
                   </div>
                   <input
                     ref={fileRef}
                     type="file"
-                    accept=".xlsx,.xls,.csv"
+                    accept=".pdf,.xlsx,.xls,.csv"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
@@ -437,7 +476,7 @@ export function AIScheduleGenerator({ projectId, projectName, plannedStartDate, 
             ) : (
               <>
                 <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button onClick={handleGenerate} disabled={isGenerating || budgetItems.length === 0} className="gap-1.5">
+                <Button onClick={handleGenerate} disabled={isGenerating || !hasInput} className="gap-1.5">
                   {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                   {isGenerating ? 'Gerando...' : 'Gerar Cronograma'}
                 </Button>

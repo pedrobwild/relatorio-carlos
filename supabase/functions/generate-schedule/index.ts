@@ -10,10 +10,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { budgetItems, projectName, startDate, endDate, durationWeeks } = await req.json();
+    const { budgetItems, budgetFileBase64, budgetFileName, projectName, startDate, endDate, durationWeeks } = await req.json();
 
-    if (!budgetItems || !Array.isArray(budgetItems) || budgetItems.length === 0) {
-      return new Response(JSON.stringify({ error: "budgetItems é obrigatório" }), {
+    const hasBudgetItems = budgetItems && Array.isArray(budgetItems) && budgetItems.length > 0;
+    const hasPdfFile = budgetFileBase64 && typeof budgetFileBase64 === 'string';
+
+    if (!hasBudgetItems && !hasPdfFile) {
+      return new Response(JSON.stringify({ error: "budgetItems ou budgetFileBase64 é obrigatório" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -100,15 +103,44 @@ Responda EXCLUSIVAMENTE com JSON válido usando tool calling.`;
       durationContext = `Data de início: A definir\nDuração: A calcular com base nos itens do orçamento`;
     }
 
+    let budgetSection = "";
+    if (hasBudgetItems) {
+      budgetSection = `Itens do orçamento:\n${budgetItems.map((item: any, i: number) => 
+        `${i + 1}. ${item.description || item.name}${item.unit ? ` (${item.quantity || ''} ${item.unit})` : ''}${item.value ? ` - R$ ${item.value}` : ''}`
+      ).join("\n")}`;
+    } else {
+      budgetSection = `O orçamento foi enviado como PDF em anexo (${budgetFileName || 'orcamento.pdf'}). Analise o conteúdo completo do PDF para extrair todos os itens, quantidades e valores. Liste cada item encontrado antes de gerar o cronograma.`;
+    }
+
     const userPrompt = `Projeto: ${projectName || "Obra"}
 ${durationContext}
 
-Itens do orçamento:
-${budgetItems.map((item: any, i: number) => 
-  `${i + 1}. ${item.description || item.name}${item.unit ? ` (${item.quantity || ''} ${item.unit})` : ''}${item.value ? ` - R$ ${item.value}` : ''}`
-).join("\n")}
+${budgetSection}
 
 Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
+
+    // Build messages - include PDF as multimodal content if provided
+    const messages: any[] = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    if (hasPdfFile) {
+      messages.push({
+        role: "user",
+        content: [
+          {
+            type: "file",
+            file: {
+              filename: budgetFileName || "orcamento.pdf",
+              file_data: `data:application/pdf;base64,${budgetFileBase64}`,
+            },
+          },
+          { type: "text", text: userPrompt },
+        ],
+      });
+    } else {
+      messages.push({ role: "user", content: userPrompt });
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -117,11 +149,8 @@ Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        model: "google/gemini-2.5-flash",
+        messages,
         tools: [
           {
             type: "function",
