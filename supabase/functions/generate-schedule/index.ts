@@ -103,13 +103,19 @@ Responda EXCLUSIVAMENTE com JSON válido usando tool calling.`;
       durationContext = `Data de início: A definir\nDuração: A calcular com base nos itens do orçamento`;
     }
 
+    let budgetSection = "";
+    if (hasBudgetItems) {
+      budgetSection = `Itens do orçamento:\n${budgetItems.map((item: any, i: number) => 
+        `${i + 1}. ${item.description || item.name}${item.unit ? ` (${item.quantity || ''} ${item.unit})` : ''}${item.value ? ` - R$ ${item.value}` : ''}`
+      ).join("\n")}`;
+    } else {
+      budgetSection = `O orçamento foi enviado como PDF em anexo (${budgetFileName || 'orcamento.pdf'}). Analise o conteúdo completo do PDF para extrair todos os itens, quantidades e valores. Liste cada item encontrado antes de gerar o cronograma.`;
+    }
+
     const userPrompt = `Projeto: ${projectName || "Obra"}
 ${durationContext}
 
-Itens do orçamento:
-${budgetItems.map((item: any, i: number) => 
-  `${i + 1}. ${item.description || item.name}${item.unit ? ` (${item.quantity || ''} ${item.unit})` : ''}${item.value ? ` - R$ ${item.value}` : ''}`
-).join("\n")}
+${budgetSection}
 
 Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
 
