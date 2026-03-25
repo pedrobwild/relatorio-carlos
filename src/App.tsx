@@ -124,7 +124,7 @@ const QueryProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => (
-  <ErrorBoundary>
+  <ErrorBoundary name="AppRoot">
     <QueryProvider>
       <TooltipProvider>
         <Toaster />
