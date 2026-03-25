@@ -129,10 +129,9 @@ Gere o cronograma semanal otimizado e a lista de compras com prazos.`;
         role: "user",
         content: [
           {
-            type: "file",
-            file: {
-              filename: budgetFileName || "orcamento.pdf",
-              file_data: `data:application/pdf;base64,${budgetFileBase64}`,
+            type: "image_url",
+            image_url: {
+              url: `data:application/pdf;base64,${budgetFileBase64}`,
             },
           },
           { type: "text", text: userPrompt },
