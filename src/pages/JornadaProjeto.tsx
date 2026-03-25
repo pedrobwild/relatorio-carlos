@@ -15,6 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePendencias } from '@/hooks/usePendencias';
 import { JornadaTabsBar } from './jornada/JornadaTabsBar';
 import { JornadaTabContent } from './jornada/JornadaTabContent';
+import { MobileNavDrawer } from './jornada/MobileNavDrawer';
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -115,16 +116,25 @@ export default function JornadaProjeto() {
   return (
     <div className="min-h-screen min-h-[100dvh] bg-background">
       <PageHeader title={journeyCopy.page.title} backTo="/minhas-obras">
-        <div className="text-right min-w-0">
-          <p className="font-medium text-sm truncate">{project.name}</p>
-          <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-0.5">
-            {project.unit_name && <span className="text-xs text-muted-foreground">{project.unit_name}</span>}
-            {project.customer_name && <span className="text-xs text-muted-foreground hidden sm:inline">• {project.customer_name}</span>}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="text-right min-w-0 flex-1">
+            <p className="font-medium text-sm truncate">{project.name}</p>
+            <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-0.5">
+              {project.unit_name && <span className="text-xs text-muted-foreground">{project.unit_name}</span>}
+              {project.customer_name && <span className="text-xs text-muted-foreground hidden sm:inline">• {project.customer_name}</span>}
+            </div>
           </div>
+          {isMobile && (
+            <MobileNavDrawer
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              pendingCount={pendingStats.total}
+            />
+          )}
         </div>
       </PageHeader>
 
-      {!hasShell && (
+      {!hasShell && !isMobile && (
         <JornadaTabsBar
           activeTab={activeTab}
           onTabChange={handleTabChange}
