@@ -127,7 +127,14 @@ export function JornadaTabContent({
   }, [selectedStage, journey.stages]);
 
   const handleTimelineClick = useCallback((stageId: string) => {
-    if (stageId === 'welcome') { setActiveView('welcome'); if (isMobile) setMobileDetailStageId(null); return; }
+    if (stageId === 'welcome') {
+      setActiveView('welcome');
+      if (isMobile) {
+        setMobileDetailStageId('welcome');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
     if (!welcomeCompleted && !isAdmin) return;
     if (!isAdmin) {
       const idx = journey.stages.findIndex(s => s.id === stageId);
@@ -230,13 +237,20 @@ export function JornadaTabContent({
                     <h2 className="text-sm font-medium text-muted-foreground mb-3">{journeyCopy.page.sidebarTitle}</h2>
                     <JourneyTimeline stages={allStagesForStepper} activeStageId={activeView} onStageClick={handleTimelineClick} />
                   </div>
+
+                  {/* Show welcome content inline on overview when no stage is drilled into and welcome not completed */}
+                  {!welcomeCompleted && activeView === 'welcome' && (
+                    <div className="mt-4">
+                      <JourneyWelcomeStage hero={journey.hero} projectId={projectId} isAdmin={isAdmin} onAdvance={handleAdvanceFromWelcome} nextStageName={journey.stages[0]?.name ?? 'próxima etapa'} />
+                    </div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div key={`mobile-detail-${mobileDetailStageId}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setMobileDetailStageId(null)}
+                    onClick={() => { setMobileDetailStageId(null); setActiveView(welcomeCompleted ? (journey.stages.find(s => s.status === 'in_progress' || s.status === 'waiting_action')?.id || journey.stages[0]?.id || 'welcome') : 'welcome'); }}
                     className="gap-1.5 -ml-2 mb-3 text-muted-foreground"
                   >
                     <ArrowLeft className="h-4 w-4" />
