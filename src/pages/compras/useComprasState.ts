@@ -127,7 +127,8 @@ export function useComprasState() {
   };
 
   const handleUpdateField = async (id: string, field: string, value: string | null) => {
-    await updatePurchase.mutateAsync({ id, [field]: value });
+    const updateValue = field === 'estimated_cost' ? (value ? parseFloat(value) : null) : value;
+    await updatePurchase.mutateAsync({ id, [field]: updateValue });
   };
 
   const getActivityName = (activityId: string | null) => {
