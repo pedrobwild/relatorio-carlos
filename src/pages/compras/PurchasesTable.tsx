@@ -460,7 +460,7 @@ export function PurchasesTable({
       <div className="space-y-3">
         {Array.from(grouped.entries()).map(([category, items]) => {
           const isService = isServiceCategory(category);
-          const isOpen = expandedCategories.has(category);
+          const isOpen = effectiveExpanded.has(category);
           const categoryTotal = items.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
           const categoryActual = items.reduce((sum, p) => sum + (p.actual_cost || 0), 0);
           const completedCount = items.filter(p => p.status === 'delivered').length;
