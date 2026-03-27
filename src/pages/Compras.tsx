@@ -1,8 +1,10 @@
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useMemo } from 'react';
 
 import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -15,13 +17,39 @@ import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseForm
 
 export default function Compras() {
   const state = useComprasState();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter by search on top of existing filters
+  const searchFilteredPurchases = useMemo(() => {
+    if (!searchQuery.trim()) return state.filteredPurchases;
+    const q = searchQuery.toLowerCase();
+    return state.filteredPurchases.filter(p =>
+      p.item_name.toLowerCase().includes(q) ||
+      (p.supplier_name && p.supplier_name.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q))
+    );
+  }, [state.filteredPurchases, searchQuery]);
+
+  // Calculate total actual cost for KPI
+  const totalActualCost = useMemo(() =>
+    state.filteredPurchases
+      .filter(p => p.status !== 'cancelled')
+      .reduce((sum, p) => sum + (p.actual_cost || 0), 0),
+    [state.filteredPurchases]
+  );
+
+  const totalItems = useMemo(() =>
+    state.filteredPurchases.filter(p => p.status !== 'cancelled').length,
+    [state.filteredPurchases]
+  );
 
   if (state.isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-8 w-64" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
           </div>
           <Skeleton className="h-96" />
@@ -50,53 +78,77 @@ export default function Compras() {
       </PageHeader>
       <ProjectSubNav showStaffItems />
       <div className="py-6">
-        <PageContainer maxWidth="full" className="space-y-6">
+        <PageContainer maxWidth="full" className="space-y-5">
+          {/* Alerts - compact */}
           <PurchaseAlertsPanel
             alertThresholds={state.alertThresholds}
             getDaysUntilDeadline={state.getDaysUntilDeadline}
             onItemClick={(purchase) => state.handleOpenDialog(purchase)}
           />
 
+          {/* KPI Cards */}
           <ComprasKPICards
             pendingCount={state.pendingPurchases.length}
             orderedCount={state.orderedPurchases.length}
             deliveredCount={state.deliveredPurchases.length}
             overdueCount={state.overduePurchases.length}
             totalEstimatedCost={state.totalEstimatedCost}
+            totalActualCost={totalActualCost}
+            totalItems={totalItems}
           />
 
-          {/* Filters */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Filtros:</span>
-                </div>
-                <Select value={state.filterStatus} onValueChange={state.setFilterStatus}>
-                  <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="ordered">Pedido</SelectItem>
-                    <SelectItem value="in_transit">Em Trânsito</SelectItem>
-                    <SelectItem value="delivered">Concluído</SelectItem>
-                    <SelectItem value="cancelled">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={state.filterActivity} onValueChange={state.setFilterActivity}>
-                  <SelectTrigger className="w-64"><SelectValue placeholder="Atividade" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as atividades</SelectItem>
-                    {state.activities.map(a => <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Search + Filters bar */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar item, fornecedor, categoria..."
+                className="pl-9 h-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Select value={state.filterStatus} onValueChange={state.setFilterStatus}>
+              <SelectTrigger className="w-40 h-9">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="ordered">Pedido</SelectItem>
+                <SelectItem value="in_transit">Em Trânsito</SelectItem>
+                <SelectItem value="delivered">Concluído</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={state.filterActivity} onValueChange={state.setFilterActivity}>
+              <SelectTrigger className="w-56 h-9">
+                <SelectValue placeholder="Atividade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as atividades</SelectItem>
+                {state.activities.map(a => <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {(searchQuery || state.filterStatus !== 'all' || state.filterActivity !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 text-xs"
+                onClick={() => {
+                  setSearchQuery('');
+                  state.setFilterStatus('all');
+                  state.setFilterActivity('all');
+                }}
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
 
+          {/* Items */}
           <PurchasesTable
-            purchases={state.filteredPurchases}
+            purchases={searchFilteredPurchases}
             getActivityName={state.getActivityName}
             getDaysUntilRequired={state.getDaysUntilRequired}
             onEdit={(p) => state.handleOpenDialog(p)}
