@@ -426,12 +426,9 @@ export function PurchasesTable({
     return sorted;
   }, [purchases]);
 
-  // Auto-expand all categories on mount
-  useMemo(() => {
-    if (expandedCategories.size === 0 && grouped.size > 0) {
-      setExpandedCategories(new Set(grouped.keys()));
-    }
-  }, [grouped]);
+  // Auto-expand all categories
+  const allCategoryKeys = useMemo(() => new Set(grouped.keys()), [grouped]);
+  const effectiveExpanded = expandedCategories.size === 0 ? allCategoryKeys : expandedCategories;
 
   const toggleCategory = useCallback((cat: string) => {
     setExpandedCategories(prev => {
