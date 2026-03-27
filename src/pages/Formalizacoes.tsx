@@ -19,7 +19,7 @@ import { Sparkles, FileText } from 'lucide-react';
 
 export default function Formalizacoes() {
   const navigate = useNavigate();
-  const { paths } = useProjectNavigation();
+  const { paths, projectId } = useProjectNavigation();
   const { isAdmin } = useUserRole();
   const { can } = useCan();
   const [activeTab, setActiveTab] = useState('pendentes');
@@ -27,7 +27,6 @@ export default function Formalizacoes() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const canCreate = can('formalizations:create');
-  const { projectId } = useProjectNavigation();
   const { data: formalizacoes, isLoading } = useFormalizacoes({ projectId: projectId ?? undefined });
 
   const filteredFormalizacoes = formalizacoes?.filter(f => {
