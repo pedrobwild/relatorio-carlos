@@ -27,7 +27,8 @@ export default function Formalizacoes() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const canCreate = can('formalizations:create');
-  const { data: formalizacoes, isLoading } = useFormalizacoes();
+  const { projectId } = useProjectNavigation();
+  const { data: formalizacoes, isLoading } = useFormalizacoes({ projectId: projectId ?? undefined });
 
   const filteredFormalizacoes = formalizacoes?.filter(f => {
     if (activeTab === 'pendentes' && f.status !== 'pending_signatures') return false;
