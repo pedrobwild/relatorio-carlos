@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate, Sparkles } from 'lucide-react';
+import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate, Sparkles, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsersTab } from '@/components/admin/UsersTab';
@@ -117,6 +117,26 @@ export default function Admin() {
                   </div>
                   <Button onClick={() => navigate('/admin/ux-insights')} variant="outline">
                     Gerar Insights
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Research Link */}
+              <div className="border rounded-lg p-4 bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Pesquisa de Referências</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Pesquise funcionalidades de softwares de gestão de obras com IA
+                      </p>
+                    </div>
+                  </div>
+                  <Button onClick={() => navigate('/admin/research')} variant="outline">
+                    Pesquisar
                   </Button>
                 </div>
               </div>
