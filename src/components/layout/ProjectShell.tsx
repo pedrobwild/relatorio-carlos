@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProjectSidebar } from "@/components/layout/ProjectSidebar";
 import { ProjectSlimHeader } from "@/components/layout/ProjectSlimHeader";
 import { ProjectLayoutProvider } from "@/components/layout/ProjectLayoutContext";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface ProjectShellProps {
@@ -27,11 +28,12 @@ export function ProjectShell({ children }: ProjectShellProps) {
     );
   }
 
-  // Clients get the existing experience
+  // Clients get the existing experience + mobile bottom nav
   if (!isStaff) {
     return (
       <ProjectLayoutProvider value={{ hasShell: false }}>
         {children}
+        <MobileBottomNav />
       </ProjectLayoutProvider>
     );
   }

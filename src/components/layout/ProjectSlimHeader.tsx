@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { GlobalSearchDialog } from "@/components/search/GlobalSearchDialog";
 import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
@@ -154,6 +155,9 @@ export function ProjectSlimHeader() {
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Global search */}
+      <GlobalSearchDialog />
 
       {/* Pendencias badge */}
       <Link
