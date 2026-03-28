@@ -61,8 +61,6 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete }: TabAtiv
                   <TableHead>Descrição</TableHead>
                   <TableHead>Início Prev.</TableHead>
                   <TableHead>Término Prev.</TableHead>
-                  <TableHead>Início Real</TableHead>
-                  <TableHead>Término Real</TableHead>
                   <TableHead className="w-16">Peso</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
@@ -74,8 +72,6 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete }: TabAtiv
                     <TableCell><Input value={a.description} onChange={(e) => onUpdate(a.id, 'description', e.target.value)} className="h-8" /></TableCell>
                     <TableCell><Input type="date" value={a.planned_start} onChange={(e) => onUpdate(a.id, 'planned_start', e.target.value)} className="h-8 w-32" /></TableCell>
                     <TableCell><Input type="date" value={a.planned_end} onChange={(e) => onUpdate(a.id, 'planned_end', e.target.value)} className="h-8 w-32" /></TableCell>
-                    <TableCell><Input type="date" value={a.actual_start || ''} onChange={(e) => onUpdate(a.id, 'actual_start', e.target.value || null)} className="h-8 w-32" /></TableCell>
-                    <TableCell><Input type="date" value={a.actual_end || ''} onChange={(e) => onUpdate(a.id, 'actual_end', e.target.value || null)} className="h-8 w-32" /></TableCell>
                     <TableCell><Input type="number" min="1" max="100" value={a.weight} onChange={(e) => onUpdate(a.id, 'weight', parseFloat(e.target.value))} className="h-8 w-16" /></TableCell>
                     <TableCell>
                       <AlertDialog>
