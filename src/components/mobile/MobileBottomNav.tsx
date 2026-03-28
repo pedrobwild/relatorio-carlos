@@ -1,14 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { Home, Camera, DollarSign, MessageCircle } from "lucide-react";
+import { Map, DollarSign, AlertCircle, Bell } from "lucide-react";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { usePendencias } from "@/hooks/usePendencias";
+import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { label: "Início", icon: Home, pathKey: "jornada" as const },
-  { label: "Diário", icon: Camera, pathKey: "relatorio" as const },
-  { label: "Financeiro", icon: DollarSign, pathKey: "financeiro" as const },
-  { label: "Pendências", icon: MessageCircle, pathKey: "pendencias" as const },
-];
 
 /**
  * MobileBottomNav — fixed bottom navigation for mobile client users.
@@ -16,7 +11,18 @@ const navItems = [
  * Only rendered for non-staff (client) users on mobile viewports.
  */
 export function MobileBottomNav() {
-  const { paths } = useProjectNavigation();
+  const { paths, projectId } = useProjectNavigation();
+  const { stats } = usePendencias({ projectId });
+  const { unreadCount } = useNotifications();
+
+  const criticalPendencias = stats.overdueCount + stats.urgentCount;
+
+  const navItems = [
+    { label: "Jornada", icon: Map, to: paths.jornada, badge: 0 },
+    { label: "Financeiro", icon: DollarSign, to: paths.financeiro, badge: 0 },
+    { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
+    { label: "Avisos", icon: Bell, to: "#notifications", badge: unreadCount },
+  ];
 
   return (
     <nav
@@ -26,11 +32,11 @@ export function MobileBottomNav() {
       <div className="flex items-stretch justify-around h-14">
         {navItems.map((item) => (
           <NavLink
-            key={item.pathKey}
-            to={paths[item.pathKey]}
+            key={item.label}
+            to={item.to}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 text-[10px] font-medium transition-colors",
+                "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 text-[10px] font-medium transition-colors",
                 "active:scale-[0.95]",
                 isActive
                   ? "text-primary"
@@ -38,7 +44,14 @@ export function MobileBottomNav() {
               )
             }
           >
-            <item.icon className="h-5 w-5" />
+            <span className="relative">
+              <item.icon className="h-5 w-5" />
+              {item.badge > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                  {item.badge > 99 ? "99+" : item.badge}
+                </span>
+              )}
+            </span>
             <span className="truncate">{item.label}</span>
           </NavLink>
         ))}

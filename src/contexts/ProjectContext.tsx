@@ -34,6 +34,8 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // Clear stale project data immediately on ID change
+      setProject(null);
       setLoading(true);
       setError(null);
 
