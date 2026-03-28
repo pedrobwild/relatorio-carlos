@@ -125,7 +125,8 @@ const FormalizacoesContent = () => {
         <EmptyState
           variant="formalizations"
           title={activeTab === 'pendentes' ? 'Nenhuma pendência!' : 'Nenhuma formalização encontrada'}
-          description={activeTab === 'pendentes' ? 'Você está em dia com todas as formalizações.' : canCreate ? 'Crie uma nova formalização para começar.' : 'As formalizações serão criadas pela equipe técnica.'}
+          description={activeTab === 'pendentes' ? 'Você está em dia com todas as formalizações.' : canCreate ? 'Crie uma nova formalização para começar.' : 'Documentos formais como aditivos, orçamentos e atas serão criados pela equipe técnica conforme a obra avança.'}
+          hint={activeTab !== 'pendentes' && !canCreate ? 'Você receberá uma notificação quando houver um documento aguardando sua assinatura.' : undefined}
           icon={activeTab === 'pendentes' ? Sparkles : undefined}
           action={activeTab !== 'pendentes' && canCreate ? { label: 'Nova formalização', onClick: () => navigate(paths.formalizacoesNova), icon: Plus } : undefined}
         />

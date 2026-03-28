@@ -9,6 +9,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { EmptyState } from "@/components/EmptyState";
 import { FinancialSummary } from "./financeiro/FinancialSummary";
 import { DesktopPaymentCard, MobilePaymentCard } from "./financeiro/PaymentCard";
 
@@ -75,9 +76,12 @@ const Financeiro = () => {
 
         <div className="flex-1 max-w-5xl mx-auto w-full">
           {payments.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-muted-foreground">Nenhum pagamento cadastrado para esta obra</p>
-            </div>
+            <EmptyState
+              variant="payments"
+              title="Nenhum pagamento programado"
+              description="Assim que o cronograma financeiro for definido, as parcelas e boletos aparecerão aqui automaticamente."
+              hint="Fique tranquilo — você será notificado quando houver um pagamento próximo do vencimento."
+            />
           ) : (
             <>
               {/* Desktop */}
