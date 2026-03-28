@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Building2, ChevronRight, ChevronsUpDown, Bell, Check } from "lucide-react";
+import { Building2, ChevronRight, ChevronsUpDown, Bell, Check, Search } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 
 function useCurrentPageLabel(projectId: string | undefined, isStaff: boolean): string | null {
   const location = useLocation();
@@ -32,6 +33,15 @@ function useCurrentPageLabel(projectId: string | undefined, isStaff: boolean): s
   return getNavLabel("breadcrumb", sub, isStaff);
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  active: "Obras Ativas",
+  paused: "Obras Pausadas",
+  completed: "Concluídas",
+  cancelled: "Canceladas",
+};
+
+const STATUS_ORDER = ["active", "paused", "completed", "cancelled"];
+
 export function ProjectSlimHeader() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,6 +50,7 @@ export function ProjectSlimHeader() {
   const { data: projects = [] } = useProjectsQuery();
   const { stats: pendenciasStats } = usePendencias({ projectId });
   const { isStaff } = useUserRole();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const currentPageLabel = useCurrentPageLabel(projectId, isStaff);
 
@@ -48,8 +59,35 @@ export function ProjectSlimHeader() {
     [projects, projectId]
   );
 
+  /** Group other projects by status, filtered by search */
+  const groupedProjects = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    const filtered = q
+      ? otherProjects.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            p.unit_name?.toLowerCase().includes(q) ||
+            p.customer_name?.toLowerCase().includes(q)
+        )
+      : otherProjects;
+
+    const groups: Record<string, typeof filtered> = {};
+    for (const p of filtered) {
+      const status = p.status || "active";
+      if (!groups[status]) groups[status] = [];
+      groups[status].push(p);
+    }
+
+    return STATUS_ORDER
+      .filter((s) => groups[s]?.length)
+      .map((s) => ({ status: s, label: STATUS_LABELS[s] || s, projects: groups[s] }));
+  }, [otherProjects, searchQuery]);
+
+  const hasMultipleGroups = groupedProjects.length > 1;
+
   /** Switch project preserving the current sub-route */
   const handleProjectSwitch = (targetId: string) => {
+    setSearchQuery("");
     if (!projectId) {
       navigate(`/obra/${targetId}`);
       return;
@@ -81,7 +119,7 @@ export function ProjectSlimHeader() {
         <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0 hidden sm:block" />
 
         {/* Level 2: Project name as dropdown switcher */}
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => { if (!open) setSearchQuery(""); }}>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-2 py-1 transition-colors group min-w-0">
               <span className="text-sm font-semibold text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors">
@@ -93,12 +131,31 @@ export function ProjectSlimHeader() {
             </button>
           </DropdownMenuTrigger>
           {otherProjects.length > 0 && (
-            <DropdownMenuContent align="start" className="w-72 bg-popover">
+            <DropdownMenuContent align="start" className="w-80 bg-popover max-h-[420px] overflow-hidden flex flex-col">
               <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Building2 className="h-3.5 w-3.5" />
                 Trocar de Obra
               </DropdownMenuLabel>
+
+              {/* Search input */}
+              {otherProjects.length > 4 && (
+                <div className="px-2 py-1.5">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar obra…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-8 pl-8 text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+              )}
+
               <DropdownMenuSeparator />
+
               {/* Current project (checked) */}
               <DropdownMenuItem disabled className="flex items-center gap-2 opacity-70">
                 <Check className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -109,23 +166,43 @@ export function ProjectSlimHeader() {
                   )}
                 </div>
               </DropdownMenuItem>
+
               <DropdownMenuSeparator />
-              {otherProjects.map((p) => (
-                <DropdownMenuItem
-                  key={p.id}
-                  onClick={() => handleProjectSwitch(p.id)}
-                  className="flex flex-col items-start gap-0.5 cursor-pointer"
-                >
-                  <span className="font-medium text-sm">
-                    {p.name} {p.unit_name && `– ${p.unit_name}`}
-                  </span>
-                  {p.customer_name && (
-                    <span className="text-xs text-muted-foreground">
-                      {p.customer_name}
-                    </span>
-                  )}
-                </DropdownMenuItem>
-              ))}
+
+              {/* Grouped project list */}
+              <div className="overflow-y-auto flex-1">
+                {groupedProjects.length === 0 && searchQuery && (
+                  <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                    Nenhuma obra encontrada
+                  </div>
+                )}
+                {groupedProjects.map((group, gi) => (
+                  <div key={group.status}>
+                    {(hasMultipleGroups || searchQuery) && (
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold py-1">
+                        {group.label}
+                      </DropdownMenuLabel>
+                    )}
+                    {group.projects.map((p) => (
+                      <DropdownMenuItem
+                        key={p.id}
+                        onClick={() => handleProjectSwitch(p.id)}
+                        className="flex flex-col items-start gap-0.5 cursor-pointer"
+                      >
+                        <span className="font-medium text-sm">
+                          {p.name} {p.unit_name && `– ${p.unit_name}`}
+                        </span>
+                        {p.customer_name && (
+                          <span className="text-xs text-muted-foreground">
+                            {p.customer_name}
+                          </span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    {gi < groupedProjects.length - 1 && <DropdownMenuSeparator />}
+                  </div>
+                ))}
+              </div>
             </DropdownMenuContent>
           )}
         </DropdownMenu>
