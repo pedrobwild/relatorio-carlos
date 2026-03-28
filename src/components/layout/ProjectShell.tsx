@@ -20,6 +20,7 @@ interface ProjectShellProps {
  */
 export function ProjectShell({ children }: ProjectShellProps) {
   const { isStaff, loading } = useUserRole();
+  const { projectId } = useParams();
 
   // While loading, don't render shell to avoid layout flash
   if (loading) {
@@ -30,12 +31,13 @@ export function ProjectShell({ children }: ProjectShellProps) {
     );
   }
 
-  // Clients get the existing experience + mobile bottom nav
+  // Clients get the existing experience + mobile bottom nav + floating approval banner
   if (!isStaff) {
     return (
       <ProjectLayoutProvider value={{ hasShell: false }}>
         {children}
         <MobileBottomNav />
+        <FloatingApprovalBanner projectId={projectId} />
       </ProjectLayoutProvider>
     );
   }
@@ -54,6 +56,9 @@ export function ProjectShell({ children }: ProjectShellProps) {
           </div>
         </div>
       </SidebarProvider>
+      <FloatingApprovalBanner projectId={projectId} />
     </ProjectLayoutProvider>
+  );
+}
   );
 }
