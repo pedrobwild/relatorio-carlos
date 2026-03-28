@@ -60,5 +60,3 @@ export function ProjectShell({ children }: ProjectShellProps) {
     </ProjectLayoutProvider>
   );
 }
-  );
-}
