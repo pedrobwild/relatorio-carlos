@@ -77,49 +77,10 @@ export function ProjectSidebar() {
           path: basePath,
           matchPaths: [`${basePath}/relatorio`],
         },
-      ],
-    },
-    {
-      label: "Execução",
-      hideInProjectPhase: false,
-      items: [
         {
-          label: "Editar Cronograma",
-          icon: GanttChartSquare,
-          path: paths.cronograma,
-          disabledInProjectPhase: true,
-        },
-        {
-          label: "Compras",
-          icon: ShoppingCart,
-          path: paths.compras,
-          disabledInProjectPhase: true,
-        },
-      ],
-    },
-    {
-      label: "Gestão",
-      items: [
-        {
-          label: "Financeiro",
-          icon: DollarSign,
-          path: paths.financeiro,
-        },
-        {
-          label: "Documentos",
-          icon: FolderOpen,
-          path: paths.documentos,
-        },
-        {
-          label: "Formalizações",
-          icon: ClipboardSignature,
-          path: paths.formalizacoes,
-        },
-        {
-          label: "Pendências",
-          icon: AlertCircle,
-          path: paths.pendencias,
-          badgeKey: "pendencias",
+          label: "Jornada",
+          icon: Map,
+          path: paths.jornada,
         },
       ],
     },
@@ -141,16 +102,48 @@ export function ProjectSidebar() {
           icon: Ruler,
           path: paths.executivo,
         },
+        {
+          label: "Documentos",
+          icon: FolderOpen,
+          path: paths.documentos,
+        },
       ],
     },
     {
-      label: "Jornada",
+      label: "Dia a Dia",
       items: [
         {
-          label: "Jornada do Projeto",
-          icon: Map,
-          path: paths.jornada,
-          projectPhaseOnly: false, // Always visible but contextual
+          label: "Cronograma",
+          icon: GanttChartSquare,
+          path: paths.cronograma,
+          disabledInProjectPhase: true,
+        },
+        {
+          label: "Compras",
+          icon: ShoppingCart,
+          path: paths.compras,
+          disabledInProjectPhase: true,
+        },
+        {
+          label: "Pendências",
+          icon: AlertCircle,
+          path: paths.pendencias,
+          badgeKey: "pendencias",
+        },
+      ],
+    },
+    {
+      label: "Gestão",
+      items: [
+        {
+          label: "Financeiro",
+          icon: DollarSign,
+          path: paths.financeiro,
+        },
+        {
+          label: "Formalizações",
+          icon: ClipboardSignature,
+          path: paths.formalizacoes,
         },
       ],
     },
