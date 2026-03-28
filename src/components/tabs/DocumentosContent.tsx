@@ -255,7 +255,12 @@ const DocumentosContent = () => {
         <EmptyState
           variant="documents"
           title="Nenhum documento disponível"
-          description={canUpload ? "Envie o primeiro documento do projeto para começar." : "Os documentos serão disponibilizados em breve pela equipe técnica."}
+          description={canUpload
+            ? "Envie o primeiro documento do projeto para começar."
+            : "Plantas, contratos e laudos serão disponibilizados aqui pela equipe técnica conforme o projeto avança."
+          }
+          hint={!canUpload ? "Fique tranquilo — assim que um documento for adicionado, você receberá uma notificação." : undefined}
+          infoLink={{ label: "Entenda como funciona", href: "#faq-documentos" }}
         >
           {canUpload && projectId && <DocumentUpload projectId={projectId} onSuccess={refetch} />}
         </EmptyState>

@@ -374,8 +374,9 @@ const WeeklyReportsHistory = ({
       {weeklyReports.length === 0 && (
         <EmptyState
           icon={AlertTriangle}
-          title="Nenhum relatório disponível"
-          description="Os relatórios semanais aparecerão aqui."
+          title="Relatórios em breve"
+          description="Os relatórios semanais da obra aparecerão aqui assim que as atividades no canteiro começarem. Você poderá acompanhar fotos, avanços e observações."
+          infoLink={{ label: "Entenda como funciona", href: "#faq-relatorios" }}
         />
       )}
     </div>

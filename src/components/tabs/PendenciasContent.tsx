@@ -179,7 +179,12 @@ const PendenciasContent = () => {
         })}
 
         {sortedItems.length === 0 && (
-          <EmptyState icon={CheckCircle2} title="Tudo em dia!" description="Não há pendências no momento." />
+          <EmptyState
+            icon={CheckCircle2}
+            title="Tudo em dia!"
+            description="Não há pendências no momento. Quando surgir algo que precise da sua atenção, aparecerá aqui."
+            hint="Pendências incluem aprovações, pagamentos e decisões que dependem de você."
+          />
         )}
       </div>
     </div>
