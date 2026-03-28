@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { LucideIcon, FileX, FolderOpen, Calendar, ClipboardList, ShoppingCart, CreditCard } from 'lucide-react';
+import { LucideIcon, FileX, FolderOpen, Calendar, ClipboardList, ShoppingCart, CreditCard, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +33,11 @@ interface EmptyStateProps {
     label: string;
     onClick: () => void;
   };
+  /** Info/FAQ link shown below description */
+  infoLink?: {
+    label: string;
+    href: string;
+  };
   /** Additional content below description */
   children?: ReactNode;
   /** Custom className */
@@ -58,6 +63,7 @@ export function EmptyState({
   hint,
   action,
   secondaryAction,
+  infoLink,
   children,
   className,
   compact = false,
@@ -119,6 +125,21 @@ export function EmptyState({
         </div>
       )}
 
+      {infoLink && (
+        <a
+          href={infoLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "inline-flex items-center gap-1.5 mt-3 text-primary hover:text-primary/80 transition-colors font-medium",
+            compact ? "text-xs" : "text-sm"
+          )}
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          {infoLink.label}
+        </a>
+      )}
+
       {(action || secondaryAction) && (
         <div className="flex flex-col sm:flex-row items-center gap-3 mt-6">
           {action && (
@@ -142,8 +163,8 @@ export function EmptyState({
           )}
         </div>
       )}
+
+      {children}
     </div>
   );
 }
-
-export default EmptyState;

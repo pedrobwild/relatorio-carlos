@@ -73,7 +73,13 @@ const ScheduleTable = ({
   if (activities.length === 0) {
     return (
       <div className="mt-8">
-        <EmptyState variant="schedule" title="Nenhuma atividade cadastrada" description="As atividades do cronograma aparecerão aqui." compact />
+        <EmptyState
+          variant="schedule"
+          title="Cronograma em preparação"
+          description="Assim que as etapas da obra forem definidas, o cronograma completo aparecerá aqui com prazos e responsáveis."
+          infoLink={{ label: "Entenda como funciona", href: "#faq-cronograma" }}
+          compact
+        />
       </div>
     );
   }
