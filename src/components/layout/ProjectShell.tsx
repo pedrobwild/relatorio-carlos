@@ -1,10 +1,12 @@
 import { ReactNode } from "react";
+import { useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProjectSidebar } from "@/components/layout/ProjectSidebar";
 import { ProjectSlimHeader } from "@/components/layout/ProjectSlimHeader";
 import { ProjectLayoutProvider } from "@/components/layout/ProjectLayoutContext";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { FloatingApprovalBanner } from "@/components/pendencias/FloatingApprovalBanner";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface ProjectShellProps {
