@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Send, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useProjectTemplates, type ProjectTemplate, type TemplateActivity } from '@/hooks/useProjectTemplates';
@@ -14,6 +14,23 @@ import { ScheduleCard } from './nova-obra/ScheduleCard';
 import { FinancialCard } from './nova-obra/FinancialCard';
 import { CustomerCard } from './nova-obra/CustomerCard';
 import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
+import { FormStepper, type Step } from '@/components/FormStepper';
+import { cn } from '@/lib/utils';
+
+const STEPS: Step[] = [
+  { label: 'Dados Básicos', description: 'Informações do projeto' },
+  { label: 'Cronograma', description: 'Datas e prazos' },
+  { label: 'Orçamento', description: 'Financeiro e arquivos' },
+  { label: 'Cliente', description: 'Acesso ao portal' },
+];
+
+// Fields required per step for validation gating
+const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
+  0: ['name'],
+  1: [],
+  2: [],
+  3: ['customer_name', 'customer_email', 'customer_password'],
+};
 
 export default function NovaObra() {
   const navigate = useNavigate();
@@ -21,6 +38,8 @@ export default function NovaObra() {
   const { data: templates } = useProjectTemplates();
   const { submit, user } = useNovaObraSubmit();
 
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,6 +72,57 @@ export default function NovaObra() {
     }
   };
 
+  const validateStep = useCallback((step: number): boolean => {
+    const requiredFields = STEP_REQUIRED_FIELDS[step] || [];
+    const newErrors: Record<string, string> = {};
+
+    for (const field of requiredFields) {
+      const value = formData[field];
+      if (typeof value === 'string' && !value.trim()) {
+        newErrors[field] = 'Campo obrigatório';
+      }
+    }
+
+    // Step-specific validations
+    if (step === 1 && !formData.is_project_phase) {
+      if (!formData.planned_start_date) newErrors.planned_start_date = 'Data de início é obrigatória';
+      if (!formData.planned_end_date) newErrors.planned_end_date = 'Data de término é obrigatória';
+    }
+
+    if (step === 3) {
+      if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
+        newErrors.customer_email = 'E-mail inválido';
+      }
+      if (formData.create_user && formData.customer_password.length < 6) {
+        newErrors.customer_password = 'Senha deve ter no mínimo 6 caracteres';
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(prev => ({ ...prev, ...newErrors }));
+      return false;
+    }
+    return true;
+  }, [formData]);
+
+  const goToStep = (target: number) => {
+    // Can always go back
+    if (target < currentStep) {
+      setCurrentStep(target);
+      return;
+    }
+    // Must validate current step to go forward
+    if (validateStep(currentStep)) {
+      setCompletedSteps(prev => new Set([...prev, currentStep]));
+      setCurrentStep(target);
+    } else {
+      toast({ title: 'Preencha os campos obrigatórios', variant: 'destructive' });
+    }
+  };
+
+  const handleNext = () => goToStep(currentStep + 1);
+  const handleBack = () => goToStep(currentStep - 1);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -60,6 +130,13 @@ export default function NovaObra() {
       return;
     }
 
+    // Validate final step
+    if (!validateStep(currentStep)) {
+      toast({ title: 'Erro de validação', description: 'Verifique os campos obrigatórios', variant: 'destructive' });
+      return;
+    }
+
+    // Full zod validation
     const result = formSchema.safeParse(formData);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -67,6 +144,16 @@ export default function NovaObra() {
         if (err.path[0]) newErrors[err.path[0] as string] = err.message;
       });
       setErrors(newErrors);
+
+      // Navigate to the first step with an error
+      const errorFields = Object.keys(newErrors);
+      for (let s = 0; s < STEPS.length; s++) {
+        const stepFields = STEP_REQUIRED_FIELDS[s] || [];
+        if (stepFields.some(f => errorFields.includes(f))) {
+          setCurrentStep(s);
+          break;
+        }
+      }
       toast({ title: 'Erro de validação', description: 'Verifique os campos obrigatórios', variant: 'destructive' });
       return;
     }
@@ -94,6 +181,8 @@ export default function NovaObra() {
     }
   };
 
+  const isLastStep = currentStep === STEPS.length - 1;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -111,37 +200,85 @@ export default function NovaObra() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6">
+        {/* Stepper */}
+        <div className="mb-8">
+          <FormStepper
+            steps={STEPS}
+            currentStep={currentStep}
+            completedSteps={completedSteps}
+            onStepClick={goToStep}
+          />
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {templates && templates.length > 0 && (
-            <TemplateSelectorCard
-              templates={templates}
-              selectedTemplate={selectedTemplate}
-              onSelectTemplate={setSelectedTemplate}
-              formData={formData}
-              onFormChange={handleChange}
-              customFieldValues={customFieldValues}
-              onCustomFieldChange={setCustomFieldValues}
-            />
-          )}
+          {/* Step 0: Dados Básicos */}
+          <div className={cn(currentStep !== 0 && 'hidden')}>
+            {templates && templates.length > 0 && (
+              <div className="mb-6">
+                <TemplateSelectorCard
+                  templates={templates}
+                  selectedTemplate={selectedTemplate}
+                  onSelectTemplate={setSelectedTemplate}
+                  formData={formData}
+                  onFormChange={handleChange}
+                  customFieldValues={customFieldValues}
+                  onCustomFieldChange={setCustomFieldValues}
+                />
+              </div>
+            )}
+            <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
+          </div>
 
-          <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
-          <ScheduleCard formData={formData} onChange={handleChange} />
-          <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
-          <FinancialCard formData={formData} onChange={handleChange} />
-          <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
+          {/* Step 1: Cronograma */}
+          <div className={cn(currentStep !== 1 && 'hidden')}>
+            <ScheduleCard formData={formData} onChange={handleChange} />
+          </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px]">
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading} className="min-h-[44px]">
-              {loading ? 'Cadastrando...' : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Cadastrar Obra
-                </>
+          {/* Step 2: Orçamento e Financeiro */}
+          <div className={cn(currentStep !== 2 && 'hidden')}>
+            <div className="space-y-6">
+              <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
+              <FinancialCard formData={formData} onChange={handleChange} />
+            </div>
+          </div>
+
+          {/* Step 3: Cliente */}
+          <div className={cn(currentStep !== 3 && 'hidden')}>
+            <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
+            <div>
+              {currentStep > 0 ? (
+                <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px] w-full sm:w-auto">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Voltar
+                </Button>
+              ) : (
+                <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px] w-full sm:w-auto">
+                  Cancelar
+                </Button>
               )}
-            </Button>
+            </div>
+
+            <div>
+              {isLastStep ? (
+                <Button type="submit" disabled={loading} className="min-h-[44px] w-full sm:w-auto">
+                  {loading ? 'Cadastrando...' : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Cadastrar Obra
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button type="button" onClick={handleNext} className="min-h-[44px] w-full sm:w-auto">
+                  Próximo
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </main>
