@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Bell, CheckCheck, FileText, DollarSign, AlertCircle, Layers, ClipboardSignature, TrendingUp, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,11 +8,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { getUrgencyCategory, isBlockingNotification } from '@/constants/notificationUrgency';
 import type { Notification } from '@/infra/repositories/notifications.repository';
 
 const typeConfig: Record<string, { icon: typeof Bell; className: string }> = {
@@ -30,7 +33,6 @@ function formatNotificationTime(createdAt: string): string {
   if (Number.isNaN(parsedDate.getTime())) {
     return 'Agora há pouco';
   }
-
   return formatDistanceToNow(parsedDate, { addSuffix: true, locale: ptBR });
 }
 
@@ -46,6 +48,7 @@ function NotificationItem({
   const config = typeConfig[notification.type] ?? typeConfig.general;
   const Icon = config.icon;
   const isUnread = !notification.read_at;
+  const isBlocking = isBlockingNotification(notification.type);
 
   const handleClick = () => {
     if (isUnread) onRead(notification.id);
@@ -57,7 +60,8 @@ function NotificationItem({
       onClick={handleClick}
       className={cn(
         'w-full text-left px-3 py-2.5 flex items-start gap-2.5 hover:bg-accent/50 transition-colors rounded-md',
-        isUnread && 'bg-primary/5'
+        isUnread && 'bg-primary/5',
+        isUnread && isBlocking && 'bg-destructive/5 border-l-2 border-destructive'
       )}
     >
       <div className={cn('mt-0.5 shrink-0', config.className)}>
@@ -74,7 +78,14 @@ function NotificationItem({
           {formatNotificationTime(notification.created_at)}
         </p>
       </div>
-      {isUnread && <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
+      {isUnread && (
+        <span
+          className={cn(
+            'w-2 h-2 rounded-full shrink-0 mt-1.5',
+            isBlocking ? 'bg-destructive animate-pulse' : 'bg-primary'
+          )}
+        />
+      )}
     </button>
   );
 }
@@ -82,10 +93,23 @@ function NotificationItem({
 export function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<string>('all');
+
+  const actionNotifications = notifications.filter(n => getUrgencyCategory(n.type) === 'action');
+  const updateNotifications = notifications.filter(n => getUrgencyCategory(n.type) === 'update');
+
+  const unreadActionCount = actionNotifications.filter(n => !n.read_at).length;
 
   const handleNavigate = (url: string) => {
     navigate(url);
   };
+
+  const displayedNotifications =
+    activeTab === 'actions'
+      ? actionNotifications
+      : activeTab === 'updates'
+        ? updateNotifications
+        : notifications;
 
   return (
     <Popover>
@@ -100,7 +124,10 @@ export function NotificationBell() {
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold flex items-center justify-center"
+              className={cn(
+                'absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 text-[10px] font-bold flex items-center justify-center',
+                unreadActionCount > 0 && 'animate-pulse'
+              )}
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
@@ -118,29 +145,79 @@ export function NotificationBell() {
               className="text-xs text-primary hover:text-primary/80 h-auto py-1 px-2"
             >
               <CheckCheck className="w-3.5 h-3.5 mr-1" />
-              Marcar todas como lidas
+              Marcar todas
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-[400px]">
-          {notifications.length === 0 ? (
-            <div className="py-10 text-center">
-              <Bell className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
-            </div>
-          ) : (
-            <div className="p-1 space-y-0.5">
-              {notifications.map((n) => (
-                <NotificationItem
-                  key={n.id}
-                  notification={n}
-                  onRead={markAsRead}
-                  onNavigate={handleNavigate}
-                />
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+
+        {/* Urgency Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full rounded-none border-b border-border bg-transparent h-auto p-0">
+            <TabsTrigger
+              value="all"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[36px] text-xs"
+            >
+              Todas
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-4 min-w-[16px] px-1 text-[10px]">
+                  {unreadCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="actions"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-destructive data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[36px] text-xs"
+            >
+              Ações
+              {unreadActionCount > 0 && (
+                <Badge variant="destructive" className="ml-1.5 h-4 min-w-[16px] px-1 text-[10px] animate-pulse">
+                  {unreadActionCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="updates"
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[36px] text-xs"
+            >
+              Atualizações
+            </TabsTrigger>
+          </TabsList>
+
+          {['all', 'actions', 'updates'].map(tab => (
+            <TabsContent key={tab} value={tab} className="mt-0">
+              <ScrollArea className="max-h-[360px]">
+                {displayedNotifications.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <Bell className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      {tab === 'actions'
+                        ? 'Nenhuma ação pendente'
+                        : tab === 'updates'
+                          ? 'Nenhuma atualização'
+                          : 'Nenhuma notificação'}
+                    </p>
+                    {tab === 'actions' && (
+                      <p className="text-xs text-muted-foreground/70 mt-1">
+                        Tudo certo! Nenhuma decisão bloqueando sua obra.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-1 space-y-0.5">
+                    {displayedNotifications.map((n) => (
+                      <NotificationItem
+                        key={n.id}
+                        notification={n}
+                        onRead={markAsRead}
+                        onNavigate={handleNavigate}
+                      />
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </TabsContent>
+          ))}
+        </Tabs>
       </PopoverContent>
     </Popover>
   );
