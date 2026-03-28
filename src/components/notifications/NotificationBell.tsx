@@ -238,13 +238,22 @@ export function NotificationBell() {
                   </div>
                 ) : (
                   <div className="p-1 space-y-0.5">
-                    {displayedNotifications.map((n) => (
-                      <NotificationItem
-                        key={n.id}
-                        notification={n}
-                        onRead={markAsRead}
-                        onNavigate={handleNavigate}
-                      />
+                    {displayedNotifications.map((n, idx) => (
+                      <div key={n.id}>
+                        <NotificationItem
+                          notification={n}
+                          onRead={markAsRead}
+                          onNavigate={handleNavigate}
+                        />
+                        {/* Divider after context-relevant block */}
+                        {contextCount > 0 && idx === contextCount - 1 && idx < displayedNotifications.length - 1 && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 my-0.5">
+                            <div className="flex-1 h-px bg-border" />
+                            <span className="text-[10px] text-muted-foreground/60 shrink-0">Outras notificações</span>
+                            <div className="flex-1 h-px bg-border" />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
