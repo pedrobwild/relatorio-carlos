@@ -224,31 +224,43 @@ export function ProjectSlimHeader() {
       {/* Global search */}
       <GlobalSearchDialog />
 
-      {/* Pendencias badge */}
-      <Link
-        to={paths.pendencias}
-        className={cn(
-          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all text-sm font-medium border",
-          "hover:shadow-sm active:scale-[0.97]",
-          pendenciasStats.overdueCount > 0
-            ? "bg-destructive/10 text-destructive border-destructive/20"
-            : pendenciasStats.urgentCount > 0
-              ? "bg-warning/10 text-warning border-warning/20"
-              : "bg-secondary text-muted-foreground border-border"
-        )}
-        aria-label={`${pendenciasStats.total} pendências`}
-      >
-        <Bell className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline text-xs">Pendências</span>
-        <Badge
-          variant={
-            pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"
-          }
-          className="min-w-4 h-4 px-1 text-[10px] font-bold"
-        >
-          {pendenciasStats.total}
-        </Badge>
-      </Link>
+      {/* Pendencias badge — shows critical count (overdue + urgent) prominently */}
+      {(() => {
+        const criticalCount = pendenciasStats.overdueCount + pendenciasStats.urgentCount;
+        const hasCritical = criticalCount > 0;
+        return (
+          <Link
+            to={hasCritical ? `${paths.pendencias}?filtro=criticas` : paths.pendencias}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all text-sm font-medium border",
+              "hover:shadow-sm active:scale-[0.97]",
+              pendenciasStats.overdueCount > 0
+                ? "bg-destructive/10 text-destructive border-destructive/20"
+                : pendenciasStats.urgentCount > 0
+                  ? "bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20"
+                  : "bg-secondary text-muted-foreground border-border"
+            )}
+            aria-label={hasCritical ? `${criticalCount} pendências críticas` : `${pendenciasStats.total} pendências`}
+          >
+            {pendenciasStats.overdueCount > 0 && (
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
+              </span>
+            )}
+            <Bell className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline text-xs">
+              {hasCritical ? "Críticas" : "Pendências"}
+            </span>
+            <Badge
+              variant={pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"}
+              className="min-w-4 h-4 px-1 text-[10px] font-bold"
+            >
+              {hasCritical ? criticalCount : pendenciasStats.total}
+            </Badge>
+          </Link>
+        );
+      })()}
 
       {/* Notifications */}
       <NotificationBell />

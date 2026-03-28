@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, CheckCircle2, Calendar, ChevronRight, ShoppingCart, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -61,9 +61,19 @@ const formatDateStr = (dateStr: string) => {
 
 const PendenciasContent = () => {
   const { projectId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { sortedItems, stats, isLoading } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
   const today = new Date();
+
+  const showCriticalOnly = searchParams.get("filtro") === "criticas";
+
+  const displayItems = showCriticalOnly
+    ? sortedItems.filter((item) => {
+        const status = item.dueDate ? getStatus(item.dueDate) : "pendente";
+        return status === "atrasado" || status === "urgente";
+      })
+    : sortedItems;
 
   const getActionUrl = (item: typeof sortedItems[0]) => {
     if (item.actionUrl) return item.actionUrl;
@@ -115,9 +125,25 @@ const PendenciasContent = () => {
         </AlertDescription>
       </Alert>
 
+      {/* Filter toggle */}
+      {showCriticalOnly && (
+        <div className="flex items-center justify-between mb-4 px-1">
+          <Badge variant="destructive" className="text-xs gap-1">
+            <AlertTriangle className="w-3 h-3" />
+            Mostrando apenas críticas ({displayItems.length})
+          </Badge>
+          <button
+            onClick={() => setSearchParams({})}
+            className="text-xs text-primary hover:underline font-medium"
+          >
+            Ver todas
+          </button>
+        </div>
+      )}
+
       {/* Items */}
       <div className="space-y-3">
-        {sortedItems.map((item, index) => {
+        {displayItems.map((item, index) => {
           const status = item.dueDate ? getStatus(item.dueDate) : "pendente";
           const daysOverdue = getDaysOverdue(item, today);
           const daysRemaining = getDaysRemaining(item, today);
@@ -178,12 +204,13 @@ const PendenciasContent = () => {
           );
         })}
 
-        {sortedItems.length === 0 && (
+        {displayItems.length === 0 && (
           <EmptyState
             icon={CheckCircle2}
-            title="Tudo em dia!"
-            description="Não há pendências no momento. Quando surgir algo que precise da sua atenção, aparecerá aqui."
-            hint="Pendências incluem aprovações, pagamentos e decisões que dependem de você."
+            title={showCriticalOnly ? "Nenhuma pendência crítica" : "Tudo em dia!"}
+            description={showCriticalOnly ? "Não há itens atrasados ou urgentes no momento." : "Não há pendências no momento. Quando surgir algo que precise da sua atenção, aparecerá aqui."}
+            hint={showCriticalOnly ? undefined : "Pendências incluem aprovações, pagamentos e decisões que dependem de você."}
+            action={showCriticalOnly ? { label: "Ver todas as pendências", onClick: () => setSearchParams({}) } : undefined}
           />
         )}
       </div>
