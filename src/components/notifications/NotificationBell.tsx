@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Bell, CheckCheck, FileText, DollarSign, AlertCircle, Layers, ClipboardSignature, TrendingUp, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -90,10 +90,29 @@ function NotificationItem({
   );
 }
 
+/** Maps route segments to relevant notification types for contextual boosting */
+const ROUTE_CONTEXT_TYPES: Record<string, string[]> = {
+  financeiro: ['payment_due', 'payment_overdue'],
+  pendencias: ['pending_item_created'],
+  formalizacoes: ['formalization_pending'],
+  documentos: ['document_uploaded'],
+  jornada: ['stage_changed'],
+};
+
+function getRouteContext(pathname: string): string[] {
+  for (const [segment, types] of Object.entries(ROUTE_CONTEXT_TYPES)) {
+    if (pathname.includes(`/${segment}`)) return types;
+  }
+  return [];
+}
+
 export function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>('all');
+
+  const contextTypes = useMemo(() => getRouteContext(location.pathname), [location.pathname]);
 
   const actionNotifications = notifications.filter(n => getUrgencyCategory(n.type) === 'action');
   const updateNotifications = notifications.filter(n => getUrgencyCategory(n.type) === 'update');
@@ -104,12 +123,27 @@ export function NotificationBell() {
     navigate(url);
   };
 
-  const displayedNotifications =
+  /** Sort notifications: context-relevant ones float to the top */
+  const sortByContext = (items: typeof notifications) => {
+    if (contextTypes.length === 0) return items;
+    return [...items].sort((a, b) => {
+      const aRelevant = contextTypes.includes(a.type) ? 1 : 0;
+      const bRelevant = contextTypes.includes(b.type) ? 1 : 0;
+      return bRelevant - aRelevant;
+    });
+  };
+
+  const displayedNotifications = sortByContext(
     activeTab === 'actions'
       ? actionNotifications
       : activeTab === 'updates'
         ? updateNotifications
-        : notifications;
+        : notifications
+  );
+
+  const contextCount = contextTypes.length > 0
+    ? displayedNotifications.filter(n => contextTypes.includes(n.type)).length
+    : 0;
 
   return (
     <Popover>
@@ -204,13 +238,22 @@ export function NotificationBell() {
                   </div>
                 ) : (
                   <div className="p-1 space-y-0.5">
-                    {displayedNotifications.map((n) => (
-                      <NotificationItem
-                        key={n.id}
-                        notification={n}
-                        onRead={markAsRead}
-                        onNavigate={handleNavigate}
-                      />
+                    {displayedNotifications.map((n, idx) => (
+                      <div key={n.id}>
+                        <NotificationItem
+                          notification={n}
+                          onRead={markAsRead}
+                          onNavigate={handleNavigate}
+                        />
+                        {/* Divider after context-relevant block */}
+                        {contextCount > 0 && idx === contextCount - 1 && idx < displayedNotifications.length - 1 && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 my-0.5">
+                            <div className="flex-1 h-px bg-border" />
+                            <span className="text-[10px] text-muted-foreground/60 shrink-0">Outras notificações</span>
+                            <div className="flex-1 h-px bg-border" />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
