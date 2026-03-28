@@ -198,6 +198,8 @@ export default function AdminUxInsights() {
       return;
     }
 
+    const areaObj = AREAS.find(a => a.value === selectedArea);
+
     setIsLoading(true);
     setResult('');
 
@@ -217,9 +219,9 @@ export default function AdminUxInsights() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            area: selectedAreaObj?.label ?? selectedArea,
+            area: areaObj?.label ?? selectedArea,
             context: context.trim() || undefined,
-            systemContext: selectedAreaObj?.systemContext || undefined,
+            systemContext: areaObj?.systemContext || undefined,
           }),
           signal: abortRef.current.signal,
         }
