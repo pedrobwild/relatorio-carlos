@@ -32,6 +32,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { usePendencias } from "@/hooks/usePendencias";
+import { useUserRole } from "@/hooks/useUserRole";
+import { navigationLabels } from "@/constants/navigationLabels";
 
 interface SidebarNavItem {
   label: string;
@@ -62,8 +64,16 @@ export function ProjectSidebar() {
   const { projectId, paths } = useProjectNavigation();
   const { project } = useProject();
   const { stats: pendenciasStats } = usePendencias({ projectId });
+  const { isStaff } = useUserRole();
 
   const isProjectPhase = project?.is_project_phase === true;
+
+  /** Pick label based on role */
+  const L = (key: string) => {
+    const entry = navigationLabels.sidebar[key];
+    if (!entry) return key;
+    return isStaff ? entry.staff : entry.client;
+  };
 
   const basePath = `/obra/${projectId}`;
 
@@ -72,13 +82,13 @@ export function ProjectSidebar() {
       label: "Visão Geral",
       items: [
         {
-          label: "Dashboard",
+          label: L("dashboard"),
           icon: LayoutDashboard,
           path: basePath,
           matchPaths: [`${basePath}/relatorio`],
         },
         {
-          label: "Jornada",
+          label: L("jornada"),
           icon: Map,
           path: paths.jornada,
         },
@@ -88,22 +98,22 @@ export function ProjectSidebar() {
       label: "Projeto",
       items: [
         {
-          label: "Contrato",
+          label: L("contrato"),
           icon: FileText,
           path: paths.contrato,
         },
         {
-          label: "Projeto 3D",
+          label: L("projeto3D"),
           icon: Box,
           path: paths.projeto3D,
         },
         {
-          label: "Executivo",
+          label: L("executivo"),
           icon: Ruler,
           path: paths.executivo,
         },
         {
-          label: "Documentos",
+          label: L("documentos"),
           icon: FolderOpen,
           path: paths.documentos,
         },
@@ -113,19 +123,19 @@ export function ProjectSidebar() {
       label: "Dia a Dia",
       items: [
         {
-          label: "Cronograma",
+          label: L("cronograma"),
           icon: GanttChartSquare,
           path: paths.cronograma,
           disabledInProjectPhase: true,
         },
         {
-          label: "Compras",
+          label: L("compras"),
           icon: ShoppingCart,
           path: paths.compras,
           disabledInProjectPhase: true,
         },
         {
-          label: "Pendências",
+          label: L("pendencias"),
           icon: AlertCircle,
           path: paths.pendencias,
           badgeKey: "pendencias",
@@ -136,12 +146,12 @@ export function ProjectSidebar() {
       label: "Gestão",
       items: [
         {
-          label: "Financeiro",
+          label: L("financeiro"),
           icon: DollarSign,
           path: paths.financeiro,
         },
         {
-          label: "Formalizações",
+          label: L("formalizacoes"),
           icon: ClipboardSignature,
           path: paths.formalizacoes,
         },
