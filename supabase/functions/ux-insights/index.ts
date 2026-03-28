@@ -60,7 +60,7 @@ serve(async (req) => {
       return jsonResponse({ error: "Acesso restrito a administradores" }, 403);
     }
 
-    const { area, context } = await req.json();
+    const { area, context, systemContext } = await req.json();
 
     if (!area) {
       return jsonResponse({ error: "Campo 'area' é obrigatório" }, 400);
@@ -71,13 +71,16 @@ serve(async (req) => {
       return jsonResponse({ error: "LOVABLE_API_KEY não configurada" }, 500);
     }
 
-    const userPrompt = `Analise a seguinte área/funcionalidade do portal de gestão de obras e gere sugestões de melhoria de UX:
+    const userPrompt = `Analise a seguinte área/funcionalidade do portal de gestão de obras e gere sugestões de melhoria de UX.
 
 **Área:** ${area}
 
-${context ? `**Contexto adicional:** ${context}` : ""}
+**FUNCIONALIDADES IMPLEMENTADAS NESTA ÁREA (base obrigatória para suas sugestões):**
+${systemContext || "Não fornecido — baseie-se apenas no nome da área."}
 
-Gere entre 5 e 10 sugestões organizadas nas 3 categorias. Foque em melhorias que tenham impacto real na experiência do cliente e da equipe.`;
+${context ? `**Contexto adicional do solicitante:** ${context}` : ""}
+
+Gere entre 5 e 10 sugestões organizadas nas 3 categorias. TODAS as sugestões devem ser sobre funcionalidades que JÁ EXISTEM no sistema conforme descrito acima. Se sugerir algo novo, marque explicitamente como "[NOVA FUNCIONALIDADE]".`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
