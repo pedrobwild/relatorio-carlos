@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Building2, ChevronsUpDown, Bell } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Building2, ChevronRight, ChevronsUpDown, Bell, Check } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -10,7 +10,6 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { usePendencias } from "@/hooks/usePendencias";
-import bwildLogo from "@/assets/bwild-logo-dark.png";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -21,37 +20,58 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/** Map route segments to readable labels */
+const ROUTE_LABELS: Record<string, string> = {
+  relatorio: "Relatório",
+  contrato: "Contrato",
+  "projeto-3d": "Projeto 3D",
+  executivo: "Executivo",
+  financeiro: "Financeiro",
+  pendencias: "Pendências",
+  documentos: "Documentos",
+  formalizacoes: "Formalizações",
+  cronograma: "Cronograma",
+  compras: "Compras",
+  jornada: "Jornada",
+};
+
+function useCurrentPageLabel(projectId: string | undefined): string | null {
+  const location = useLocation();
+  if (!projectId) return null;
+  const prefix = `/obra/${projectId}`;
+  const sub = location.pathname.replace(prefix, "").replace(/^\//, "").split("/")[0];
+  if (!sub) return "Dashboard";
+  return ROUTE_LABELS[sub] ?? sub;
+}
+
 export function ProjectSlimHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { project } = useProject();
   const { projectId, paths } = useProjectNavigation();
   const { data: projects = [] } = useProjectsQuery();
   const { stats: pendenciasStats } = usePendencias({ projectId });
+
+  const currentPageLabel = useCurrentPageLabel(projectId);
 
   const otherProjects = useMemo(
     () => projects.filter((p) => p.id !== projectId),
     [projects, projectId]
   );
 
+  /** Switch project preserving the current sub-route */
   const handleProjectSwitch = (targetId: string) => {
-    navigate(`/obra/${targetId}`);
+    if (!projectId) {
+      navigate(`/obra/${targetId}`);
+      return;
+    }
+    const currentSub = location.pathname.replace(`/obra/${projectId}`, "");
+    navigate(`/obra/${targetId}${currentSub}`);
   };
 
-  const phaseBadge = project?.is_project_phase ? (
-    <Badge
-      variant="secondary"
-      className="bg-primary/10 text-primary border-primary/20 text-xs font-medium shrink-0"
-    >
-      Em Projeto
-    </Badge>
-  ) : (
-    <Badge
-      variant="secondary"
-      className="bg-success/10 text-success border-success/20 text-xs font-medium shrink-0"
-    >
-      Em Execução
-    </Badge>
-  );
+  const projectDisplayName = project
+    ? `${project.name}${project.unit_name ? ` – ${project.unit_name}` : ""}`
+    : "Carregando…";
 
   return (
     <header className="h-14 border-b border-border bg-card/95 backdrop-blur-sm flex items-center px-3 gap-2 shrink-0 z-40">
@@ -60,58 +80,77 @@ export function ProjectSlimHeader() {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Project selector */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 text-left hover:bg-accent rounded-lg px-2.5 py-1.5 transition-colors group min-w-0">
-            <img src={bwildLogo} alt="Bwild" className="h-6 w-auto shrink-0 hidden sm:block" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                  {project?.name}
-                  {project?.unit_name && ` – ${project.unit_name}`}
-                </span>
-              </div>
-              {project?.customer_name && (
-                <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                  {project.customer_name}
-                </p>
-              )}
-            </div>
-            {otherProjects.length > 0 && (
-              <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-            )}
-          </button>
-        </DropdownMenuTrigger>
-        {otherProjects.length > 0 && (
-          <DropdownMenuContent align="start" className="w-72 bg-popover">
-            <DropdownMenuLabel className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Trocar de Obra
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {otherProjects.map((p) => (
-              <DropdownMenuItem
-                key={p.id}
-                onClick={() => handleProjectSwitch(p.id)}
-                className="flex flex-col items-start gap-0.5 cursor-pointer"
-              >
-                <span className="font-medium">
-                  {p.name} {p.unit_name && `– ${p.unit_name}`}
-                </span>
-                {p.customer_name && (
-                  <span className="text-xs text-muted-foreground">
-                    {p.customer_name}
-                  </span>
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        )}
-      </DropdownMenu>
+      {/* Breadcrumb with project switcher */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1 min-w-0 overflow-hidden">
+        {/* Level 1: Minhas Obras */}
+        <Link
+          to="/minhas-obras"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:inline"
+        >
+          Minhas Obras
+        </Link>
+        <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0 hidden sm:block" />
 
-      {/* Phase badge */}
-      <div className="hidden sm:block">{phaseBadge}</div>
+        {/* Level 2: Project name as dropdown switcher */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-2 py-1 transition-colors group min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors">
+                {projectDisplayName}
+              </span>
+              {otherProjects.length > 0 && (
+                <ChevronsUpDown className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          {otherProjects.length > 0 && (
+            <DropdownMenuContent align="start" className="w-72 bg-popover">
+              <DropdownMenuLabel className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Building2 className="h-3.5 w-3.5" />
+                Trocar de Obra
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {/* Current project (checked) */}
+              <DropdownMenuItem disabled className="flex items-center gap-2 opacity-70">
+                <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <span className="font-medium text-sm truncate block">{projectDisplayName}</span>
+                  {project?.customer_name && (
+                    <span className="text-xs text-muted-foreground">{project.customer_name}</span>
+                  )}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {otherProjects.map((p) => (
+                <DropdownMenuItem
+                  key={p.id}
+                  onClick={() => handleProjectSwitch(p.id)}
+                  className="flex flex-col items-start gap-0.5 cursor-pointer"
+                >
+                  <span className="font-medium text-sm">
+                    {p.name} {p.unit_name && `– ${p.unit_name}`}
+                  </span>
+                  {p.customer_name && (
+                    <span className="text-xs text-muted-foreground">
+                      {p.customer_name}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          )}
+        </DropdownMenu>
+
+        {/* Level 3: Current page */}
+        {currentPageLabel && (
+          <>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+            <span className="text-xs font-medium text-foreground truncate shrink-0">
+              {currentPageLabel}
+            </span>
+          </>
+        )}
+      </nav>
 
       {/* Spacer */}
       <div className="flex-1" />
