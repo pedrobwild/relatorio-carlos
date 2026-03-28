@@ -1,10 +1,12 @@
 import { ReactNode } from "react";
+import { useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProjectSidebar } from "@/components/layout/ProjectSidebar";
 import { ProjectSlimHeader } from "@/components/layout/ProjectSlimHeader";
 import { ProjectLayoutProvider } from "@/components/layout/ProjectLayoutContext";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { FloatingApprovalBanner } from "@/components/pendencias/FloatingApprovalBanner";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface ProjectShellProps {
@@ -18,6 +20,7 @@ interface ProjectShellProps {
  */
 export function ProjectShell({ children }: ProjectShellProps) {
   const { isStaff, loading } = useUserRole();
+  const { projectId } = useParams();
 
   // While loading, don't render shell to avoid layout flash
   if (loading) {
@@ -28,12 +31,13 @@ export function ProjectShell({ children }: ProjectShellProps) {
     );
   }
 
-  // Clients get the existing experience + mobile bottom nav
+  // Clients get the existing experience + mobile bottom nav + floating approval banner
   if (!isStaff) {
     return (
       <ProjectLayoutProvider value={{ hasShell: false }}>
         {children}
         <MobileBottomNav />
+        <FloatingApprovalBanner projectId={projectId} />
       </ProjectLayoutProvider>
     );
   }
@@ -52,6 +56,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
           </div>
         </div>
       </SidebarProvider>
+      <FloatingApprovalBanner projectId={projectId} />
     </ProjectLayoutProvider>
   );
 }
