@@ -12,6 +12,8 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { usePendencias } from "@/hooks/usePendencias";
 import { cn } from "@/lib/utils";
+import { useUserRole } from "@/hooks/useUserRole";
+import { getNavLabel } from "@/constants/navigationLabels";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,28 +23,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-/** Map route segments to readable labels */
-const ROUTE_LABELS: Record<string, string> = {
-  relatorio: "Relatório",
-  contrato: "Contrato",
-  "projeto-3d": "Projeto 3D",
-  executivo: "Executivo",
-  financeiro: "Financeiro",
-  pendencias: "Pendências",
-  documentos: "Documentos",
-  formalizacoes: "Formalizações",
-  cronograma: "Cronograma",
-  compras: "Compras",
-  jornada: "Jornada",
-};
-
-function useCurrentPageLabel(projectId: string | undefined): string | null {
+function useCurrentPageLabel(projectId: string | undefined, isStaff: boolean): string | null {
   const location = useLocation();
   if (!projectId) return null;
   const prefix = `/obra/${projectId}`;
   const sub = location.pathname.replace(prefix, "").replace(/^\//, "").split("/")[0];
-  if (!sub) return "Dashboard";
-  return ROUTE_LABELS[sub] ?? sub;
+  if (!sub) return isStaff ? "Dashboard" : "Início";
+  return getNavLabel("breadcrumb", sub, isStaff);
 }
 
 export function ProjectSlimHeader() {
@@ -52,8 +39,9 @@ export function ProjectSlimHeader() {
   const { projectId, paths } = useProjectNavigation();
   const { data: projects = [] } = useProjectsQuery();
   const { stats: pendenciasStats } = usePendencias({ projectId });
+  const { isStaff } = useUserRole();
 
-  const currentPageLabel = useCurrentPageLabel(projectId);
+  const currentPageLabel = useCurrentPageLabel(projectId, isStaff);
 
   const otherProjects = useMemo(
     () => projects.filter((p) => p.id !== projectId),
