@@ -12,6 +12,7 @@ import {
   Ruler,
   Map,
   ShoppingCart,
+  ClipboardCheck,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -132,6 +133,12 @@ export function ProjectSidebar() {
           label: L("compras"),
           icon: ShoppingCart,
           path: paths.compras,
+          disabledInProjectPhase: true,
+        },
+        {
+          label: L("vistorias"),
+          icon: ClipboardCheck,
+          path: paths.vistorias,
           disabledInProjectPhase: true,
         },
         {

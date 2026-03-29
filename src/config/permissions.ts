@@ -50,7 +50,18 @@ export type Feature =
   | 'admin:manage_system'
   // Reports
   | 'reports:export_pdf'
-  | 'reports:edit_weekly';
+  | 'reports:edit_weekly'
+  // Inspections
+  | 'inspections:create'
+  | 'inspections:edit'
+  | 'inspections:view'
+  | 'inspections:complete'
+  // Non-conformities
+  | 'ncs:create'
+  | 'ncs:treat'
+  | 'ncs:verify'
+  | 'ncs:approve'
+  | 'ncs:view';
 
 /**
  * Permission matrix: role -> allowed features
@@ -67,6 +78,8 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'journey:view',
     'projects:view',
     'reports:export_pdf',
+    'inspections:view',
+    'ncs:view',
   ],
 
   engineer: [
@@ -107,6 +120,15 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     // Reports
     'reports:export_pdf',
     'reports:edit_weekly',
+    // Inspections & NCs
+    'inspections:create',
+    'inspections:edit',
+    'inspections:view',
+    'inspections:complete',
+    'ncs:create',
+    'ncs:treat',
+    'ncs:verify',
+    'ncs:view',
   ],
 
   manager: [
@@ -142,6 +164,16 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'admin:view_audit',
     'reports:export_pdf',
     'reports:edit_weekly',
+    // Inspections & NCs
+    'inspections:create',
+    'inspections:edit',
+    'inspections:view',
+    'inspections:complete',
+    'ncs:create',
+    'ncs:treat',
+    'ncs:verify',
+    'ncs:approve',
+    'ncs:view',
   ],
 
   admin: [
@@ -182,6 +214,16 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'admin:manage_system',
     'reports:export_pdf',
     'reports:edit_weekly',
+    // Inspections & NCs
+    'inspections:create',
+    'inspections:edit',
+    'inspections:view',
+    'inspections:complete',
+    'ncs:create',
+    'ncs:treat',
+    'ncs:verify',
+    'ncs:approve',
+    'ncs:view',
   ],
 };
 
