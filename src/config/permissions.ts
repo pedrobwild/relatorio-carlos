@@ -214,6 +214,16 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'admin:manage_system',
     'reports:export_pdf',
     'reports:edit_weekly',
+    // Inspections & NCs
+    'inspections:create',
+    'inspections:edit',
+    'inspections:view',
+    'inspections:complete',
+    'ncs:create',
+    'ncs:treat',
+    'ncs:verify',
+    'ncs:approve',
+    'ncs:view',
   ],
 };
 
