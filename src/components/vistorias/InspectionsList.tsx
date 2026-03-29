@@ -72,7 +72,7 @@ export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    {format(new Date(inspection.created_at), "dd/MM", { locale: ptBR })}
+                    {format(parseISO(inspection.created_at), "dd/MM", { locale: ptBR })}
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>

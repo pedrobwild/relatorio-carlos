@@ -100,7 +100,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect }: 
                 <div className="flex items-center gap-2 shrink-0">
                   {nc.deadline && (
                     <span className="text-xs text-muted-foreground">
-                      Prazo: {format(new Date(nc.deadline), "dd/MM", { locale: ptBR })}
+                      Prazo: {format(parseISO(nc.deadline), "dd/MM", { locale: ptBR })}
                     </span>
                   )}
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
