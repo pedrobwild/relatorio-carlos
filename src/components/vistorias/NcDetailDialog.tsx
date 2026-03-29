@@ -51,7 +51,6 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
-  const [rejectionReason, setRejectionReason] = useState('');
 
   const handleTransition = (newStatus: NcStatus) => {
     updateStatus.mutate({
