@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -93,7 +93,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
           </Badge>
           {nc.deadline && (
             <span className="text-xs text-muted-foreground">
-              Prazo: {format(new Date(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
+              Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
             </span>
           )}
         </div>

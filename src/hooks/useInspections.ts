@@ -31,7 +31,7 @@ export interface InspectionItem {
   description: string;
   result: InspectionItemResult;
   notes: string | null;
-  photo_paths: string[];
+  photo_paths: string[] | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
