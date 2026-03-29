@@ -32,7 +32,7 @@ export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
   if (filtered.length === 0) {
     return (
       <EmptyState
-        icon={<ClipboardCheck className="h-12 w-12" />}
+        icon={ClipboardCheck}
         title="Nenhuma vistoria encontrada"
         description="Crie uma nova vistoria para iniciar o checklist de qualidade."
       />

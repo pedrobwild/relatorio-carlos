@@ -42,7 +42,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect }: 
   if (filtered.length === 0) {
     return (
       <EmptyState
-        icon={<AlertTriangle className="h-12 w-12" />}
+        icon={AlertTriangle}
         title="Nenhuma não conformidade"
         description="NCs serão criadas automaticamente a partir de itens reprovados nas vistorias."
       />
