@@ -59,12 +59,10 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       notes: actionNotes || undefined,
       corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
       resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
-      rejection_reason: newStatus === 'reopened' ? rejectionReason : undefined,
     }, {
       onSuccess: () => {
         setActionNotes('');
         setCorrectiveAction('');
-        setRejectionReason('');
         onOpenChange(false);
       },
     });
