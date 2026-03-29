@@ -792,6 +792,111 @@ export type Database = {
           },
         ]
       }
+      inspection_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          inspection_id: string
+          notes: string | null
+          photo_paths: string[] | null
+          result: Database["public"]["Enums"]["inspection_item_result"]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          inspection_id: string
+          notes?: string | null
+          photo_paths?: string[] | null
+          result?: Database["public"]["Enums"]["inspection_item_result"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          inspection_id?: string
+          notes?: string | null
+          photo_paths?: string[] | null
+          result?: Database["public"]["Enums"]["inspection_item_result"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_items_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspections: {
+        Row: {
+          activity_id: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          inspection_date: string
+          inspector_id: string
+          notes: string | null
+          project_id: string
+          status: Database["public"]["Enums"]["inspection_status"]
+          updated_at: string
+        }
+        Insert: {
+          activity_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          inspection_date?: string
+          inspector_id: string
+          notes?: string | null
+          project_id: string
+          status?: Database["public"]["Enums"]["inspection_status"]
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          inspection_date?: string
+          inspector_id?: string
+          notes?: string | null
+          project_id?: string
+          status?: Database["public"]["Enums"]["inspection_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspections_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "inspections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -1568,6 +1673,154 @@ export type Database = {
             columns: ["cronograma_id"]
             isOneToOne: false
             referencedRelation: "cronogramas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nc_history: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          nc_id: string
+          new_status: Database["public"]["Enums"]["nc_status"] | null
+          notes: string | null
+          old_status: Database["public"]["Enums"]["nc_status"] | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          nc_id: string
+          new_status?: Database["public"]["Enums"]["nc_status"] | null
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["nc_status"] | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          nc_id?: string
+          new_status?: Database["public"]["Enums"]["nc_status"] | null
+          notes?: string | null
+          old_status?: Database["public"]["Enums"]["nc_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nc_history_nc_id_fkey"
+            columns: ["nc_id"]
+            isOneToOne: false
+            referencedRelation: "non_conformities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      non_conformities: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          corrective_action: string | null
+          created_at: string
+          created_by: string
+          deadline: string | null
+          description: string | null
+          evidence_photo_paths: string[] | null
+          id: string
+          inspection_id: string | null
+          inspection_item_id: string | null
+          project_id: string
+          rejection_reason: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          responsible_user_id: string | null
+          severity: Database["public"]["Enums"]["nc_severity"]
+          status: Database["public"]["Enums"]["nc_status"]
+          title: string
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          corrective_action?: string | null
+          created_at?: string
+          created_by: string
+          deadline?: string | null
+          description?: string | null
+          evidence_photo_paths?: string[] | null
+          id?: string
+          inspection_id?: string | null
+          inspection_item_id?: string | null
+          project_id: string
+          rejection_reason?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsible_user_id?: string | null
+          severity?: Database["public"]["Enums"]["nc_severity"]
+          status?: Database["public"]["Enums"]["nc_status"]
+          title: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          corrective_action?: string | null
+          created_at?: string
+          created_by?: string
+          deadline?: string | null
+          description?: string | null
+          evidence_photo_paths?: string[] | null
+          id?: string
+          inspection_id?: string | null
+          inspection_item_id?: string | null
+          project_id?: string
+          rejection_reason?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responsible_user_id?: string | null
+          severity?: Database["public"]["Enums"]["nc_severity"]
+          status?: Database["public"]["Enums"]["nc_status"]
+          title?: string
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "non_conformities_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "non_conformities_inspection_item_id_fkey"
+            columns: ["inspection_item_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "non_conformities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "non_conformities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -3944,6 +4197,12 @@ export type Database = {
         | "exception_custody"
         | "scope_change"
         | "general"
+      inspection_item_result:
+        | "approved"
+        | "rejected"
+        | "not_applicable"
+        | "pending"
+      inspection_status: "draft" | "in_progress" | "completed"
       invitation_status: "pending" | "accepted" | "expired" | "revoked"
       journey_stage_status:
         | "pending"
@@ -3951,6 +4210,14 @@ export type Database = {
         | "in_progress"
         | "completed"
       marco_status: "pendente" | "em_andamento" | "concluido" | "atrasado"
+      nc_severity: "low" | "medium" | "high" | "critical"
+      nc_status:
+        | "open"
+        | "in_treatment"
+        | "pending_verification"
+        | "pending_approval"
+        | "closed"
+        | "reopened"
       notification_type:
         | "payment_due"
         | "payment_overdue"
@@ -4150,6 +4417,13 @@ export const Constants = {
         "scope_change",
         "general",
       ],
+      inspection_item_result: [
+        "approved",
+        "rejected",
+        "not_applicable",
+        "pending",
+      ],
+      inspection_status: ["draft", "in_progress", "completed"],
       invitation_status: ["pending", "accepted", "expired", "revoked"],
       journey_stage_status: [
         "pending",
@@ -4158,6 +4432,15 @@ export const Constants = {
         "completed",
       ],
       marco_status: ["pendente", "em_andamento", "concluido", "atrasado"],
+      nc_severity: ["low", "medium", "high", "critical"],
+      nc_status: [
+        "open",
+        "in_treatment",
+        "pending_verification",
+        "pending_approval",
+        "closed",
+        "reopened",
+      ],
       notification_type: [
         "payment_due",
         "payment_overdue",
