@@ -31,7 +31,7 @@ export interface InspectionItem {
   description: string;
   result: InspectionItemResult;
   notes: string | null;
-  photo_paths: string[];
+  photo_paths: string[] | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -49,7 +49,7 @@ export interface NonConformity {
   responsible_user_id: string | null;
   deadline: string | null;
   corrective_action: string | null;
-  evidence_photo_paths: string[];
+  evidence_photo_paths: string[] | null;
   resolution_notes: string | null;
   resolved_at: string | null;
   resolved_by: string | null;

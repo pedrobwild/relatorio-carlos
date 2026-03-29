@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,7 +51,6 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
-  const [rejectionReason, setRejectionReason] = useState('');
 
   const handleTransition = (newStatus: NcStatus) => {
     updateStatus.mutate({
@@ -60,12 +59,10 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       notes: actionNotes || undefined,
       corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
       resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
-      rejection_reason: newStatus === 'reopened' ? rejectionReason : undefined,
     }, {
       onSuccess: () => {
         setActionNotes('');
         setCorrectiveAction('');
-        setRejectionReason('');
         onOpenChange(false);
       },
     });
@@ -93,7 +90,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
           </Badge>
           {nc.deadline && (
             <span className="text-xs text-muted-foreground">
-              Prazo: {format(new Date(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
+              Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
             </span>
           )}
         </div>
@@ -194,8 +191,17 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                     variant="destructive"
                     className="gap-2"
                     onClick={() => {
-                      setRejectionReason(actionNotes);
-                      handleTransition('reopened');
+                      updateStatus.mutate({
+                        nc,
+                        new_status: 'reopened',
+                        notes: actionNotes || undefined,
+                        rejection_reason: actionNotes,
+                      }, {
+                        onSuccess: () => {
+                          setActionNotes('');
+                          onOpenChange(false);
+                        },
+                      });
                     }}
                     disabled={!actionNotes.trim() || updateStatus.isPending}
                   >
@@ -230,11 +236,18 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                         variant="destructive"
                         className="gap-2"
                         onClick={() => {
-                          if (!actionNotes.trim()) {
-                            return;
-                          }
-                          setRejectionReason(actionNotes);
-                          handleTransition('reopened');
+                          if (!actionNotes.trim()) return;
+                          updateStatus.mutate({
+                            nc,
+                            new_status: 'reopened',
+                            notes: actionNotes,
+                            rejection_reason: actionNotes,
+                          }, {
+                            onSuccess: () => {
+                              setActionNotes('');
+                              onOpenChange(false);
+                            },
+                          });
                         }}
                         disabled={!actionNotes.trim() || updateStatus.isPending}
                       >

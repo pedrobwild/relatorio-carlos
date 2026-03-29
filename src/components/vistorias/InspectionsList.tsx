@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ClipboardCheck, Calendar, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -58,7 +58,7 @@ export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">
-                        Vistoria {format(new Date(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
+                        Vistoria {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
                       </span>
                       <Badge variant={cfg.variant}>{cfg.label}</Badge>
                     </div>
@@ -72,7 +72,7 @@ export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    {format(new Date(inspection.created_at), "dd/MM", { locale: ptBR })}
+                    {format(parseISO(inspection.created_at), "dd/MM", { locale: ptBR })}
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>

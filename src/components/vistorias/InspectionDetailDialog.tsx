@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle2, XCircle, MinusCircle, Clock, AlertTriangle, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -96,7 +96,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
       <DialogContent className="max-w-2xl max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Vistoria — {format(new Date(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
+            Vistoria — {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
             <Badge variant={isCompleted ? 'secondary' : 'default'}>
               {isCompleted ? 'Concluída' : 'Em andamento'}
             </Badge>
