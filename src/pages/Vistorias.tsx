@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, ClipboardCheck, AlertTriangle, Search, Filter } from 'lucide-react';
+import { Plus, ClipboardCheck, AlertTriangle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +28,7 @@ export default function Vistorias() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [selectedNc, setSelectedNc] = useState<NonConformity | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   const openNcs = useMemo(() => nonConformities.filter(nc => nc.status !== 'closed'), [nonConformities]);
 
@@ -54,38 +55,50 @@ export default function Vistorias() {
         maxWidth="full"
         showLogo={false}
       >
-        <Button onClick={() => setShowCreateDialog(true)} size="sm" className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nova Vistoria
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden h-10 w-10"
+            onClick={() => setShowSearch(prev => !prev)}
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => setShowCreateDialog(true)} size="sm" className="gap-2 h-10 min-w-[44px]">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nova Vistoria</span>
+          </Button>
+        </div>
       </PageHeader>
 
-      <div className="py-6">
+      <div className="py-4 md:py-6">
         <PageContainer maxWidth="full">
           <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <TabsList>
-                <TabsTrigger value="vistorias" className="gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <TabsList className="w-full sm:w-auto overflow-x-auto">
+                <TabsTrigger value="vistorias" className="gap-1.5 min-h-[44px] flex-1 sm:flex-none">
                   <ClipboardCheck className="h-4 w-4" />
-                  Vistorias
+                  <span className="hidden xs:inline">Vistorias</span>
                   <Badge variant="secondary" className="ml-1">{inspections.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="ncs" className="gap-2">
+                <TabsTrigger value="ncs" className="gap-1.5 min-h-[44px] flex-1 sm:flex-none">
                   <AlertTriangle className="h-4 w-4" />
-                  Não Conformidades
+                  <span className="truncate">NCs</span>
                   {openNcs.length > 0 && (
                     <Badge variant="destructive" className="ml-1">{openNcs.length}</Badge>
                   )}
                 </TabsTrigger>
               </TabsList>
 
-              <div className="relative w-64">
+              {/* Desktop search always visible, mobile toggle */}
+              <div className={`relative w-full sm:w-64 ${showSearch ? 'block' : 'hidden md:block'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10"
+                  autoFocus={showSearch}
                 />
               </div>
             </div>
@@ -125,7 +138,6 @@ export default function Vistorias() {
           onOpenChange={(open) => !open && setSelectedInspection(null)}
           onCreateNc={(item) => {
             setSelectedInspection(null);
-            // will be handled by NcDetailDialog in create mode
           }}
         />
       )}

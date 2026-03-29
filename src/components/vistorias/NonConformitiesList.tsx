@@ -17,8 +17,8 @@ const severityConfig: Record<NcSeverity, { label: string; className: string }> =
 const statusConfig: Record<NcStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   open: { label: 'Aberta', variant: 'destructive' },
   in_treatment: { label: 'Em tratamento', variant: 'default' },
-  pending_verification: { label: 'Aguardando verificação', variant: 'outline' },
-  pending_approval: { label: 'Aguardando aprovação', variant: 'outline' },
+  pending_verification: { label: 'Verificação', variant: 'outline' },
+  pending_approval: { label: 'Aprovação', variant: 'outline' },
   closed: { label: 'Encerrada', variant: 'secondary' },
   reopened: { label: 'Reaberta', variant: 'destructive' },
 };
@@ -59,12 +59,12 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect }: 
         return (
           <Card
             key={nc.id}
-            className="cursor-pointer hover:border-primary/50 transition-colors"
+            className="cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98]"
             onClick={() => onSelect(nc)}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start sm:items-center justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
                   <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
                     nc.severity === 'critical' || nc.severity === 'high'
                       ? 'bg-destructive/10'
@@ -77,30 +77,30 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect }: 
                     }`} />
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium truncate">{nc.title}</span>
-                      <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${sev.className}`}>
+                    <p className="font-medium text-sm sm:text-base truncate">{nc.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className={`text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded ${sev.className}`}>
                         {sev.label}
                       </span>
-                      <Badge variant={st.variant}>{st.label}</Badge>
+                      <Badge variant={st.variant} className="text-[10px] sm:text-xs">{st.label}</Badge>
                       {isOverdue && (
-                        <Badge variant="destructive" className="gap-1">
+                        <Badge variant="destructive" className="gap-1 text-[10px] sm:text-xs">
                           <Clock className="h-3 w-3" />
                           Atrasada
                         </Badge>
                       )}
                     </div>
                     {nc.description && (
-                      <p className="text-sm text-muted-foreground truncate mt-0.5">
+                      <p className="text-xs text-muted-foreground truncate mt-1 hidden sm:block">
                         {nc.description}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0 mt-1 sm:mt-0">
                   {nc.deadline && (
-                    <span className="text-xs text-muted-foreground">
-                      Prazo: {format(parseISO(nc.deadline), "dd/MM", { locale: ptBR })}
+                    <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">
+                      {format(parseISO(nc.deadline), "dd/MM", { locale: ptBR })}
                     </span>
                   )}
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />

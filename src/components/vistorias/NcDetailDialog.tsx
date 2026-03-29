@@ -31,8 +31,8 @@ const severityConfig: Record<string, { label: string; className: string }> = {
 const statusLabels: Record<NcStatus, string> = {
   open: 'Aberta',
   in_treatment: 'Em tratamento',
-  pending_verification: 'Aguardando verificação',
-  pending_approval: 'Aguardando aprovação',
+  pending_verification: 'Verificação',
+  pending_approval: 'Aprovação',
   closed: 'Encerrada',
   reopened: 'Reaberta',
 };
@@ -72,11 +72,11 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85dvh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[100dvh] sm:max-h-[85dvh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
-            {nc.title}
+          <DialogTitle className="flex items-start gap-2 text-base sm:text-lg">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <span className="break-words">{nc.title}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -89,7 +89,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
             {statusLabels[nc.status]}
           </Badge>
           {nc.deadline && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground flex items-center">
               Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
             </span>
           )}
@@ -97,28 +97,28 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
         {nc.description && (
           <div className="bg-muted/50 rounded-lg p-3">
-            <p className="text-sm">{nc.description}</p>
+            <p className="text-sm break-words">{nc.description}</p>
           </div>
         )}
 
         {nc.corrective_action && (
           <div className="space-y-1">
             <Label className="text-xs font-semibold uppercase text-muted-foreground">Ação corretiva</Label>
-            <p className="text-sm bg-muted/50 rounded-lg p-3">{nc.corrective_action}</p>
+            <p className="text-sm bg-muted/50 rounded-lg p-3 break-words">{nc.corrective_action}</p>
           </div>
         )}
 
         {nc.resolution_notes && (
           <div className="space-y-1">
             <Label className="text-xs font-semibold uppercase text-muted-foreground">Notas de resolução</Label>
-            <p className="text-sm bg-muted/50 rounded-lg p-3">{nc.resolution_notes}</p>
+            <p className="text-sm bg-muted/50 rounded-lg p-3 break-words">{nc.resolution_notes}</p>
           </div>
         )}
 
         {nc.rejection_reason && (
           <div className="space-y-1">
             <Label className="text-xs font-semibold uppercase text-destructive">Motivo da rejeição</Label>
-            <p className="text-sm bg-destructive/5 rounded-lg p-3 border border-destructive/20">{nc.rejection_reason}</p>
+            <p className="text-sm bg-destructive/5 rounded-lg p-3 border border-destructive/20 break-words">{nc.rejection_reason}</p>
           </div>
         )}
 
@@ -131,15 +131,16 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
             {/* open → in_treatment */}
             {(nc.status === 'open' || nc.status === 'reopened') && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Textarea
                   placeholder="Descreva a ação corretiva a ser tomada..."
                   value={correctiveAction}
                   onChange={(e) => setCorrectiveAction(e.target.value)}
-                  rows={2}
+                  rows={3}
+                  className="min-h-[44px]"
                 />
                 <Button
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto h-11 sm:h-10"
                   onClick={() => handleTransition('in_treatment')}
                   disabled={!correctiveAction.trim() || updateStatus.isPending}
                 >
@@ -151,15 +152,16 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
             {/* in_treatment → pending_verification */}
             {nc.status === 'in_treatment' && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Textarea
                   placeholder="Descreva o que foi feito para resolver..."
                   value={actionNotes}
                   onChange={(e) => setActionNotes(e.target.value)}
-                  rows={2}
+                  rows={3}
+                  className="min-h-[44px]"
                 />
                 <Button
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto h-11 sm:h-10"
                   onClick={() => handleTransition('pending_verification')}
                   disabled={!actionNotes.trim() || updateStatus.isPending}
                 >
@@ -171,16 +173,17 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
             {/* pending_verification → pending_approval (any staff) */}
             {nc.status === 'pending_verification' && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Textarea
                   placeholder="Notas da verificação..."
                   value={actionNotes}
                   onChange={(e) => setActionNotes(e.target.value)}
-                  rows={2}
+                  rows={3}
+                  className="min-h-[44px]"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
-                    className="gap-2"
+                    className="gap-2 h-11 sm:h-10 w-full sm:w-auto"
                     onClick={() => handleTransition('pending_approval')}
                     disabled={updateStatus.isPending}
                   >
@@ -189,7 +192,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                   </Button>
                   <Button
                     variant="destructive"
-                    className="gap-2"
+                    className="gap-2 h-11 sm:h-10 w-full sm:w-auto"
                     onClick={() => {
                       updateStatus.mutate({
                         nc,
@@ -214,18 +217,19 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
             {/* pending_approval → closed (admin/manager only) */}
             {nc.status === 'pending_approval' && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {isAdminOrManager ? (
                   <>
                     <Textarea
                       placeholder="Notas finais (opcional)..."
                       value={actionNotes}
                       onChange={(e) => setActionNotes(e.target.value)}
-                      rows={2}
+                      rows={3}
+                      className="min-h-[44px]"
                     />
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
-                        className="gap-2"
+                        className="gap-2 h-11 sm:h-10 w-full sm:w-auto"
                         onClick={() => handleTransition('closed')}
                         disabled={updateStatus.isPending}
                       >
@@ -234,7 +238,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                       </Button>
                       <Button
                         variant="destructive"
-                        className="gap-2"
+                        className="gap-2 h-11 sm:h-10 w-full sm:w-auto"
                         onClick={() => {
                           if (!actionNotes.trim()) return;
                           updateStatus.mutate({
@@ -277,14 +281,14 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
               </Label>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {history.map((entry) => (
-                  <div key={entry.id} className="flex items-start gap-2 text-xs">
+                  <div key={entry.id} className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-2 text-xs">
                     <span className="text-muted-foreground shrink-0">
                       {format(new Date(entry.created_at), "dd/MM HH:mm", { locale: ptBR })}
                     </span>
                     <div>
                       <span className="font-medium">{entry.action}</span>
                       {entry.notes && (
-                        <p className="text-muted-foreground mt-0.5">{entry.notes}</p>
+                        <p className="text-muted-foreground mt-0.5 break-words">{entry.notes}</p>
                       )}
                     </div>
                   </div>
