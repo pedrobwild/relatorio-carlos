@@ -18,6 +18,7 @@ export const navigationLabels: NavLabels = {
     documentos:     { staff: "Documentos",       client: "Documentos" },
     cronograma:     { staff: "Cronograma",       client: "Evolução da Obra" },
     compras:        { staff: "Compras",          client: "Compras" },
+    vistorias:      { staff: "Vistorias & NC",    client: "Vistorias" },
     pendencias:     { staff: "Pendências",       client: "O que preciso fazer" },
     financeiro:     { staff: "Financeiro",        client: "Pagamentos e Custos" },
     formalizacoes:  { staff: "Formalizações",     client: "Aprovações" },
@@ -33,6 +34,7 @@ export const navigationLabels: NavLabels = {
     formalizacoes:  { staff: "Formalizações",     client: "Aprovações" },
     cronograma:     { staff: "Cronograma",        client: "Evolução da Obra" },
     compras:        { staff: "Compras",           client: "Compras" },
+    vistorias:      { staff: "Vistorias & NC",     client: "Vistorias" },
     jornada:        { staff: "Jornada",           client: "Minha Jornada" },
   },
 } as const;

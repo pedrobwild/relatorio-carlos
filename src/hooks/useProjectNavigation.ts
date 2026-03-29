@@ -23,6 +23,7 @@ export function useProjectNavigation() {
       formalizacoesNova: getProjectPath('/formalizacoes/nova'),
       cronograma: getProjectPath('/cronograma'),
       compras: getProjectPath('/compras'),
+      vistorias: getProjectPath('/vistorias'),
       jornada: getProjectPath('/jornada'),
     }
   };
