@@ -116,7 +116,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
     createInspection.mutate(
       {
         project_id: projectId,
-        activity_id: activityId || undefined,
+        activity_id: activityId && activityId !== 'none' ? activityId : undefined,
         inspection_date: inspectionDate,
         notes: notes || undefined,
         items: items.map((item, i) => ({

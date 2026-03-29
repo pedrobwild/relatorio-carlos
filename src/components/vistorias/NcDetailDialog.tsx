@@ -194,8 +194,17 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                     variant="destructive"
                     className="gap-2"
                     onClick={() => {
-                      setRejectionReason(actionNotes);
-                      handleTransition('reopened');
+                      updateStatus.mutate({
+                        nc,
+                        new_status: 'reopened',
+                        notes: actionNotes || undefined,
+                        rejection_reason: actionNotes,
+                      }, {
+                        onSuccess: () => {
+                          setActionNotes('');
+                          onOpenChange(false);
+                        },
+                      });
                     }}
                     disabled={!actionNotes.trim() || updateStatus.isPending}
                   >
@@ -230,11 +239,18 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                         variant="destructive"
                         className="gap-2"
                         onClick={() => {
-                          if (!actionNotes.trim()) {
-                            return;
-                          }
-                          setRejectionReason(actionNotes);
-                          handleTransition('reopened');
+                          if (!actionNotes.trim()) return;
+                          updateStatus.mutate({
+                            nc,
+                            new_status: 'reopened',
+                            notes: actionNotes,
+                            rejection_reason: actionNotes,
+                          }, {
+                            onSuccess: () => {
+                              setActionNotes('');
+                              onOpenChange(false);
+                            },
+                          });
                         }}
                         disabled={!actionNotes.trim() || updateStatus.isPending}
                       >

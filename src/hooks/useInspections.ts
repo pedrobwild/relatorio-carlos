@@ -49,7 +49,7 @@ export interface NonConformity {
   responsible_user_id: string | null;
   deadline: string | null;
   corrective_action: string | null;
-  evidence_photo_paths: string[];
+  evidence_photo_paths: string[] | null;
   resolution_notes: string | null;
   resolved_at: string | null;
   resolved_by: string | null;
