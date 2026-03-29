@@ -132,7 +132,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85dvh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[100dvh] sm:max-h-[85dvh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Nova Vistoria</DialogTitle>
         </DialogHeader>
@@ -145,6 +145,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               type="date"
               value={inspectionDate}
               onChange={(e) => setInspectionDate(e.target.value)}
+              className="h-11 sm:h-10"
             />
           </div>
 
@@ -152,7 +153,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
           <div className="space-y-2">
             <Label>Atividade vinculada (opcional)</Label>
             <Select value={activityId} onValueChange={setActivityId}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Selecione uma atividade" />
               </SelectTrigger>
               <SelectContent>
@@ -172,6 +173,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
+              className="min-h-[44px]"
             />
           </div>
 
@@ -180,30 +182,33 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
             <Label>Itens do checklist</Label>
 
             {/* Category presets */}
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <Select value={selectedCategory} onValueChange={handleAddCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Adicionar checklist padrão..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(DEFAULT_ITEMS).map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <Select value={selectedCategory} onValueChange={handleAddCategory}>
+              <SelectTrigger className="h-11 sm:h-10">
+                <SelectValue placeholder="Adicionar checklist padrão..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(DEFAULT_ITEMS).map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Custom item */}
             <div className="flex gap-2">
               <Input
-                placeholder="Adicionar item personalizado..."
+                placeholder="Item personalizado..."
                 value={newItemText}
                 onChange={(e) => setNewItemText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddCustomItem()}
+                className="h-11 sm:h-10"
               />
-              <Button variant="outline" size="icon" onClick={handleAddCustomItem} disabled={!newItemText.trim()}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleAddCustomItem}
+                disabled={!newItemText.trim()}
+                className="h-11 w-11 sm:h-10 sm:w-10 shrink-0"
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -212,12 +217,12 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
             {items.length > 0 && (
               <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
                 {items.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between px-3 py-2 text-sm">
-                    <span className="truncate">{item.description}</span>
+                  <div key={i} className="flex items-center justify-between px-3 py-2.5 text-sm gap-2">
+                    <span className="truncate text-xs sm:text-sm">{item.description}</span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 shrink-0"
+                      className="h-9 w-9 sm:h-7 sm:w-7 shrink-0"
                       onClick={() => handleRemoveItem(i)}
                     >
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -233,13 +238,14 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 sm:h-10 w-full sm:w-auto">
             Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={items.length === 0 || createInspection.isPending}
+            className="h-11 sm:h-10 w-full sm:w-auto"
           >
             {createInspection.isPending ? 'Criando...' : 'Criar Vistoria'}
           </Button>
