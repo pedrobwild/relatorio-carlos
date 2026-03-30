@@ -43,6 +43,16 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
     return result;
   }, [inspections, searchQuery, filterStatus]);
 
+  const ncCountByInspection = useMemo(() => {
+    const map: Record<string, number> = {};
+    nonConformities.forEach(nc => {
+      if (nc.inspection_id) {
+        map[nc.inspection_id] = (map[nc.inspection_id] || 0) + 1;
+      }
+    });
+    return map;
+  }, [nonConformities]);
+
   return (
     <div className="space-y-3">
       {/* Status filter chips */}
