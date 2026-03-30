@@ -15,6 +15,7 @@ import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList';
 import { NcSummaryCards, type NcFilter } from '@/components/vistorias/NcSummaryCards';
 import { NcTimelineChart } from '@/components/vistorias/NcTimelineChart';
+import { NcConsolidatedReport } from '@/components/vistorias/NcConsolidatedReport';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
@@ -135,6 +136,7 @@ export default function Vistorias() {
                 onFilterChange={setNcSummaryFilter}
               />
               <NcTimelineChart nonConformities={nonConformities} />
+              <NcConsolidatedReport nonConformities={nonConformities} />
               {can('ncs:create') && (
                 <div className="flex justify-end">
                   <Button
