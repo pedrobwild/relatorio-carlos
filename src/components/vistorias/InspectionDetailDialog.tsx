@@ -22,6 +22,7 @@ import {
   type InspectionItemResult,
 } from '@/hooks/useInspections';
 import { EvidenceUpload } from './EvidenceUpload';
+import { InspectionPdfExport } from './InspectionPdfExport';
 import { useCan } from '@/hooks/useCan';
 import { toast } from 'sonner';
 
@@ -277,20 +278,29 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
           })}
         </div>
 
-        {isEditable && (
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          {isCompleted && (
+            <InspectionPdfExport inspection={inspection} items={items} />
+          )}
+          {isEditable ? (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 sm:h-10 w-full sm:w-auto">
+                Fechar
+              </Button>
+              <Button
+                onClick={handleComplete}
+                disabled={pendingCount > 0 || hasRejectedWithoutPhotos || completeInspection.isPending}
+                className="h-11 sm:h-10 w-full sm:w-auto"
+              >
+                {completeInspection.isPending ? 'Finalizando...' : 'Finalizar Vistoria'}
+              </Button>
+            </>
+          ) : (
             <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 sm:h-10 w-full sm:w-auto">
               Fechar
             </Button>
-            <Button
-              onClick={handleComplete}
-              disabled={pendingCount > 0 || hasRejectedWithoutPhotos || completeInspection.isPending}
-              className="h-11 sm:h-10 w-full sm:w-auto"
-            >
-              {completeInspection.isPending ? 'Finalizando...' : 'Finalizar Vistoria'}
-            </Button>
-          </DialogFooter>
-        )}
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -58,13 +58,13 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
     queryKey: ['inspection-templates'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('inspection_templates' as any)
+        .from('inspection_templates')
         .select('*')
         .eq('is_active', true)
         .order('category')
         .order('sort_order');
       if (error) throw error;
-      return ((data as any[]) || []).reduce((acc: Record<string, string[]>, item: any) => {
+      return (data ?? []).reduce((acc: Record<string, string[]>, item) => {
         if (!acc[item.category]) acc[item.category] = [];
         acc[item.category].push(item.description);
         return acc;
