@@ -123,6 +123,7 @@ export default function Vistorias() {
             <TabsContent value="vistorias">
               <InspectionsList
                 inspections={inspections}
+                nonConformities={nonConformities}
                 searchQuery={searchQuery}
                 onSelect={setSelectedInspection}
                 onDuplicate={(insp) => setDuplicateSourceId(insp.id)}
