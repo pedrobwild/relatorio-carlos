@@ -1977,6 +1977,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          category: string | null
           corrective_action: string | null
           created_at: string
           created_by: string
@@ -1993,6 +1994,7 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           responsible_user_id: string | null
+          root_cause: string | null
           severity: Database["public"]["Enums"]["nc_severity"]
           status: Database["public"]["Enums"]["nc_status"]
           title: string
@@ -2003,6 +2005,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          category?: string | null
           corrective_action?: string | null
           created_at?: string
           created_by: string
@@ -2019,6 +2022,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           responsible_user_id?: string | null
+          root_cause?: string | null
           severity?: Database["public"]["Enums"]["nc_severity"]
           status?: Database["public"]["Enums"]["nc_status"]
           title: string
@@ -2029,6 +2033,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          category?: string | null
           corrective_action?: string | null
           created_at?: string
           created_by?: string
@@ -2045,6 +2050,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           responsible_user_id?: string | null
+          root_cause?: string | null
           severity?: Database["public"]["Enums"]["nc_severity"]
           status?: Database["public"]["Enums"]["nc_status"]
           title?: string
