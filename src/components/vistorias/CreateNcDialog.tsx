@@ -29,6 +29,7 @@ import {
 import { useCreateNonConformity, type NcSeverity } from '@/hooks/useNonConformities';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn } from '@/lib/utils';
+import { NC_CATEGORIES } from './ncConstants';
 
 const severityOptions: { value: NcSeverity; label: string }[] = [
   { value: 'low', label: 'Baixa' },
@@ -61,15 +62,16 @@ export function CreateNcDialog({
 
   const [title, setTitle] = useState(prefillTitle || '');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<string>('');
   const [severity, setSeverity] = useState<NcSeverity>('high');
   const [responsibleUserId, setResponsibleUserId] = useState<string>('');
   const [deadline, setDeadline] = useState<Date | undefined>();
 
-  // Reset form when dialog reopens with different context
   useEffect(() => {
     if (open) {
       setTitle(prefillTitle || '');
       setDescription('');
+      setCategory('');
       setSeverity('high');
       setResponsibleUserId('');
       setDeadline(undefined);
@@ -77,7 +79,7 @@ export function CreateNcDialog({
   }, [open, prefillTitle]);
 
   const handleSubmit = () => {
-    if (!title.trim()) return;
+    if (!title.trim() || !category) return;
 
     createNc.mutate(
       {
@@ -87,6 +89,7 @@ export function CreateNcDialog({
         title: title.trim(),
         description: description.trim() || undefined,
         severity,
+        category,
         responsible_user_id: responsibleUserId || undefined,
         deadline: deadline ? format(deadline, 'yyyy-MM-dd') : undefined,
       },
@@ -99,7 +102,6 @@ export function CreateNcDialog({
     );
   };
 
-  // Filter to staff members only (not customers/viewers)
   const staffMembers = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
 
   return (
@@ -137,6 +139,25 @@ export function CreateNcDialog({
               rows={3}
               className="min-h-[44px]"
             />
+          </div>
+
+          {/* Categoria */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">
+              Categoria <span className="text-destructive">*</span>
+            </Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder="Selecionar categoria..." />
+              </SelectTrigger>
+              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                {NC_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat} className="min-h-[44px]">
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Severidade */}
@@ -215,7 +236,7 @@ export function CreateNcDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!title.trim() || createNc.isPending}
+            disabled={!title.trim() || !category || createNc.isPending}
             className="h-11 sm:h-10 w-full sm:w-auto"
           >
             {createNc.isPending ? 'Criando...' : 'Registrar NC'}
