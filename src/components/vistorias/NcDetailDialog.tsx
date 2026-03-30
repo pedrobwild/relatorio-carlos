@@ -70,13 +70,37 @@ interface Props {
 
 export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const updateStatus = useUpdateNcStatus();
+  const updateNc = useUpdateNonConformity();
   const { data: history = [] } = useNcHistory(nc.id);
   const { can } = useCan();
   const canApproveNc = can('ncs:approve');
+  const canEdit = can('ncs:treat');
+
+  const isEditable = canEdit && (nc.status === 'open' || nc.status === 'reopened');
+
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(nc.title);
+  const [editDescription, setEditDescription] = useState(nc.description || '');
+  const [editSeverity, setEditSeverity] = useState<NcSeverity>(nc.severity);
+  const [editDeadline, setEditDeadline] = useState<Date | undefined>(nc.deadline ? parseISO(nc.deadline) : undefined);
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
   const [evidencePhotos, setEvidencePhotos] = useState<string[]>(nc.evidence_photo_paths ?? []);
+
+  const handleSaveEdit = () => {
+    if (!editTitle.trim()) return;
+    updateNc.mutate({
+      id: nc.id,
+      project_id: nc.project_id,
+      title: editTitle.trim(),
+      description: editDescription.trim() || null,
+      severity: editSeverity,
+      deadline: editDeadline ? format(editDeadline, 'yyyy-MM-dd') : null,
+    }, {
+      onSuccess: () => setEditing(false),
+    });
+  };
 
   const handleTransition = (newStatus: NcStatus) => {
     updateStatus.mutate({
