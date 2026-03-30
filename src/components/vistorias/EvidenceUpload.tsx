@@ -32,7 +32,6 @@ export function EvidenceUpload({
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const loadSignedUrl = async (path: string) => {
-    if (signedUrls[path]) return;
     const { data } = await supabase.storage
       .from('inspection-evidences')
       .createSignedUrl(path, 3600);
@@ -42,7 +41,23 @@ export function EvidenceUpload({
   };
 
   useEffect(() => {
-    value.forEach(loadSignedUrl);
+    // Load signed URLs for any paths not yet cached
+    value.forEach(path => {
+      setSignedUrls(prev => {
+        if (!prev[path]) {
+          loadSignedUrl(path);
+        }
+        return prev;
+      });
+    });
+    // Clean up stale entries
+    setSignedUrls(prev => {
+      const pathSet = new Set(value);
+      const cleaned = Object.fromEntries(
+        Object.entries(prev).filter(([k]) => pathSet.has(k))
+      );
+      return Object.keys(cleaned).length !== Object.keys(prev).length ? cleaned : prev;
+    });
   }, [value]);
 
   const handleUpload = async (files: FileList | null) => {

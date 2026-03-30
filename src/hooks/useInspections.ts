@@ -108,6 +108,7 @@ export function useCompleteInspection() {
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['inspections', vars.project_id] });
       queryClient.invalidateQueries({ queryKey: ['inspection', vars.id] });
+      queryClient.invalidateQueries({ queryKey: ['inspection-items', vars.id] });
       toast.success('Vistoria finalizada');
     },
   });
