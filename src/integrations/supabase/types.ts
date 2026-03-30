@@ -309,6 +309,33 @@ export type Database = {
         }
         Relationships: []
       }
+      corrective_action_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          template_text: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          template_text: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          template_text?: string
+          title?: string
+        }
+        Relationships: []
+      }
       cronogramas: {
         Row: {
           created_at: string
