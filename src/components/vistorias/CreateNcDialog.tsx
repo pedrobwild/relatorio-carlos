@@ -137,7 +137,7 @@ export function CreateNcDialog({
               <SelectTrigger className="h-11">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                 {severityOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value} className="min-h-[44px]">
                     {opt.label}
@@ -154,7 +154,7 @@ export function CreateNcDialog({
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Selecionar responsável..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                 {staffMembers.map((m) => (
                   <SelectItem key={m.user_id} value={m.user_id} className="min-h-[44px]">
                     {m.user_name || m.user_email || m.user_id.slice(0, 8)}
