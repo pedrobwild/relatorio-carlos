@@ -3942,6 +3942,17 @@ export type Database = {
         Args: { p_formalization_id: string }
         Returns: string
       }
+      create_inspection_with_items: {
+        Args: {
+          p_activity_id?: string
+          p_inspection_date?: string
+          p_inspector_id?: string
+          p_items?: Json
+          p_notes?: string
+          p_project_id: string
+        }
+        Returns: string
+      }
       create_notification: {
         Args: {
           _action_url?: string
