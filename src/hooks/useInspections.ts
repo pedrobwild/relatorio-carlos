@@ -148,7 +148,7 @@ export function useCreateInspection() {
         p_activity_id: params.activity_id || undefined,
         p_inspection_date: params.inspection_date || new Date().toISOString().split('T')[0],
         p_notes: params.notes || undefined,
-        p_items: params.items as unknown as Record<string, unknown>[],
+        p_items: JSON.parse(JSON.stringify(params.items)),
       });
 
       if (error) throw error;
