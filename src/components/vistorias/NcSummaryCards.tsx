@@ -128,6 +128,11 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">
                   {card.label}
                 </p>
+                {subtitle && (
+                  <p className="text-[9px] text-muted-foreground/70 truncate">
+                    {subtitle}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
