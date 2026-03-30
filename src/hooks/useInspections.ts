@@ -143,37 +143,17 @@ export function useCreateInspection() {
     }) => {
       if (!user) throw new Error('Não autenticado');
 
-      // Create inspection
-      const { data: inspection, error: insError } = await supabase
-        .from('inspections')
-        .insert({
-          project_id: params.project_id,
-          activity_id: params.activity_id || null,
-          inspector_id: user.id,
-          inspection_date: params.inspection_date || new Date().toISOString().split('T')[0],
-          notes: params.notes || null,
-          status: 'draft' as InspectionStatus,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('create_inspection_with_items', {
+        p_project_id: params.project_id,
+        p_activity_id: params.activity_id || undefined,
+        p_inspection_date: params.inspection_date || new Date().toISOString().split('T')[0],
+        p_notes: params.notes || undefined,
+        p_items: JSON.parse(JSON.stringify(params.items)),
+      });
 
-      if (insError) throw insError;
+      if (error) throw error;
 
-      // Create items
-      if (params.items.length > 0) {
-        const { error: itemsError } = await supabase
-          .from('inspection_items')
-          .insert(
-            params.items.map((item) => ({
-              inspection_id: inspection.id,
-              description: item.description,
-              sort_order: item.sort_order,
-            }))
-          );
-        if (itemsError) throw itemsError;
-      }
-
-      return inspection as Inspection;
+      return { id: data, project_id: params.project_id } as Inspection;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['inspections', data.project_id] });
