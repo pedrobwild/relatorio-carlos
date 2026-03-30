@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, ClipboardCheck, AlertTriangle, Search } from 'lucide-react';
+import { Plus, ClipboardCheck, AlertTriangle, Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +21,7 @@ import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspe
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
+import { CorrectiveActionTemplatesAdmin } from '@/components/vistorias/CorrectiveActionTemplatesAdmin';
 import type { Inspection, InspectionItem } from '@/hooks/useInspections';
 import type { NonConformity } from '@/hooks/useNonConformities';
 import { useCan } from '@/hooks/useCan';
@@ -106,6 +107,12 @@ export default function Vistorias() {
                     <Badge variant="destructive" className="ml-1">{openNcs.length}</Badge>
                   )}
                 </TabsTrigger>
+                {can('admin:manage_system') && (
+                  <TabsTrigger value="config" className="gap-1.5 min-h-[44px] flex-1 sm:flex-none">
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden xs:inline">Config</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <div className={`relative w-full sm:w-64 ${showSearch ? 'block' : 'hidden md:block'}`}>
