@@ -130,13 +130,22 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       });
     }
 
+    // Save evidence photos to correct fields before transitioning
+    const allPhotos = [...photosBefore, ...photosAfter];
+    updateEvidence.mutate({
+      id: nc.id,
+      project_id: nc.project_id,
+      evidence_photos_before: photosBefore,
+      evidence_photos_after: photosAfter,
+    });
+
     updateStatus.mutate({
       nc,
       new_status: newStatus,
       notes: actionNotes || undefined,
       corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
       resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
-      evidence_photo_paths: evidencePhotos.length > 0 ? evidencePhotos : undefined,
+      evidence_photo_paths: allPhotos.length > 0 ? allPhotos : undefined,
     }, {
       onSuccess: () => {
         setActionNotes('');
