@@ -50,18 +50,18 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
     }));
 
     const byCategory = NC_CATEGORIES.map(cat => {
-      const catTotal = nonConformities.filter(nc => (nc as any).category === cat).length;
-      const openCount = open.filter(nc => (nc as any).category === cat).length;
+      const catTotal = nonConformities.filter(nc => nc.category === cat).length;
+      const openCount = open.filter(nc => nc.category === cat).length;
       return { category: cat, total: catTotal, open: openCount };
     }).filter(c => c.total > 0);
 
-    const uncategorized = nonConformities.filter(nc => !(nc as any).category).length;
+    const uncategorized = nonConformities.filter(nc => !nc.category).length;
 
     // Financial totals
-    const totalEstimated = nonConformities.reduce((sum, nc) => sum + ((nc as any).estimated_cost ?? 0), 0);
-    const totalActual = nonConformities.reduce((sum, nc) => sum + ((nc as any).actual_cost ?? 0), 0);
-    const openEstimated = open.reduce((sum, nc) => sum + ((nc as any).estimated_cost ?? 0), 0);
-    const closedActual = closed.reduce((sum, nc) => sum + ((nc as any).actual_cost ?? 0), 0);
+    const totalEstimated = nonConformities.reduce((sum, nc) => sum + (nc.estimated_cost ?? 0), 0);
+    const totalActual = nonConformities.reduce((sum, nc) => sum + (nc.actual_cost ?? 0), 0);
+    const openEstimated = open.reduce((sum, nc) => sum + (nc.estimated_cost ?? 0), 0);
+    const closedActual = closed.reduce((sum, nc) => sum + (nc.actual_cost ?? 0), 0);
 
     return { total, openCount: open.length, closedCount: closed.length, overdueCount: overdue.length, reincidentCount: reincident.length, avgResolution, bySeverity, byStatus, byCategory, uncategorized, totalEstimated, totalActual, openEstimated, closedActual };
   }, [nonConformities]);
@@ -70,15 +70,15 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
     const headers = ['Título', 'Categoria', 'Severidade', 'Status', 'Responsável', 'Prazo', 'Criada em', 'Causa Raiz', 'Custo Est.', 'Custo Real', 'Reaberturas'];
     const rows = nonConformities.map(nc => [
       nc.title,
-      (nc as any).category || '-',
+      nc.category || '-',
       severityLabels[nc.severity],
       statusLabels[nc.status],
       nc.responsible_user_name || '-',
       nc.deadline ? format(parseISO(nc.deadline), 'dd/MM/yyyy') : '-',
       format(parseISO(nc.created_at), 'dd/MM/yyyy'),
-      (nc as any).root_cause || '-',
-      (nc as any).estimated_cost != null ? formatBRL((nc as any).estimated_cost) : '-',
-      (nc as any).actual_cost != null ? formatBRL((nc as any).actual_cost) : '-',
+      nc.root_cause || '-',
+      nc.estimated_cost != null ? formatBRL(nc.estimated_cost) : '-',
+      nc.actual_cost != null ? formatBRL(nc.actual_cost) : '-',
       nc.reopen_count.toString(),
     ]);
     // Add totals row
