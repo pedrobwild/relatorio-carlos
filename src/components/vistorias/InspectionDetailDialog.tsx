@@ -16,7 +16,6 @@ import {
   useInspectionItems,
   useUpdateInspectionItem,
   useCompleteInspection,
-  useCreateNonConformity,
   type Inspection,
   type InspectionItem,
   type InspectionItemResult,
@@ -43,7 +42,6 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   const { data: items = [], isLoading } = useInspectionItems(inspection.id);
   const updateItem = useUpdateInspectionItem();
   const completeInspection = useCompleteInspection();
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [itemPhotos, setItemPhotos] = useState<Record<string, string[]>>({});
 
@@ -117,14 +115,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   };
 
   const handleCreateNcFromItem = (item: InspectionItem) => {
-    createNc.mutate({
-      project_id: projectId,
-      inspection_id: inspection.id,
-      inspection_item_id: item.id,
-      title: `NC: ${item.description}`,
-      description: item.notes || undefined,
-      severity: 'medium',
-    });
+    onCreateNc?.(item);
   };
 
   const approvedCount = items.filter(i => i.result === 'approved').length;
