@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowLeft, Users, Building2, Shield, Settings, History, Activity, LayoutTemplate, Sparkles, BookOpen, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UsersTab } from '@/components/admin/UsersTab';
 import { ObrasTab } from '@/components/admin/ObrasTab';
 import { TemplatesTab } from '@/components/admin/TemplatesTab';
 import { FilesCleanupCard } from '@/components/admin/FilesCleanupCard';
+import { InspectionTemplatesTab } from '@/components/admin/InspectionTemplatesTab';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
 
 export default function Admin() {
@@ -46,22 +47,26 @@ export default function Admin() {
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="usuarios" className="gap-2">
               <Users className="h-4 w-4" />
-              Usuários
+              <span className="hidden sm:inline">Usuários</span>
             </TabsTrigger>
             <TabsTrigger value="obras" className="gap-2">
               <Building2 className="h-4 w-4" />
-              Obras
+              <span className="hidden sm:inline">Obras</span>
             </TabsTrigger>
             <TabsTrigger value="templates" className="gap-2">
               <LayoutTemplate className="h-4 w-4" />
-              Templates
+              <span className="hidden sm:inline">Templates</span>
+            </TabsTrigger>
+            <TabsTrigger value="checklists" className="gap-2">
+              <ClipboardCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Checklists</span>
             </TabsTrigger>
             <TabsTrigger value="sistema" className="gap-2">
               <Settings className="h-4 w-4" />
-              Sistema
+              <span className="hidden sm:inline">Sistema</span>
             </TabsTrigger>
           </TabsList>
 
@@ -75,6 +80,10 @@ export default function Admin() {
 
           <TabsContent value="templates">
             <TemplatesTab />
+          </TabsContent>
+
+          <TabsContent value="checklists">
+            <InspectionTemplatesTab />
           </TabsContent>
 
           <TabsContent value="sistema">
