@@ -59,6 +59,10 @@ export function useCreateInspection() {
       inspection_date?: string;
       notes?: string;
       items: { description: string; sort_order: number }[];
+      inspection_type?: string;
+      inspector_user_id?: string;
+      client_present?: boolean;
+      client_name?: string;
     }) => {
       if (!user) throw new Error('Não autenticado');
       const id = await createInspectionWithItems(params);
