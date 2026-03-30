@@ -5,6 +5,16 @@ import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { Inspection, InspectionItem } from '@/hooks/useInspections';
+import { getInspectionTypeConfig } from './inspectionConstants';
+
+const typeTitles: Record<string, string> = {
+  rotina: 'Relatório de Vistoria de Rotina',
+  recebimento_etapa: 'Relatório de Vistoria de Recebimento de Etapa',
+  entrega_cliente: 'Relatório de Vistoria de Entrega ao Cliente',
+  seguranca: 'Relatório de Vistoria de Segurança do Trabalho',
+  pos_chuva: 'Relatório de Vistoria Pós-Chuva / Emergência',
+  garantia: 'Relatório de Vistoria de Garantia',
+};
 
 interface Props {
   inspection: Inspection;
@@ -18,6 +28,13 @@ export function InspectionPdfExport({ inspection, items }: Props) {
     setExporting(true);
     try {
       const html2pdf = (await import('html2pdf.js')).default;
+
+      const inspectionType = (inspection as any).inspection_type || 'rotina';
+      const typeConfig = getInspectionTypeConfig(inspectionType);
+      const title = typeTitles[inspectionType] || 'Relatório de Vistoria';
+      const inspectorName = (inspection as any).inspector_user_name || '';
+      const clientPresent = (inspection as any).client_present || false;
+      const clientName = (inspection as any).client_name || '';
 
       const approvedCount = items.filter(i => i.result === 'approved').length;
       const rejectedCount = items.filter(i => i.result === 'rejected').length;
@@ -34,10 +51,27 @@ export function InspectionPdfExport({ inspection, items }: Props) {
       const date = format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR });
       const statusLabel = inspection.status === 'completed' ? 'Concluída' : 'Em andamento';
 
+      const signatureBlock = inspectionType === 'entrega_cliente' ? `
+        <div style="margin-top: 40px; page-break-inside: avoid;">
+          <div style="display: flex; justify-content: space-between; gap: 32px; margin-top: 32px;">
+            <div style="flex: 1; text-align: center; border-top: 1px solid #999; padding-top: 8px; font-size: 11px;">
+              Vistoriado por: ${inspectorName || '________________________'}
+            </div>
+            <div style="flex: 1; text-align: center; border-top: 1px solid #999; padding-top: 8px; font-size: 11px;">
+              Acompanhado por: ${clientName || '________________________'}
+            </div>
+            <div style="flex: 1; text-align: center; border-top: 1px solid #999; padding-top: 8px; font-size: 11px;">
+              Data: ${date}
+            </div>
+          </div>
+        </div>
+      ` : '';
+
       const html = `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #1a1a1a; max-width: 800px;">
-          <h1 style="font-size: 20px; margin-bottom: 4px;">Relatório de Vistoria</h1>
-          <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Data: ${date} | Status: ${statusLabel}</p>
+          <h1 style="font-size: 20px; margin-bottom: 4px;">${title}</h1>
+          <p style="color: #666; font-size: 13px; margin-bottom: 4px;">Tipo: ${typeConfig.emoji} ${typeConfig.label}</p>
+          <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Data: ${date} | Status: ${statusLabel}${inspectorName ? ` | Vistoriador: ${inspectorName}` : ''}${clientPresent ? ` | Cliente: ${clientName || 'Presente'}` : ''}</p>
           
           ${inspection.activity_description ? `<p style="font-size: 13px; margin-bottom: 8px;"><strong>Atividade:</strong> ${inspection.activity_description}</p>` : ''}
           ${inspection.notes ? `<p style="font-size: 13px; margin-bottom: 8px; color: #555;"><strong>Observações:</strong> ${inspection.notes}</p>` : ''}
@@ -69,6 +103,8 @@ export function InspectionPdfExport({ inspection, items }: Props) {
               `).join('')}
             </tbody>
           </table>
+
+          ${signatureBlock}
 
           <p style="font-size: 10px; color: #999; margin-top: 24px; text-align: center;">
             Gerado automaticamente em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
