@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EvidenceUpload } from './EvidenceUpload';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
