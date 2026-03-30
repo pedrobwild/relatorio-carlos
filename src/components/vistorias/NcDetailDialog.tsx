@@ -127,38 +127,96 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-start gap-2 text-base sm:text-lg">
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-            <span className="break-words">{nc.title}</span>
+            <span className="break-words flex-1">{nc.title}</span>
+            {isEditable && !editing && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditing(true)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
           </DialogTitle>
         </DialogHeader>
 
-        {/* Meta */}
-        <div className="flex flex-wrap gap-2">
-          <span className={`text-xs font-semibold px-2 py-1 rounded ${sev.className}`}>
-            {sev.label}
-          </span>
-          <Badge variant={nc.status === 'closed' ? 'secondary' : 'destructive'}>
-            {statusLabels[nc.status]}
-          </Badge>
-          {nc.reopen_count > 0 && (
-            <Badge
-              variant={nc.reopen_count >= 3 ? 'destructive' : 'outline'}
-              className="gap-1"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Reaberta {nc.reopen_count}x
-            </Badge>
-          )}
-          {nc.deadline && (
-            <span className="text-xs text-muted-foreground flex items-center">
-              Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
-            </span>
-          )}
-        </div>
-
-        {nc.description && (
-          <div className="bg-muted/50 rounded-lg p-3">
-            <p className="text-sm break-words">{nc.description}</p>
+        {/* Edit mode */}
+        {editing && (
+          <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Título</Label>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="h-10" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Descrição</Label>
+              <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={2} className="min-h-[44px]" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Severidade</Label>
+                <Select value={editSeverity} onValueChange={(v) => setEditSeverity(v as NcSeverity)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                    {severityOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Prazo</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn('w-full h-10 justify-start text-left font-normal text-xs', !editDeadline && 'text-muted-foreground')}>
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      {editDeadline ? format(editDeadline, "dd/MM/yyyy", { locale: ptBR }) : 'Sem prazo'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                    <Calendar mode="single" selected={editDeadline} onSelect={setEditDeadline} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="h-9">Cancelar</Button>
+              <Button size="sm" onClick={handleSaveEdit} disabled={!editTitle.trim() || updateNc.isPending} className="h-9">
+                {updateNc.isPending ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
           </div>
+        )}
+
+        {/* Meta */}
+        {!editing && (
+          <>
+            <div className="flex flex-wrap gap-2">
+              <span className={`text-xs font-semibold px-2 py-1 rounded ${sev.className}`}>
+                {sev.label}
+              </span>
+              <Badge variant={nc.status === 'closed' ? 'secondary' : 'destructive'}>
+                {statusLabels[nc.status]}
+              </Badge>
+              {nc.reopen_count > 0 && (
+                <Badge
+                  variant={nc.reopen_count >= 3 ? 'destructive' : 'outline'}
+                  className="gap-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reaberta {nc.reopen_count}x
+                </Badge>
+              )}
+              {nc.deadline && (
+                <span className="text-xs text-muted-foreground flex items-center">
+                  Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
+                </span>
+              )}
+            </div>
+
+            {nc.description && (
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm break-words">{nc.description}</p>
+              </div>
+            )}
+          </>
         )}
 
         {nc.corrective_action && (
