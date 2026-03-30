@@ -132,7 +132,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
     <div className="space-y-3">
       {/* Advanced filters */}
       <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1.5 h-9 min-w-[44px]">
               <Filter className="h-3.5 w-3.5" />
@@ -145,6 +145,19 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
               <X className="h-3 w-3" /> Limpar
             </Button>
           )}
+          <div className="ml-auto flex items-center gap-1.5">
+            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Data de criação</SelectItem>
+                <SelectItem value="severity">Severidade</SelectItem>
+                <SelectItem value="deadline">Prazo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <CollapsibleContent className="mt-3 space-y-3">
