@@ -36,6 +36,9 @@ interface Props {
 export function DuplicateInspectionDialog({ projectId, open, onOpenChange, duplicateFromInspectionId }: Props) {
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split('T')[0]);
   const [activityId, setActivityId] = useState<string>('');
+  const [inspectionType, setInspectionType] = useState<InspectionType>('rotina');
+  const [clientPresent, setClientPresent] = useState(false);
+  const [clientName, setClientName] = useState('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<{ description: string }[]>([]);
   const [newItemText, setNewItemText] = useState('');
