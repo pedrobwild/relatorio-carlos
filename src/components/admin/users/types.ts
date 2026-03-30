@@ -8,6 +8,9 @@ export const roleLabels: Record<AppRole, string> = {
   manager: 'Gestor de Engenharia',
   engineer: 'Engenheiro',
   customer: 'Cliente',
+  gestor: 'Gestor',
+  suprimentos: 'Suprimentos',
+  financeiro: 'Financeiro',
 };
 
 export const roleColors: Record<AppRole, string> = {
@@ -15,6 +18,9 @@ export const roleColors: Record<AppRole, string> = {
   manager: 'bg-accent/10 text-accent-foreground border-accent/20',
   engineer: 'bg-primary/10 text-primary border-primary/20',
   customer: 'bg-success/10 text-[hsl(var(--success))] border-success/20',
+  gestor: 'bg-accent/10 text-accent-foreground border-accent/20',
+  suprimentos: 'bg-primary/10 text-primary border-primary/20',
+  financeiro: 'bg-primary/10 text-primary border-primary/20',
 };
 
 export interface ProjectOption {
