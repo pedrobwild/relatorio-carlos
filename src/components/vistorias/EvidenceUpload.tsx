@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Camera, X, Loader2, ImagePlus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,10 +39,9 @@ export function EvidenceUpload({
     }
   };
 
-  // Load URLs for existing paths
-  useState(() => {
+  useEffect(() => {
     value.forEach(loadSignedUrl);
-  });
+  }, [value]);
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;

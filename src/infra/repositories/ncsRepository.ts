@@ -1,10 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
-export type NonConformity = Database['public']['Tables']['non_conformities']['Row'];
-export type NcHistoryEntry = Database['public']['Tables']['nc_history']['Row'];
 export type NcSeverity = Database['public']['Enums']['nc_severity'];
 export type NcStatus = Database['public']['Enums']['nc_status'];
+
+type NcRow = Database['public']['Tables']['non_conformities']['Row'];
+export type NonConformity = NcRow & {
+  responsible_user_name?: string | null;
+};
+export type NcHistoryEntry = Database['public']['Tables']['nc_history']['Row'];
 
 export async function getNcsByProject(projectId: string): Promise<NonConformity[]> {
   const { data, error } = await supabase
@@ -13,7 +17,25 @@ export async function getNcsByProject(projectId: string): Promise<NonConformity[
     .eq('project_id', projectId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  const ncs = data ?? [];
+
+  // Fetch responsible user names
+  const responsibleIds = [...new Set(ncs.map(nc => nc.responsible_user_id).filter(Boolean))] as string[];
+  let nameMap: Record<string, string> = {};
+  if (responsibleIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('users_profile')
+      .select('id, nome')
+      .in('id', responsibleIds);
+    if (profiles) {
+      nameMap = Object.fromEntries(profiles.map(p => [p.id, p.nome]));
+    }
+  }
+
+  return ncs.map(nc => ({
+    ...nc,
+    responsible_user_name: nc.responsible_user_id ? nameMap[nc.responsible_user_id] ?? null : null,
+  })) as NonConformity[];
 }
 
 export async function getNcHistory(ncId: string): Promise<NcHistoryEntry[]> {

@@ -125,11 +125,26 @@ export default function Vistorias() {
             </TabsContent>
 
             <TabsContent value="ncs" className="space-y-4">
-              <NcSummaryCards
-                nonConformities={nonConformities}
-                activeFilter={ncSummaryFilter}
-                onFilterChange={setNcSummaryFilter}
-              />
+              <div className="flex items-center justify-between">
+                <NcSummaryCards
+                  nonConformities={nonConformities}
+                  activeFilter={ncSummaryFilter}
+                  onFilterChange={setNcSummaryFilter}
+                />
+              </div>
+              {can('ncs:create') && (
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => setCreateNcContext({})}
+                    size="sm"
+                    variant="outline"
+                    className="gap-2 h-10 min-w-[44px]"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Nova NC</span>
+                  </Button>
+                </div>
+              )}
               <NonConformitiesList
                 nonConformities={nonConformities}
                 searchQuery={searchQuery}
