@@ -39,6 +39,13 @@ import {
 import { useCan } from '@/hooks/useCan';
 import { cn } from '@/lib/utils';
 
+const severityOptions: { value: NcSeverity; label: string }[] = [
+  { value: 'low', label: 'Baixa' },
+  { value: 'medium', label: 'Média' },
+  { value: 'high', label: 'Alta' },
+  { value: 'critical', label: 'Crítica' },
+];
+
 const severityConfig: Record<string, { label: string; className: string }> = {
   low: { label: 'Baixa', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   medium: { label: 'Média', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
