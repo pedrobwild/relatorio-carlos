@@ -106,6 +106,12 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
                             Vistoria {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
                           </span>
                           <Badge variant={cfg.variant} className="text-[10px] sm:text-xs">{cfg.label}</Badge>
+                          {(ncCountByInspection[inspection.id] ?? 0) > 0 && (
+                            <Badge variant="destructive" className="gap-1 text-[10px] sm:text-xs">
+                              <AlertTriangle className="h-3 w-3" />
+                              {ncCountByInspection[inspection.id]} NC{ncCountByInspection[inspection.id] > 1 ? 's' : ''}
+                            </Badge>
+                          )}
                         </div>
                         {inspection.activity_description && (
                           <p className="text-xs text-primary/80 truncate mt-0.5">
