@@ -5,7 +5,7 @@ import { AlertTriangle, ChevronRight, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/EmptyState';
-import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useInspections';
+import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
 
 const severityConfig: Record<NcSeverity, { label: string; className: string }> = {
   low: { label: 'Baixa', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },

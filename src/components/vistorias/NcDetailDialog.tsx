@@ -19,7 +19,7 @@ import {
   useNcHistory,
   type NonConformity,
   type NcStatus,
-} from '@/hooks/useInspections';
+} from '@/hooks/useNonConformities';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const severityConfig: Record<string, { label: string; className: string }> = {

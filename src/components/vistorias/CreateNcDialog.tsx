@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useCreateNonConformity, type NcSeverity } from '@/hooks/useInspections';
+import { useCreateNonConformity, type NcSeverity } from '@/hooks/useNonConformities';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn } from '@/lib/utils';
 
