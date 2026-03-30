@@ -250,7 +250,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                     size="sm"
                     className="gap-1.5 text-xs h-9 min-w-[44px]"
                     onClick={() => handleCreateNcFromItem(item)}
-                    disabled={createNc.isPending}
+                    disabled={false}
                   >
                     <AlertTriangle className="h-3.5 w-3.5" />
                     Abrir NC
