@@ -15,7 +15,8 @@ import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList'
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
-import type { Inspection, NonConformity } from '@/hooks/useInspections';
+import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
+import type { Inspection, NonConformity, InspectionItem } from '@/hooks/useInspections';
 
 export default function Vistorias() {
   const { projectId } = useProjectNavigation();

@@ -39,11 +39,11 @@ interface Props {
   onCreateNc?: (item: InspectionItem) => void;
 }
 
-export function InspectionDetailDialog({ inspection, projectId, open, onOpenChange }: Props) {
+export function InspectionDetailDialog({ inspection, projectId, open, onOpenChange, onCreateNc }: Props) {
   const { data: items = [], isLoading } = useInspectionItems(inspection.id);
   const updateItem = useUpdateInspectionItem();
   const completeInspection = useCompleteInspection();
-  const createNc = useCreateNonConformity();
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [itemPhotos, setItemPhotos] = useState<Record<string, string[]>>({});
 
