@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle2, XCircle, MinusCircle, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -125,6 +126,8 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   const approvedCount = items.filter(i => i.result === 'approved').length;
   const rejectedCount = items.filter(i => i.result === 'rejected').length;
   const pendingCount = items.filter(i => i.result === 'pending').length;
+  const evaluatedCount = items.length - pendingCount;
+  const progressPercent = items.length > 0 ? Math.round((evaluatedCount / items.length) * 100) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,6 +140,15 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
             </Badge>
           </DialogTitle>
         </DialogHeader>
+
+        {/* Progress bar */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{evaluatedCount} de {items.length} itens avaliados</span>
+            <span>{progressPercent}%</span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
+        </div>
 
         {/* Summary */}
         <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
