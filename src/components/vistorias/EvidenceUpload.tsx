@@ -216,6 +216,44 @@ export function EvidenceUpload({
           Foto obrigatória para itens reprovados
         </p>
       )}
+
+      {/* Lightbox */}
+      <Dialog open={lightboxIndex !== null} onOpenChange={() => setLightboxIndex(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95dvh] p-0 bg-black/95 border-none flex items-center justify-center">
+          {lightboxIndex !== null && signedUrls[value[lightboxIndex]] && (
+            <>
+              <img
+                src={signedUrls[value[lightboxIndex]]}
+                alt={`Evidência ${lightboxIndex + 1}`}
+                className="max-w-full max-h-[85dvh] object-contain"
+              />
+              {value.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-black/50 text-white hover:bg-black/70"
+                    onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + value.length) % value.length); }}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-black/50 text-white hover:bg-black/70"
+                    onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % value.length); }}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </>
+              )}
+              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-xs">
+                {lightboxIndex + 1} / {value.length}
+              </span>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
