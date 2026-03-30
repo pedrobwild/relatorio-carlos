@@ -1,7 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
-export type Inspection = Database['public']['Tables']['inspections']['Row'];
+type InspectionRow = Database['public']['Tables']['inspections']['Row'];
+export type Inspection = InspectionRow & {
+  activity_description?: string | null;
+};
 export type InspectionItem = Database['public']['Tables']['inspection_items']['Row'];
 export type InspectionStatus = Database['public']['Enums']['inspection_status'];
 export type InspectionItemResult = Database['public']['Enums']['inspection_item_result'];
