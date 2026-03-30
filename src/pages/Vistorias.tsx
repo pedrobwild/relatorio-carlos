@@ -9,14 +9,16 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useProject } from '@/contexts/ProjectContext';
-import { useInspections, useNonConformities } from '@/hooks/useInspections';
+import { useInspections } from '@/hooks/useInspections';
+import { useNonConformities } from '@/hooks/useNonConformities';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
-import type { Inspection, NonConformity, InspectionItem } from '@/hooks/useInspections';
+import type { Inspection, InspectionItem } from '@/hooks/useInspections';
+import type { NonConformity } from '@/hooks/useNonConformities';
 
 export default function Vistorias() {
   const { projectId } = useProjectNavigation();
