@@ -125,6 +125,18 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
           </div>
         )}
 
+        {/* Evidence photos */}
+        <div className="space-y-1">
+          <Label className="text-xs font-semibold uppercase text-muted-foreground">Fotos de evidência</Label>
+          <EvidenceUpload
+            projectId={nc.project_id}
+            entityId={nc.id}
+            value={evidencePhotos}
+            onChange={setEvidencePhotos}
+            disabled={nc.status === 'closed'}
+          />
+        </div>
+
         <Separator />
 
         {/* Actions based on current status */}
