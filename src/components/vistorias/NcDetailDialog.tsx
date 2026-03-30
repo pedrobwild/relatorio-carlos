@@ -32,6 +32,7 @@ import {
 import {
   useUpdateNcStatus,
   useUpdateNonConformity,
+  useUpdateNcEvidence,
   useNcHistory,
   type NonConformity,
   type NcStatus,
