@@ -30,6 +30,11 @@ export default function Vistorias() {
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [selectedNc, setSelectedNc] = useState<NonConformity | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [createNcContext, setCreateNcContext] = useState<{
+    inspectionId?: string;
+    inspectionItemId?: string;
+    prefillTitle?: string;
+  } | null>(null);
 
   const openNcs = useMemo(() => nonConformities.filter(nc => nc.status !== 'closed'), [nonConformities]);
 
@@ -138,7 +143,13 @@ export default function Vistorias() {
           open={!!selectedInspection}
           onOpenChange={(open) => !open && setSelectedInspection(null)}
           onCreateNc={(item) => {
+            const inspId = selectedInspection?.id;
             setSelectedInspection(null);
+            setCreateNcContext({
+              inspectionId: inspId,
+              inspectionItemId: item.id,
+              prefillTitle: `NC: ${item.description}`,
+            });
           }}
         />
       )}
