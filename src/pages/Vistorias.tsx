@@ -14,6 +14,7 @@ import { useNonConformities } from '@/hooks/useNonConformities';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList';
 import { NcSummaryCards, type NcFilter } from '@/components/vistorias/NcSummaryCards';
+import { NcTimelineChart } from '@/components/vistorias/NcTimelineChart';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
@@ -125,13 +126,12 @@ export default function Vistorias() {
             </TabsContent>
 
             <TabsContent value="ncs" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <NcSummaryCards
-                  nonConformities={nonConformities}
-                  activeFilter={ncSummaryFilter}
-                  onFilterChange={setNcSummaryFilter}
-                />
-              </div>
+              <NcSummaryCards
+                nonConformities={nonConformities}
+                activeFilter={ncSummaryFilter}
+                onFilterChange={setNcSummaryFilter}
+              />
+              <NcTimelineChart nonConformities={nonConformities} />
               {can('ncs:create') && (
                 <div className="flex justify-end">
                   <Button
