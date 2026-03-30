@@ -233,10 +233,18 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
             const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
             const reopenCount = nc.reopen_count ?? 0;
 
+            const deadlineDate = nc.deadline ? parseISO(nc.deadline) : null;
+            const hoursUntilDeadline = deadlineDate && nc.status !== 'closed'
+              ? differenceInHours(deadlineDate, new Date())
+              : null;
+            const isExpiringSoon = hoursUntilDeadline !== null && hoursUntilDeadline > 0 && hoursUntilDeadline <= 48;
+
             return (
               <Card
                 key={nc.id}
-                className="cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98]"
+                className={`cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98] ${
+                  isExpiringSoon ? 'ring-2 ring-orange-400/60 animate-pulse' : ''
+                }`}
                 onClick={() => onSelect(nc)}
               >
                 <CardContent className="p-3 sm:p-4">
