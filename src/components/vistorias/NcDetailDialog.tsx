@@ -422,6 +422,14 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
             {/* open → in_treatment */}
             {(nc.status === 'open' || nc.status === 'reopened') && (
               <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-muted-foreground">Ação corretiva</Label>
+                  <CorrectiveActionTemplateSelector
+                    category={nc.category}
+                    currentText={correctiveAction}
+                    onSelect={setCorrectiveAction}
+                  />
+                </div>
                 <Textarea
                   placeholder="Descreva a ação corretiva a ser tomada..."
                   value={correctiveAction}
