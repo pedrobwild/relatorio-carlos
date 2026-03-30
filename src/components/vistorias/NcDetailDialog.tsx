@@ -140,14 +140,14 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       }
 
       // 3) Now transition status atomically via RPC
-      const allPhotos = [...photosBefore, ...photosAfter];
       await updateStatus.mutateAsync({
         nc,
         new_status: newStatus,
         notes: actionNotes || undefined,
         corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
         resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
-        evidence_photo_paths: allPhotos.length > 0 ? allPhotos : undefined,
+        evidence_photos_before: photosBefore.length > 0 ? photosBefore : undefined,
+        evidence_photos_after: photosAfter.length > 0 ? photosAfter : undefined,
       });
 
       setActionNotes('');
@@ -482,18 +482,25 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                   <Button
                     variant="destructive"
                     className="gap-2 h-11 sm:h-10 w-full sm:w-auto"
-                    onClick={() => {
-                      updateStatus.mutate({
-                        nc,
-                        new_status: 'reopened',
-                        notes: actionNotes || undefined,
-                        rejection_reason: actionNotes,
-                      }, {
-                        onSuccess: () => {
-                          setActionNotes('');
-                          onOpenChange(false);
-                        },
-                      });
+                    onClick={async () => {
+                      try {
+                        await updateEvidence.mutateAsync({
+                          id: nc.id,
+                          project_id: nc.project_id,
+                          evidence_photos_before: photosBefore,
+                          evidence_photos_after: photosAfter,
+                        });
+                        await updateStatus.mutateAsync({
+                          nc,
+                          new_status: 'reopened',
+                          notes: actionNotes || undefined,
+                          rejection_reason: actionNotes,
+                        });
+                        setActionNotes('');
+                        onOpenChange(false);
+                      } catch {
+                        // handled by mutation onError
+                      }
                     }}
                     disabled={!actionNotes.trim() || updateStatus.isPending}
                   >
@@ -557,19 +564,26 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                       <Button
                         variant="destructive"
                         className="gap-2 h-11 sm:h-10 w-full sm:w-auto"
-                        onClick={() => {
+                        onClick={async () => {
                           if (!actionNotes.trim()) return;
-                          updateStatus.mutate({
-                            nc,
-                            new_status: 'reopened',
-                            notes: actionNotes,
-                            rejection_reason: actionNotes,
-                          }, {
-                            onSuccess: () => {
-                              setActionNotes('');
-                              onOpenChange(false);
-                            },
-                          });
+                          try {
+                            await updateEvidence.mutateAsync({
+                              id: nc.id,
+                              project_id: nc.project_id,
+                              evidence_photos_before: photosBefore,
+                              evidence_photos_after: photosAfter,
+                            });
+                            await updateStatus.mutateAsync({
+                              nc,
+                              new_status: 'reopened',
+                              notes: actionNotes,
+                              rejection_reason: actionNotes,
+                            });
+                            setActionNotes('');
+                            onOpenChange(false);
+                          } catch {
+                            // handled by mutation onError
+                          }
                         }}
                         disabled={!actionNotes.trim() || updateStatus.isPending}
                       >

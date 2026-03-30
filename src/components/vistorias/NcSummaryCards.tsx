@@ -114,7 +114,7 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
         {cards.map((card) => {
           const isActive = activeFilter && JSON.stringify(activeFilter) === JSON.stringify(card.filter);
           const Icon = card.icon;
-          const subtitle = 'subtitle' in card ? (card as any).subtitle as string | undefined : undefined;
+          const subtitle = 'subtitle' in card ? (card as { subtitle?: string }).subtitle : undefined;
           return (
             <Card
               key={card.label}

@@ -145,7 +145,8 @@ export async function transitionNcStatus(params: {
   corrective_action?: string;
   resolution_notes?: string;
   rejection_reason?: string;
-  evidence_photo_paths?: string[];
+  evidence_photos_before?: string[];
+  evidence_photos_after?: string[];
 }): Promise<void> {
   const { error } = await supabase.rpc('transition_nc_status', {
     p_nc_id: params.nc_id,
@@ -154,7 +155,8 @@ export async function transitionNcStatus(params: {
     p_corrective_action: params.corrective_action || undefined,
     p_resolution_notes: params.resolution_notes || undefined,
     p_rejection_reason: params.rejection_reason || undefined,
-    p_evidence_photo_paths: params.evidence_photo_paths || undefined,
+    p_evidence_photos_before: params.evidence_photos_before || undefined,
+    p_evidence_photos_after: params.evidence_photos_after || undefined,
   });
   if (error) throw error;
 }
