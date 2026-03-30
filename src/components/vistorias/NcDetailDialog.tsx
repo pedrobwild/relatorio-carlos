@@ -52,6 +52,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
+  const [evidencePhotos, setEvidencePhotos] = useState<string[]>(nc.evidence_photo_paths ?? []);
 
   const handleTransition = (newStatus: NcStatus) => {
     updateStatus.mutate({
