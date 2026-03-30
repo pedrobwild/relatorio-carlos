@@ -161,6 +161,21 @@ export default function Vistorias() {
           onOpenChange={(open) => !open && setSelectedNc(null)}
         />
       )}
+
+      {createNcContext && projectId && (
+        <CreateNcDialog
+          open={!!createNcContext}
+          onOpenChange={(open) => !open && setCreateNcContext(null)}
+          projectId={projectId}
+          inspectionId={createNcContext.inspectionId}
+          inspectionItemId={createNcContext.inspectionItemId}
+          prefillTitle={createNcContext.prefillTitle}
+          onSuccess={() => {
+            setCreateNcContext(null);
+            setTab('ncs');
+          }}
+        />
+      )}
     </>
   );
 }
