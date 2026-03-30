@@ -74,6 +74,7 @@ interface Props {
 export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const updateStatus = useUpdateNcStatus();
   const updateNc = useUpdateNonConformity();
+  const updateEvidence = useUpdateNcEvidence();
   const { data: history = [] } = useNcHistory(nc.id);
   const { can } = useCan();
   const canApproveNc = can('ncs:approve');
@@ -93,7 +94,8 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
-  const [evidencePhotos, setEvidencePhotos] = useState<string[]>(nc.evidence_photo_paths ?? []);
+  const [photosBefore, setPhotosBefore] = useState<string[]>((nc as any).evidence_photos_before ?? nc.evidence_photo_paths ?? []);
+  const [photosAfter, setPhotosAfter] = useState<string[]>((nc as any).evidence_photos_after ?? []);
   const [rootCause, setRootCause] = useState<string>((nc as any).root_cause || '');
   const [actualCostInput, setActualCostInput] = useState<string>(
     (nc as any).actual_cost != null ? String((nc as any).actual_cost) : ''
