@@ -1094,11 +1094,15 @@ export type Database = {
       inspections: {
         Row: {
           activity_id: string | null
+          client_name: string | null
+          client_present: boolean | null
           completed_at: string | null
           created_at: string
           id: string
           inspection_date: string
+          inspection_type: string
           inspector_id: string
+          inspector_user_id: string | null
           notes: string | null
           project_id: string
           status: Database["public"]["Enums"]["inspection_status"]
@@ -1106,11 +1110,15 @@ export type Database = {
         }
         Insert: {
           activity_id?: string | null
+          client_name?: string | null
+          client_present?: boolean | null
           completed_at?: string | null
           created_at?: string
           id?: string
           inspection_date?: string
+          inspection_type?: string
           inspector_id: string
+          inspector_user_id?: string | null
           notes?: string | null
           project_id: string
           status?: Database["public"]["Enums"]["inspection_status"]
@@ -1118,11 +1126,15 @@ export type Database = {
         }
         Update: {
           activity_id?: string | null
+          client_name?: string | null
+          client_present?: boolean | null
           completed_at?: string | null
           created_at?: string
           id?: string
           inspection_date?: string
+          inspection_type?: string
           inspector_id?: string
+          inspector_user_id?: string | null
           notes?: string | null
           project_id?: string
           status?: Database["public"]["Enums"]["inspection_status"]
