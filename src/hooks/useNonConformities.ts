@@ -82,7 +82,8 @@ export function useUpdateNcStatus() {
       corrective_action?: string;
       resolution_notes?: string;
       rejection_reason?: string;
-      evidence_photo_paths?: string[];
+      evidence_photos_before?: string[];
+      evidence_photos_after?: string[];
     }) => {
       if (!user) throw new Error('Não autenticado');
       await transitionNcStatus({
@@ -92,7 +93,8 @@ export function useUpdateNcStatus() {
         corrective_action: params.corrective_action,
         resolution_notes: params.resolution_notes,
         rejection_reason: params.rejection_reason,
-        evidence_photo_paths: params.evidence_photo_paths,
+        evidence_photos_before: params.evidence_photos_before,
+        evidence_photos_after: params.evidence_photos_after,
       });
     },
     onSuccess: (_, vars) => {
