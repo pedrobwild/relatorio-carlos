@@ -207,6 +207,15 @@ export default function Vistorias() {
           }}
         />
       )}
+
+      {duplicateSourceId && projectId && (
+        <DuplicateInspectionDialog
+          projectId={projectId}
+          open={!!duplicateSourceId}
+          onOpenChange={(open) => !open && setDuplicateSourceId(null)}
+          duplicateFromInspectionId={duplicateSourceId}
+        />
+      )}
     </>
   );
 }
