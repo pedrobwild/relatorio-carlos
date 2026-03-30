@@ -348,17 +348,62 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
           </div>
         )}
 
-        {/* Evidence photos */}
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold uppercase text-muted-foreground">Fotos de evidência</Label>
-          <EvidenceUpload
-            projectId={nc.project_id}
-            entityId={nc.id}
-            value={evidencePhotos}
-            onChange={setEvidencePhotos}
-            disabled={nc.status === 'closed'}
-          />
-        </div>
+        {/* Evidence photos — Before / After */}
+        {nc.status === 'closed' ? (
+          /* Closed: side-by-side read-only comparison */
+          (photosBefore.length > 0 || photosAfter.length > 0) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase text-muted-foreground">📸 Antes</Label>
+                <EvidenceUpload
+                  projectId={nc.project_id}
+                  entityId={`${nc.id}-before`}
+                  value={photosBefore}
+                  onChange={() => {}}
+                  disabled
+                />
+              </div>
+              <div className="space-y-1.5 sm:border-l sm:pl-4">
+                <Label className="text-xs font-semibold uppercase text-muted-foreground">✅ Depois</Label>
+                <EvidenceUpload
+                  projectId={nc.project_id}
+                  entityId={`${nc.id}-after`}
+                  value={photosAfter}
+                  onChange={() => {}}
+                  disabled
+                />
+              </div>
+            </div>
+          )
+        ) : (
+          <div className="space-y-4">
+            {/* Before: problem evidence */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase text-muted-foreground">📸 Evidências do Problema</Label>
+              <EvidenceUpload
+                projectId={nc.project_id}
+                entityId={`${nc.id}-before`}
+                value={photosBefore}
+                onChange={setPhotosBefore}
+                disabled={!['open', 'reopened', 'in_treatment'].includes(nc.status)}
+              />
+            </div>
+
+            {/* After: correction evidence */}
+            {['in_treatment', 'pending_verification', 'pending_approval'].includes(nc.status) && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase text-muted-foreground">✅ Evidências da Correção</Label>
+                <p className="text-[11px] text-muted-foreground">Adicione fotos mostrando como o problema foi corrigido</p>
+                <EvidenceUpload
+                  projectId={nc.project_id}
+                  entityId={`${nc.id}-after`}
+                  value={photosAfter}
+                  onChange={setPhotosAfter}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Purchase link for critical/high NCs */}
         <NcPurchaseLink nc={nc} />
