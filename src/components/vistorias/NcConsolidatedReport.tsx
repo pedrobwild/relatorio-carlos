@@ -5,6 +5,7 @@ import { FileDown, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
+import { NC_CATEGORIES } from './ncConstants';
 
 interface Props {
   nonConformities: NonConformity[];
@@ -28,7 +29,6 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
     const overdue = open.filter(nc => nc.deadline && nc.deadline < today);
     const reincident = nonConformities.filter(nc => nc.reopen_count > 0);
 
-    // Average resolution time (for closed NCs)
     const resolutionTimes = closed
       .filter(nc => nc.resolved_at)
       .map(nc => differenceInDays(parseISO(nc.resolved_at!), parseISO(nc.created_at)));
@@ -36,7 +36,6 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
       ? Math.round(resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length)
       : null;
 
-    // By severity
     const bySeverity = (['critical', 'high', 'medium', 'low'] as NcSeverity[]).map(s => ({
       severity: s,
       label: severityLabels[s],
@@ -44,25 +43,36 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
       open: open.filter(nc => nc.severity === s).length,
     }));
 
-    // By status
     const byStatus = (['open', 'in_treatment', 'pending_verification', 'pending_approval', 'reopened', 'closed'] as NcStatus[]).map(s => ({
       status: s,
       label: statusLabels[s],
       count: nonConformities.filter(nc => nc.status === s).length,
     }));
 
-    return { total, openCount: open.length, closedCount: closed.length, overdueCount: overdue.length, reincidentCount: reincident.length, avgResolution, bySeverity, byStatus };
+    // By category
+    const byCategory = NC_CATEGORIES.map(cat => {
+      const total = nonConformities.filter(nc => (nc as any).category === cat).length;
+      const openCount = open.filter(nc => (nc as any).category === cat).length;
+      return { category: cat, total, open: openCount };
+    }).filter(c => c.total > 0);
+
+    // Uncategorized
+    const uncategorized = nonConformities.filter(nc => !(nc as any).category).length;
+
+    return { total, openCount: open.length, closedCount: closed.length, overdueCount: overdue.length, reincidentCount: reincident.length, avgResolution, bySeverity, byStatus, byCategory, uncategorized };
   }, [nonConformities]);
 
   const handleExportCsv = useCallback(() => {
-    const headers = ['Título', 'Severidade', 'Status', 'Responsável', 'Prazo', 'Criada em', 'Reaberturas'];
+    const headers = ['Título', 'Categoria', 'Severidade', 'Status', 'Responsável', 'Prazo', 'Criada em', 'Causa Raiz', 'Reaberturas'];
     const rows = nonConformities.map(nc => [
       nc.title,
+      (nc as any).category || '-',
       severityLabels[nc.severity],
       statusLabels[nc.status],
       nc.responsible_user_name || '-',
       nc.deadline ? format(parseISO(nc.deadline), 'dd/MM/yyyy') : '-',
       format(parseISO(nc.created_at), 'dd/MM/yyyy'),
+      (nc as any).root_cause || '-',
       nc.reopen_count.toString(),
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
@@ -107,6 +117,30 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
             </div>
           ))}
         </div>
+
+        {/* By category */}
+        {stats.byCategory.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Por Categoria</p>
+            <div className="space-y-1">
+              {stats.byCategory.map(c => (
+                <div key={c.category} className="flex items-center justify-between text-sm py-1">
+                  <span>{c.category}</span>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>{c.total} total</span>
+                    {c.open > 0 && <span className="text-destructive font-medium">{c.open} abertas</span>}
+                  </div>
+                </div>
+              ))}
+              {stats.uncategorized > 0 && (
+                <div className="flex items-center justify-between text-sm py-1 text-muted-foreground">
+                  <span className="italic">Sem categoria</span>
+                  <span className="text-xs">{stats.uncategorized}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* By severity */}
         <div>

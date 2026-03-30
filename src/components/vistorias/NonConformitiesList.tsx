@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, parseISO, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X, User, ArrowUpDown } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X, User, ArrowUpDown, Tag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
 import type { NcFilter } from './NcSummaryCards';
+import { NC_CATEGORIES } from './ncConstants';
 
 const severityConfig: Record<NcSeverity, { label: string; className: string }> = {
   low: { label: 'Baixa', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
@@ -51,20 +52,27 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<NcStatus | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<NcSeverity | null>(null);
+  const [filterCategories, setFilterCategories] = useState<string[]>([]);
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [filterReincident, setFilterReincident] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('created_at');
 
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const nowMs = useMemo(() => Date.now(), []);
 
-  const hasLocalFilters = !!filterStatus || !!filterSeverity || filterOverdue || filterReincident;
+  const hasLocalFilters = !!filterStatus || !!filterSeverity || filterOverdue || filterReincident || filterCategories.length > 0;
 
   const clearLocalFilters = () => {
     setFilterStatus(null);
     setFilterSeverity(null);
+    setFilterCategories([]);
     setFilterOverdue(false);
     setFilterReincident(false);
+  };
+
+  const toggleCategory = (cat: string) => {
+    setFilterCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
   };
 
   const filtered = useMemo(() => {
@@ -85,12 +93,16 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
         case 'open':
           result = result.filter(nc => nc.status !== 'closed');
           break;
+        case 'category':
+          result = result.filter(nc => (nc as any).category === summaryFilter.value && nc.status !== 'closed');
+          break;
       }
     }
 
     // Apply local advanced filters
     if (filterStatus) result = result.filter(nc => nc.status === filterStatus);
     if (filterSeverity) result = result.filter(nc => nc.severity === filterSeverity);
+    if (filterCategories.length > 0) result = result.filter(nc => filterCategories.includes((nc as any).category || ''));
     if (filterOverdue) result = result.filter(nc => nc.deadline && nc.deadline < today && nc.status !== 'closed');
     if (filterReincident) result = result.filter(nc => nc.reopen_count > 0);
 
@@ -99,7 +111,8 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
       const q = searchQuery.toLowerCase();
       result = result.filter(nc =>
         nc.title.toLowerCase().includes(q) ||
-        nc.description?.toLowerCase().includes(q)
+        nc.description?.toLowerCase().includes(q) ||
+        ((nc as any).category || '').toLowerCase().includes(q)
       );
     }
 
@@ -116,7 +129,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
     });
 
     return result;
-  }, [nonConformities, searchQuery, summaryFilter, filterStatus, filterSeverity, filterOverdue, filterReincident, today, sortBy]);
+  }, [nonConformities, searchQuery, summaryFilter, filterStatus, filterSeverity, filterCategories, filterOverdue, filterReincident, today, sortBy]);
 
   if (nonConformities.length === 0) {
     return (
@@ -197,6 +210,24 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
             </div>
           </div>
 
+          {/* Category chips */}
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider">Categoria</p>
+            <div className="flex flex-wrap gap-1.5">
+              {NC_CATEGORIES.map(cat => (
+                <Button
+                  key={cat}
+                  variant={filterCategories.includes(cat) ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-8 text-xs min-w-[44px]"
+                  onClick={() => toggleCategory(cat)}
+                >
+                  {cat}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           {/* Toggles */}
           <div className="flex flex-wrap gap-1.5">
             <Button
@@ -232,6 +263,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
             const st = statusConfig[nc.status];
             const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
             const reopenCount = nc.reopen_count ?? 0;
+            const ncCategory = (nc as any).category as string | undefined;
 
             const deadlineDate = nc.deadline ? parseISO(nc.deadline) : null;
             const hoursUntilDeadline = deadlineDate && nc.status !== 'closed'
@@ -268,6 +300,12 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
                             {sev.label}
                           </span>
                           <Badge variant={st.variant} className="text-[10px] sm:text-xs">{st.label}</Badge>
+                          {ncCategory && (
+                            <Badge variant="outline" className="text-[10px] sm:text-xs gap-1">
+                              <Tag className="h-2.5 w-2.5" />
+                              {ncCategory}
+                            </Badge>
+                          )}
                           {isOverdue && (
                             <Badge variant="destructive" className="gap-1 text-[10px] sm:text-xs">
                               <Clock className="h-3 w-3" />

@@ -57,6 +57,7 @@ export async function createNonConformity(params: {
   severity: NcSeverity;
   responsible_user_id?: string;
   deadline?: string;
+  category?: string;
   created_by: string;
 }): Promise<NonConformity> {
   const { data, error } = await supabase
@@ -70,8 +71,9 @@ export async function createNonConformity(params: {
       severity: params.severity,
       responsible_user_id: params.responsible_user_id || null,
       deadline: params.deadline || null,
+      category: params.category || null,
       created_by: params.created_by,
-    })
+    } as any)
     .select()
     .single();
 
@@ -95,6 +97,8 @@ export async function updateNonConformity(params: {
   severity?: NcSeverity;
   responsible_user_id?: string | null;
   deadline?: string | null;
+  category?: string;
+  root_cause?: string | null;
 }): Promise<void> {
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (params.title !== undefined) update.title = params.title;
@@ -102,6 +106,8 @@ export async function updateNonConformity(params: {
   if (params.severity !== undefined) update.severity = params.severity;
   if (params.responsible_user_id !== undefined) update.responsible_user_id = params.responsible_user_id;
   if (params.deadline !== undefined) update.deadline = params.deadline;
+  if (params.category !== undefined) update.category = params.category;
+  if (params.root_cause !== undefined) update.root_cause = params.root_cause;
 
   const { error } = await supabase
     .from('non_conformities')

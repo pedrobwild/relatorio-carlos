@@ -53,6 +53,7 @@ export function useCreateNonConformity() {
       severity: NcSeverity;
       responsible_user_id?: string;
       deadline?: string;
+      category?: string;
     }) => {
       if (!user) throw new Error('Não autenticado');
       return createNonConformity({ ...params, created_by: user.id });
@@ -115,6 +116,8 @@ export function useUpdateNonConformity() {
       severity?: NcSeverity;
       responsible_user_id?: string | null;
       deadline?: string | null;
+      category?: string;
+      root_cause?: string | null;
     }) => {
       await updateNonConformity(params);
       return params;
