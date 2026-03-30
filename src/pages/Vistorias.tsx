@@ -19,12 +19,14 @@ import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
 import type { Inspection, InspectionItem } from '@/hooks/useInspections';
 import type { NonConformity } from '@/hooks/useNonConformities';
+import { useCan } from '@/hooks/useCan';
 
 export default function Vistorias() {
   const { projectId } = useProjectNavigation();
   const { project } = useProject();
   const { data: inspections = [], isLoading: loadingInspections } = useInspections(projectId);
   const { data: nonConformities = [], isLoading: loadingNcs } = useNonConformities(projectId);
+  const { can } = useCan();
 
   const [tab, setTab] = useState('vistorias');
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,10 +74,12 @@ export default function Vistorias() {
           >
             <Search className="h-4 w-4" />
           </Button>
-          <Button onClick={() => setShowCreateDialog(true)} size="sm" className="gap-2 h-10 min-w-[44px]">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Nova Vistoria</span>
-          </Button>
+          {can('inspections:create') && (
+            <Button onClick={() => setShowCreateDialog(true)} size="sm" className="gap-2 h-10 min-w-[44px]">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Nova Vistoria</span>
+            </Button>
+          )}
         </div>
       </PageHeader>
 

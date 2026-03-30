@@ -20,7 +20,7 @@ import {
   type NonConformity,
   type NcStatus,
 } from '@/hooks/useNonConformities';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useCan } from '@/hooks/useCan';
 
 const severityConfig: Record<string, { label: string; className: string }> = {
   low: { label: 'Baixa', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
@@ -47,8 +47,8 @@ interface Props {
 export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const updateStatus = useUpdateNcStatus();
   const { data: history = [] } = useNcHistory(nc.id);
-  const { hasRole } = useUserRole();
-  const isAdminOrManager = hasRole('admin') || hasRole('manager');
+  const { can } = useCan();
+  const canApproveNc = can('ncs:approve');
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
@@ -233,7 +233,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
             {/* pending_approval → closed (admin/manager only) */}
             {nc.status === 'pending_approval' && (
               <div className="space-y-3">
-                {isAdminOrManager ? (
+                {canApproveNc ? (
                   <>
                     <Textarea
                       placeholder="Notas finais (opcional)..."

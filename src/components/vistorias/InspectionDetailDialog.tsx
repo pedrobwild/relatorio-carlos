@@ -21,6 +21,7 @@ import {
   type InspectionItemResult,
 } from '@/hooks/useInspections';
 import { EvidenceUpload } from './EvidenceUpload';
+import { useCan } from '@/hooks/useCan';
 import { toast } from 'sonner';
 
 const resultConfig: Record<InspectionItemResult, { icon: React.ReactNode; label: string; className: string }> = {
@@ -39,6 +40,8 @@ interface Props {
 }
 
 export function InspectionDetailDialog({ inspection, projectId, open, onOpenChange, onCreateNc }: Props) {
+  const { can } = useCan();
+  const canEdit = can('inspections:edit');
   const { data: items = [], isLoading } = useInspectionItems(inspection.id);
   const updateItem = useUpdateInspectionItem();
   const completeInspection = useCompleteInspection();
@@ -46,6 +49,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   const [itemPhotos, setItemPhotos] = useState<Record<string, string[]>>({});
 
   const isCompleted = inspection.status === 'completed';
+  const isEditable = !isCompleted && canEdit;
 
   // Get effective photos for an item (local state or DB value)
   const getPhotos = (item: InspectionItem): string[] => {
@@ -179,7 +183,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                     </span>
                   </div>
 
-                  {!isCompleted && (
+                  {isEditable && (
                     <div className="flex items-center gap-1.5 shrink-0 ml-5 sm:ml-0">
                       <Button
                         variant={item.result === 'approved' ? 'default' : 'outline'}
@@ -220,7 +224,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                 </div>
 
                 {/* Notes */}
-                {!isCompleted ? (
+                {isEditable ? (
                   <Textarea
                     placeholder="Observações..."
                     className="text-xs min-h-[44px] resize-none"
@@ -240,7 +244,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                   value={photos}
                   onChange={(paths) => handlePhotosChange(item, paths)}
                   required={item.result === 'rejected'}
-                  disabled={isCompleted}
+                  disabled={!isEditable}
                 />
 
                 {/* Create NC button for rejected items */}
@@ -261,7 +265,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
           })}
         </div>
 
-        {!isCompleted && (
+        {isEditable && (
           <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 sm:h-10 w-full sm:w-auto">
               Fechar
