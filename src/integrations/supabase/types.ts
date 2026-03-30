@@ -1733,6 +1733,7 @@ export type Database = {
           inspection_item_id: string | null
           project_id: string
           rejection_reason: string | null
+          reopen_count: number
           resolution_notes: string | null
           resolved_at: string | null
           resolved_by: string | null
@@ -1758,6 +1759,7 @@ export type Database = {
           inspection_item_id?: string | null
           project_id: string
           rejection_reason?: string | null
+          reopen_count?: number
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -1783,6 +1785,7 @@ export type Database = {
           inspection_item_id?: string | null
           project_id?: string
           rejection_reason?: string | null
+          reopen_count?: number
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
