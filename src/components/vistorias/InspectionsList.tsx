@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 import type { Inspection } from '@/hooks/useInspections';
 import type { NonConformity } from '@/hooks/useNonConformities';
+import { INSPECTION_TYPES, getInspectionTypeConfig, type InspectionType } from './inspectionConstants';
 
 type InspectionStatus = 'draft' | 'in_progress' | 'completed';
 
@@ -29,10 +30,18 @@ interface Props {
 
 export function InspectionsList({ inspections, nonConformities = [], searchQuery, onSelect, onDuplicate }: Props) {
   const [filterStatus, setFilterStatus] = useState<InspectionStatus | null>(null);
+  const [filterTypes, setFilterTypes] = useState<InspectionType[]>([]);
+
+  const toggleTypeFilter = (type: InspectionType) => {
+    setFilterTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
 
   const filtered = useMemo(() => {
     let result = inspections;
     if (filterStatus) result = result.filter(i => i.status === filterStatus);
+    if (filterTypes.length > 0) result = result.filter(i => filterTypes.includes((i as any).inspection_type || 'rotina'));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(i =>
@@ -41,7 +50,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
       );
     }
     return result;
-  }, [inspections, searchQuery, filterStatus]);
+  }, [inspections, searchQuery, filterStatus, filterTypes]);
 
   const ncCountByInspection = useMemo(() => {
     const map: Record<string, number> = {};
@@ -52,6 +61,12 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
     });
     return map;
   }, [nonConformities]);
+
+  // Only show type filter if there are inspections with different types
+  const usedTypes = useMemo(() => {
+    const types = new Set(inspections.map(i => (i as any).inspection_type || 'rotina'));
+    return INSPECTION_TYPES.filter(t => types.has(t.value));
+  }, [inspections]);
 
   return (
     <div className="space-y-3">
@@ -78,6 +93,23 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
         ))}
       </div>
 
+      {/* Type filter chips */}
+      {usedTypes.length > 1 && (
+        <div className="flex flex-wrap gap-1.5">
+          {usedTypes.map(t => (
+            <Button
+              key={t.value}
+              variant={filterTypes.includes(t.value) ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-[10px] min-w-[44px] gap-1"
+              onClick={() => toggleTypeFilter(t.value)}
+            >
+              {t.emoji} {t.label}
+            </Button>
+          ))}
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <EmptyState
           icon={ClipboardCheck}
@@ -88,6 +120,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
         <div className="grid gap-3">
           {filtered.map((inspection) => {
             const cfg = statusConfig[inspection.status as InspectionStatus] || statusConfig.draft;
+            const typeConfig = getInspectionTypeConfig((inspection as any).inspection_type || 'rotina');
             return (
               <Card
                 key={inspection.id}
@@ -105,6 +138,9 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
                           <span className="font-medium text-sm sm:text-base">
                             Vistoria {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
                           </span>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${typeConfig.color}`}>
+                            {typeConfig.emoji} {typeConfig.label}
+                          </span>
                           <Badge variant={cfg.variant} className="text-[10px] sm:text-xs">{cfg.label}</Badge>
                           {(ncCountByInspection[inspection.id] ?? 0) > 0 && (
                             <Badge variant="destructive" className="gap-1 text-[10px] sm:text-xs">
@@ -113,6 +149,11 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
                             </Badge>
                           )}
                         </div>
+                        {(inspection as any).inspector_user_name && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            Vistoriador: {(inspection as any).inspector_user_name}
+                          </p>
+                        )}
                         {inspection.activity_description && (
                           <p className="text-xs text-primary/80 truncate mt-0.5">
                             {inspection.activity_description}

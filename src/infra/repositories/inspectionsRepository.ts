@@ -4,6 +4,7 @@ import type { Database } from '@/integrations/supabase/types';
 type InspectionRow = Database['public']['Tables']['inspections']['Row'];
 export type Inspection = InspectionRow & {
   activity_description?: string | null;
+  inspector_user_name?: string | null;
 };
 export type InspectionItem = Database['public']['Tables']['inspection_items']['Row'];
 export type InspectionStatus = Database['public']['Enums']['inspection_status'];
@@ -16,10 +17,28 @@ export async function getInspectionsByProject(projectId: string): Promise<Inspec
     .eq('project_id', projectId)
     .order('inspection_date', { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((row: any) => ({
+  const inspections = (data ?? []).map((row: any) => ({
     ...row,
     activity_description: row.project_activities?.description ?? null,
     project_activities: undefined,
+  }));
+
+  // Fetch inspector user names
+  const inspectorIds = [...new Set(inspections.map((i: any) => i.inspector_user_id).filter(Boolean))] as string[];
+  let nameMap: Record<string, string> = {};
+  if (inspectorIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('users_profile')
+      .select('id, nome')
+      .in('id', inspectorIds);
+    if (profiles) {
+      nameMap = Object.fromEntries(profiles.map(p => [p.id, p.nome]));
+    }
+  }
+
+  return inspections.map((i: any) => ({
+    ...i,
+    inspector_user_name: i.inspector_user_id ? nameMap[i.inspector_user_id] ?? null : null,
   }));
 }
 
@@ -30,7 +49,19 @@ export async function getInspectionById(inspectionId: string): Promise<Inspectio
     .eq('id', inspectionId)
     .single();
   if (error) throw error;
-  return data;
+
+  // Fetch inspector name
+  let inspector_user_name: string | null = null;
+  if ((data as any).inspector_user_id) {
+    const { data: profile } = await supabase
+      .from('users_profile')
+      .select('nome')
+      .eq('id', (data as any).inspector_user_id)
+      .single();
+    inspector_user_name = profile?.nome ?? null;
+  }
+
+  return { ...data, inspector_user_name };
 }
 
 export async function getInspectionItems(inspectionId: string): Promise<InspectionItem[]> {
@@ -49,6 +80,10 @@ export async function createInspectionWithItems(params: {
   inspection_date?: string;
   notes?: string;
   items: { description: string; sort_order: number }[];
+  inspection_type?: string;
+  inspector_user_id?: string;
+  client_present?: boolean;
+  client_name?: string;
 }): Promise<string> {
   const { data, error } = await supabase.rpc('create_inspection_with_items', {
     p_project_id: params.project_id,
@@ -56,6 +91,10 @@ export async function createInspectionWithItems(params: {
     p_inspection_date: params.inspection_date || new Date().toISOString().split('T')[0],
     p_notes: params.notes || undefined,
     p_items: JSON.parse(JSON.stringify(params.items)),
+    p_inspection_type: params.inspection_type || 'rotina',
+    p_client_present: params.client_present ?? false,
+    p_client_name: params.client_name || undefined,
+    p_inspector_id: params.inspector_user_id || undefined,
   });
   if (error) throw error;
   return data as string;
