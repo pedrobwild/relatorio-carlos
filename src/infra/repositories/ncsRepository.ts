@@ -122,6 +122,22 @@ export async function updateNonConformity(params: {
   if (error) throw error;
 }
 
+export async function updateNcEvidencePhotos(params: {
+  id: string;
+  evidence_photos_before?: string[];
+  evidence_photos_after?: string[];
+}): Promise<void> {
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (params.evidence_photos_before !== undefined) update.evidence_photos_before = params.evidence_photos_before;
+  if (params.evidence_photos_after !== undefined) update.evidence_photos_after = params.evidence_photos_after;
+
+  const { error } = await supabase
+    .from('non_conformities')
+    .update(update)
+    .eq('id', params.id);
+  if (error) throw error;
+}
+
 export async function transitionNcStatus(params: {
   nc_id: string;
   new_status: NcStatus;

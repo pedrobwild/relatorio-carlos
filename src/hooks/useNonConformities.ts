@@ -6,6 +6,7 @@ import {
   getNcHistory,
   createNonConformity,
   updateNonConformity,
+  updateNcEvidencePhotos,
   transitionNcStatus,
 } from '@/infra/repositories/ncsRepository';
 
