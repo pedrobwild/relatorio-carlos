@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ClipboardCheck, Calendar, ChevronRight, Copy } from 'lucide-react';
+import { ClipboardCheck, Calendar, ChevronRight, Copy, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 import type { Inspection } from '@/hooks/useInspections';
+import type { NonConformity } from '@/hooks/useNonConformities';
 
 type InspectionStatus = 'draft' | 'in_progress' | 'completed';
 
@@ -20,12 +21,13 @@ const allStatuses: InspectionStatus[] = ['draft', 'in_progress', 'completed'];
 
 interface Props {
   inspections: Inspection[];
+  nonConformities?: NonConformity[];
   searchQuery: string;
   onSelect: (inspection: Inspection) => void;
   onDuplicate?: (inspection: Inspection) => void;
 }
 
-export function InspectionsList({ inspections, searchQuery, onSelect, onDuplicate }: Props) {
+export function InspectionsList({ inspections, nonConformities = [], searchQuery, onSelect, onDuplicate }: Props) {
   const [filterStatus, setFilterStatus] = useState<InspectionStatus | null>(null);
 
   const filtered = useMemo(() => {
