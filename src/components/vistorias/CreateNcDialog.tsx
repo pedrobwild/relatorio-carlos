@@ -65,6 +65,17 @@ export function CreateNcDialog({
   const [responsibleUserId, setResponsibleUserId] = useState<string>('');
   const [deadline, setDeadline] = useState<Date | undefined>();
 
+  // Reset form when dialog reopens with different context
+  useEffect(() => {
+    if (open) {
+      setTitle(prefillTitle || '');
+      setDescription('');
+      setSeverity('high');
+      setResponsibleUserId('');
+      setDeadline(undefined);
+    }
+  }, [open, prefillTitle]);
+
   const handleSubmit = () => {
     if (!title.trim()) return;
 
