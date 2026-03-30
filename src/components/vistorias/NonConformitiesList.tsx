@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -238,6 +238,12 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
                             </Badge>
                           )}
                         </div>
+                        {nc.responsible_user_name && (
+                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {nc.responsible_user_name}
+                          </p>
+                        )}
                         {nc.description && (
                           <p className="text-xs text-muted-foreground truncate mt-1 hidden sm:block">
                             {nc.description}
