@@ -124,6 +124,23 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Inspection type */}
+            <div className="space-y-2">
+              <Label>Tipo de Vistoria</Label>
+              <Select value={inspectionType} onValueChange={(v) => setInspectionType(v as InspectionType)}>
+                <SelectTrigger className="h-11 sm:h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                  {INSPECTION_TYPES.map(t => (
+                    <SelectItem key={t.value} value={t.value} className="min-h-[44px]">
+                      {t.emoji} {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label>Data da vistoria</Label>
               <Input
