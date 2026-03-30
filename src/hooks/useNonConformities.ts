@@ -5,6 +5,7 @@ import {
   getNcsByProject,
   getNcHistory,
   createNonConformity,
+  updateNonConformity,
   transitionNcStatus,
 } from '@/infra/repositories/ncsRepository';
 
