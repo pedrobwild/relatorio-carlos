@@ -91,13 +91,13 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
           <Badge variant={nc.status === 'closed' ? 'secondary' : 'destructive'}>
             {statusLabels[nc.status]}
           </Badge>
-          {(nc as any).reopen_count > 0 && (
+          {nc.reopen_count > 0 && (
             <Badge
-              variant={(nc as any).reopen_count >= 3 ? 'destructive' : 'outline'}
+              variant={nc.reopen_count >= 3 ? 'destructive' : 'outline'}
               className="gap-1"
             >
               <RotateCcw className="h-3 w-3" />
-              Reaberta {(nc as any).reopen_count}x
+              Reaberta {nc.reopen_count}x
             </Badge>
           )}
           {nc.deadline && (

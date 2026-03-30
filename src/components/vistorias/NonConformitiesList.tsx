@@ -79,7 +79,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
     if (filterStatus) result = result.filter(nc => nc.status === filterStatus);
     if (filterSeverity) result = result.filter(nc => nc.severity === filterSeverity);
     if (filterOverdue) result = result.filter(nc => nc.deadline && nc.deadline < today && nc.status !== 'closed');
-    if (filterReincident) result = result.filter(nc => (nc as any).reopen_count > 0);
+    if (filterReincident) result = result.filter(nc => nc.reopen_count > 0);
 
     // Apply search
     if (searchQuery.trim()) {
@@ -193,7 +193,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
             const sev = severityConfig[nc.severity];
             const st = statusConfig[nc.status];
             const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
-            const reopenCount = (nc as any).reopen_count ?? 0;
+            const reopenCount = nc.reopen_count ?? 0;
 
             return (
               <Card
