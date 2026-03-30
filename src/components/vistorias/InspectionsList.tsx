@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ClipboardCheck, Calendar, ChevronRight } from 'lucide-react';
+import { ClipboardCheck, Calendar, ChevronRight, Copy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,10 @@ interface Props {
   inspections: Inspection[];
   searchQuery: string;
   onSelect: (inspection: Inspection) => void;
+  onDuplicate?: (inspection: Inspection) => void;
 }
 
-export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
+export function InspectionsList({ inspections, searchQuery, onSelect, onDuplicate }: Props) {
   const [filterStatus, setFilterStatus] = useState<InspectionStatus | null>(null);
 
   const filtered = useMemo(() => {
@@ -94,6 +95,11 @@ export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
                           </span>
                           <Badge variant={cfg.variant} className="text-[10px] sm:text-xs">{cfg.label}</Badge>
                         </div>
+                        {inspection.activity_description && (
+                          <p className="text-xs text-primary/80 truncate mt-0.5">
+                            {inspection.activity_description}
+                          </p>
+                        )}
                         {inspection.notes && (
                           <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
                             {inspection.notes}
@@ -101,7 +107,18 @@ export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
+                      {onDuplicate && inspection.status === 'completed' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Duplicar vistoria"
+                          onClick={(e) => { e.stopPropagation(); onDuplicate(inspection); }}
+                        >
+                          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      )}
                       <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3.5 w-3.5" />
                         {format(parseISO(inspection.created_at), "dd/MM", { locale: ptBR })}

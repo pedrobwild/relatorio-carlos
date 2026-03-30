@@ -14,7 +14,9 @@ import { useNonConformities } from '@/hooks/useNonConformities';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList';
 import { NcSummaryCards, type NcFilter } from '@/components/vistorias/NcSummaryCards';
+import { NcTimelineChart } from '@/components/vistorias/NcTimelineChart';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
+import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
@@ -41,6 +43,7 @@ export default function Vistorias() {
     inspectionItemId?: string;
     prefillTitle?: string;
   } | null>(null);
+  const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null);
 
   const openNcs = useMemo(() => nonConformities.filter(nc => nc.status !== 'closed'), [nonConformities]);
 
@@ -121,17 +124,17 @@ export default function Vistorias() {
                 inspections={inspections}
                 searchQuery={searchQuery}
                 onSelect={setSelectedInspection}
+                onDuplicate={(insp) => setDuplicateSourceId(insp.id)}
               />
             </TabsContent>
 
             <TabsContent value="ncs" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <NcSummaryCards
-                  nonConformities={nonConformities}
-                  activeFilter={ncSummaryFilter}
-                  onFilterChange={setNcSummaryFilter}
-                />
-              </div>
+              <NcSummaryCards
+                nonConformities={nonConformities}
+                activeFilter={ncSummaryFilter}
+                onFilterChange={setNcSummaryFilter}
+              />
+              <NcTimelineChart nonConformities={nonConformities} />
               {can('ncs:create') && (
                 <div className="flex justify-end">
                   <Button
@@ -202,6 +205,15 @@ export default function Vistorias() {
             setCreateNcContext(null);
             setTab('ncs');
           }}
+        />
+      )}
+
+      {duplicateSourceId && projectId && (
+        <DuplicateInspectionDialog
+          projectId={projectId}
+          open={!!duplicateSourceId}
+          onOpenChange={(open) => !open && setDuplicateSourceId(null)}
+          duplicateFromInspectionId={duplicateSourceId}
         />
       )}
     </>
