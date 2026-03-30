@@ -88,6 +88,28 @@ export async function createNonConformity(params: {
   return data;
 }
 
+export async function updateNonConformity(params: {
+  id: string;
+  title?: string;
+  description?: string | null;
+  severity?: NcSeverity;
+  responsible_user_id?: string | null;
+  deadline?: string | null;
+}): Promise<void> {
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (params.title !== undefined) update.title = params.title;
+  if (params.description !== undefined) update.description = params.description;
+  if (params.severity !== undefined) update.severity = params.severity;
+  if (params.responsible_user_id !== undefined) update.responsible_user_id = params.responsible_user_id;
+  if (params.deadline !== undefined) update.deadline = params.deadline;
+
+  const { error } = await supabase
+    .from('non_conformities')
+    .update(update)
+    .eq('id', params.id);
+  if (error) throw error;
+}
+
 export async function transitionNcStatus(params: {
   nc_id: string;
   new_status: NcStatus;

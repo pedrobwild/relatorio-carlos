@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EvidenceUpload } from './EvidenceUpload';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -15,12 +17,34 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
   useUpdateNcStatus,
+  useUpdateNonConformity,
   useNcHistory,
   type NonConformity,
   type NcStatus,
+  type NcSeverity,
 } from '@/hooks/useNonConformities';
 import { useCan } from '@/hooks/useCan';
+import { cn } from '@/lib/utils';
+
+const severityOptions: { value: NcSeverity; label: string }[] = [
+  { value: 'low', label: 'Baixa' },
+  { value: 'medium', label: 'Média' },
+  { value: 'high', label: 'Alta' },
+  { value: 'critical', label: 'Crítica' },
+];
 
 const severityConfig: Record<string, { label: string; className: string }> = {
   low: { label: 'Baixa', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
@@ -46,13 +70,37 @@ interface Props {
 
 export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const updateStatus = useUpdateNcStatus();
+  const updateNc = useUpdateNonConformity();
   const { data: history = [] } = useNcHistory(nc.id);
   const { can } = useCan();
   const canApproveNc = can('ncs:approve');
+  const canEdit = can('ncs:treat');
+
+  const isEditable = canEdit && (nc.status === 'open' || nc.status === 'reopened');
+
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(nc.title);
+  const [editDescription, setEditDescription] = useState(nc.description || '');
+  const [editSeverity, setEditSeverity] = useState<NcSeverity>(nc.severity);
+  const [editDeadline, setEditDeadline] = useState<Date | undefined>(nc.deadline ? parseISO(nc.deadline) : undefined);
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
   const [evidencePhotos, setEvidencePhotos] = useState<string[]>(nc.evidence_photo_paths ?? []);
+
+  const handleSaveEdit = () => {
+    if (!editTitle.trim()) return;
+    updateNc.mutate({
+      id: nc.id,
+      project_id: nc.project_id,
+      title: editTitle.trim(),
+      description: editDescription.trim() || null,
+      severity: editSeverity,
+      deadline: editDeadline ? format(editDeadline, 'yyyy-MM-dd') : null,
+    }, {
+      onSuccess: () => setEditing(false),
+    });
+  };
 
   const handleTransition = (newStatus: NcStatus) => {
     updateStatus.mutate({
@@ -79,38 +127,96 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-start gap-2 text-base sm:text-lg">
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-            <span className="break-words">{nc.title}</span>
+            <span className="break-words flex-1">{nc.title}</span>
+            {isEditable && !editing && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditing(true)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
           </DialogTitle>
         </DialogHeader>
 
-        {/* Meta */}
-        <div className="flex flex-wrap gap-2">
-          <span className={`text-xs font-semibold px-2 py-1 rounded ${sev.className}`}>
-            {sev.label}
-          </span>
-          <Badge variant={nc.status === 'closed' ? 'secondary' : 'destructive'}>
-            {statusLabels[nc.status]}
-          </Badge>
-          {nc.reopen_count > 0 && (
-            <Badge
-              variant={nc.reopen_count >= 3 ? 'destructive' : 'outline'}
-              className="gap-1"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Reaberta {nc.reopen_count}x
-            </Badge>
-          )}
-          {nc.deadline && (
-            <span className="text-xs text-muted-foreground flex items-center">
-              Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
-            </span>
-          )}
-        </div>
-
-        {nc.description && (
-          <div className="bg-muted/50 rounded-lg p-3">
-            <p className="text-sm break-words">{nc.description}</p>
+        {/* Edit mode */}
+        {editing && (
+          <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Título</Label>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="h-10" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Descrição</Label>
+              <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={2} className="min-h-[44px]" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Severidade</Label>
+                <Select value={editSeverity} onValueChange={(v) => setEditSeverity(v as NcSeverity)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                    {severityOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Prazo</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn('w-full h-10 justify-start text-left font-normal text-xs', !editDeadline && 'text-muted-foreground')}>
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      {editDeadline ? format(editDeadline, "dd/MM/yyyy", { locale: ptBR }) : 'Sem prazo'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                    <Calendar mode="single" selected={editDeadline} onSelect={setEditDeadline} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="h-9">Cancelar</Button>
+              <Button size="sm" onClick={handleSaveEdit} disabled={!editTitle.trim() || updateNc.isPending} className="h-9">
+                {updateNc.isPending ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
           </div>
+        )}
+
+        {/* Meta */}
+        {!editing && (
+          <>
+            <div className="flex flex-wrap gap-2">
+              <span className={`text-xs font-semibold px-2 py-1 rounded ${sev.className}`}>
+                {sev.label}
+              </span>
+              <Badge variant={nc.status === 'closed' ? 'secondary' : 'destructive'}>
+                {statusLabels[nc.status]}
+              </Badge>
+              {nc.reopen_count > 0 && (
+                <Badge
+                  variant={nc.reopen_count >= 3 ? 'destructive' : 'outline'}
+                  className="gap-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reaberta {nc.reopen_count}x
+                </Badge>
+              )}
+              {nc.deadline && (
+                <span className="text-xs text-muted-foreground flex items-center">
+                  Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
+                </span>
+              )}
+            </div>
+
+            {nc.description && (
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm break-words">{nc.description}</p>
+              </div>
+            )}
+          </>
         )}
 
         {nc.corrective_action && (

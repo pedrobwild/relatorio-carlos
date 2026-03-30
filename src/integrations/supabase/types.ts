@@ -3968,6 +3968,10 @@ export type Database = {
           source: string
         }[]
       }
+      complete_inspection: {
+        Args: { p_inspection_id: string }
+        Returns: undefined
+      }
       compute_formalization_hash: {
         Args: { p_formalization_id: string }
         Returns: string

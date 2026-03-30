@@ -73,13 +73,8 @@ export async function updateInspectionItem(params: {
 }
 
 export async function completeInspection(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('inspections')
-    .update({
-      status: 'completed' as InspectionStatus,
-      completed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id);
+  const { error } = await supabase.rpc('complete_inspection', {
+    p_inspection_id: id,
+  });
   if (error) throw error;
 }

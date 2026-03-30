@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, X, Loader2, ImagePlus, AlertCircle } from 'lucide-react';
+import { Camera, X, Loader2, ImagePlus, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export function EvidenceUpload({
 }: EvidenceUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,8 +127,8 @@ export function EvidenceUpload({
       {/* Thumbnails */}
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {value.map((path) => (
-            <div key={path} className="relative group w-16 h-16 rounded-md overflow-hidden border bg-muted">
+          {value.map((path, idx) => (
+            <div key={path} className="relative group w-16 h-16 rounded-md overflow-hidden border bg-muted cursor-pointer" onClick={() => signedUrls[path] && setLightboxIndex(idx)}>
               {signedUrls[path] ? (
                 <img
                   src={signedUrls[path]}
@@ -141,7 +143,7 @@ export function EvidenceUpload({
               {!disabled && (
                 <button
                   type="button"
-                  onClick={() => handleRemove(path)}
+                  onClick={(e) => { e.stopPropagation(); handleRemove(path); }}
                   className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-bl-md p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity min-w-[28px] min-h-[28px] flex items-center justify-center"
                 >
                   <X className="h-3 w-3" />
@@ -214,6 +216,44 @@ export function EvidenceUpload({
           Foto obrigatória para itens reprovados
         </p>
       )}
+
+      {/* Lightbox */}
+      <Dialog open={lightboxIndex !== null} onOpenChange={() => setLightboxIndex(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95dvh] p-0 bg-black/95 border-none flex items-center justify-center">
+          {lightboxIndex !== null && signedUrls[value[lightboxIndex]] && (
+            <>
+              <img
+                src={signedUrls[value[lightboxIndex]]}
+                alt={`Evidência ${lightboxIndex + 1}`}
+                className="max-w-full max-h-[85dvh] object-contain"
+              />
+              {value.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-black/50 text-white hover:bg-black/70"
+                    onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + value.length) % value.length); }}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-black/50 text-white hover:bg-black/70"
+                    onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % value.length); }}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </>
+              )}
+              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-xs">
+                {lightboxIndex + 1} / {value.length}
+              </span>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
