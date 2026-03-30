@@ -61,6 +61,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       notes: actionNotes || undefined,
       corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
       resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
+      evidence_photo_paths: evidencePhotos.length > 0 ? evidencePhotos : undefined,
     }, {
       onSuccess: () => {
         setActionNotes('');
