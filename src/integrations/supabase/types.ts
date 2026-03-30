@@ -836,6 +836,33 @@ export type Database = {
           },
         ]
       }
+      inspection_templates: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          sort_order: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Relationships: []
+      }
       inspections: {
         Row: {
           activity_id: string | null

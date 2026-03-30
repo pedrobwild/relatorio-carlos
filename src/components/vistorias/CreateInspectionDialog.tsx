@@ -22,45 +22,6 @@ import { useCreateInspection } from '@/hooks/useInspections';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-// Default checklist items by category
-const DEFAULT_ITEMS: Record<string, string[]> = {
-  'Alvenaria': [
-    'Prumo das paredes verificado',
-    'Esquadro das quinas conferido',
-    'Nivelamento correto',
-    'Argamassa uniforme',
-    'Ausência de trincas ou fissuras',
-  ],
-  'Elétrica': [
-    'Pontos de tomada conforme projeto',
-    'Fiação identificada e organizada',
-    'Disjuntores dimensionados',
-    'Aterramento verificado',
-    'Conduítes sem obstrução',
-  ],
-  'Hidráulica': [
-    'Pontos de água conforme projeto',
-    'Teste de pressão realizado',
-    'Esgoto com caimento adequado',
-    'Ausência de vazamentos',
-    'Registros funcionando',
-  ],
-  'Acabamento': [
-    'Revestimento cerâmico nivelado',
-    'Pintura uniforme sem falhas',
-    'Rejunte completo e limpo',
-    'Soleiras e peitoris instalados',
-    'Rodapés alinhados',
-  ],
-  'Estrutural': [
-    'Armadura conforme projeto',
-    'Formas alinhadas e niveladas',
-    'Escoramento adequado',
-    'Concreto sem segregação',
-    'Cobrimento mínimo respeitado',
-  ],
-};
-
 interface Props {
   projectId: string;
   open: boolean;
@@ -92,11 +53,31 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
     enabled: !!projectId,
   });
 
+  // Fetch inspection templates from DB
+  const { data: templatesByCategory = {} } = useQuery({
+    queryKey: ['inspection-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('inspection_templates' as any)
+        .select('*')
+        .eq('is_active', true)
+        .order('category')
+        .order('sort_order');
+      if (error) throw error;
+      return ((data as any[]) || []).reduce((acc: Record<string, string[]>, item: any) => {
+        if (!acc[item.category]) acc[item.category] = [];
+        acc[item.category].push(item.description);
+        return acc;
+      }, {} as Record<string, string[]>);
+    },
+    staleTime: 1000 * 60 * 60,
+  });
+
   const handleAddCategory = (category: string) => {
-    const categoryItems = DEFAULT_ITEMS[category] || [];
+    const categoryItems = templatesByCategory[category] || [];
     const newItems = categoryItems
-      .filter(desc => !items.some(i => i.description === desc))
-      .map(desc => ({ description: desc }));
+      .filter((desc: string) => !items.some(i => i.description === desc))
+      .map((desc: string) => ({ description: desc }));
     setItems(prev => [...prev, ...newItems]);
     setSelectedCategory('');
   };
@@ -129,6 +110,8 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
       }
     );
   };
+
+  const categories = Object.keys(templatesByCategory);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -181,13 +164,13 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
           <div className="space-y-3">
             <Label>Itens do checklist</Label>
 
-            {/* Category presets */}
+            {/* Category presets from DB */}
             <Select value={selectedCategory} onValueChange={handleAddCategory}>
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Adicionar checklist padrão..." />
               </SelectTrigger>
               <SelectContent>
-                {Object.keys(DEFAULT_ITEMS).map(cat => (
+                {categories.map(cat => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
