@@ -107,7 +107,18 @@ export function InspectionsList({ inspections, searchQuery, onSelect, onDuplicat
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
+                      {onDuplicate && inspection.status === 'completed' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          title="Duplicar vistoria"
+                          onClick={(e) => { e.stopPropagation(); onDuplicate(inspection); }}
+                        >
+                          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                      )}
                       <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3.5 w-3.5" />
                         {format(parseISO(inspection.created_at), "dd/MM", { locale: ptBR })}
