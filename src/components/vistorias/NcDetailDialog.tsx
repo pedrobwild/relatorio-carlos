@@ -4,6 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EvidenceUpload } from './EvidenceUpload';
+import { CorrectiveActionTemplateSelector } from './CorrectiveActionTemplateSelector';
 import { NcPurchaseLink } from './NcPurchaseLink';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
