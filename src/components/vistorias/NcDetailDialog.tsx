@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EvidenceUpload } from './EvidenceUpload';
 import { NcPurchaseLink } from './NcPurchaseLink';
@@ -39,7 +39,7 @@ import {
 } from '@/hooks/useNonConformities';
 import { useCan } from '@/hooks/useCan';
 import { cn } from '@/lib/utils';
-import { NC_CATEGORIES, ROOT_CAUSES } from './ncConstants';
+import { NC_CATEGORIES, ROOT_CAUSES, formatBRL, parseCurrencyInput } from './ncConstants';
 
 const severityOptions: { value: NcSeverity; label: string }[] = [
   { value: 'low', label: 'Baixa' },
@@ -86,14 +86,21 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const [editSeverity, setEditSeverity] = useState<NcSeverity>(nc.severity);
   const [editCategory, setEditCategory] = useState<string>((nc as any).category || '');
   const [editDeadline, setEditDeadline] = useState<Date | undefined>(nc.deadline ? parseISO(nc.deadline) : undefined);
+  const [editEstimatedCost, setEditEstimatedCost] = useState<string>(
+    (nc as any).estimated_cost != null ? String((nc as any).estimated_cost) : ''
+  );
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
   const [evidencePhotos, setEvidencePhotos] = useState<string[]>(nc.evidence_photo_paths ?? []);
   const [rootCause, setRootCause] = useState<string>((nc as any).root_cause || '');
+  const [actualCostInput, setActualCostInput] = useState<string>(
+    (nc as any).actual_cost != null ? String((nc as any).actual_cost) : ''
+  );
 
   const handleSaveEdit = () => {
     if (!editTitle.trim()) return;
+    const parsedCost = parseCurrencyInput(editEstimatedCost);
     updateNc.mutate({
       id: nc.id,
       project_id: nc.project_id,
@@ -102,18 +109,21 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       severity: editSeverity,
       category: editCategory || undefined,
       deadline: editDeadline ? format(editDeadline, 'yyyy-MM-dd') : null,
+      estimated_cost: editEstimatedCost.trim() === '' ? null : parsedCost,
     }, {
       onSuccess: () => setEditing(false),
     });
   };
 
   const handleTransition = (newStatus: NcStatus) => {
-    // For closing, save root_cause first
-    if (newStatus === 'closed' && rootCause) {
+    // For closing, save root_cause and actual_cost first
+    if (newStatus === 'closed') {
+      const parsedActual = parseCurrencyInput(actualCostInput);
       updateNc.mutate({
         id: nc.id,
         project_id: nc.project_id,
-        root_cause: rootCause,
+        root_cause: rootCause || undefined,
+        actual_cost: actualCostInput.trim() === '' ? null : parsedActual,
       });
     }
 
@@ -129,6 +139,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
         setActionNotes('');
         setCorrectiveAction('');
         setRootCause('');
+        setActualCostInput('');
         onOpenChange(false);
       },
     });
@@ -137,6 +148,9 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const sev = severityConfig[nc.severity];
   const ncCategory = (nc as any).category as string | undefined;
   const ncRootCause = (nc as any).root_cause as string | undefined;
+  const ncEstimatedCost = (nc as any).estimated_cost as number | null;
+  const ncActualCost = (nc as any).actual_cost as number | null;
+  const costOverrun = ncActualCost != null && ncEstimatedCost != null && ncActualCost > ncEstimatedCost;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,19 +206,31 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 </Select>
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Prazo</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn('w-full h-10 justify-start text-left font-normal text-xs', !editDeadline && 'text-muted-foreground')}>
-                    <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                    {editDeadline ? format(editDeadline, "dd/MM/yyyy", { locale: ptBR }) : 'Sem prazo'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                  <Calendar mode="single" selected={editDeadline} onSelect={setEditDeadline} initialFocus className="p-3 pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Prazo</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn('w-full h-10 justify-start text-left font-normal text-xs', !editDeadline && 'text-muted-foreground')}>
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      {editDeadline ? format(editDeadline, "dd/MM/yyyy", { locale: ptBR }) : 'Sem prazo'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                    <Calendar mode="single" selected={editDeadline} onSelect={setEditDeadline} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Custo Estimado (R$)</Label>
+                <Input
+                  value={editEstimatedCost}
+                  onChange={(e) => setEditEstimatedCost(e.target.value)}
+                  placeholder="0,00"
+                  inputMode="decimal"
+                  className="h-10"
+                />
+              </div>
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="h-9">Cancelar</Button>
@@ -245,6 +271,34 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 </span>
               )}
             </div>
+
+            {/* Cost info */}
+            {(ncEstimatedCost != null || ncActualCost != null) && (
+              <div className="flex flex-wrap gap-3 text-sm">
+                {ncEstimatedCost != null && (
+                  <div className="flex items-center gap-1.5 bg-muted/50 rounded-lg px-3 py-1.5">
+                    <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Estimado:</span>
+                    <span className="text-xs font-medium">{formatBRL(ncEstimatedCost)}</span>
+                  </div>
+                )}
+                {ncActualCost != null && (
+                  <div className={cn(
+                    'flex items-center gap-1.5 rounded-lg px-3 py-1.5',
+                    costOverrun ? 'bg-destructive/10' : 'bg-muted/50'
+                  )}>
+                    <DollarSign className={cn('h-3.5 w-3.5', costOverrun ? 'text-destructive' : 'text-muted-foreground')} />
+                    <span className="text-xs text-muted-foreground">Real:</span>
+                    <span className={cn('text-xs font-medium', costOverrun && 'text-destructive')}>{formatBRL(ncActualCost)}</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {costOverrun && (
+              <p className="text-xs text-destructive font-medium">
+                ⚠️ Custo real acima do estimado
+              </p>
+            )}
 
             {nc.description && (
               <div className="bg-muted/50 rounded-lg p-3">
@@ -402,22 +456,34 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                       rows={3}
                       className="min-h-[44px]"
                     />
-                    <div className="space-y-1.5">
-                      <Label className="text-sm font-medium">
-                        Causa Raiz <span className="text-destructive">*</span>
-                      </Label>
-                      <Select value={rootCause} onValueChange={setRootCause}>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecionar causa raiz..." />
-                        </SelectTrigger>
-                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
-                          {ROOT_CAUSES.map((cause) => (
-                            <SelectItem key={cause} value={cause} className="min-h-[44px]">
-                              {cause}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-sm font-medium">
+                          Causa Raiz <span className="text-destructive">*</span>
+                        </Label>
+                        <Select value={rootCause} onValueChange={setRootCause}>
+                          <SelectTrigger className="h-11">
+                            <SelectValue placeholder="Selecionar causa raiz..." />
+                          </SelectTrigger>
+                          <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                            {ROOT_CAUSES.map((cause) => (
+                              <SelectItem key={cause} value={cause} className="min-h-[44px]">
+                                {cause}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-sm font-medium">Custo Real de Correção (R$)</Label>
+                        <Input
+                          value={actualCostInput}
+                          onChange={(e) => setActualCostInput(e.target.value)}
+                          placeholder="0,00"
+                          inputMode="decimal"
+                          className="h-11"
+                        />
+                      </div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button

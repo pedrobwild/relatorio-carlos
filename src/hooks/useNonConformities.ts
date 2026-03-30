@@ -54,6 +54,7 @@ export function useCreateNonConformity() {
       responsible_user_id?: string;
       deadline?: string;
       category?: string;
+      estimated_cost?: number;
     }) => {
       if (!user) throw new Error('Não autenticado');
       return createNonConformity({ ...params, created_by: user.id });
@@ -118,6 +119,8 @@ export function useUpdateNonConformity() {
       deadline?: string | null;
       category?: string;
       root_cause?: string | null;
+      estimated_cost?: number | null;
+      actual_cost?: number | null;
     }) => {
       await updateNonConformity(params);
       return params;

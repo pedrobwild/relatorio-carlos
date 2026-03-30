@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { AlertTriangle, Clock, ShieldAlert, CheckCircle2, ListChecks, Tag } from 'lucide-react';
+import { AlertTriangle, Clock, ShieldAlert, CheckCircle2, ListChecks, Tag, DollarSign } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { NonConformity, NcStatus, NcSeverity } from '@/hooks/useNonConformities';
+import { formatBRL } from './ncConstants';
 
 export type NcFilter =
   | { type: 'overdue' }
@@ -22,6 +23,7 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
 
   const stats = useMemo(() => {
     const open = nonConformities.filter(nc => nc.status !== 'closed');
+    const closed = nonConformities.filter(nc => nc.status === 'closed');
     const overdue = open.filter(nc => nc.deadline && nc.deadline < today);
     const criticalHigh = open.filter(nc => nc.severity === 'critical' || nc.severity === 'high');
     const pendingApproval = nonConformities.filter(nc => nc.status === 'pending_approval');
@@ -37,6 +39,16 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
       .slice(0, 3);
     const topCategoryName = topCategories.length > 0 ? topCategories[0][0] : null;
 
+    // Financial impact
+    const openEstimatedTotal = open.reduce((sum, nc) => {
+      const cost = (nc as any).estimated_cost as number | null;
+      return sum + (cost ?? 0);
+    }, 0);
+    const closedActualTotal = closed.reduce((sum, nc) => {
+      const cost = (nc as any).actual_cost as number | null;
+      return sum + (cost ?? 0);
+    }, 0);
+
     return {
       overdue: overdue.length,
       criticalHigh: criticalHigh.length,
@@ -44,11 +56,12 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
       totalOpen: open.length,
       topCategoryName,
       topCategories,
+      openEstimatedTotal,
+      closedActualTotal,
     };
   }, [nonConformities, today]);
 
   const toggle = (filter: NcFilter) => {
-    // If same filter is active, clear it
     if (activeFilter && filter && JSON.stringify(activeFilter) === JSON.stringify(filter)) {
       onFilterChange(null);
     } else {
@@ -98,46 +111,79 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-      {cards.map((card) => {
-        const isActive = activeFilter && JSON.stringify(activeFilter) === JSON.stringify(card.filter);
-        const Icon = card.icon;
-        const subtitle = 'subtitle' in card ? (card as any).subtitle as string | undefined : undefined;
-        return (
-          <Card
-            key={card.label}
-            className={`cursor-pointer transition-all active:scale-[0.97] min-h-[44px] ${
-              isActive
-                ? 'ring-2 ring-primary border-primary'
-                : card.danger
-                  ? 'border-destructive/40 bg-destructive/5'
-                  : ''
-            }`}
-            onClick={() => toggle(card.filter)}
-          >
-            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
-                card.danger ? 'bg-destructive/10' : 'bg-muted'
-              }`}>
-                <Icon className={`h-5 w-5 ${card.danger ? 'text-destructive' : 'text-muted-foreground'}`} />
-              </div>
-              <div className="min-w-0">
-                <p className={`text-xl sm:text-2xl font-bold leading-none ${card.danger ? 'text-destructive' : ''}`}>
-                  {card.value}
-                </p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">
-                  {card.label}
-                </p>
-                {subtitle && (
-                  <p className="text-[9px] text-muted-foreground/70 truncate">
-                    {subtitle}
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {cards.map((card) => {
+          const isActive = activeFilter && JSON.stringify(activeFilter) === JSON.stringify(card.filter);
+          const Icon = card.icon;
+          const subtitle = 'subtitle' in card ? (card as any).subtitle as string | undefined : undefined;
+          return (
+            <Card
+              key={card.label}
+              className={`cursor-pointer transition-all active:scale-[0.97] min-h-[44px] ${
+                isActive
+                  ? 'ring-2 ring-primary border-primary'
+                  : card.danger
+                    ? 'border-destructive/40 bg-destructive/5'
+                    : ''
+              }`}
+              onClick={() => toggle(card.filter)}
+            >
+              <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
+                  card.danger ? 'bg-destructive/10' : 'bg-muted'
+                }`}>
+                  <Icon className={`h-5 w-5 ${card.danger ? 'text-destructive' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-xl sm:text-2xl font-bold leading-none ${card.danger ? 'text-destructive' : ''}`}>
+                    {card.value}
                   </p>
-                )}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">
+                    {card.label}
+                  </p>
+                  {subtitle && (
+                    <p className="text-[9px] text-muted-foreground/70 truncate">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Financial impact card */}
+      {(stats.openEstimatedTotal > 0 || stats.closedActualTotal > 0) && (
+        <Card>
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 bg-muted">
+              <DollarSign className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="flex flex-wrap gap-4 min-w-0">
+              <div>
+                <p className="text-lg sm:text-xl font-bold leading-none">
+                  {formatBRL(stats.openEstimatedTotal)}
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  Estimado (abertas)
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+              {stats.closedActualTotal > 0 && (
+                <div>
+                  <p className="text-lg sm:text-xl font-bold leading-none text-muted-foreground">
+                    {formatBRL(stats.closedActualTotal)}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                    Real (encerradas)
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1975,6 +1975,7 @@ export type Database = {
       }
       non_conformities: {
         Row: {
+          actual_cost: number | null
           approved_at: string | null
           approved_by: string | null
           category: string | null
@@ -1983,6 +1984,7 @@ export type Database = {
           created_by: string
           deadline: string | null
           description: string | null
+          estimated_cost: number | null
           evidence_photo_paths: string[] | null
           id: string
           inspection_id: string | null
@@ -2003,6 +2005,7 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          actual_cost?: number | null
           approved_at?: string | null
           approved_by?: string | null
           category?: string | null
@@ -2011,6 +2014,7 @@ export type Database = {
           created_by: string
           deadline?: string | null
           description?: string | null
+          estimated_cost?: number | null
           evidence_photo_paths?: string[] | null
           id?: string
           inspection_id?: string | null
@@ -2031,6 +2035,7 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          actual_cost?: number | null
           approved_at?: string | null
           approved_by?: string | null
           category?: string | null
@@ -2039,6 +2044,7 @@ export type Database = {
           created_by?: string
           deadline?: string | null
           description?: string | null
+          estimated_cost?: number | null
           evidence_photo_paths?: string[] | null
           id?: string
           inspection_id?: string | null

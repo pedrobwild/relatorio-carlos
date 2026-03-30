@@ -5,7 +5,7 @@ import { FileDown, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
-import { NC_CATEGORIES } from './ncConstants';
+import { NC_CATEGORIES, formatBRL } from './ncConstants';
 
 interface Props {
   nonConformities: NonConformity[];
@@ -49,21 +49,25 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
       count: nonConformities.filter(nc => nc.status === s).length,
     }));
 
-    // By category
     const byCategory = NC_CATEGORIES.map(cat => {
-      const total = nonConformities.filter(nc => (nc as any).category === cat).length;
+      const catTotal = nonConformities.filter(nc => (nc as any).category === cat).length;
       const openCount = open.filter(nc => (nc as any).category === cat).length;
-      return { category: cat, total, open: openCount };
+      return { category: cat, total: catTotal, open: openCount };
     }).filter(c => c.total > 0);
 
-    // Uncategorized
     const uncategorized = nonConformities.filter(nc => !(nc as any).category).length;
 
-    return { total, openCount: open.length, closedCount: closed.length, overdueCount: overdue.length, reincidentCount: reincident.length, avgResolution, bySeverity, byStatus, byCategory, uncategorized };
+    // Financial totals
+    const totalEstimated = nonConformities.reduce((sum, nc) => sum + ((nc as any).estimated_cost ?? 0), 0);
+    const totalActual = nonConformities.reduce((sum, nc) => sum + ((nc as any).actual_cost ?? 0), 0);
+    const openEstimated = open.reduce((sum, nc) => sum + ((nc as any).estimated_cost ?? 0), 0);
+    const closedActual = closed.reduce((sum, nc) => sum + ((nc as any).actual_cost ?? 0), 0);
+
+    return { total, openCount: open.length, closedCount: closed.length, overdueCount: overdue.length, reincidentCount: reincident.length, avgResolution, bySeverity, byStatus, byCategory, uncategorized, totalEstimated, totalActual, openEstimated, closedActual };
   }, [nonConformities]);
 
   const handleExportCsv = useCallback(() => {
-    const headers = ['Título', 'Categoria', 'Severidade', 'Status', 'Responsável', 'Prazo', 'Criada em', 'Causa Raiz', 'Reaberturas'];
+    const headers = ['Título', 'Categoria', 'Severidade', 'Status', 'Responsável', 'Prazo', 'Criada em', 'Causa Raiz', 'Custo Est.', 'Custo Real', 'Reaberturas'];
     const rows = nonConformities.map(nc => [
       nc.title,
       (nc as any).category || '-',
@@ -73,7 +77,16 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
       nc.deadline ? format(parseISO(nc.deadline), 'dd/MM/yyyy') : '-',
       format(parseISO(nc.created_at), 'dd/MM/yyyy'),
       (nc as any).root_cause || '-',
+      (nc as any).estimated_cost != null ? formatBRL((nc as any).estimated_cost) : '-',
+      (nc as any).actual_cost != null ? formatBRL((nc as any).actual_cost) : '-',
       nc.reopen_count.toString(),
+    ]);
+    // Add totals row
+    rows.push([
+      'TOTAL', '', '', '', '', '', '', '',
+      stats.totalEstimated > 0 ? formatBRL(stats.totalEstimated) : '-',
+      stats.totalActual > 0 ? formatBRL(stats.totalActual) : '-',
+      '',
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
@@ -83,7 +96,7 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
     a.download = `relatorio-ncs-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [nonConformities]);
+  }, [nonConformities, stats.totalEstimated, stats.totalActual]);
 
   if (nonConformities.length === 0) return null;
 
@@ -117,6 +130,39 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
             </div>
           ))}
         </div>
+
+        {/* Financial summary */}
+        {(stats.totalEstimated > 0 || stats.totalActual > 0) && (
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Impacto Financeiro</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {stats.openEstimated > 0 && (
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-sm font-bold">{formatBRL(stats.openEstimated)}</p>
+                  <p className="text-[10px] text-muted-foreground">Est. abertas</p>
+                </div>
+              )}
+              {stats.closedActual > 0 && (
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-sm font-bold">{formatBRL(stats.closedActual)}</p>
+                  <p className="text-[10px] text-muted-foreground">Real encerradas</p>
+                </div>
+              )}
+              {stats.totalEstimated > 0 && (
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-sm font-bold">{formatBRL(stats.totalEstimated)}</p>
+                  <p className="text-[10px] text-muted-foreground">Est. total</p>
+                </div>
+              )}
+              {stats.totalActual > 0 && (
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-sm font-bold">{formatBRL(stats.totalActual)}</p>
+                  <p className="text-[10px] text-muted-foreground">Real total</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* By category */}
         {stats.byCategory.length > 0 && (
@@ -176,6 +222,15 @@ export function NcConsolidatedReport({ nonConformities }: Props) {
           <p className="text-xs text-destructive">
             ⚠ {stats.reincidentCount} NC(s) reincidente(s) — atenção para causas-raiz.
           </p>
+        )}
+
+        {/* Financial impact total */}
+        {stats.totalEstimated > 0 && (
+          <div className="pt-2 border-t">
+            <p className="text-sm font-semibold">
+              Total de impacto financeiro estimado: {formatBRL(stats.totalEstimated)}
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

@@ -58,6 +58,7 @@ export async function createNonConformity(params: {
   responsible_user_id?: string;
   deadline?: string;
   category?: string;
+  estimated_cost?: number;
   created_by: string;
 }): Promise<NonConformity> {
   const { data, error } = await supabase
@@ -72,6 +73,7 @@ export async function createNonConformity(params: {
       responsible_user_id: params.responsible_user_id || null,
       deadline: params.deadline || null,
       category: params.category || null,
+      estimated_cost: params.estimated_cost ?? null,
       created_by: params.created_by,
     } as any)
     .select()
@@ -99,6 +101,8 @@ export async function updateNonConformity(params: {
   deadline?: string | null;
   category?: string;
   root_cause?: string | null;
+  estimated_cost?: number | null;
+  actual_cost?: number | null;
 }): Promise<void> {
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (params.title !== undefined) update.title = params.title;
@@ -108,6 +112,8 @@ export async function updateNonConformity(params: {
   if (params.deadline !== undefined) update.deadline = params.deadline;
   if (params.category !== undefined) update.category = params.category;
   if (params.root_cause !== undefined) update.root_cause = params.root_cause;
+  if (params.estimated_cost !== undefined) update.estimated_cost = params.estimated_cost;
+  if (params.actual_cost !== undefined) update.actual_cost = params.actual_cost;
 
   const { error } = await supabase
     .from('non_conformities')
