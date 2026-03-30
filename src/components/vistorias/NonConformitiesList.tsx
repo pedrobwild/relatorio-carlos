@@ -1,12 +1,19 @@
 import { useState, useMemo } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X, User } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X, User, ArrowUpDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
 import type { NcFilter } from './NcSummaryCards';
 

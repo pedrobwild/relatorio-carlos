@@ -197,35 +197,60 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                   </div>
 
                   {isEditable && (
-                    <div className="flex items-center gap-1.5 shrink-0 ml-5 sm:ml-0">
-                      <Button
-                        variant={item.result === 'approved' ? 'default' : 'outline'}
-                        size="icon"
-                        className="h-10 w-10 sm:h-8 sm:w-8"
-                        onClick={() => handleResultChange(item, 'approved')}
-                        title="Aprovado"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={item.result === 'rejected' ? 'destructive' : 'outline'}
-                        size="icon"
-                        className="h-10 w-10 sm:h-8 sm:w-8"
-                        onClick={() => handleResultChange(item, 'rejected')}
-                        title="Reprovado"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={item.result === 'not_applicable' ? 'secondary' : 'outline'}
-                        size="icon"
-                        className="h-10 w-10 sm:h-8 sm:w-8"
-                        onClick={() => handleResultChange(item, 'not_applicable')}
-                        title="N/A"
-                      >
-                        <MinusCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <>
+                      {/* Desktop: individual buttons */}
+                      <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                        <Button
+                          variant={item.result === 'approved' ? 'default' : 'outline'}
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleResultChange(item, 'approved')}
+                          title="Aprovado"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant={item.result === 'rejected' ? 'destructive' : 'outline'}
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleResultChange(item, 'rejected')}
+                          title="Reprovado"
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant={item.result === 'not_applicable' ? 'secondary' : 'outline'}
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleResultChange(item, 'not_applicable')}
+                          title="N/A"
+                        >
+                          <MinusCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Mobile: segmented toggle */}
+                      <div className="flex sm:hidden w-full ml-5 mt-1">
+                        <div className="inline-flex rounded-lg border bg-muted/50 p-0.5 w-full">
+                          {([
+                            { value: 'approved' as InspectionItemResult, label: 'OK', activeClass: 'bg-green-600 text-white shadow-sm' },
+                            { value: 'rejected' as InspectionItemResult, label: 'NC', activeClass: 'bg-destructive text-destructive-foreground shadow-sm' },
+                            { value: 'not_applicable' as InspectionItemResult, label: 'N/A', activeClass: 'bg-muted-foreground text-background shadow-sm' },
+                          ]).map(opt => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              className={`flex-1 py-2.5 text-xs font-medium rounded-md transition-all min-h-[44px] ${
+                                item.result === opt.value ? opt.activeClass : 'text-muted-foreground'
+                              }`}
+                              onClick={() => handleResultChange(item, opt.value)}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {isCompleted && (
