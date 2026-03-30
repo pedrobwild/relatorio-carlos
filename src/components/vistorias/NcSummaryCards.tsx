@@ -98,10 +98,11 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
       {cards.map((card) => {
         const isActive = activeFilter && JSON.stringify(activeFilter) === JSON.stringify(card.filter);
         const Icon = card.icon;
+        const subtitle = 'subtitle' in card ? (card as any).subtitle as string | undefined : undefined;
         return (
           <Card
             key={card.label}
