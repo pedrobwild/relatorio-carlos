@@ -139,7 +139,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Selecione uma atividade" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                 <SelectItem value="none">Nenhuma</SelectItem>
                 {activities.map(a => (
                   <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>
@@ -169,7 +169,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Adicionar checklist padrão..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                 {categories.map(cat => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
