@@ -4142,6 +4142,18 @@ export type Database = {
         Returns: string
       }
       my_profile_role: { Args: never; Returns: string }
+      transition_nc_status: {
+        Args: {
+          p_corrective_action?: string
+          p_evidence_photo_paths?: string[]
+          p_nc_id: string
+          p_new_status: Database["public"]["Enums"]["nc_status"]
+          p_notes?: string
+          p_rejection_reason?: string
+          p_resolution_notes?: string
+        }
+        Returns: undefined
+      }
       user_belongs_to_org: {
         Args: { p_org_id: string; p_user_id: string }
         Returns: boolean

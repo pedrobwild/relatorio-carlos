@@ -343,47 +343,17 @@ export function useUpdateNcStatus() {
     }) => {
       if (!user) throw new Error('Não autenticado');
 
-      const update: Record<string, unknown> = {
-        status: params.new_status,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (params.corrective_action) update.corrective_action = params.corrective_action;
-      if (params.resolution_notes) update.resolution_notes = params.resolution_notes;
-      if (params.evidence_photo_paths) update.evidence_photo_paths = params.evidence_photo_paths;
-
-      if (params.new_status === 'pending_verification') {
-        update.resolved_at = new Date().toISOString();
-        update.resolved_by = user.id;
-      }
-      if (params.new_status === 'closed') {
-        update.approved_at = new Date().toISOString();
-        update.approved_by = user.id;
-      }
-      if (params.new_status === 'pending_approval') {
-        update.verified_at = new Date().toISOString();
-        update.verified_by = user.id;
-      }
-      if (params.rejection_reason) {
-        update.rejection_reason = params.rejection_reason;
-      }
-
-      const { error } = await supabase
-        .from('non_conformities')
-        .update(update)
-        .eq('id', params.nc.id);
+      const { error } = await supabase.rpc('transition_nc_status', {
+        p_nc_id: params.nc.id,
+        p_new_status: params.new_status,
+        p_notes: params.notes || undefined,
+        p_corrective_action: params.corrective_action || undefined,
+        p_resolution_notes: params.resolution_notes || undefined,
+        p_rejection_reason: params.rejection_reason || undefined,
+        p_evidence_photo_paths: params.evidence_photo_paths || undefined,
+      });
 
       if (error) throw error;
-
-      // Log history
-      await supabase.from('nc_history').insert({
-        nc_id: params.nc.id,
-        action: getActionLabel(params.new_status),
-        old_status: params.nc.status as NcStatus,
-        new_status: params.new_status,
-        notes: params.notes || params.resolution_notes || params.rejection_reason || null,
-        actor_id: user.id,
-      });
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['non-conformities', vars.nc.project_id] });
