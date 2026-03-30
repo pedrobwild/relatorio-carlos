@@ -43,14 +43,20 @@ interface Props {
   summaryFilter?: NcFilter;
 }
 
+type SortOption = 'created_at' | 'severity' | 'deadline';
+
+const severityOrder: Record<NcSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
 export function NonConformitiesList({ nonConformities, searchQuery, onSelect, summaryFilter }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<NcStatus | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<NcSeverity | null>(null);
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [filterReincident, setFilterReincident] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('created_at');
 
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const nowMs = useMemo(() => Date.now(), []);
 
   const hasLocalFilters = !!filterStatus || !!filterSeverity || filterOverdue || filterReincident;
 
