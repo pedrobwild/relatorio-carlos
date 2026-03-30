@@ -165,6 +165,12 @@ export default function Vistorias() {
                 summaryFilter={ncSummaryFilter}
               />
             </TabsContent>
+
+            {can('admin:manage_system') && (
+              <TabsContent value="config" className="space-y-4">
+                <CorrectiveActionTemplatesAdmin />
+              </TabsContent>
+            )}
           </Tabs>
         </PageContainer>
       </div>
