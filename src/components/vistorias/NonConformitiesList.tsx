@@ -1,12 +1,19 @@
 import { useState, useMemo } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X, User } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Clock, RotateCcw, Filter, X, User, ArrowUpDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
 import type { NcFilter } from './NcSummaryCards';
 
@@ -36,14 +43,20 @@ interface Props {
   summaryFilter?: NcFilter;
 }
 
+type SortOption = 'created_at' | 'severity' | 'deadline';
+
+const severityOrder: Record<NcSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
 export function NonConformitiesList({ nonConformities, searchQuery, onSelect, summaryFilter }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<NcStatus | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<NcSeverity | null>(null);
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [filterReincident, setFilterReincident] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('created_at');
 
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const nowMs = useMemo(() => Date.now(), []);
 
   const hasLocalFilters = !!filterStatus || !!filterSeverity || filterOverdue || filterReincident;
 
@@ -90,8 +103,20 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
       );
     }
 
+    // Apply sorting
+    result = [...result].sort((a, b) => {
+      if (sortBy === 'severity') return severityOrder[a.severity] - severityOrder[b.severity];
+      if (sortBy === 'deadline') {
+        if (!a.deadline && !b.deadline) return 0;
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return a.deadline.localeCompare(b.deadline);
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
     return result;
-  }, [nonConformities, searchQuery, summaryFilter, filterStatus, filterSeverity, filterOverdue, filterReincident, today]);
+  }, [nonConformities, searchQuery, summaryFilter, filterStatus, filterSeverity, filterOverdue, filterReincident, today, sortBy]);
 
   if (nonConformities.length === 0) {
     return (
@@ -107,7 +132,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
     <div className="space-y-3">
       {/* Advanced filters */}
       <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1.5 h-9 min-w-[44px]">
               <Filter className="h-3.5 w-3.5" />
@@ -120,6 +145,19 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
               <X className="h-3 w-3" /> Limpar
             </Button>
           )}
+          <div className="ml-auto flex items-center gap-1.5">
+            <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Data de criação</SelectItem>
+                <SelectItem value="severity">Severidade</SelectItem>
+                <SelectItem value="deadline">Prazo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <CollapsibleContent className="mt-3 space-y-3">
@@ -195,10 +233,18 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
             const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
             const reopenCount = nc.reopen_count ?? 0;
 
+            const deadlineDate = nc.deadline ? parseISO(nc.deadline) : null;
+            const hoursUntilDeadline = deadlineDate && nc.status !== 'closed'
+              ? differenceInHours(deadlineDate, new Date())
+              : null;
+            const isExpiringSoon = hoursUntilDeadline !== null && hoursUntilDeadline > 0 && hoursUntilDeadline <= 48;
+
             return (
               <Card
                 key={nc.id}
-                className="cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98]"
+                className={`cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98] ${
+                  isExpiringSoon ? 'ring-2 ring-orange-400/60 animate-pulse' : ''
+                }`}
                 onClick={() => onSelect(nc)}
               >
                 <CardContent className="p-3 sm:p-4">
@@ -226,6 +272,12 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
                             <Badge variant="destructive" className="gap-1 text-[10px] sm:text-xs">
                               <Clock className="h-3 w-3" />
                               Atrasada
+                            </Badge>
+                          )}
+                          {isExpiringSoon && !isOverdue && (
+                            <Badge variant="outline" className="gap-1 text-[10px] sm:text-xs border-orange-400 text-orange-600">
+                              <Clock className="h-3 w-3" />
+                              Vence em {Math.ceil(hoursUntilDeadline!)}h
                             </Badge>
                           )}
                           {reopenCount > 0 && (
