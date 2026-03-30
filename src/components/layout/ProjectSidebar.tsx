@@ -48,6 +48,8 @@ interface SidebarNavItem {
   projectPhaseOnly?: boolean;
   /** Show a badge count */
   badgeKey?: "pendencias";
+  /** Only visible to staff users */
+  staffOnly?: boolean;
 }
 
 interface SidebarNavGroup {
