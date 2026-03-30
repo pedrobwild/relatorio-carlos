@@ -31,7 +31,7 @@ interface OnboardingChecklistProps {
 }
 
 // Default steps by role
-const getDefaultSteps = (role: string, navigate: (path: string) => void): OnboardingStep[] => {
+const getDefaultSteps = (role: AppRole | string, navigate: (path: string) => void): OnboardingStep[] => {
   const customerSteps: OnboardingStep[] = [
     {
       id: 'view_schedule',

@@ -34,6 +34,22 @@ const MODULE_PERMISSIONS: Record<AppRole, ModulePermission[]> = {
     'templates:delete',
     'system:admin',
   ],
+  gestor: [
+    'users:read',
+    'users:write',
+    'works:read',
+    'works:write',
+    'works:delete',
+    'templates:read',
+    'templates:write',
+  ],
+  suprimentos: [
+    'works:read',
+    'works:write',
+  ],
+  financeiro: [
+    'works:read',
+  ],
 };
 
 /**
