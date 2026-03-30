@@ -27,6 +27,7 @@ export function EvidenceUpload({
 }: EvidenceUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
