@@ -86,19 +86,19 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const [editTitle, setEditTitle] = useState(nc.title);
   const [editDescription, setEditDescription] = useState(nc.description || '');
   const [editSeverity, setEditSeverity] = useState<NcSeverity>(nc.severity);
-  const [editCategory, setEditCategory] = useState<string>((nc as any).category || '');
+  const [editCategory, setEditCategory] = useState<string>(nc.category || '');
   const [editDeadline, setEditDeadline] = useState<Date | undefined>(nc.deadline ? parseISO(nc.deadline) : undefined);
   const [editEstimatedCost, setEditEstimatedCost] = useState<string>(
-    (nc as any).estimated_cost != null ? String((nc as any).estimated_cost) : ''
+    nc.estimated_cost != null ? String(nc.estimated_cost) : ''
   );
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
-  const [photosBefore, setPhotosBefore] = useState<string[]>((nc as any).evidence_photos_before ?? nc.evidence_photo_paths ?? []);
-  const [photosAfter, setPhotosAfter] = useState<string[]>((nc as any).evidence_photos_after ?? []);
-  const [rootCause, setRootCause] = useState<string>((nc as any).root_cause || '');
+  const [photosBefore, setPhotosBefore] = useState<string[]>(nc.evidence_photos_before ?? nc.evidence_photo_paths ?? []);
+  const [photosAfter, setPhotosAfter] = useState<string[]>(nc.evidence_photos_after ?? []);
+  const [rootCause, setRootCause] = useState<string>(nc.root_cause || '');
   const [actualCostInput, setActualCostInput] = useState<string>(
-    (nc as any).actual_cost != null ? String((nc as any).actual_cost) : ''
+    nc.actual_cost != null ? String(nc.actual_cost) : ''
   );
 
   const handleSaveEdit = () => {
@@ -118,50 +118,53 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
     });
   };
 
-  const handleTransition = (newStatus: NcStatus) => {
-    // For closing, save root_cause and actual_cost first
-    if (newStatus === 'closed') {
-      const parsedActual = parseCurrencyInput(actualCostInput);
-      updateNc.mutate({
+  const handleTransition = async (newStatus: NcStatus) => {
+    try {
+      // 1) Save evidence photos BEFORE transitioning status
+      await updateEvidence.mutateAsync({
         id: nc.id,
         project_id: nc.project_id,
-        root_cause: rootCause || undefined,
-        actual_cost: actualCostInput.trim() === '' ? null : parsedActual,
+        evidence_photos_before: photosBefore,
+        evidence_photos_after: photosAfter,
       });
+
+      // 2) For closing, save root_cause and actual_cost BEFORE transitioning
+      if (newStatus === 'closed') {
+        const parsedActual = parseCurrencyInput(actualCostInput);
+        await updateNc.mutateAsync({
+          id: nc.id,
+          project_id: nc.project_id,
+          root_cause: rootCause || undefined,
+          actual_cost: actualCostInput.trim() === '' ? null : parsedActual,
+        });
+      }
+
+      // 3) Now transition status atomically via RPC
+      const allPhotos = [...photosBefore, ...photosAfter];
+      await updateStatus.mutateAsync({
+        nc,
+        new_status: newStatus,
+        notes: actionNotes || undefined,
+        corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
+        resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
+        evidence_photo_paths: allPhotos.length > 0 ? allPhotos : undefined,
+      });
+
+      setActionNotes('');
+      setCorrectiveAction('');
+      setRootCause('');
+      setActualCostInput('');
+      onOpenChange(false);
+    } catch {
+      // Errors are already handled by individual mutation onError callbacks
     }
-
-    // Save evidence photos to correct fields before transitioning
-    const allPhotos = [...photosBefore, ...photosAfter];
-    updateEvidence.mutate({
-      id: nc.id,
-      project_id: nc.project_id,
-      evidence_photos_before: photosBefore,
-      evidence_photos_after: photosAfter,
-    });
-
-    updateStatus.mutate({
-      nc,
-      new_status: newStatus,
-      notes: actionNotes || undefined,
-      corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
-      resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
-      evidence_photo_paths: allPhotos.length > 0 ? allPhotos : undefined,
-    }, {
-      onSuccess: () => {
-        setActionNotes('');
-        setCorrectiveAction('');
-        setRootCause('');
-        setActualCostInput('');
-        onOpenChange(false);
-      },
-    });
   };
 
   const sev = severityConfig[nc.severity];
-  const ncCategory = (nc as any).category as string | undefined;
-  const ncRootCause = (nc as any).root_cause as string | undefined;
-  const ncEstimatedCost = (nc as any).estimated_cost as number | null;
-  const ncActualCost = (nc as any).actual_cost as number | null;
+  const ncCategory = nc.category;
+  const ncRootCause = nc.root_cause;
+  const ncEstimatedCost = nc.estimated_cost;
+  const ncActualCost = nc.actual_cost;
   const costOverrun = ncActualCost != null && ncEstimatedCost != null && ncActualCost > ncEstimatedCost;
 
   return (
