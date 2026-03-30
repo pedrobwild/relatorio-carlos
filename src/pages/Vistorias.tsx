@@ -42,6 +42,7 @@ export default function Vistorias() {
     inspectionItemId?: string;
     prefillTitle?: string;
   } | null>(null);
+  const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null);
 
   const openNcs = useMemo(() => nonConformities.filter(nc => nc.status !== 'closed'), [nonConformities]);
 
@@ -122,6 +123,7 @@ export default function Vistorias() {
                 inspections={inspections}
                 searchQuery={searchQuery}
                 onSelect={setSelectedInspection}
+                onDuplicate={(insp) => setDuplicateSourceId(insp.id)}
               />
             </TabsContent>
 
