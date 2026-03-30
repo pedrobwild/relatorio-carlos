@@ -1986,6 +1986,8 @@ export type Database = {
           description: string | null
           estimated_cost: number | null
           evidence_photo_paths: string[] | null
+          evidence_photos_after: string[] | null
+          evidence_photos_before: string[] | null
           id: string
           inspection_id: string | null
           inspection_item_id: string | null
@@ -2016,6 +2018,8 @@ export type Database = {
           description?: string | null
           estimated_cost?: number | null
           evidence_photo_paths?: string[] | null
+          evidence_photos_after?: string[] | null
+          evidence_photos_before?: string[] | null
           id?: string
           inspection_id?: string | null
           inspection_item_id?: string | null
@@ -2046,6 +2050,8 @@ export type Database = {
           description?: string | null
           estimated_cost?: number | null
           evidence_photo_paths?: string[] | null
+          evidence_photos_after?: string[] | null
+          evidence_photos_before?: string[] | null
           id?: string
           inspection_id?: string | null
           inspection_item_id?: string | null
