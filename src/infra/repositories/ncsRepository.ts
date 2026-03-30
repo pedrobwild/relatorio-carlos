@@ -13,14 +13,28 @@ export type NcHistoryEntry = Database['public']['Tables']['nc_history']['Row'];
 export async function getNcsByProject(projectId: string): Promise<NonConformity[]> {
   const { data, error } = await supabase
     .from('non_conformities')
-    .select('*, responsible:users_profile!non_conformities_responsible_user_id_fkey(nome)')
+    .select('*')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((row: any) => ({
-    ...row,
-    responsible_user_name: row.responsible?.nome ?? null,
-    responsible: undefined,
+  const ncs = data ?? [];
+
+  // Fetch responsible user names
+  const responsibleIds = [...new Set(ncs.map(nc => nc.responsible_user_id).filter(Boolean))] as string[];
+  let nameMap: Record<string, string> = {};
+  if (responsibleIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('users_profile')
+      .select('id, nome')
+      .in('id', responsibleIds);
+    if (profiles) {
+      nameMap = Object.fromEntries(profiles.map(p => [p.id, p.nome]));
+    }
+  }
+
+  return ncs.map(nc => ({
+    ...nc,
+    responsible_user_name: nc.responsible_user_id ? nameMap[nc.responsible_user_id] ?? null : null,
   })) as NonConformity[];
 }
 
