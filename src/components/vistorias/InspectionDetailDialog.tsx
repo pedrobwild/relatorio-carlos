@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle2, XCircle, MinusCircle, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, MinusCircle, Clock, AlertTriangle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import { EvidenceUpload } from './EvidenceUpload';
 import { InspectionPdfExport } from './InspectionPdfExport';
 import { useCan } from '@/hooks/useCan';
 import { toast } from 'sonner';
+import { getInspectionTypeConfig } from './inspectionConstants';
 
 const resultConfig: Record<InspectionItemResult, { icon: React.ReactNode; label: string; className: string }> = {
   pending: { icon: <Clock className="h-4 w-4" />, label: 'Pendente', className: 'text-muted-foreground' },
@@ -136,10 +137,32 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
         <DialogHeader>
           <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-base sm:text-lg">
             <span>Vistoria — {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}</span>
+            {(() => {
+              const typeConfig = getInspectionTypeConfig((inspection as any).inspection_type || 'rotina');
+              return (
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${typeConfig.color}`}>
+                  {typeConfig.emoji} {typeConfig.label}
+                </span>
+              );
+            })()}
             <Badge variant={isCompleted ? 'secondary' : 'default'}>
               {isCompleted ? 'Concluída' : 'Em andamento'}
             </Badge>
           </DialogTitle>
+          {/* Inspector & client info */}
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
+            {(inspection as any).inspector_user_name && (
+              <span className="flex items-center gap-1">
+                <User className="h-3 w-3" />
+                Vistoriador: {(inspection as any).inspector_user_name}
+              </span>
+            )}
+            {(inspection as any).client_present && (
+              <span className="flex items-center gap-1">
+                🏠 Cliente presente{(inspection as any).client_name ? `: ${(inspection as any).client_name}` : ''}
+              </span>
+            )}
+          </div>
         </DialogHeader>
 
         {/* Progress bar */}
