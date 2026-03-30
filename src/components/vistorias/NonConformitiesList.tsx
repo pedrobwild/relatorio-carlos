@@ -103,8 +103,20 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
       );
     }
 
+    // Apply sorting
+    result = [...result].sort((a, b) => {
+      if (sortBy === 'severity') return severityOrder[a.severity] - severityOrder[b.severity];
+      if (sortBy === 'deadline') {
+        if (!a.deadline && !b.deadline) return 0;
+        if (!a.deadline) return 1;
+        if (!b.deadline) return -1;
+        return a.deadline.localeCompare(b.deadline);
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
     return result;
-  }, [nonConformities, searchQuery, summaryFilter, filterStatus, filterSeverity, filterOverdue, filterReincident, today]);
+  }, [nonConformities, searchQuery, summaryFilter, filterStatus, filterSeverity, filterOverdue, filterReincident, today, sortBy]);
 
   if (nonConformities.length === 0) {
     return (
