@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useUserRole, type AppRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { track } from '@/lib/telemetry';
 
@@ -17,7 +17,7 @@ interface OnboardingStep {
     onClick: () => void;
   };
   /** Role-specific - only show for these roles */
-  roles?: ('customer' | 'engineer' | 'manager' | 'admin')[];
+  roles?: AppRole[];
 }
 
 interface OnboardingChecklistProps {
