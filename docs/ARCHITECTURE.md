@@ -320,6 +320,10 @@ const docErrors = createFeatureErrorCapture('documents');
 docErrors.capture(error, { action: 'delete' });
 ```
 
+## Padrões de Segurança
+
+Para padrões detalhados de segurança, checklists obrigatórios antes de iniciar novos módulos e templates de RPCs de transição de estado, consulte **[docs/SECURITY_PATTERNS.md](./SECURITY_PATTERNS.md)**.
+
 ## Próximos Passos
 
 1. Migrar hooks legados para TanStack Query pattern
