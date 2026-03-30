@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EvidenceUpload } from './EvidenceUpload';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -51,6 +52,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
+  const [evidencePhotos, setEvidencePhotos] = useState<string[]>(nc.evidence_photo_paths ?? []);
 
   const handleTransition = (newStatus: NcStatus) => {
     updateStatus.mutate({
@@ -59,6 +61,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       notes: actionNotes || undefined,
       corrective_action: newStatus === 'in_treatment' ? correctiveAction : undefined,
       resolution_notes: newStatus === 'pending_verification' ? actionNotes : undefined,
+      evidence_photo_paths: evidencePhotos.length > 0 ? evidencePhotos : undefined,
     }, {
       onSuccess: () => {
         setActionNotes('');
@@ -121,6 +124,18 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
             <p className="text-sm bg-destructive/5 rounded-lg p-3 border border-destructive/20 break-words">{nc.rejection_reason}</p>
           </div>
         )}
+
+        {/* Evidence photos */}
+        <div className="space-y-1">
+          <Label className="text-xs font-semibold uppercase text-muted-foreground">Fotos de evidência</Label>
+          <EvidenceUpload
+            projectId={nc.project_id}
+            entityId={nc.id}
+            value={evidencePhotos}
+            onChange={setEvidencePhotos}
+            disabled={nc.status === 'closed'}
+          />
+        </div>
 
         <Separator />
 

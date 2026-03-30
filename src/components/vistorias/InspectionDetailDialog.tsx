@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle2, XCircle, MinusCircle, Clock, AlertTriangle } from 'lucide-react';
@@ -21,6 +21,7 @@ import {
   type InspectionItem,
   type InspectionItemResult,
 } from '@/hooks/useInspections';
+import { EvidenceUpload } from './EvidenceUpload';
 import { toast } from 'sonner';
 
 const resultConfig: Record<InspectionItemResult, { icon: React.ReactNode; label: string; className: string }> = {
@@ -44,11 +45,37 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   const completeInspection = useCompleteInspection();
   const createNc = useCreateNonConformity();
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [itemPhotos, setItemPhotos] = useState<Record<string, string[]>>({});
 
   const isCompleted = inspection.status === 'completed';
 
+  // Get effective photos for an item (local state or DB value)
+  const getPhotos = (item: InspectionItem): string[] => {
+    return itemPhotos[item.id] ?? item.photo_paths ?? [];
+  };
+
+  const handlePhotosChange = (item: InspectionItem, paths: string[]) => {
+    setItemPhotos(prev => ({ ...prev, [item.id]: paths }));
+    // Persist immediately
+    updateItem.mutate({
+      id: item.id,
+      inspection_id: inspection.id,
+      photo_paths: paths,
+    });
+  };
+
   const handleResultChange = (item: InspectionItem, result: InspectionItemResult) => {
     if (isCompleted) return;
+
+    // If rejecting, check photos exist
+    if (result === 'rejected') {
+      const photos = getPhotos(item);
+      if (photos.length === 0) {
+        toast.error('Adicione pelo menos uma foto antes de reprovar o item');
+        return;
+      }
+    }
+
     updateItem.mutate({
       id: item.id,
       inspection_id: inspection.id,
@@ -67,10 +94,23 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
     }
   };
 
+  // Check if any rejected item is missing photos
+  const hasRejectedWithoutPhotos = useMemo(() => {
+    return items.some(i => {
+      if (i.result !== 'rejected') return false;
+      const photos = getPhotos(i);
+      return photos.length === 0;
+    });
+  }, [items, itemPhotos]);
+
   const handleComplete = () => {
     const pendingItems = items.filter(i => i.result === 'pending');
     if (pendingItems.length > 0) {
       toast.error(`Ainda há ${pendingItems.length} itens pendentes`);
+      return;
+    }
+    if (hasRejectedWithoutPhotos) {
+      toast.error('Todos os itens reprovados devem ter pelo menos uma foto de evidência');
       return;
     }
     completeInspection.mutate({ id: inspection.id, project_id: projectId });
@@ -103,7 +143,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
           </DialogTitle>
         </DialogHeader>
 
-        {/* Summary - compact on mobile */}
+        {/* Summary */}
         <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-1 text-green-600">
             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -125,10 +165,13 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
           </p>
         )}
 
-        {/* Items checklist - optimized for touch */}
+        {/* Items checklist */}
         <div className="space-y-2">
           {items.map((item, i) => {
             const cfg = resultConfig[item.result];
+            const photos = getPhotos(item);
+            const isRejectedNoPhotos = item.result === 'rejected' && photos.length === 0;
+
             return (
               <div
                 key={item.id}
@@ -136,7 +179,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                   item.result === 'rejected' ? 'border-destructive/30 bg-destructive/5' : ''
                 }`}
               >
-                {/* Description + status badge on mobile */}
+                {/* Description + action buttons */}
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                   <div className="flex items-start gap-2 min-w-0">
                     <span className="text-xs text-muted-foreground font-mono mt-0.5 shrink-0">{i + 1}.</span>
@@ -145,7 +188,6 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                     </span>
                   </div>
 
-                  {/* Action buttons - larger touch targets on mobile */}
                   {!isCompleted && (
                     <div className="flex items-center gap-1.5 shrink-0 ml-5 sm:ml-0">
                       <Button
@@ -200,6 +242,16 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                   <p className="text-xs text-muted-foreground ml-5">{item.notes}</p>
                 ) : null}
 
+                {/* Evidence photos */}
+                <EvidenceUpload
+                  projectId={projectId}
+                  entityId={item.id}
+                  value={photos}
+                  onChange={(paths) => handlePhotosChange(item, paths)}
+                  required={item.result === 'rejected'}
+                  disabled={isCompleted}
+                />
+
                 {/* Create NC button for rejected items */}
                 {item.result === 'rejected' && (
                   <Button
@@ -225,7 +277,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
             </Button>
             <Button
               onClick={handleComplete}
-              disabled={pendingCount > 0 || completeInspection.isPending}
+              disabled={pendingCount > 0 || hasRejectedWithoutPhotos || completeInspection.isPending}
               className="h-11 sm:h-10 w-full sm:w-auto"
             >
               {completeInspection.isPending ? 'Finalizando...' : 'Finalizar Vistoria'}
