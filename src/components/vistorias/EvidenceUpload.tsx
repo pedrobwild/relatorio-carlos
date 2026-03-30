@@ -39,10 +39,9 @@ export function EvidenceUpload({
     }
   };
 
-  // Load URLs for existing paths
-  useState(() => {
+  useEffect(() => {
     value.forEach(loadSignedUrl);
-  });
+  }, [value]);
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
