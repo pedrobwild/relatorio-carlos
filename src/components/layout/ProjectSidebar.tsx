@@ -142,6 +142,7 @@ export function ProjectSidebar() {
           icon: ClipboardCheck,
           path: paths.vistorias,
           disabledInProjectPhase: true,
+          staffOnly: true,
         },
         {
           label: L("pendencias"),
@@ -189,6 +190,7 @@ export function ProjectSidebar() {
           // Filter items
           const visibleItems = group.items.filter((item) => {
             if (item.projectPhaseOnly && !isProjectPhase) return false;
+            if (item.staffOnly && !isStaff) return false;
             return true;
           });
 
