@@ -1,10 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
-export type NonConformity = Database['public']['Tables']['non_conformities']['Row'];
-export type NcHistoryEntry = Database['public']['Tables']['nc_history']['Row'];
 export type NcSeverity = Database['public']['Enums']['nc_severity'];
 export type NcStatus = Database['public']['Enums']['nc_status'];
+
+type NcRow = Database['public']['Tables']['non_conformities']['Row'];
+export type NonConformity = NcRow & {
+  responsible_user_name?: string | null;
+};
+export type NcHistoryEntry = Database['public']['Tables']['nc_history']['Row'];
 
 export async function getNcsByProject(projectId: string): Promise<NonConformity[]> {
   const { data, error } = await supabase
