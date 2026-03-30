@@ -274,6 +274,12 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
                               Atrasada
                             </Badge>
                           )}
+                          {isExpiringSoon && !isOverdue && (
+                            <Badge variant="outline" className="gap-1 text-[10px] sm:text-xs border-orange-400 text-orange-600">
+                              <Clock className="h-3 w-3" />
+                              Vence em {Math.ceil(hoursUntilDeadline!)}h
+                            </Badge>
+                          )}
                           {reopenCount > 0 && (
                             <Badge
                               variant={reopenCount >= 3 ? 'destructive' : 'outline'}
