@@ -102,3 +102,29 @@ export function useUpdateNcStatus() {
     },
   });
 }
+
+export function useUpdateNonConformity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      id: string;
+      project_id: string;
+      title?: string;
+      description?: string | null;
+      severity?: NcSeverity;
+      responsible_user_id?: string | null;
+      deadline?: string | null;
+    }) => {
+      await updateNonConformity(params);
+      return params;
+    },
+    onSuccess: (params) => {
+      queryClient.invalidateQueries({ queryKey: ['non-conformities', params.project_id] });
+      toast.success('NC atualizada');
+    },
+    onError: (err: Error) => {
+      toast.error('Erro: ' + err.message);
+    },
+  });
+}
