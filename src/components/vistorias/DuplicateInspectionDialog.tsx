@@ -46,13 +46,22 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
   const createInspection = useCreateInspection();
 
   const { data: sourceItems, isLoading: loadingSource } = useInspectionItems(duplicateFromInspectionId);
+  const { data: sourceInspection } = useInspection(duplicateFromInspectionId);
 
-  // Pre-fill items from source inspection
+  // Pre-fill items and type from source inspection
   useEffect(() => {
     if (sourceItems && sourceItems.length > 0) {
       setItems(sourceItems.map(i => ({ description: i.description })));
     }
   }, [sourceItems]);
+
+  useEffect(() => {
+    if (sourceInspection) {
+      setInspectionType(((sourceInspection as any).inspection_type || 'rotina') as InspectionType);
+      setClientPresent((sourceInspection as any).client_present || false);
+      setClientName((sourceInspection as any).client_name || '');
+    }
+  }, [sourceInspection]);
 
   const { data: activities = [] } = useQuery({
     queryKey: ['project-activities', projectId],
