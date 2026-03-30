@@ -4,6 +4,7 @@ import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EvidenceUpload } from './EvidenceUpload';
+import { NcPurchaseLink } from './NcPurchaseLink';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -251,6 +252,9 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
             disabled={nc.status === 'closed'}
           />
         </div>
+
+        {/* Purchase link for critical/high NCs */}
+        <NcPurchaseLink nc={nc} />
 
         <Separator />
 
