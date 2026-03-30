@@ -13,6 +13,7 @@ import { useInspections } from '@/hooks/useInspections';
 import { useNonConformities } from '@/hooks/useNonConformities';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList';
+import { NcSummaryCards, type NcFilter } from '@/components/vistorias/NcSummaryCards';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
@@ -34,6 +35,7 @@ export default function Vistorias() {
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [selectedNc, setSelectedNc] = useState<NonConformity | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [ncSummaryFilter, setNcSummaryFilter] = useState<NcFilter>(null);
   const [createNcContext, setCreateNcContext] = useState<{
     inspectionId?: string;
     inspectionItemId?: string;
@@ -102,7 +104,6 @@ export default function Vistorias() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Desktop search always visible, mobile toggle */}
               <div className={`relative w-full sm:w-64 ${showSearch ? 'block' : 'hidden md:block'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -123,11 +124,17 @@ export default function Vistorias() {
               />
             </TabsContent>
 
-            <TabsContent value="ncs">
+            <TabsContent value="ncs" className="space-y-4">
+              <NcSummaryCards
+                nonConformities={nonConformities}
+                activeFilter={ncSummaryFilter}
+                onFilterChange={setNcSummaryFilter}
+              />
               <NonConformitiesList
                 nonConformities={nonConformities}
                 searchQuery={searchQuery}
                 onSelect={setSelectedNc}
+                summaryFilter={ncSummaryFilter}
               />
             </TabsContent>
           </Tabs>

@@ -1,17 +1,22 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ClipboardCheck, Calendar, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 import type { Inspection } from '@/hooks/useInspections';
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+type InspectionStatus = 'draft' | 'in_progress' | 'completed';
+
+const statusConfig: Record<InspectionStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Rascunho', variant: 'outline' },
   in_progress: { label: 'Em andamento', variant: 'default' },
   completed: { label: 'Concluída', variant: 'secondary' },
 };
+
+const allStatuses: InspectionStatus[] = ['draft', 'in_progress', 'completed'];
 
 interface Props {
   inspections: Inspection[];
@@ -20,67 +25,96 @@ interface Props {
 }
 
 export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
-  const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return inspections;
-    const q = searchQuery.toLowerCase();
-    return inspections.filter(i =>
-      i.notes?.toLowerCase().includes(q) ||
-      i.inspection_date.includes(q)
-    );
-  }, [inspections, searchQuery]);
+  const [filterStatus, setFilterStatus] = useState<InspectionStatus | null>(null);
 
-  if (filtered.length === 0) {
-    return (
-      <EmptyState
-        icon={ClipboardCheck}
-        title="Nenhuma vistoria encontrada"
-        description="Crie uma nova vistoria para iniciar o checklist de qualidade."
-      />
-    );
-  }
+  const filtered = useMemo(() => {
+    let result = inspections;
+    if (filterStatus) result = result.filter(i => i.status === filterStatus);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(i =>
+        i.notes?.toLowerCase().includes(q) ||
+        i.inspection_date.includes(q)
+      );
+    }
+    return result;
+  }, [inspections, searchQuery, filterStatus]);
 
   return (
-    <div className="grid gap-3">
-      {filtered.map((inspection) => {
-        const cfg = statusConfig[inspection.status] || statusConfig.draft;
-        return (
-          <Card
-            key={inspection.id}
-            className="cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98]"
-            onClick={() => onSelect(inspection)}
+    <div className="space-y-3">
+      {/* Status filter chips */}
+      <div className="flex flex-wrap gap-1.5">
+        <Button
+          variant={filterStatus === null ? 'default' : 'outline'}
+          size="sm"
+          className="h-8 text-xs min-w-[44px]"
+          onClick={() => setFilterStatus(null)}
+        >
+          Todas
+        </Button>
+        {allStatuses.map(s => (
+          <Button
+            key={s}
+            variant={filterStatus === s ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs min-w-[44px]"
+            onClick={() => setFilterStatus(prev => prev === s ? null : s)}
           >
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <ClipboardCheck className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm sm:text-base">
-                        Vistoria {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
-                      </span>
-                      <Badge variant={cfg.variant} className="text-[10px] sm:text-xs">{cfg.label}</Badge>
+            {statusConfig[s].label}
+          </Button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={ClipboardCheck}
+          title="Nenhuma vistoria encontrada"
+          description="Crie uma nova vistoria para iniciar o checklist de qualidade."
+        />
+      ) : (
+        <div className="grid gap-3">
+          {filtered.map((inspection) => {
+            const cfg = statusConfig[inspection.status as InspectionStatus] || statusConfig.draft;
+            return (
+              <Card
+                key={inspection.id}
+                className="cursor-pointer hover:border-primary/50 transition-colors active:scale-[0.98]"
+                onClick={() => onSelect(inspection)}
+              >
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <ClipboardCheck className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm sm:text-base">
+                            Vistoria {format(parseISO(inspection.inspection_date), "dd/MM/yyyy", { locale: ptBR })}
+                          </span>
+                          <Badge variant={cfg.variant} className="text-[10px] sm:text-xs">{cfg.label}</Badge>
+                        </div>
+                        {inspection.notes && (
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
+                            {inspection.notes}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    {inspection.notes && (
-                      <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
-                        {inspection.notes}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {format(parseISO(inspection.created_at), "dd/MM", { locale: ptBR })}
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {format(parseISO(inspection.created_at), "dd/MM", { locale: ptBR })}
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

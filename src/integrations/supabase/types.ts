@@ -836,6 +836,33 @@ export type Database = {
           },
         ]
       }
+      inspection_templates: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          sort_order: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+        }
+        Relationships: []
+      }
       inspections: {
         Row: {
           activity_id: string | null
@@ -1733,6 +1760,7 @@ export type Database = {
           inspection_item_id: string | null
           project_id: string
           rejection_reason: string | null
+          reopen_count: number
           resolution_notes: string | null
           resolved_at: string | null
           resolved_by: string | null
@@ -1758,6 +1786,7 @@ export type Database = {
           inspection_item_id?: string | null
           project_id: string
           rejection_reason?: string | null
+          reopen_count?: number
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -1783,6 +1812,7 @@ export type Database = {
           inspection_item_id?: string | null
           project_id?: string
           rejection_reason?: string | null
+          reopen_count?: number
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
