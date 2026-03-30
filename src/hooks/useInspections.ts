@@ -346,11 +346,11 @@ export function useUpdateNcStatus() {
       const { error } = await supabase.rpc('transition_nc_status', {
         p_nc_id: params.nc.id,
         p_new_status: params.new_status,
-        p_notes: params.notes || null,
-        p_corrective_action: params.corrective_action || null,
-        p_resolution_notes: params.resolution_notes || null,
-        p_rejection_reason: params.rejection_reason || null,
-        p_evidence_photo_paths: params.evidence_photo_paths || null,
+        p_notes: params.notes || undefined,
+        p_corrective_action: params.corrective_action || undefined,
+        p_resolution_notes: params.resolution_notes || undefined,
+        p_rejection_reason: params.rejection_reason || undefined,
+        p_evidence_photo_paths: params.evidence_photo_paths || undefined,
       });
 
       if (error) throw error;
