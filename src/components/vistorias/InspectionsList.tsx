@@ -94,6 +94,11 @@ export function InspectionsList({ inspections, searchQuery, onSelect }: Props) {
                           </span>
                           <Badge variant={cfg.variant} className="text-[10px] sm:text-xs">{cfg.label}</Badge>
                         </div>
+                        {inspection.activity_description && (
+                          <p className="text-xs text-primary/80 truncate mt-0.5">
+                            {inspection.activity_description}
+                          </p>
+                        )}
                         {inspection.notes && (
                           <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
                             {inspection.notes}

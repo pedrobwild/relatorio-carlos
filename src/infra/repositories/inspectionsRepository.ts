@@ -12,11 +12,15 @@ export type InspectionItemResult = Database['public']['Enums']['inspection_item_
 export async function getInspectionsByProject(projectId: string): Promise<Inspection[]> {
   const { data, error } = await supabase
     .from('inspections')
-    .select('*')
+    .select('*, project_activities(description)')
     .eq('project_id', projectId)
     .order('inspection_date', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    activity_description: row.project_activities?.description ?? null,
+    project_activities: undefined,
+  }));
 }
 
 export async function getInspectionById(inspectionId: string): Promise<Inspection> {
