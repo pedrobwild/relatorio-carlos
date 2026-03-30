@@ -36,14 +36,22 @@ export function NcPurchaseLink({ nc }: Props) {
   const handleSubmit = () => {
     if (!form.item_name.trim()) return;
 
+    const requiredByDate = new Date();
+    requiredByDate.setDate(requiredByDate.getDate() + (nc.severity === 'critical' ? 3 : 7));
+
     addPurchase.mutate(
       {
+        project_id: nc.project_id,
         item_name: form.item_name.trim(),
-        description: form.description.trim() || undefined,
-        estimated_cost: form.estimated_cost ? parseFloat(form.estimated_cost) : undefined,
-        status: 'pending' as const,
-        priority: nc.severity === 'critical' ? 'urgent' : 'high',
-      } as PurchaseInput,
+        description: form.description.trim() || null,
+        estimated_cost: form.estimated_cost ? parseFloat(form.estimated_cost) : null,
+        status: 'pending',
+        quantity: 1,
+        unit: 'un',
+        lead_time_days: nc.severity === 'critical' ? 3 : 7,
+        required_by_date: requiredByDate.toISOString().split('T')[0],
+        notes: `Prioridade: ${nc.severity === 'critical' ? 'URGENTE' : 'ALTA'} — Originada de NC`,
+      } satisfies PurchaseInput,
       {
         onSuccess: () => {
           toast.success('Solicitação de compra criada');
