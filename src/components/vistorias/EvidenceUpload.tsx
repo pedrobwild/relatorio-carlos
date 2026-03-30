@@ -127,8 +127,8 @@ export function EvidenceUpload({
       {/* Thumbnails */}
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {value.map((path) => (
-            <div key={path} className="relative group w-16 h-16 rounded-md overflow-hidden border bg-muted">
+          {value.map((path, idx) => (
+            <div key={path} className="relative group w-16 h-16 rounded-md overflow-hidden border bg-muted cursor-pointer" onClick={() => signedUrls[path] && setLightboxIndex(idx)}>
               {signedUrls[path] ? (
                 <img
                   src={signedUrls[path]}
@@ -143,7 +143,7 @@ export function EvidenceUpload({
               {!disabled && (
                 <button
                   type="button"
-                  onClick={() => handleRemove(path)}
+                  onClick={(e) => { e.stopPropagation(); handleRemove(path); }}
                   className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-bl-md p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity min-w-[28px] min-h-[28px] flex items-center justify-center"
                 >
                   <X className="h-3 w-3" />
