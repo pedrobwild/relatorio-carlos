@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AlertTriangle, Clock, ShieldAlert, CheckCircle2, ListChecks } from 'lucide-react';
+import { AlertTriangle, Clock, ShieldAlert, CheckCircle2, ListChecks, Tag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { NonConformity, NcStatus, NcSeverity } from '@/hooks/useNonConformities';
 
@@ -8,6 +8,7 @@ export type NcFilter =
   | { type: 'severity'; value: NcSeverity[] }
   | { type: 'status'; value: NcStatus }
   | { type: 'open' }
+  | { type: 'category'; value: string }
   | null;
 
 interface Props {
@@ -24,7 +25,26 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
     const overdue = open.filter(nc => nc.deadline && nc.deadline < today);
     const criticalHigh = open.filter(nc => nc.severity === 'critical' || nc.severity === 'high');
     const pendingApproval = nonConformities.filter(nc => nc.status === 'pending_approval');
-    return { overdue: overdue.length, criticalHigh: criticalHigh.length, pendingApproval: pendingApproval.length, totalOpen: open.length };
+
+    // Category breakdown for open NCs
+    const categoryCounts: Record<string, number> = {};
+    open.forEach(nc => {
+      const cat = (nc as any).category as string | undefined;
+      if (cat) categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    });
+    const topCategories = Object.entries(categoryCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+    const topCategoryName = topCategories.length > 0 ? topCategories[0][0] : null;
+
+    return {
+      overdue: overdue.length,
+      criticalHigh: criticalHigh.length,
+      pendingApproval: pendingApproval.length,
+      totalOpen: open.length,
+      topCategoryName,
+      topCategories,
+    };
   }, [nonConformities, today]);
 
   const toggle = (filter: NcFilter) => {
@@ -65,6 +85,16 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
       filter: { type: 'open' } as NcFilter,
       danger: false,
     },
+    ...(stats.topCategoryName ? [{
+      label: stats.topCategoryName,
+      value: stats.topCategories[0][1],
+      icon: Tag,
+      filter: { type: 'category', value: stats.topCategoryName } as NcFilter,
+      danger: false,
+      subtitle: stats.topCategories.length > 1
+        ? stats.topCategories.slice(1).map(([name, count]) => `${name}: ${count}`).join(' · ')
+        : undefined,
+    }] : []),
   ];
 
   return (
