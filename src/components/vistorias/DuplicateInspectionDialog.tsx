@@ -95,6 +95,9 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
         activity_id: activityId && activityId !== 'none' ? activityId : undefined,
         inspection_date: inspectionDate,
         notes: notes || undefined,
+        inspection_type: inspectionType,
+        client_present: clientPresent,
+        client_name: clientPresent && clientName.trim() ? clientName.trim() : undefined,
         items: items.map((item, i) => ({
           description: item.description,
           sort_order: i,
