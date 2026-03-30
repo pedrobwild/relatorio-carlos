@@ -16,6 +16,7 @@ import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList'
 import { NcSummaryCards, type NcFilter } from '@/components/vistorias/NcSummaryCards';
 import { NcTimelineChart } from '@/components/vistorias/NcTimelineChart';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
+import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
