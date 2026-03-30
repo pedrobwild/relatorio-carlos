@@ -15,7 +15,8 @@ import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList'
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
-import type { Inspection, NonConformity } from '@/hooks/useInspections';
+import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
+import type { Inspection, NonConformity, InspectionItem } from '@/hooks/useInspections';
 
 export default function Vistorias() {
   const { projectId } = useProjectNavigation();
@@ -29,6 +30,11 @@ export default function Vistorias() {
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [selectedNc, setSelectedNc] = useState<NonConformity | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [createNcContext, setCreateNcContext] = useState<{
+    inspectionId?: string;
+    inspectionItemId?: string;
+    prefillTitle?: string;
+  } | null>(null);
 
   const openNcs = useMemo(() => nonConformities.filter(nc => nc.status !== 'closed'), [nonConformities]);
 
@@ -137,7 +143,13 @@ export default function Vistorias() {
           open={!!selectedInspection}
           onOpenChange={(open) => !open && setSelectedInspection(null)}
           onCreateNc={(item) => {
+            const inspId = selectedInspection?.id;
             setSelectedInspection(null);
+            setCreateNcContext({
+              inspectionId: inspId,
+              inspectionItemId: item.id,
+              prefillTitle: `NC: ${item.description}`,
+            });
           }}
         />
       )}
@@ -147,6 +159,21 @@ export default function Vistorias() {
           nc={selectedNc}
           open={!!selectedNc}
           onOpenChange={(open) => !open && setSelectedNc(null)}
+        />
+      )}
+
+      {createNcContext && projectId && (
+        <CreateNcDialog
+          open={!!createNcContext}
+          onOpenChange={(open) => !open && setCreateNcContext(null)}
+          projectId={projectId}
+          inspectionId={createNcContext.inspectionId}
+          inspectionItemId={createNcContext.inspectionItemId}
+          prefillTitle={createNcContext.prefillTitle}
+          onSuccess={() => {
+            setCreateNcContext(null);
+            setTab('ncs');
+          }}
         />
       )}
     </>

@@ -16,7 +16,6 @@ import {
   useInspectionItems,
   useUpdateInspectionItem,
   useCompleteInspection,
-  useCreateNonConformity,
   type Inspection,
   type InspectionItem,
   type InspectionItemResult,
@@ -39,11 +38,10 @@ interface Props {
   onCreateNc?: (item: InspectionItem) => void;
 }
 
-export function InspectionDetailDialog({ inspection, projectId, open, onOpenChange }: Props) {
+export function InspectionDetailDialog({ inspection, projectId, open, onOpenChange, onCreateNc }: Props) {
   const { data: items = [], isLoading } = useInspectionItems(inspection.id);
   const updateItem = useUpdateInspectionItem();
   const completeInspection = useCompleteInspection();
-  const createNc = useCreateNonConformity();
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [itemPhotos, setItemPhotos] = useState<Record<string, string[]>>({});
 
@@ -117,14 +115,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
   };
 
   const handleCreateNcFromItem = (item: InspectionItem) => {
-    createNc.mutate({
-      project_id: projectId,
-      inspection_id: inspection.id,
-      inspection_item_id: item.id,
-      title: `NC: ${item.description}`,
-      description: item.notes || undefined,
-      severity: 'medium',
-    });
+    onCreateNc?.(item);
   };
 
   const approvedCount = items.filter(i => i.result === 'approved').length;
@@ -259,7 +250,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
                     size="sm"
                     className="gap-1.5 text-xs h-9 min-w-[44px]"
                     onClick={() => handleCreateNcFromItem(item)}
-                    disabled={createNc.isPending}
+                    disabled={false}
                   >
                     <AlertTriangle className="h-3.5 w-3.5" />
                     Abrir NC
