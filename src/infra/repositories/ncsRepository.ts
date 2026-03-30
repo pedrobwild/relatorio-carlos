@@ -13,11 +13,15 @@ export type NcHistoryEntry = Database['public']['Tables']['nc_history']['Row'];
 export async function getNcsByProject(projectId: string): Promise<NonConformity[]> {
   const { data, error } = await supabase
     .from('non_conformities')
-    .select('*')
+    .select('*, responsible:users_profile!non_conformities_responsible_user_id_fkey(nome)')
     .eq('project_id', projectId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    responsible_user_name: row.responsible?.nome ?? null,
+    responsible: undefined,
+  })) as NonConformity[];
 }
 
 export async function getNcHistory(ncId: string): Promise<NcHistoryEntry[]> {
