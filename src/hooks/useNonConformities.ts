@@ -135,3 +135,25 @@ export function useUpdateNonConformity() {
     },
   });
 }
+
+export function useUpdateNcEvidence() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      id: string;
+      project_id: string;
+      evidence_photos_before?: string[];
+      evidence_photos_after?: string[];
+    }) => {
+      await updateNcEvidencePhotos(params);
+      return params;
+    },
+    onSuccess: (params) => {
+      queryClient.invalidateQueries({ queryKey: ['non-conformities', params.project_id] });
+    },
+    onError: (err: Error) => {
+      toast.error('Erro ao salvar evidências: ' + err.message);
+    },
+  });
+}
