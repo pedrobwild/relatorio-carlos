@@ -31,7 +31,7 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
     // Category breakdown for open NCs
     const categoryCounts: Record<string, number> = {};
     open.forEach(nc => {
-      const cat = (nc as any).category as string | undefined;
+      const cat = nc.category;
       if (cat) categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     });
     const topCategories = Object.entries(categoryCounts)
@@ -41,12 +41,10 @@ export function NcSummaryCards({ nonConformities, activeFilter, onFilterChange }
 
     // Financial impact
     const openEstimatedTotal = open.reduce((sum, nc) => {
-      const cost = (nc as any).estimated_cost as number | null;
-      return sum + (cost ?? 0);
+      return sum + (nc.estimated_cost ?? 0);
     }, 0);
     const closedActualTotal = closed.reduce((sum, nc) => {
-      const cost = (nc as any).actual_cost as number | null;
-      return sum + (cost ?? 0);
+      return sum + (nc.actual_cost ?? 0);
     }, 0);
 
     return {

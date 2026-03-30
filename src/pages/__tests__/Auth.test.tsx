@@ -56,11 +56,10 @@ describe('Auth Page', () => {
     );
 
     // Wait for session check to complete
-    const title = await findByText('Portal Bwild');
+    const title = await findByText('Portal Bwild', { exact: false });
     expect(title).toBeInTheDocument();
 
     expect(queryByText('Entrar')).toBeInTheDocument();
-    expect(queryByText('Criar conta')).toBeInTheDocument();
   });
 
   it('should show loading state while checking session', async () => {

@@ -75,7 +75,7 @@ export async function createNonConformity(params: {
       category: params.category || null,
       estimated_cost: params.estimated_cost ?? null,
       created_by: params.created_by,
-    } as any)
+    })
     .select()
     .single();
 

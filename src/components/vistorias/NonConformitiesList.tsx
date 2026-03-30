@@ -94,7 +94,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
           result = result.filter(nc => nc.status !== 'closed');
           break;
         case 'category':
-          result = result.filter(nc => (nc as any).category === summaryFilter.value && nc.status !== 'closed');
+          result = result.filter(nc => nc.category === summaryFilter.value && nc.status !== 'closed');
           break;
       }
     }
@@ -102,7 +102,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
     // Apply local advanced filters
     if (filterStatus) result = result.filter(nc => nc.status === filterStatus);
     if (filterSeverity) result = result.filter(nc => nc.severity === filterSeverity);
-    if (filterCategories.length > 0) result = result.filter(nc => filterCategories.includes((nc as any).category || ''));
+    if (filterCategories.length > 0) result = result.filter(nc => filterCategories.includes(nc.category || ''));
     if (filterOverdue) result = result.filter(nc => nc.deadline && nc.deadline < today && nc.status !== 'closed');
     if (filterReincident) result = result.filter(nc => nc.reopen_count > 0);
 
@@ -112,7 +112,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
       result = result.filter(nc =>
         nc.title.toLowerCase().includes(q) ||
         nc.description?.toLowerCase().includes(q) ||
-        ((nc as any).category || '').toLowerCase().includes(q)
+        ((nc.category || '').toLowerCase().includes(q))
       );
     }
 
@@ -263,7 +263,7 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
             const st = statusConfig[nc.status];
             const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
             const reopenCount = nc.reopen_count ?? 0;
-            const ncCategory = (nc as any).category as string | undefined;
+            const ncCategory = nc.category;
 
             const deadlineDate = nc.deadline ? parseISO(nc.deadline) : null;
             const hoursUntilDeadline = deadlineDate && nc.status !== 'closed'
