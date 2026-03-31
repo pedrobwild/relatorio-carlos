@@ -136,6 +136,10 @@ export default function EditarObra() {
             <TabGeral project={data.project} customer={data.customer} onProjectChange={data.handleProjectChange} onCustomerChange={data.handleCustomerChange} />
           </TabsContent>
 
+          <TabsContent value="ficha">
+            <TabFichaTecnica studioInfo={data.studioInfo} onChange={data.handleStudioInfoChange} />
+          </TabsContent>
+
           <TabsContent value="atividades">
             <TabAtividades activities={data.activities} onAdd={data.addActivity} onUpdate={data.updateActivity} onDelete={data.deleteActivity} />
           </TabsContent>
