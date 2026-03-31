@@ -47,6 +47,7 @@ export function ObrasTab() {
   const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [engineerFilter, setEngineerFilter] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const toggleRow = (id: string) => {
@@ -58,13 +59,25 @@ export function ObrasTab() {
     });
   };
 
+  // Unique engineers for filter dropdown
+  const engineers = useMemo(() => {
+    const map = new Map<string, string>();
+    projects.forEach((p: ProjectWithCustomer) => {
+      if (p.engineer_user_id && p.engineer_name) {
+        map.set(p.engineer_user_id, p.engineer_name);
+      }
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [projects]);
+
   const filteredProjects = useMemo(() => projects.filter((p: ProjectWithCustomer) => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }), [projects, searchTerm, statusFilter]);
+    const matchesEngineer = !engineerFilter || p.engineer_user_id === engineerFilter;
+    return matchesSearch && matchesStatus && matchesEngineer;
+  }), [projects, searchTerm, statusFilter, engineerFilter]);
 
   const { activeCount, completedCount, pausedCount } = useMemo(() => ({
     activeCount: projects.filter((p: ProjectWithCustomer) => p.status === 'active').length,
