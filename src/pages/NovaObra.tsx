@@ -250,6 +250,27 @@ export default function NovaObra() {
           />
         </div>
 
+        {/* Draft restored banner */}
+        {draftRestored && (
+          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3 mb-2">
+            <p className="text-sm text-muted-foreground">Rascunho restaurado automaticamente.</p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                clearDraft();
+                setFormData(initialFormData);
+                setCurrentStep(0);
+                setCompletedSteps(new Set());
+                setDraftRestored(false);
+              }}
+            >
+              Limpar
+            </Button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Step 0: Dados Básicos */}
           <div className={cn(currentStep !== 0 && 'hidden')}>
@@ -282,9 +303,12 @@ export default function NovaObra() {
             </div>
           </div>
 
-          {/* Step 3: Cliente */}
+          {/* Step 3: Cliente - with Review Summary */}
           <div className={cn(currentStep !== 3 && 'hidden')}>
-            <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
+            <div className="space-y-6">
+              <ReviewSummary formData={formData} />
+              <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
+            </div>
           </div>
 
           {/* Navigation buttons */}
