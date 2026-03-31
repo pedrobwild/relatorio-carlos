@@ -53,6 +53,8 @@ interface SidebarNavItem {
   badgeKey?: "pendencias" | "formalizacoes" | "financeiro";
   /** Only visible to staff users */
   staffOnly?: boolean;
+  /** For clients, hide under a collapsible "Mais" section */
+  clientSecondary?: boolean;
 }
 
 interface SidebarNavGroup {
@@ -60,6 +62,8 @@ interface SidebarNavGroup {
   items: SidebarNavItem[];
   /** Hide entire group in project phase */
   hideInProjectPhase?: boolean;
+  /** For clients, collapse this entire group under "Mais" */
+  clientCollapsible?: boolean;
 }
 
 export function ProjectSidebar() {
