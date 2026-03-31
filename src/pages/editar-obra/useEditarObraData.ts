@@ -86,6 +86,29 @@ export function useEditarObraData(projectId: string | undefined) {
         };
       }));
 
+      // Fetch studio info
+      const { data: studioData } = await supabase
+        .from('project_studio_info')
+        .select('*')
+        .eq('project_id', projectId!)
+        .maybeSingle();
+      if (studioData) {
+        setStudioInfo(studioData as StudioInfo);
+      } else {
+        setStudioInfo({
+          project_id: projectId!,
+          nome_do_empreendimento: null,
+          endereco_completo: null,
+          bairro: null,
+          cidade: null,
+          cep: null,
+          complemento: null,
+          tamanho_imovel_m2: null,
+          tipo_de_locacao: null,
+          data_recebimento_chaves: null,
+        });
+      }
+
       const { data: staffProfiles } = await supabase
         .from('profiles')
         .select('user_id, display_name, email, role')
