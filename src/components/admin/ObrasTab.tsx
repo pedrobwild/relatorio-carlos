@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Search, Eye, Settings, Trash2 } from 'lucide-react';
+import { Building2, Search, Eye, Settings, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -33,6 +33,7 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
 import { CreateObraDialog } from './obras/CreateObraDialog';
 import { ObraCard, statusColors, statusLabels } from './obras/ObraCard';
+import { ObraExpandedRow } from './obras/ObraExpandedRow';
 
 export function ObrasTab() {
   const navigate = useNavigate();
