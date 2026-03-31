@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Home, Settings } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,7 +22,19 @@ import { useUserRole } from '@/hooks/useUserRole';
 export function UserMenu() {
   const navigate = useNavigate();
   const { user, signOut, isAuthenticated } = useAuth();
-  const { isAdmin, isStaff } = useUserRole();
+  const { isAdmin, isStaff, roles } = useUserRole();
+
+  const ROLE_LABELS: Record<string, string> = {
+    admin: 'Admin',
+    manager: 'Gestor',
+    engineer: 'Engenheiro',
+    gestor: 'Supervisor',
+    suprimentos: 'Suprimentos',
+    financeiro: 'Financeiro',
+    customer: 'Cliente',
+  };
+
+  const primaryRoleLabel = roles.length > 0 ? ROLE_LABELS[roles[0]] || roles[0] : null;
 
   if (!isAuthenticated) return null;
 
@@ -50,9 +63,16 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-3 py-2">
-          <p className="text-sm font-medium truncate">
-            {user?.email?.split('@')[0]}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium truncate flex-1">
+              {user?.email?.split('@')[0]}
+            </p>
+            {primaryRoleLabel && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0 font-medium">
+                {primaryRoleLabel}
+              </Badge>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground truncate">
             {user?.email}
           </p>
