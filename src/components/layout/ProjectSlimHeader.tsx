@@ -50,6 +50,7 @@ export function ProjectSlimHeader() {
   const { projectId, paths } = useProjectNavigation();
   const { data: projects = [] } = useProjectsQuery();
   const { stats: pendenciasStats } = usePendencias({ projectId });
+  const { data: pendingByProject } = usePendingCountsByProject();
   const { isStaff } = useUserRole();
   const [searchQuery, setSearchQuery] = useState("");
 
