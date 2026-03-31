@@ -71,6 +71,10 @@ function NotificationItem({
         <p className={cn('text-sm leading-tight', isUnread ? 'font-semibold text-foreground' : 'text-foreground/80')}>
           {notification.title}
         </p>
+        {/* Contextual microcopy: imperative for actions, informative for updates */}
+        {isUnread && notification.action_url && isBlocking && (
+          <p className="text-xs text-destructive/80 font-medium mt-0.5">{config.actionVerb} →</p>
+        )}
         {notification.body && (
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notification.body}</p>
         )}
