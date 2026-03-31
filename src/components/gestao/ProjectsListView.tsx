@@ -1,17 +1,20 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ExternalLink, AlertTriangle, FileSignature, FileText, TrendingUp } from 'lucide-react';
+import { ExternalLink, AlertTriangle, FileSignature, FileText, CheckCircle, Clock } from 'lucide-react';
+import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
+import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { format, differenceInDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import type { ProjectWithCustomer } from '@/infra/repositories';
+import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
