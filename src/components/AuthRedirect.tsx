@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { debugNav } from '@/lib/debugAuth';
 
 /**
@@ -18,6 +19,7 @@ export function AuthRedirect() {
   const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { roles, loading: roleLoading, isStaff, isCustomer } = useUserRole();
+  const { data: projects = [], isLoading: projectsLoading } = useProjectsQuery();
   
   // Track if we've already done the initial redirect to prevent re-triggers
   // Also track the user roles to reset on user change (logout/login)
@@ -28,8 +30,8 @@ export function AuthRedirect() {
   });
 
   useEffect(() => {
-    if (authLoading || roleLoading) {
-      debugNav('AuthRedirect: still loading', { authLoading, roleLoading });
+    if (authLoading || roleLoading || projectsLoading) {
+      debugNav('AuthRedirect: still loading', { authLoading, roleLoading, projectsLoading });
       return;
     }
     
@@ -66,17 +68,23 @@ export function AuthRedirect() {
       
       hasRedirected.current = true;
       
-      // Prioritize staff routes for users with multiple roles
+      // Staff with a single active project → go directly to that project
       if (isStaff) {
-        navigate('/gestao', { replace: true });
+        const activeProjects = projects.filter(p => p.status === 'active');
+        if (activeProjects.length === 1) {
+          debugNav('AuthRedirect: single active project, redirecting directly', { projectId: activeProjects[0].id });
+          navigate(`/obra/${activeProjects[0].id}/jornada`, { replace: true });
+        } else {
+          navigate('/gestao', { replace: true });
+        }
       } else if (isCustomer) {
         navigate('/minhas-obras', { replace: true });
       }
     }
-  }, [isAuthenticated, roles, isStaff, isCustomer, authLoading, roleLoading, navigate, location.pathname]);
+  }, [isAuthenticated, roles, isStaff, isCustomer, authLoading, roleLoading, projectsLoading, projects, navigate, location.pathname]);
 
   // Show loading while checking auth
-  if (authLoading || roleLoading) {
+  if (authLoading || roleLoading || projectsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Carregando">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

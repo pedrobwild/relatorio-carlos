@@ -23,8 +23,32 @@ export function ProtectedRoute({
   if (authLoading || roleLoading) {
     debugNav('ProtectedRoute: loading', { authLoading, roleLoading, path: location.pathname });
     return (
-      <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Carregando autenticação">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="min-h-screen min-h-[100dvh] bg-background">
+        {/* Skeleton header */}
+        <div className="h-14 border-b border-border bg-card/95 flex items-center px-4 gap-3">
+          <div className="h-6 w-6 rounded bg-muted animate-pulse" />
+          <div className="h-1 w-px bg-border mx-1" />
+          <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+          <div className="flex-1" />
+          <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+          <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+        </div>
+        {/* Skeleton sidebar + content */}
+        <div className="flex">
+          <div className="hidden md:block w-[220px] border-r border-border p-3 space-y-4">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="h-8 rounded bg-muted animate-pulse" />
+            ))}
+          </div>
+          <div className="flex-1 p-6 space-y-4">
+            <div className="h-8 w-48 rounded bg-muted animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 rounded-lg bg-muted animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
         <span className="sr-only">Verificando autenticação...</span>
       </div>
     );
