@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
+import type { StudioInfo } from './TabFichaTecnica';
 
 export function useEditarObraData(projectId: string | undefined) {
   const { toast } = useToast();
