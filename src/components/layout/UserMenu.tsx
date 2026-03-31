@@ -63,9 +63,16 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-3 py-2">
-          <p className="text-sm font-medium truncate">
-            {user?.email?.split('@')[0]}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium truncate flex-1">
+              {user?.email?.split('@')[0]}
+            </p>
+            {primaryRoleLabel && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0 font-medium">
+                {primaryRoleLabel}
+              </Badge>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground truncate">
             {user?.email}
           </p>
