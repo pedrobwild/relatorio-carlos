@@ -3361,6 +3361,66 @@ export type Database = {
           },
         ]
       }
+      project_studio_info: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          created_at: string
+          data_recebimento_chaves: string | null
+          endereco_completo: string | null
+          nome_do_empreendimento: string | null
+          project_id: string
+          tamanho_imovel_m2: number | null
+          tipo_de_locacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          data_recebimento_chaves?: string | null
+          endereco_completo?: string | null
+          nome_do_empreendimento?: string | null
+          project_id: string
+          tamanho_imovel_m2?: number | null
+          tipo_de_locacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          created_at?: string
+          data_recebimento_chaves?: string | null
+          endereco_completo?: string | null
+          nome_do_empreendimento?: string | null
+          project_id?: string
+          tamanho_imovel_m2?: number | null
+          tipo_de_locacao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_studio_info_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_studio_info_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_team_contacts: {
         Row: {
           crea: string | null
