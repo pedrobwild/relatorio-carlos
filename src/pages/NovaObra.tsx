@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Send, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { ScheduleCard } from './nova-obra/ScheduleCard';
 import { FinancialCard } from './nova-obra/FinancialCard';
 import { CustomerCard } from './nova-obra/CustomerCard';
 import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
+import { ReviewSummary } from './nova-obra/ReviewSummary';
 import { FormStepper, type Step } from '@/components/FormStepper';
 import { cn } from '@/lib/utils';
 
@@ -32,21 +33,50 @@ const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
   3: ['customer_name', 'customer_email', 'customer_password'],
 };
 
+const DRAFT_KEY = 'nova-obra-draft';
+
+function loadDraft(): { formData: FormData; step: number } | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.formData) return parsed;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveDraft(formData: FormData, step: number) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, step, savedAt: Date.now() }));
+  } catch { /* ignore */ }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+}
+
 export default function NovaObra() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: templates } = useProjectTemplates();
   const { submit, user } = useNovaObraSubmit();
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const draft = useMemo(() => loadDraft(), []);
+  const [currentStep, setCurrentStep] = useState(draft?.step ?? 0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [sendInvite, setSendInvite] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<FormData>(draft?.formData ?? initialFormData);
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
+  const [draftRestored, setDraftRestored] = useState(!!draft);
+
+  // Auto-save draft on formData or step change
+  useEffect(() => {
+    saveDraft(formData, currentStep);
+  }, [formData, currentStep]);
 
   const templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
