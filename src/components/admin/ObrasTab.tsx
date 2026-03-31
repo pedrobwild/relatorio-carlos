@@ -1,10 +1,17 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Search, Eye, Settings, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Building2, Search, Eye, Settings, Trash2, ChevronDown, ChevronRight, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +47,7 @@ export function ObrasTab() {
   const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [engineerFilter, setEngineerFilter] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const toggleRow = (id: string) => {
@@ -51,13 +59,25 @@ export function ObrasTab() {
     });
   };
 
+  // Unique engineers for filter dropdown
+  const engineers = useMemo(() => {
+    const map = new Map<string, string>();
+    projects.forEach((p: ProjectWithCustomer) => {
+      if (p.engineer_user_id && p.engineer_name) {
+        map.set(p.engineer_user_id, p.engineer_name);
+      }
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [projects]);
+
   const filteredProjects = useMemo(() => projects.filter((p: ProjectWithCustomer) => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }), [projects, searchTerm, statusFilter]);
+    const matchesEngineer = !engineerFilter || p.engineer_user_id === engineerFilter;
+    return matchesSearch && matchesStatus && matchesEngineer;
+  }), [projects, searchTerm, statusFilter, engineerFilter]);
 
   const { activeCount, completedCount, pausedCount } = useMemo(() => ({
     activeCount: projects.filter((p: ProjectWithCustomer) => p.status === 'active').length,
@@ -123,6 +143,20 @@ export function ObrasTab() {
             </Button>
           ))}
         </div>
+        {engineers.length > 0 && (
+          <Select value={engineerFilter ?? 'all'} onValueChange={(v) => setEngineerFilter(v === 'all' ? null : v)}>
+            <SelectTrigger className="w-[200px] shrink-0">
+              <UserCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os responsáveis</SelectItem>
+              {engineers.map(([id, name]) => (
+                <SelectItem key={id} value={id}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Projects List */}

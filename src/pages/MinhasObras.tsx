@@ -1,12 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2 } from 'lucide-react';
+import { Building2, Mail } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { AppHeader } from '@/components/AppHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useClientDashboard } from '@/hooks/useClientDashboard';
+import { useAuth } from '@/hooks/useAuth';
 import { useDashboardActivities } from '@/hooks/useDashboardActivities';
 import { DashboardStatsCards } from '@/pages/minhas-obras/DashboardStatsCards';
 import { UpcomingPaymentsCard } from '@/pages/minhas-obras/UpcomingPaymentsCard';
@@ -16,7 +17,9 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 export default function MinhasObras() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { projects, stats, upcomingPayments, isLoading, error } = useClientDashboard();
+  const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
   const activeIds = useMemo(() => projects.filter(p => p.status === 'active').map(p => p.id), [projects]);
   const { data: activitiesMap } = useDashboardActivities(activeIds);
   const getProjectActivities = useCallback(
@@ -84,8 +87,14 @@ export default function MinhasObras() {
           ) : sortedProjects.length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="Nenhuma obra encontrada"
-              description="Você ainda não possui obras vinculadas ao seu cadastro. Entre em contato com a equipe Bwild."
+              title={displayName ? `Olá, ${displayName}! Sua jornada começa aqui.` : 'Sua jornada começa aqui'}
+              description="Assim que sua obra for configurada pela nossa equipe, você poderá acompanhar cronograma, fotos e documentos por este painel."
+              hint="Se você já recebeu um convite por e-mail, verifique se está logado com o mesmo endereço de e-mail."
+              action={{
+                label: 'Falar com a equipe',
+                onClick: () => window.open('mailto:contato@bwild.com.br', '_blank'),
+                icon: Mail,
+              }}
             />
           ) : (
             <div className="space-y-6">
