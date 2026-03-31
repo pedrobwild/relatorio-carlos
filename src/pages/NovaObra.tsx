@@ -210,6 +210,7 @@ export default function NovaObra() {
             ? `Convite enviado para ${formData.customer_email}`
             : 'Cliente cadastrado sem envio de convite',
       });
+      clearDraft();
       navigate('/gestao');
     } catch (err: unknown) {
       console.error('Error creating project:', err);
