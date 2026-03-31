@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users, LayoutGrid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
+import { ProjectsListView } from '@/components/gestao/ProjectsListView';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -168,6 +169,15 @@ export default function GestaoObras() {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectWithCustomer | null>(null);
 
+  // View mode: persist in localStorage
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>(() => {
+    return (localStorage.getItem('gestao-view-mode') as 'cards' | 'list') || 'cards';
+  });
+  const toggleViewMode = useCallback((mode: 'cards' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('gestao-view-mode', mode);
+  }, []);
+
   const handleProjectClick = useCallback((projectId: string) => {
     navigate(`/obra/${projectId}`);
   }, [navigate]);
@@ -220,7 +230,7 @@ export default function GestaoObras() {
         </div>
       </AppHeader>
 
-      <main className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+      <main className={`mx-auto px-4 py-4 md:py-6 ${viewMode === 'list' ? 'max-w-[1400px]' : 'max-w-6xl'}`}>
         {/* Stats + Action row */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide">
@@ -240,6 +250,27 @@ export default function GestaoObras() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
+            {/* View toggle */}
+            <div className="hidden md:flex items-center border rounded-md overflow-hidden">
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-8 rounded-none px-2"
+                onClick={() => toggleViewMode('cards')}
+                title="Visualização em cards"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-8 rounded-none px-2"
+                onClick={() => toggleViewMode('list')}
+                title="Visualização em lista"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
             <Button variant="outline" size="sm" onClick={() => navigate('/gestao/calendario-compras')}>
               <span className="hidden sm:inline">Calendário Compras</span>
               <span className="sm:hidden">Compras</span>
@@ -349,6 +380,8 @@ export default function GestaoObras() {
               </>
             )}
           </Card>
+        ) : viewMode === 'list' ? (
+          <ProjectsListView projects={filteredProjects} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="gestao-obras-list">
             {filteredProjects.map((project) => (
