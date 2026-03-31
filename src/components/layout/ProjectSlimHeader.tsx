@@ -144,8 +144,8 @@ export function ProjectSlimHeader() {
                 <div className="px-2 py-1.5">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar obra…"
+                     <Input
+                      placeholder="🔍 Buscar ou selecionar obra…"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="h-8 pl-8 text-sm"
@@ -197,11 +197,21 @@ export function ProjectSlimHeader() {
                             <span className="font-medium text-sm block">
                               {p.name} {p.unit_name && `– ${p.unit_name}`}
                             </span>
-                            {p.customer_name && (
-                              <span className="text-xs text-muted-foreground">
-                                {p.customer_name}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              {p.customer_name && (
+                                <span className="text-xs text-muted-foreground">
+                                  {p.customer_name}
+                                </span>
+                              )}
+                              {isStaff && (p as any).engineer_name && (
+                                <>
+                                  <span className="text-xs text-muted-foreground/50">·</span>
+                                  <span className="text-xs text-muted-foreground/70">
+                                    {(p as any).engineer_name}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
                           {pendingCount > 0 && (
                             <Badge
