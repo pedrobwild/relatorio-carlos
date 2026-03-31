@@ -159,11 +159,13 @@ export function ProjectSidebar() {
           label: L("financeiro"),
           icon: DollarSign,
           path: paths.financeiro,
+          badgeKey: "financeiro",
         },
         {
           label: L("formalizacoes"),
           icon: ClipboardSignature,
           path: paths.formalizacoes,
+          badgeKey: "formalizacoes",
         },
       ],
     },
