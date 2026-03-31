@@ -200,6 +200,19 @@ export function useEditarObraData(projectId: string | undefined) {
         if (customerError) throw customerError;
       }
 
+      // Save studio info (upsert)
+      const { project_id, ...studioFields } = studioInfo;
+      const hasStudioData = Object.values(studioFields).some(v => v !== null && v !== '');
+      if (hasStudioData) {
+        const { error: studioError } = await supabase
+          .from('project_studio_info')
+          .upsert({
+            project_id: project.id,
+            ...studioFields,
+          }, { onConflict: 'project_id' });
+        if (studioError) throw studioError;
+      }
+
       const statusLabels: Record<string, string> = {
         active: 'Em andamento',
         paused: 'Pausada',
