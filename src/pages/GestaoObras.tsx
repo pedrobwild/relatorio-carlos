@@ -128,11 +128,43 @@ function ProjectCard({
 
 export default function GestaoObras() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [phaseFilter, setPhaseFilter] = useState<'all' | 'project' | 'execution'>('all');
-  const [engineerFilter, setEngineerFilter] = useState<string | null>(null);
+
+  // Persist filters in URL search params
+  const searchTerm = searchParams.get('q') || '';
+  const statusFilter = searchParams.get('status') || null;
+  const phaseFilter = (searchParams.get('phase') as 'all' | 'project' | 'execution') || 'all';
+  const engineerFilter = searchParams.get('engineer') || null;
+
+  const setSearchTerm = useCallback((value: string) => {
+    setSearchParams(prev => {
+      if (value) prev.set('q', value); else prev.delete('q');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setStatusFilter = useCallback((value: string | null) => {
+    setSearchParams(prev => {
+      if (value) prev.set('status', value); else prev.delete('status');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setPhaseFilter = useCallback((value: 'all' | 'project' | 'execution') => {
+    setSearchParams(prev => {
+      if (value !== 'all') prev.set('phase', value); else prev.delete('phase');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setEngineerFilter = useCallback((value: string | null) => {
+    setSearchParams(prev => {
+      if (value) prev.set('engineer', value); else prev.delete('engineer');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectWithCustomer | null>(null);
 
