@@ -230,7 +230,7 @@ export default function GestaoObras() {
         </div>
       </AppHeader>
 
-      <main className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+      <main className={`mx-auto px-4 py-4 md:py-6 ${viewMode === 'list' ? 'max-w-[1400px]' : 'max-w-6xl'}`}>
         {/* Stats + Action row */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-hide">
