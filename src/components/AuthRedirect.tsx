@@ -19,6 +19,7 @@ export function AuthRedirect() {
   const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { roles, loading: roleLoading, isStaff, isCustomer } = useUserRole();
+  const { data: projects = [], isLoading: projectsLoading } = useProjectsQuery();
   
   // Track if we've already done the initial redirect to prevent re-triggers
   // Also track the user roles to reset on user change (logout/login)
