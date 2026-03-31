@@ -1,5 +1,5 @@
 import { useProjectDashboardSummary } from '@/hooks/useOptimizedQueries';
-import { Loader2, TrendingUp, AlertTriangle, FileCheck, DollarSign } from 'lucide-react';
+import { Loader2, TrendingUp, AlertTriangle, FileText, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface ObraExpandedRowProps {
@@ -27,49 +27,61 @@ export function ObraExpandedRow({ projectId, contractValue }: ObraExpandedRowPro
     );
   }
 
-  const progress = summary.progress_pct ?? 0;
-  const totalActivities = summary.total_activities ?? 0;
-  const completedActivities = summary.completed_activities ?? 0;
-  const openNcs = summary.open_ncs ?? 0;
-  const pendingInspections = summary.pending_inspections ?? 0;
+  const pendingCount = summary.pending_count ?? 0;
+  const overdueCount = summary.overdue_count ?? 0;
+  const documentsCount = summary.documents_count ?? 0;
+  const pendingDocsCount = summary.pending_documents_count ?? 0;
+  const pendingSignatures = summary.pending_signatures_count ?? 0;
+  const paidAmount = summary.paid_amount ?? 0;
+  const totalPayments = summary.total_payments ?? 0;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-3 px-4 bg-muted/30 rounded-md">
       <div className="flex items-center gap-2">
-        <TrendingUp className="h-4 w-4 text-primary" />
+        <AlertTriangle className={`h-4 w-4 ${overdueCount > 0 ? 'text-[hsl(var(--warning))]' : 'text-muted-foreground'}`} />
         <div>
-          <p className="text-xs text-muted-foreground">Progresso</p>
-          <div className="flex items-center gap-2">
-            <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all"
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              />
-            </div>
-            <span className="text-sm font-medium">{progress}%</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <FileCheck className="h-4 w-4 text-muted-foreground" />
-        <div>
-          <p className="text-xs text-muted-foreground">Atividades</p>
-          <p className="text-sm font-medium">{completedActivities}/{totalActivities}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <AlertTriangle className={`h-4 w-4 ${openNcs > 0 ? 'text-warning' : 'text-muted-foreground'}`} />
-        <div>
-          <p className="text-xs text-muted-foreground">NCs Abertas</p>
+          <p className="text-xs text-muted-foreground">Pendências</p>
           <p className="text-sm font-medium">
-            {openNcs > 0 ? (
+            {pendingCount > 0 ? (
+              <span className="flex items-center gap-1">
+                {pendingCount}
+                {overdueCount > 0 && (
+                  <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs px-1.5 py-0">
+                    {overdueCount} atrasada{overdueCount > 1 ? 's' : ''}
+                  </Badge>
+                )}
+              </span>
+            ) : (
+              <span className="text-[hsl(var(--success))]">Em dia</span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <FileText className="h-4 w-4 text-muted-foreground" />
+        <div>
+          <p className="text-xs text-muted-foreground">Documentos</p>
+          <p className="text-sm font-medium">
+            {documentsCount}
+            {pendingDocsCount > 0 && (
+              <span className="text-[hsl(var(--warning))] ml-1">({pendingDocsCount} pend.)</span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <TrendingUp className={`h-4 w-4 ${pendingSignatures > 0 ? 'text-[hsl(var(--warning))]' : 'text-muted-foreground'}`} />
+        <div>
+          <p className="text-xs text-muted-foreground">Assinaturas</p>
+          <p className="text-sm font-medium">
+            {pendingSignatures > 0 ? (
               <Badge variant="outline" className="bg-warning/10 text-[hsl(var(--warning))] border-warning/20 text-xs px-1.5 py-0">
-                {openNcs}
+                {pendingSignatures} pendente{pendingSignatures > 1 ? 's' : ''}
               </Badge>
             ) : (
-              '0'
+              'OK'
             )}
           </p>
         </div>
@@ -78,10 +90,10 @@ export function ObraExpandedRow({ projectId, contractValue }: ObraExpandedRowPro
       <div className="flex items-center gap-2">
         <DollarSign className="h-4 w-4 text-muted-foreground" />
         <div>
-          <p className="text-xs text-muted-foreground">Contrato</p>
+          <p className="text-xs text-muted-foreground">Financeiro</p>
           <p className="text-sm font-medium">
             {contractValue
-              ? `R$ ${contractValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+              ? `R$ ${paidAmount.toLocaleString('pt-BR', { minimumFractionDigits: 0 })} / ${contractValue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`
               : '—'}
           </p>
         </div>
