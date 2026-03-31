@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, Calendar, DollarSign, Users, Save, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, DollarSign, Users, Save, Trash2, Loader2, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -21,6 +21,7 @@ import { TabGeral } from './editar-obra/TabGeral';
 import { TabAtividades } from './editar-obra/TabAtividades';
 import { TabPagamentos } from './editar-obra/TabPagamentos';
 import { TabEquipe } from './editar-obra/TabEquipe';
+import { TabFichaTecnica } from './editar-obra/TabFichaTecnica';
 
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
