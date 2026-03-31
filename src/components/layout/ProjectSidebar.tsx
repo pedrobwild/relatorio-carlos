@@ -258,11 +258,14 @@ export function ProjectSidebar() {
                                 {badgeCount > 0 && (
                                   <Badge
                                     variant={
-                                      pendenciasStats.overdueCount > 0
+                                      isBadgeUrgent(item.badgeKey)
                                         ? "destructive"
                                         : "secondary"
                                     }
-                                    className="min-w-5 h-5 px-1.5 text-xs font-bold"
+                                    className={cn(
+                                      "min-w-5 h-5 px-1.5 text-xs font-bold",
+                                      isBadgeUrgent(item.badgeKey) && item.badgeKey !== "pendencias" && "animate-pulse"
+                                    )}
                                   >
                                     {badgeCount}
                                   </Badge>
