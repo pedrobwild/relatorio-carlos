@@ -250,6 +250,27 @@ export default function GestaoObras() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-2">
+            {/* View toggle */}
+            <div className="hidden md:flex items-center border rounded-md overflow-hidden">
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-8 rounded-none px-2"
+                onClick={() => toggleViewMode('cards')}
+                title="Visualização em cards"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-8 rounded-none px-2"
+                onClick={() => toggleViewMode('list')}
+                title="Visualização em lista"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
             <Button variant="outline" size="sm" onClick={() => navigate('/gestao/calendario-compras')}>
               <span className="hidden sm:inline">Calendário Compras</span>
               <span className="sm:hidden">Compras</span>
