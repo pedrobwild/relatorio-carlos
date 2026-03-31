@@ -155,7 +155,39 @@ function ProjectRow({
         )}
       </TableCell>
 
-      {/* Progress */}
+      {/* Prazo (Deadline) */}
+      <TableCell className="text-center">
+        {plannedEnd ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-[10px] text-muted-foreground tabular-nums">
+                  {format(parseLocalDate(project.planned_start_date || ''), 'dd/MM', { locale: ptBR })} – {format(plannedEnd, 'dd/MM', { locale: ptBR })}
+                </span>
+                {isFinished ? (
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-[hsl(var(--success))]">
+                    <CheckCircle className="h-3 w-3" /> Entregue
+                  </span>
+                ) : isOverdue ? (
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-destructive">
+                    <AlertTriangle className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-[hsl(var(--success))]">
+                    <Clock className="h-3 w-3" /> {daysRemaining}d restantes
+                  </span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              Início: {project.planned_start_date ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yyyy') : 'N/D'}<br />
+              Término: {format(plannedEnd, 'dd/MM/yyyy')}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="text-xs text-muted-foreground italic">A definir</span>
+        )}
+      </TableCell>
       <TableCell className="text-center">
         <div className="flex flex-col items-center gap-1">
           <span className="text-xs font-medium tabular-nums">{Math.round(progress)}%</span>
