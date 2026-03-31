@@ -1,13 +1,16 @@
+import { useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import { Map, DollarSign, AlertCircle, Bell } from "lucide-react";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { cn } from "@/lib/utils";
 
 /**
  * MobileBottomNav — fixed bottom navigation for mobile client users.
  * Shows 4 primary actions with ergonomic thumb-zone positioning.
+ * Supports horizontal swipe gestures to navigate between tabs.
  * Only rendered for non-staff (client) users on mobile viewports.
  */
 export function MobileBottomNav() {
@@ -23,6 +26,12 @@ export function MobileBottomNav() {
     { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
     { label: "Avisos", icon: Bell, to: "#notifications", badge: unreadCount },
   ];
+
+  // Enable swipe between the navigable tabs (exclude #notifications)
+  const swipeRoutes = useMemo(
+    () => navItems.filter((i) => !i.to.startsWith("#")).map((i) => i.to),
+    [paths]
+  );
 
   return (
     <nav
