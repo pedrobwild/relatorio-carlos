@@ -180,9 +180,20 @@ export function ProjectSidebar() {
     return false;
   };
 
-  const getBadgeCount = (key?: string) => {
+  const getBadgeCount = (key?: string): number => {
     if (key === "pendencias") return pendenciasStats.total;
+    if (key === "formalizacoes") return pendenciasStats.byType.signature;
+    if (key === "financeiro") return pendenciasStats.byType.invoice;
     return 0;
+  };
+
+  const isBadgeUrgent = (key?: string): boolean => {
+    if (key === "pendencias") return pendenciasStats.overdueCount > 0;
+    if (key === "formalizacoes" || key === "financeiro") {
+      // Any pending item of this type is urgent enough to warrant attention
+      return getBadgeCount(key) > 0;
+    }
+    return false;
   };
 
   return (
