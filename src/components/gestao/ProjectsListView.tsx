@@ -1,22 +1,22 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ExternalLink, AlertTriangle, FileSignature, FileText, TrendingUp } from 'lucide-react';
+import { ExternalLink, AlertTriangle, FileSignature, FileText, CheckCircle, Clock } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { format, differenceInDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
+
+
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -62,6 +62,7 @@ export function ProjectsListView({ projects }: ProjectsListViewProps) {
               <TableHead className="min-w-[180px]">Obra</TableHead>
               <TableHead className="w-[80px] text-center">Status</TableHead>
               <TableHead className="w-[60px] text-center">Saúde</TableHead>
+              <TableHead className="w-[100px] text-center">Prazo</TableHead>
               <TableHead className="w-[70px] text-center">Progresso</TableHead>
               <TableHead className="min-w-[120px]">Engenheiro</TableHead>
               <TableHead className="w-[90px] text-center">Pendências</TableHead>
@@ -85,7 +86,7 @@ export function ProjectsListView({ projects }: ProjectsListViewProps) {
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -113,10 +114,13 @@ function ProjectRow({
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 
-  // Financial: calculate paid percentage from summary if available
-  const paidPct = contractValue > 0 && summary
-    ? Math.min(100, Math.round(progress)) // approximate from progress
-    : null;
+  // Deadline calculation
+  const today = getTodayLocal();
+  const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
+  const actualEnd = project.actual_end_date ? parseLocalDate(project.actual_end_date) : null;
+  const isFinished = !!actualEnd;
+  const daysRemaining = plannedEnd && !isFinished ? differenceInDays(plannedEnd, today) : null;
+  const isOverdue = daysRemaining !== null && daysRemaining < 0;
 
   return (
     <TableRow
@@ -151,7 +155,39 @@ function ProjectRow({
         )}
       </TableCell>
 
-      {/* Progress */}
+      {/* Prazo (Deadline) */}
+      <TableCell className="text-center">
+        {plannedEnd ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-[10px] text-muted-foreground tabular-nums">
+                  {format(parseLocalDate(project.planned_start_date || ''), 'dd/MM', { locale: ptBR })} – {format(plannedEnd, 'dd/MM', { locale: ptBR })}
+                </span>
+                {isFinished ? (
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-[hsl(var(--success))]">
+                    <CheckCircle className="h-3 w-3" /> Entregue
+                  </span>
+                ) : isOverdue ? (
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-destructive">
+                    <AlertTriangle className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-[hsl(var(--success))]">
+                    <Clock className="h-3 w-3" /> {daysRemaining}d restantes
+                  </span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              Início: {project.planned_start_date ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yyyy') : 'N/D'}<br />
+              Término: {format(plannedEnd, 'dd/MM/yyyy')}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="text-xs text-muted-foreground italic">A definir</span>
+        )}
+      </TableCell>
       <TableCell className="text-center">
         <div className="flex flex-col items-center gap-1">
           <span className="text-xs font-medium tabular-nums">{Math.round(progress)}%</span>

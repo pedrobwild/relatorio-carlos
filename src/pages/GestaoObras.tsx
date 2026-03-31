@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users, LayoutGrid, List } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users, LayoutGrid, List, HardHat, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
+import { ProjectsListViewProjetos } from '@/components/gestao/ProjectsListViewProjetos';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
@@ -135,7 +136,7 @@ export default function GestaoObras() {
   // Persist filters in URL search params
   const searchTerm = searchParams.get('q') || '';
   const statusFilter = searchParams.get('status') || null;
-  const phaseFilter = (searchParams.get('phase') as 'all' | 'project' | 'execution') || 'all';
+  const phaseFilter = (searchParams.get('phase') as 'all' | 'project' | 'execution') || 'execution';
   const engineerFilter = searchParams.get('engineer') || null;
 
   const setSearchTerm = useCallback((value: string) => {
@@ -296,6 +297,28 @@ export default function GestaoObras() {
 
         {/* Filters — horizontal scroll on mobile */}
         <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+          {/* Primary: Obras vs Projetos toggle */}
+          <div className="flex items-center border rounded-md overflow-hidden shrink-0 mr-2">
+            <Button
+              variant={phaseFilter !== 'project' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-8 min-h-[32px] text-xs rounded-none gap-1.5"
+              onClick={() => setPhaseFilter('execution')}
+            >
+              <HardHat className="h-3.5 w-3.5" />
+              Obras
+            </Button>
+            <Button
+              variant={phaseFilter === 'project' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-8 min-h-[32px] text-xs rounded-none gap-1.5"
+              onClick={() => setPhaseFilter('project')}
+            >
+              <Compass className="h-3.5 w-3.5" />
+              Projetos
+            </Button>
+          </div>
+          <div className="w-px h-7 bg-border shrink-0 self-center" />
           <Button variant={statusFilter === null ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter(null)}>
             Todas
           </Button>
@@ -310,16 +333,6 @@ export default function GestaoObras() {
           </Button>
           <Button variant={statusFilter === 'cancelled' ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter('cancelled')}>
             Canceladas
-          </Button>
-          <div className="w-px h-7 bg-border shrink-0 self-center" />
-          <Button variant={phaseFilter === 'all' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('all')}>
-            Todas
-          </Button>
-          <Button variant={phaseFilter === 'project' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('project')}>
-            🏗️ Projeto
-          </Button>
-          <Button variant={phaseFilter === 'execution' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('execution')}>
-            🔨 Execução
           </Button>
         </div>
 
@@ -381,7 +394,11 @@ export default function GestaoObras() {
             )}
           </Card>
         ) : viewMode === 'list' ? (
-          <ProjectsListView projects={filteredProjects} />
+          phaseFilter === 'project' ? (
+            <ProjectsListViewProjetos projects={filteredProjects} />
+          ) : (
+            <ProjectsListView projects={filteredProjects} />
+          )
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="gestao-obras-list">
             {filteredProjects.map((project) => (
