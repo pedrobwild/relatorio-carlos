@@ -33,6 +33,8 @@ export function MobileBottomNav() {
     [paths]
   );
 
+  useSwipeNavigation(swipeRoutes);
+
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card/95 backdrop-blur-md pb-safe md:hidden"
