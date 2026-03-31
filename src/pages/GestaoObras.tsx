@@ -332,7 +332,7 @@ export default function GestaoObras() {
                 <p className="text-caption text-muted-foreground mb-4">
                   Nenhum resultado para os filtros selecionados. Tente ajustar sua busca.
                 </p>
-                <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter(null); setEngineerFilter(null); setPhaseFilter('all'); }}>
+                <Button variant="outline" onClick={() => setSearchParams({}, { replace: true })}>
                   Limpar filtros
                 </Button>
               </>
