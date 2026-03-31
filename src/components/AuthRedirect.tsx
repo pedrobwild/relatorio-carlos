@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { debugNav } from '@/lib/debugAuth';
 
 /**
