@@ -86,7 +86,7 @@ export function ProjectsListView({ projects }: ProjectsListViewProps) {
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
