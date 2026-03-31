@@ -95,11 +95,16 @@ export function CustomerCard({ formData, errors, sendInvite, onSendInviteChange,
         )}
 
         {!formData.create_user && (
-          <div className="flex items-center gap-3">
-            <input type="checkbox" id="send_invite" checked={sendInvite} onChange={(e) => onSendInviteChange(e.target.checked)} className="h-4 w-4 rounded border-border" />
-            <Label htmlFor="send_invite" className="text-caption cursor-pointer">
-              Enviar convite de acesso por e-mail ao cadastrar
-            </Label>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <input type="checkbox" id="send_invite" checked={sendInvite} onChange={(e) => onSendInviteChange(e.target.checked)} className="h-4 w-4 rounded border-border" />
+              <Label htmlFor="send_invite" className="text-caption cursor-pointer">
+                Enviar convite de acesso por e-mail ao cadastrar
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground ml-7">
+              O cliente receberá um e-mail com link para criar sua conta e acompanhar fotos, cronograma e documentos da obra pelo portal.
+            </p>
           </div>
         )}
       </CardContent>
