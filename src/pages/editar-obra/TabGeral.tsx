@@ -1,4 +1,4 @@
-import { Building2, Calendar, DollarSign, Map, User } from 'lucide-react';
+import { Building2, Calendar, DollarSign, Map, User, Info } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import type { Project, Customer } from './types';
+
+const STATUS_DESCRIPTIONS: Record<string, string> = {
+  active: 'A obra está em execução. O cliente pode acompanhar atualizações pelo portal.',
+  paused: 'A obra está temporariamente pausada. O cliente será notificado.',
+  completed: 'A obra foi concluída. O cliente terá acesso de leitura ao histórico.',
+  cancelled: 'A obra foi cancelada. Os dados serão preservados para consulta.',
+};
 
 interface TabGeralProps {
   project: Project;
@@ -48,7 +55,34 @@ export function TabGeral({ project, customer, onProjectChange, onCustomerChange 
                   <SelectItem value="cancelled">Cancelada</SelectItem>
                 </SelectContent>
               </Select>
+              {STATUS_DESCRIPTIONS[project.status] && (
+                <p className="flex items-start gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  {STATUS_DESCRIPTIONS[project.status]}
+                </p>
+              )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Location Info - Card layout for mobile */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-body">
+            <Map className="h-5 w-5" />
+            Localização
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Mobile: stacked detail cards */}
+          <div className="sm:hidden space-y-3">
+            <DetailItem label="Endereço" value={project.address} onChange={(v) => onProjectChange('address', v)} />
+            <DetailItem label="Bairro" value={project.bairro} onChange={(v) => onProjectChange('bairro', v)} />
+            <DetailItem label="CEP" value={project.cep} onChange={(v) => onProjectChange('cep', v)} placeholder="00000-000" />
+          </div>
+          {/* Desktop: grid */}
+          <div className="hidden sm:grid grid-cols-2 gap-4">
             <div>
               <Label>Endereço</Label>
               <Input value={project.address || ''} onChange={(e) => onProjectChange('address', e.target.value || null)} />
@@ -67,13 +101,7 @@ export function TabGeral({ project, customer, onProjectChange, onCustomerChange 
 
       {/* Project Phase Toggle */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-body">
-            <Map className="h-5 w-5" />
-            Fase do Projeto
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
             <div className="space-y-0.5">
               <Label htmlFor="is_project_phase" className="text-sm font-medium">Obra em fase de projeto</Label>
@@ -121,7 +149,26 @@ export function TabGeral({ project, customer, onProjectChange, onCustomerChange 
           <CardDescription>Marcos importantes da jornada do cliente</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Mobile: stacked */}
+          <div className="sm:hidden space-y-3">
+            {([
+              ['date_briefing_arch', 'Briefing com Arquiteta'],
+              ['date_approval_3d', 'Aprovação 3D'],
+              ['date_approval_exec', 'Aprovação Executivo'],
+              ['date_approval_obra', 'Aprovação Obra'],
+              ['date_official_start', 'Início Oficial'],
+              ['date_mobilization_start', 'Início Mobilização'],
+              ['date_official_delivery', 'Entrega Oficial'],
+              ['contract_signing_date', 'Assinatura do Contrato'],
+            ] as const).map(([field, label]) => (
+              <div key={field} className="flex items-center justify-between rounded-lg border p-3">
+                <Label className="text-sm">{label}</Label>
+                <Input type="date" value={project[field] || ''} onChange={(e) => onProjectChange(field, e.target.value || null)} className="w-auto max-w-[160px]" />
+              </div>
+            ))}
+          </div>
+          {/* Desktop: grid */}
+          <div className="hidden sm:grid grid-cols-2 gap-4">
             {([
               ['date_briefing_arch', 'Briefing com Arquiteta'],
               ['date_approval_3d', 'Aprovação 3D'],
@@ -213,6 +260,18 @@ function DateFieldWithPending({
       ) : (
         <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">Em definição</div>
       )}
+    </div>
+  );
+}
+
+/** Mobile-friendly detail item */
+function DetailItem({ label, value, onChange, placeholder }: {
+  label: string; value: string | null | undefined; onChange: (v: string | null) => void; placeholder?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 rounded-lg border p-3">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Input value={value || ''} onChange={(e) => onChange(e.target.value || null)} placeholder={placeholder} className="border-0 p-0 h-auto shadow-none focus-visible:ring-0" />
     </div>
   );
 }
