@@ -160,7 +160,14 @@ export function useEditarObraData(projectId: string | undefined) {
         if (customerError) throw customerError;
       }
 
-      toast({ title: 'Salvo!', description: 'Dados da obra atualizados.' });
+      const statusLabels: Record<string, string> = {
+        active: 'Em andamento',
+        paused: 'Pausada',
+        completed: 'Concluída',
+        cancelled: 'Cancelada',
+      };
+      const statusLabel = statusLabels[project.status] || project.status;
+      toast({ title: 'Salvo!', description: `Obra atualizada · Status: ${statusLabel}` });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       console.error('Error saving:', err);
