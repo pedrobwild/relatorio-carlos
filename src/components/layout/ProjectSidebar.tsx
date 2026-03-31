@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -13,6 +14,7 @@ import {
   Map,
   ShoppingCart,
   ClipboardCheck,
+  ChevronDown,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -30,6 +32,7 @@ import { NavLink } from "@/components/NavLink";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { usePendencias } from "@/hooks/usePendencias";
@@ -50,6 +53,8 @@ interface SidebarNavItem {
   badgeKey?: "pendencias" | "formalizacoes" | "financeiro";
   /** Only visible to staff users */
   staffOnly?: boolean;
+  /** For clients, hide under a collapsible "Mais" section */
+  clientSecondary?: boolean;
 }
 
 interface SidebarNavGroup {
@@ -57,6 +62,8 @@ interface SidebarNavGroup {
   items: SidebarNavItem[];
   /** Hide entire group in project phase */
   hideInProjectPhase?: boolean;
+  /** For clients, collapse this entire group under "Mais" */
+  clientCollapsible?: boolean;
 }
 
 export function ProjectSidebar() {
@@ -99,6 +106,7 @@ export function ProjectSidebar() {
     },
     {
       label: "Projeto",
+      clientCollapsible: true,
       items: [
         {
           label: L("contrato"),
@@ -196,11 +204,69 @@ export function ProjectSidebar() {
     return false;
   };
 
+  // Track open state for client-collapsible groups
+  const [clientGroupOpen, setClientGroupOpen] = useState<Record<string, boolean>>({});
+
+  /** Render a single nav item */
+  const renderNavItem = (item: SidebarNavItem) => {
+    const Icon = item.icon;
+    const active = isActive(item);
+    const disabled = isProjectPhase && item.disabledInProjectPhase;
+    const badgeCount = getBadgeCount(item.badgeKey);
+
+    const button = (
+      <SidebarMenuButton
+        asChild={!disabled}
+        isActive={active}
+        className={cn(disabled && "opacity-50 cursor-not-allowed")}
+      >
+        {disabled ? (
+          <div className="flex items-center gap-2 w-full">
+            <Icon className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="truncate">{item.label}</span>}
+          </div>
+        ) : (
+          <NavLink to={item.path} className="flex items-center gap-2 w-full" activeClassName="">
+            <Icon className="h-4 w-4 shrink-0" />
+            {!collapsed && (
+              <>
+                <span className="truncate flex-1">{item.label}</span>
+                {badgeCount > 0 && (
+                  <Badge
+                    variant={isBadgeUrgent(item.badgeKey) ? "destructive" : "secondary"}
+                    className={cn(
+                      "min-w-5 h-5 px-1.5 text-xs font-bold",
+                      isBadgeUrgent(item.badgeKey) && item.badgeKey !== "pendencias" && "animate-pulse"
+                    )}
+                  >
+                    {badgeCount}
+                  </Badge>
+                )}
+              </>
+            )}
+          </NavLink>
+        )}
+      </SidebarMenuButton>
+    );
+
+    return (
+      <SidebarMenuItem key={item.path}>
+        {disabled ? (
+          <Tooltip>
+            <TooltipTrigger asChild>{button}</TooltipTrigger>
+            <TooltipContent side="right">Disponível quando a obra estiver em execução</TooltipContent>
+          </Tooltip>
+        ) : (
+          button
+        )}
+      </SidebarMenuItem>
+    );
+  };
+
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent className="pt-2">
         {groups.map((group) => {
-          // Filter items
           const visibleItems = group.items.filter((item) => {
             if (item.projectPhaseOnly && !isProjectPhase) return false;
             if (item.staffOnly && !isStaff) return false;
@@ -209,10 +275,33 @@ export function ProjectSidebar() {
 
           if (visibleItems.length === 0) return null;
 
-          // Check if all items are disabled
-          const allDisabled =
-            isProjectPhase &&
-            visibleItems.every((item) => item.disabledInProjectPhase);
+          // For clients, collapse secondary groups under a "Mais" toggle
+          const shouldCollapse = !isStaff && group.clientCollapsible && !collapsed;
+          // Auto-open if any item in the group is active
+          const hasActiveItem = visibleItems.some(isActive);
+
+          if (shouldCollapse) {
+            const isOpen = clientGroupOpen[group.label] ?? hasActiveItem;
+            return (
+              <SidebarGroup key={group.label}>
+                <Collapsible open={isOpen} onOpenChange={(open) => setClientGroupOpen(prev => ({ ...prev, [group.label]: open }))}>
+                  <CollapsibleTrigger className="w-full">
+                    <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs font-semibold uppercase tracking-wider flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/80 transition-colors">
+                      <span>{group.label}</span>
+                      <ChevronDown className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")} />
+                    </SidebarGroupLabel>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {visibleItems.map(renderNavItem)}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarGroup>
+            );
+          }
 
           return (
             <SidebarGroup key={group.label}>
@@ -221,77 +310,7 @@ export function ProjectSidebar() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {visibleItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item);
-                    const disabled =
-                      isProjectPhase && item.disabledInProjectPhase;
-                    const badgeCount = getBadgeCount(item.badgeKey);
-
-                    const button = (
-                      <SidebarMenuButton
-                        asChild={!disabled}
-                        isActive={active}
-                        className={cn(
-                          disabled && "opacity-50 cursor-not-allowed"
-                        )}
-                      >
-                        {disabled ? (
-                          <div className="flex items-center gap-2 w-full">
-                            <Icon className="h-4 w-4 shrink-0" />
-                            {!collapsed && (
-                              <span className="truncate">{item.label}</span>
-                            )}
-                          </div>
-                        ) : (
-                          <NavLink
-                            to={item.path}
-                            className="flex items-center gap-2 w-full"
-                            activeClassName=""
-                          >
-                            <Icon className="h-4 w-4 shrink-0" />
-                            {!collapsed && (
-                              <>
-                                <span className="truncate flex-1">
-                                  {item.label}
-                                </span>
-                                {badgeCount > 0 && (
-                                  <Badge
-                                    variant={
-                                      isBadgeUrgent(item.badgeKey)
-                                        ? "destructive"
-                                        : "secondary"
-                                    }
-                                    className={cn(
-                                      "min-w-5 h-5 px-1.5 text-xs font-bold",
-                                      isBadgeUrgent(item.badgeKey) && item.badgeKey !== "pendencias" && "animate-pulse"
-                                    )}
-                                  >
-                                    {badgeCount}
-                                  </Badge>
-                                )}
-                              </>
-                            )}
-                          </NavLink>
-                        )}
-                      </SidebarMenuButton>
-                    );
-
-                    return (
-                      <SidebarMenuItem key={item.path}>
-                        {disabled ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>{button}</TooltipTrigger>
-                            <TooltipContent side="right">
-                              Disponível quando a obra estiver em execução
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          button
-                        )}
-                      </SidebarMenuItem>
-                    );
-                  })}
+                  {visibleItems.map(renderNavItem)}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
