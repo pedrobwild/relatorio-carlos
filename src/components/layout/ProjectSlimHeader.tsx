@@ -197,11 +197,21 @@ export function ProjectSlimHeader() {
                             <span className="font-medium text-sm block">
                               {p.name} {p.unit_name && `– ${p.unit_name}`}
                             </span>
-                            {p.customer_name && (
-                              <span className="text-xs text-muted-foreground">
-                                {p.customer_name}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              {p.customer_name && (
+                                <span className="text-xs text-muted-foreground">
+                                  {p.customer_name}
+                                </span>
+                              )}
+                              {isStaff && (p as any).engineer_name && (
+                                <>
+                                  <span className="text-xs text-muted-foreground/50">·</span>
+                                  <span className="text-xs text-muted-foreground/70">
+                                    {(p as any).engineer_name}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
                           {pendingCount > 0 && (
                             <Badge
