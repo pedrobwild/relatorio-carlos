@@ -11,6 +11,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProjectsQuery } from "@/hooks/useProjectsQuery";
 import { usePendencias } from "@/hooks/usePendencias";
+import { usePendingCountsByProject } from "@/hooks/usePendingCountsByProject";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { getNavLabel } from "@/constants/navigationLabels";
