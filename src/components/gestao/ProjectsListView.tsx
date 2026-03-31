@@ -62,6 +62,7 @@ export function ProjectsListView({ projects }: ProjectsListViewProps) {
               <TableHead className="min-w-[180px]">Obra</TableHead>
               <TableHead className="w-[80px] text-center">Status</TableHead>
               <TableHead className="w-[60px] text-center">Saúde</TableHead>
+              <TableHead className="w-[100px] text-center">Prazo</TableHead>
               <TableHead className="w-[70px] text-center">Progresso</TableHead>
               <TableHead className="min-w-[120px]">Engenheiro</TableHead>
               <TableHead className="w-[90px] text-center">Pendências</TableHead>
