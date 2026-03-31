@@ -297,6 +297,28 @@ export default function GestaoObras() {
 
         {/* Filters — horizontal scroll on mobile */}
         <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+          {/* Primary: Obras vs Projetos toggle */}
+          <div className="flex items-center border rounded-md overflow-hidden shrink-0 mr-2">
+            <Button
+              variant={phaseFilter !== 'project' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-8 min-h-[32px] text-xs rounded-none gap-1.5"
+              onClick={() => setPhaseFilter('execution')}
+            >
+              <HardHat className="h-3.5 w-3.5" />
+              Obras
+            </Button>
+            <Button
+              variant={phaseFilter === 'project' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-8 min-h-[32px] text-xs rounded-none gap-1.5"
+              onClick={() => setPhaseFilter('project')}
+            >
+              <Compass className="h-3.5 w-3.5" />
+              Projetos
+            </Button>
+          </div>
+          <div className="w-px h-7 bg-border shrink-0 self-center" />
           <Button variant={statusFilter === null ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter(null)}>
             Todas
           </Button>
@@ -311,16 +333,6 @@ export default function GestaoObras() {
           </Button>
           <Button variant={statusFilter === 'cancelled' ? 'default' : 'outline'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setStatusFilter('cancelled')}>
             Canceladas
-          </Button>
-          <div className="w-px h-7 bg-border shrink-0 self-center" />
-          <Button variant={phaseFilter === 'all' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('all')}>
-            Todas
-          </Button>
-          <Button variant={phaseFilter === 'project' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('project')}>
-            🏗️ Projeto
-          </Button>
-          <Button variant={phaseFilter === 'execution' ? 'secondary' : 'ghost'} size="sm" className="shrink-0 h-8 min-h-[32px] text-xs" onClick={() => setPhaseFilter('execution')}>
-            🔨 Execução
           </Button>
         </div>
 
