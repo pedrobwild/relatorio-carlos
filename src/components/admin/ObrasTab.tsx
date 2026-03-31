@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Search, Eye, Settings, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Building2, Search, Eye, Settings, Trash2, ChevronDown, ChevronRight, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
