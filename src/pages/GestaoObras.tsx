@@ -136,7 +136,7 @@ export default function GestaoObras() {
   // Persist filters in URL search params
   const searchTerm = searchParams.get('q') || '';
   const statusFilter = searchParams.get('status') || null;
-  const phaseFilter = (searchParams.get('phase') as 'all' | 'project' | 'execution') || 'all';
+  const phaseFilter = (searchParams.get('phase') as 'all' | 'project' | 'execution') || 'execution';
   const engineerFilter = searchParams.get('engineer') || null;
 
   const setSearchTerm = useCallback((value: string) => {
