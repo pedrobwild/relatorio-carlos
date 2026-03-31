@@ -15,11 +15,8 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
-import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
-import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
-import { ContentSkeleton } from '@/components/ContentSkeleton';
-import type { ProjectWithCustomer } from '@/infra/repositories';
-import type { ProjectSummary } from '@/infra/repositories/projects.repository';
+
+
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
