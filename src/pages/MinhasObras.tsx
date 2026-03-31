@@ -1,12 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2 } from 'lucide-react';
+import { Building2, Mail } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { AppHeader } from '@/components/AppHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useClientDashboard } from '@/hooks/useClientDashboard';
+import { useAuth } from '@/hooks/useAuth';
 import { useDashboardActivities } from '@/hooks/useDashboardActivities';
 import { DashboardStatsCards } from '@/pages/minhas-obras/DashboardStatsCards';
 import { UpcomingPaymentsCard } from '@/pages/minhas-obras/UpcomingPaymentsCard';
