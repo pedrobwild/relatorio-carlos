@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Building2, Calendar, DollarSign, Users, Save, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, DollarSign, Users, Save, Trash2, Loader2, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -21,6 +21,7 @@ import { TabGeral } from './editar-obra/TabGeral';
 import { TabAtividades } from './editar-obra/TabAtividades';
 import { TabPagamentos } from './editar-obra/TabPagamentos';
 import { TabEquipe } from './editar-obra/TabEquipe';
+import { TabFichaTecnica } from './editar-obra/TabFichaTecnica';
 
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -108,10 +109,14 @@ export default function EditarObra() {
 
       <main className="max-w-5xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="geral" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Dados Gerais</span>
+            </TabsTrigger>
+            <TabsTrigger value="ficha" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Ficha Técnica</span>
             </TabsTrigger>
             <TabsTrigger value="atividades" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
@@ -129,6 +134,10 @@ export default function EditarObra() {
 
           <TabsContent value="geral">
             <TabGeral project={data.project} customer={data.customer} onProjectChange={data.handleProjectChange} onCustomerChange={data.handleCustomerChange} />
+          </TabsContent>
+
+          <TabsContent value="ficha">
+            <TabFichaTecnica studioInfo={data.studioInfo} onChange={data.handleStudioInfoChange} />
           </TabsContent>
 
           <TabsContent value="atividades">

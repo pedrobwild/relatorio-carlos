@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,11 +128,43 @@ function ProjectCard({
 
 export default function GestaoObras() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [phaseFilter, setPhaseFilter] = useState<'all' | 'project' | 'execution'>('all');
-  const [engineerFilter, setEngineerFilter] = useState<string | null>(null);
+
+  // Persist filters in URL search params
+  const searchTerm = searchParams.get('q') || '';
+  const statusFilter = searchParams.get('status') || null;
+  const phaseFilter = (searchParams.get('phase') as 'all' | 'project' | 'execution') || 'all';
+  const engineerFilter = searchParams.get('engineer') || null;
+
+  const setSearchTerm = useCallback((value: string) => {
+    setSearchParams(prev => {
+      if (value) prev.set('q', value); else prev.delete('q');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setStatusFilter = useCallback((value: string | null) => {
+    setSearchParams(prev => {
+      if (value) prev.set('status', value); else prev.delete('status');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setPhaseFilter = useCallback((value: 'all' | 'project' | 'execution') => {
+    setSearchParams(prev => {
+      if (value !== 'all') prev.set('phase', value); else prev.delete('phase');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setEngineerFilter = useCallback((value: string | null) => {
+    setSearchParams(prev => {
+      if (value) prev.set('engineer', value); else prev.delete('engineer');
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectWithCustomer | null>(null);
 
@@ -300,7 +332,7 @@ export default function GestaoObras() {
                 <p className="text-caption text-muted-foreground mb-4">
                   Nenhum resultado para os filtros selecionados. Tente ajustar sua busca.
                 </p>
-                <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter(null); setEngineerFilter(null); setPhaseFilter('all'); }}>
+                <Button variant="outline" onClick={() => setSearchParams({}, { replace: true })}>
                   Limpar filtros
                 </Button>
               </>

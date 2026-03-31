@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
+import type { StudioInfo } from './TabFichaTecnica';
 
 export function useEditarObraData(projectId: string | undefined) {
   const { toast } = useToast();
@@ -19,6 +20,18 @@ export function useEditarObraData(projectId: string | undefined) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [engineers, setEngineers] = useState<Engineer[]>([]);
   const [availableEngineers, setAvailableEngineers] = useState<AvailableEngineer[]>([]);
+  const [studioInfo, setStudioInfo] = useState<StudioInfo>({
+    project_id: projectId || '',
+    nome_do_empreendimento: null,
+    endereco_completo: null,
+    bairro: null,
+    cidade: null,
+    cep: null,
+    complemento: null,
+    tamanho_imovel_m2: null,
+    tipo_de_locacao: null,
+    data_recebimento_chaves: null,
+  });
 
   useEffect(() => {
     if (projectId) fetchAllData();
@@ -73,6 +86,29 @@ export function useEditarObraData(projectId: string | undefined) {
         };
       }));
 
+      // Fetch studio info
+      const { data: studioData } = await supabase
+        .from('project_studio_info')
+        .select('*')
+        .eq('project_id', projectId!)
+        .maybeSingle();
+      if (studioData) {
+        setStudioInfo(studioData as StudioInfo);
+      } else {
+        setStudioInfo({
+          project_id: projectId!,
+          nome_do_empreendimento: null,
+          endereco_completo: null,
+          bairro: null,
+          cidade: null,
+          cep: null,
+          complemento: null,
+          tamanho_imovel_m2: null,
+          tipo_de_locacao: null,
+          data_recebimento_chaves: null,
+        });
+      }
+
       const { data: staffProfiles } = await supabase
         .from('profiles')
         .select('user_id, display_name, email, role')
@@ -117,6 +153,10 @@ export function useEditarObraData(projectId: string | undefined) {
     if (customer) setCustomer({ ...customer, [field]: value });
   };
 
+  const handleStudioInfoChange = (field: keyof StudioInfo, value: string | number | null) => {
+    setStudioInfo(prev => ({ ...prev, [field]: value }));
+  };
+
   const saveProject = async () => {
     if (!project) return;
     setSaving(true);
@@ -158,6 +198,19 @@ export function useEditarObraData(projectId: string | undefined) {
           })
           .eq('id', customer.id);
         if (customerError) throw customerError;
+      }
+
+      // Save studio info (upsert)
+      const { project_id, ...studioFields } = studioInfo;
+      const hasStudioData = Object.values(studioFields).some(v => v !== null && v !== '');
+      if (hasStudioData) {
+        const { error: studioError } = await supabase
+          .from('project_studio_info')
+          .upsert({
+            project_id: project.id,
+            ...studioFields,
+          }, { onConflict: 'project_id' });
+        if (studioError) throw studioError;
       }
 
       const statusLabels: Record<string, string> = {
@@ -334,6 +387,7 @@ export function useEditarObraData(projectId: string | undefined) {
     saving,
     project,
     customer,
+    studioInfo,
     activities,
     payments,
     engineers,
@@ -344,6 +398,7 @@ export function useEditarObraData(projectId: string | undefined) {
     setCustomer,
     handleProjectChange,
     handleCustomerChange,
+    handleStudioInfoChange,
     saveProject,
     addActivity,
     updateActivity,
