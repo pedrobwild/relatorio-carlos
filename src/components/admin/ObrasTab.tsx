@@ -40,6 +40,16 @@ export function ObrasTab() {
   const { data: projects = [], isLoading: loading, error, refetch } = useProjectsQuery();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const filteredProjects = useMemo(() => projects.filter((p: ProjectWithCustomer) => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
