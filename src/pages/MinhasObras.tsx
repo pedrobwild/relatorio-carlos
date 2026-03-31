@@ -87,8 +87,14 @@ export default function MinhasObras() {
           ) : sortedProjects.length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="Nenhuma obra encontrada"
-              description="Você ainda não possui obras vinculadas ao seu cadastro. Entre em contato com a equipe Bwild."
+              title={displayName ? `Olá, ${displayName}! Sua jornada começa aqui.` : 'Sua jornada começa aqui'}
+              description="Assim que sua obra for configurada pela nossa equipe, você poderá acompanhar cronograma, fotos e documentos por este painel."
+              hint="Se você já recebeu um convite por e-mail, verifique se está logado com o mesmo endereço de e-mail."
+              action={{
+                label: 'Falar com a equipe',
+                onClick: () => window.open('mailto:contato@bwild.com.br', '_blank'),
+                icon: Mail,
+              }}
             />
           ) : (
             <div className="space-y-6">
