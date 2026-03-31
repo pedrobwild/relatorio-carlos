@@ -185,22 +185,35 @@ export function ProjectSlimHeader() {
                         {group.label}
                       </DropdownMenuLabel>
                     )}
-                    {group.projects.map((p) => (
-                      <DropdownMenuItem
-                        key={p.id}
-                        onClick={() => handleProjectSwitch(p.id)}
-                        className="flex flex-col items-start gap-0.5 cursor-pointer"
-                      >
-                        <span className="font-medium text-sm">
-                          {p.name} {p.unit_name && `– ${p.unit_name}`}
-                        </span>
-                        {p.customer_name && (
-                          <span className="text-xs text-muted-foreground">
-                            {p.customer_name}
-                          </span>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
+                    {group.projects.map((p) => {
+                      const pendingCount = pendingByProject?.get(p.id) || 0;
+                      return (
+                        <DropdownMenuItem
+                          key={p.id}
+                          onClick={() => handleProjectSwitch(p.id)}
+                          className="flex items-start gap-2 cursor-pointer"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium text-sm block">
+                              {p.name} {p.unit_name && `– ${p.unit_name}`}
+                            </span>
+                            {p.customer_name && (
+                              <span className="text-xs text-muted-foreground">
+                                {p.customer_name}
+                              </span>
+                            )}
+                          </div>
+                          {pendingCount > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className="shrink-0 min-w-5 h-5 px-1.5 text-[10px] font-bold mt-0.5"
+                            >
+                              {pendingCount}
+                            </Badge>
+                          )}
+                        </DropdownMenuItem>
+                      );
+                    })}
                     {gi < groupedProjects.length - 1 && <DropdownMenuSeparator />}
                   </div>
                 ))}
