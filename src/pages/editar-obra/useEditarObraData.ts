@@ -153,6 +153,10 @@ export function useEditarObraData(projectId: string | undefined) {
     if (customer) setCustomer({ ...customer, [field]: value });
   };
 
+  const handleStudioInfoChange = (field: keyof StudioInfo, value: string | number | null) => {
+    setStudioInfo(prev => ({ ...prev, [field]: value }));
+  };
+
   const saveProject = async () => {
     if (!project) return;
     setSaving(true);
