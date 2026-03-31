@@ -143,6 +143,20 @@ export function ObrasTab() {
             </Button>
           ))}
         </div>
+        {engineers.length > 0 && (
+          <Select value={engineerFilter ?? 'all'} onValueChange={(v) => setEngineerFilter(v === 'all' ? null : v)}>
+            <SelectTrigger className="w-[200px] shrink-0">
+              <UserCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os responsáveis</SelectItem>
+              {engineers.map(([id, name]) => (
+                <SelectItem key={id} value={id}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Projects List */}
