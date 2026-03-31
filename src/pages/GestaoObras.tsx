@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users } from 'lucide-react';
+import { Plus, Building2, Calendar, User, Search, Settings, Copy, Users, LayoutGrid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
