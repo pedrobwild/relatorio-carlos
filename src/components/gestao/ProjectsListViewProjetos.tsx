@@ -27,18 +27,16 @@ const statusLabels: Record<string, string> = {
 
 const stageStatusLabels: Record<string, string> = {
   pending: 'Pendente',
-  active: 'Em andamento',
-  waiting_client: 'Aguardando cliente',
-  done: 'Concluída',
-  skipped: 'Pulada',
+  in_progress: 'Em andamento',
+  waiting_action: 'Aguardando ação',
+  completed: 'Concluída',
 };
 
 const stageStatusColors: Record<string, string> = {
   pending: 'text-muted-foreground',
-  active: 'text-primary',
-  waiting_client: 'text-[hsl(var(--warning))]',
-  done: 'text-[hsl(var(--success))]',
-  skipped: 'text-muted-foreground',
+  in_progress: 'text-primary',
+  waiting_action: 'text-[hsl(var(--warning))]',
+  completed: 'text-[hsl(var(--success))]',
 };
 
 interface Props {

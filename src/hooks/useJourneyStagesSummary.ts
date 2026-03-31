@@ -47,7 +47,7 @@ export function useJourneyStagesSummary(projectIds: string[]) {
       for (const [projectId, stages] of byProject) {
         const totalStages = stages.length;
         // Find current stage: first non-done stage, or last stage
-        const current = stages.find(s => s.status !== 'done') ?? stages[stages.length - 1];
+        const current = stages.find(s => s.status !== 'completed') ?? stages[stages.length - 1];
         if (!current) continue;
 
         const referenceDate = current.waiting_since || current.confirmed_start || current.updated_at;
