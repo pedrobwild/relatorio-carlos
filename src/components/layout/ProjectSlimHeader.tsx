@@ -257,12 +257,17 @@ export function ProjectSlimHeader() {
             )}
             aria-label={hasCritical ? `${criticalCount} pendências críticas` : `${pendenciasStats.total} pendências`}
           >
-            {pendenciasStats.overdueCount > 0 && (
+            {pendenciasStats.overdueCount > 0 ? (
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
               </span>
-            )}
+            ) : pendenciasStats.urgentCount > 0 ? (
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-[hsl(var(--warning))] opacity-60" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[hsl(var(--warning))]" />
+              </span>
+            ) : null}
             <Bell className="w-3.5 h-3.5" />
             <span className="hidden sm:inline text-xs">
               {hasCritical ? "Críticas" : "Pendências"}
