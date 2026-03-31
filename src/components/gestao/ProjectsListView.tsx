@@ -114,10 +114,13 @@ function ProjectRow({
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 
-  // Financial: calculate paid percentage from summary if available
-  const paidPct = contractValue > 0 && summary
-    ? Math.min(100, Math.round(progress)) // approximate from progress
-    : null;
+  // Deadline calculation
+  const today = getTodayLocal();
+  const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
+  const actualEnd = project.actual_end_date ? parseLocalDate(project.actual_end_date) : null;
+  const isFinished = !!actualEnd;
+  const daysRemaining = plannedEnd && !isFinished ? differenceInDays(plannedEnd, today) : null;
+  const isOverdue = daysRemaining !== null && daysRemaining < 0;
 
   return (
     <TableRow
