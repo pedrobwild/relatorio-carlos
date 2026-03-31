@@ -20,6 +20,18 @@ export function useEditarObraData(projectId: string | undefined) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [engineers, setEngineers] = useState<Engineer[]>([]);
   const [availableEngineers, setAvailableEngineers] = useState<AvailableEngineer[]>([]);
+  const [studioInfo, setStudioInfo] = useState<StudioInfo>({
+    project_id: projectId || '',
+    nome_do_empreendimento: null,
+    endereco_completo: null,
+    bairro: null,
+    cidade: null,
+    cep: null,
+    complemento: null,
+    tamanho_imovel_m2: null,
+    tipo_de_locacao: null,
+    data_recebimento_chaves: null,
+  });
 
   useEffect(() => {
     if (projectId) fetchAllData();
