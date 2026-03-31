@@ -47,7 +47,7 @@ interface SidebarNavItem {
   /** Only show in project phase */
   projectPhaseOnly?: boolean;
   /** Show a badge count */
-  badgeKey?: "pendencias";
+  badgeKey?: "pendencias" | "formalizacoes" | "financeiro";
   /** Only visible to staff users */
   staffOnly?: boolean;
 }
