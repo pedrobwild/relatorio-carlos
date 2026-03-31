@@ -163,6 +163,7 @@ export function ObrasTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead>Projeto</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Período</TableHead>
@@ -171,60 +172,75 @@ export function ObrasTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProjects.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{project.name}</p>
-                        {project.unit_name && <p className="text-sm text-muted-foreground">{project.unit_name}</p>}
-                      </div>
-                    </TableCell>
-                    <TableCell>{project.customer_name || '—'}</TableCell>
-                    <TableCell>
-                      <span className="text-sm">
-                        {project.planned_start_date && project.planned_end_date
-                          ? `${format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - ${format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}`
-                          : '—'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={statusColors[project.status]}>
-                        {statusLabels[project.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => navigate(`/obra/${project.id}`)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => navigate(`/gestao/obra/${project.id}`)}>
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
+                {filteredProjects.map((project) => {
+                  const isExpanded = expandedRows.has(project.id);
+                  return (
+                    <>
+                      <TableRow key={project.id} className="cursor-pointer" onClick={() => toggleRow(project.id)}>
+                        <TableCell className="w-8 px-2">
+                          {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{project.name}</p>
+                            {project.unit_name && <p className="text-sm text-muted-foreground">{project.unit_name}</p>}
+                          </div>
+                        </TableCell>
+                        <TableCell>{project.customer_name || '—'}</TableCell>
+                        <TableCell>
+                          <span className="text-sm">
+                            {project.planned_start_date && project.planned_end_date
+                              ? `${format(parseLocalDate(project.planned_start_date), 'dd/MM/yy', { locale: ptBR })} - ${format(parseLocalDate(project.planned_end_date), 'dd/MM/yy', { locale: ptBR })}`
+                              : '—'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={statusColors[project.status]}>
+                            {statusLabels[project.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/obra/${project.id}`)}>
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Deletar obra?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta ação não pode ser desfeita. A obra <strong>{project.name}</strong> e todos os dados associados serão permanentemente removidos.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(project.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Deletar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/gestao/obra/${project.id}`)}>
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Deletar obra?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. A obra <strong>{project.name}</strong> e todos os dados associados serão permanentemente removidos.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(project.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Deletar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded && (
+                        <TableRow key={`${project.id}-expanded`}>
+                          <TableCell colSpan={6} className="p-2">
+                            <ObraExpandedRow projectId={project.id} contractValue={project.contract_value} />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  );
+                })}
               </TableBody>
             </Table>
           </Card>
