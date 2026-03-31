@@ -14,6 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
+import { ProjectsListViewProjetos } from '@/components/gestao/ProjectsListViewProjetos';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 border-green-500/20',
