@@ -22,7 +22,19 @@ import { useUserRole } from '@/hooks/useUserRole';
 export function UserMenu() {
   const navigate = useNavigate();
   const { user, signOut, isAuthenticated } = useAuth();
-  const { isAdmin, isStaff } = useUserRole();
+  const { isAdmin, isStaff, roles } = useUserRole();
+
+  const ROLE_LABELS: Record<string, string> = {
+    admin: 'Admin',
+    manager: 'Gestor',
+    engineer: 'Engenheiro',
+    gestor: 'Supervisor',
+    suprimentos: 'Suprimentos',
+    financeiro: 'Financeiro',
+    customer: 'Cliente',
+  };
+
+  const primaryRoleLabel = roles.length > 0 ? ROLE_LABELS[roles[0]] || roles[0] : null;
 
   if (!isAuthenticated) return null;
 
