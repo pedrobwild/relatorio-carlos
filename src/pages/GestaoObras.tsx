@@ -169,6 +169,15 @@ export default function GestaoObras() {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectWithCustomer | null>(null);
 
+  // View mode: persist in localStorage
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>(() => {
+    return (localStorage.getItem('gestao-view-mode') as 'cards' | 'list') || 'cards';
+  });
+  const toggleViewMode = useCallback((mode: 'cards' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('gestao-view-mode', mode);
+  }, []);
+
   const handleProjectClick = useCallback((projectId: string) => {
     navigate(`/obra/${projectId}`);
   }, [navigate]);
