@@ -106,6 +106,7 @@ export function ProjectSidebar() {
     },
     {
       label: "Projeto",
+      clientCollapsible: true,
       items: [
         {
           label: L("contrato"),
