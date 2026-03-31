@@ -89,6 +89,15 @@ export default function NovaObra() {
       if (!formData.planned_end_date) newErrors.planned_end_date = 'Data de término é obrigatória';
     }
 
+    if (step === 2) {
+      if (formData.contract_value) {
+        const numVal = parseFloat(formData.contract_value);
+        if (isNaN(numVal) || numVal < 0) {
+          newErrors.contract_value = 'Valor do contrato inválido';
+        }
+      }
+    }
+
     if (step === 3) {
       if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
         newErrors.customer_email = 'E-mail inválido';
