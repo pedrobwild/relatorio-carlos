@@ -109,10 +109,14 @@ export default function EditarObra() {
 
       <main className="max-w-5xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="geral" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Dados Gerais</span>
+            </TabsTrigger>
+            <TabsTrigger value="ficha" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Ficha Técnica</span>
             </TabsTrigger>
             <TabsTrigger value="atividades" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
