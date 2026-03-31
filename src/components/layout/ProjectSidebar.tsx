@@ -47,7 +47,7 @@ interface SidebarNavItem {
   /** Only show in project phase */
   projectPhaseOnly?: boolean;
   /** Show a badge count */
-  badgeKey?: "pendencias";
+  badgeKey?: "pendencias" | "formalizacoes" | "financeiro";
   /** Only visible to staff users */
   staffOnly?: boolean;
 }
@@ -159,11 +159,13 @@ export function ProjectSidebar() {
           label: L("financeiro"),
           icon: DollarSign,
           path: paths.financeiro,
+          badgeKey: "financeiro",
         },
         {
           label: L("formalizacoes"),
           icon: ClipboardSignature,
           path: paths.formalizacoes,
+          badgeKey: "formalizacoes",
         },
       ],
     },
@@ -178,9 +180,20 @@ export function ProjectSidebar() {
     return false;
   };
 
-  const getBadgeCount = (key?: string) => {
+  const getBadgeCount = (key?: string): number => {
     if (key === "pendencias") return pendenciasStats.total;
+    if (key === "formalizacoes") return pendenciasStats.byType.signature;
+    if (key === "financeiro") return pendenciasStats.byType.invoice;
     return 0;
+  };
+
+  const isBadgeUrgent = (key?: string): boolean => {
+    if (key === "pendencias") return pendenciasStats.overdueCount > 0;
+    if (key === "formalizacoes" || key === "financeiro") {
+      // Any pending item of this type is urgent enough to warrant attention
+      return getBadgeCount(key) > 0;
+    }
+    return false;
   };
 
   return (
@@ -245,11 +258,14 @@ export function ProjectSidebar() {
                                 {badgeCount > 0 && (
                                   <Badge
                                     variant={
-                                      pendenciasStats.overdueCount > 0
+                                      isBadgeUrgent(item.badgeKey)
                                         ? "destructive"
                                         : "secondary"
                                     }
-                                    className="min-w-5 h-5 px-1.5 text-xs font-bold"
+                                    className={cn(
+                                      "min-w-5 h-5 px-1.5 text-xs font-bold",
+                                      isBadgeUrgent(item.badgeKey) && item.badgeKey !== "pendencias" && "animate-pulse"
+                                    )}
                                   >
                                     {badgeCount}
                                   </Badge>

@@ -17,15 +17,15 @@ import { cn } from '@/lib/utils';
 import { getUrgencyCategory, isBlockingNotification } from '@/constants/notificationUrgency';
 import type { Notification } from '@/infra/repositories/notifications.repository';
 
-const typeConfig: Record<string, { icon: typeof Bell; className: string }> = {
-  payment_due: { icon: DollarSign, className: 'text-warning' },
-  payment_overdue: { icon: DollarSign, className: 'text-destructive' },
-  formalization_pending: { icon: ClipboardSignature, className: 'text-primary' },
-  document_uploaded: { icon: FileText, className: 'text-success' },
-  stage_changed: { icon: Layers, className: 'text-primary' },
-  pending_item_created: { icon: AlertCircle, className: 'text-warning' },
-  report_published: { icon: TrendingUp, className: 'text-success' },
-  general: { icon: Info, className: 'text-muted-foreground' },
+const typeConfig: Record<string, { icon: typeof Bell; className: string; actionVerb: string; updateVerb: string }> = {
+  payment_due: { icon: DollarSign, className: 'text-warning', actionVerb: 'Pagar parcela', updateVerb: 'Parcela próxima do vencimento' },
+  payment_overdue: { icon: DollarSign, className: 'text-destructive', actionVerb: 'Regularizar pagamento em atraso', updateVerb: 'Pagamento vencido' },
+  formalization_pending: { icon: ClipboardSignature, className: 'text-primary', actionVerb: 'Assinar formalização pendente', updateVerb: 'Formalização aguardando assinatura' },
+  document_uploaded: { icon: FileText, className: 'text-success', actionVerb: 'Revisar documento', updateVerb: 'Novo documento disponível' },
+  stage_changed: { icon: Layers, className: 'text-primary', actionVerb: 'Ver nova etapa', updateVerb: 'Etapa da jornada atualizada' },
+  pending_item_created: { icon: AlertCircle, className: 'text-warning', actionVerb: 'Resolver pendência', updateVerb: 'Nova pendência registrada' },
+  report_published: { icon: TrendingUp, className: 'text-success', actionVerb: 'Ver relatório', updateVerb: 'Relatório semanal publicado' },
+  general: { icon: Info, className: 'text-muted-foreground', actionVerb: 'Ver detalhe', updateVerb: 'Atualização geral' },
 };
 
 function formatNotificationTime(createdAt: string): string {
@@ -71,6 +71,10 @@ function NotificationItem({
         <p className={cn('text-sm leading-tight', isUnread ? 'font-semibold text-foreground' : 'text-foreground/80')}>
           {notification.title}
         </p>
+        {/* Contextual microcopy: imperative for actions, informative for updates */}
+        {isUnread && notification.action_url && isBlocking && (
+          <p className="text-xs text-destructive/80 font-medium mt-0.5">{config.actionVerb} →</p>
+        )}
         {notification.body && (
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notification.body}</p>
         )}
