@@ -1,16 +1,24 @@
 import { useState } from 'react';
-import { Plus, User, UserPlus, X, Link2, Mail, CheckCircle2, Loader2 } from 'lucide-react';
+import { Plus, User, UserPlus, X, Link2, Mail, CheckCircle2, Loader2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { ProjectRole } from '@/hooks/useProjectMembers';
 import type { Customer, Engineer, AvailableEngineer } from './types';
+
+const roleDescriptions: Record<string, { label: string; description: string }> = {
+  owner: { label: 'Responsável', description: 'Acesso total: edita cronograma, financeiro e equipe' },
+  engineer: { label: 'Engenheiro', description: 'Gerencia cronograma, vistorias e atividades' },
+  viewer: { label: 'Visualizador', description: 'Apenas visualiza fotos, cronograma e documentos' },
+  customer: { label: 'Cliente', description: 'Acesso ao portal do cliente com acompanhamento' },
+};
 
 interface ProjectMember {
   id: string;
@@ -55,6 +63,7 @@ export function TabEquipe({
   };
 
   return (
+    <TooltipProvider delayDuration={300}>
     <div className="space-y-6">
       {/* Add Member */}
       <Card>
@@ -109,12 +118,16 @@ export function TabEquipe({
                   </div>
                   <div className="flex items-center gap-2">
                     <Select value={member.role} onValueChange={(v) => onUpdateRole(member.id, v as ProjectRole)}>
-                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="owner">Responsável</SelectItem>
-                        <SelectItem value="engineer">Engenheiro</SelectItem>
-                        <SelectItem value="viewer">Visualizador</SelectItem>
-                        <SelectItem value="customer">Cliente</SelectItem>
+                        {Object.entries(roleDescriptions).map(([value, { label, description }]) => (
+                          <SelectItem key={value} value={value}>
+                            <div className="flex flex-col">
+                              <span>{label}</span>
+                              <span className="text-[10px] text-muted-foreground">{description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <AlertDialog>
@@ -208,6 +221,7 @@ export function TabEquipe({
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
 
