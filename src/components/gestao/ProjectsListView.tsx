@@ -59,16 +59,16 @@ export function ProjectsListView({ projects }: ProjectsListViewProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[180px]">Obra</TableHead>
-              <TableHead className="w-[80px] text-center">Status</TableHead>
-              <TableHead className="w-[60px] text-center">Saúde</TableHead>
-              <TableHead className="w-[100px] text-center">Prazo</TableHead>
-              <TableHead className="w-[70px] text-center">Progresso</TableHead>
-              <TableHead className="min-w-[120px]">Engenheiro</TableHead>
-              <TableHead className="w-[90px] text-center">Pendências</TableHead>
-              <TableHead className="w-[90px] text-center">Assinaturas</TableHead>
-              <TableHead className="w-[80px] text-center">Docs</TableHead>
-              <TableHead className="w-[120px] text-center">Financeiro</TableHead>
+              <TableHead className="min-w-[180px] text-xs whitespace-nowrap">Obra</TableHead>
+              <TableHead className="w-[80px] text-center text-xs whitespace-nowrap">Status</TableHead>
+              <TableHead className="w-[60px] text-center text-xs whitespace-nowrap">Saúde</TableHead>
+              <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">Prazo</TableHead>
+              <TableHead className="w-[70px] text-center text-xs whitespace-nowrap">Progresso</TableHead>
+              <TableHead className="min-w-[120px] text-xs whitespace-nowrap">Engenheiro</TableHead>
+              <TableHead className="w-[90px] text-center text-xs whitespace-nowrap">Pendências</TableHead>
+              <TableHead className="w-[90px] text-center text-xs whitespace-nowrap">Assinaturas</TableHead>
+              <TableHead className="w-[80px] text-center text-xs whitespace-nowrap">Docs</TableHead>
+              <TableHead className="w-[120px] text-center text-xs whitespace-nowrap">Financeiro</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
