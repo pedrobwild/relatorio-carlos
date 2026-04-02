@@ -357,138 +357,120 @@ const Cronograma = () => {
 
         {/* ── Spreadsheet table ── */}
         <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
-          {/* Desktop table */}
+          {/* Desktop grid */}
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-muted/60 border-b border-border/60">
-                  <th className="text-left py-2.5 pl-4 pr-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-10">
-                    #
-                  </th>
-                  <th className="text-left py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground">
-                    Descrição
-                  </th>
-                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
-                    Início Prev.
-                  </th>
-                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
-                    Término Prev.
-                  </th>
-                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
-                    Início Real
-                  </th>
-                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
-                    Término Real
-                  </th>
-                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[72px]">
-                    Peso
-                  </th>
-                  <th className="w-11 py-2.5 pr-3" />
-                </tr>
-              </thead>
-              <tbody>
+            <div className="min-w-[1180px]">
+              <div className="grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
+                <div className="py-3 pl-4 pr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</div>
+                <div className="py-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição</div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Prev.</div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Prev.</div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Real</div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Real</div>
+                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Peso</div>
+                <div className="py-3 pr-3" />
+              </div>
+
+              <div>
                 {activities.map((activity, index) => {
                   const rowError = dateValidationErrors[activity.id];
                   return (
-                    <tr
+                    <div
                       key={activity.id}
                       className={cn(
-                        'group border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
+                        'grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
                         index % 2 === 1 && 'bg-muted/15',
-                        rowError && 'bg-destructive/5 hover:bg-destructive/8',
+                        rowError && 'bg-destructive/5 hover:bg-destructive/10',
                       )}
                     >
-                      <td className="pl-4 pr-2 py-1.5 text-xs font-bold text-muted-foreground tabular-nums align-top pt-3">
+                      <div className="pl-4 pr-2 py-2.5 text-sm font-bold text-muted-foreground tabular-nums">
                         {index + 1}
-                      </td>
-                      <td className="px-2 py-1.5 align-top">
+                      </div>
+
+                      <div className="px-2 py-2">
                         <AutoTextarea
                           value={activity.description}
                           onChange={(v) => handleActivityChange(activity.id, 'description', v)}
                           placeholder="Ex: Mobilização e alinhamentos iniciais..."
                         />
                         {rowError?.plannedDates && (
-                          <p className="text-[10px] text-destructive mt-0.5 flex items-center gap-1 px-1">
+                          <p className="text-[10px] text-destructive mt-1 flex items-center gap-1 px-1">
                             <AlertCircle className="h-3 w-3 shrink-0" />
                             {rowError.plannedDates}
                           </p>
                         )}
                         {rowError?.actualDates && (
-                          <p className="text-[10px] text-destructive mt-0.5 flex items-center gap-1 px-1">
+                          <p className="text-[10px] text-destructive mt-1 flex items-center gap-1 px-1">
                             <AlertCircle className="h-3 w-3 shrink-0" />
                             {rowError.actualDates}
                           </p>
                         )}
-                      </td>
-                      <td className="px-2 py-1.5 align-top pt-2">
+                      </div>
+
+                      <div className="px-2 py-2">
                         <DatePickerField
                           value={activity.plannedStart}
-                          onChange={(val) =>
-                            handleActivityChange(activity.id, 'plannedStart', val)
-                          }
+                          onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
                           placeholder="dd/mm/aaaa"
                           hasError={!!rowError?.plannedDates}
                         />
-                      </td>
-                      <td className="px-2 py-1.5 align-top pt-2">
+                      </div>
+
+                      <div className="px-2 py-2">
                         <DatePickerField
                           value={activity.plannedEnd}
-                          onChange={(val) =>
-                            handleActivityChange(activity.id, 'plannedEnd', val)
-                          }
+                          onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
                           placeholder="dd/mm/aaaa"
                           hasError={!!rowError?.plannedDates}
                         />
-                      </td>
-                      <td className="px-2 py-1.5 align-top pt-2">
+                      </div>
+
+                      <div className="px-2 py-2">
                         <DatePickerField
                           value={activity.actualStart}
-                          onChange={(val) =>
-                            handleActivityChange(activity.id, 'actualStart', val)
-                          }
+                          onChange={(val) => handleActivityChange(activity.id, 'actualStart', val)}
                           placeholder="dd/mm/aaaa"
                           hasError={!!rowError?.actualDates}
                         />
-                      </td>
-                      <td className="px-2 py-1.5 align-top pt-2">
+                      </div>
+
+                      <div className="px-2 py-2">
                         <DatePickerField
                           value={activity.actualEnd}
-                          onChange={(val) =>
-                            handleActivityChange(activity.id, 'actualEnd', val)
-                          }
+                          onChange={(val) => handleActivityChange(activity.id, 'actualEnd', val)}
                           placeholder="dd/mm/aaaa"
                           hasError={!!rowError?.actualDates}
                         />
-                      </td>
-                      <td className="px-2 py-1.5 align-top pt-2">
+                      </div>
+
+                      <div className="px-2 py-2">
                         <Input
                           type="number"
                           min="0"
                           max="100"
                           step="0.1"
                           value={activity.weight}
-                          onChange={(e) =>
-                            handleActivityChange(activity.id, 'weight', e.target.value)
-                          }
-                          className="h-9 text-xs text-center font-semibold tabular-nums w-full border-transparent bg-transparent hover:border-border focus:border-border transition-colors"
+                          onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
+                          className="h-10 w-full text-sm text-center font-semibold tabular-nums"
                         />
-                      </td>
-                      <td className="pr-3 py-1.5 align-top pt-2">
+                      </div>
+
+                      <div className="pr-3 py-2 flex justify-center">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
                           onClick={() => handleRemoveActivity(activity.id)}
                           disabled={activities.length === 1}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
 
           {/* Mobile cards */}
@@ -529,9 +511,7 @@ const Cronograma = () => {
                   )}
                   <div className="grid grid-cols-2 gap-2 pl-8">
                     <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">
-                        Início Prev.
-                      </span>
+                      <span className="text-[10px] text-muted-foreground font-medium">Início Prev.</span>
                       <DatePickerField
                         value={activity.plannedStart}
                         onChange={(v) => handleActivityChange(activity.id, 'plannedStart', v)}
@@ -540,9 +520,7 @@ const Cronograma = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">
-                        Término Prev.
-                      </span>
+                      <span className="text-[10px] text-muted-foreground font-medium">Término Prev.</span>
                       <DatePickerField
                         value={activity.plannedEnd}
                         onChange={(v) => handleActivityChange(activity.id, 'plannedEnd', v)}
@@ -551,9 +529,7 @@ const Cronograma = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">
-                        Início Real
-                      </span>
+                      <span className="text-[10px] text-muted-foreground font-medium">Início Real</span>
                       <DatePickerField
                         value={activity.actualStart}
                         onChange={(v) => handleActivityChange(activity.id, 'actualStart', v)}
@@ -562,9 +538,7 @@ const Cronograma = () => {
                       />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">
-                        Término Real
-                      </span>
+                      <span className="text-[10px] text-muted-foreground font-medium">Término Real</span>
                       <DatePickerField
                         value={activity.actualEnd}
                         onChange={(v) => handleActivityChange(activity.id, 'actualEnd', v)}
