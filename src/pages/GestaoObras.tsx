@@ -31,6 +31,13 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
+const statusTooltips: Record<string, string> = {
+  active: 'Obra em execução — cronograma e financeiro ativos',
+  completed: 'Obra entregue e finalizada',
+  paused: 'Obra temporariamente pausada — sem atividades em andamento',
+  cancelled: 'Obra cancelada — não será retomada',
+};
+
 function ProjectCard({ 
   project, 
   onClick, 
