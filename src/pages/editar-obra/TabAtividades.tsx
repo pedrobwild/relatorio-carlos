@@ -1,12 +1,11 @@
-import { useState } from 'react';
-import { Plus, Trash2, GripVertical, Calendar, Weight, ChevronDown, ChevronUp, ListChecks } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Trash2, Calendar, Weight, ListChecks, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import type { Activity } from './types';
@@ -22,134 +21,154 @@ function WeightBar({ total }: { total: number }) {
   const isValid = total === 100;
   const isOver = total > 100;
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground font-medium">Peso total</span>
-        <span className={cn(
-          'font-bold tabular-nums',
-          isValid ? 'text-[hsl(var(--success))]' : isOver ? 'text-destructive' : 'text-[hsl(var(--warning))]'
-        )}>
-          {total}%
-        </span>
-      </div>
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-muted/50 border border-border/60">
+      <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">Peso total das atividades:</span>
       <Progress
         value={Math.min(total, 100)}
         className={cn(
-          'h-2 rounded-full',
+          'h-2 flex-1 rounded-full',
           isValid ? '[&>div]:bg-[hsl(var(--success))]' : isOver ? '[&>div]:bg-destructive' : '[&>div]:bg-[hsl(var(--warning))]'
         )}
       />
-      {!isValid && (
-        <p className={cn(
-          'text-[11px]',
-          isOver ? 'text-destructive' : 'text-[hsl(var(--warning))]'
-        )}>
-          {isOver ? `${total - 100}% acima do total` : `Faltam ${100 - total}% para completar`}
-        </p>
-      )}
+      <span className={cn(
+        'text-sm font-bold tabular-nums whitespace-nowrap',
+        isValid ? 'text-[hsl(var(--success))]' : isOver ? 'text-destructive' : 'text-[hsl(var(--warning))]'
+      )}>
+        {total.toFixed(1)}%
+      </span>
     </div>
   );
 }
 
-function AddActivityForm({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
-  const [isOpen, setIsOpen] = useState(false);
+function AutoResizeTextarea({
+  value,
+  onChange,
+  placeholder,
+  className,
+  autoFocus,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  className?: string;
+  autoFocus?: boolean;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = '0px';
+      ref.current.style.height = `${Math.max(38, ref.current.scrollHeight)}px`;
+    }
+  }, [value]);
+
+  return (
+    <Textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+      rows={1}
+      className={cn(
+        'min-h-[38px] resize-none overflow-hidden py-2 px-2.5 text-sm leading-snug',
+        className,
+      )}
+    />
+  );
+}
+
+function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
   const [form, setForm] = useState({ description: '', planned_start: '', planned_end: '', weight: '5' });
   const [adding, setAdding] = useState(false);
 
+  const canSubmit = form.description && form.planned_start && form.planned_end;
+
   const handleAdd = async () => {
+    if (!canSubmit) return;
     setAdding(true);
     const ok = await onAdd(form);
     if (ok) {
       setForm({ description: '', planned_start: '', planned_end: '', weight: '5' });
-      // keep open for rapid entry
     }
     setAdding(false);
   };
 
-  const canSubmit = form.description && form.planned_start && form.planned_end;
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && canSubmit) {
+      e.preventDefault();
+      handleAdd();
+    }
+  };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <Button variant={isOpen ? 'secondary' : 'outline'} className="w-full h-12 gap-2 border-dashed text-sm">
-          {isOpen ? <ChevronUp className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {isOpen ? 'Fechar formulário' : 'Adicionar atividade'}
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="mt-3">
-        <div className="rounded-xl border-2 border-dashed border-primary/20 bg-accent/30 p-4 md:p-5 space-y-4 animate-fade-in">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Descrição da atividade</Label>
-            <Input
-              placeholder="Ex: Pintura 1ª demão, Instalação piso porcelanato..."
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="h-11"
-              autoFocus
-            />
-          </div>
+    <div className="border-t-2 border-dashed border-primary/20 bg-accent/20" onKeyDown={handleKeyDown}>
+      {/* Desktop inline row */}
+      <div className="hidden md:grid md:grid-cols-[1fr_130px_130px_130px_130px_70px_44px] gap-0 items-start">
+        <div className="p-2 pl-3 flex items-start gap-2">
+          <span className="inline-flex items-center justify-center w-6 h-[38px] text-xs font-bold text-primary/40">+</span>
+          <AutoResizeTextarea
+            value={form.description}
+            onChange={(v) => setForm({ ...form, description: v })}
+            placeholder="Nova atividade... (Ctrl+Enter para adicionar)"
+            autoFocus={false}
+          />
+        </div>
+        <div className="p-2">
+          <Input type="date" value={form.planned_start} onChange={(e) => setForm({ ...form, planned_start: e.target.value })} className="h-[38px] text-xs" />
+        </div>
+        <div className="p-2">
+          <Input type="date" value={form.planned_end} onChange={(e) => setForm({ ...form, planned_end: e.target.value })} className="h-[38px] text-xs" />
+        </div>
+        <div className="p-2">
+          {/* empty: no actual start for new */}
+        </div>
+        <div className="p-2">
+          {/* empty: no actual end for new */}
+        </div>
+        <div className="p-2">
+          <Input type="number" min={1} max={100} value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="h-[38px] text-xs text-center" />
+        </div>
+        <div className="p-2 flex items-center justify-center">
+          <Button size="icon" variant="default" className="h-[38px] w-[38px] rounded-lg" onClick={handleAdd} disabled={!canSubmit || adding}>
+            {adding ? <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Plus className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <Calendar className="h-3 w-3 text-muted-foreground" />
-                Início previsto
-              </Label>
-              <Input
-                type="date"
-                value={form.planned_start}
-                onChange={(e) => setForm({ ...form, planned_start: e.target.value })}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <Calendar className="h-3 w-3 text-muted-foreground" />
-                Término previsto
-              </Label>
-              <Input
-                type="date"
-                value={form.planned_end}
-                onChange={(e) => setForm({ ...form, planned_end: e.target.value })}
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <Weight className="h-3 w-3 text-muted-foreground" />
-                Peso (%)
-              </Label>
-              <Input
-                type="number"
-                min={1}
-                max={100}
-                value={form.weight}
-                onChange={(e) => setForm({ ...form, weight: e.target.value })}
-                className="h-11"
-              />
-            </div>
+      {/* Mobile add form */}
+      <div className="md:hidden p-3 space-y-3">
+        <AutoResizeTextarea
+          value={form.description}
+          onChange={(v) => setForm({ ...form, description: v })}
+          placeholder="Descrição da nova atividade..."
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Início Prev.</Label>
+            <Input type="date" value={form.planned_start} onChange={(e) => setForm({ ...form, planned_start: e.target.value })} className="h-9 text-xs" />
           </div>
-
-          <div className="flex justify-end gap-2 pt-1">
-            <Button variant="ghost" size="sm" className="h-10" onClick={() => setIsOpen(false)}>
-              Cancelar
-            </Button>
-            <Button size="sm" className="h-10 gap-1.5" onClick={handleAdd} disabled={!canSubmit || adding}>
-              {adding ? (
-                <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Plus className="h-3.5 w-3.5" />
-              )}
-              Adicionar
-            </Button>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Término Prev.</Label>
+            <Input type="date" value={form.planned_end} onChange={(e) => setForm({ ...form, planned_end: e.target.value })} className="h-9 text-xs" />
           </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+        <div className="flex items-end gap-2">
+          <div className="w-20 space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Peso (%)</Label>
+            <Input type="number" min={1} max={100} value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="h-9 text-xs" />
+          </div>
+          <Button className="flex-1 h-9 gap-1.5" onClick={handleAdd} disabled={!canSubmit || adding}>
+            {adding ? <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            Adicionar
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function ActivityCard({
+function ActivityRow({
   activity,
   index,
   onUpdate,
@@ -160,158 +179,120 @@ function ActivityCard({
   onUpdate: TabAtividadesProps['onUpdate'];
   onDelete: TabAtividadesProps['onDelete'];
 }) {
-  const [expanded, setExpanded] = useState(false);
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-');
-    return `${d}/${m}/${y}`;
-  };
-
-  const durationDays = (() => {
-    if (!activity.planned_start || !activity.planned_end) return null;
-    const start = new Date(activity.planned_start);
-    const end = new Date(activity.planned_end);
-    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return diff > 0 ? diff : null;
-  })();
-
   return (
-    <div className={cn(
-      'group rounded-xl border bg-card transition-all duration-200',
-      expanded ? 'border-primary/30 shadow-sm' : 'border-border/60 hover:border-border',
-    )}>
-      {/* Summary row */}
-      <button
-        type="button"
-        className="w-full flex items-center gap-3 p-3.5 md:p-4 text-left"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="flex items-center gap-2 shrink-0">
-          <GripVertical className="h-4 w-4 text-muted-foreground/40" />
-          <span className="text-xs font-bold text-muted-foreground tabular-nums w-6">
-            {index + 1}
-          </span>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">{activity.description || 'Sem descrição'}</p>
-          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
-            {activity.planned_start && activity.planned_end && (
-              <span>{formatDate(activity.planned_start)} → {formatDate(activity.planned_end)}</span>
-            )}
-            {durationDays && (
-              <span className="text-muted-foreground/60">· {durationDays}d</span>
-            )}
+    <>
+      {/* Desktop row */}
+      <div className={cn(
+        'hidden md:grid md:grid-cols-[1fr_130px_130px_130px_130px_70px_44px] gap-0 items-start group/row border-b border-border/40 last:border-b-0 transition-colors hover:bg-accent/30',
+        index % 2 === 1 && 'bg-muted/20'
+      )}>
+        <div className="p-2 pl-3 flex items-start gap-2">
+          <div className="flex items-center gap-1 shrink-0 pt-2">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 opacity-0 group-hover/row:opacity-100 transition-opacity cursor-grab" />
+            <span className="text-xs font-bold text-muted-foreground tabular-nums w-5 text-right">{index + 1}</span>
           </div>
+          <AutoResizeTextarea
+            value={activity.description}
+            onChange={(v) => onUpdate(activity.id, 'description', v)}
+            placeholder="Descrição da atividade..."
+          />
         </div>
+        <div className="p-2">
+          <Input type="date" value={activity.planned_start} onChange={(e) => onUpdate(activity.id, 'planned_start', e.target.value)} className="h-[38px] text-xs" />
+        </div>
+        <div className="p-2">
+          <Input type="date" value={activity.planned_end} onChange={(e) => onUpdate(activity.id, 'planned_end', e.target.value)} className="h-[38px] text-xs" />
+        </div>
+        <div className="p-2">
+          <Input type="date" value={activity.actual_start || ''} onChange={(e) => onUpdate(activity.id, 'actual_start', e.target.value || null)} className="h-[38px] text-xs" />
+        </div>
+        <div className="p-2">
+          <Input type="date" value={activity.actual_end || ''} onChange={(e) => onUpdate(activity.id, 'actual_end', e.target.value || null)} className="h-[38px] text-xs" />
+        </div>
+        <div className="p-2">
+          <Input type="number" min={0} max={100} value={activity.weight} onChange={(e) => onUpdate(activity.id, 'weight', parseFloat(e.target.value) || 0)} className="h-[38px] text-xs text-center font-semibold" />
+        </div>
+        <div className="p-2 flex items-center justify-center">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-[38px] w-[38px] text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remover atividade?</AlertDialogTitle>
+                <AlertDialogDescription>"{activity.description}" será removida permanentemente.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(activity.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
 
-        <Badge variant="secondary" className="shrink-0 text-[11px] font-bold tabular-nums px-2 py-0.5">
-          {activity.weight}%
-        </Badge>
-
-        <ChevronDown className={cn(
-          'h-4 w-4 text-muted-foreground/60 transition-transform shrink-0',
-          expanded && 'rotate-180'
-        )} />
-      </button>
-
-      {/* Expanded edit form */}
-      {expanded && (
-        <div className="px-3.5 pb-4 md:px-4 space-y-3 animate-fade-in border-t border-border/40 pt-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Descrição</Label>
-            <Input
+      {/* Mobile card */}
+      <div className="md:hidden border-b border-border/40 last:border-b-0 p-3 space-y-2.5">
+        <div className="flex items-start gap-2">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold bg-primary/10 text-primary shrink-0 mt-1">{index + 1}</span>
+          <div className="flex-1 min-w-0">
+            <AutoResizeTextarea
               value={activity.description}
-              onChange={(e) => onUpdate(activity.id, 'description', e.target.value)}
-              className="h-10"
+              onChange={(v) => onUpdate(activity.id, 'description', v)}
+              placeholder="Descrição..."
             />
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-[11px] text-muted-foreground">Início Prev.</Label>
-              <Input
-                type="date"
-                value={activity.planned_start}
-                onChange={(e) => onUpdate(activity.id, 'planned_start', e.target.value)}
-                className="h-10 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] text-muted-foreground">Término Prev.</Label>
-              <Input
-                type="date"
-                value={activity.planned_end}
-                onChange={(e) => onUpdate(activity.id, 'planned_end', e.target.value)}
-                className="h-10 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] text-muted-foreground">Início Real</Label>
-              <Input
-                type="date"
-                value={activity.actual_start || ''}
-                onChange={(e) => onUpdate(activity.id, 'actual_start', e.target.value || null)}
-                className="h-10 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[11px] text-muted-foreground">Término Real</Label>
-              <Input
-                type="date"
-                value={activity.actual_end || ''}
-                onChange={(e) => onUpdate(activity.id, 'actual_end', e.target.value || null)}
-                className="h-10 text-xs"
-              />
-            </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground/50 hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remover atividade?</AlertDialogTitle>
+                <AlertDialogDescription>"{activity.description}" será removida permanentemente.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(activity.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        <div className="grid grid-cols-2 gap-2 pl-8">
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Início Prev.</Label>
+            <Input type="date" value={activity.planned_start} onChange={(e) => onUpdate(activity.id, 'planned_start', e.target.value)} className="h-9 text-xs" />
           </div>
-
-          <div className="flex items-end justify-between gap-3 pt-1">
-            <div className="w-24 space-y-1.5">
-              <Label className="text-[11px] text-muted-foreground">Peso (%)</Label>
-              <Input
-                type="number"
-                min={1}
-                max={100}
-                value={activity.weight}
-                onChange={(e) => onUpdate(activity.id, 'weight', parseFloat(e.target.value) || 0)}
-                className="h-10 text-sm font-semibold"
-              />
-            </div>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-10 gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Remover</span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Remover atividade?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    A atividade "{activity.description}" será removida permanentemente.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(activity.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Remover
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Término Prev.</Label>
+            <Input type="date" value={activity.planned_end} onChange={(e) => onUpdate(activity.id, 'planned_end', e.target.value)} className="h-9 text-xs" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Início Real</Label>
+            <Input type="date" value={activity.actual_start || ''} onChange={(e) => onUpdate(activity.id, 'actual_start', e.target.value || null)} className="h-9 text-xs" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[10px] text-muted-foreground">Término Real</Label>
+            <Input type="date" value={activity.actual_end || ''} onChange={(e) => onUpdate(activity.id, 'actual_end', e.target.value || null)} className="h-9 text-xs" />
           </div>
         </div>
-      )}
-    </div>
+        <div className="pl-8 flex items-center gap-2">
+          <Label className="text-[10px] text-muted-foreground">Peso:</Label>
+          <Input type="number" min={0} max={100} value={activity.weight} onChange={(e) => onUpdate(activity.id, 'weight', parseFloat(e.target.value) || 0)} className="h-8 w-16 text-xs text-center font-semibold" />
+          <span className="text-[10px] text-muted-foreground">%</span>
+        </div>
+      </div>
+    </>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="text-center py-10 space-y-3">
+    <div className="text-center py-12 space-y-3">
       <div className="mx-auto w-12 h-12 rounded-2xl bg-accent flex items-center justify-center">
         <ListChecks className="h-6 w-6 text-primary" />
       </div>
@@ -329,35 +310,47 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete }: TabAtiv
   const totalWeight = activities.reduce((sum, a) => sum + (a.weight || 0), 0);
 
   return (
-    <div className="space-y-5">
-      <Card className="border-border/60">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
+    <div className="space-y-4">
+      {activities.length > 0 && <WeightBar total={totalWeight} />}
+
+      <Card className="border-border/60 overflow-hidden">
+        <CardHeader className="pb-0 pt-4 px-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
               <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-4.5 w-4.5 text-primary" />
+                <Calendar className="h-4 w-4 text-primary" />
                 Cronograma de Atividades
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 {activities.length === 0
-                  ? 'Monte o cronograma adicionando atividades'
-                  : `${activities.length} atividade${activities.length !== 1 ? 's' : ''} cadastrada${activities.length !== 1 ? 's' : ''}`
-                }
+                  ? 'Monte o cronograma adicionando atividades abaixo'
+                  : `${activities.length} atividade${activities.length !== 1 ? 's' : ''}`}
               </CardDescription>
             </div>
-            {activities.length > 0 && (
-              <div className="w-40 shrink-0">
-                <WeightBar total={totalWeight} />
-              </div>
-            )}
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3">
+        <CardContent className="p-0 mt-3">
+          {/* Desktop column headers */}
+          <div className="hidden md:grid md:grid-cols-[1fr_130px_130px_130px_130px_70px_44px] gap-0 bg-muted/60 border-y border-border/60 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="py-2.5 pl-3 pr-2 flex items-center gap-2">
+              <span className="w-[calc(1rem+20px+0.5rem)]" /> {/* spacer for grip + number */}
+              Descrição
+            </div>
+            <div className="py-2.5 px-2 text-center">Início Prev.</div>
+            <div className="py-2.5 px-2 text-center">Término Prev.</div>
+            <div className="py-2.5 px-2 text-center">Início Real</div>
+            <div className="py-2.5 px-2 text-center">Término Real</div>
+            <div className="py-2.5 px-2 text-center flex items-center justify-center gap-1">
+              <Weight className="h-3 w-3" /> %
+            </div>
+            <div className="py-2.5 px-2" />
+          </div>
+
           {activities.length > 0 ? (
-            <div className="space-y-2">
+            <div>
               {activities.map((a, i) => (
-                <ActivityCard
+                <ActivityRow
                   key={a.id}
                   activity={a}
                   index={i}
@@ -370,7 +363,7 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete }: TabAtiv
             <EmptyState />
           )}
 
-          <AddActivityForm onAdd={onAdd} />
+          <InlineAddRow onAdd={onAdd} />
         </CardContent>
       </Card>
     </div>
