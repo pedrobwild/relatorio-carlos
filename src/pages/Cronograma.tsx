@@ -160,6 +160,16 @@ const Cronograma = () => {
     hasBaseline,
   } = useProjectActivities(projectId);
 
+  const createFirstActivity = (): ActivityFormData => {
+    const first = createEmptyActivity();
+    if (project?.planned_start_date) {
+      const start = new Date(project.planned_start_date + 'T00:00:00');
+      first.plannedStart = project.planned_start_date;
+      first.plannedEnd = toISO(getFridayOfWeek(start));
+    }
+    return first;
+  };
+
   const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -233,7 +243,13 @@ const Cronograma = () => {
               : weightPerWeek.toFixed(1);
         });
         setActivities(weeks);
+      } else {
+        // No weeks generated but project has dates — use first activity with project start
+        setActivities([createFirstActivity()]);
       }
+    } else if (!activitiesLoading && existingActivities.length === 0) {
+      // No existing activities and no planned dates — still pre-fill if start date exists
+      setActivities([createFirstActivity()]);
     }
   }, [existingActivities, activitiesLoading, project]);
 
