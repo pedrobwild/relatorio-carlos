@@ -1,16 +1,24 @@
 import { useState } from 'react';
-import { Plus, User, UserPlus, X, Link2, Mail, CheckCircle2, Loader2 } from 'lucide-react';
+import { Plus, User, UserPlus, X, Link2, Mail, CheckCircle2, Loader2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { ProjectRole } from '@/hooks/useProjectMembers';
 import type { Customer, Engineer, AvailableEngineer } from './types';
+
+const roleDescriptions: Record<string, { label: string; description: string }> = {
+  owner: { label: 'Responsável', description: 'Acesso total: edita cronograma, financeiro e equipe' },
+  engineer: { label: 'Engenheiro', description: 'Gerencia cronograma, vistorias e atividades' },
+  viewer: { label: 'Visualizador', description: 'Apenas visualiza fotos, cronograma e documentos' },
+  customer: { label: 'Cliente', description: 'Acesso ao portal do cliente com acompanhamento' },
+};
 
 interface ProjectMember {
   id: string;
