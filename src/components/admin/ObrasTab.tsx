@@ -102,7 +102,10 @@ export function ObrasTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Gerenciar Obras</h2>
-        <CreateObraDialog onCreated={refetch} />
+        <Button onClick={() => navigate('/gestao/nova-obra')}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Obra
+        </Button>
       </div>
 
       {/* Stats */}
