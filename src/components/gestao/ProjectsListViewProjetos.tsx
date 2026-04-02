@@ -58,13 +58,13 @@ export function ProjectsListViewProjetos({ projects }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[180px]">Projeto</TableHead>
-              <TableHead className="w-[80px] text-center">Status</TableHead>
-              <TableHead className="min-w-[160px]">Etapa Atual</TableHead>
-              <TableHead className="w-[100px] text-center">Status Etapa</TableHead>
-              <TableHead className="w-[80px] text-center">Progresso</TableHead>
-              <TableHead className="w-[100px] text-center">Tempo na Etapa</TableHead>
-              <TableHead className="min-w-[120px]">Engenheiro</TableHead>
+              <TableHead className="min-w-[180px] text-xs whitespace-nowrap">Projeto</TableHead>
+              <TableHead className="w-[80px] text-center text-xs whitespace-nowrap">Status</TableHead>
+              <TableHead className="min-w-[160px] text-xs whitespace-nowrap">Etapa Atual</TableHead>
+              <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">Status Etapa</TableHead>
+              <TableHead className="w-[80px] text-center text-xs whitespace-nowrap">Progresso</TableHead>
+              <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">Tempo na Etapa</TableHead>
+              <TableHead className="min-w-[120px] text-xs whitespace-nowrap">Engenheiro</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
