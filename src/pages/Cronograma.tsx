@@ -28,6 +28,41 @@ interface ActivityFormData {
   predecessorIds: string[];
 }
 
+const toISO = (d: Date) => {
+  const y = d.getFullYear();
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+/** Find Friday of the same week as the given date. If it's a holiday, go back until a business day. */
+const getFridayOfWeek = (date: Date): Date => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dayOfWeek = d.getDay(); // 0=Sun..6=Sat
+  const daysUntilFriday = dayOfWeek <= 5 ? 5 - dayOfWeek : -1; // if Sat, Friday was yesterday
+  const friday = new Date(d);
+  friday.setDate(friday.getDate() + daysUntilFriday);
+  // If Friday is a holiday, go back day by day until we find a non-holiday weekday
+  while (isHoliday(friday)) {
+    friday.setDate(friday.getDate() - 1);
+  }
+  // Ensure we don't go before the start date
+  if (friday < date) return new Date(date);
+  return friday;
+};
+
+/** Find the next Monday after a given date */
+const getNextMonday = (date: Date): Date => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dayOfWeek = d.getDay();
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek; // Sun->1, Mon->7, Tue->6...
+  const monday = new Date(d);
+  monday.setDate(monday.getDate() + daysUntilMonday);
+  return monday;
+};
+
 const createEmptyActivity = (): ActivityFormData => ({
   id: crypto.randomUUID(),
   description: '',
