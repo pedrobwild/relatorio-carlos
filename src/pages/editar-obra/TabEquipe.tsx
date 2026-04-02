@@ -63,6 +63,7 @@ export function TabEquipe({
   };
 
   return (
+    <TooltipProvider delayDuration={300}>
     <div className="space-y-6">
       {/* Add Member */}
       <Card>
