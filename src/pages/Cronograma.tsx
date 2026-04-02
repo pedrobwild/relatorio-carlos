@@ -243,7 +243,13 @@ const Cronograma = () => {
               : weightPerWeek.toFixed(1);
         });
         setActivities(weeks);
+      } else {
+        // No weeks generated but project has dates — use first activity with project start
+        setActivities([createFirstActivity()]);
       }
+    } else if (!activitiesLoading && existingActivities.length === 0) {
+      // No existing activities and no planned dates — still pre-fill if start date exists
+      setActivities([createFirstActivity()]);
     }
   }, [existingActivities, activitiesLoading, project]);
 
