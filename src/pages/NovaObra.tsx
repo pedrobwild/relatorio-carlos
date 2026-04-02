@@ -202,7 +202,7 @@ export default function NovaObra() {
     setErrors({});
 
     try {
-      await submit(formData, selectedTemplate, sendInvite, budgetFile);
+      await submit(formData, selectedTemplate, sendInvite, budgetFile, scheduleActivities);
       toast({
         title: 'Obra cadastrada!',
         description: formData.create_user
