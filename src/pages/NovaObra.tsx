@@ -30,7 +30,7 @@ const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
   0: ['name'],
   1: [],
   2: [],
-  3: ['customer_name', 'customer_email', 'customer_password'],
+  3: ['customer_name', 'customer_email'],
 };
 
 const DRAFT_KEY = 'nova-obra-draft';
