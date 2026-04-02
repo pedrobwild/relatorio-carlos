@@ -10,7 +10,7 @@
 import type { Persister, PersistedClient } from '@tanstack/react-query-persist-client';
 
 // Increment this version to invalidate all cached data after deploy
-export const QUERY_CACHE_VERSION = 3;
+export const QUERY_CACHE_VERSION = 4;
 const STORAGE_KEY = `bwild-query-cache-v${QUERY_CACHE_VERSION}`;
 const MAX_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB limit
 

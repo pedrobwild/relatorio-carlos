@@ -186,7 +186,9 @@ export function ProjectSlimHeader() {
                       </DropdownMenuLabel>
                     )}
                     {group.projects.map((p) => {
-                      const pendingCount = pendingByProject?.[p.id] || 0;
+                      const pendingCount = pendingByProject instanceof Map
+                        ? (pendingByProject.get(p.id) ?? 0)
+                        : (pendingByProject?.[p.id] ?? 0);
                       return (
                         <DropdownMenuItem
                           key={p.id}
