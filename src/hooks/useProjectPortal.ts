@@ -252,7 +252,7 @@ export function useProjectPortal() {
   // Redirect to journey for "fase de projeto"
   useEffect(() => {
     if (!projectLoading && project?.is_project_phase && projectId) {
-      navigate(`/obra/${projectId}/cronograma`, { replace: true });
+      navigate(`/obra/${projectId}`, { replace: true });
     }
   }, [projectLoading, project?.is_project_phase, projectId, navigate]);
 

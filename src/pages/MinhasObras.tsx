@@ -29,7 +29,7 @@ export default function MinhasObras() {
 
   const handleProjectClick = useCallback((project: ProjectSummary) => {
     sessionStorage.setItem('selectedProjectId', project.id);
-    navigate(`/obra/${project.id}/cronograma`);
+    navigate(`/obra/${project.id}`);
   }, [navigate]);
 
   const handlePaymentClick = useCallback((projectId: string) => {
