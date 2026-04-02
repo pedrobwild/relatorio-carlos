@@ -376,7 +376,7 @@ const Cronograma = () => {
                     <div
                       key={activity.id}
                       className={cn(
-                        'grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
+                        'grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
                         index % 2 === 1 && 'bg-muted/15',
                         rowError && 'bg-destructive/5 hover:bg-destructive/10',
                       )}
@@ -397,12 +397,6 @@ const Cronograma = () => {
                             {rowError.plannedDates}
                           </p>
                         )}
-                        {rowError?.actualDates && (
-                          <p className="text-[10px] text-destructive mt-1 flex items-center gap-1 px-1">
-                            <AlertCircle className="h-3 w-3 shrink-0" />
-                            {rowError.actualDates}
-                          </p>
-                        )}
                       </div>
 
                       <div className="px-2 py-2">
@@ -420,24 +414,6 @@ const Cronograma = () => {
                           onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
                           placeholder="dd/mm/aaaa"
                           hasError={!!rowError?.plannedDates}
-                        />
-                      </div>
-
-                      <div className="px-2 py-2">
-                        <DatePickerField
-                          value={activity.actualStart}
-                          onChange={(val) => handleActivityChange(activity.id, 'actualStart', val)}
-                          placeholder="dd/mm/aaaa"
-                          hasError={!!rowError?.actualDates}
-                        />
-                      </div>
-
-                      <div className="px-2 py-2">
-                        <DatePickerField
-                          value={activity.actualEnd}
-                          onChange={(val) => handleActivityChange(activity.id, 'actualEnd', val)}
-                          placeholder="dd/mm/aaaa"
-                          hasError={!!rowError?.actualDates}
                         />
                       </div>
 
