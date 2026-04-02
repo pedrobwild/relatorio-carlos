@@ -268,7 +268,7 @@ export default function GestaoObras() {
   }), [projects]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex-1 bg-background">
       {/* Header */}
       <AppHeader>
         <div className="ml-2">
