@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   ChevronDown,
   LucideIcon,
+  Building2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -101,6 +102,12 @@ export function ProjectSidebar() {
           label: L("jornada"),
           icon: Map,
           path: paths.jornada,
+        },
+        {
+          label: L("obra"),
+          icon: Building2,
+          path: paths.relatorio,
+          staffOnly: true,
         },
       ],
     },
