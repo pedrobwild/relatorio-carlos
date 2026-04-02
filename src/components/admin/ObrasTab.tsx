@@ -38,7 +38,7 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
-import { CreateObraDialog } from './obras/CreateObraDialog';
+import { useNavigate } from 'react-router-dom';
 import { ObraCard, statusColors, statusLabels } from './obras/ObraCard';
 import { ObraExpandedRow } from './obras/ObraExpandedRow';
 
