@@ -238,7 +238,19 @@ const Cronograma = () => {
   }, [existingActivities, activitiesLoading, project]);
 
   const handleAddActivity = () => {
-    setActivities([...activities, createEmptyActivity()]);
+    const lastActivity = activities[activities.length - 1];
+    const newActivity = createEmptyActivity();
+
+    // Auto-fill dates based on previous activity's end date
+    if (lastActivity?.plannedEnd) {
+      const prevEnd = new Date(lastActivity.plannedEnd + 'T00:00:00');
+      const nextMon = getNextMonday(prevEnd);
+      const nextFri = getFridayOfWeek(nextMon);
+      newActivity.plannedStart = toISO(nextMon);
+      newActivity.plannedEnd = toISO(nextFri);
+    }
+
+    setActivities([...activities, newActivity]);
   };
 
   const handleRemoveActivity = (id: string) => {
