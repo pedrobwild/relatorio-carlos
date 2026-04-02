@@ -502,25 +502,6 @@ const Cronograma = () => {
                         hasError={!!rowError?.plannedDates}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">Início Real</span>
-                      <DatePickerField
-                        value={activity.actualStart}
-                        onChange={(v) => handleActivityChange(activity.id, 'actualStart', v)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!rowError?.actualDates}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">Término Real</span>
-                      <DatePickerField
-                        value={activity.actualEnd}
-                        onChange={(v) => handleActivityChange(activity.id, 'actualEnd', v)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!rowError?.actualDates}
-                      />
-                    </div>
-                  </div>
                   <div className="pl-8 flex items-center gap-2">
                     <span className="text-[10px] text-muted-foreground font-medium">Peso:</span>
                     <Input
