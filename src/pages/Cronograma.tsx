@@ -502,6 +502,7 @@ const Cronograma = () => {
                         hasError={!!rowError?.plannedDates}
                       />
                     </div>
+                  </div>
                   <div className="pl-8 flex items-center gap-2">
                     <span className="text-[10px] text-muted-foreground font-medium">Peso:</span>
                     <Input
