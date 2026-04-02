@@ -46,6 +46,12 @@ export interface ProjectWithCustomer extends Project {
   customer_email?: string;
   engineer_name?: string;
   engineer_user_id?: string;
+  // Studio info (enriched from project_studio_info)
+  tamanho_imovel_m2?: number | null;
+  endereco_completo?: string | null;
+  cidade?: string | null;
+  tipo_de_locacao?: string | null;
+  data_recebimento_chaves?: string | null;
 }
 
 export interface ProjectSummary {
