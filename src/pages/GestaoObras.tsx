@@ -57,6 +57,7 @@ function ProjectCard({
   }, [project.planned_end_date]);
 
   return (
+    <TooltipProvider delayDuration={300}>
     <Card 
       className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
       onClick={onClick}
@@ -69,16 +70,51 @@ function ProjectCard({
               <p className="text-caption text-muted-foreground truncate">{project.unit_name}</p>
             )}
           </div>
-          <Badge variant="outline" className={`${statusColors[project.status]} shrink-0 whitespace-nowrap text-[10px] md:text-xs`}>
-            {statusLabels[project.status]}
-          </Badge>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className={`${statusColors[project.status]} shrink-0 whitespace-nowrap text-[10px] md:text-xs cursor-help`}>
+                {statusLabels[project.status]}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-[200px]">
+              <p className="text-xs">{statusTooltips[project.status]}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </CardHeader>
-      <CardContent className="p-3 md:p-4 pt-2 md:pt-2 space-y-2">
+      <CardContent className="p-3 md:p-4 pt-2 md:pt-2 space-y-1.5">
         {project.customer_name && (
           <div className="flex items-center gap-2 text-caption text-muted-foreground">
             <User className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{project.customer_name}</span>
+          </div>
+        )}
+
+        {/* Studio info: cidade + m² */}
+        {(project.cidade || project.tamanho_imovel_m2) && (
+          <div className="flex items-center gap-3 text-caption text-muted-foreground">
+            {project.cidade && (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{project.cidade}</span>
+              </div>
+            )}
+            {project.tamanho_imovel_m2 && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Ruler className="h-3.5 w-3.5" />
+                <span>{project.tamanho_imovel_m2}m²</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Key delivery date */}
+        {project.data_recebimento_chaves && (
+          <div className="flex items-center gap-2 text-caption text-muted-foreground">
+            <Key className="h-3.5 w-3.5 shrink-0" />
+            <span className="tabular-nums">
+              Chaves: {format(parseLocalDate(project.data_recebimento_chaves), 'dd/MM/yy', { locale: ptBR })}
+            </span>
           </div>
         )}
         
@@ -133,6 +169,7 @@ function ProjectCard({
         </div>
       </CardContent>
     </Card>
+    </TooltipProvider>
   );
 }
 
