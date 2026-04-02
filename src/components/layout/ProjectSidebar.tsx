@@ -103,6 +103,12 @@ export function ProjectSidebar() {
           icon: Map,
           path: paths.jornada,
         },
+        {
+          label: L("obra"),
+          icon: Building2,
+          path: paths.relatorio,
+          staffOnly: true,
+        },
       ],
     },
     {

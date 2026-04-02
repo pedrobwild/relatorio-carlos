@@ -12,6 +12,7 @@ export const navigationLabels: NavLabels = {
   sidebar: {
     dashboard:      { staff: "Dashboard",       client: "Início" },
     jornada:        { staff: "Jornada",         client: "Minha Jornada" },
+    obra:           { staff: "Obra",             client: "Obra" },
     contrato:       { staff: "Contrato",        client: "Contrato" },
     projeto3D:      { staff: "Projeto 3D",      client: "Projeto 3D" },
     executivo:      { staff: "Executivo",        client: "Plantas e Detalhes" },
