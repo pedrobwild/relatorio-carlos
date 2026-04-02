@@ -1,24 +1,21 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, GripVertical, Save, Loader2, AlertCircle, Link2, Upload, Bookmark, ShoppingCart, Wand2 } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2 } from 'lucide-react';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePickerField } from '@/components/DatePickerField';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectActivities, ActivityInput } from '@/hooks/useProjectActivities';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { ImportScheduleModal } from '@/components/ImportScheduleModal';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { cn } from '@/lib/utils';
+
 interface ActivityFormData {
   id: string;
   description: string;
@@ -41,17 +38,101 @@ const createEmptyActivity = (): ActivityFormData => ({
   predecessorIds: [],
 });
 
+/* ── Auto-resize textarea ── */
+function AutoTextarea({
+  value,
+  onChange,
+  placeholder,
+  hasError,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  hasError?: boolean;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = '0px';
+      ref.current.style.height = `${Math.max(36, ref.current.scrollHeight)}px`;
+    }
+  }, [value]);
+
+  return (
+    <Textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={1}
+      className={cn(
+        'min-h-[36px] resize-none overflow-hidden py-2 px-2.5 text-sm leading-snug border-transparent bg-transparent hover:border-border focus:border-border transition-colors',
+        hasError && 'border-destructive',
+      )}
+    />
+  );
+}
+
+/* ── Weight progress bar ── */
+function WeightSummary({ total }: { total: number }) {
+  const isValid = Math.abs(total - 100) < 0.05;
+  const isOver = total > 100;
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/40 border border-border/60">
+      <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">
+        Peso total das atividades:
+      </span>
+      <Progress
+        value={Math.min(total, 100)}
+        className={cn(
+          'h-2 flex-1 rounded-full max-w-xs',
+          isValid
+            ? '[&>div]:bg-[hsl(var(--success))]'
+            : isOver
+              ? '[&>div]:bg-destructive'
+              : '[&>div]:bg-[hsl(var(--warning))]',
+        )}
+      />
+      <span
+        className={cn(
+          'text-sm font-bold tabular-nums whitespace-nowrap min-w-[52px] text-right',
+          isValid
+            ? 'text-[hsl(var(--success))]'
+            : isOver
+              ? 'text-destructive'
+              : 'text-[hsl(var(--warning))]',
+        )}
+      >
+        {total.toFixed(1)}%
+      </span>
+    </div>
+  );
+}
+
+/* ── Main component ── */
 const Cronograma = () => {
   const navigate = useNavigate();
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
-  const { activities: existingActivities, loading: activitiesLoading, saveActivities, saveBaseline, clearBaseline, hasBaseline } = useProjectActivities(projectId);
-  
+  const {
+    activities: existingActivities,
+    loading: activitiesLoading,
+    saveActivities,
+    saveBaseline,
+    clearBaseline,
+    hasBaseline,
+  } = useProjectActivities(projectId);
+
   const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
   const [saving, setSaving] = useState(false);
-  const [totalWeight, setTotalWeight] = useState(0);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [savingBaseline, setSavingBaseline] = useState(false);
+
+  const totalWeight = useMemo(
+    () => activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0),
+    [activities],
+  );
 
   const handleSaveBaseline = async () => {
     setSavingBaseline(true);
@@ -61,10 +142,8 @@ const Cronograma = () => {
 
   const handleImportActivities = (importedActivities: ActivityFormData[]) => {
     if (activities.length === 1 && !activities[0].description.trim()) {
-      // Replace empty default activity
       setActivities(importedActivities);
     } else {
-      // Append to existing activities
       setActivities([...activities, ...importedActivities]);
     }
   };
@@ -72,7 +151,7 @@ const Cronograma = () => {
   // Load existing activities or auto-generate weekly slots
   useEffect(() => {
     if (existingActivities.length > 0) {
-      const formActivities = existingActivities.map(act => ({
+      const formActivities = existingActivities.map((act) => ({
         id: act.id,
         description: act.description,
         plannedStart: act.planned_start,
@@ -84,19 +163,16 @@ const Cronograma = () => {
       }));
       setActivities(formActivities);
     } else if (!activitiesLoading && project?.planned_start_date && project?.planned_end_date) {
-      // Auto-generate weekly activities from project dates
       const start = new Date(project.planned_start_date + 'T00:00:00');
       const end = new Date(project.planned_end_date + 'T00:00:00');
       if (start >= end) return;
 
       const weeks: ActivityFormData[] = [];
       let weekStart = new Date(start);
-      
       while (weekStart < end) {
         const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6); // 7-day week
+        weekEnd.setDate(weekEnd.getDate() + 6);
         const cappedEnd = weekEnd > end ? end : weekEnd;
-        
         const fmt = (d: Date) => d.toISOString().split('T')[0];
         weeks.push({
           id: crypto.randomUUID(),
@@ -105,30 +181,25 @@ const Cronograma = () => {
           plannedEnd: fmt(cappedEnd),
           actualStart: '',
           actualEnd: '',
-          weight: '0', // placeholder, will be set below
+          weight: '0',
           predecessorIds: [],
         });
-        
         weekStart = new Date(cappedEnd);
         weekStart.setDate(weekStart.getDate() + 1);
       }
-      
       if (weeks.length > 0) {
         const weightPerWeek = parseFloat((100 / weeks.length).toFixed(1));
         const remainder = parseFloat((100 - weightPerWeek * weeks.length).toFixed(1));
         weeks.forEach((w, i) => {
-          w.weight = (i === weeks.length - 1 ? (weightPerWeek + remainder).toFixed(1) : weightPerWeek.toFixed(1));
+          w.weight =
+            i === weeks.length - 1
+              ? (weightPerWeek + remainder).toFixed(1)
+              : weightPerWeek.toFixed(1);
         });
         setActivities(weeks);
       }
     }
   }, [existingActivities, activitiesLoading, project]);
-
-  // Calculate total weight
-  useEffect(() => {
-    const total = activities.reduce((sum, act) => sum + (parseFloat(act.weight) || 0), 0);
-    setTotalWeight(total);
-  }, [activities]);
 
   const handleAddActivity = () => {
     setActivities([...activities, createEmptyActivity()]);
@@ -136,109 +207,51 @@ const Cronograma = () => {
 
   const handleRemoveActivity = (id: string) => {
     if (activities.length === 1) return;
-    setActivities(activities.filter(act => act.id !== id));
+    setActivities(activities.filter((act) => act.id !== id));
   };
 
-  const handleActivityChange = (id: string, field: keyof ActivityFormData, value: string | string[]) => {
-    setActivities(activities.map(act => 
-      act.id === id ? { ...act, [field]: value } : act
-    ));
+  const handleActivityChange = (
+    id: string,
+    field: keyof ActivityFormData,
+    value: string | string[],
+  ) => {
+    setActivities(activities.map((act) => (act.id === id ? { ...act, [field]: value } : act)));
   };
 
-  // Detect circular dependencies using DFS
-  const wouldCreateCircularDependency = (activityId: string, newPredecessorId: string): boolean => {
-    const visited = new Set<string>();
-    
-    const hasCycle = (currentId: string): boolean => {
-      if (currentId === activityId) return true;
-      if (visited.has(currentId)) return false;
-      
-      visited.add(currentId);
-      const activity = activities.find(a => a.id === currentId);
-      if (!activity) return false;
-      
-      for (const predId of activity.predecessorIds) {
-        if (hasCycle(predId)) return true;
-      }
-      return false;
-    };
-    
-    return hasCycle(newPredecessorId);
-  };
-
-  const togglePredecessor = (activityId: string, predecessorId: string) => {
-    const activity = activities.find(a => a.id === activityId);
-    if (!activity) return;
-
-    // If adding a new predecessor, check for circular dependency
-    if (!activity.predecessorIds.includes(predecessorId)) {
-      if (wouldCreateCircularDependency(activityId, predecessorId)) {
-        toast.error('Dependência circular detectada! Esta atividade já depende direta ou indiretamente da atividade selecionada.');
-        return;
-      }
-    }
-
-    setActivities(activities.map(act => {
-      if (act.id === activityId) {
-        const newPredecessors = act.predecessorIds.includes(predecessorId)
-          ? act.predecessorIds.filter(id => id !== predecessorId)
-          : [...act.predecessorIds, predecessorId];
-        return { ...act, predecessorIds: newPredecessors };
-      }
-      return act;
-    }));
-  };
-
-  const getActivityLabel = (id: string) => {
-    const index = activities.findIndex(a => a.id === id);
-    return index >= 0 ? `${index + 1}. ${activities[index].description || 'Sem descrição'}` : '';
-  };
-
-  // Validate dates for each activity
+  // Date validation
   const dateValidationErrors = useMemo(() => {
     const errors: Record<string, { plannedDates?: string; actualDates?: string }> = {};
-    
-    activities.forEach(act => {
+    activities.forEach((act) => {
       const actErrors: { plannedDates?: string; actualDates?: string } = {};
-      
-      // Validate planned dates
       if (act.plannedStart && act.plannedEnd && act.plannedEnd < act.plannedStart) {
         actErrors.plannedDates = 'Término previsto deve ser igual ou posterior ao início';
       }
-      
-      // Validate actual dates
       if (act.actualStart && act.actualEnd && act.actualEnd < act.actualStart) {
         actErrors.actualDates = 'Término real deve ser igual ou posterior ao início';
       }
-      
       if (Object.keys(actErrors).length > 0) {
         errors[act.id] = actErrors;
       }
     });
-    
     return errors;
   }, [activities]);
 
   const hasDateErrors = Object.keys(dateValidationErrors).length > 0;
 
   const handleSave = async () => {
-    // Validation
-    const hasEmptyFields = activities.some(act => 
-      !act.description.trim() || !act.plannedStart || !act.plannedEnd
+    const hasEmptyFields = activities.some(
+      (act) => !act.description.trim() || !act.plannedStart || !act.plannedEnd,
     );
-
     if (hasEmptyFields) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
-
     if (hasDateErrors) {
       toast.error('Corrija os erros de data antes de salvar');
       return;
     }
 
     setSaving(true);
-    
     const activityInputs: ActivityInput[] = activities.map((act, index) => ({
       description: act.description.trim(),
       planned_start: act.plannedStart,
@@ -249,28 +262,12 @@ const Cronograma = () => {
       sort_order: index,
       predecessor_ids: act.predecessorIds,
     }));
-
     const success = await saveActivities(activityInputs);
     setSaving(false);
-
     if (success) {
       toast.success('Cronograma salvo com sucesso');
       navigate(paths.relatorio);
     }
-  };
-
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
-    const newActivities = [...activities];
-    [newActivities[index - 1], newActivities[index]] = [newActivities[index], newActivities[index - 1]];
-    setActivities(newActivities);
-  };
-
-  const handleMoveDown = (index: number) => {
-    if (index === activities.length - 1) return;
-    const newActivities = [...activities];
-    [newActivities[index], newActivities[index + 1]] = [newActivities[index + 1], newActivities[index]];
-    setActivities(newActivities);
   };
 
   if (projectLoading || activitiesLoading) {
@@ -281,12 +278,9 @@ const Cronograma = () => {
           showLogo={false}
           maxWidth="md"
           onBack={() => navigate(-1)}
-          breadcrumbs={[
-            { label: "Gestão", href: "/gestao" },
-            { label: "Cronograma" },
-          ]}
+          breadcrumbs={[{ label: 'Gestão', href: '/gestao' }, { label: 'Cronograma' }]}
         />
-        <div className="max-w-4xl mx-auto p-4">
+        <div className="max-w-7xl mx-auto p-4">
           <ContentSkeleton variant="table" rows={6} />
         </div>
       </div>
@@ -295,48 +289,55 @@ const Cronograma = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <PageHeader
         title="Cronograma"
         showLogo={false}
         maxWidth="md"
         onBack={() => {
-          if (window.history.length > 1) {
-            navigate(-1);
-          } else {
-            navigate('/gestao', { replace: true });
-          }
+          if (window.history.length > 1) navigate(-1);
+          else navigate('/gestao', { replace: true });
         }}
         breadcrumbs={[
-          { label: "Gestão", href: "/gestao" },
-          { label: project?.name || "Obra", href: `/obra/${projectId}` },
-          { label: "Cronograma" },
+          { label: 'Gestão', href: '/gestao' },
+          { label: project?.name || 'Obra', href: `/obra/${projectId}` },
+          { label: 'Cronograma' },
         ]}
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <AIScheduleGenerator projectId={projectId || ''} projectName={project?.name || 'Obra'} plannedStartDate={project?.planned_start_date} plannedEndDate={project?.planned_end_date} />
+          <AIScheduleGenerator
+            projectId={projectId || ''}
+            projectName={project?.name || 'Obra'}
+            plannedStartDate={project?.planned_start_date}
+            plannedEndDate={project?.planned_end_date}
+          />
           <Link to={paths.compras}>
             <Button variant="outline" size="sm" className="text-xs">
               <ShoppingCart className="w-4 h-4 mr-1.5" />
               <span className="hidden sm:inline">Compras</span>
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             className="text-xs"
             onClick={handleSaveBaseline}
             disabled={savingBaseline || activities.length === 0}
-            title={hasBaseline ? "Atualizar baseline" : "Salvar baseline"}
           >
             {savingBaseline ? (
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
             ) : (
-              <Bookmark className={cn("w-4 h-4 mr-1.5", hasBaseline && "fill-current")} />
+              <Bookmark className={cn('w-4 h-4 mr-1.5', hasBaseline && 'fill-current')} />
             )}
-            <span className="hidden sm:inline">{hasBaseline ? 'Atualizar Baseline' : 'Baseline'}</span>
+            <span className="hidden sm:inline">
+              {hasBaseline ? 'Atualizar Baseline' : 'Baseline'}
+            </span>
           </Button>
-          <Button variant="outline" size="sm" className="text-xs" onClick={() => setImportModalOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={() => setImportModalOpen(true)}
+          >
             <Upload className="w-4 h-4 mr-1.5" />
             <span className="hidden sm:inline">Importar</span>
           </Button>
@@ -352,129 +353,256 @@ const Cronograma = () => {
       </PageHeader>
 
       <div className="max-w-7xl mx-auto p-4 space-y-4">
-        {/* Weight summary */}
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Peso total das atividades:</span>
-              <span className={`font-semibold ${totalWeight === 100 ? 'text-[hsl(var(--success))]' : totalWeight > 100 ? 'text-destructive' : 'text-[hsl(var(--warning))]'}`}>
-                {totalWeight.toFixed(1)}%
-              </span>
-            </div>
-            {totalWeight !== 100 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                O peso total deve ser igual a 100% para cálculo correto de progresso.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <WeightSummary total={totalWeight} />
 
-        {/* Table layout */}
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+        {/* ── Spreadsheet table ── */}
+        <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left px-3 py-3 font-medium text-muted-foreground w-12">#</th>
-                  <th className="text-left px-3 py-3 font-medium text-muted-foreground min-w-[160px]">Descrição</th>
-                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Início Prev.</th>
-                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Término Prev.</th>
-                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Início Real</th>
-                  <th className="text-left px-3 py-3 font-medium text-muted-foreground">Término Real</th>
-                  <th className="text-left px-3 py-3 font-medium text-muted-foreground w-20">Peso</th>
-                  <th className="w-12"></th>
+                <tr className="bg-muted/60 border-b border-border/60">
+                  <th className="text-left py-2.5 pl-4 pr-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-10">
+                    #
+                  </th>
+                  <th className="text-left py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Descrição
+                  </th>
+                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
+                    Início Prev.
+                  </th>
+                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
+                    Término Prev.
+                  </th>
+                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
+                    Início Real
+                  </th>
+                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[140px]">
+                    Término Real
+                  </th>
+                  <th className="text-center py-2.5 px-2 font-semibold text-[11px] uppercase tracking-wider text-muted-foreground w-[72px]">
+                    Peso
+                  </th>
+                  <th className="w-11 py-2.5 pr-3" />
                 </tr>
               </thead>
               <tbody>
-                {activities.map((activity, index) => (
-                  <tr
-                    key={activity.id}
-                    className={cn(
-                      "border-b border-border last:border-0 transition-colors hover:bg-muted/50",
-                      (dateValidationErrors[activity.id]?.plannedDates || dateValidationErrors[activity.id]?.actualDates) && "bg-destructive/5"
-                    )}
-                  >
-                    <td className="px-3 py-3 text-muted-foreground tabular-nums">{index}</td>
-                    <td className="px-3 py-3">
-                      <Textarea
-                        value={activity.description}
-                        onChange={(e) => handleActivityChange(activity.id, 'description', e.target.value)}
-                        placeholder="Ex: Mobilização"
-                        rows={1}
-                        className="resize-none min-h-[36px] border-border bg-transparent text-sm"
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <DatePickerField
-                        value={activity.plannedStart}
-                        onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!dateValidationErrors[activity.id]?.plannedDates}
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <DatePickerField
-                        value={activity.plannedEnd}
-                        onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!dateValidationErrors[activity.id]?.plannedDates}
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <DatePickerField
-                        value={activity.actualStart}
-                        onChange={(val) => handleActivityChange(activity.id, 'actualStart', val)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!dateValidationErrors[activity.id]?.actualDates}
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <DatePickerField
-                        value={activity.actualEnd}
-                        onChange={(val) => handleActivityChange(activity.id, 'actualEnd', val)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!dateValidationErrors[activity.id]?.actualDates}
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={activity.weight}
-                        onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
-                        className="w-20 text-sm"
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleRemoveActivity(activity.id)}
-                        disabled={activities.length === 1}
-                        aria-label="Remover atividade"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                {activities.map((activity, index) => {
+                  const rowError = dateValidationErrors[activity.id];
+                  return (
+                    <tr
+                      key={activity.id}
+                      className={cn(
+                        'group border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
+                        index % 2 === 1 && 'bg-muted/15',
+                        rowError && 'bg-destructive/5 hover:bg-destructive/8',
+                      )}
+                    >
+                      <td className="pl-4 pr-2 py-1.5 text-xs font-bold text-muted-foreground tabular-nums align-top pt-3">
+                        {index + 1}
+                      </td>
+                      <td className="px-2 py-1.5 align-top">
+                        <AutoTextarea
+                          value={activity.description}
+                          onChange={(v) => handleActivityChange(activity.id, 'description', v)}
+                          placeholder="Ex: Mobilização e alinhamentos iniciais..."
+                        />
+                        {rowError?.plannedDates && (
+                          <p className="text-[10px] text-destructive mt-0.5 flex items-center gap-1 px-1">
+                            <AlertCircle className="h-3 w-3 shrink-0" />
+                            {rowError.plannedDates}
+                          </p>
+                        )}
+                        {rowError?.actualDates && (
+                          <p className="text-[10px] text-destructive mt-0.5 flex items-center gap-1 px-1">
+                            <AlertCircle className="h-3 w-3 shrink-0" />
+                            {rowError.actualDates}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 align-top pt-2">
+                        <DatePickerField
+                          value={activity.plannedStart}
+                          onChange={(val) =>
+                            handleActivityChange(activity.id, 'plannedStart', val)
+                          }
+                          placeholder="dd/mm/aaaa"
+                          hasError={!!rowError?.plannedDates}
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 align-top pt-2">
+                        <DatePickerField
+                          value={activity.plannedEnd}
+                          onChange={(val) =>
+                            handleActivityChange(activity.id, 'plannedEnd', val)
+                          }
+                          placeholder="dd/mm/aaaa"
+                          hasError={!!rowError?.plannedDates}
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 align-top pt-2">
+                        <DatePickerField
+                          value={activity.actualStart}
+                          onChange={(val) =>
+                            handleActivityChange(activity.id, 'actualStart', val)
+                          }
+                          placeholder="dd/mm/aaaa"
+                          hasError={!!rowError?.actualDates}
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 align-top pt-2">
+                        <DatePickerField
+                          value={activity.actualEnd}
+                          onChange={(val) =>
+                            handleActivityChange(activity.id, 'actualEnd', val)
+                          }
+                          placeholder="dd/mm/aaaa"
+                          hasError={!!rowError?.actualDates}
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 align-top pt-2">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={activity.weight}
+                          onChange={(e) =>
+                            handleActivityChange(activity.id, 'weight', e.target.value)
+                          }
+                          className="h-9 text-xs text-center font-semibold tabular-nums w-full border-transparent bg-transparent hover:border-border focus:border-border transition-colors"
+                        />
+                      </td>
+                      <td className="pr-3 py-1.5 align-top pt-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleRemoveActivity(activity.id)}
+                          disabled={activities.length === 1}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        </Card>
 
-        {/* Add activity button */}
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={handleAddActivity}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar Atividade
-        </Button>
+          {/* Mobile cards */}
+          <div className="md:hidden divide-y divide-border/40">
+            {activities.map((activity, index) => {
+              const rowError = dateValidationErrors[activity.id];
+              return (
+                <div
+                  key={activity.id}
+                  className={cn('p-3 space-y-2.5', rowError && 'bg-destructive/5')}
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold bg-primary/10 text-primary shrink-0 mt-1">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <AutoTextarea
+                        value={activity.description}
+                        onChange={(v) => handleActivityChange(activity.id, 'description', v)}
+                        placeholder="Descrição da atividade..."
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-muted-foreground/50 hover:text-destructive"
+                      onClick={() => handleRemoveActivity(activity.id)}
+                      disabled={activities.length === 1}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  {(rowError?.plannedDates || rowError?.actualDates) && (
+                    <p className="text-[10px] text-destructive flex items-center gap-1 pl-8">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      {rowError?.plannedDates || rowError?.actualDates}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2 pl-8">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Início Prev.
+                      </span>
+                      <DatePickerField
+                        value={activity.plannedStart}
+                        onChange={(v) => handleActivityChange(activity.id, 'plannedStart', v)}
+                        placeholder="dd/mm/aaaa"
+                        hasError={!!rowError?.plannedDates}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Término Prev.
+                      </span>
+                      <DatePickerField
+                        value={activity.plannedEnd}
+                        onChange={(v) => handleActivityChange(activity.id, 'plannedEnd', v)}
+                        placeholder="dd/mm/aaaa"
+                        hasError={!!rowError?.plannedDates}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Início Real
+                      </span>
+                      <DatePickerField
+                        value={activity.actualStart}
+                        onChange={(v) => handleActivityChange(activity.id, 'actualStart', v)}
+                        placeholder="dd/mm/aaaa"
+                        hasError={!!rowError?.actualDates}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        Término Real
+                      </span>
+                      <DatePickerField
+                        value={activity.actualEnd}
+                        onChange={(v) => handleActivityChange(activity.id, 'actualEnd', v)}
+                        placeholder="dd/mm/aaaa"
+                        hasError={!!rowError?.actualDates}
+                      />
+                    </div>
+                  </div>
+                  <div className="pl-8 flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground font-medium">Peso:</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={activity.weight}
+                      onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
+                      className="h-8 w-16 text-xs text-center font-semibold"
+                    />
+                    <span className="text-[10px] text-muted-foreground">%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add row */}
+          <div className="border-t border-dashed border-primary/20">
+            <Button
+              variant="ghost"
+              className="w-full h-12 gap-2 text-sm text-muted-foreground hover:text-primary rounded-none"
+              onClick={handleAddActivity}
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar atividade
+            </Button>
+          </div>
+        </div>
       </div>
 
       <ImportScheduleModal
