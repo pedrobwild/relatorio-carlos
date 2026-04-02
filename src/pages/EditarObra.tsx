@@ -22,6 +22,7 @@ import { TabAtividades } from './editar-obra/TabAtividades';
 import { TabPagamentos } from './editar-obra/TabPagamentos';
 import { TabEquipe } from './editar-obra/TabEquipe';
 import { TabFichaTecnica } from './editar-obra/TabFichaTecnica';
+import { EditarObraSidebar } from './editar-obra/EditarObraSidebar';
 
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
