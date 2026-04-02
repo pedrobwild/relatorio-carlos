@@ -221,6 +221,7 @@ export function TabEquipe({
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
 
