@@ -162,7 +162,7 @@ const App = () => (
               path="/obra/:projectId"
               element={
                 <ProtectedRoute>
-                  <ProjectPage>{withSuspense(<Index />)}</ProjectPage>
+                  <ProjectPage>{withSuspense(<Cronograma />)}</ProjectPage>
                 </ProtectedRoute>
               }
             />
@@ -257,9 +257,9 @@ const App = () => (
             <Route
               path="/obra/:projectId/cronograma"
               element={
-                <StaffRoute>
+                <ProtectedRoute>
                   <ProjectPage>{withSuspense(<Cronograma />)}</ProjectPage>
-                </StaffRoute>
+                </ProtectedRoute>
               }
             />
             <Route
