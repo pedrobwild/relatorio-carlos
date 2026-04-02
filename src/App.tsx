@@ -13,6 +13,7 @@ import { createQueryPersister, QUERY_CACHE_VERSION } from "@/lib/queryPersister"
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { AuthRedirect } from "@/components/AuthRedirect";
 import { ProjectShell } from "@/components/layout/ProjectShell";
+import { GestaoShell } from "@/components/layout/GestaoShell";
 
 /** Thin wrapper: shows AuthRedirect (which navigates away) + a spinner while it resolves. */
 const AuthRedirectPage = () => {
@@ -138,12 +139,12 @@ const App = () => (
             <Route path="/auth" element={withSuspense(<Auth />)} />
             <Route path="/verificar/:hash" element={withSuspense(<VerificarAssinatura />)} />
             
-            {/* Staff-only routes */}
-            <Route path="/gestao" element={<StaffRoute>{withSuspense(<GestaoObras />)}</StaffRoute>} />
-            <Route path="/gestao/nova-obra" element={<StaffRoute>{withSuspense(<NovaObra />)}</StaffRoute>} />
-            <Route path="/gestao/obra/:projectId" element={<StaffRoute>{withSuspense(<EditarObra />)}</StaffRoute>} />
-            <Route path="/gestao/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
-            <Route path="/gestao/calendario-compras" element={<StaffRoute>{withSuspense(<CalendarioCompras />)}</StaffRoute>} />
+            {/* Staff-only routes — wrapped in GestaoShell */}
+            <Route path="/gestao" element={<StaffRoute><GestaoShell>{withSuspense(<GestaoObras />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/nova-obra" element={<StaffRoute><GestaoShell>{withSuspense(<NovaObra />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/obra/:projectId" element={<StaffRoute><GestaoShell>{withSuspense(<EditarObra />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/arquivos" element={<ProtectedRoute><GestaoShell>{withSuspense(<Arquivos />)}</GestaoShell></ProtectedRoute>} />
+            <Route path="/gestao/calendario-compras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioCompras />)}</GestaoShell></StaffRoute>} />
             <Route path="/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
             
             {/* Admin-only routes */}
