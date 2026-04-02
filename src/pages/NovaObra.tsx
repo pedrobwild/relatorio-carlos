@@ -241,9 +241,9 @@ export default function NovaObra() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-4 py-6">
         {/* Stepper */}
-        <div className="mb-8">
+        <div className="mb-8 lg:max-w-3xl">
           <FormStepper
             steps={STEPS}
             currentStep={currentStep}
@@ -252,101 +252,113 @@ export default function NovaObra() {
           />
         </div>
 
-        {/* Draft restored banner */}
-        {draftRestored && (
-          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3 mb-2">
-            <p className="text-sm text-muted-foreground">Rascunho restaurado automaticamente.</p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                clearDraft();
-                setFormData(initialFormData);
-                setCurrentStep(0);
-                setCompletedSteps(new Set());
-                setDraftRestored(false);
-              }}
-            >
-              Limpar
-            </Button>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Step 0: Dados Básicos */}
-          <div className={cn(currentStep !== 0 && 'hidden')}>
-            {templates && templates.length > 0 && (
-              <div className="mb-6">
-                <TemplateSelectorCard
-                  templates={templates}
-                  selectedTemplate={selectedTemplate}
-                  onSelectTemplate={setSelectedTemplate}
-                  formData={formData}
-                  onFormChange={handleChange}
-                  customFieldValues={customFieldValues}
-                  onCustomFieldChange={setCustomFieldValues}
-                />
+        <div className="flex gap-8 items-start">
+          {/* Main form */}
+          <div className="flex-1 min-w-0 max-w-3xl">
+            {/* Draft restored banner */}
+            {draftRestored && (
+              <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3 mb-2">
+                <p className="text-sm text-muted-foreground">Rascunho restaurado automaticamente.</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    clearDraft();
+                    setFormData(initialFormData);
+                    setCurrentStep(0);
+                    setCompletedSteps(new Set());
+                    setDraftRestored(false);
+                  }}
+                >
+                  Limpar
+                </Button>
               </div>
             )}
-            <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
-          </div>
 
-          {/* Step 1: Cronograma */}
-          <div className={cn(currentStep !== 1 && 'hidden')}>
-            <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Step 0: Dados Básicos */}
+              <div className={cn(currentStep !== 0 && 'hidden')}>
+                {templates && templates.length > 0 && (
+                  <div className="mb-6">
+                    <TemplateSelectorCard
+                      templates={templates}
+                      selectedTemplate={selectedTemplate}
+                      onSelectTemplate={setSelectedTemplate}
+                      formData={formData}
+                      onFormChange={handleChange}
+                      customFieldValues={customFieldValues}
+                      onCustomFieldChange={setCustomFieldValues}
+                    />
+                  </div>
+                )}
+                <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
+              </div>
 
-          {/* Step 2: Orçamento e Financeiro */}
-          <div className={cn(currentStep !== 2 && 'hidden')}>
-            <div className="space-y-6">
-              <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
-              <FinancialCard formData={formData} onChange={handleChange} />
-            </div>
-          </div>
+              {/* Step 1: Cronograma */}
+              <div className={cn(currentStep !== 1 && 'hidden')}>
+                <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
+              </div>
 
-          {/* Step 3: Cliente - with Review Summary */}
-          <div className={cn(currentStep !== 3 && 'hidden')}>
-            <div className="space-y-6">
-              <ReviewSummary formData={formData} />
-              <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
-            </div>
-          </div>
+              {/* Step 2: Orçamento e Financeiro */}
+              <div className={cn(currentStep !== 2 && 'hidden')}>
+                <div className="space-y-6">
+                  <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
+                  <FinancialCard formData={formData} onChange={handleChange} />
+                </div>
+              </div>
 
-          {/* Navigation buttons */}
-          <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
-            <div>
-              {currentStep > 0 ? (
-                <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px] w-full sm:w-auto">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar
-                </Button>
-              ) : (
-                <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px] w-full sm:w-auto">
-                  Cancelar
-                </Button>
-              )}
-            </div>
+              {/* Step 3: Cliente - with Review Summary */}
+              <div className={cn(currentStep !== 3 && 'hidden')}>
+                <div className="space-y-6">
+                  <ReviewSummary formData={formData} />
+                  <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
+                </div>
+              </div>
 
-            <div>
-              {isLastStep ? (
-                <Button type="submit" disabled={loading} className="min-h-[44px] w-full sm:w-auto">
-                  {loading ? 'Cadastrando...' : (
-                    <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Cadastrar Obra
-                    </>
+              {/* Navigation buttons */}
+              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
+                <div>
+                  {currentStep > 0 ? (
+                    <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px] w-full sm:w-auto">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Voltar
+                    </Button>
+                  ) : (
+                    <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px] w-full sm:w-auto">
+                      Cancelar
+                    </Button>
                   )}
-                </Button>
-              ) : (
-                <Button type="button" onClick={handleNext} className="min-h-[44px] w-full sm:w-auto">
-                  Próximo
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              )}
-            </div>
+                </div>
+
+                <div>
+                  {isLastStep ? (
+                    <Button type="submit" disabled={loading} className="min-h-[44px] w-full sm:w-auto">
+                      {loading ? 'Cadastrando...' : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Cadastrar Obra
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button type="button" onClick={handleNext} className="min-h-[44px] w-full sm:w-auto">
+                      Próximo
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </form>
           </div>
-        </form>
+
+          {/* Sticky sidebar summary — desktop only */}
+          <StickySummary
+            formData={formData}
+            currentStep={currentStep}
+            completedSteps={completedSteps}
+          />
+        </div>
       </main>
     </div>
   );
