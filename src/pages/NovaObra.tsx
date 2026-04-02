@@ -16,6 +16,7 @@ import { CustomerCard } from './nova-obra/CustomerCard';
 import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
 import { ReviewSummary } from './nova-obra/ReviewSummary';
 import { FormStepper, type Step } from '@/components/FormStepper';
+import { StickySummary } from './nova-obra/StickySummary';
 import { cn } from '@/lib/utils';
 
 const STEPS: Step[] = [
