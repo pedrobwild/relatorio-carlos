@@ -63,6 +63,16 @@ export function useLinkCustomerOnLogin(user: User | null) {
           return;
         }
 
+        // Also ensure project_members entries exist (needed for RLS and queries)
+        for (const proj of unlinkedProjects) {
+          await supabase
+            .from('project_members')
+            .upsert(
+              { project_id: proj.project_id, user_id: user.id, role: 'viewer' as any },
+              { onConflict: 'project_id,user_id' }
+            );
+        }
+
         // Log success
         const projectNames = unlinkedProjects.map(p => p.customer_name || p.project_id).join(', ');
         logInfo('Customer linked to projects on login', {
