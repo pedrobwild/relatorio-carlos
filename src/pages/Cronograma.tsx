@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2 } from 'lucide-react';
+import { isHoliday } from '@/lib/businessDays';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,41 @@ interface ActivityFormData {
   weight: string;
   predecessorIds: string[];
 }
+
+const toISO = (d: Date) => {
+  const y = d.getFullYear();
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+/** Find Friday of the same week as the given date. If it's a holiday, go back until a business day. */
+const getFridayOfWeek = (date: Date): Date => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dayOfWeek = d.getDay(); // 0=Sun..6=Sat
+  const daysUntilFriday = dayOfWeek <= 5 ? 5 - dayOfWeek : -1; // if Sat, Friday was yesterday
+  const friday = new Date(d);
+  friday.setDate(friday.getDate() + daysUntilFriday);
+  // If Friday is a holiday, go back day by day until we find a non-holiday weekday
+  while (isHoliday(friday)) {
+    friday.setDate(friday.getDate() - 1);
+  }
+  // Ensure we don't go before the start date
+  if (friday < date) return new Date(date);
+  return friday;
+};
+
+/** Find the next Monday after a given date */
+const getNextMonday = (date: Date): Date => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const dayOfWeek = d.getDay();
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek; // Sun->1, Mon->7, Tue->6...
+  const monday = new Date(d);
+  monday.setDate(monday.getDate() + daysUntilMonday);
+  return monday;
+};
 
 const createEmptyActivity = (): ActivityFormData => ({
   id: crypto.randomUUID(),
@@ -202,7 +238,19 @@ const Cronograma = () => {
   }, [existingActivities, activitiesLoading, project]);
 
   const handleAddActivity = () => {
-    setActivities([...activities, createEmptyActivity()]);
+    const lastActivity = activities[activities.length - 1];
+    const newActivity = createEmptyActivity();
+
+    // Auto-fill dates based on previous activity's end date
+    if (lastActivity?.plannedEnd) {
+      const prevEnd = new Date(lastActivity.plannedEnd + 'T00:00:00');
+      const nextMon = getNextMonday(prevEnd);
+      const nextFri = getFridayOfWeek(nextMon);
+      newActivity.plannedStart = toISO(nextMon);
+      newActivity.plannedEnd = toISO(nextFri);
+    }
+
+    setActivities([...activities, newActivity]);
   };
 
   const handleRemoveActivity = (id: string) => {
@@ -215,7 +263,19 @@ const Cronograma = () => {
     field: keyof ActivityFormData,
     value: string | string[],
   ) => {
-    setActivities(activities.map((act) => (act.id === id ? { ...act, [field]: value } : act)));
+    setActivities(activities.map((act) => {
+      if (act.id !== id) return act;
+      const updated = { ...act, [field]: value };
+      // Auto-fill end date when start date is set and end date is empty or was auto-filled
+      if (field === 'plannedStart' && typeof value === 'string' && value) {
+        const startDate = new Date(value + 'T00:00:00');
+        if (!isNaN(startDate.getTime())) {
+          const friday = getFridayOfWeek(startDate);
+          updated.plannedEnd = toISO(friday);
+        }
+      }
+      return updated;
+    }));
   };
 
   // Date validation
