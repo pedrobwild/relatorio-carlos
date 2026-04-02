@@ -71,6 +71,7 @@ export default function NovaObra() {
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<FormData>(draft?.formData ?? initialFormData);
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
+  const [scheduleActivities, setScheduleActivities] = useState<ScheduleActivity[]>([]);
   const [draftRestored, setDraftRestored] = useState(!!draft);
 
   // Auto-save draft on formData or step change
