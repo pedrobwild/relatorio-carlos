@@ -1,17 +1,68 @@
-import { useEffect } from 'react';
-import { Calendar } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Calendar, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { addBusinessDays } from '@/lib/businessDays';
+import { cn } from '@/lib/utils';
 import type { FormData } from './types';
+
+export interface ScheduleActivity {
+  id: string;
+  description: string;
+  plannedStart: string;
+  plannedEnd: string;
+  weight: string;
+}
+
+export const createEmptyActivity = (): ScheduleActivity => ({
+  id: crypto.randomUUID(),
+  description: '',
+  plannedStart: '',
+  plannedEnd: '',
+  weight: '0',
+});
 
 interface ScheduleCardProps {
   formData: FormData;
   onChange: (field: keyof FormData, value: string | boolean) => void;
+  activities: ScheduleActivity[];
+  onActivitiesChange: (activities: ScheduleActivity[]) => void;
 }
 
-export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
+function AutoTextarea({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = '0px';
+      ref.current.style.height = `${Math.max(36, ref.current.scrollHeight)}px`;
+    }
+  }, [value]);
+
+  return (
+    <Textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={1}
+      className="min-h-[36px] resize-none overflow-hidden py-2 px-2.5 text-sm leading-snug"
+    />
+  );
+}
+
+export function ScheduleCard({ formData, onChange, activities, onActivitiesChange }: ScheduleCardProps) {
   // Auto-calculate end date when start date + business days are set
   useEffect(() => {
     const days = parseInt(formData.business_days_duration, 10);
@@ -30,6 +81,22 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
 
   const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
 
+  const totalWeight = activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0);
+
+  const updateActivity = (id: string, field: keyof ScheduleActivity, value: string) => {
+    onActivitiesChange(
+      activities.map((a) => (a.id === id ? { ...a, [field]: value } : a))
+    );
+  };
+
+  const addActivity = () => {
+    onActivitiesChange([...activities, createEmptyActivity()]);
+  };
+
+  const removeActivity = (id: string) => {
+    onActivitiesChange(activities.filter((a) => a.id !== id));
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -43,9 +110,9 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
             : 'Datas previstas de início e término'}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {formData.is_project_phase && (
-          <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg mb-4">
+          <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
             <p>Obra em fase de projeto. As datas podem ser definidas agora ou marcadas como "Em definição".</p>
           </div>
         )}
@@ -133,6 +200,107 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
               <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">Em definição</div>
             )}
           </div>
+        </div>
+
+        {/* Activities / Etapas */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-medium">Etapas da Obra</h4>
+              <p className="text-xs text-muted-foreground">Adicione as etapas do cronograma (opcional)</p>
+            </div>
+            {activities.length > 0 && (
+              <span className={cn(
+                "text-xs font-medium px-2 py-0.5 rounded-full",
+                Math.abs(totalWeight - 100) < 0.05
+                  ? "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]"
+                  : "bg-muted text-muted-foreground"
+              )}>
+                Peso: {totalWeight.toFixed(1)}%
+              </span>
+            )}
+          </div>
+
+          {activities.length > 0 && (
+            <div className="space-y-3">
+              {/* Header - desktop only */}
+              <div className="hidden sm:grid grid-cols-[1fr_130px_130px_70px_40px] gap-2 text-xs font-medium text-muted-foreground px-1">
+                <span>Descrição</span>
+                <span>Início Prev.</span>
+                <span>Término Prev.</span>
+                <span>Peso %</span>
+                <span />
+              </div>
+
+              {activities.map((act, idx) => (
+                <div
+                  key={act.id}
+                  className="rounded-lg border bg-card p-3 sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start"
+                >
+                  {/* Mobile label */}
+                  <span className="text-xs font-medium text-muted-foreground sm:hidden">
+                    Etapa {idx + 1}
+                  </span>
+
+                  <AutoTextarea
+                    value={act.description}
+                    onChange={(v) => updateActivity(act.id, 'description', v)}
+                    placeholder={`Descrição da etapa ${idx + 1}`}
+                  />
+
+                  <div className="grid grid-cols-2 gap-2 sm:contents">
+                    <div>
+                      <Label className="text-xs sm:hidden">Início</Label>
+                      <Input
+                        type="date"
+                        value={act.plannedStart}
+                        onChange={(e) => updateActivity(act.id, 'plannedStart', e.target.value)}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs sm:hidden">Término</Label>
+                      <Input
+                        type="date"
+                        value={act.plannedEnd}
+                        onChange={(e) => updateActivity(act.id, 'plannedEnd', e.target.value)}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:contents">
+                    <div className="flex-1 sm:flex-none">
+                      <Label className="text-xs sm:hidden">Peso %</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={act.weight}
+                        onChange={(e) => updateActivity(act.id, 'weight', e.target.value)}
+                        className="text-sm h-9 text-center"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeActivity(act.id)}
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <Button type="button" variant="outline" size="sm" onClick={addActivity} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar Etapa
+          </Button>
         </div>
       </CardContent>
     </Card>

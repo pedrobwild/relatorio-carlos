@@ -10,7 +10,7 @@ import { formSchema, initialFormData, type FormData } from './nova-obra/types';
 import { useNovaObraSubmit } from './nova-obra/useNovaObraSubmit';
 import { TemplateSelectorCard } from './nova-obra/TemplateSelectorCard';
 import { ProjectInfoCard } from './nova-obra/ProjectInfoCard';
-import { ScheduleCard } from './nova-obra/ScheduleCard';
+import { ScheduleCard, type ScheduleActivity, createEmptyActivity } from './nova-obra/ScheduleCard';
 import { FinancialCard } from './nova-obra/FinancialCard';
 import { CustomerCard } from './nova-obra/CustomerCard';
 import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
