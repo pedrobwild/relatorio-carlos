@@ -359,14 +359,12 @@ const Cronograma = () => {
         <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
           {/* Desktop grid */}
           <div className="hidden md:block overflow-x-auto">
-            <div className="min-w-[1180px]">
-              <div className="grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
+            <div className="min-w-[700px]">
+              <div className="grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
                 <div className="py-3 pl-4 pr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</div>
                 <div className="py-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Prev.</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Prev.</div>
-                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Real</div>
-                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Real</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Peso</div>
                 <div className="py-3 pr-3" />
               </div>
