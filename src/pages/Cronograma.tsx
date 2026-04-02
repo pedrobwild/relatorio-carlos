@@ -263,7 +263,19 @@ const Cronograma = () => {
     field: keyof ActivityFormData,
     value: string | string[],
   ) => {
-    setActivities(activities.map((act) => (act.id === id ? { ...act, [field]: value } : act)));
+    setActivities(activities.map((act) => {
+      if (act.id !== id) return act;
+      const updated = { ...act, [field]: value };
+      // Auto-fill end date when start date is set and end date is empty or was auto-filled
+      if (field === 'plannedStart' && typeof value === 'string' && value) {
+        const startDate = new Date(value + 'T00:00:00');
+        if (!isNaN(startDate.getTime())) {
+          const friday = getFridayOfWeek(startDate);
+          updated.plannedEnd = toISO(friday);
+        }
+      }
+      return updated;
+    }));
   };
 
   // Date validation
