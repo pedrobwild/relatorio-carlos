@@ -18,6 +18,7 @@ export function useNovaObraSubmit() {
     selectedTemplate: ProjectTemplate | null,
     sendInvite: boolean,
     budgetFile?: File | null,
+    manualActivities?: ScheduleActivity[],
   ) => {
     if (!user) throw new Error('Você precisa estar logado');
 
