@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { addBusinessDays, isWeekend } from '@/lib/businessDays';
 import type { ProjectTemplate, TemplateActivity } from '@/hooks/useProjectTemplates';
 import type { FormData } from './types';
+import type { ScheduleActivity } from './ScheduleCard';
 
 export function useNovaObraSubmit() {
   const { user } = useAuth();
