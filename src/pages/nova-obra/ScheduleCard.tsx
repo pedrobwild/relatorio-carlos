@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { addBusinessDays } from '@/lib/businessDays';
 import type { FormData } from './types';
 
 interface ScheduleCardProps {
@@ -10,6 +12,24 @@ interface ScheduleCardProps {
 }
 
 export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
+  // Auto-calculate end date when start date + business days are set
+  useEffect(() => {
+    const days = parseInt(formData.business_days_duration, 10);
+    if (formData.planned_start_date && days > 0) {
+      const start = new Date(formData.planned_start_date + 'T00:00:00');
+      const end = addBusinessDays(start, days);
+      const y = end.getFullYear();
+      const m = (end.getMonth() + 1).toString().padStart(2, '0');
+      const d = end.getDate().toString().padStart(2, '0');
+      const computed = `${y}-${m}-${d}`;
+      if (formData.planned_end_date !== computed) {
+        onChange('planned_end_date', computed);
+      }
+    }
+  }, [formData.planned_start_date, formData.business_days_duration]);
+
+  const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
+
   return (
     <Card>
       <CardHeader>
@@ -73,7 +93,7 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="business_days_duration">Dias Úteis p/ Entrega</Label>
+            <Label htmlFor="business_days_duration">Dias Úteis de Execução</Label>
             <Input
               id="business_days_duration"
               type="number"
@@ -88,8 +108,11 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
           <div className="space-y-2">
             <Label htmlFor="planned_end_date">
               Data de Término {!formData.is_project_phase && '*'}
+              {isEndDateAutoCalculated && (
+                <span className="text-xs font-normal text-muted-foreground ml-1">(calculada)</span>
+              )}
             </Label>
-            {formData.is_project_phase && (
+            {formData.is_project_phase && !isEndDateAutoCalculated && (
               <div className="flex items-center gap-2 mb-2">
                 <input type="checkbox" id="end_date_undefined" checked={formData.planned_end_date === ''} onChange={(e) => onChange('planned_end_date', e.target.checked ? '' : '')} className="h-4 w-4 rounded border-border" />
                 <Label htmlFor="end_date_undefined" className="text-caption cursor-pointer text-muted-foreground">Em definição</Label>
@@ -102,10 +125,11 @@ export function ScheduleCard({ formData, onChange }: ScheduleCardProps) {
                 value={formData.planned_end_date}
                 onChange={(e) => onChange('planned_end_date', e.target.value)}
                 required={!formData.is_project_phase}
-                className={formData.business_days_duration && formData.planned_start_date ? 'bg-muted/50' : ''}
+                disabled={isEndDateAutoCalculated}
+                className={isEndDateAutoCalculated ? 'bg-muted/50 cursor-not-allowed' : ''}
               />
             )}
-            {formData.is_project_phase && formData.planned_end_date === '' && (
+            {formData.is_project_phase && formData.planned_end_date === '' && !isEndDateAutoCalculated && (
               <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">Em definição</div>
             )}
           </div>
