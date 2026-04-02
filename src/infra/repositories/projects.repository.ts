@@ -292,13 +292,21 @@ export async function createProjectWithCustomer(input: {
     });
 
     // Add customer
-    await supabase.from('project_customers').insert({
+    const { data: customerInsert } = await supabase.from('project_customers').insert({
       project_id: project.id,
       customer_name: input.customer_name,
       customer_email: input.customer_email,
       customer_phone: input.customer_phone ?? null,
       invitation_sent_at: input.invitation_sent_at ?? null,
-    });
+    }).select('customer_user_id').maybeSingle();
+
+    // If customer already has a user account, also add to project_members
+    if (customerInsert?.customer_user_id) {
+      await supabase.from('project_members').upsert(
+        { project_id: project.id, user_id: customerInsert.customer_user_id, role: 'viewer' as any },
+        { onConflict: 'project_id,user_id' }
+      );
+    }
 
     return { data: { ...project, status: project.status as ProjectStatus }, error: null };
   });
