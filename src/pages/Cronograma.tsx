@@ -160,6 +160,16 @@ const Cronograma = () => {
     hasBaseline,
   } = useProjectActivities(projectId);
 
+  const createFirstActivity = (): ActivityFormData => {
+    const first = createEmptyActivity();
+    if (project?.planned_start_date) {
+      const start = new Date(project.planned_start_date + 'T00:00:00');
+      first.plannedStart = project.planned_start_date;
+      first.plannedEnd = toISO(getFridayOfWeek(start));
+    }
+    return first;
+  };
+
   const [activities, setActivities] = useState<ActivityFormData[]>([createEmptyActivity()]);
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
