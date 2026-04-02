@@ -180,7 +180,7 @@ export default function GestaoObras() {
   }, []);
 
   const handleProjectClick = useCallback((projectId: string) => {
-    navigate(`/obra/${projectId}/cronograma`);
+    navigate(`/obra/${projectId}`);
   }, [navigate]);
 
   const handleProjectEdit = useCallback((projectId: string) => {

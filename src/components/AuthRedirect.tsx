@@ -73,7 +73,7 @@ export function AuthRedirect() {
         const activeProjects = projects.filter(p => p.status === 'active');
         if (activeProjects.length === 1) {
           debugNav('AuthRedirect: single active project, redirecting directly', { projectId: activeProjects[0].id });
-          navigate(`/obra/${activeProjects[0].id}/cronograma`, { replace: true });
+          navigate(`/obra/${activeProjects[0].id}`, { replace: true });
         } else {
           navigate('/gestao', { replace: true });
         }
