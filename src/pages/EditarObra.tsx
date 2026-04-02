@@ -22,6 +22,7 @@ import { TabAtividades } from './editar-obra/TabAtividades';
 import { TabPagamentos } from './editar-obra/TabPagamentos';
 import { TabEquipe } from './editar-obra/TabEquipe';
 import { TabFichaTecnica } from './editar-obra/TabFichaTecnica';
+import { EditarObraSidebar } from './editar-obra/EditarObraSidebar';
 
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -107,64 +108,78 @@ export default function EditarObra() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-6">
-            <TabsTrigger value="geral" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Dados Gerais</span>
-            </TabsTrigger>
-            <TabsTrigger value="ficha" className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline">Ficha Técnica</span>
-            </TabsTrigger>
-            <TabsTrigger value="atividades" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Atividades</span>
-            </TabsTrigger>
-            <TabsTrigger value="pagamentos" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              <span className="hidden sm:inline">Pagamentos</span>
-            </TabsTrigger>
-            <TabsTrigger value="equipe" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Equipe</span>
-            </TabsTrigger>
-          </TabsList>
+      <main className="max-w-6xl mx-auto px-4 py-6">
+        <div className="flex gap-6">
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-5 mb-6">
+                <TabsTrigger value="geral" className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Dados Gerais</span>
+                </TabsTrigger>
+                <TabsTrigger value="ficha" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ficha Técnica</span>
+                </TabsTrigger>
+                <TabsTrigger value="atividades" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Atividades</span>
+                </TabsTrigger>
+                <TabsTrigger value="pagamentos" className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="hidden sm:inline">Pagamentos</span>
+                </TabsTrigger>
+                <TabsTrigger value="equipe" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Equipe</span>
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="geral">
-            <TabGeral project={data.project} customer={data.customer} onProjectChange={data.handleProjectChange} onCustomerChange={data.handleCustomerChange} />
-          </TabsContent>
+              <TabsContent value="geral">
+                <TabGeral project={data.project} customer={data.customer} onProjectChange={data.handleProjectChange} onCustomerChange={data.handleCustomerChange} />
+              </TabsContent>
 
-          <TabsContent value="ficha">
-            <TabFichaTecnica studioInfo={data.studioInfo} onChange={data.handleStudioInfoChange} />
-          </TabsContent>
+              <TabsContent value="ficha">
+                <TabFichaTecnica studioInfo={data.studioInfo} onChange={data.handleStudioInfoChange} />
+              </TabsContent>
 
-          <TabsContent value="atividades">
-            <TabAtividades activities={data.activities} onAdd={data.addActivity} onUpdate={data.updateActivity} onDelete={data.deleteActivity} />
-          </TabsContent>
+              <TabsContent value="atividades">
+                <TabAtividades activities={data.activities} onAdd={data.addActivity} onUpdate={data.updateActivity} onDelete={data.deleteActivity} />
+              </TabsContent>
 
-          <TabsContent value="pagamentos">
-            <TabPagamentos payments={data.payments} onAdd={data.addPayment} onUpdate={data.updatePayment} onTogglePaid={data.togglePaymentPaid} onDelete={data.deletePayment} />
-          </TabsContent>
+              <TabsContent value="pagamentos">
+                <TabPagamentos payments={data.payments} onAdd={data.addPayment} onUpdate={data.updatePayment} onTogglePaid={data.togglePaymentPaid} onDelete={data.deletePayment} />
+              </TabsContent>
 
-          <TabsContent value="equipe">
-            <TabEquipe
-              projectId={projectId!}
+              <TabsContent value="equipe">
+                <TabEquipe
+                  projectId={projectId!}
+                  customer={data.customer}
+                  engineers={data.engineers}
+                  availableEngineers={data.availableEngineers}
+                  members={data.members}
+                  isAddingMember={data.isAddingMember}
+                  isRemovingMember={data.isRemovingMember}
+                  onAddMember={data.handleAddMember}
+                  onRemoveMember={data.handleRemoveMember}
+                  onUpdateRole={data.handleUpdateRole}
+                  onCustomerLinked={(c) => data.setCustomer(c)}
+                  onCustomerAdded={(c) => data.setCustomer(c)}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Context Sidebar - hidden on mobile */}
+          <aside className="hidden lg:block w-[260px] shrink-0 sticky top-20 self-start">
+            <EditarObraSidebar
+              project={data.project}
+              studioInfo={data.studioInfo}
               customer={data.customer}
-              engineers={data.engineers}
-              availableEngineers={data.availableEngineers}
-              members={data.members}
-              isAddingMember={data.isAddingMember}
-              isRemovingMember={data.isRemovingMember}
-              onAddMember={data.handleAddMember}
-              onRemoveMember={data.handleRemoveMember}
-              onUpdateRole={data.handleUpdateRole}
-              onCustomerLinked={(c) => data.setCustomer(c)}
-              onCustomerAdded={(c) => data.setCustomer(c)}
             />
-          </TabsContent>
-        </Tabs>
+          </aside>
+        </div>
       </main>
     </div>
   );
