@@ -359,14 +359,12 @@ const Cronograma = () => {
         <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
           {/* Desktop grid */}
           <div className="hidden md:block overflow-x-auto">
-            <div className="min-w-[1180px]">
-              <div className="grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
+            <div className="min-w-[700px]">
+              <div className="grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
                 <div className="py-3 pl-4 pr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</div>
                 <div className="py-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Prev.</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Prev.</div>
-                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Real</div>
-                <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Real</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Peso</div>
                 <div className="py-3 pr-3" />
               </div>
@@ -378,7 +376,7 @@ const Cronograma = () => {
                     <div
                       key={activity.id}
                       className={cn(
-                        'grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
+                        'grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
                         index % 2 === 1 && 'bg-muted/15',
                         rowError && 'bg-destructive/5 hover:bg-destructive/10',
                       )}
@@ -399,12 +397,6 @@ const Cronograma = () => {
                             {rowError.plannedDates}
                           </p>
                         )}
-                        {rowError?.actualDates && (
-                          <p className="text-[10px] text-destructive mt-1 flex items-center gap-1 px-1">
-                            <AlertCircle className="h-3 w-3 shrink-0" />
-                            {rowError.actualDates}
-                          </p>
-                        )}
                       </div>
 
                       <div className="px-2 py-2">
@@ -422,24 +414,6 @@ const Cronograma = () => {
                           onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
                           placeholder="dd/mm/aaaa"
                           hasError={!!rowError?.plannedDates}
-                        />
-                      </div>
-
-                      <div className="px-2 py-2">
-                        <DatePickerField
-                          value={activity.actualStart}
-                          onChange={(val) => handleActivityChange(activity.id, 'actualStart', val)}
-                          placeholder="dd/mm/aaaa"
-                          hasError={!!rowError?.actualDates}
-                        />
-                      </div>
-
-                      <div className="px-2 py-2">
-                        <DatePickerField
-                          value={activity.actualEnd}
-                          onChange={(val) => handleActivityChange(activity.id, 'actualEnd', val)}
-                          placeholder="dd/mm/aaaa"
-                          hasError={!!rowError?.actualDates}
                         />
                       </div>
 
@@ -526,24 +500,6 @@ const Cronograma = () => {
                         onChange={(v) => handleActivityChange(activity.id, 'plannedEnd', v)}
                         placeholder="dd/mm/aaaa"
                         hasError={!!rowError?.plannedDates}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">Início Real</span>
-                      <DatePickerField
-                        value={activity.actualStart}
-                        onChange={(v) => handleActivityChange(activity.id, 'actualStart', v)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!rowError?.actualDates}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-muted-foreground font-medium">Término Real</span>
-                      <DatePickerField
-                        value={activity.actualEnd}
-                        onChange={(v) => handleActivityChange(activity.id, 'actualEnd', v)}
-                        placeholder="dd/mm/aaaa"
-                        hasError={!!rowError?.actualDates}
                       />
                     </div>
                   </div>
