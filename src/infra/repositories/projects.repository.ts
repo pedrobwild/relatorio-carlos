@@ -130,9 +130,21 @@ export async function getStaffProjects(): Promise<RepositoryListResult<ProjectWi
       }
     }
 
+    // Fetch studio info for all projects
+    const projectIds = (projectsData ?? []).map(p => p.id);
+    const { data: studioData } = await supabase
+      .from('project_studio_info')
+      .select('project_id, tamanho_imovel_m2, endereco_completo, cidade, tipo_de_locacao, data_recebimento_chaves')
+      .in('project_id', projectIds);
+
+    const studioMap = new Map(
+      (studioData ?? []).map(s => [s.project_id, s])
+    );
+
     return {
       data: (projectsData ?? []).map(p => {
         const engineerInfo = projectEngineerMap.get(p.id);
+        const studio = studioMap.get(p.id);
         return {
           ...p,
           status: p.status as ProjectStatus,
@@ -140,6 +152,11 @@ export async function getStaffProjects(): Promise<RepositoryListResult<ProjectWi
           customer_email: p.project_customers?.[0]?.customer_email,
           engineer_name: engineerInfo?.engineer_name ?? undefined,
           engineer_user_id: engineerInfo?.engineer_user_id ?? undefined,
+          tamanho_imovel_m2: studio?.tamanho_imovel_m2 ?? null,
+          endereco_completo: studio?.endereco_completo ?? null,
+          cidade: studio?.cidade ?? null,
+          tipo_de_locacao: studio?.tipo_de_locacao ?? null,
+          data_recebimento_chaves: studio?.data_recebimento_chaves ?? null,
         };
       }),
       error: null,
