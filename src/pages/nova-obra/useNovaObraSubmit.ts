@@ -144,9 +144,33 @@ export function useNovaObraSubmit() {
 
       const { error: actError } = await supabase.from('project_activities').insert(rows);
       if (actError) console.error('Activities creation error:', actError);
+    } else if (manualActivities && manualActivities.length > 0) {
+      // 7b. Create activities from manual input
+      const validActivities = manualActivities.filter((a) => a.description.trim());
+      if (validActivities.length > 0) {
+        const activityIds: string[] = [];
+        const rows = validActivities.map((act, idx) => {
+          const actId = crypto.randomUUID();
+          activityIds.push(actId);
+          return {
+            id: actId,
+            project_id: project.id,
+            description: act.description.trim(),
+            planned_start: act.plannedStart || null,
+            planned_end: act.plannedEnd || null,
+            weight: parseFloat(act.weight) || 0,
+            sort_order: idx,
+            created_by: user!.id,
+            predecessor_ids: idx > 0 ? [activityIds[idx - 1]] : [],
+          };
+        });
+
+        const { error: actError } = await supabase.from('project_activities').insert(rows);
+        if (actError) console.error('Manual activities creation error:', actError);
+      }
     }
 
-    // 8. Create payment installments
+
     if (formData.num_installments && parseInt(formData.num_installments) > 0) {
       const numInstallments = parseInt(formData.num_installments);
       const installmentAmount = formData.installment_value
