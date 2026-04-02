@@ -117,12 +117,16 @@ export function TabEquipe({
                   </div>
                   <div className="flex items-center gap-2">
                     <Select value={member.role} onValueChange={(v) => onUpdateRole(member.id, v as ProjectRole)}>
-                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="owner">Responsável</SelectItem>
-                        <SelectItem value="engineer">Engenheiro</SelectItem>
-                        <SelectItem value="viewer">Visualizador</SelectItem>
-                        <SelectItem value="customer">Cliente</SelectItem>
+                        {Object.entries(roleDescriptions).map(([value, { label, description }]) => (
+                          <SelectItem key={value} value={value}>
+                            <div className="flex flex-col">
+                              <span>{label}</span>
+                              <span className="text-[10px] text-muted-foreground">{description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <AlertDialog>
