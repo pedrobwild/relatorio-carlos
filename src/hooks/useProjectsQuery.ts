@@ -21,7 +21,7 @@ export const projectKeys = {
     [...projectKeys.lists(), filters] as const,
   details: () => [...projectKeys.all, 'detail'] as const,
   detail: (id: string) => [...projectKeys.details(), id] as const,
-  summary: () => [...projectKeys.all, 'summary'] as const,
+  summary: (userId?: string) => [...projectKeys.all, 'summary', userId ?? 'anonymous'] as const,
 };
 
 /**
@@ -92,7 +92,7 @@ export function useProjectSummaryQuery() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: projectKeys.summary(),
+    queryKey: projectKeys.summary(user?.id),
     queryFn: async () => {
       const result = await projectsRepo.getUserProjectsSummary();
       if (result.error) throw result.error;
