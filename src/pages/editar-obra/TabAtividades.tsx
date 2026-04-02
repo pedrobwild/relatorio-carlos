@@ -27,7 +27,7 @@ function WeightBar({ total }: { total: number }) {
         <span className="text-muted-foreground font-medium">Peso total</span>
         <span className={cn(
           'font-bold tabular-nums',
-          isValid ? 'text-emerald-600 dark:text-emerald-400' : isOver ? 'text-destructive' : 'text-amber-600 dark:text-amber-400'
+          isValid ? 'text-[hsl(var(--success))]' : isOver ? 'text-destructive' : 'text-[hsl(var(--warning))]'
         )}>
           {total}%
         </span>
@@ -36,13 +36,13 @@ function WeightBar({ total }: { total: number }) {
         value={Math.min(total, 100)}
         className={cn(
           'h-2 rounded-full',
-          isValid ? '[&>div]:bg-emerald-500' : isOver ? '[&>div]:bg-destructive' : '[&>div]:bg-amber-500'
+          isValid ? '[&>div]:bg-[hsl(var(--success))]' : isOver ? '[&>div]:bg-destructive' : '[&>div]:bg-[hsl(var(--warning))]'
         )}
       />
       {!isValid && (
         <p className={cn(
           'text-[11px]',
-          isOver ? 'text-destructive' : 'text-amber-600 dark:text-amber-400'
+          isOver ? 'text-destructive' : 'text-[hsl(var(--warning))]'
         )}>
           {isOver ? `${total - 100}% acima do total` : `Faltam ${100 - total}% para completar`}
         </p>
