@@ -10,7 +10,7 @@ import { formSchema, initialFormData, type FormData } from './nova-obra/types';
 import { useNovaObraSubmit } from './nova-obra/useNovaObraSubmit';
 import { TemplateSelectorCard } from './nova-obra/TemplateSelectorCard';
 import { ProjectInfoCard } from './nova-obra/ProjectInfoCard';
-import { ScheduleCard } from './nova-obra/ScheduleCard';
+import { ScheduleCard, type ScheduleActivity, createEmptyActivity } from './nova-obra/ScheduleCard';
 import { FinancialCard } from './nova-obra/FinancialCard';
 import { CustomerCard } from './nova-obra/CustomerCard';
 import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
@@ -71,6 +71,7 @@ export default function NovaObra() {
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<FormData>(draft?.formData ?? initialFormData);
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
+  const [scheduleActivities, setScheduleActivities] = useState<ScheduleActivity[]>([]);
   const [draftRestored, setDraftRestored] = useState(!!draft);
 
   // Auto-save draft on formData or step change
@@ -201,7 +202,7 @@ export default function NovaObra() {
     setErrors({});
 
     try {
-      await submit(formData, selectedTemplate, sendInvite, budgetFile);
+      await submit(formData, selectedTemplate, sendInvite, budgetFile, scheduleActivities);
       toast({
         title: 'Obra cadastrada!',
         description: formData.create_user
@@ -292,7 +293,7 @@ export default function NovaObra() {
 
           {/* Step 1: Cronograma */}
           <div className={cn(currentStep !== 1 && 'hidden')}>
-            <ScheduleCard formData={formData} onChange={handleChange} />
+            <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
           </div>
 
           {/* Step 2: Orçamento e Financeiro */}

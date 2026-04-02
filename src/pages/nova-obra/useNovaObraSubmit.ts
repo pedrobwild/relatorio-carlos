@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { addBusinessDays, isWeekend } from '@/lib/businessDays';
 import type { ProjectTemplate, TemplateActivity } from '@/hooks/useProjectTemplates';
 import type { FormData } from './types';
+import type { ScheduleActivity } from './ScheduleCard';
 
 export function useNovaObraSubmit() {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export function useNovaObraSubmit() {
     selectedTemplate: ProjectTemplate | null,
     sendInvite: boolean,
     budgetFile?: File | null,
+    manualActivities?: ScheduleActivity[],
   ) => {
     if (!user) throw new Error('Você precisa estar logado');
 
@@ -142,9 +144,33 @@ export function useNovaObraSubmit() {
 
       const { error: actError } = await supabase.from('project_activities').insert(rows);
       if (actError) console.error('Activities creation error:', actError);
+    } else if (manualActivities && manualActivities.length > 0) {
+      // 7b. Create activities from manual input
+      const validActivities = manualActivities.filter((a) => a.description.trim());
+      if (validActivities.length > 0) {
+        const activityIds: string[] = [];
+        const rows = validActivities.map((act, idx) => {
+          const actId = crypto.randomUUID();
+          activityIds.push(actId);
+          return {
+            id: actId,
+            project_id: project.id,
+            description: act.description.trim(),
+            planned_start: act.plannedStart || formData.planned_start_date || new Date().toISOString().split('T')[0],
+            planned_end: act.plannedEnd || formData.planned_end_date || new Date().toISOString().split('T')[0],
+            weight: parseFloat(act.weight) || 0,
+            sort_order: idx,
+            created_by: user!.id,
+            predecessor_ids: idx > 0 ? [activityIds[idx - 1]] : [],
+          };
+        });
+
+        const { error: actError } = await supabase.from('project_activities').insert(rows);
+        if (actError) console.error('Manual activities creation error:', actError);
+      }
     }
 
-    // 8. Create payment installments
+
     if (formData.num_installments && parseInt(formData.num_installments) > 0) {
       const numInstallments = parseInt(formData.num_installments);
       const installmentAmount = formData.installment_value
