@@ -177,7 +177,7 @@ export function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void 
               <Label htmlFor="role">Permissão *</Label>
               <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
                 <SelectTrigger><SelectValue placeholder="Selecione uma permissão" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="z-[9999]">
                   <SelectItem value="customer">Cliente</SelectItem>
                   <SelectItem value="engineer">Engenheiro</SelectItem>
                   <SelectItem value="manager">Gestor de Engenharia</SelectItem>
