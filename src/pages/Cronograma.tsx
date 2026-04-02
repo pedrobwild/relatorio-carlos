@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2 } from 'lucide-react';
+import { isHoliday } from '@/lib/businessDays';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
