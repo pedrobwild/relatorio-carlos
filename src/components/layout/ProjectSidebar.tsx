@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   ChevronDown,
   LucideIcon,
+  Building2,
 } from "lucide-react";
 import {
   Sidebar,
