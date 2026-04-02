@@ -38,7 +38,7 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
-import { CreateObraDialog } from './obras/CreateObraDialog';
+import { Plus } from 'lucide-react';
 import { ObraCard, statusColors, statusLabels } from './obras/ObraCard';
 import { ObraExpandedRow } from './obras/ObraExpandedRow';
 
@@ -102,7 +102,10 @@ export function ObrasTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Gerenciar Obras</h2>
-        <CreateObraDialog onCreated={refetch} />
+        <Button onClick={() => navigate('/gestao/nova-obra')}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Obra
+        </Button>
       </div>
 
       {/* Stats */}
