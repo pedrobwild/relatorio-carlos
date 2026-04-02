@@ -293,7 +293,7 @@ export default function NovaObra() {
 
           {/* Step 1: Cronograma */}
           <div className={cn(currentStep !== 1 && 'hidden')}>
-            <ScheduleCard formData={formData} onChange={handleChange} />
+            <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
           </div>
 
           {/* Step 2: Orçamento e Financeiro */}
