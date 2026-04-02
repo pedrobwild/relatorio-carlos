@@ -13,6 +13,7 @@ import { createQueryPersister, QUERY_CACHE_VERSION } from "@/lib/queryPersister"
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
 import { AuthRedirect } from "@/components/AuthRedirect";
 import { ProjectShell } from "@/components/layout/ProjectShell";
+import { GestaoShell } from "@/components/layout/GestaoShell";
 
 /** Thin wrapper: shows AuthRedirect (which navigates away) + a spinner while it resolves. */
 const AuthRedirectPage = () => {
