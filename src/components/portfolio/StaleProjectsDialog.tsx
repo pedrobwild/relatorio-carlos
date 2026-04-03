@@ -44,9 +44,7 @@ function getStaleProjects(
     const isStale = refTime > 0 && now - refTime > MS_STALE;
 
     if (isStale) {
-      const staleDays = lastActivity
-        ? Math.floor((now - lastActivity) / (1000 * 60 * 60 * 24))
-        : null;
+      const staleDays = Math.floor((now - refTime) / (1000 * 60 * 60 * 24));
 
       result.push({
         id: p.id,

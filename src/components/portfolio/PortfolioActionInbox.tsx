@@ -114,9 +114,10 @@ function buildActionItems(
     }
 
     if (p.status === 'active') {
-      const lastActivity = s?.last_activity_at ? new Date(s.last_activity_at).getTime() : 0;
-      const staleDays = lastActivity ? Math.floor((now - lastActivity) / (1000 * 60 * 60 * 24)) : null;
-      if (!lastActivity || now - lastActivity > MS_STALE) {
+      const ref = s?.last_activity_at ?? p.created_at;
+      const refTime = ref ? new Date(ref).getTime() : 0;
+      const staleDays = refTime ? Math.floor((now - refTime) / (1000 * 60 * 60 * 24)) : null;
+      if (refTime && now - refTime > MS_STALE) {
         items.push({
           id: `stale-${p.id}`,
           projectName: p.name,
