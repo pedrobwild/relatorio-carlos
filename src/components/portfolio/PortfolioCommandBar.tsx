@@ -54,61 +54,67 @@ export function PortfolioCommandBar({
 }: PortfolioCommandBarProps) {
   const navigate = useNavigate();
 
-  const hasActiveFilters = activeFilterCount > 0 || search.length > 0 || activePreset !== 'all';
   const showingSubset = filteredCount < totalCount;
 
   return (
     <div className="space-y-3">
       {/* Row 1: Title + Actions */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-xl font-bold tracking-tight text-foreground whitespace-nowrap">
+          <h1 className="text-lg font-bold tracking-tight text-foreground whitespace-nowrap sm:text-xl">
             Command Center
           </h1>
           <Badge
             variant="secondary"
-            className="tabular-nums text-xs font-semibold bg-muted text-muted-foreground"
+            className="tabular-nums text-[11px] font-semibold bg-muted text-muted-foreground shrink-0"
           >
-            {showingSubset ? `${filteredCount} de ${totalCount}` : `${totalCount}`} obras
+            {showingSubset ? `${filteredCount} / ${totalCount}` : totalCount} obras
           </Badge>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* View toggle */}
-          <div className="hidden md:flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
+          <div
+            className="hidden md:flex items-center rounded-lg border border-border/60 bg-muted/30 p-0.5"
+            role="radiogroup"
+            aria-label="Modo de visualização"
+          >
             {([
               { mode: 'cards' as ViewMode, icon: LayoutGrid, label: 'Cards' },
               { mode: 'list' as ViewMode, icon: List, label: 'Lista' },
               { mode: 'table' as ViewMode, icon: Table2, label: 'Tabela' },
             ]).map(({ mode, icon: Icon, label }) => (
-              <Button
+              <button
                 key={mode}
-                variant="ghost"
-                size="sm"
+                role="radio"
+                aria-checked={viewMode === mode}
+                aria-label={`Visualização: ${label}`}
                 className={cn(
-                  'h-7 px-2.5 rounded-md text-xs gap-1.5 transition-all',
+                  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                   viewMode === mode
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
                 onClick={() => onViewModeChange(mode)}
-                title={label}
               >
                 <Icon className="h-3.5 w-3.5" />
                 <span className="hidden lg:inline">{label}</span>
-              </Button>
+              </button>
             ))}
           </div>
 
-          {/* Filters button */}
+          {/* Filters */}
           <Button
             variant={activeFilterCount > 0 ? 'default' : 'outline'}
             size="sm"
             className={cn(
               'h-8 gap-1.5 text-xs relative',
+              'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
               activeFilterCount > 0 && 'shadow-sm'
             )}
             onClick={onOpenFilters}
+            aria-label={activeFilterCount > 0 ? `Filtros (${activeFilterCount} ativos)` : 'Abrir filtros'}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Filtros</span>
@@ -125,7 +131,8 @@ export function PortfolioCommandBar({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 gap-1.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            aria-label="Exportar dados"
           >
             <Download className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Exportar</span>
@@ -133,11 +140,11 @@ export function PortfolioCommandBar({
 
           <Button
             size="sm"
-            className="h-8 gap-1.5 text-xs font-semibold"
+            className="h-8 gap-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onClick={() => navigate('/gestao/nova-obra')}
           >
             <Plus className="h-3.5 w-3.5" />
-            Nova Obra
+            <span className="hidden xs:inline">Nova Obra</span>
           </Button>
         </div>
       </div>
@@ -146,32 +153,41 @@ export function PortfolioCommandBar({
       <div className="flex items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Buscar obra, cliente, unidade ou endereço…"
-            className="pl-10 h-9 bg-muted/30 border-border/60 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-primary/30"
+            className="pl-10 h-9 bg-muted/20 border-border/50 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40"
+            aria-label="Busca global de obras"
           />
         </div>
 
         {/* Preset pills */}
-        <div className="hidden md:flex items-center gap-1 overflow-x-auto scrollbar-hide">
-          {presets.map(({ key, label }) => (
+        <nav
+          className="hidden md:flex items-center gap-1 overflow-x-auto scrollbar-hide"
+          role="tablist"
+          aria-label="Presets de visualização"
+        >
+          {presets.map(({ key, label, description }) => (
             <button
               key={key}
+              role="tab"
+              aria-selected={activePreset === key}
+              title={description}
               onClick={() => onPresetChange(key)}
               className={cn(
-                'whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                 activePreset === key
                   ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
               )}
             >
               {label}
             </button>
           ))}
-        </div>
+        </nav>
 
         {/* Mobile preset dropdown */}
         <div className="md:hidden">

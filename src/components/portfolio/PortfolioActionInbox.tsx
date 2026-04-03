@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
   FileSignature, Ban, FileX, ClipboardX, Milestone,
-  TrendingDown, HeartPulse, ChevronRight, ArrowRight, Inbox,
+  HeartPulse, ChevronRight, ArrowRight, Inbox,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,21 +33,24 @@ interface PortfolioActionInboxProps {
 
 // ─── Urgency styles ──────────────────────────────────────────────────────────
 
-const urgencyConfig: Record<Urgency, { badge: string; dot: string; label: string }> = {
+const urgencyConfig: Record<Urgency, { badge: string; dot: string; label: string; iconBg: string }> = {
   critical: {
-    badge: 'bg-red-500/10 text-red-600 border-red-500/20',
-    dot: 'bg-red-500',
+    badge: 'bg-destructive/10 text-destructive border-destructive/20',
+    dot: 'bg-destructive',
     label: 'Crítico',
+    iconBg: 'bg-destructive/10 text-destructive',
   },
   high: {
-    badge: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     dot: 'bg-amber-500',
     label: 'Alto',
+    iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   },
   medium: {
-    badge: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+    badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     dot: 'bg-blue-500',
     label: 'Médio',
+    iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   },
 };
 
@@ -68,7 +71,6 @@ function buildActionItems(
   for (const p of projects) {
     const s = summaryMap.get(p.id);
 
-    // Unsigned formalizations
     if (s && s.unsigned_formalizations > 0) {
       items.push({
         id: `sign-${p.id}`,
@@ -83,7 +85,6 @@ function buildActionItems(
       });
     }
 
-    // Blocked (paused)
     if (p.status === 'paused') {
       items.push({
         id: `blocked-${p.id}`,
@@ -98,7 +99,6 @@ function buildActionItems(
       });
     }
 
-    // Pending documents
     if (s && s.pending_documents > 0) {
       items.push({
         id: `docs-${p.id}`,
@@ -113,7 +113,6 @@ function buildActionItems(
       });
     }
 
-    // Stale 48h (active only)
     if (p.status === 'active') {
       const lastActivity = s?.last_activity_at ? new Date(s.last_activity_at).getTime() : 0;
       if (!lastActivity || now - lastActivity > MS_48H) {
@@ -131,7 +130,6 @@ function buildActionItems(
       }
     }
 
-    // Health dropped — overdue items as proxy
     if (s && p.status === 'active' && s.overdue_count > 0) {
       items.push({
         id: `health-${p.id}`,
@@ -146,7 +144,6 @@ function buildActionItems(
       });
     }
 
-    // Milestone within 7 days
     if (p.planned_end_date && p.status === 'active') {
       const diff = new Date(p.planned_end_date).getTime() - now;
       if (diff >= 0 && diff <= MS_7D) {
@@ -166,7 +163,6 @@ function buildActionItems(
     }
   }
 
-  // Sort by urgency priority
   const urgencyOrder: Record<Urgency, number> = { critical: 0, high: 1, medium: 2 };
   items.sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]);
 
@@ -182,12 +178,12 @@ export function PortfolioActionInbox({ projects, summaries, onNavigate }: Portfo
   const remaining = items.length - displayed.length;
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
+    <div className="rounded-xl border border-border/40 bg-card overflow-hidden" role="region" aria-label="Ações prioritárias">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 bg-muted/20">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/30 bg-muted/15">
         <div className="flex items-center gap-2">
-          <Inbox className="h-3.5 w-3.5 text-muted-foreground" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Inbox className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+          <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Ações Prioritárias
           </h3>
           {items.length > 0 && (
@@ -207,7 +203,7 @@ export function PortfolioActionInbox({ projects, summaries, onNavigate }: Portfo
       {displayed.length === 0 ? (
         <div className="px-4 py-8 text-center">
           <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-emerald-500/10 mb-2">
-            <span className="text-lg">✓</span>
+            <span className="text-lg" aria-hidden="true">✓</span>
           </div>
           <p className="text-sm font-medium text-foreground">Tudo em dia</p>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -215,74 +211,71 @@ export function PortfolioActionInbox({ projects, summaries, onNavigate }: Portfo
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border/30">
+        <ul className="divide-y divide-border/20">
           {displayed.map((item) => {
             const cfg = urgencyConfig[item.urgency];
             return (
-              <div
-                key={item.id}
-                className="group flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer"
-                onClick={() => onNavigate?.(item.projectId)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && onNavigate?.(item.projectId)}
-              >
-                {/* Urgency dot + icon */}
-                <div className="relative shrink-0 mt-0.5">
-                  <div className={cn(
-                    'flex items-center justify-center h-8 w-8 rounded-lg',
-                    item.urgency === 'critical' ? 'bg-red-500/10 text-red-600' :
-                    item.urgency === 'high' ? 'bg-amber-500/10 text-amber-600' :
-                    'bg-blue-500/10 text-blue-600'
-                  )}>
-                    {item.icon}
-                  </div>
-                  <div className={cn(
-                    'absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full',
-                    cfg.dot,
-                    item.urgency === 'critical' && 'animate-pulse'
-                  )} />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate leading-tight">
-                    {item.projectName}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-tight">
-                    {item.reason}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {item.responsible && (
-                      <span className="text-[10px] text-muted-foreground/70 truncate">
-                        {item.responsible}
-                      </span>
-                    )}
-                    {item.deadline && (
-                      <Badge variant="outline" className={cn('h-4 px-1.5 text-[9px] font-semibold', cfg.badge)}>
-                        {item.deadline}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* CTA */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onNavigate?.(item.projectId);
-                  }}
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className={cn(
+                    'group flex items-start gap-2.5 w-full text-left px-3 py-2.5',
+                    'hover:bg-muted/20 transition-colors',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                  )}
+                  onClick={() => onNavigate?.(item.projectId)}
+                  aria-label={`${item.projectName}: ${item.reason}`}
                 >
-                  {item.cta}
-                  <ArrowRight className="h-3 w-3 ml-0.5" />
-                </Button>
-              </div>
+                  {/* Icon */}
+                  <div className="relative shrink-0 mt-0.5">
+                    <div className={cn('flex items-center justify-center h-7 w-7 rounded-lg', cfg.iconBg)}>
+                      {item.icon}
+                    </div>
+                    <div className={cn(
+                      'absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full border border-card',
+                      cfg.dot,
+                      item.urgency === 'critical' && 'animate-pulse'
+                    )} aria-hidden="true" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-foreground truncate leading-tight">
+                      {item.projectName}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
+                      {item.reason}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {item.responsible && (
+                        <span className="text-[10px] text-muted-foreground/70 truncate">
+                          {item.responsible}
+                        </span>
+                      )}
+                      {item.deadline && (
+                        <Badge variant="outline" className={cn('h-4 px-1.5 text-[9px] font-semibold', cfg.badge)}>
+                          {item.deadline}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* CTA — visible on mobile, hover on desktop */}
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-0.5 text-[11px] font-medium text-primary shrink-0 mt-1',
+                      'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100 transition-opacity'
+                    )}
+                    aria-hidden="true"
+                  >
+                    {item.cta}
+                    <ArrowRight className="h-3 w-3" />
+                  </span>
+                </button>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );
