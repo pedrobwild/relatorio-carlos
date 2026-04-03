@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Download, FileText, Image, File } from "lucide-react";
+import { Plus, Trash2, Download, FileText, Image, File, Eye, X } from "lucide-react";
 
 interface Attachment {
   id: string;
@@ -21,11 +21,6 @@ interface Props {
   fornecedorId: string;
 }
 
-const FILE_ICONS: Record<string, typeof FileText> = {
-  pdf: FileText,
-  image: Image,
-};
-
 function getFileIcon(mime: string | null) {
   if (!mime) return File;
   if (mime.startsWith("image/")) return Image;
@@ -38,6 +33,90 @@ function formatBytes(bytes: number | null) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isImage(mime: string | null) {
+  return !!mime && mime.startsWith("image/");
+}
+
+function AttachmentPreview({ att }: { att: Attachment }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.storage
+      .from("fornecedor-anexos")
+      .createSignedUrl(att.file_path, 3600)
+      .then(({ data }) => {
+        if (!cancelled && data?.signedUrl) setUrl(data.signedUrl);
+      });
+    return () => { cancelled = true; };
+  }, [att.file_path]);
+
+  if (!url) {
+    return (
+      <div className="h-32 w-full rounded-md bg-muted/50 animate-pulse" />
+    );
+  }
+
+  if (isImage(att.mime_type)) {
+    return (
+      <>
+        <div
+          className="relative cursor-pointer group/img"
+          onClick={() => setFullscreen(true)}
+        >
+          <img
+            src={url}
+            alt={att.file_name}
+            className="w-full h-40 object-cover rounded-md border"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/30 transition-colors rounded-md flex items-center justify-center">
+            <Eye className="h-6 w-6 text-white opacity-0 group-hover/img:opacity-100 transition-opacity" />
+          </div>
+        </div>
+
+        {fullscreen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setFullscreen(false)}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 text-white hover:bg-white/20"
+              onClick={() => setFullscreen(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            <img
+              src={url}
+              alt={att.file_name}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Non-image: show icon card with link
+  const Icon = getFileIcon(att.mime_type);
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 p-3 rounded-md border bg-muted/30 hover:bg-muted/60 transition-colors"
+    >
+      <Icon className="h-8 w-8 text-muted-foreground shrink-0" />
+      <span className="text-sm text-primary underline underline-offset-2 truncate">
+        Abrir {att.file_name}
+      </span>
+    </a>
+  );
 }
 
 export function SupplierAttachmentsTab({ fornecedorId }: Props) {
@@ -61,9 +140,7 @@ export function SupplierAttachmentsTab({ fornecedorId }: Props) {
 
   const deleteMut = useMutation({
     mutationFn: async (att: Attachment) => {
-      // Delete from storage
       await supabase.storage.from("fornecedor-anexos").remove([att.file_path]);
-      // Delete record
       const { error } = await supabase.from("fornecedor_anexos").delete().eq("id", att.id);
       if (error) throw error;
     },
@@ -141,32 +218,33 @@ export function SupplierAttachmentsTab({ fornecedorId }: Props) {
           Nenhum anexo adicionado
         </div>
       ) : (
-        <div className="space-y-2">
-          {attachments.map((att) => {
-            const Icon = getFileIcon(att.mime_type);
-            return (
-              <div
-                key={att.id}
-                className="flex items-center gap-3 p-2.5 rounded-lg border bg-muted/30 hover:bg-muted/60 transition-colors"
-              >
-                <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {attachments.map((att) => (
+            <div
+              key={att.id}
+              className="rounded-lg border bg-card overflow-hidden"
+            >
+              <div className="p-2">
+                <AttachmentPreview att={att} />
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 border-t bg-muted/20">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{att.file_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatBytes(att.file_size)} · {new Date(att.created_at).toLocaleDateString("pt-BR")}
+                    {formatBytes(att.file_size)} · {new Date(att.created_at!).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownload(att)}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownload(att)} title="Baixar">
                     <Download className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteMut.mutate(att)}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteMut.mutate(att)} title="Remover">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>
