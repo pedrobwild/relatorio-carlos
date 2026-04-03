@@ -22,7 +22,7 @@ interface StaleProject {
   name: string;
   customer: string | null;
   engineer: string | null;
-  staleDays: number | null;
+  staleDays: number;
 }
 
 function getStaleProjects(
