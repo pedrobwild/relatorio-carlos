@@ -14,6 +14,10 @@ import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { PortfolioGridPlaceholder } from './PortfolioGridPlaceholder';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
+import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
+import { ActiveFilterChips } from './filters/ActiveFilterChips';
+import { type AdvancedFilters, emptyFilters, isFiltersEmpty } from './filters/types';
+import { applyAdvancedFilters } from './filters/applyFilters';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
 export default function PortfolioPage() {
@@ -35,6 +39,10 @@ export default function PortfolioPage() {
   // KPI filter
   const [kpiFilter, setKpiFilter] = useState<KpiFilterKey | null>(null);
 
+  // Advanced filters
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(emptyFilters);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     (localStorage.getItem('portfolio-view-mode') as ViewMode) || 'list'
@@ -51,6 +59,20 @@ export default function PortfolioPage() {
   // Duplicate modal
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<ProjectWithCustomer | null>(null);
+
+  // Count active advanced filter dimensions
+  const activeFilterCount = useMemo(() => {
+    const f = advancedFilters;
+    return [
+      f.status.length, f.phase.length, f.engineers.length,
+      f.customers.length, f.cities.length, f.units.length,
+      f.health.length, f.criticality.length,
+      f.hasPendingDocs !== null ? 1 : 0,
+      f.hasPendingSign !== null ? 1 : 0,
+      (f.dateRange.from || f.dateRange.to) ? 1 : 0,
+      (f.contractMin !== null || f.contractMax !== null) ? 1 : 0,
+    ].reduce((a, b) => a + b, 0);
+  }, [advancedFilters]);
 
   // --- Filtering pipeline ---
   const filtered = useMemo(() => {
@@ -85,7 +107,7 @@ export default function PortfolioPage() {
           const daysLeft = Math.ceil(
             (new Date(p.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
           );
-          return daysLeft >= 0 && daysLeft <= 30;
+          return daysLeft >= 0 && daysLeft <= 7;
         });
         break;
       case 'all':
@@ -93,17 +115,29 @@ export default function PortfolioPage() {
         break;
     }
 
-    // KPI filter (additive on top of preset)
+    // KPI filter
     if (kpiFilter) {
       result = applyKpiFilter(result, summaries, kpiFilter);
     }
 
+    // Advanced filters
+    if (!isFiltersEmpty(advancedFilters)) {
+      result = applyAdvancedFilters(result, summaries, advancedFilters);
+    }
+
     return result;
-  }, [projects, search, activePreset, user?.id, kpiFilter, summaries]);
+  }, [projects, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters]);
 
   const handleKpiFilterChange = useCallback((key: KpiFilterKey | null) => {
     setKpiFilter(key);
   }, []);
+
+  const handleClearAll = useCallback(() => {
+    setSearch('');
+    setActivePreset('all');
+    setKpiFilter(null);
+    setAdvancedFilters(emptyFilters);
+  }, [setSearch]);
 
   return (
     <div className="flex-1 bg-background">
@@ -123,6 +157,15 @@ export default function PortfolioPage() {
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
           totalCount={projects.length}
+          filteredCount={filtered.length}
+          activeFilterCount={activeFilterCount}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
+
+        {/* Active filter chips */}
+        <ActiveFilterChips
+          filters={advancedFilters}
+          onFiltersChange={setAdvancedFilters}
         />
 
         {/* KPI Strip */}
@@ -162,7 +205,7 @@ export default function PortfolioPage() {
               ) : filtered.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-12 text-center">
                   <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                  {search || activePreset !== 'all' || kpiFilter ? (
+                  {search || activePreset !== 'all' || kpiFilter || !isFiltersEmpty(advancedFilters) ? (
                     <>
                       <p className="text-sm font-medium text-foreground mb-1">
                         Nenhuma obra encontrada
@@ -170,16 +213,8 @@ export default function PortfolioPage() {
                       <p className="text-xs text-muted-foreground mb-4">
                         Ajuste a busca ou selecione outro filtro.
                       </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSearch('');
-                          setActivePreset('all');
-                          setKpiFilter(null);
-                        }}
-                      >
-                        Limpar filtros
+                      <Button variant="outline" size="sm" onClick={handleClearAll}>
+                        Limpar todos os filtros
                       </Button>
                     </>
                   ) : (
@@ -210,6 +245,15 @@ export default function PortfolioPage() {
           </div>
         </div>
       </main>
+
+      {/* Advanced Filters Sheet */}
+      <PortfolioAdvancedFilters
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        filters={advancedFilters}
+        onApply={setAdvancedFilters}
+        projects={projects}
+      />
 
       {/* Preview Drawer */}
       <WorkQuickPreviewDrawer
