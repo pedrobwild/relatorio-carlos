@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { computeHealthScore, type HealthLevel } from '@/lib/healthScore';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
-import { HeartPulse } from 'lucide-react';
+import { HeartPulse, Lightbulb } from 'lucide-react';
 
 const levelColors: Record<HealthLevel, { text: string; fill: string; bg: string }> = {
   excellent: { text: 'text-[hsl(var(--success))]', fill: 'hsl(var(--success))', bg: 'bg-[hsl(var(--success-light))]' },
@@ -17,6 +17,36 @@ function getScoreLevel(score: number): HealthLevel {
   if (score >= 60) return 'good';
   if (score >= 40) return 'attention';
   return 'critical';
+}
+
+function getImprovementTip(label: string, score: number, detail: string): string | null {
+  if (score >= 80) return null;
+
+  const tips: Record<string, Record<string, string>> = {
+    'Cronograma': {
+      critical: 'Priorize concluir atividades atrasadas para recuperar o prazo',
+      attention: 'Acompanhe de perto as atividades para evitar atraso maior',
+      good: 'Cronograma próximo do ideal, mantenha o ritmo',
+    },
+    'Pendências': {
+      critical: 'Resolva as pendências em atraso com urgência',
+      attention: 'Reduza pendências abertas para melhorar este indicador',
+      good: 'Poucas pendências restantes, quase lá',
+    },
+    'Formalizações': {
+      critical: 'Colete as assinaturas pendentes o mais rápido possível',
+      attention: 'Envie lembretes para assinatura das formalizações',
+      good: 'Apenas uma formalização pendente',
+    },
+    'Documentos': {
+      critical: 'Solicite os documentos faltantes à equipe responsável',
+      attention: 'Alguns documentos precisam ser enviados ou aprovados',
+      good: 'Quase todos os documentos estão em dia',
+    },
+  };
+
+  const level = getScoreLevel(score);
+  return tips[label]?.[level] ?? null;
 }
 
 interface HealthScoreBreakdownPanelProps {
@@ -51,6 +81,7 @@ export function HealthScoreBreakdownPanel({ project }: HealthScoreBreakdownPanel
         <div className="space-y-3">
           {health.breakdowns.map((b) => {
             const barColors = levelColors[getScoreLevel(b.score)];
+            const tip = getImprovementTip(b.label, b.score, b.detail);
             return (
               <div key={b.label} className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -69,6 +100,12 @@ export function HealthScoreBreakdownPanel({ project }: HealthScoreBreakdownPanel
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">{b.detail}</p>
+                {tip && (
+                  <p className={cn('text-[11px] flex items-start gap-1', barColors.text)}>
+                    <Lightbulb className="h-3 w-3 shrink-0 mt-0.5" />
+                    {tip}
+                  </p>
+                )}
               </div>
             );
           })}

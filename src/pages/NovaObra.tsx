@@ -17,6 +17,7 @@ import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
 import { ReviewSummary } from './nova-obra/ReviewSummary';
 import { FormStepper, type Step } from '@/components/FormStepper';
 import { StickySummary } from './nova-obra/StickySummary';
+import { MobileSummarySheet } from './nova-obra/MobileSummarySheet';
 import { cn } from '@/lib/utils';
 
 const STEPS: Step[] = [
@@ -359,6 +360,14 @@ export default function NovaObra() {
             completedSteps={completedSteps}
           />
         </div>
+
+        {/* Mobile bottom sheet summary */}
+        <MobileSummarySheet
+          formData={formData}
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+          totalSteps={STEPS.length}
+        />
       </main>
     </div>
   );

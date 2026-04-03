@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ExternalLink, AlertTriangle, FileSignature, FileText, Clock } from 'lucide-react';
+import { AlertTriangle, FileSignature, FileText, Clock } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -74,17 +73,17 @@ function ProjectCard({
   summary?: ProjectSummary;
   onClick: () => void;
 }) {
-  const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocs = summary?.pending_documents ?? 0;
   const progress = summary?.progress_percentage ?? 0;
-  const contractValue = project.contract_value ?? 0;
 
   const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
   const daysRemaining = plannedEnd ? differenceInDays(plannedEnd, today) : null;
   const isOverdue = daysRemaining !== null && daysRemaining < 0;
+
+  const hasCriticalAlerts = overdueCount > 0 || unsignedFormalizations > 0 || pendingDocs > 0;
 
   return (
     <button
@@ -96,23 +95,18 @@ function ProjectCard({
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
       )}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm truncate text-foreground">{project.name}</p>
-          {project.unit_name && (
-            <p className="text-[11px] text-primary/70 font-medium truncate mt-0.5">{project.unit_name}</p>
-          )}
-          {project.customer_name && (
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{project.customer_name}</p>
-          )}
-          {(project.tamanho_imovel_m2 || project.tipo_de_locacao) && (
-            <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">
-              {[
-                project.tamanho_imovel_m2 ? `${project.tamanho_imovel_m2}m²` : null,
-                project.tipo_de_locacao,
-              ].filter(Boolean).join(' · ')}
-            </p>
+      {/* Row 1: Health + Status (highest visual priority) */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          {summary && <HealthScoreBadge project={summary} size="md" showLabel />}
+          {plannedEnd && (
+            <span className={cn(
+              'flex items-center gap-1 text-[11px] font-medium',
+              isOverdue ? 'text-destructive' : daysRemaining !== null && daysRemaining <= 7 ? 'text-[hsl(var(--warning))]' : 'text-muted-foreground',
+            )}>
+              <Clock className="h-3 w-3" />
+              {isOverdue ? `${Math.abs(daysRemaining!)}d atraso` : `${daysRemaining}d`}
+            </span>
           )}
         </div>
         <Badge variant="outline" className={cn('text-[10px] shrink-0', statusColors[project.status])}>
@@ -120,92 +114,76 @@ function ProjectCard({
         </Badge>
       </div>
 
-      {/* Health + Progress */}
-      <div className="flex items-center gap-3">
-        {summary && <HealthScoreBadge project={summary} size="md" showLabel />}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
-            <span>Progresso</span>
-            <span className="font-medium tabular-nums">{progress}%</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            />
-          </div>
+      {/* Row 2: Critical alerts (positioned before project info for urgency) */}
+      {hasCriticalAlerts && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {overdueCount > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
+                  <AlertTriangle className="h-3 w-3" />
+                  {overdueCount} atraso{overdueCount > 1 ? 's' : ''}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{overdueCount} item(ns) em atraso</TooltipContent>
+            </Tooltip>
+          )}
+          {unsignedFormalizations > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
+                  <FileSignature className="h-3 w-3" />
+                  {unsignedFormalizations} assinatura{unsignedFormalizations > 1 ? 's' : ''}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{unsignedFormalizations} assinatura(s) pendente(s)</TooltipContent>
+            </Tooltip>
+          )}
+          {pendingDocs > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
+                  <FileText className="h-3 w-3" />
+                  {pendingDocs} doc{pendingDocs > 1 ? 's' : ''}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{pendingDocs} documento(s) pendente(s)</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      )}
+
+      {/* Row 3: Project name + unit */}
+      <div className="min-w-0">
+        <p className="font-semibold text-sm truncate text-foreground">{project.name}</p>
+        {project.unit_name && (
+          <p className="text-[11px] text-primary/70 font-medium truncate mt-0.5">{project.unit_name}</p>
+        )}
+      </div>
+
+      {/* Row 4: Progress bar */}
+      <div>
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+          <span>Progresso</span>
+          <span className="font-medium tabular-nums">{progress}%</span>
+        </div>
+        <div className="h-2 md:h-1.5 rounded-full bg-muted overflow-hidden group-hover:h-2 transition-all">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${Math.min(progress, 100)}%` }}
+          />
         </div>
       </div>
 
-      {/* Deadline */}
-      {plannedEnd && (
-      <div className={cn(
-          'flex items-center gap-1.5 text-xs',
-          isOverdue ? 'text-destructive' : daysRemaining !== null && daysRemaining <= 7 ? 'text-[hsl(var(--warning))]' : 'text-muted-foreground',
-        )}>
-          <Clock className="h-3 w-3" />
-          {isOverdue
-            ? `${Math.abs(daysRemaining!)}d em atraso`
-            : `${daysRemaining}d restantes`}
+      {/* Row 5: Secondary metadata (subtle, grouped) */}
+      {(project.customer_name || project.tamanho_imovel_m2 || project.tipo_de_locacao || project.engineer_name) && (
+        <div className="text-[10px] text-muted-foreground/60 truncate border-t border-border/30 pt-2 -mb-1 flex items-center gap-1.5 flex-wrap">
+          {project.customer_name && <span>{project.customer_name}</span>}
+          {project.customer_name && (project.tamanho_imovel_m2 || project.tipo_de_locacao || project.engineer_name) && <span>·</span>}
+          {project.tamanho_imovel_m2 && <span>{project.tamanho_imovel_m2}m²</span>}
+          {project.tipo_de_locacao && <span>{project.tipo_de_locacao}</span>}
+          {project.engineer_name && <span>{project.engineer_name}</span>}
         </div>
-      )}
-
-      {/* Atenção Necessária */}
-      {(overdueCount > 0 || unsignedFormalizations > 0 || pendingDocs > 0) && (
-        <div className="rounded-lg bg-destructive/5 border border-destructive/10 p-2 space-y-1">
-          <p className="text-[10px] font-semibold text-destructive/80 uppercase tracking-wider">Atenção Necessária</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            {overdueCount > 0 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
-                    <AlertTriangle className="h-3 w-3" />
-                    {overdueCount} atraso{overdueCount > 1 ? 's' : ''}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">{overdueCount} item(ns) em atraso</TooltipContent>
-              </Tooltip>
-            )}
-            {unsignedFormalizations > 0 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
-                    <FileSignature className="h-3 w-3" />
-                    {unsignedFormalizations} assinatura{unsignedFormalizations > 1 ? 's' : ''}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">{unsignedFormalizations} assinatura(s) pendente(s)</TooltipContent>
-              </Tooltip>
-            )}
-            {pendingDocs > 0 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
-                    <FileText className="h-3 w-3" />
-                    {pendingDocs} doc{pendingDocs > 1 ? 's' : ''}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">{pendingDocs} documento(s) pendente(s)</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Contract value */}
-      {contractValue > 0 && (
-        <div className="flex items-center justify-end">
-          <span className="text-[10px] text-muted-foreground tabular-nums">
-            R$ {(contractValue / 1000).toFixed(0)}k
-          </span>
-        </div>
-      )}
-
-      {/* Engineer */}
-      {project.engineer_name && (
-        <p className="text-[11px] text-muted-foreground/70 truncate border-t border-border/30 pt-2 -mb-1">
-          {project.engineer_name}
-        </p>
       )}
     </button>
   );
