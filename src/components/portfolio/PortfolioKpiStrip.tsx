@@ -14,7 +14,7 @@ export type KpiFilterKey =
   | 'critical'
   | 'blocked'
   | 'milestone-7d'
-  | 'stale-48h'
+  | 'stale-7d'
   | 'pending-docs'
   | 'pending-sign'
   | 'financial-deviation';
