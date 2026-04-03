@@ -28,7 +28,8 @@ import { EditarObraSidebar } from './editar-obra/EditarObraSidebar';
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isManager, hasAnyRole } = useUserRole();
+  const canEdit = isAdmin || isManager || hasAnyRole(['engineer']);
   const deleteProjectMutation = useDeleteProject();
   const [activeTab, setActiveTab] = useState('geral');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
