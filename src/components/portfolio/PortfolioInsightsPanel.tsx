@@ -11,21 +11,12 @@ interface PortfolioInsightsPanelProps {
 
 // ─── Health tier config ──────────────────────────────────────────────────────
 
-interface HealthTier {
-  label: string;
-  range: string;
-  color: string;
-  bg: string;
-}
-
-const healthTiers: HealthTier[] = [
-  { label: 'Excelente', range: '80–100', color: 'bg-emerald-500', bg: 'text-emerald-600' },
-  { label: 'Bom', range: '60–79', color: 'bg-blue-500', bg: 'text-blue-600' },
-  { label: 'Atenção', range: '40–59', color: 'bg-amber-500', bg: 'text-amber-600' },
-  { label: 'Crítico', range: '0–39', color: 'bg-red-500', bg: 'text-red-600' },
-];
-
-// ─── Simple health score heuristic ──────────────────────────────────────────
+const healthTiers = [
+  { label: 'Excelente', range: '80–100', color: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+  { label: 'Bom', range: '60–79', color: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
+  { label: 'Atenção', range: '40–59', color: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+  { label: 'Crítico', range: '0–39', color: 'bg-destructive', text: 'text-destructive' },
+] as const;
 
 function estimateHealth(s: ProjectSummary): number {
   let score = 100;
@@ -39,15 +30,10 @@ function estimateHealth(s: ProjectSummary): number {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsightsPanelProps) {
-  const activeProjects = useMemo(
-    () => projects.filter(p => p.status === 'active'),
-    [projects],
-  );
-
-  // ── Health distribution ────────────────────────────────────────────────────
+  const activeProjects = useMemo(() => projects.filter(p => p.status === 'active'), [projects]);
 
   const healthDistribution = useMemo(() => {
-    const buckets = [0, 0, 0, 0]; // excellent, good, attention, critical
+    const buckets = [0, 0, 0, 0];
     for (const s of summaries) {
       if (s.status !== 'active') continue;
       const h = estimateHealth(s);
@@ -60,8 +46,6 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
   }, [summaries]);
 
   const totalHealth = healthDistribution.reduce((a, b) => a + b, 0);
-
-  // ── Engineer load ──────────────────────────────────────────────────────────
 
   const engineerLoad = useMemo(() => {
     const map = new Map<string, { name: string; count: number; overdueTotal: number }>();
@@ -81,8 +65,6 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
     return Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 5);
   }, [activeProjects, summaries]);
 
-  // ── Upcoming milestones ────────────────────────────────────────────────────
-
   const upcomingMilestones = useMemo(() => {
     const now = Date.now();
     const MS_30D = 30 * 24 * 60 * 60 * 1000;
@@ -100,18 +82,14 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
   }, [activeProjects]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="region" aria-label="Insights do portfólio">
       {/* Health Distribution */}
-      <InsightCard
-        icon={<HeartPulse className="h-3.5 w-3.5" />}
-        title="Saúde do Portfólio"
-      >
+      <InsightCard icon={<HeartPulse className="h-3.5 w-3.5" />} title="Saúde do Portfólio">
         {totalHealth === 0 ? (
           <p className="text-xs text-muted-foreground py-2">Sem dados de saúde disponíveis</p>
         ) : (
           <div className="space-y-2.5">
-            {/* Bar */}
-            <div className="flex h-2 rounded-full overflow-hidden bg-muted/40">
+            <div className="flex h-2 rounded-full overflow-hidden bg-muted/40" role="img" aria-label="Distribuição de saúde">
               {healthDistribution.map((count, i) => {
                 const pct = totalHealth > 0 ? (count / totalHealth) * 100 : 0;
                 if (pct === 0) return null;
@@ -120,20 +98,19 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
                     key={i}
                     className={cn('h-full transition-all', healthTiers[i].color)}
                     style={{ width: `${pct}%` }}
+                    title={`${healthTiers[i].label}: ${count}`}
                   />
                 );
               })}
             </div>
-
-            {/* Legend */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
               {healthTiers.map((tier, i) => (
                 <div key={tier.label} className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <div className={cn('h-2 w-2 rounded-full', tier.color)} />
+                    <div className={cn('h-2 w-2 rounded-full', tier.color)} aria-hidden="true" />
                     <span className="text-[11px] text-muted-foreground">{tier.label}</span>
                   </div>
-                  <span className={cn('text-[11px] font-bold tabular-nums', tier.bg)}>
+                  <span className={cn('text-[11px] font-bold tabular-nums', tier.text)}>
                     {healthDistribution[i]}
                   </span>
                 </div>
@@ -145,10 +122,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
 
       {/* Engineer Load */}
       {engineerLoad.length > 0 && (
-        <InsightCard
-          icon={<Users className="h-3.5 w-3.5" />}
-          title="Carga por Engenheiro"
-        >
+        <InsightCard icon={<Users className="h-3.5 w-3.5" />} title="Carga por Engenheiro">
           <div className="space-y-2">
             {engineerLoad.map((eng) => {
               const maxCount = engineerLoad[0]?.count ?? 1;
@@ -156,7 +130,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
               return (
                 <div key={eng.name} className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-foreground font-medium truncate max-w-[140px]">
+                    <span className="text-xs text-foreground font-medium truncate max-w-[130px]">
                       {eng.name.split(' ')[0]}
                     </span>
                     <div className="flex items-center gap-2">
@@ -164,7 +138,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
                         {eng.count}
                       </span>
                       {eng.overdueTotal > 0 && (
-                        <span className="text-[10px] font-semibold text-red-600 tabular-nums">
+                        <span className="text-[10px] font-semibold text-destructive tabular-nums">
                           {eng.overdueTotal} atraso
                         </span>
                       )}
@@ -188,22 +162,12 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
 
       {/* Upcoming Milestones */}
       {upcomingMilestones.length > 0 && (
-        <InsightCard
-          icon={<Milestone className="h-3.5 w-3.5" />}
-          title="Marcos Próximos"
-        >
+        <InsightCard icon={<Milestone className="h-3.5 w-3.5" />} title="Marcos Próximos">
           <div className="space-y-1.5">
             {upcomingMilestones.map((m) => (
               <div key={m.id} className="flex items-center justify-between gap-2">
                 <span className="text-xs text-foreground truncate">{m.name}</span>
-                <span className={cn(
-                  'text-[11px] font-bold tabular-nums shrink-0',
-                  m.daysLeft <= 3 ? 'text-red-600' :
-                  m.daysLeft <= 7 ? 'text-amber-600' :
-                  'text-muted-foreground'
-                )}>
-                  {m.daysLeft}d
-                </span>
+                <Badge daysLeft={m.daysLeft} />
               </div>
             ))}
           </div>
@@ -213,28 +177,35 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
   );
 }
 
+// ─── Milestone badge with icon+text (not color-only) ─────────────────────────
+
+function Badge({ daysLeft }: { daysLeft: number }) {
+  const isUrgent = daysLeft <= 3;
+  const isWarning = daysLeft <= 7;
+
+  return (
+    <span className={cn(
+      'inline-flex items-center gap-1 text-[11px] font-bold tabular-nums shrink-0 px-1.5 py-0.5 rounded',
+      isUrgent ? 'bg-destructive/10 text-destructive' :
+      isWarning ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+      'text-muted-foreground'
+    )}>
+      {isUrgent && <span aria-hidden="true">⚠</span>}
+      {daysLeft}d
+    </span>
+  );
+}
+
 // ─── Shared card shell ───────────────────────────────────────────────────────
 
-function InsightCard({
-  icon,
-  title,
-  children,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-}) {
+function InsightCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border/50 bg-card overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-border/40 bg-muted/20">
-        <span className="text-muted-foreground">{icon}</span>
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </h4>
+    <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30 bg-muted/15">
+        <span className="text-muted-foreground" aria-hidden="true">{icon}</span>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</h4>
       </div>
-      <div className="px-4 py-3">
-        {children}
-      </div>
+      <div className="px-3 py-3">{children}</div>
     </div>
   );
 }
