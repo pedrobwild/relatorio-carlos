@@ -41,6 +41,24 @@ const SCHEDULE_TEMPLATES: ScheduleTemplate[] = [
       { description: 'Vistoria Bwild, limpeza fina e vistoria cliente para entrega da unidade', weight: 2 },
     ],
   },
+  {
+    id: 'troca-bancadas',
+    name: 'Cronograma Troca de Bancadas',
+    entries: [
+      { description: 'Mobilização de mão de obra, medições e alinhamento com o projeto executivo', weight: 8 },
+      { description: 'Instalação de fechadura eletrônica, adequações elétricas, execução de infra de ar-condicionado e demolição de bancadas', weight: 10 },
+      { description: 'Instalação de bancadas, cubas e luminárias', weight: 8 },
+      { description: 'Instalação de backsplash, nivelamento e instalação de piso vinílico', weight: 10 },
+      { description: 'Medição de marcenaria, início da produção das peças e instalação do box e espelhos', weight: 8 },
+      { description: 'Fechamento de shaft do ar-condicionado, drywall e instalação de metais', weight: 10 },
+      { description: 'Instalação de ar-condicionado e primeira demão de pintura', weight: 8 },
+      { description: 'Instalação de marcenaria', weight: 10 },
+      { description: 'Ajustes de marcenaria, instalação de rodapé e acabamentos de civil', weight: 8 },
+      { description: 'Segunda demão de pintura, acabamentos elétricos e instalação de acessórios', weight: 10 },
+      { description: 'Instalação de cortinas, recebimento e instalação de eletros e móveis', weight: 8 },
+      { description: 'Vistoria Bwild, limpeza fina e vistoria cliente para entrega da unidade', weight: 2 },
+    ],
+  },
 ];
 
 export interface ScheduleActivity {
