@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ const emptyForm = (): Partial<Supplier> => ({
 });
 
 export default function Fornecedores() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -331,7 +333,7 @@ export default function Fornecedores() {
               </TableHeader>
               <TableBody>
                 {filtered.map((s) => (
-                  <TableRow key={s.id} className="cursor-pointer" onClick={() => openEdit(s)}>
+                  <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/gestao/fornecedores/${s.id}`)}>
                     <TableCell>
                       <div>
                         <p className="font-medium">{s.nome}</p>
