@@ -215,7 +215,10 @@ function ProjectRow({
         {/* Name + Customer */}
         <TableCell onClick={(e) => { e.stopPropagation(); onNavigate(); }}>
           <div className="min-w-0">
-            <p className="font-medium text-sm truncate">{project.name}</p>
+            <p className="font-semibold text-sm truncate">{project.name}</p>
+            {project.unit_name && (
+              <p className="text-[11px] text-primary/70 font-medium truncate">{project.unit_name}</p>
+            )}
             {project.customer_name && (
               <p className="text-xs text-muted-foreground truncate">{project.customer_name}</p>
             )}
