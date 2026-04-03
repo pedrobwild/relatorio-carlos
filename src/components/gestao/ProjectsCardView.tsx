@@ -111,7 +111,7 @@ function ProjectCard({
 
       {/* Health + Progress */}
       <div className="flex items-center gap-3">
-        {summary && <HealthScoreBadge summary={summary} size="sm" />}
+        {summary && <HealthScoreBadge project={summary} size="sm" />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
             <span>Progresso</span>
