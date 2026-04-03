@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
@@ -12,6 +12,7 @@ import { ProjectsListView } from '@/components/gestao/ProjectsListView';
 import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
 import { ActiveFilterChips } from './filters/ActiveFilterChips';
 import { usePortfolioFilters } from './hooks/usePortfolioFilters';
+import { StaleProjectsDialog } from './StaleProjectsDialog';
 import {
   PortfolioPageSkeleton, KpiStripSkeleton, SidebarSkeleton,
   GridSkeleton, EmptyPortfolio, NoFilterResults,
@@ -45,6 +46,25 @@ export default function PortfolioPage() {
   // ── Duplicate modal ─────────────────────────────────────────────────────
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<ProjectWithCustomer | null>(null);
+
+  // ── Stale projects dialog ──────────────────────────────────────────────
+  const [staleDialogOpen, setStaleDialogOpen] = useState(false);
+
+  const handleKpiFilterChange = useCallback((key: typeof filters.kpiFilter) => {
+    if (key === 'stale-7d') {
+      setStaleDialogOpen(true);
+    } else {
+      filters.setKpiFilter(key);
+    }
+  }, [filters]);
+
+  const handleStaleAction = useCallback((projectId: string) => {
+    if (projectId.startsWith('stale-')) {
+      setStaleDialogOpen(true);
+    } else {
+      navigate(`/obra/${projectId}`);
+    }
+  }, [navigate]);
 
   // ── Full-page loading ───────────────────────────────────────────────────
   if (isLoading && projects.length === 0) {
@@ -106,7 +126,7 @@ export default function PortfolioPage() {
             projects={projects}
             summaries={summaries}
             activeFilter={filters.kpiFilter}
-            onFilterChange={filters.setKpiFilter}
+            onFilterChange={handleKpiFilterChange}
           />
         )}
 
@@ -123,7 +143,13 @@ export default function PortfolioPage() {
                 <PortfolioActionInbox
                   projects={projects}
                   summaries={summaries}
-                  onNavigate={(id) => navigate(`/obra/${id}`)}
+                  onNavigate={(id) => {
+                    if (id.startsWith('stale-')) {
+                      setStaleDialogOpen(true);
+                    } else {
+                      navigate(`/obra/${id}`);
+                    }
+                  }}
                 />
                 <PortfolioInsightsPanel projects={projects} summaries={summaries} />
               </>
@@ -174,6 +200,13 @@ export default function PortfolioPage() {
         open={duplicateModalOpen}
         onOpenChange={setDuplicateModalOpen}
         onSuccess={() => refetch()}
+      />
+
+      <StaleProjectsDialog
+        open={staleDialogOpen}
+        onOpenChange={setStaleDialogOpen}
+        projects={projects}
+        summaries={summaries}
       />
     </div>
   );

@@ -14,7 +14,7 @@ export type KpiFilterKey =
   | 'critical'
   | 'blocked'
   | 'milestone-7d'
-  | 'stale-48h'
+  | 'stale-7d'
   | 'pending-docs'
   | 'pending-sign'
   | 'financial-deviation';
@@ -41,7 +41,7 @@ const kpiDefinitions: KpiDefinition[] = [
   { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-4 w-4" />, accent: 'destructive' },
   { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
   { key: 'milestone-7d', label: 'Marco em 7d', description: 'Prazo final nos próximos 7 dias', icon: <Milestone className="h-4 w-4" />, accent: 'warning' },
-  { key: 'stale-48h', label: 'Sem update 48h', description: 'Sem atividade registrada há 2 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
+  { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade registrada há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
   { key: 'pending-docs', label: 'Docs pendentes', description: 'Documentos aguardando envio', icon: <FileText className="h-4 w-4" />, accent: 'warning' },
   { key: 'pending-sign', label: 'Assinaturas', description: 'Formalizações aguardando assinatura', icon: <FileSignature className="h-4 w-4" />, accent: 'warning' },
   { key: 'financial-deviation', label: 'Desvio financeiro', description: 'Soma de desvios sobre contratos ativos', icon: <TrendingDown className="h-4 w-4" />, accent: 'muted' },
@@ -75,11 +75,11 @@ function computeKpiValues(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_48H = 48 * 60 * 60 * 1000;
+  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
-  let milestone7d = 0, stale48h = 0;
+  let milestone7d = 0, stale7d = 0;
   let pendingDocsTotal = 0, pendingSignTotal = 0;
 
   for (const p of projects) {
@@ -95,9 +95,9 @@ function computeKpiValues(
 
     if (p.status === 'active') {
       if (s?.last_activity_at) {
-        if (now - new Date(s.last_activity_at).getTime() > MS_48H) stale48h++;
+        if (now - new Date(s.last_activity_at).getTime() > MS_STALE) stale7d++;
       } else {
-        stale48h++;
+        stale7d++;
       }
     }
 
@@ -112,7 +112,7 @@ function computeKpiValues(
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
   map.set('milestone-7d', milestone7d);
-  map.set('stale-48h', stale48h);
+  map.set('stale-7d', stale7d);
   map.set('pending-docs', pendingDocsTotal);
   map.set('pending-sign', pendingSignTotal);
   map.set('financial-deviation', '—');
@@ -193,7 +193,7 @@ export function applyKpiFilter(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_48H = 48 * 60 * 60 * 1000;
+  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
 
   switch (filter) {
@@ -212,12 +212,12 @@ export function applyKpiFilter(
         const diff = new Date(p.planned_end_date).getTime() - now;
         return diff >= 0 && diff <= MS_7D;
       });
-    case 'stale-48h':
+    case 'stale-7d':
       return projects.filter(p => {
         if (p.status !== 'active') return false;
         const s = summaryMap.get(p.id);
         if (!s?.last_activity_at) return true;
-        return now - new Date(s.last_activity_at).getTime() > MS_48H;
+        return now - new Date(s.last_activity_at).getTime() > MS_STALE;
       });
     case 'pending-docs':
       return projects.filter(p => {

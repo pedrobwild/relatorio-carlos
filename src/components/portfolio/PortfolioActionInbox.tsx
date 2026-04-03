@@ -64,7 +64,7 @@ function buildActionItems(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_48H = 48 * 60 * 60 * 1000;
+  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
   const items: ActionItem[] = [];
 
@@ -115,17 +115,18 @@ function buildActionItems(
 
     if (p.status === 'active') {
       const lastActivity = s?.last_activity_at ? new Date(s.last_activity_at).getTime() : 0;
-      if (!lastActivity || now - lastActivity > MS_48H) {
+      const staleDays = lastActivity ? Math.floor((now - lastActivity) / (1000 * 60 * 60 * 24)) : null;
+      if (!lastActivity || now - lastActivity > MS_STALE) {
         items.push({
           id: `stale-${p.id}`,
           projectName: p.name,
-          projectId: p.id,
-          reason: 'Sem atualização há 48h+',
+          projectId: `stale-${p.id}`,
+          reason: staleDays ? `${staleDays} dias sem atualização` : 'Sem atualização registrada',
           responsible: p.engineer_name ?? null,
-          urgency: 'medium',
+          urgency: (staleDays ?? 8) >= 14 ? 'high' : 'medium',
           deadline: null,
           icon: <ClipboardX className="h-4 w-4" />,
-          cta: 'Atualizar',
+          cta: 'Ver todas',
         });
       }
     }

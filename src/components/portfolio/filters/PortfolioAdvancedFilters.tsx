@@ -48,7 +48,7 @@ const healthOptions = [
 const criticalityOptions = [
   { value: 'overdue', label: 'Com itens em atraso' },
   { value: 'blocked', label: 'Bloqueada / Pausada' },
-  { value: 'stale', label: 'Sem atualização (48h+)' },
+  { value: 'stale', label: 'Sem atualização (7d+)' },
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
