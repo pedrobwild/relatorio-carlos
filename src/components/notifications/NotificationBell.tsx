@@ -205,9 +205,10 @@ export function NotificationBell() {
             <TabsTrigger
               value="actions"
               className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-destructive data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[36px] text-xs"
+              title="Pendências que bloqueiam o projeto e precisam da sua decisão"
             >
               <AlertCircle className="w-3 h-3 mr-1 text-destructive" />
-              Precisa de Atenção
+              Requer sua ação
               {unreadActionCount > 0 && (
                 <Badge variant="destructive" className="ml-1.5 h-4 min-w-[16px] px-1 text-[10px] animate-pulse">
                   {unreadActionCount}
@@ -217,9 +218,10 @@ export function NotificationBell() {
             <TabsTrigger
               value="updates"
               className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[36px] text-xs"
+              title="Atualizações do progresso da obra para acompanhamento"
             >
               <Calendar className="w-3 h-3 mr-1 text-primary" />
-              Apenas Informativo
+              Para acompanhar
             </TabsTrigger>
           </TabsList>
 
@@ -239,6 +241,11 @@ export function NotificationBell() {
                     {tab === 'actions' && (
                       <p className="text-xs text-muted-foreground/70 mt-1">
                         Tudo certo! Nenhuma decisão bloqueando sua obra.
+                      </p>
+                    )}
+                    {tab === 'updates' && (
+                      <p className="text-xs text-muted-foreground/70 mt-1">
+                        Atualizações de progresso aparecerão aqui.
                       </p>
                     )}
                   </div>

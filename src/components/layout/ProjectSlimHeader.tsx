@@ -134,23 +134,30 @@ export function ProjectSlimHeader() {
         </Link>
         <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0 hidden sm:block" />
 
-        {/* Level 2: Project name as dropdown switcher */}
+        {/* Level 2: Project name as dropdown switcher — prominent with status badge */}
         <DropdownMenu onOpenChange={(open) => { if (!open) setSearchQuery(""); }}>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-2 py-1 transition-colors group min-w-0">
+            <button className="flex items-center gap-2 text-left hover:bg-accent rounded-lg px-2.5 py-1.5 transition-colors group min-w-0 border border-transparent hover:border-border">
               {project?.status && (
                 <span className={cn(
-                  "shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border",
+                  "shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide",
                   STATUS_BADGE_STYLES[project.status] || STATUS_BADGE_STYLES.active
                 )}>
                   {STATUS_SHORT_LABELS[project.status] || project.status}
                 </span>
               )}
-              <span className="text-sm font-semibold text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors">
-                {projectDisplayName}
-              </span>
+              <div className="min-w-0">
+                <span className="text-sm font-bold text-foreground truncate max-w-[220px] block group-hover:text-primary transition-colors leading-tight">
+                  {projectDisplayName}
+                </span>
+                {project?.customer_name && (
+                  <span className="text-[10px] text-muted-foreground truncate block leading-tight">
+                    {project.customer_name}
+                  </span>
+                )}
+              </div>
               {otherProjects.length > 0 && (
-                <ChevronsUpDown className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               )}
             </button>
           </DropdownMenuTrigger>
