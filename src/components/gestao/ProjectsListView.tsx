@@ -99,7 +99,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                       summary={summary}
                       isExpanded={isExpanded}
                       onToggle={() => toggleExpanded(project.id)}
-                      onNavigate={() => navigate(`/obra/${project.id}`)}
+                      onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
