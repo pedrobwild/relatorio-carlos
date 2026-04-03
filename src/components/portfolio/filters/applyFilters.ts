@@ -59,7 +59,7 @@ export function applyAdvancedFilters(
         if (c === 'stale') {
           if (p.status !== 'active') return false;
           if (!s?.last_activity_at) return true;
-          return now - new Date(s.last_activity_at).getTime() > MS_48H;
+          return now - new Date(s.last_activity_at).getTime() > MS_STALE;
         }
         return false;
       });

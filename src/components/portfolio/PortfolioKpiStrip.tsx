@@ -193,7 +193,7 @@ export function applyKpiFilter(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_48H = 48 * 60 * 60 * 1000;
+  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
 
   switch (filter) {
@@ -212,12 +212,12 @@ export function applyKpiFilter(
         const diff = new Date(p.planned_end_date).getTime() - now;
         return diff >= 0 && diff <= MS_7D;
       });
-    case 'stale-48h':
+    case 'stale-7d':
       return projects.filter(p => {
         if (p.status !== 'active') return false;
         const s = summaryMap.get(p.id);
         if (!s?.last_activity_at) return true;
-        return now - new Date(s.last_activity_at).getTime() > MS_48H;
+        return now - new Date(s.last_activity_at).getTime() > MS_STALE;
       });
     case 'pending-docs':
       return projects.filter(p => {
