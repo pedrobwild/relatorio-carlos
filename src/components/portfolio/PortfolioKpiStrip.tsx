@@ -112,7 +112,7 @@ function computeKpiValues(
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
   map.set('milestone-7d', milestone7d);
-  map.set('stale-48h', stale48h);
+  map.set('stale-7d', stale7d);
   map.set('pending-docs', pendingDocsTotal);
   map.set('pending-sign', pendingSignTotal);
   map.set('financial-deviation', '—');
