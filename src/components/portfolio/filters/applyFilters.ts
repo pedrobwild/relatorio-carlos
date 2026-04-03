@@ -58,8 +58,9 @@ export function applyAdvancedFilters(
         if (c === 'blocked') return p.status === 'paused';
         if (c === 'stale') {
           if (p.status !== 'active') return false;
-          if (!s?.last_activity_at) return true;
-          return now - new Date(s.last_activity_at).getTime() > MS_STALE;
+          const ref = s?.last_activity_at ?? p.created_at;
+          const refTime = ref ? new Date(ref).getTime() : 0;
+          return refTime > 0 && now - refTime > MS_STALE;
         }
         return false;
       });

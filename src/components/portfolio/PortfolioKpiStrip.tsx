@@ -94,11 +94,9 @@ function computeKpiValues(
     }
 
     if (p.status === 'active') {
-      if (s?.last_activity_at) {
-        if (now - new Date(s.last_activity_at).getTime() > MS_STALE) stale7d++;
-      } else {
-        stale7d++;
-      }
+      const ref = s?.last_activity_at ?? p.created_at;
+      const refTime = ref ? new Date(ref).getTime() : 0;
+      if (refTime > 0 && now - refTime > MS_STALE) stale7d++;
     }
 
     if (s) {
@@ -216,8 +214,9 @@ export function applyKpiFilter(
       return projects.filter(p => {
         if (p.status !== 'active') return false;
         const s = summaryMap.get(p.id);
-        if (!s?.last_activity_at) return true;
-        return now - new Date(s.last_activity_at).getTime() > MS_STALE;
+        const ref = s?.last_activity_at ?? p.created_at;
+        const refTime = ref ? new Date(ref).getTime() : 0;
+        return refTime > 0 && now - refTime > MS_STALE;
       });
     case 'pending-docs':
       return projects.filter(p => {
