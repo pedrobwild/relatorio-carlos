@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   HeartPulse, Clock, FileText, FileSignature,
@@ -12,8 +13,23 @@ import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import { getHealthResult } from './lib/healthScore';
+import { computeHealthScore, type HealthLevel } from '@/lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
+
+const breakdownLevelColors: Record<HealthLevel, { text: string; fill: string }> = {
+  excellent: { text: 'text-[hsl(var(--success))]', fill: 'hsl(var(--success))' },
+  good: { text: 'text-primary', fill: 'hsl(var(--primary))' },
+  attention: { text: 'text-[hsl(var(--warning))]', fill: 'hsl(var(--warning))' },
+  critical: { text: 'text-destructive', fill: 'hsl(var(--destructive))' },
+};
+
+function getScoreLevel(score: number): HealthLevel {
+  if (score >= 80) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 40) return 'attention';
+  return 'critical';
+}
 
 // ─── Status config ───────────────────────────────────────────────────────────
 
@@ -39,6 +55,7 @@ interface WorkQuickPreviewDrawerProps {
 
 export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }: WorkQuickPreviewDrawerProps) {
   const navigate = useNavigate();
+  const detailedHealth = useMemo(() => summary ? computeHealthScore(summary) : null, [summary]);
 
   if (!project) {
     return (
@@ -54,6 +71,7 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
 
   const status = statusConfig[project.status] ?? statusConfig.active;
   const health = summary ? getHealthResult(summary) : null;
+  
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 
@@ -162,7 +180,31 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
             </div>
           </Section>
 
-          {/* Prazo */}
+          {/* Health Score Breakdown */}
+          {detailedHealth && (
+            <Section title="Detalhamento do Score" icon={<TrendingDown className="h-3.5 w-3.5" />}>
+              <div className="space-y-2.5">
+                {detailedHealth.breakdowns.map((b) => {
+                  const bColors = breakdownLevelColors[getScoreLevel(b.score)];
+                  return (
+                    <div key={b.label} className="space-y-0.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          {b.label} <span className="text-[10px]">({Math.round(b.weight * 100)}%)</span>
+                        </span>
+                        <span className={cn('font-bold tabular-nums', bColors.text)}>{b.score}</span>
+                      </div>
+                      <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${b.score}%`, backgroundColor: bColors.fill }} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/70">{b.detail}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+
           <Section title="Prazo" icon={<Calendar className="h-3.5 w-3.5" />}>
             <div className="space-y-1.5 text-sm">
               <Row label="Início" value={project.planned_start_date ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yyyy', { locale: ptBR }) : 'A definir'} />

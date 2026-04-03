@@ -1,8 +1,11 @@
-import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import type { FormData } from './types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface StickySummaryProps {
   formData: FormData;
@@ -77,10 +80,16 @@ function Section({ icon, label, stepIndex, currentStep, completedSteps, children
 }
 
 export function StickySummary({ formData, currentStep, completedSteps }: StickySummaryProps) {
+  const navigate = useNavigate();
   const hasProject = !!formData.name;
   const hasSchedule = !!formData.planned_start_date || !!formData.planned_end_date || formData.is_project_phase;
   const hasFinancial = !!formData.contract_value;
   const hasCustomer = !!formData.customer_name;
+
+  const handleSaveDraft = () => {
+    toast.success('Rascunho salvo! Você pode continuar depois.');
+    navigate('/gestao');
+  };
 
   return (
     <div className="hidden lg:block w-72 shrink-0">
@@ -158,6 +167,16 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
           <p className="font-medium text-foreground">{formData.customer_name}</p>
           {formData.customer_email && <p>{formData.customer_email}</p>}
         </Section>
+        {/* Save Draft Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2 text-xs mt-3"
+          onClick={handleSaveDraft}
+        >
+          <Save className="h-3.5 w-3.5" />
+          Continuar depois
+        </Button>
       </div>
     </div>
   );
