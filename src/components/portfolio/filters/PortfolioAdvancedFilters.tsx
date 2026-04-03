@@ -81,7 +81,6 @@ export function PortfolioAdvancedFilters({
 
   const activeCount = [
     draft.status.length, draft.phase.length, draft.engineers.length,
-    draft.customers.length, draft.cities.length, draft.units.length,
     draft.health.length, draft.criticality.length,
     draft.hasPendingDocs !== null ? 1 : 0,
     draft.hasPendingSign !== null ? 1 : 0,
