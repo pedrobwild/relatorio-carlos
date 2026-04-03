@@ -1,8 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, User, Settings, LogIn } from 'lucide-react';
+import { LogOut, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
@@ -16,7 +15,7 @@ interface AppHeaderProps {
 export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) {
   const navigate = useNavigate();
   const { user, loading, signOut, isAuthenticated } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  
 
   const handleSignOut = async () => {
     // CRITICAL: signOut already cleans up local state and the onAuthStateChange
@@ -52,23 +51,10 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
           </div>
 
           <div className="flex items-center gap-2">
-            {loading || roleLoading ? (
+            {loading ? (
               <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
             ) : isAuthenticated ? (
               <>
-                {/* Admin Settings Button */}
-                {isAdmin && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => navigate('/admin')}
-                    className="gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline">Configurações</span>
-                  </Button>
-                )}
-                
                 <ErrorBoundary name="NotificationBell" feature="general" fallback={null}>
                   <NotificationBell />
                 </ErrorBoundary>

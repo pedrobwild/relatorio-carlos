@@ -41,6 +41,20 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Canceladas",
 };
 
+const STATUS_BADGE_STYLES: Record<string, string> = {
+  active: "bg-primary/15 text-primary border-primary/25",
+  paused: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25",
+  completed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/25",
+  cancelled: "bg-muted text-muted-foreground border-border",
+};
+
+const STATUS_SHORT_LABELS: Record<string, string> = {
+  active: "Em andamento",
+  paused: "Pausada",
+  completed: "Concluída",
+  cancelled: "Cancelada",
+};
+
 const STATUS_ORDER = ["active", "paused", "completed", "cancelled"];
 
 export function ProjectSlimHeader() {
@@ -124,6 +138,14 @@ export function ProjectSlimHeader() {
         <DropdownMenu onOpenChange={(open) => { if (!open) setSearchQuery(""); }}>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-2 py-1 transition-colors group min-w-0">
+              {project?.status && (
+                <span className={cn(
+                  "shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border",
+                  STATUS_BADGE_STYLES[project.status] || STATUS_BADGE_STYLES.active
+                )}>
+                  {STATUS_SHORT_LABELS[project.status] || project.status}
+                </span>
+              )}
               <span className="text-sm font-semibold text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors">
                 {projectDisplayName}
               </span>
