@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Save, User, Building2, Loader2 } from 'lucide-react';
+import { Save, User, Building2, Loader2, Search } from 'lucide-react';
+import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
 
 interface CustomerData {
   id: string;
@@ -49,6 +50,7 @@ export default function DadosCliente() {
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [studio, setStudio] = useState<StudioData | null>(null);
   const [project, setProject] = useState<ProjectBasic | null>(null);
+  const { lookup: lookupCep, loading: cepLoading } = useCepLookup();
 
   useEffect(() => {
     if (projectId) fetchData();
@@ -93,7 +95,6 @@ export default function DadosCliente() {
     if (!projectId) return;
     setSaving(true);
     try {
-      // Save customer data
       if (customer) {
         const { id, ...rest } = customer;
         const { error: custErr } = await supabase
@@ -115,7 +116,6 @@ export default function DadosCliente() {
         if (custErr) throw custErr;
       }
 
-      // Save studio/property data
       if (studio) {
         const { error: studioErr } = await supabase
           .from('project_studio_info')
@@ -151,6 +151,50 @@ export default function DadosCliente() {
   const updateStudio = (field: keyof StudioData, value: string | number | null) => {
     if (!studio) return;
     setStudio({ ...studio, [field]: value });
+  };
+
+  const handleCepChange = (rawValue: string) => {
+    const formatted = formatCep(rawValue);
+    updateStudio('cep', formatted || null);
+
+    // Auto-lookup when 8 digits entered
+    const digits = rawValue.replace(/\D/g, '');
+    if (digits.length === 8) {
+      lookupCep(digits).then((result) => {
+        if (result && studio) {
+          setStudio((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              cep: formatted,
+              endereco_completo: result.logradouro || prev.endereco_completo,
+              bairro: result.bairro || prev.bairro,
+              cidade: result.cidade || prev.cidade,
+            };
+          });
+          toast.success('Endereço preenchido automaticamente');
+        }
+      });
+    }
+  };
+
+  const handleManualCepLookup = async () => {
+    if (!studio?.cep) return;
+    const result = await lookupCep(studio.cep);
+    if (result) {
+      setStudio((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          endereco_completo: result.logradouro || prev.endereco_completo,
+          bairro: result.bairro || prev.bairro,
+          cidade: result.cidade || prev.cidade,
+        };
+      });
+      toast.success('Endereço preenchido automaticamente');
+    } else {
+      toast.error('CEP não encontrado');
+    }
   };
 
   if (loading) {
@@ -324,12 +368,49 @@ export default function DadosCliente() {
                 placeholder="Nome do empreendimento"
               />
             </div>
+
+            {/* CEP with auto-fill */}
+            <div>
+              <Label>CEP</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={studio?.cep || ''}
+                  onChange={(e) => handleCepChange(e.target.value)}
+                  placeholder="00000-000"
+                  maxLength={9}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleManualCepLookup}
+                  disabled={cepLoading || !studio?.cep}
+                  title="Buscar endereço pelo CEP"
+                >
+                  {cepLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Digite o CEP para preencher o endereço automaticamente
+              </p>
+            </div>
+
+            <div>
+              <Label>Complemento</Label>
+              <Input
+                value={studio?.complemento || ''}
+                onChange={(e) => updateStudio('complemento', e.target.value || null)}
+                placeholder="Apto, Bloco"
+              />
+            </div>
+
             <div className="sm:col-span-2">
               <Label>Endereço do imóvel *</Label>
               <Input
                 value={studio?.endereco_completo || ''}
                 onChange={(e) => updateStudio('endereco_completo', e.target.value || null)}
-                placeholder="Rua, número, bairro, cidade/UF, CEP"
+                placeholder="Rua, número"
               />
             </div>
             <div>
@@ -346,22 +427,6 @@ export default function DadosCliente() {
                 value={studio?.cidade || ''}
                 onChange={(e) => updateStudio('cidade', e.target.value || null)}
                 placeholder="Ex: São Paulo"
-              />
-            </div>
-            <div>
-              <Label>CEP</Label>
-              <Input
-                value={studio?.cep || ''}
-                onChange={(e) => updateStudio('cep', e.target.value || null)}
-                placeholder="00000-000"
-              />
-            </div>
-            <div>
-              <Label>Complemento</Label>
-              <Input
-                value={studio?.complemento || ''}
-                onChange={(e) => updateStudio('complemento', e.target.value || null)}
-                placeholder="Apto, Bloco"
               />
             </div>
             <div>
