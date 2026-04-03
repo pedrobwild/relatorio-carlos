@@ -1,13 +1,47 @@
 import { useEffect, useRef } from 'react';
-import { Calendar, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Trash2, LayoutTemplate } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addBusinessDays, isHoliday } from '@/lib/businessDays';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import type { FormData } from './types';
+
+interface ScheduleTemplateEntry {
+  description: string;
+  weight: number;
+}
+
+interface ScheduleTemplate {
+  id: string;
+  name: string;
+  entries: ScheduleTemplateEntry[];
+}
+
+const SCHEDULE_TEMPLATES: ScheduleTemplate[] = [
+  {
+    id: 'padrao',
+    name: 'Template padrão',
+    entries: [
+      { description: 'Mobilização de mão de obra, medições e alinhamento com o projeto executivo', weight: 8 },
+      { description: 'Instalação de fechadura eletrônica, adequações elétricas e execução da infra de ar-condicionado', weight: 10 },
+      { description: 'Demolições, instalação de luminárias e instalação de backsplash', weight: 8 },
+      { description: 'Nivelamento e instalação de piso vinílico', weight: 10 },
+      { description: 'Medição de marcenaria, início da produção das peças e instalação do box e espelhos', weight: 8 },
+      { description: 'Fechamento de shaft do ar-condicionado, drywall e instalação de metais', weight: 10 },
+      { description: 'Instalação de ar-condicionado e primeira demão de pintura', weight: 8 },
+      { description: 'Instalação de marcenaria', weight: 10 },
+      { description: 'Ajustes de marcenaria, instalação de rodapé e acabamentos de civil', weight: 8 },
+      { description: 'Segunda demão de pintura, acabamentos elétricos e instalação de acessórios', weight: 10 },
+      { description: 'Instalação de cortinas, recebimento e instalação de eletros e móveis', weight: 8 },
+      { description: 'Vistoria Bwild, limpeza fina e vistoria cliente para entrega da unidade', weight: 2 },
+    ],
+  },
+];
 
 export interface ScheduleActivity {
   id: string;
