@@ -98,7 +98,7 @@ function ProjectCard({
       {/* Row 1: Health + Status (highest visual priority) */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          {summary && <HealthScoreBadge project={summary} size="lg" showLabel />}
+          {summary && <HealthScoreBadge project={summary} size="md" showLabel />}
           {plannedEnd && (
             <span className={cn(
               'flex items-center gap-1 text-[11px] font-medium',
