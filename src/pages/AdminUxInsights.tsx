@@ -139,24 +139,18 @@ const AREAS = [
     label: 'Gestão de Obras',
     description: 'Dashboard, listagem, criação de obras',
     systemContext: `Funcionalidades EXISTENTES na Gestão de Obras (SOMENTE STAFF):
-- Listagem de obras (/gestao): cards e tabela com toggle de visualização. Em mobile, exibe automaticamente cards empilhados para melhor usabilidade
-- Cards com: nome do projeto (font-semibold), nome da unidade (unit_name em cor primary), nome do cliente, badge de status com cores semânticas, barra de progresso linear, indicadores de pendências vencidas/formalizações pendentes/documentos pendentes
-- Tabela com colunas: Nome/Unidade/Cliente, Status (badge colorido), Progresso (barra linear), Pendências (ícones com contagem), Ações
+- Listagem de obras (/gestao): cards e tabela com toggle de visualização. Em mobile, exibe automaticamente cards empilhados
+- Cards e tabela exibem: nome, unidade, cliente, m² e tipo de locação (dados secundários em cinza), badge de status, barra de progresso, health score, indicadores de pendências/formalizações/documentos
 - Filtros por status (ativa/pausada/concluída/cancelada) e busca por nome
-- Health Score automático (0-100) calculado com 4 dimensões: Cronograma (40%), Pendências (25%), Formalizações (20%), Documentos (15%). Níveis: Excelente/Bom/Atenção/Crítico
-- Criação de nova obra (/gestao/nova-obra): formulário stepper com 4 etapas (Dados Básicos, Cronograma, Orçamento, Cliente) com resumo lateral sticky (StickySummary) que mostra dados preenchidos
-- Campo "Tipo de Locação" como Select padronizado (Residencial, Comercial, Apartamento, Casa, Studio, Cobertura, Sala Comercial) em vez de texto livre
-- Integração ViaCEP para autopreenchimento de endereço a partir do CEP com máscara de entrada
-- Edição de obra (/gestao/obra/:id): atualização de dados do projeto
-- Tabela obras: nome_da_obra, codigo_interno, status (ativa/pausada/concluida/cancelada)
-- Informações do studio (obras_studio_info): endereço, CEP, tamanho m², tipo de locação, data recebimento chaves
-- Projetos (projects table): org_id, customer_org_id, obra_id, nome, status (planning/in_progress/completed/on_hold/cancelled)
+- Health Score automático (0-100) com 4 dimensões: Cronograma (40%), Pendências (25%), Formalizações (20%), Documentos (15%)
+- Criação de nova obra (/gestao/nova-obra): stepper 4 etapas com microcopy educativo (ex: "Valores que comporão o gráfico de saúde financeira") e StickySummary lateral
+- Campo "Tipo de Locação" como Select padronizado e ViaCEP para autopreenchimento
+- Edição de obra (/gestao/obra/:id): feedback de permissões com tooltips ("Sua permissão é apenas de visualização"), botões disabled para viewers, exclusão restrita a admin
 - Dashboard com sumário (project_dashboard_summary view): pending_count, overdue_count, unsigned_formalizations, pending_documents, progress_percentage
-- Sistema de convites (invitations): envio por email com token, role, project_role (owner/viewer/editor/admin) com tooltips descritivos para cada role
-- Perfis de usuário (profiles): user_id, customer_org_id, display_name, role
-- Feature flags (feature_flags table) para controle de funcionalidades via hook useFeatureFlags
-- Clientes veem /minhas-obras com suas obras e empty state educativo personalizado
-- Templates de projeto (project_templates) com versionamento e campos customizáveis`
+- Sistema de convites com tooltips descritivos por role (owner/viewer/editor/admin)
+- Clientes veem /minhas-obras com status traduzido (Em andamento, Concluído, Pausado) e empty state educativo
+- Templates de projeto com versionamento e campos customizáveis
+- Feature flags para controle de funcionalidades`
   },
   {
     value: 'navegacao',

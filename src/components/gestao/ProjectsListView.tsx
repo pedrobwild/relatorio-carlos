@@ -212,7 +212,7 @@ function ProjectRow({
           </Button>
         </TableCell>
 
-        {/* Name + Customer */}
+        {/* Name + Customer + Studio info */}
         <TableCell onClick={(e) => { e.stopPropagation(); onNavigate(); }}>
           <div className="min-w-0">
             <p className="font-semibold text-sm truncate">{project.name}</p>
@@ -221,6 +221,14 @@ function ProjectRow({
             )}
             {project.customer_name && (
               <p className="text-xs text-muted-foreground truncate">{project.customer_name}</p>
+            )}
+            {(project.tamanho_imovel_m2 || project.tipo_de_locacao) && (
+              <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">
+                {[
+                  project.tamanho_imovel_m2 ? `${project.tamanho_imovel_m2}m²` : null,
+                  project.tipo_de_locacao,
+                ].filter(Boolean).join(' · ')}
+              </p>
             )}
           </div>
         </TableCell>
