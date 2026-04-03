@@ -14,10 +14,10 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-600 border-green-500/20',
-  completed: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  paused: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  cancelled: 'bg-red-500/10 text-red-600 border-red-500/20',
+  active: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20',
+  completed: 'bg-primary/10 text-primary border-primary/20',
+  paused: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20',
+  cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
 const statusLabels: Record<string, string> = {
@@ -99,7 +99,10 @@ function ProjectCard({
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate text-foreground">{project.name}</p>
+          <p className="font-semibold text-sm truncate text-foreground">{project.name}</p>
+          {project.unit_name && (
+            <p className="text-[11px] text-primary/70 font-medium truncate mt-0.5">{project.unit_name}</p>
+          )}
           {project.customer_name && (
             <p className="text-xs text-muted-foreground truncate mt-0.5">{project.customer_name}</p>
           )}
@@ -128,9 +131,9 @@ function ProjectCard({
 
       {/* Deadline */}
       {plannedEnd && (
-        <div className={cn(
+      <div className={cn(
           'flex items-center gap-1.5 text-xs',
-          isOverdue ? 'text-destructive' : daysRemaining !== null && daysRemaining <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground',
+          isOverdue ? 'text-destructive' : daysRemaining !== null && daysRemaining <= 7 ? 'text-[hsl(var(--warning))]' : 'text-muted-foreground',
         )}>
           <Clock className="h-3 w-3" />
           {isOverdue
@@ -155,7 +158,7 @@ function ProjectCard({
         {unsignedFormalizations > 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
                 <FileSignature className="h-3 w-3" />
                 {unsignedFormalizations}
               </Badge>
@@ -166,7 +169,7 @@ function ProjectCard({
         {pendingDocs > 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-blue-500/10 text-blue-600 border-blue-500/20">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
                 <FileText className="h-3 w-3" />
                 {pendingDocs}
               </Badge>

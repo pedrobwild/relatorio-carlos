@@ -19,10 +19,10 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-600 border-green-500/20',
-  completed: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  paused: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  cancelled: 'bg-red-500/10 text-red-600 border-red-500/20',
+  active: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20',
+  completed: 'bg-primary/10 text-primary border-primary/20',
+  paused: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20',
+  cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
 const statusLabels: Record<string, string> = {
@@ -215,7 +215,10 @@ function ProjectRow({
         {/* Name + Customer */}
         <TableCell onClick={(e) => { e.stopPropagation(); onNavigate(); }}>
           <div className="min-w-0">
-            <p className="font-medium text-sm truncate">{project.name}</p>
+            <p className="font-semibold text-sm truncate">{project.name}</p>
+            {project.unit_name && (
+              <p className="text-[11px] text-primary/70 font-medium truncate">{project.unit_name}</p>
+            )}
             {project.customer_name && (
               <p className="text-xs text-muted-foreground truncate">{project.customer_name}</p>
             )}
@@ -231,7 +234,7 @@ function ProjectRow({
                   {statusLabels[project.status]}
                 </Badge>
                 {project.is_project_phase && (
-                  <span className="text-[10px] text-purple-600 font-medium">Fase Projeto</span>
+                  <span className="text-[10px] text-accent-foreground font-medium">Fase Projeto</span>
                 )}
               </div>
             </TooltipTrigger>
@@ -239,7 +242,7 @@ function ProjectRow({
               <p className="text-xs font-medium mb-1">Status da Obra: {statusLabels[project.status]}</p>
               <p className="text-xs text-muted-foreground">{statusTooltips[project.status]}</p>
               {project.is_project_phase && (
-                <p className="text-xs text-purple-600 mt-1">Fase de Projeto — planejamento e aprovações</p>
+                <p className="text-xs text-accent-foreground mt-1">Fase de Projeto — planejamento e aprovações</p>
               )}
             </TooltipContent>
           </Tooltip>
