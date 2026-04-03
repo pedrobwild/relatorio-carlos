@@ -201,6 +201,13 @@ export default function PortfolioPage() {
         onOpenChange={setDuplicateModalOpen}
         onSuccess={() => refetch()}
       />
+
+      <StaleProjectsDialog
+        open={staleDialogOpen}
+        onOpenChange={setStaleDialogOpen}
+        projects={projects}
+        summaries={summaries}
+      />
     </div>
   );
 }
