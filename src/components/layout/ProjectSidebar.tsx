@@ -17,6 +17,7 @@ import {
   ChevronDown,
   LucideIcon,
   Building2,
+  UserCircle,
 } from "lucide-react";
 import {
   Sidebar,
