@@ -41,6 +41,7 @@ const AdminUxInsights = lazy(() => import("./pages/AdminUxInsights"));
 const Demo = lazy(() => import("./pages/Demo"));
 const AdminResearch = lazy(() => import("./pages/AdminResearch"));
 const CalendarioCompras = lazy(() => import("./pages/CalendarioCompras"));
+const Fornecedores = lazy(() => import("./pages/gestao/Fornecedores"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
