@@ -9,6 +9,7 @@ import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
+import { ProjectsCardView } from '@/components/gestao/ProjectsCardView';
 import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
 import { ActiveFilterChips } from './filters/ActiveFilterChips';
 import { usePortfolioFilters } from './hooks/usePortfolioFilters';
@@ -168,6 +169,11 @@ export default function PortfolioPage() {
               <NoFilterResults
                 onClearFilters={filters.handleClearAll}
                 activeFilterCount={filters.totalFilterCount}
+              />
+            ) : filters.viewMode === 'cards' ? (
+              <ProjectsCardView
+                projects={filters.filtered}
+                onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
               />
             ) : (
               <ProjectsListView
