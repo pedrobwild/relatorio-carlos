@@ -243,6 +243,11 @@ export function NotificationBell() {
                         Tudo certo! Nenhuma decisão bloqueando sua obra.
                       </p>
                     )}
+                    {tab === 'updates' && (
+                      <p className="text-xs text-muted-foreground/70 mt-1">
+                        Atualizações de progresso aparecerão aqui.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="p-1 space-y-0.5">

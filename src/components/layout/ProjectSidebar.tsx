@@ -89,7 +89,8 @@ export function ProjectSidebar() {
 
   const basePath = `/obra/${projectId}`;
 
-  const groups: SidebarNavGroup[] = [
+  // Define all groups, then reorder based on role
+  const allGroups: SidebarNavGroup[] = [
     {
       label: "Visão Geral",
       items: [
@@ -192,6 +193,12 @@ export function ProjectSidebar() {
       ],
     },
   ];
+
+  // For staff: promote "Dia a Dia" (with Pendências/Cronograma) above "Projeto"
+  // For clients: keep Visão Geral first (Jornada is prominent)
+  const groups = isStaff
+    ? [allGroups[0], allGroups[2], allGroups[1], allGroups[3]] // Visão Geral, Dia a Dia, Projeto, Gestão
+    : allGroups;
 
   const isActive = (item: SidebarNavItem) => {
     const currentPath = location.pathname;
