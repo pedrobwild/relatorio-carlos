@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ExternalLink, HeartPulse, Clock, FileText, FileSignature,
+  HeartPulse, Clock, FileText, FileSignature,
   AlertTriangle, CheckCircle, Calendar, User, Building2,
   MapPin, Ruler, TrendingDown, ArrowRight,
 } from 'lucide-react';
@@ -12,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { getHealthResult } from './lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -24,21 +24,7 @@ const statusConfig: Record<string, { label: string; icon: string; color: string 
   cancelled: { label: 'Cancelada',    icon: '✕', color: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
-// ─── Health estimation ───────────────────────────────────────────────────────
-
-function estimateHealth(s: ProjectSummary): { score: number; tier: string; color: string } {
-  let score = 100;
-  if (s.overdue_count > 0) score -= Math.min(40, s.overdue_count * 15);
-  if (s.unsigned_formalizations > 0) score -= Math.min(20, s.unsigned_formalizations * 10);
-  if (s.pending_documents > 0) score -= Math.min(15, s.pending_documents * 5);
-  if (s.progress_percentage < 20 && s.status === 'active') score -= 10;
-  score = Math.max(0, Math.min(100, score));
-
-  if (score >= 80) return { score, tier: 'Excelente', color: 'text-emerald-600 dark:text-emerald-400' };
-  if (score >= 60) return { score, tier: 'Bom', color: 'text-blue-600 dark:text-blue-400' };
-  if (score >= 40) return { score, tier: 'Atenção', color: 'text-amber-600 dark:text-amber-400' };
-  return { score, tier: 'Crítico', color: 'text-destructive' };
-}
+// Health estimation uses shared utility from lib/healthScore.ts
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -67,7 +53,7 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
   }
 
   const status = statusConfig[project.status] ?? statusConfig.active;
-  const health = summary ? estimateHealth(summary) : null;
+  const health = summary ? getHealthResult(summary) : null;
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Users, Milestone, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { estimateHealthScore, HEALTH_TIER_CONFIG } from './lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -9,34 +10,15 @@ interface PortfolioInsightsPanelProps {
   summaries: ProjectSummary[];
 }
 
-// ─── Health tier config ──────────────────────────────────────────────────────
-
-const healthTiers = [
-  { label: 'Excelente', range: '80–100', color: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
-  { label: 'Bom', range: '60–79', color: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
-  { label: 'Atenção', range: '40–59', color: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
-  { label: 'Crítico', range: '0–39', color: 'bg-destructive', text: 'text-destructive' },
-] as const;
-
-function estimateHealth(s: ProjectSummary): number {
-  let score = 100;
-  if (s.overdue_count > 0) score -= Math.min(40, s.overdue_count * 15);
-  if (s.unsigned_formalizations > 0) score -= Math.min(20, s.unsigned_formalizations * 10);
-  if (s.pending_documents > 0) score -= Math.min(15, s.pending_documents * 5);
-  if (s.progress_percentage < 20 && s.status === 'active') score -= 10;
-  return Math.max(0, Math.min(100, score));
-}
-
-// ─── Component ───────────────────────────────────────────────────────────────
-
 export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsightsPanelProps) {
   const activeProjects = useMemo(() => projects.filter(p => p.status === 'active'), [projects]);
 
+  // ── Health distribution ────────────────────────────────────────────────
   const healthDistribution = useMemo(() => {
-    const buckets = [0, 0, 0, 0];
+    const buckets = [0, 0, 0, 0]; // excellent, good, attention, critical
     for (const s of summaries) {
       if (s.status !== 'active') continue;
-      const h = estimateHealth(s);
+      const h = estimateHealthScore(s);
       if (h >= 80) buckets[0]++;
       else if (h >= 60) buckets[1]++;
       else if (h >= 40) buckets[2]++;
@@ -47,6 +29,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
 
   const totalHealth = healthDistribution.reduce((a, b) => a + b, 0);
 
+  // ── Engineer load ──────────────────────────────────────────────────────
   const engineerLoad = useMemo(() => {
     const map = new Map<string, { name: string; count: number; overdueTotal: number }>();
     const summaryMap = new Map<string, ProjectSummary>();
@@ -65,6 +48,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
     return Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 5);
   }, [activeProjects, summaries]);
 
+  // ── Upcoming milestones ────────────────────────────────────────────────
   const upcomingMilestones = useMemo(() => {
     const now = Date.now();
     const MS_30D = 30 * 24 * 60 * 60 * 1000;
@@ -91,26 +75,26 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
           <div className="space-y-2.5">
             <div className="flex h-2 rounded-full overflow-hidden bg-muted/40" role="img" aria-label="Distribuição de saúde">
               {healthDistribution.map((count, i) => {
-                const pct = totalHealth > 0 ? (count / totalHealth) * 100 : 0;
+                const pct = (count / totalHealth) * 100;
                 if (pct === 0) return null;
                 return (
                   <div
                     key={i}
-                    className={cn('h-full transition-all', healthTiers[i].color)}
+                    className={cn('h-full transition-all', HEALTH_TIER_CONFIG[i].barColor)}
                     style={{ width: `${pct}%` }}
-                    title={`${healthTiers[i].label}: ${count}`}
+                    title={`${HEALTH_TIER_CONFIG[i].label}: ${count}`}
                   />
                 );
               })}
             </div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-              {healthTiers.map((tier, i) => (
-                <div key={tier.label} className="flex items-center justify-between">
+              {HEALTH_TIER_CONFIG.map((tier, i) => (
+                <div key={tier.tier} className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <div className={cn('h-2 w-2 rounded-full', tier.color)} aria-hidden="true" />
+                    <div className={cn('h-2 w-2 rounded-full', tier.barColor)} aria-hidden="true" />
                     <span className="text-[11px] text-muted-foreground">{tier.label}</span>
                   </div>
-                  <span className={cn('text-[11px] font-bold tabular-nums', tier.text)}>
+                  <span className={cn('text-[11px] font-bold tabular-nums', tier.textColor)}>
                     {healthDistribution[i]}
                   </span>
                 </div>
@@ -134,9 +118,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
                       {eng.name.split(' ')[0]}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold tabular-nums text-foreground">
-                        {eng.count}
-                      </span>
+                      <span className="text-xs font-bold tabular-nums text-foreground">{eng.count}</span>
                       {eng.overdueTotal > 0 && (
                         <span className="text-[10px] font-semibold text-destructive tabular-nums">
                           {eng.overdueTotal} atraso
@@ -146,10 +128,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
                   </div>
                   <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
                     <div
-                      className={cn(
-                        'h-full rounded-full transition-all',
-                        eng.overdueTotal > 0 ? 'bg-amber-500' : 'bg-primary'
-                      )}
+                      className={cn('h-full rounded-full transition-all', eng.overdueTotal > 0 ? 'bg-amber-500' : 'bg-primary')}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -167,7 +146,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
             {upcomingMilestones.map((m) => (
               <div key={m.id} className="flex items-center justify-between gap-2">
                 <span className="text-xs text-foreground truncate">{m.name}</span>
-                <Badge daysLeft={m.daysLeft} />
+                <MilestoneBadge daysLeft={m.daysLeft} />
               </div>
             ))}
           </div>
@@ -177,12 +156,11 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
   );
 }
 
-// ─── Milestone badge with icon+text (not color-only) ─────────────────────────
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
-function Badge({ daysLeft }: { daysLeft: number }) {
+function MilestoneBadge({ daysLeft }: { daysLeft: number }) {
   const isUrgent = daysLeft <= 3;
   const isWarning = daysLeft <= 7;
-
   return (
     <span className={cn(
       'inline-flex items-center gap-1 text-[11px] font-bold tabular-nums shrink-0 px-1.5 py-0.5 rounded',
@@ -195,8 +173,6 @@ function Badge({ daysLeft }: { daysLeft: number }) {
     </span>
   );
 }
-
-// ─── Shared card shell ───────────────────────────────────────────────────────
 
 function InsightCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
