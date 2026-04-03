@@ -64,7 +64,7 @@ function buildActionItems(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_48H = 48 * 60 * 60 * 1000;
+  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
   const items: ActionItem[] = [];
 
