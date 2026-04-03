@@ -378,6 +378,31 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
           </div>
         </div>
 
+        {/* Schedule Template Selector */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-1.5 text-sm">
+            <LayoutTemplate className="h-4 w-4" />
+            Template de Cronograma
+          </Label>
+          <Select
+            onValueChange={(id) => {
+              const tpl = SCHEDULE_TEMPLATES.find(t => t.id === id);
+              if (tpl) applyScheduleTemplate(tpl);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um template (opcional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {SCHEDULE_TEMPLATES.map(t => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name} — {t.entries.length} etapas
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Activities / Etapas */}
         <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
