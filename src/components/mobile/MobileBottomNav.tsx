@@ -1,36 +1,49 @@
 import { useMemo } from "react";
 import { NavLink } from "react-router-dom";
-import { Map, DollarSign, AlertCircle, Bell } from "lucide-react";
+import { Map, DollarSign, AlertCircle, Bell, GanttChartSquare, Ruler } from "lucide-react";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
+import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
 
 /**
- * MobileBottomNav — fixed bottom navigation for mobile client users.
- * Shows 4 primary actions with ergonomic thumb-zone positioning.
- * Supports horizontal swipe gestures to navigate between tabs.
- * Only rendered for non-staff (client) users on mobile viewports.
+ * MobileBottomNav — fixed bottom navigation for mobile users.
+ * Shows role-appropriate tabs:
+ * - Client: Jornada, Financeiro, Pendências, Avisos
+ * - Staff: Pendências, Cronograma, Executivo, Financeiro
+ * Only rendered on mobile viewports.
  */
 export function MobileBottomNav() {
   const { paths, projectId } = useProjectNavigation();
   const { stats } = usePendencias({ projectId });
   const { unreadCount } = useNotifications();
+  const { isStaff } = useUserRole();
 
   const criticalPendencias = stats.overdueCount + stats.urgentCount;
 
-  const navItems = [
-    { label: "Jornada", icon: Map, to: paths.jornada, badge: 0 },
-    { label: "Financeiro", icon: DollarSign, to: paths.financeiro, badge: 0 },
-    { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
-    { label: "Avisos", icon: Bell, to: "#notifications", badge: unreadCount },
-  ];
+  const navItems = useMemo(() => {
+    if (isStaff) {
+      return [
+        { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
+        { label: "Cronograma", icon: GanttChartSquare, to: paths.cronograma, badge: 0 },
+        { label: "Executivo", icon: Ruler, to: paths.executivo, badge: 0 },
+        { label: "Financeiro", icon: DollarSign, to: paths.financeiro, badge: 0 },
+      ];
+    }
+    return [
+      { label: "Jornada", icon: Map, to: paths.jornada, badge: 0 },
+      { label: "Financeiro", icon: DollarSign, to: paths.financeiro, badge: 0 },
+      { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
+      { label: "Avisos", icon: Bell, to: "#notifications", badge: unreadCount },
+    ];
+  }, [isStaff, paths, criticalPendencias, unreadCount]);
 
   // Enable swipe between the navigable tabs (exclude #notifications)
   const swipeRoutes = useMemo(
     () => navItems.filter((i) => !i.to.startsWith("#")).map((i) => i.to),
-    [paths]
+    [navItems]
   );
 
   useSwipeNavigation(swipeRoutes);
