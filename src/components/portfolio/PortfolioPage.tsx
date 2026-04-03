@@ -4,11 +4,11 @@ import { Building2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppHeader } from '@/components/AppHeader';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { useProjectsQuery } from '@/hooks/useProjectsQuery';
+import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar, type PortfolioPreset, type ViewMode } from './PortfolioCommandBar';
-import { PortfolioKpiStrip } from './PortfolioKpiStrip';
+import { PortfolioKpiStrip, applyKpiFilter, type KpiFilterKey } from './PortfolioKpiStrip';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioGridPlaceholder } from './PortfolioGridPlaceholder';
 import { PortfolioPreviewDrawer } from './PortfolioPreviewDrawer';
@@ -20,6 +20,7 @@ export default function PortfolioPage() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: projects = [], isLoading, error, refetch } = useProjectsQuery();
+  const { data: summaries = [] } = useProjectSummaryQuery();
 
   // Search
   const search = searchParams.get('q') || '';
@@ -29,6 +30,9 @@ export default function PortfolioPage() {
 
   // Preset
   const [activePreset, setActivePreset] = useState<PortfolioPreset>('all');
+
+  // KPI filter
+  const [kpiFilter, setKpiFilter] = useState<KpiFilterKey | null>(null);
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
@@ -47,7 +51,7 @@ export default function PortfolioPage() {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<ProjectWithCustomer | null>(null);
 
-  // --- Filtering ---
+  // --- Filtering pipeline ---
   const filtered = useMemo(() => {
     let result = projects;
 
@@ -69,11 +73,9 @@ export default function PortfolioPage() {
         result = result.filter(p => p.engineer_user_id === user?.id);
         break;
       case 'critical':
-        // Placeholder: filter by health < 50 once wired
         result = result.filter(p => p.status === 'active');
         break;
       case 'stale':
-        // Placeholder: no activity in 7 days
         result = result.filter(p => p.status === 'active');
         break;
       case 'due-soon':
@@ -90,8 +92,17 @@ export default function PortfolioPage() {
         break;
     }
 
+    // KPI filter (additive on top of preset)
+    if (kpiFilter) {
+      result = applyKpiFilter(result, summaries, kpiFilter);
+    }
+
     return result;
-  }, [projects, search, activePreset, user?.id]);
+  }, [projects, search, activePreset, user?.id, kpiFilter, summaries]);
+
+  const handleKpiFilterChange = useCallback((key: KpiFilterKey | null) => {
+    setKpiFilter(key);
+  }, []);
 
   return (
     <div className="flex-1 bg-background">
@@ -107,14 +118,19 @@ export default function PortfolioPage() {
           search={search}
           onSearchChange={setSearch}
           activePreset={activePreset}
-          onPresetChange={setActivePreset}
+          onPresetChange={(p) => { setActivePreset(p); setKpiFilter(null); }}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
           totalCount={projects.length}
         />
 
         {/* KPI Strip */}
-        <PortfolioKpiStrip />
+        <PortfolioKpiStrip
+          projects={projects}
+          summaries={summaries}
+          activeFilter={kpiFilter}
+          onFilterChange={handleKpiFilterChange}
+        />
 
         {/* Content: Inbox + Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
@@ -137,13 +153,13 @@ export default function PortfolioPage() {
               ) : filtered.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-12 text-center">
                   <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                  {search || activePreset !== 'all' ? (
+                  {search || activePreset !== 'all' || kpiFilter ? (
                     <>
                       <p className="text-sm font-medium text-foreground mb-1">
                         Nenhuma obra encontrada
                       </p>
                       <p className="text-xs text-muted-foreground mb-4">
-                        Ajuste a busca ou selecione outro preset.
+                        Ajuste a busca ou selecione outro filtro.
                       </p>
                       <Button
                         variant="outline"
@@ -151,6 +167,7 @@ export default function PortfolioPage() {
                         onClick={() => {
                           setSearch('');
                           setActivePreset('all');
+                          setKpiFilter(null);
                         }}
                       >
                         Limpar filtros
