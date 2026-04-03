@@ -126,7 +126,7 @@ export default function PortfolioPage() {
             projects={projects}
             summaries={summaries}
             activeFilter={filters.kpiFilter}
-            onFilterChange={filters.setKpiFilter}
+            onFilterChange={handleKpiFilterChange}
           />
         )}
 
