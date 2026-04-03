@@ -96,31 +96,13 @@ export function MobileReportHeader({
         {/* Project name + compact progress — always visible */}
         <div className="p-3">
           <div className="mb-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-lg px-2 py-1.5 -ml-2 transition-colors group min-w-0 w-full">
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-[15px] font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
-                      {projectName} – {unitName}
-                    </h1>
-                    {clientName && <p className="text-caption mt-0.5">Cliente: {clientName}</p>}
-                  </div>
-                  {otherProjects.length > 0 && <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />}
-                </button>
-              </DropdownMenuTrigger>
-              {otherProjects.length > 0 && (
-                <DropdownMenuContent align="start" className="w-64 bg-popover">
-                  <DropdownMenuLabel className="flex items-center gap-2 text-xs"><Building2 className="h-3.5 w-3.5" />Trocar de Obra</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {otherProjects.map((project) => (
-                    <DropdownMenuItem key={project.id} onClick={() => onProjectSwitch(project.id)} className="flex flex-col items-start gap-0.5 cursor-pointer">
-                      <span className="font-medium text-sm">{project.name} {project.unit_name && `– ${project.unit_name}`}</span>
-                      {project.customer_name && <span className="text-xs text-muted-foreground">Cliente: {project.customer_name}</span>}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              )}
-            </DropdownMenu>
+            <ProjectSwitcherSheet
+              currentProjectName={projectName}
+              unitName={unitName}
+              clientName={clientName}
+              otherProjects={otherProjects}
+              onProjectSwitch={onProjectSwitch}
+            />
           </div>
 
           {/* Compact progress summary — always visible */}
