@@ -41,6 +41,7 @@ const statusTooltips: Record<string, string> = {
 
 interface ProjectsListViewProps {
   projects: ProjectWithCustomer[];
+  onProjectClick?: (project: ProjectWithCustomer) => void;
 }
 
 export function ProjectsListView({ projects }: ProjectsListViewProps) {
