@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
@@ -12,6 +12,7 @@ import { ProjectsListView } from '@/components/gestao/ProjectsListView';
 import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
 import { ActiveFilterChips } from './filters/ActiveFilterChips';
 import { usePortfolioFilters } from './hooks/usePortfolioFilters';
+import { StaleProjectsDialog } from './StaleProjectsDialog';
 import {
   PortfolioPageSkeleton, KpiStripSkeleton, SidebarSkeleton,
   GridSkeleton, EmptyPortfolio, NoFilterResults,
