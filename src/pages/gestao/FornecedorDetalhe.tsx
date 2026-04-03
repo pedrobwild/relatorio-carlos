@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
+import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
 
 type SupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
 
