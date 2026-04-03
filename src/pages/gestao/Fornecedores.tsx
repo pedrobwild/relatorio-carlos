@@ -20,6 +20,9 @@ import { toast } from "@/hooks/use-toast";
 import {
   Plus, Search, Star, Phone, Mail, MapPin, Pencil, Trash2, Building2, Filter,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
+import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
 
 type SupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
 
@@ -400,15 +403,22 @@ export default function Fornecedores() {
 
       {/* Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(v) => !v && closeDialog()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editing ? "Editar Fornecedor" : "Novo Fornecedor"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4 py-2">
-            {/* Row 1 */}
+          <Tabs defaultValue="dados" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="dados">Dados</TabsTrigger>
+              {editing && <TabsTrigger value="precos">Preços</TabsTrigger>}
+              {editing && <TabsTrigger value="anexos">Anexos</TabsTrigger>}
+            </TabsList>
+
+            <TabsContent value="dados">
+          <div className="grid gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Nome *</Label>
@@ -575,6 +585,20 @@ export default function Fornecedores() {
               />
             </div>
           </div>
+            </TabsContent>
+
+            {editing && (
+              <TabsContent value="precos">
+                <SupplierPricesTab fornecedorId={editing.id} />
+              </TabsContent>
+            )}
+
+            {editing && (
+              <TabsContent value="anexos">
+                <SupplierAttachmentsTab fornecedorId={editing.id} />
+              </TabsContent>
+            )}
+          </Tabs>
 
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>
