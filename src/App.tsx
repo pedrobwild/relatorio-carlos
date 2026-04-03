@@ -59,6 +59,7 @@ const Cronograma = lazy(() => import("./pages/Cronograma"));
 const Compras = lazy(() => import("./pages/Compras"));
 const Vistorias = lazy(() => import("./pages/Vistorias"));
 const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
+const DadosCliente = lazy(() => import("./pages/DadosCliente"));
 
 // Create persister - returns null if localStorage is not available
 const persister = createQueryPersister();
@@ -276,6 +277,14 @@ const App = () => (
               element={
                 <StaffRoute>
                   <ProjectPage>{withSuspense(<Vistorias />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/dados-cliente"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<DadosCliente />)}</ProjectPage>
                 </StaffRoute>
               }
             />

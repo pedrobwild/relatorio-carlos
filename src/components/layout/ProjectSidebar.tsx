@@ -17,6 +17,7 @@ import {
   ChevronDown,
   LucideIcon,
   Building2,
+  UserCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -181,6 +182,12 @@ export function ProjectSidebar() {
           icon: ClipboardSignature,
           path: paths.formalizacoes,
           badgeKey: "formalizacoes",
+        },
+        {
+          label: L("dadosCliente"),
+          icon: UserCircle,
+          path: paths.dadosCliente,
+          staffOnly: true,
         },
       ],
     },
