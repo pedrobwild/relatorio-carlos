@@ -10,6 +10,7 @@ import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar, type PortfolioPreset, type ViewMode } from './PortfolioCommandBar';
 import { PortfolioKpiStrip, applyKpiFilter, type KpiFilterKey } from './PortfolioKpiStrip';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
+import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { PortfolioGridPlaceholder } from './PortfolioGridPlaceholder';
 import { PortfolioPreviewDrawer } from './PortfolioPreviewDrawer';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
