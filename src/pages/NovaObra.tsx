@@ -266,21 +266,37 @@ export default function NovaObra() {
             {draftRestored && (
               <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3 mb-2">
                 <p className="text-sm text-muted-foreground">Rascunho restaurado automaticamente.</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    clearDraft();
-                    setFormData(initialFormData);
-                    setScheduleActivities([]);
-                    setCurrentStep(0);
-                    setCompletedSteps(new Set());
-                    setDraftRestored(false);
-                  }}
-                >
-                  Limpar
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      clearDraft();
+                      setFormData(initialFormData);
+                      setScheduleActivities([]);
+                      setCurrentStep(0);
+                      setCompletedSteps(new Set());
+                      setDraftRestored(false);
+                    }}
+                  >
+                    Limpar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => {
+                      clearDraft();
+                      setDraftRestored(false);
+                      navigate('/gestao');
+                      toast({ title: 'Rascunho excluído' });
+                    }}
+                  >
+                    Excluir rascunho
+                  </Button>
+                </div>
               </div>
             )}
 
