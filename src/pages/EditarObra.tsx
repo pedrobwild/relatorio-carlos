@@ -211,5 +211,6 @@ export default function EditarObra() {
         </div>
       </main>
     </div>
+    </TooltipProvider>
   );
 }
