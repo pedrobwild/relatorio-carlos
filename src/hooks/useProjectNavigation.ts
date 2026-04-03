@@ -25,6 +25,7 @@ export function useProjectNavigation() {
       compras: getProjectPath('/compras'),
       vistorias: getProjectPath('/vistorias'),
       jornada: getProjectPath('/jornada'),
+      dadosCliente: getProjectPath('/dados-cliente'),
     }
   };
 }

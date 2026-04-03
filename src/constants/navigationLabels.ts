@@ -23,6 +23,7 @@ export const navigationLabels: NavLabels = {
     pendencias:     { staff: "Pendências",       client: "O que preciso fazer" },
     financeiro:     { staff: "Financeiro",        client: "Pagamentos e Custos" },
     formalizacoes:  { staff: "Formalizações",     client: "Aprovações" },
+    dadosCliente:   { staff: "Dados do Cliente",   client: "Dados do Cliente" },
   },
   breadcrumb: {
     relatorio:      { staff: "Relatório",        client: "Diário da Obra" },

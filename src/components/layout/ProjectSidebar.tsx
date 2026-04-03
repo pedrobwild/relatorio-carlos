@@ -183,6 +183,12 @@ export function ProjectSidebar() {
           path: paths.formalizacoes,
           badgeKey: "formalizacoes",
         },
+        {
+          label: L("dadosCliente"),
+          icon: UserCircle,
+          path: paths.dadosCliente,
+          staffOnly: true,
+        },
       ],
     },
   ];
