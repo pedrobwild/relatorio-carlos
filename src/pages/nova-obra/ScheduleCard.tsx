@@ -229,16 +229,25 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     }
   }, [formData.planned_start_date, formData.business_days_duration]);
 
+  // Normalize dates only when planned_start_date changes (not on every activities change)
+  const prevStartDateRef = useRef(formData.planned_start_date);
   useEffect(() => {
     if (skipNormalizeRef.current) {
       skipNormalizeRef.current = false;
       return;
     }
+    // Only auto-fill dates when start date changes or on first render with activities
+    const startChanged = prevStartDateRef.current !== formData.planned_start_date;
+    prevStartDateRef.current = formData.planned_start_date;
+    
+    if (activities.length === 0) return;
+    
     const normalized = normalizeActivitiesWithDates(activities, formData.planned_start_date);
-    if (normalized) {
+    if (normalized && startChanged) {
       safeSetActivities(normalized);
     }
-  }, [activities, formData.planned_start_date, safeSetActivities]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.planned_start_date]);
 
   const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
 
