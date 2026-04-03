@@ -66,9 +66,9 @@ serve(async (req) => {
       return jsonResponse({ error: "Campo 'area' é obrigatório" }, 400);
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return jsonResponse({ error: "LOVABLE_API_KEY não configurada" }, 500);
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      return jsonResponse({ error: "ANTHROPIC_API_KEY não configurada" }, 500);
     }
 
     const userPrompt = `Analise a seguinte área/funcionalidade do portal de gestão de obras e gere sugestões de melhoria de UX.
@@ -83,17 +83,19 @@ ${context ? `**Contexto adicional do solicitante:** ${context}` : ""}
 Gere entre 5 e 10 sugestões organizadas nas 3 categorias. TODAS as sugestões devem ser sobre funcionalidades que JÁ EXISTEM no sistema conforme descrito acima. Se sugerir algo novo, marque explicitamente como "[NOVA FUNCIONALIDADE]".`;
 
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "https://api.anthropic.com/v1/messages",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4096,
+          system: SYSTEM_PROMPT,
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
             { role: "user", content: userPrompt },
           ],
           stream: true,
@@ -110,16 +112,52 @@ Gere entre 5 e 10 sugestões organizadas nas 3 categorias. TODAS as sugestões d
       }
       if (response.status === 402) {
         return jsonResponse(
-          { error: "Créditos insuficientes. Adicione créditos em Settings → Workspace → Usage." },
+          { error: "Créditos insuficientes na conta Anthropic." },
           402
         );
       }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return jsonResponse({ error: "Erro no serviço de IA" }, 500);
+      console.error("Anthropic API error:", response.status, errorText);
+      return jsonResponse({ error: "Erro no serviço de IA (Claude)" }, 500);
     }
 
-    return new Response(response.body, {
+    // Transform Anthropic SSE format to OpenAI-compatible SSE format
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        const text = new TextDecoder().decode(chunk);
+        const lines = text.split("\n");
+        
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr) continue;
+          
+          try {
+            const event = JSON.parse(jsonStr);
+            
+            if (event.type === "content_block_delta" && event.delta?.text) {
+              // Convert to OpenAI-compatible format
+              const openAIChunk = {
+                choices: [{ delta: { content: event.delta.text } }],
+              };
+              controller.enqueue(
+                new TextEncoder().encode(`data: ${JSON.stringify(openAIChunk)}\n\n`)
+              );
+            } else if (event.type === "message_stop") {
+              controller.enqueue(
+                new TextEncoder().encode("data: [DONE]\n\n")
+              );
+            }
+          } catch {
+            // Skip unparseable lines
+          }
+        }
+      },
+    });
+
+    const transformed = response.body!.pipeThrough(transformStream);
+
+    return new Response(transformed, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (err) {
