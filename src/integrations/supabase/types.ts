@@ -1000,6 +1000,78 @@ export type Database = {
           },
         ]
       }
+      fornecedores: {
+        Row: {
+          categoria: Database["public"]["Enums"]["supplier_category"]
+          cep: string | null
+          cidade: string | null
+          cnpj_cpf: string | null
+          condicoes_pagamento: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: string
+          nome: string
+          nota_avaliacao: number | null
+          observacoes: string | null
+          prazo_entrega_dias: number | null
+          produtos_servicos: string | null
+          razao_social: string | null
+          site: string | null
+          status: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["supplier_category"]
+          cep?: string | null
+          cidade?: string | null
+          cnpj_cpf?: string | null
+          condicoes_pagamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          nome: string
+          nota_avaliacao?: number | null
+          observacoes?: string | null
+          prazo_entrega_dias?: number | null
+          produtos_servicos?: string | null
+          razao_social?: string | null
+          site?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["supplier_category"]
+          cep?: string | null
+          cidade?: string | null
+          cnpj_cpf?: string | null
+          condicoes_pagamento?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          nome?: string
+          nota_avaliacao?: number | null
+          observacoes?: string | null
+          prazo_entrega_dias?: number | null
+          produtos_servicos?: string | null
+          razao_social?: string | null
+          site?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       historico_cargos: {
         Row: {
           aprovado_por: string | null
@@ -4797,6 +4869,12 @@ export type Database = {
       project_role: "owner" | "engineer" | "viewer" | "customer"
       review_comment_status: "open" | "resolved"
       review_status: "draft" | "in_review" | "approved" | "archived"
+      supplier_category:
+        | "materiais"
+        | "mao_de_obra"
+        | "servicos"
+        | "equipamentos"
+        | "outros"
       user_status: "ativo" | "inativo"
     }
     CompositeTypes: {
@@ -5023,6 +5101,13 @@ export const Constants = {
       project_role: ["owner", "engineer", "viewer", "customer"],
       review_comment_status: ["open", "resolved"],
       review_status: ["draft", "in_review", "approved", "archived"],
+      supplier_category: [
+        "materiais",
+        "mao_de_obra",
+        "servicos",
+        "equipamentos",
+        "outros",
+      ],
       user_status: ["ativo", "inativo"],
     },
   },
