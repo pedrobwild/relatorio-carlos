@@ -128,9 +128,9 @@ function ProjectCard({
 
       {/* Deadline */}
       {plannedEnd && (
-        <div className={cn(
+      <div className={cn(
           'flex items-center gap-1.5 text-xs',
-          isOverdue ? 'text-destructive' : daysRemaining !== null && daysRemaining <= 7 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground',
+          isOverdue ? 'text-destructive' : daysRemaining !== null && daysRemaining <= 7 ? 'text-[hsl(var(--warning))]' : 'text-muted-foreground',
         )}>
           <Clock className="h-3 w-3" />
           {isOverdue
