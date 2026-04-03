@@ -122,7 +122,7 @@ function ProjectCard({
 
       {/* Health + Progress */}
       <div className="flex items-center gap-3">
-        {summary && <HealthScoreBadge project={summary} size="sm" />}
+        {summary && <HealthScoreBadge project={summary} size="md" showLabel />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
             <span>Progresso</span>
@@ -150,47 +150,56 @@ function ProjectCard({
         </div>
       )}
 
-      {/* Indicators */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {overdueCount > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
-                <AlertTriangle className="h-3 w-3" />
-                {overdueCount}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">{overdueCount} item(ns) em atraso</TooltipContent>
-          </Tooltip>
-        )}
-        {unsignedFormalizations > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
-                <FileSignature className="h-3 w-3" />
-                {unsignedFormalizations}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">{unsignedFormalizations} assinatura(s) pendente(s)</TooltipContent>
-          </Tooltip>
-        )}
-        {pendingDocs > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
-                <FileText className="h-3 w-3" />
-                {pendingDocs}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">{pendingDocs} documento(s) pendente(s)</TooltipContent>
-          </Tooltip>
-        )}
-        {contractValue > 0 && (
-          <span className="text-[10px] text-muted-foreground ml-auto tabular-nums">
+      {/* Atenção Necessária */}
+      {(overdueCount > 0 || unsignedFormalizations > 0 || pendingDocs > 0) && (
+        <div className="rounded-lg bg-destructive/5 border border-destructive/10 p-2 space-y-1">
+          <p className="text-[10px] font-semibold text-destructive/80 uppercase tracking-wider">Atenção Necessária</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            {overdueCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
+                    <AlertTriangle className="h-3 w-3" />
+                    {overdueCount} atraso{overdueCount > 1 ? 's' : ''}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">{overdueCount} item(ns) em atraso</TooltipContent>
+              </Tooltip>
+            )}
+            {unsignedFormalizations > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
+                    <FileSignature className="h-3 w-3" />
+                    {unsignedFormalizations} assinatura{unsignedFormalizations > 1 ? 's' : ''}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">{unsignedFormalizations} assinatura(s) pendente(s)</TooltipContent>
+              </Tooltip>
+            )}
+            {pendingDocs > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
+                    <FileText className="h-3 w-3" />
+                    {pendingDocs} doc{pendingDocs > 1 ? 's' : ''}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">{pendingDocs} documento(s) pendente(s)</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Contract value */}
+      {contractValue > 0 && (
+        <div className="flex items-center justify-end">
+          <span className="text-[10px] text-muted-foreground tabular-nums">
             R$ {(contractValue / 1000).toFixed(0)}k
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Engineer */}
       {project.engineer_name && (
