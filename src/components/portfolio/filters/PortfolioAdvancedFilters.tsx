@@ -75,23 +75,6 @@ export function PortfolioAdvancedFilters({
     return Array.from(set).sort();
   }, [projects]);
 
-  const customers = useMemo(() => {
-    const set = new Set<string>();
-    projects.forEach(p => { if (p.customer_name) set.add(p.customer_name); });
-    return Array.from(set).sort();
-  }, [projects]);
-
-  const cities = useMemo(() => {
-    const set = new Set<string>();
-    projects.forEach(p => { if (p.cidade) set.add(p.cidade); });
-    return Array.from(set).sort();
-  }, [projects]);
-
-  const units = useMemo(() => {
-    const set = new Set<string>();
-    projects.forEach(p => { if (p.unit_name) set.add(p.unit_name); });
-    return Array.from(set).sort();
-  }, [projects]);
 
   const toggleArray = (arr: string[], value: string) =>
     arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
