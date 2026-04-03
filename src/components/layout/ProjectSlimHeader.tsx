@@ -138,6 +138,14 @@ export function ProjectSlimHeader() {
         <DropdownMenu onOpenChange={(open) => { if (!open) setSearchQuery(""); }}>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-md px-2 py-1 transition-colors group min-w-0">
+              {project?.status && (
+                <span className={cn(
+                  "shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border",
+                  STATUS_BADGE_STYLES[project.status] || STATUS_BADGE_STYLES.active
+                )}>
+                  {STATUS_SHORT_LABELS[project.status] || project.status}
+                </span>
+              )}
               <span className="text-sm font-semibold text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors">
                 {projectDisplayName}
               </span>
