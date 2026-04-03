@@ -82,6 +82,12 @@ export function GestaoSidebar() {
       label: "Administração",
       items: [
         {
+          label: "Config. Fornecedores",
+          icon: Truck,
+          path: "/gestao/fornecedores/admin",
+          adminOnly: true,
+        },
+        {
           label: "Configurações",
           icon: Settings,
           path: "/admin",

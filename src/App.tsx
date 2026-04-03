@@ -43,6 +43,7 @@ const AdminResearch = lazy(() => import("./pages/AdminResearch"));
 const CalendarioCompras = lazy(() => import("./pages/CalendarioCompras"));
 const Fornecedores = lazy(() => import("./pages/gestao/Fornecedores"));
 const FornecedorDetalhe = lazy(() => import("./pages/gestao/FornecedorDetalhe"));
+const FornecedoresAdmin = lazy(() => import("./pages/gestao/FornecedoresAdmin"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
@@ -150,6 +151,7 @@ const App = () => (
             <Route path="/gestao/calendario-compras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioCompras />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores" element={<StaffRoute><GestaoShell>{withSuspense(<Fornecedores />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/:id" element={<StaffRoute><GestaoShell>{withSuspense(<FornecedorDetalhe />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/fornecedores/admin" element={<AdminRoute><GestaoShell>{withSuspense(<FornecedoresAdmin />)}</GestaoShell></AdminRoute>} />
             <Route path="/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
             
             {/* Admin-only routes */}
