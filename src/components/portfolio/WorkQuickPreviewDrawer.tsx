@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   HeartPulse, Clock, FileText, FileSignature,
@@ -12,8 +13,23 @@ import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import { getHealthResult } from './lib/healthScore';
+import { computeHealthScore, type HealthLevel } from '@/lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
+
+const breakdownLevelColors: Record<HealthLevel, { text: string; fill: string }> = {
+  excellent: { text: 'text-[hsl(var(--success))]', fill: 'hsl(var(--success))' },
+  good: { text: 'text-primary', fill: 'hsl(var(--primary))' },
+  attention: { text: 'text-[hsl(var(--warning))]', fill: 'hsl(var(--warning))' },
+  critical: { text: 'text-destructive', fill: 'hsl(var(--destructive))' },
+};
+
+function getScoreLevel(score: number): HealthLevel {
+  if (score >= 80) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 40) return 'attention';
+  return 'critical';
+}
 
 // ─── Status config ───────────────────────────────────────────────────────────
 
