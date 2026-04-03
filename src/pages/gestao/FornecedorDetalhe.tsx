@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -18,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Building2, Clock, CreditCard,
+  ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X,
 } from "lucide-react";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
@@ -67,7 +66,7 @@ export default function FornecedorDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [form, setForm] = useState<Partial<Supplier>>({});
 
@@ -85,6 +84,10 @@ export default function FornecedorDetalhe() {
     enabled: !!id,
   });
 
+  useEffect(() => {
+    if (supplier && !editing) setForm({ ...supplier });
+  }, [supplier]);
+
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<Supplier>) => {
       const { error } = await supabase.from("fornecedores").update(data as any).eq("id", id!);
@@ -94,7 +97,7 @@ export default function FornecedorDetalhe() {
       queryClient.invalidateQueries({ queryKey: ["fornecedor", id] });
       queryClient.invalidateQueries({ queryKey: ["fornecedores"] });
       toast({ title: "Fornecedor atualizado" });
-      setEditOpen(false);
+      setEditing(false);
     },
     onError: (err: Error) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
@@ -111,9 +114,14 @@ export default function FornecedorDetalhe() {
     },
   });
 
-  const openEdit = () => {
+  const startEdit = () => {
     if (supplier) setForm({ ...supplier });
-    setEditOpen(true);
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    if (supplier) setForm({ ...supplier });
+    setEditing(false);
   };
 
   const handleSave = () => {
@@ -174,6 +182,8 @@ export default function FornecedorDetalhe() {
     );
   };
 
+  const s = editing ? form : supplier;
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
@@ -182,26 +192,48 @@ export default function FornecedorDetalhe() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold tracking-tight">{supplier.nome}</h1>
-            <Badge variant={supplier.status === "ativo" ? "default" : "secondary"}>
-              {supplier.status === "ativo" ? "Ativo" : "Inativo"}
-            </Badge>
-            <Badge variant="secondary" className={CATEGORY_COLORS[supplier.categoria]}>
-              {CATEGORY_LABELS[supplier.categoria]}
-            </Badge>
-          </div>
-          {supplier.razao_social && (
+          {editing ? (
+            <Input
+              value={form.nome || ""}
+              onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
+              className="text-2xl font-bold h-auto py-1 px-2"
+              placeholder="Nome do fornecedor"
+            />
+          ) : (
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold tracking-tight">{supplier.nome}</h1>
+              <Badge variant={supplier.status === "ativo" ? "default" : "secondary"}>
+                {supplier.status === "ativo" ? "Ativo" : "Inativo"}
+              </Badge>
+              <Badge variant="secondary" className={CATEGORY_COLORS[supplier.categoria]}>
+                {CATEGORY_LABELS[supplier.categoria]}
+              </Badge>
+            </div>
+          )}
+          {!editing && supplier.razao_social && (
             <p className="text-sm text-muted-foreground mt-0.5">{supplier.razao_social}</p>
           )}
         </div>
         <div className="flex gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={openEdit}>
-            <Pencil className="h-4 w-4" /> Editar
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => setDeleteConfirm(true)}>
-            <Trash2 className="h-4 w-4" /> Excluir
-          </Button>
+          {editing ? (
+            <>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={cancelEdit}>
+                <X className="h-4 w-4" /> Cancelar
+              </Button>
+              <Button size="sm" className="gap-1.5" onClick={handleSave} disabled={saveMutation.isPending}>
+                <Save className="h-4 w-4" /> {saveMutation.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={startEdit}>
+                <Pencil className="h-4 w-4" /> Editar
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => setDeleteConfirm(true)}>
+                <Trash2 className="h-4 w-4" /> Excluir
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -209,56 +241,145 @@ export default function FornecedorDetalhe() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column: info */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Contact & ID */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Informações</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {supplier.cnpj_cpf && (
-                <div>
-                  <p className="text-xs text-muted-foreground">CNPJ/CPF</p>
-                  <p className="text-sm font-mono">{supplier.cnpj_cpf}</p>
-                </div>
+              {editing ? (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Razão Social</Label>
+                    <Input value={form.razao_social || ""} onChange={(e) => setForm((p) => ({ ...p, razao_social: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>CNPJ/CPF</Label>
+                    <Input value={form.cnpj_cpf || ""} onChange={(e) => setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Categoria</Label>
+                      <Select value={form.categoria || "outros"} onValueChange={(v) => setForm((p) => ({ ...p, categoria: v as SupplierCategory }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Status</Label>
+                      <Select value={form.status || "ativo"} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ativo">Ativo</SelectItem>
+                          <SelectItem value="inativo">Inativo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Telefone</Label>
+                    <Input value={form.telefone || ""} onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Email</Label>
+                    <Input type="email" value={form.email || ""} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Site</Label>
+                    <Input value={form.site || ""} onChange={(e) => setForm((p) => ({ ...p, site: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Endereço</Label>
+                    <Input value={form.endereco || ""} onChange={(e) => setForm((p) => ({ ...p, endereco: e.target.value }))} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label>Cidade</Label>
+                      <Input value={form.cidade || ""} onChange={(e) => setForm((p) => ({ ...p, cidade: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Estado</Label>
+                      <Input value={form.estado || ""} onChange={(e) => setForm((p) => ({ ...p, estado: e.target.value }))} maxLength={2} />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {supplier.cnpj_cpf && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">CNPJ/CPF</p>
+                      <p className="text-sm font-mono">{supplier.cnpj_cpf}</p>
+                    </div>
+                  )}
+                  <InfoItem icon={Phone} label="Telefone" value={supplier.telefone} />
+                  <InfoItem icon={Mail} label="Email" value={supplier.email} />
+                  <InfoItem icon={Globe} label="Site" value={supplier.site} />
+                  <InfoItem
+                    icon={MapPin}
+                    label="Localização"
+                    value={
+                      [supplier.endereco, supplier.cidade, supplier.estado, supplier.cep]
+                        .filter(Boolean)
+                        .join(", ") || null
+                    }
+                  />
+                </>
               )}
-              <InfoItem icon={Phone} label="Telefone" value={supplier.telefone} />
-              <InfoItem icon={Mail} label="Email" value={supplier.email} />
-              <InfoItem icon={Globe} label="Site" value={supplier.site} />
-              <InfoItem
-                icon={MapPin}
-                label="Localização"
-                value={
-                  [supplier.endereco, supplier.cidade, supplier.estado, supplier.cep]
-                    .filter(Boolean)
-                    .join(", ") || null
-                }
-              />
             </CardContent>
           </Card>
 
-          {/* Commercial */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Dados Comerciais</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Avaliação</p>
-                <div className="mt-1">{renderStars(supplier.nota_avaliacao)}</div>
-              </div>
-              <InfoItem icon={Clock} label="Prazo de Entrega" value={supplier.prazo_entrega_dias ? `${supplier.prazo_entrega_dias} dias` : null} />
-              <InfoItem icon={CreditCard} label="Condições de Pagamento" value={supplier.condicoes_pagamento} />
-              {supplier.produtos_servicos && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Produtos / Serviços</p>
-                  <p className="text-sm whitespace-pre-wrap">{supplier.produtos_servicos}</p>
-                </div>
-              )}
-              {supplier.observacoes && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Observações</p>
-                  <p className="text-sm whitespace-pre-wrap">{supplier.observacoes}</p>
-                </div>
+              {editing ? (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Nota (0 a 5)</Label>
+                    <Input type="number" min={0} max={5} step={0.5} value={form.nota_avaliacao ?? ""} onChange={(e) => setForm((p) => ({ ...p, nota_avaliacao: e.target.value ? Number(e.target.value) : undefined }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Prazo de Entrega (dias)</Label>
+                    <Input type="number" value={form.prazo_entrega_dias || ""} onChange={(e) => setForm((p) => ({ ...p, prazo_entrega_dias: e.target.value ? Number(e.target.value) : undefined }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Condições de Pagamento</Label>
+                    <Input value={form.condicoes_pagamento || ""} onChange={(e) => setForm((p) => ({ ...p, condicoes_pagamento: e.target.value }))} placeholder="Ex: 30/60/90 dias" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Produtos / Serviços</Label>
+                    <Textarea value={form.produtos_servicos || ""} onChange={(e) => setForm((p) => ({ ...p, produtos_servicos: e.target.value }))} rows={3} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Observações</Label>
+                    <Textarea value={form.observacoes || ""} onChange={(e) => setForm((p) => ({ ...p, observacoes: e.target.value }))} rows={2} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Avaliação</p>
+                    <div className="mt-1">{renderStars(supplier.nota_avaliacao)}</div>
+                  </div>
+                  <InfoItem icon={Clock} label="Prazo de Entrega" value={supplier.prazo_entrega_dias ? `${supplier.prazo_entrega_dias} dias` : null} />
+                  <InfoItem icon={CreditCard} label="Condições de Pagamento" value={supplier.condicoes_pagamento} />
+                  {supplier.produtos_servicos && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Produtos / Serviços</p>
+                      <p className="text-sm whitespace-pre-wrap">{supplier.produtos_servicos}</p>
+                    </div>
+                  )}
+                  {supplier.observacoes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Observações</p>
+                      <p className="text-sm whitespace-pre-wrap">{supplier.observacoes}</p>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -284,110 +405,6 @@ export default function FornecedorDetalhe() {
           </Card>
         </div>
       </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={(v) => !v && setEditOpen(false)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Editar Fornecedor</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Nome *</Label>
-                <Input value={form.nome || ""} onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Razão Social</Label>
-                <Input value={form.razao_social || ""} onChange={(e) => setForm((p) => ({ ...p, razao_social: e.target.value }))} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>CNPJ/CPF</Label>
-                <Input value={form.cnpj_cpf || ""} onChange={(e) => setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Categoria</Label>
-                <Select value={form.categoria || "outros"} onValueChange={(v) => setForm((p) => ({ ...p, categoria: v as SupplierCategory }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Status</Label>
-                <Select value={form.status || "ativo"} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Telefone</Label>
-                <Input value={form.telefone || ""} onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email</Label>
-                <Input type="email" value={form.email || ""} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Site</Label>
-                <Input value={form.site || ""} onChange={(e) => setForm((p) => ({ ...p, site: e.target.value }))} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Endereço</Label>
-                <Input value={form.endereco || ""} onChange={(e) => setForm((p) => ({ ...p, endereco: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Cidade</Label>
-                <Input value={form.cidade || ""} onChange={(e) => setForm((p) => ({ ...p, cidade: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Estado</Label>
-                <Input value={form.estado || ""} onChange={(e) => setForm((p) => ({ ...p, estado: e.target.value }))} maxLength={2} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Produtos / Serviços</Label>
-              <Textarea value={form.produtos_servicos || ""} onChange={(e) => setForm((p) => ({ ...p, produtos_servicos: e.target.value }))} rows={3} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Condições de Pagamento</Label>
-                <Input value={form.condicoes_pagamento || ""} onChange={(e) => setForm((p) => ({ ...p, condicoes_pagamento: e.target.value }))} placeholder="Ex: 30/60/90 dias" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Prazo de Entrega (dias)</Label>
-                <Input type="number" value={form.prazo_entrega_dias || ""} onChange={(e) => setForm((p) => ({ ...p, prazo_entrega_dias: e.target.value ? Number(e.target.value) : undefined }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Nota (0 a 5)</Label>
-                <Input type="number" min={0} max={5} step={0.5} value={form.nota_avaliacao ?? ""} onChange={(e) => setForm((p) => ({ ...p, nota_avaliacao: e.target.value ? Number(e.target.value) : undefined }))} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Observações</Label>
-              <Textarea value={form.observacoes || ""} onChange={(e) => setForm((p) => ({ ...p, observacoes: e.target.value }))} rows={2} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? "Salvando..." : "Salvar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete confirm */}
       <Dialog open={deleteConfirm} onOpenChange={setDeleteConfirm}>
