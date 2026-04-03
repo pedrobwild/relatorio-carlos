@@ -163,17 +163,19 @@ const AREAS = [
     label: 'Navegação Geral',
     description: 'Header, menus, rotas, mobile',
     systemContext: `Funcionalidades EXISTENTES na Navegação:
-- AppHeader com logo, botão de configurações (admin), NotificationBell, perfil e logout
-- ProjectSlimHeader com breadcrumb e seletor de projeto que preserva sub-rota ao trocar de obra
+- AppHeader com logo, NotificationBell, perfil e logout (botão admin removido do header, movido para dropdown do UserMenu)
+- UserMenu dropdown com: email, badge de role, link "Minhas Obras", "Configurações" (admin only), logout
+- ProjectSlimHeader com breadcrumb, badge colorido de status da obra (Em andamento/Pausada/Concluída/Cancelada) e seletor de projeto agrupado por status com busca
+- Seletor preserva sub-rota ao trocar de obra e exibe badges de pendências por projeto
 - Navegação por abas dentro do projeto: Jornada, Contrato, Projeto 3D, Executivo, Financeiro, Pendências, Documentos, Formalizações, Cronograma, Compras
-- Rotas protegidas: ProtectedRoute (autenticado), StaffRoute (admin/manager/engineer), AdminRoute (admin), CustomerRoute (cliente)
-- Roles via user_roles: admin, manager, engineer, customer
-- Centro de notificações com filtro de urgência (Ações vs Atualizações), badge pulsante para ações bloqueantes
-- Notificações com tipos: payment_due, payment_overdue, formalization_pending, pending_item_created, document_uploaded, stage_changed, report_published, general
+- Rotas protegidas: ProtectedRoute (com skeleton loading), StaffRoute, AdminRoute, CustomerRoute
+- Roles via user_roles: admin, manager, engineer, gestor, suprimentos, financeiro, customer
+- Centro de notificações com filtros "Precisa de Atenção" / "Apenas Informativo", badge pulsante APENAS para ações bloqueantes (payment_overdue, formalization_pending)
+- Notificações com boost contextual baseado na rota atual (ex: financeiro → payment_due)
 - Redirecionamento automático baseado em role (/ → /gestao para staff, /minhas-obras para cliente)
-- Admin panel (/admin): configurações, auditoria, health check, UX insights, pesquisa de referências
-- Sem bottom navigation mobile (usa header fixo)
-- Sem barra de busca global`
+- Admin panel (/admin): configurações, auditoria, health check, UX insights
+- Bottom navigation mobile para clientes (MobileBottomNav): Jornada, Financeiro, Pendências, Avisos
+- Busca global (GlobalSearchDialog) no ProjectSlimHeader`
   },
   {
     value: 'onboarding',
