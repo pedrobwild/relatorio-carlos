@@ -155,7 +155,7 @@ function ProjectCard({
         {unsignedFormalizations > 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
                 <FileSignature className="h-3 w-3" />
                 {unsignedFormalizations}
               </Badge>
