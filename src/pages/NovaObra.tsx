@@ -273,6 +273,7 @@ export default function NovaObra() {
                   onClick={() => {
                     clearDraft();
                     setFormData(initialFormData);
+                    setScheduleActivities([]);
                     setCurrentStep(0);
                     setCompletedSteps(new Set());
                     setDraftRestored(false);
