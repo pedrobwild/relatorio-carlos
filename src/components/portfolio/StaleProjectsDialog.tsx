@@ -39,8 +39,9 @@ function getStaleProjects(
   for (const p of projects) {
     if (p.status !== 'active') continue;
     const s = summaryMap.get(p.id);
-    const lastActivity = s?.last_activity_at ? new Date(s.last_activity_at).getTime() : 0;
-    const isStale = !lastActivity || now - lastActivity > MS_STALE;
+    const ref = s?.last_activity_at ?? p.created_at;
+    const refTime = ref ? new Date(ref).getTime() : 0;
+    const isStale = refTime > 0 && now - refTime > MS_STALE;
 
     if (isStale) {
       const staleDays = lastActivity
