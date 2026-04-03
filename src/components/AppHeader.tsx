@@ -51,7 +51,7 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
           </div>
 
           <div className="flex items-center gap-2">
-            {loading || roleLoading ? (
+            {loading ? (
               <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
             ) : isAuthenticated ? (
               <>
