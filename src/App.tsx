@@ -280,6 +280,14 @@ const App = () => (
                 </StaffRoute>
               }
             />
+            <Route
+              path="/obra/:projectId/dados-cliente"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<DadosCliente />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
             
             {/* Root route - redirect based on role */}
             <Route path="/" element={<ProtectedRoute><AuthRedirectPage /></ProtectedRoute>} />
