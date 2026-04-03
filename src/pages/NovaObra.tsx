@@ -27,6 +27,8 @@ const STEPS: Step[] = [
   { label: 'Cliente', description: 'Dados de acesso ao portal do cliente (~2 min)' },
 ];
 
+const STEP_SHORT_LABELS = ['Dados', 'Cronograma', 'Orçamento', 'Cliente'];
+
 // Fields required per step for validation gating
 const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
   0: ['name'],
@@ -234,23 +236,62 @@ export default function NovaObra() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header with sticky progress bar on mobile */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')} className="min-h-[44px] min-w-[44px] h-11 w-11" aria-label="Voltar">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-h3 font-bold">Nova Obra</h1>
-              <p className="text-tiny text-muted-foreground">Cadastre uma nova obra</p>
+              <p className="text-tiny text-muted-foreground hidden sm:block">Cadastre uma nova obra</p>
             </div>
+            {/* Mobile step indicator in header */}
+            <div className="flex items-center gap-1 sm:hidden">
+              <span className="text-xs font-semibold text-primary tabular-nums">{currentStep + 1}/{STEPS.length}</span>
+            </div>
+          </div>
+        </div>
+        {/* Mobile sticky progress bar */}
+        <div className="sm:hidden">
+          <div className="flex gap-0.5 px-4 pb-2">
+            {STEPS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToStep(i)}
+                className={cn(
+                  "flex-1 h-1.5 rounded-full transition-all",
+                  completedSteps.has(i) ? "bg-primary" :
+                  i === currentStep ? "bg-primary/60" :
+                  "bg-muted"
+                )}
+                aria-label={`Etapa ${i + 1}: ${STEP_SHORT_LABELS[i]}`}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between px-4 pb-2">
+            {STEP_SHORT_LABELS.map((label, i) => (
+              <button
+                key={i}
+                onClick={() => goToStep(i)}
+                className={cn(
+                  "text-[10px] font-medium transition-colors flex-1 text-center",
+                  i === currentStep ? "text-primary" :
+                  completedSteps.has(i) ? "text-foreground" :
+                  "text-muted-foreground"
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6">
-        {/* Stepper */}
-        <div className="mb-8 lg:max-w-3xl">
+      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 sm:pb-6">
+        {/* Desktop Stepper */}
+        <div className="mb-8 lg:max-w-3xl hidden sm:block">
           <FormStepper
             steps={STEPS}
             currentStep={currentStep}
@@ -340,16 +381,16 @@ export default function NovaObra() {
                 </div>
               </div>
 
-              {/* Navigation buttons */}
-              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-2">
+              {/* Desktop Navigation buttons */}
+              <div className="hidden sm:flex flex-row justify-between gap-3 pt-2">
                 <div>
                   {currentStep > 0 ? (
-                    <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px] w-full sm:w-auto">
+                    <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px]">
                       <ArrowLeft className="h-4 w-4 mr-2" />
                       Voltar
                     </Button>
                   ) : (
-                    <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px] w-full sm:w-auto">
+                    <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px]">
                       Cancelar
                     </Button>
                   )}
@@ -357,7 +398,7 @@ export default function NovaObra() {
 
                 <div>
                   {isLastStep ? (
-                    <Button type="submit" disabled={loading} className="min-h-[44px] w-full sm:w-auto">
+                    <Button type="submit" disabled={loading} className="min-h-[44px]">
                       {loading ? 'Cadastrando...' : (
                         <>
                           <Send className="h-4 w-4 mr-2" />
@@ -366,7 +407,7 @@ export default function NovaObra() {
                       )}
                     </Button>
                   ) : (
-                    <Button type="button" onClick={handleNext} className="min-h-[44px] w-full sm:w-auto">
+                    <Button type="button" onClick={handleNext} className="min-h-[44px]">
                       Próximo
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
@@ -392,6 +433,38 @@ export default function NovaObra() {
           totalSteps={STEPS.length}
         />
       </main>
+
+      {/* Mobile sticky bottom navigation */}
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur-md border-t border-border px-4 py-3 pb-safe sm:hidden">
+        <div className="flex gap-3">
+          {currentStep > 0 ? (
+            <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px] flex-1">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Voltar
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px] flex-1">
+              Cancelar
+            </Button>
+          )}
+
+          {isLastStep ? (
+            <Button onClick={handleSubmit} disabled={loading} className="min-h-[44px] flex-[2]">
+              {loading ? 'Cadastrando...' : (
+                <>
+                  <Send className="h-4 w-4 mr-1" />
+                  Cadastrar
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button type="button" onClick={handleNext} className="min-h-[44px] flex-[2]">
+              Próximo
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
