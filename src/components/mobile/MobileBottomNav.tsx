@@ -7,12 +7,13 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 import { useUserRole } from "@/hooks/useUserRole";
 import { cn } from "@/lib/utils";
+import { MobileMoreSheet } from "./MobileMoreSheet";
 
 /**
  * MobileBottomNav — fixed bottom navigation for mobile users.
  * Shows role-appropriate tabs:
  * - Client: Jornada, Financeiro, Pendências, Avisos
- * - Staff: Pendências, Cronograma, Executivo, Financeiro
+ * - Staff: Pendências, Cronograma, Executivo, Financeiro, + Mais (sheet)
  * Only rendered on mobile viewports.
  */
 export function MobileBottomNav() {
@@ -79,6 +80,8 @@ export function MobileBottomNav() {
             <span className="truncate">{item.label}</span>
           </NavLink>
         ))}
+        {/* 5th slot: "Mais" sheet for staff */}
+        {isStaff && <MobileMoreSheet />}
       </div>
     </nav>
   );
