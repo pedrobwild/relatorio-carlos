@@ -12,7 +12,7 @@ import { PortfolioKpiStrip, applyKpiFilter, type KpiFilterKey } from './Portfoli
 import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { PortfolioGridPlaceholder } from './PortfolioGridPlaceholder';
-import { PortfolioPreviewDrawer } from './PortfolioPreviewDrawer';
+import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
@@ -198,7 +198,13 @@ export default function PortfolioPage() {
                   )}
                 </div>
               ) : (
-                <ProjectsListView projects={filtered} />
+                <ProjectsListView
+                  projects={filtered}
+                  onProjectClick={(p) => {
+                    setPreviewProject(p);
+                    setDrawerOpen(true);
+                  }}
+                />
               )}
             </PortfolioGridPlaceholder>
           </div>
@@ -206,8 +212,9 @@ export default function PortfolioPage() {
       </main>
 
       {/* Preview Drawer */}
-      <PortfolioPreviewDrawer
+      <WorkQuickPreviewDrawer
         project={previewProject}
+        summary={summaries.find(s => s.id === previewProject?.id) ?? null}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
       />

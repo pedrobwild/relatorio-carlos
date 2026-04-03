@@ -41,9 +41,10 @@ const statusTooltips: Record<string, string> = {
 
 interface ProjectsListViewProps {
   projects: ProjectWithCustomer[];
+  onProjectClick?: (project: ProjectWithCustomer) => void;
 }
 
-export function ProjectsListView({ projects }: ProjectsListViewProps) {
+export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -98,7 +99,7 @@ export function ProjectsListView({ projects }: ProjectsListViewProps) {
                       summary={summary}
                       isExpanded={isExpanded}
                       onToggle={() => toggleExpanded(project.id)}
-                      onNavigate={() => navigate(`/obra/${project.id}`)}
+                      onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
