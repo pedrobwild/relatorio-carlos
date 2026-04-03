@@ -143,7 +143,13 @@ export default function PortfolioPage() {
                 <PortfolioActionInbox
                   projects={projects}
                   summaries={summaries}
-                  onNavigate={(id) => navigate(`/obra/${id}`)}
+                  onNavigate={(id) => {
+                    if (id.startsWith('stale-')) {
+                      setStaleDialogOpen(true);
+                    } else {
+                      navigate(`/obra/${id}`);
+                    }
+                  }}
                 />
                 <PortfolioInsightsPanel projects={projects} summaries={summaries} />
               </>
