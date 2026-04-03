@@ -106,6 +106,14 @@ function ProjectCard({
           {project.customer_name && (
             <p className="text-xs text-muted-foreground truncate mt-0.5">{project.customer_name}</p>
           )}
+          {(project.tamanho_imovel_m2 || project.tipo_de_locacao) && (
+            <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">
+              {[
+                project.tamanho_imovel_m2 ? `${project.tamanho_imovel_m2}m²` : null,
+                project.tipo_de_locacao,
+              ].filter(Boolean).join(' · ')}
+            </p>
+          )}
         </div>
         <Badge variant="outline" className={cn('text-[10px] shrink-0', statusColors[project.status])}>
           {statusLabels[project.status] ?? project.status}

@@ -20,10 +20,10 @@ import { StickySummary } from './nova-obra/StickySummary';
 import { cn } from '@/lib/utils';
 
 const STEPS: Step[] = [
-  { label: 'Dados Básicos', description: 'Informações do projeto' },
-  { label: 'Cronograma', description: 'Datas e prazos' },
-  { label: 'Orçamento', description: 'Financeiro e arquivos' },
-  { label: 'Cliente', description: 'Acesso ao portal' },
+  { label: 'Dados Básicos', description: 'Nome, código e configurações iniciais do projeto' },
+  { label: 'Cronograma', description: 'Datas de início/término e atividades planejadas' },
+  { label: 'Orçamento', description: 'Valores que comporão o gráfico de saúde financeira' },
+  { label: 'Cliente', description: 'Dados de acesso ao portal do cliente' },
 ];
 
 // Fields required per step for validation gating
