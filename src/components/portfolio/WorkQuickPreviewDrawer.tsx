@@ -70,6 +70,7 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
 
   const status = statusConfig[project.status] ?? statusConfig.active;
   const health = summary ? getHealthResult(summary) : null;
+  const detailedHealth = useMemo(() => summary ? computeHealthScore(summary) : null, [summary]);
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 
