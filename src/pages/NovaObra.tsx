@@ -360,6 +360,14 @@ export default function NovaObra() {
             completedSteps={completedSteps}
           />
         </div>
+
+        {/* Mobile bottom sheet summary */}
+        <MobileSummarySheet
+          formData={formData}
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+          totalSteps={STEPS.length}
+        />
       </main>
     </div>
   );
