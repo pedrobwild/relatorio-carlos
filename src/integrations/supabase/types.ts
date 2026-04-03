@@ -3446,6 +3446,7 @@ export type Database = {
           end_date: string | null
           estimated_cost: number | null
           expected_delivery_date: string | null
+          fornecedor_id: string | null
           id: string
           invoice_number: string | null
           item_name: string
@@ -3475,6 +3476,7 @@ export type Database = {
           end_date?: string | null
           estimated_cost?: number | null
           expected_delivery_date?: string | null
+          fornecedor_id?: string | null
           id?: string
           invoice_number?: string | null
           item_name: string
@@ -3504,6 +3506,7 @@ export type Database = {
           end_date?: string | null
           estimated_cost?: number | null
           expected_delivery_date?: string | null
+          fornecedor_id?: string | null
           id?: string
           invoice_number?: string | null
           item_name?: string
@@ -3527,6 +3530,13 @@ export type Database = {
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_purchases_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
             referencedColumns: ["id"]
           },
           {

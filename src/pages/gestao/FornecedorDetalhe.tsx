@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
+import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
 
 type SupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
 
@@ -392,10 +393,14 @@ export default function FornecedorDetalhe() {
               <Tabs defaultValue="precos">
                 <TabsList className="mb-4">
                   <TabsTrigger value="precos">Tabela de Preços</TabsTrigger>
+                  <TabsTrigger value="historico">Histórico de Compras</TabsTrigger>
                   <TabsTrigger value="anexos">Anexos</TabsTrigger>
                 </TabsList>
                 <TabsContent value="precos">
                   <SupplierPricesTab fornecedorId={supplier.id} />
+                </TabsContent>
+                <TabsContent value="historico">
+                  <SupplierPurchaseHistoryTab fornecedorId={supplier.id} />
                 </TabsContent>
                 <TabsContent value="anexos">
                   <SupplierAttachmentsTab fornecedorId={supplier.id} />
