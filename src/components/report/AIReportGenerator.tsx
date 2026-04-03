@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { WeeklyReportData } from "@/types/weeklyReport";
+import { cn } from "@/lib/utils";
 
 interface AIReportGeneratorProps {
   projectId: string;
@@ -25,6 +26,13 @@ interface AIReportGeneratorProps {
   onGenerated: (updatedData: WeeklyReportData) => void;
 }
 
+const GENERATION_STEPS = [
+  { label: "Analisando atividades...", duration: 2500 },
+  { label: "Processando conversas...", duration: 2000 },
+  { label: "Avaliando riscos e pendências...", duration: 2000 },
+  { label: "Compilando relatório...", duration: 3000 },
+];
+
 export function AIReportGenerator({
   projectId,
   weekNumber,
@@ -34,9 +42,29 @@ export function AIReportGenerator({
   onGenerated,
 }: AIReportGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Progress step animation
+  useEffect(() => {
+    if (!isGenerating) {
+      setCurrentStep(0);
+      return;
+    }
+    let stepIdx = 0;
+    const advance = () => {
+      stepIdx++;
+      if (stepIdx < GENERATION_STEPS.length) {
+        setCurrentStep(stepIdx);
+        timer = setTimeout(advance, GENERATION_STEPS[stepIdx].duration);
+      }
+    };
+    let timer = setTimeout(advance, GENERATION_STEPS[0].duration);
+    return () => clearTimeout(timer);
+  }, [isGenerating]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
+    setCurrentStep(0);
     try {
       const { data, error } = await supabase.functions.invoke("generate-weekly-report", {
         body: { projectId, weekNumber, weekStart, weekEnd },
@@ -47,7 +75,6 @@ export function AIReportGenerator({
 
       const generated = data.data;
 
-      // Merge AI data into current report data (preserving gallery, KPIs, etc.)
       const merged: WeeklyReportData = {
         ...currentData,
         executiveSummary: generated.executiveSummary || currentData.executiveSummary,
@@ -95,21 +122,55 @@ export function AIReportGenerator({
             <Sparkles className="h-5 w-5 text-primary" />
             Gerar relatório com IA
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            A IA analisará as atividades, etapas, conversas e pendências do projeto
-            para gerar automaticamente o resumo executivo, tarefas da próxima semana,
-            riscos e decisões pendentes.
-            <br /><br />
-            <strong>O conteúdo atual será substituído.</strong> Você poderá revisar e
-            editar antes de salvar.
-          </AlertDialogDescription>
+          {isGenerating ? (
+            <div className="space-y-4 py-4">
+              {GENERATION_STEPS.map((step, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all duration-300",
+                    idx < currentStep
+                      ? "bg-[hsl(var(--success))] text-white"
+                      : idx === currentStep
+                      ? "bg-primary text-white animate-pulse"
+                      : "bg-muted text-muted-foreground"
+                  )}>
+                    {idx < currentStep ? "✓" : idx + 1}
+                  </div>
+                  <span className={cn(
+                    "text-sm transition-colors duration-300",
+                    idx === currentStep ? "text-foreground font-medium" : 
+                    idx < currentStep ? "text-muted-foreground line-through" : "text-muted-foreground"
+                  )}>
+                    {step.label}
+                  </span>
+                </div>
+              ))}
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden mt-2">
+                <div 
+                  className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${((currentStep + 1) / GENERATION_STEPS.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <AlertDialogDescription>
+              A IA analisará as atividades, etapas, conversas e pendências do projeto
+              para gerar automaticamente o resumo executivo, tarefas da próxima semana,
+              riscos e decisões pendentes.
+              <br /><br />
+              <strong>O conteúdo atual será substituído.</strong> Você poderá revisar e
+              editar antes de salvar.
+            </AlertDialogDescription>
+          )}
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={handleGenerate} disabled={isGenerating}>
-            {isGenerating ? "Gerando..." : "Gerar relatório"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
+        {!isGenerating && (
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleGenerate}>
+              Gerar relatório
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        )}
       </AlertDialogContent>
     </AlertDialog>
   );

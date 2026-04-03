@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { GalleryPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { cn } from "@/lib/utils";
 
 interface PhotoGalleryProps {
   photos: GalleryPhoto[];
@@ -23,17 +24,49 @@ interface PhotoGalleryProps {
 const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (selectedIndex !== null && selectedIndex > 0) {
       setSelectedIndex(selectedIndex - 1);
     }
-  };
+  }, [selectedIndex]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (selectedIndex !== null && selectedIndex < photos.length - 1) {
       setSelectedIndex(selectedIndex + 1);
     }
+  }, [selectedIndex, photos.length]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (selectedIndex === null) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") handlePrevious();
+      if (e.key === "ArrowRight") handleNext();
+      if (e.key === "Escape") setSelectedIndex(null);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [selectedIndex, handlePrevious, handleNext]);
+
+  // Swipe handlers
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+  const onTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) handleNext();
+      else handlePrevious();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   if (photos.length === 0) return null;
@@ -54,6 +87,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
       <img
         src={photo.url}
         alt={photo.caption}
+        loading="lazy"
         className="w-full h-full object-cover transition-transform group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -61,6 +95,30 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
         <p className="text-tiny font-medium text-white line-clamp-2">{photo.caption}</p>
       </div>
     </button>
+  );
+
+  // Mobile: horizontal carousel of thumbnails
+  const MobileCarousel = () => (
+    <div className="overflow-x-auto scrollbar-hide">
+      <div className="flex gap-2 p-2.5 w-max">
+        {photos.map((photo, index) => (
+          <button
+            key={photo.id}
+            onClick={() => setSelectedIndex(index)}
+            className="relative w-28 h-20 rounded-lg overflow-hidden bg-muted shrink-0"
+          >
+            <img
+              src={photo.url}
+              alt={photo.caption}
+              loading="lazy"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <p className="absolute bottom-1 left-1.5 right-1.5 text-[10px] font-medium text-white line-clamp-1">{photo.caption}</p>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 
   return (
@@ -71,6 +129,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
         </h3>
       </div>
       
+      {/* Desktop: Grid */}
       <div className="hidden sm:block p-2.5 sm:p-3">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {photos.map((photo, index) => (
@@ -79,38 +138,14 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
         </div>
       </div>
 
+      {/* Mobile: Horizontal carousel */}
       <div className="sm:hidden">
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <div className="p-2.5">
-            <div className="grid grid-cols-2 gap-1.5">
-              {firstPhotos.map((photo, index) => (
-                <PhotoItem key={photo.id} photo={photo} index={index} />
-              ))}
-              
-              <CollapsibleContent className="col-span-2 overflow-hidden">
-                <div className="grid grid-cols-2 gap-1.5 mt-1.5">
-                  {remainingPhotos.map((photo, index) => (
-                    <PhotoItem key={photo.id} photo={photo} index={firstPhotos.length + index} animationDelay={isOpen ? (index + 1) * 50 : 0} />
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </div>
-          </div>
-          
-          {remainingPhotos.length > 0 && (
-            <CollapsibleTrigger asChild>
-              <button className="w-full py-2 px-3 border-t border-border flex items-center justify-center gap-1.5 text-tiny font-medium text-primary hover:bg-primary/5 transition-colors">
-                <span>{isOpen ? "Ver menos" : "Ver mais"}</span>
-                {!isOpen && <span className="bg-primary/10 px-1.5 py-0.5 rounded-md text-tiny font-semibold">+{remainingPhotos.length}</span>}
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-              </button>
-            </CollapsibleTrigger>
-          )}
-        </Collapsible>
+        <MobileCarousel />
       </div>
 
+      {/* Fullscreen Dialog with swipe */}
       <Dialog open={selectedIndex !== null} onOpenChange={() => setSelectedIndex(null)}>
-        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none max-h-[95dvh]">
+        <DialogContent className="max-w-4xl sm:max-w-4xl w-[100dvw] sm:w-auto h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[95dvh] p-0 bg-black/95 border-none rounded-none sm:rounded-lg">
           <VisuallyHidden>
             <DialogTitle>
               {selectedIndex !== null ? photos[selectedIndex].caption : "Foto"}
@@ -118,22 +153,34 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
           </VisuallyHidden>
           
           {selectedIndex !== null && (
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 z-10 text-white hover:bg-white/20 h-11 w-11"
-                onClick={() => setSelectedIndex(null)}
-                aria-label="Fechar"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+            <div 
+              className="relative h-full flex flex-col"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
+              {/* Top bar */}
+              <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3">
+                <span className="text-white/60 text-xs tabular-nums">
+                  {selectedIndex + 1} / {photos.length}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/20 h-11 w-11"
+                  onClick={() => setSelectedIndex(null)}
+                  aria-label="Fechar"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
 
+              {/* Navigation arrows - hidden on mobile (use swipe) */}
               {selectedIndex > 0 && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20 h-11 w-11"
+                  className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20 h-11 w-11"
                   onClick={handlePrevious}
                   aria-label="Foto anterior"
                 >
@@ -144,7 +191,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20 h-11 w-11"
+                  className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white hover:bg-white/20 h-11 w-11"
                   onClick={handleNext}
                   aria-label="Próxima foto"
                 >
@@ -152,19 +199,39 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 </Button>
               )}
 
-              <div className="flex items-center justify-center min-h-[60vh] p-8">
+              {/* Image */}
+              <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
                 <img
                   src={photos[selectedIndex].url}
                   alt={photos[selectedIndex].caption}
-                  className="max-w-full max-h-[70vh] object-contain rounded"
+                  className="max-w-full max-h-[70dvh] sm:max-h-[70vh] object-contain rounded"
                 />
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+              {/* Caption bar */}
+              <div className="p-4 bg-gradient-to-t from-black to-transparent">
                 <p className="text-white text-caption font-medium">{photos[selectedIndex].caption}</p>
                 <p className="text-white/70 text-tiny">
                   {photos[selectedIndex].area} • {photos[selectedIndex].category} • {format(new Date(photos[selectedIndex].date), "dd/MM/yyyy", { locale: ptBR })}
                 </p>
+              </div>
+
+              {/* Mobile thumbnail strip */}
+              <div className="sm:hidden overflow-x-auto scrollbar-hide border-t border-white/10">
+                <div className="flex gap-1 p-2 w-max">
+                  {photos.map((photo, i) => (
+                    <button
+                      key={photo.id}
+                      onClick={() => setSelectedIndex(i)}
+                      className={cn(
+                        "w-12 h-12 rounded overflow-hidden shrink-0 border-2 transition-all",
+                        i === selectedIndex ? "border-primary opacity-100" : "border-transparent opacity-50"
+                      )}
+                    >
+                      <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
