@@ -37,7 +37,13 @@ const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
 
 const DRAFT_KEY = 'nova-obra-draft';
 
-function loadDraft(): { formData: FormData; step: number } | null {
+interface NovaObraDraft {
+  formData: FormData;
+  step: number;
+  scheduleActivities?: ScheduleActivity[];
+}
+
+function loadDraft(): NovaObraDraft | null {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
@@ -47,9 +53,9 @@ function loadDraft(): { formData: FormData; step: number } | null {
   return null;
 }
 
-function saveDraft(formData: FormData, step: number) {
+function saveDraft(formData: FormData, step: number, scheduleActivities: ScheduleActivity[]) {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, step, savedAt: Date.now() }));
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, step, scheduleActivities, savedAt: Date.now() }));
   } catch { /* ignore */ }
 }
 
@@ -73,13 +79,13 @@ export default function NovaObra() {
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<FormData>(draft?.formData ?? initialFormData);
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
-  const [scheduleActivities, setScheduleActivities] = useState<ScheduleActivity[]>([]);
+  const [scheduleActivities, setScheduleActivities] = useState<ScheduleActivity[]>(draft?.scheduleActivities ?? []);
   const [draftRestored, setDraftRestored] = useState(!!draft);
 
-  // Auto-save draft on formData or step change
+  // Auto-save draft on formData, activities or step change
   useEffect(() => {
-    saveDraft(formData, currentStep);
-  }, [formData, currentStep]);
+    saveDraft(formData, currentStep, scheduleActivities);
+  }, [formData, currentStep, scheduleActivities]);
 
   const templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
