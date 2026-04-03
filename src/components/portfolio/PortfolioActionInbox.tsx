@@ -120,13 +120,13 @@ function buildActionItems(
         items.push({
           id: `stale-${p.id}`,
           projectName: p.name,
-          projectId: p.id,
+          projectId: `stale-${p.id}`,
           reason: staleDays ? `${staleDays} dias sem atualização` : 'Sem atualização registrada',
           responsible: p.engineer_name ?? null,
           urgency: (staleDays ?? 8) >= 14 ? 'high' : 'medium',
           deadline: null,
           icon: <ClipboardX className="h-4 w-4" />,
-          cta: 'Atualizar',
+          cta: 'Ver todas',
         });
       }
     }
