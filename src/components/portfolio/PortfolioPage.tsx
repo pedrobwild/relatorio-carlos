@@ -1,9 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { AppHeader } from '@/components/AppHeader';
-import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
@@ -18,14 +15,38 @@ import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
 import { ActiveFilterChips } from './filters/ActiveFilterChips';
 import { type AdvancedFilters, emptyFilters, isFiltersEmpty } from './filters/types';
 import { applyAdvancedFilters } from './filters/applyFilters';
+import {
+  PortfolioPageSkeleton,
+  KpiStripSkeleton,
+  SidebarSkeleton,
+  GridSkeleton,
+  EmptyPortfolio,
+  NoFilterResults,
+  PortfolioErrorState,
+  StaleDataBanner,
+  PartialErrorBanner,
+} from './PortfolioStates';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
 export default function PortfolioPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: projects = [], isLoading, error, refetch } = useProjectsQuery();
-  const { data: summaries = [] } = useProjectSummaryQuery();
+  const {
+    data: projects = [],
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    dataUpdatedAt,
+    isStale,
+  } = useProjectsQuery();
+  const {
+    data: summaries = [],
+    isLoading: summariesLoading,
+    error: summariesError,
+    refetch: refetchSummaries,
+  } = useProjectSummaryQuery();
 
   // Search
   const search = searchParams.get('q') || '';
@@ -60,6 +81,9 @@ export default function PortfolioPage() {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<ProjectWithCustomer | null>(null);
 
+  // Derived: has any filter active
+  const hasAnyFilter = search || activePreset !== 'all' || kpiFilter || !isFiltersEmpty(advancedFilters);
+
   // Count active advanced filter dimensions
   const activeFilterCount = useMemo(() => {
     const f = advancedFilters;
@@ -74,11 +98,15 @@ export default function PortfolioPage() {
     ].reduce((a, b) => a + b, 0);
   }, [advancedFilters]);
 
+  const totalFilterCount = activeFilterCount
+    + (search ? 1 : 0)
+    + (activePreset !== 'all' ? 1 : 0)
+    + (kpiFilter ? 1 : 0);
+
   // --- Filtering pipeline ---
   const filtered = useMemo(() => {
     let result = projects;
 
-    // Text search
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(p =>
@@ -90,7 +118,6 @@ export default function PortfolioPage() {
       );
     }
 
-    // Preset filters
     switch (activePreset) {
       case 'mine':
         result = result.filter(p => p.engineer_user_id === user?.id);
@@ -115,12 +142,10 @@ export default function PortfolioPage() {
         break;
     }
 
-    // KPI filter
     if (kpiFilter) {
       result = applyKpiFilter(result, summaries, kpiFilter);
     }
 
-    // Advanced filters
     if (!isFiltersEmpty(advancedFilters)) {
       result = applyAdvancedFilters(result, summaries, advancedFilters);
     }
@@ -139,6 +164,38 @@ export default function PortfolioPage() {
     setAdvancedFilters(emptyFilters);
   }, [setSearch]);
 
+  // ─── Full-page loading (first load, no cached data) ─────────────────────
+  if (isLoading && projects.length === 0) {
+    return (
+      <div className="flex-1 bg-background">
+        <AppHeader>
+          <div className="ml-2">
+            <h1 className="text-h3 font-bold sr-only">Gestão de Obras</h1>
+          </div>
+        </AppHeader>
+        <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-4 space-y-4">
+          <PortfolioPageSkeleton />
+        </main>
+      </div>
+    );
+  }
+
+  // ─── Full-page error (no data at all) ───────────────────────────────────
+  if (error && projects.length === 0) {
+    return (
+      <div className="flex-1 bg-background">
+        <AppHeader>
+          <div className="ml-2">
+            <h1 className="text-h3 font-bold sr-only">Gestão de Obras</h1>
+          </div>
+        </AppHeader>
+        <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-4">
+          <PortfolioErrorState error={error} onRetry={() => refetch()} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 bg-background">
       <AppHeader>
@@ -148,6 +205,11 @@ export default function PortfolioPage() {
       </AppHeader>
 
       <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-4 space-y-4">
+        {/* Stale data banner */}
+        {isStale && !isLoading && projects.length > 0 && (
+          <StaleDataBanner onRefresh={() => refetch()} isRefetching={isRefetching} />
+        )}
+
         {/* Command Bar */}
         <PortfolioCommandBar
           search={search}
@@ -169,69 +231,57 @@ export default function PortfolioPage() {
         />
 
         {/* KPI Strip */}
-        <PortfolioKpiStrip
-          projects={projects}
-          summaries={summaries}
-          activeFilter={kpiFilter}
-          onFilterChange={handleKpiFilterChange}
-        />
+        {summariesLoading && summaries.length === 0 ? (
+          <KpiStripSkeleton />
+        ) : (
+          <PortfolioKpiStrip
+            projects={projects}
+            summaries={summaries}
+            activeFilter={kpiFilter}
+            onFilterChange={handleKpiFilterChange}
+          />
+        )}
 
         {/* Content: Inbox + Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
           {/* Action Inbox + Insights sidebar */}
           <aside className="order-2 lg:order-1 space-y-4">
-            <PortfolioActionInbox
-              projects={projects}
-              summaries={summaries}
-              onNavigate={(id) => navigate(`/obra/${id}`)}
-            />
-            <PortfolioInsightsPanel
-              projects={projects}
-              summaries={summaries}
-            />
+            {summariesLoading && summaries.length === 0 ? (
+              <SidebarSkeleton />
+            ) : summariesError && summaries.length === 0 ? (
+              <PartialErrorBanner
+                section="painel de ações"
+                onRetry={() => refetchSummaries()}
+              />
+            ) : (
+              <>
+                <PortfolioActionInbox
+                  projects={projects}
+                  summaries={summaries}
+                  onNavigate={(id) => navigate(`/obra/${id}`)}
+                />
+                <PortfolioInsightsPanel
+                  projects={projects}
+                  summaries={summaries}
+                />
+              </>
+            )}
           </aside>
 
           {/* Main grid area */}
           <div className="order-1 lg:order-2">
             <PortfolioGridPlaceholder>
               {isLoading ? (
-                <ContentSkeleton variant="table" rows={6} />
+                <GridSkeleton rows={6} />
               ) : error ? (
-                <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-8 text-center">
-                  <p className="text-sm text-destructive">
-                    Erro ao carregar obras: {String(error)}
-                  </p>
-                </div>
+                <PortfolioErrorState error={error} onRetry={() => refetch()} />
+              ) : projects.length === 0 ? (
+                <EmptyPortfolio onCreateProject={() => navigate('/gestao/nova-obra')} />
               ) : filtered.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-12 text-center">
-                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-                  {search || activePreset !== 'all' || kpiFilter || !isFiltersEmpty(advancedFilters) ? (
-                    <>
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        Nenhuma obra encontrada
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Ajuste a busca ou selecione outro filtro.
-                      </p>
-                      <Button variant="outline" size="sm" onClick={handleClearAll}>
-                        Limpar todos os filtros
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        Cadastre sua primeira obra
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Gerencie cronogramas, financeiro e a jornada completa.
-                      </p>
-                      <Button size="sm" onClick={() => navigate('/gestao/nova-obra')}>
-                        <Plus className="h-4 w-4 mr-1.5" />
-                        Criar nova obra
-                      </Button>
-                    </>
-                  )}
-                </div>
+                <NoFilterResults
+                  onClearFilters={handleClearAll}
+                  activeFilterCount={totalFilterCount}
+                />
               ) : (
                 <ProjectsListView
                   projects={filtered}
