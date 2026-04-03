@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { AdvancedFilters } from './types';
-import { getActiveFilterChips, removeFilterChip, isFiltersEmpty } from './types';
+import { getActiveFilterChips, removeFilterChip, isFiltersEmpty, emptyFilters } from './types';
 
 interface ActiveFilterChipsProps {
   filters: AdvancedFilters;
