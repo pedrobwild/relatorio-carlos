@@ -386,26 +386,31 @@ export default function FornecedorDetalhe() {
           </Card>
         </div>
 
-        {/* Right column: prices & attachments */}
+        {/* Right column */}
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardContent className="pt-6">
               <Tabs defaultValue="precos">
                 <TabsList className="mb-4">
                   <TabsTrigger value="precos">Tabela de Preços</TabsTrigger>
-                  <TabsTrigger value="historico">Histórico de Compras</TabsTrigger>
                   <TabsTrigger value="anexos">Anexos</TabsTrigger>
                 </TabsList>
                 <TabsContent value="precos">
                   <SupplierPricesTab fornecedorId={supplier.id} />
                 </TabsContent>
-                <TabsContent value="historico">
-                  <SupplierPurchaseHistoryTab fornecedorId={supplier.id} />
-                </TabsContent>
                 <TabsContent value="anexos">
                   <SupplierAttachmentsTab fornecedorId={supplier.id} />
                 </TabsContent>
               </Tabs>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Histórico de Compras</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SupplierPurchaseHistoryTab fornecedorId={supplier.id} />
             </CardContent>
           </Card>
         </div>
