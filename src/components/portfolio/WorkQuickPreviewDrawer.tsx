@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ExternalLink, HeartPulse, Clock, FileText, FileSignature,
+  HeartPulse, Clock, FileText, FileSignature,
   AlertTriangle, CheckCircle, Calendar, User, Building2,
   MapPin, Ruler, TrendingDown, ArrowRight,
 } from 'lucide-react';
@@ -12,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { getHealthResult } from './lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
