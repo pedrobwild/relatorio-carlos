@@ -10,6 +10,7 @@ import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar, type PortfolioPreset, type ViewMode } from './PortfolioCommandBar';
 import { PortfolioKpiStrip, applyKpiFilter, type KpiFilterKey } from './PortfolioKpiStrip';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
+import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { PortfolioGridPlaceholder } from './PortfolioGridPlaceholder';
 import { PortfolioPreviewDrawer } from './PortfolioPreviewDrawer';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
@@ -134,9 +135,17 @@ export default function PortfolioPage() {
 
         {/* Content: Inbox + Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
-          {/* Action Inbox sidebar */}
-          <aside className="order-2 lg:order-1">
-            <PortfolioActionInbox />
+          {/* Action Inbox + Insights sidebar */}
+          <aside className="order-2 lg:order-1 space-y-4">
+            <PortfolioActionInbox
+              projects={projects}
+              summaries={summaries}
+              onNavigate={(id) => navigate(`/obra/${id}`)}
+            />
+            <PortfolioInsightsPanel
+              projects={projects}
+              summaries={summaries}
+            />
           </aside>
 
           {/* Main grid area */}
