@@ -55,6 +55,7 @@ interface WorkQuickPreviewDrawerProps {
 
 export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }: WorkQuickPreviewDrawerProps) {
   const navigate = useNavigate();
+  const detailedHealth = useMemo(() => summary ? computeHealthScore(summary) : null, [summary]);
 
   if (!project) {
     return (
