@@ -130,7 +130,7 @@ const WeeklyReportTemplate = ({
 
         {/* Risks, Issues, Action Plans */}
         {data.risksAndIssues.length > 0 && (
-          <RisksIssuesSection issues={data.risksAndIssues} />
+          <RisksIssuesSection issues={data.risksAndIssues} isStaff={isStaff} />
         )}
 
         {/* Incidents */}
