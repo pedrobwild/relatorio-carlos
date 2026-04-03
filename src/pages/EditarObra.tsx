@@ -63,6 +63,7 @@ export default function EditarObra() {
   }
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -74,16 +75,29 @@ export default function EditarObra() {
               </Button>
               <div>
                 <h1 className="text-h3 font-bold">{data.project.name}</h1>
-                <p className="text-tiny text-muted-foreground">Editar dados da obra</p>
+                <p className="text-tiny text-muted-foreground">
+                  {canEdit ? 'Editar dados da obra' : 'Visualizando dados da obra'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={() => navigate(`/obra/${projectId}`)}>Ver Portal</Button>
-              <Button onClick={data.saveProject} disabled={data.saving}>
-                {data.saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                Salvar
-              </Button>
-              {isAdmin && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={canEdit ? -1 : 0}>
+                    <Button onClick={data.saveProject} disabled={data.saving || !canEdit}>
+                      {data.saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                      Salvar
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!canEdit && (
+                  <TooltipContent>
+                    <p className="text-xs">Sua permissão é apenas de visualização</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+              {isAdmin ? (
                 <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
@@ -104,6 +118,19 @@ export default function EditarObra() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+              ) : !canEdit ? null : (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={0}>
+                      <Button variant="destructive" size="icon" disabled>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Apenas administradores podem excluir obras</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           </div>
