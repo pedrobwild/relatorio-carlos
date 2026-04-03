@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import bwildLogo from "@/assets/bwild-logo-dark.png";
-import { ArrowLeft, Bell, Building2, ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ProjectSwitcherSheet } from "@/components/mobile/ProjectSwitcherSheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { formatDateShort } from "./types";
