@@ -1000,6 +1000,94 @@ export type Database = {
           },
         ]
       }
+      fornecedor_anexos: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          fornecedor_id: string
+          id: string
+          mime_type: string | null
+          tipo: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          fornecedor_id: string
+          id?: string
+          mime_type?: string | null
+          tipo?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          fornecedor_id?: string
+          id?: string
+          mime_type?: string | null
+          tipo?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornecedor_anexos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fornecedor_precos: {
+        Row: {
+          created_at: string | null
+          data_validade: string | null
+          descricao: string
+          fornecedor_id: string
+          id: string
+          observacoes: string | null
+          preco_unitario: number
+          unidade: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_validade?: string | null
+          descricao: string
+          fornecedor_id: string
+          id?: string
+          observacoes?: string | null
+          preco_unitario: number
+          unidade?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_validade?: string | null
+          descricao?: string
+          fornecedor_id?: string
+          id?: string
+          observacoes?: string | null
+          preco_unitario?: number
+          unidade?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornecedor_precos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fornecedores: {
         Row: {
           categoria: Database["public"]["Enums"]["supplier_category"]
