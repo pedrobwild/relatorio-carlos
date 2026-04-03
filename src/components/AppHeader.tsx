@@ -56,19 +56,6 @@ export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) 
               <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
             ) : isAuthenticated ? (
               <>
-                {/* Admin Settings Button */}
-                {isAdmin && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => navigate('/admin')}
-                    className="gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span className="hidden sm:inline">Configurações</span>
-                  </Button>
-                )}
-                
                 <ErrorBoundary name="NotificationBell" feature="general" fallback={null}>
                   <NotificationBell />
                 </ErrorBoundary>

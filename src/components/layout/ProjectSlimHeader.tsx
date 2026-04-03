@@ -41,6 +41,20 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Canceladas",
 };
 
+const STATUS_BADGE_STYLES: Record<string, string> = {
+  active: "bg-primary/15 text-primary border-primary/25",
+  paused: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25",
+  completed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/25",
+  cancelled: "bg-muted text-muted-foreground border-border",
+};
+
+const STATUS_SHORT_LABELS: Record<string, string> = {
+  active: "Em andamento",
+  paused: "Pausada",
+  completed: "Concluída",
+  cancelled: "Cancelada",
+};
+
 const STATUS_ORDER = ["active", "paused", "completed", "cancelled"];
 
 export function ProjectSlimHeader() {

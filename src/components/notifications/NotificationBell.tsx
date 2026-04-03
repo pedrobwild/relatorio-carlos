@@ -207,7 +207,7 @@ export function NotificationBell() {
               className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-destructive data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[36px] text-xs"
             >
               <AlertCircle className="w-3 h-3 mr-1 text-destructive" />
-              Requer atenção
+              Precisa de Atenção
               {unreadActionCount > 0 && (
                 <Badge variant="destructive" className="ml-1.5 h-4 min-w-[16px] px-1 text-[10px] animate-pulse">
                   {unreadActionCount}
@@ -219,7 +219,7 @@ export function NotificationBell() {
               className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none min-h-[36px] text-xs"
             >
               <Calendar className="w-3 h-3 mr-1 text-primary" />
-              Atualizações
+              Apenas Informativo
             </TabsTrigger>
           </TabsList>
 
