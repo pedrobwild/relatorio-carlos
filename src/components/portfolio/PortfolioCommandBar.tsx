@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, SlidersHorizontal, Download, Plus, LayoutGrid, List, Table2,
@@ -25,7 +24,7 @@ const presets: { key: PortfolioPreset; label: string; description: string }[] = 
   { key: 'mine', label: 'Minhas obras', description: 'Obras atribuídas a mim' },
   { key: 'critical', label: 'Obras críticas', description: 'Saúde baixa ou em atraso' },
   { key: 'stale', label: 'Sem atualização', description: 'Sem atividade recente' },
-  { key: 'due-soon', label: 'Vencendo em breve', description: 'Prazo nos próximos 30 dias' },
+  { key: 'due-soon', label: 'Vencendo em breve', description: 'Prazo nos próximos 7 dias' },
 ];
 
 interface PortfolioCommandBarProps {
@@ -36,6 +35,9 @@ interface PortfolioCommandBarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   totalCount: number;
+  filteredCount: number;
+  activeFilterCount: number;
+  onOpenFilters: () => void;
 }
 
 export function PortfolioCommandBar({
@@ -46,8 +48,14 @@ export function PortfolioCommandBar({
   viewMode,
   onViewModeChange,
   totalCount,
+  filteredCount,
+  activeFilterCount,
+  onOpenFilters,
 }: PortfolioCommandBarProps) {
   const navigate = useNavigate();
+
+  const hasActiveFilters = activeFilterCount > 0 || search.length > 0 || activePreset !== 'all';
+  const showingSubset = filteredCount < totalCount;
 
   return (
     <div className="space-y-3">
@@ -61,7 +69,7 @@ export function PortfolioCommandBar({
             variant="secondary"
             className="tabular-nums text-xs font-semibold bg-muted text-muted-foreground"
           >
-            {totalCount} obras
+            {showingSubset ? `${filteredCount} de ${totalCount}` : `${totalCount}`} obras
           </Badge>
         </div>
 
@@ -92,13 +100,26 @@ export function PortfolioCommandBar({
             ))}
           </div>
 
+          {/* Filters button */}
           <Button
-            variant="outline"
+            variant={activeFilterCount > 0 ? 'default' : 'outline'}
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className={cn(
+              'h-8 gap-1.5 text-xs relative',
+              activeFilterCount > 0 && 'shadow-sm'
+            )}
+            onClick={onOpenFilters}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Filtros</span>
+            {activeFilterCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="h-4 min-w-[16px] px-1 text-[9px] font-bold bg-primary-foreground/20 text-primary-foreground"
+              >
+                {activeFilterCount}
+              </Badge>
+            )}
           </Button>
 
           <Button
