@@ -167,6 +167,16 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
           <p className="font-medium text-foreground">{formData.customer_name}</p>
           {formData.customer_email && <p>{formData.customer_email}</p>}
         </Section>
+        {/* Save Draft Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2 text-xs mt-3"
+          onClick={handleSaveDraft}
+        >
+          <Save className="h-3.5 w-3.5" />
+          Continuar depois
+        </Button>
       </div>
     </div>
   );
