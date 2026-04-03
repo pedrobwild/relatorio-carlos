@@ -9,7 +9,9 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SearchResult {
@@ -28,6 +30,7 @@ export function GlobalSearchDialog() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { projectId, paths } = useProjectNavigation();
+  const isMobile = useIsMobile();
 
   // Keyboard shortcut: Cmd+K / Ctrl+K
   useEffect(() => {
@@ -162,16 +165,32 @@ export function GlobalSearchDialog() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 h-8 px-3 rounded-md border border-input bg-background text-muted-foreground text-sm hover:bg-accent transition-colors w-48 lg:w-64"
-      >
-        <Search className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate flex-1 text-left">Buscar…</span>
-        <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
-          ⌘K
-        </kbd>
-      </button>
+      {/* Desktop: text input style trigger */}
+      {!isMobile && (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 h-8 px-3 rounded-md border border-input bg-background text-muted-foreground text-sm hover:bg-accent transition-colors w-48 lg:w-64"
+        >
+          <Search className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate flex-1 text-left">Buscar…</span>
+          <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+            ⌘K
+          </kbd>
+        </button>
+      )}
+
+      {/* Mobile: icon button */}
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setOpen(true)}
+          className="h-9 w-9"
+          aria-label="Buscar"
+        >
+          <Search className="h-4.5 w-4.5" />
+        </Button>
+      )}
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
