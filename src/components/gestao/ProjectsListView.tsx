@@ -234,7 +234,7 @@ function ProjectRow({
                   {statusLabels[project.status]}
                 </Badge>
                 {project.is_project_phase && (
-                  <span className="text-[10px] text-purple-600 font-medium">Fase Projeto</span>
+                  <span className="text-[10px] text-accent-foreground font-medium">Fase Projeto</span>
                 )}
               </div>
             </TooltipTrigger>
@@ -242,7 +242,7 @@ function ProjectRow({
               <p className="text-xs font-medium mb-1">Status da Obra: {statusLabels[project.status]}</p>
               <p className="text-xs text-muted-foreground">{statusTooltips[project.status]}</p>
               {project.is_project_phase && (
-                <p className="text-xs text-purple-600 mt-1">Fase de Projeto — planejamento e aprovações</p>
+                <p className="text-xs text-accent-foreground mt-1">Fase de Projeto — planejamento e aprovações</p>
               )}
             </TooltipContent>
           </Tooltip>
