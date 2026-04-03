@@ -432,11 +432,23 @@ export default function DadosCliente() {
             </div>
             <div>
               <Label>Tipo de locação</Label>
-              <Input
+              <Select
                 value={studio?.tipo_de_locacao || ''}
-                onChange={(e) => updateStudio('tipo_de_locacao', e.target.value || null)}
-                placeholder="Ex: Residencial"
-              />
+                onValueChange={(v) => updateStudio('tipo_de_locacao', v || null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Residencial">Residencial</SelectItem>
+                  <SelectItem value="Comercial">Comercial</SelectItem>
+                  <SelectItem value="Apartamento">Apartamento</SelectItem>
+                  <SelectItem value="Casa">Casa</SelectItem>
+                  <SelectItem value="Studio">Studio</SelectItem>
+                  <SelectItem value="Cobertura">Cobertura</SelectItem>
+                  <SelectItem value="Sala Comercial">Sala Comercial</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Data recebimento das chaves</Label>
