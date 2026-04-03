@@ -98,7 +98,6 @@ function computeKpiValues(
       const refTime = ref ? new Date(ref).getTime() : 0;
       if (refTime > 0 && now - refTime > MS_STALE) stale7d++;
     }
-    }
 
     if (s) {
       pendingDocsTotal += s.pending_documents;
