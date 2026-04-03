@@ -47,6 +47,25 @@ export default function PortfolioPage() {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<ProjectWithCustomer | null>(null);
 
+  // ── Stale projects dialog ──────────────────────────────────────────────
+  const [staleDialogOpen, setStaleDialogOpen] = useState(false);
+
+  const handleKpiFilterChange = useCallback((key: typeof filters.kpiFilter) => {
+    if (key === 'stale-7d') {
+      setStaleDialogOpen(true);
+    } else {
+      filters.setKpiFilter(key);
+    }
+  }, [filters]);
+
+  const handleStaleAction = useCallback((projectId: string) => {
+    if (projectId.startsWith('stale-')) {
+      setStaleDialogOpen(true);
+    } else {
+      navigate(`/obra/${projectId}`);
+    }
+  }, [navigate]);
+
   // ── Full-page loading ───────────────────────────────────────────────────
   if (isLoading && projects.length === 0) {
     return (
