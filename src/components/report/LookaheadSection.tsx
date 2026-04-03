@@ -25,6 +25,13 @@ const getRiskBadge = (risk: LookaheadTask["risk"]) => {
   }
 };
 
+const getActionVerb = (description: string) => {
+  const lower = description.toLowerCase().trim();
+  const startsWithVerb = /^(finalizar|iniciar|concluir|instalar|aguardar|preparar|revisar|aprovar|executar|realizar|entregar|montar|pintar|aplicar|testar|verificar)/i.test(lower);
+  if (startsWithVerb) return description;
+  return description;
+};
+
 const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animationDelay?: number }) => (
   <div 
     className="px-5 py-3 sm:px-6 sm:py-4 space-y-2"
@@ -38,20 +45,27 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
       <div className="flex-1">
         <div className="flex flex-wrap items-center gap-1.5 mb-1">
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
-            {format(new Date(task.date), "dd/MM", { locale: ptBR })}
+            {format(new Date(task.date), "EEEE, dd/MM", { locale: ptBR })}
           </span>
           {getRiskBadge(task.risk)}
         </div>
-        <p className="text-sm font-medium text-foreground leading-[1.6]">{task.description}</p>
+        <p className="text-sm font-medium text-foreground leading-[1.6]">
+          {getActionVerb(task.description)}
+        </p>
+        {task.responsible && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Responsável: <span className="font-medium text-foreground/80">{task.responsible}</span>
+          </p>
+        )}
       </div>
     </div>
     
-    <div className="flex flex-col gap-1 text-sm text-foreground/75">
-      <div className="flex items-start gap-1.5">
+    {task.prerequisites && (
+      <div className="flex items-start gap-1.5 text-sm text-foreground/75">
         <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-        <span className="leading-[1.6]"><span className="font-medium text-foreground/90">Pré-requisito:</span> {task.prerequisites}</span>
+        <span className="leading-[1.6]"><span className="font-medium text-foreground/90">Depende de:</span> {task.prerequisites}</span>
       </div>
-    </div>
+    )}
     
     {task.riskReason && (
       <div className="flex items-start gap-1.5 text-xs bg-warning/10 p-2.5 rounded-lg">
@@ -70,7 +84,9 @@ const LookaheadSection = ({ tasks }: LookaheadSectionProps) => {
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="px-4 py-2.5 bg-primary-dark">
-        <h3 className="text-base font-semibold text-white tracking-tight">Plano da Próxima Semana</h3>
+        <h3 className="text-base font-semibold text-white tracking-tight">
+          Na próxima semana vamos focar em:
+        </h3>
       </div>
       
       {/* Desktop: Always show all tasks */}

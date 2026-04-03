@@ -1,5 +1,5 @@
 import { WeeklyReportData, DeliverableItem } from "@/types/weeklyReport";
-import { CheckCircle2, ChevronDown } from "lucide-react";
+import { CheckCircle2, ChevronDown, FileText } from "lucide-react";
 import { useState, useMemo } from "react";
 import {
   Collapsible,
@@ -16,6 +16,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const isHtml = /<[a-z][\s\S]*>/i.test(data.executiveSummary);
+  const isEmpty = !data.executiveSummary || data.executiveSummary.trim().length < 50;
 
   const sanitizedHtml = useMemo(() => {
     if (isHtml) {
@@ -30,6 +31,19 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
   const remainingParagraphs = paragraphs.slice(1);
 
   const renderContent = () => {
+    if (isEmpty) {
+      return (
+        <div className="flex items-start gap-3 py-2">
+          <FileText className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-muted-foreground leading-[1.6]">
+              Seu relatório está sendo finalizado pela equipe. Detalhes técnicos disponíveis abaixo ⬇️
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     if (isHtml) {
       return (
         <div
@@ -61,7 +75,11 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
 
         {/* Mobile: Collapsible content */}
         <div className="sm:hidden">
-          {isHtml ? (
+          {isEmpty ? (
+            <div className="px-4 py-3">
+              {renderContent()}
+            </div>
+          ) : isHtml ? (
             <Collapsible open={isOpen} onOpenChange={setIsOpen}>
               <div className="px-4 py-3">
                 <CollapsibleContent className="overflow-hidden" forceMount>
@@ -121,7 +139,7 @@ const ExecutiveSummary = ({ data }: ExecutiveSummaryProps) => {
                   </div>
                   {item.subItems && item.subItems.length > 0 && (
                     <ul className="ml-6 space-y-1 border-l-2 border-border pl-3">
-                      {item.subItems.map((subItem, subIndex) => (
+                      {item.subItems.map((subItem) => (
                         <li key={subItem.id} className="text-sm text-foreground/75 leading-[1.6]">
                           {subItem.description}
                         </li>
