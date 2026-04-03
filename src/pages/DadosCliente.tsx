@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Save, User, Building2, Loader2, Search } from 'lucide-react';
@@ -431,11 +432,23 @@ export default function DadosCliente() {
             </div>
             <div>
               <Label>Tipo de locação</Label>
-              <Input
+              <Select
                 value={studio?.tipo_de_locacao || ''}
-                onChange={(e) => updateStudio('tipo_de_locacao', e.target.value || null)}
-                placeholder="Ex: Residencial"
-              />
+                onValueChange={(v) => updateStudio('tipo_de_locacao', v || null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Residencial">Residencial</SelectItem>
+                  <SelectItem value="Comercial">Comercial</SelectItem>
+                  <SelectItem value="Apartamento">Apartamento</SelectItem>
+                  <SelectItem value="Casa">Casa</SelectItem>
+                  <SelectItem value="Studio">Studio</SelectItem>
+                  <SelectItem value="Cobertura">Cobertura</SelectItem>
+                  <SelectItem value="Sala Comercial">Sala Comercial</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Data recebimento das chaves</Label>

@@ -176,10 +176,22 @@ export default function PortfolioPage() {
                 onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
               />
             ) : (
-              <ProjectsListView
-                projects={filters.filtered}
-                onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-              />
+              <>
+                {/* Mobile: always show cards for better usability */}
+                <div className="block md:hidden">
+                  <ProjectsCardView
+                    projects={filters.filtered}
+                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                  />
+                </div>
+                {/* Desktop: show list/table view */}
+                <div className="hidden md:block">
+                  <ProjectsListView
+                    projects={filters.filtered}
+                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                  />
+                </div>
+              </>
             )}
           </section>
         </div>
