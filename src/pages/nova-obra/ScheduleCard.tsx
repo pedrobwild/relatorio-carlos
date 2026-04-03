@@ -91,7 +91,10 @@ function normalizeActivitiesWithDates(
   if (activities.length === 0) return null;
 
   let changed = false;
-  const normalized = activities.map((activity, index, list) => {
+  const normalized: ScheduleActivity[] = [];
+
+  for (let index = 0; index < activities.length; index += 1) {
+    const activity = activities[index];
     let next = activity;
 
     if (index === 0) {
@@ -109,10 +112,11 @@ function normalizeActivitiesWithDates(
         changed = true;
       }
 
-      return next;
+      normalized.push(next);
+      continue;
     }
 
-    const previous = normalized[index - 1] ?? list[index - 1];
+    const previous = normalized[index - 1] ?? activities[index - 1];
 
     if (!next.plannedStart && previous?.plannedEnd) {
       const previousEnd = new Date(previous.plannedEnd + 'T00:00:00');
@@ -129,8 +133,8 @@ function normalizeActivitiesWithDates(
       changed = true;
     }
 
-    return next;
-  });
+    normalized.push(next);
+  }
 
   return changed ? normalized : null;
 }
@@ -229,25 +233,17 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     }
   }, [formData.planned_start_date, formData.business_days_duration]);
 
-  // Normalize dates only when planned_start_date changes (not on every activities change)
-  const prevStartDateRef = useRef(formData.planned_start_date);
   useEffect(() => {
     if (skipNormalizeRef.current) {
       skipNormalizeRef.current = false;
       return;
     }
-    // Only auto-fill dates when start date changes or on first render with activities
-    const startChanged = prevStartDateRef.current !== formData.planned_start_date;
-    prevStartDateRef.current = formData.planned_start_date;
-    
-    if (activities.length === 0) return;
-    
+
     const normalized = normalizeActivitiesWithDates(activities, formData.planned_start_date);
-    if (normalized && startChanged) {
+    if (normalized) {
       safeSetActivities(normalized);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.planned_start_date]);
+  }, [activities, formData.planned_start_date, safeSetActivities]);
 
   const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
 
