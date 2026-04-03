@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { addBusinessDays, isHoliday, isNonBusinessDay } from '@/lib/businessDays';
+import { addBusinessDays, isHoliday } from '@/lib/businessDays';
 import { cn } from '@/lib/utils';
 import type { FormData } from './types';
 
@@ -24,7 +24,6 @@ const toISO = (d: Date) => {
   return `${y}-${m}-${day}`;
 };
 
-/** Find Friday of the same week as the given date. If it's a holiday, go back until a business day. */
 const getFridayOfWeek = (date: Date): Date => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -32,14 +31,15 @@ const getFridayOfWeek = (date: Date): Date => {
   const daysUntilFriday = dayOfWeek <= 5 ? 5 - dayOfWeek : -1;
   const friday = new Date(d);
   friday.setDate(friday.getDate() + daysUntilFriday);
+
   while (isHoliday(friday)) {
     friday.setDate(friday.getDate() - 1);
   }
+
   if (friday < date) return new Date(date);
   return friday;
 };
 
-/** Find the next Monday after a given date */
 const getNextMonday = (date: Date): Date => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -49,6 +49,57 @@ const getNextMonday = (date: Date): Date => {
   monday.setDate(monday.getDate() + daysUntilMonday);
   return monday;
 };
+
+function normalizeActivitiesWithDates(
+  activities: ScheduleActivity[],
+  plannedStartDate: string,
+): ScheduleActivity[] | null {
+  if (activities.length === 0) return null;
+
+  let changed = false;
+  const normalized = activities.map((activity, index, list) => {
+    let next = activity;
+
+    if (index === 0) {
+      if (!next.plannedStart && plannedStartDate) {
+        const start = new Date(plannedStartDate + 'T00:00:00');
+        next = {
+          ...next,
+          plannedStart: plannedStartDate,
+          plannedEnd: next.plannedEnd || toISO(getFridayOfWeek(start)),
+        };
+        changed = true;
+      } else if (next.plannedStart && !next.plannedEnd) {
+        const start = new Date(next.plannedStart + 'T00:00:00');
+        next = { ...next, plannedEnd: toISO(getFridayOfWeek(start)) };
+        changed = true;
+      }
+
+      return next;
+    }
+
+    const previous = normalized[index - 1] ?? list[index - 1];
+
+    if (!next.plannedStart && previous?.plannedEnd) {
+      const previousEnd = new Date(previous.plannedEnd + 'T00:00:00');
+      const nextMonday = getNextMonday(previousEnd);
+      next = {
+        ...next,
+        plannedStart: toISO(nextMonday),
+        plannedEnd: next.plannedEnd || toISO(getFridayOfWeek(nextMonday)),
+      };
+      changed = true;
+    } else if (next.plannedStart && !next.plannedEnd) {
+      const start = new Date(next.plannedStart + 'T00:00:00');
+      next = { ...next, plannedEnd: toISO(getFridayOfWeek(start)) };
+      changed = true;
+    }
+
+    return next;
+  });
+
+  return changed ? normalized : null;
+}
 
 export const createEmptyActivity = (): ScheduleActivity => ({
   id: crypto.randomUUID(),
@@ -96,36 +147,24 @@ function AutoTextarea({
 }
 
 export function ScheduleCard({ formData, onChange, activities, onActivitiesChange }: ScheduleCardProps) {
-  // Auto-calculate end date when start date + business days are set
   useEffect(() => {
     const days = parseInt(formData.business_days_duration, 10);
     if (formData.planned_start_date && days > 0) {
       const start = new Date(formData.planned_start_date + 'T00:00:00');
       const end = addBusinessDays(start, days);
-      const y = end.getFullYear();
-      const m = (end.getMonth() + 1).toString().padStart(2, '0');
-      const d = end.getDate().toString().padStart(2, '0');
-      const computed = `${y}-${m}-${d}`;
+      const computed = toISO(end);
       if (formData.planned_end_date !== computed) {
         onChange('planned_end_date', computed);
       }
     }
   }, [formData.planned_start_date, formData.business_days_duration]);
 
-  // Auto-fill first activity start date when project start date changes
   useEffect(() => {
-    if (formData.planned_start_date && activities.length > 0 && !activities[0].plannedStart) {
-      const start = new Date(formData.planned_start_date + 'T00:00:00');
-      const friday = getFridayOfWeek(start);
-      const updated = [...activities];
-      updated[0] = {
-        ...updated[0],
-        plannedStart: formData.planned_start_date,
-        plannedEnd: toISO(friday),
-      };
-      onActivitiesChange(updated);
+    const normalized = normalizeActivitiesWithDates(activities, formData.planned_start_date);
+    if (normalized) {
+      onActivitiesChange(normalized);
     }
-  }, [formData.planned_start_date]);
+  }, [activities, formData.planned_start_date, onActivitiesChange]);
 
   const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
 
@@ -134,31 +173,30 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
   const updateActivity = (id: string, field: keyof ScheduleActivity, value: string) => {
     const updated = activities.map((a) => {
       if (a.id !== id) return a;
-      const newA = { ...a, [field]: value };
-      // Auto-fill end date when start date is set
+      const next = { ...a, [field]: value };
+
       if (field === 'plannedStart' && value) {
         const startDate = new Date(value + 'T00:00:00');
         if (!isNaN(startDate.getTime())) {
-          newA.plannedEnd = toISO(getFridayOfWeek(startDate));
+          next.plannedEnd = toISO(getFridayOfWeek(startDate));
         }
       }
-      return newA;
+
+      return next;
     });
+
     onActivitiesChange(updated);
   };
 
   const addActivity = () => {
     const newAct = createEmptyActivity();
-
-    // Auto-fill dates based on last activity or project start
     const lastActivity = activities.length > 0 ? activities[activities.length - 1] : null;
 
     if (lastActivity?.plannedEnd) {
       const prevEnd = new Date(lastActivity.plannedEnd + 'T00:00:00');
       const nextMon = getNextMonday(prevEnd);
-      const nextFri = getFridayOfWeek(nextMon);
       newAct.plannedStart = toISO(nextMon);
-      newAct.plannedEnd = toISO(nextFri);
+      newAct.plannedEnd = toISO(getFridayOfWeek(nextMon));
     } else if (activities.length === 0 && formData.planned_start_date) {
       const start = new Date(formData.planned_start_date + 'T00:00:00');
       newAct.plannedStart = formData.planned_start_date;
