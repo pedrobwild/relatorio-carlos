@@ -16,7 +16,7 @@ export function applyAdvancedFilters(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_48H = 48 * 60 * 60 * 1000;
+  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
 
   return projects.filter(p => {
     const s = summaryMap.get(p.id);
