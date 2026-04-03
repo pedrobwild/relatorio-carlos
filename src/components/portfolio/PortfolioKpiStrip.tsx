@@ -75,11 +75,11 @@ function computeKpiValues(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_48H = 48 * 60 * 60 * 1000;
+  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
-  let milestone7d = 0, stale48h = 0;
+  let milestone7d = 0, stale7d = 0;
   let pendingDocsTotal = 0, pendingSignTotal = 0;
 
   for (const p of projects) {
@@ -95,9 +95,9 @@ function computeKpiValues(
 
     if (p.status === 'active') {
       if (s?.last_activity_at) {
-        if (now - new Date(s.last_activity_at).getTime() > MS_48H) stale48h++;
+        if (now - new Date(s.last_activity_at).getTime() > MS_STALE) stale7d++;
       } else {
-        stale48h++;
+        stale7d++;
       }
     }
 
