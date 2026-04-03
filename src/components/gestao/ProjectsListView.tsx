@@ -19,10 +19,10 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-600 border-green-500/20',
-  completed: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  paused: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  cancelled: 'bg-red-500/10 text-red-600 border-red-500/20',
+  active: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20',
+  completed: 'bg-primary/10 text-primary border-primary/20',
+  paused: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20',
+  cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
 const statusLabels: Record<string, string> = {
