@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Settings,
   LayoutDashboard,
+  Truck,
   LucideIcon,
 } from "lucide-react";
 import {
