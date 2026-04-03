@@ -170,6 +170,11 @@ export default function PortfolioPage() {
                 onClearFilters={filters.handleClearAll}
                 activeFilterCount={filters.totalFilterCount}
               />
+            ) : filters.viewMode === 'cards' ? (
+              <ProjectsCardView
+                projects={filters.filtered}
+                onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+              />
             ) : (
               <ProjectsListView
                 projects={filters.filtered}
