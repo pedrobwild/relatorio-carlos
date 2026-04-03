@@ -44,7 +44,7 @@ interface ProjectsListViewProps {
   onProjectClick?: (project: ProjectWithCustomer) => void;
 }
 
-export function ProjectsListView({ projects }: ProjectsListViewProps) {
+export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
