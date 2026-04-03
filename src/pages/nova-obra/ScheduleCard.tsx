@@ -1,13 +1,47 @@
 import { useEffect, useRef } from 'react';
-import { Calendar, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Trash2, LayoutTemplate } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addBusinessDays, isHoliday } from '@/lib/businessDays';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import type { FormData } from './types';
+
+interface ScheduleTemplateEntry {
+  description: string;
+  weight: number;
+}
+
+interface ScheduleTemplate {
+  id: string;
+  name: string;
+  entries: ScheduleTemplateEntry[];
+}
+
+const SCHEDULE_TEMPLATES: ScheduleTemplate[] = [
+  {
+    id: 'padrao',
+    name: 'Template padrão',
+    entries: [
+      { description: 'Mobilização de mão de obra, medições e alinhamento com o projeto executivo', weight: 8 },
+      { description: 'Instalação de fechadura eletrônica, adequações elétricas e execução da infra de ar-condicionado', weight: 10 },
+      { description: 'Demolições, instalação de luminárias e instalação de backsplash', weight: 8 },
+      { description: 'Nivelamento e instalação de piso vinílico', weight: 10 },
+      { description: 'Medição de marcenaria, início da produção das peças e instalação do box e espelhos', weight: 8 },
+      { description: 'Fechamento de shaft do ar-condicionado, drywall e instalação de metais', weight: 10 },
+      { description: 'Instalação de ar-condicionado e primeira demão de pintura', weight: 8 },
+      { description: 'Instalação de marcenaria', weight: 10 },
+      { description: 'Ajustes de marcenaria, instalação de rodapé e acabamentos de civil', weight: 8 },
+      { description: 'Segunda demão de pintura, acabamentos elétricos e instalação de acessórios', weight: 10 },
+      { description: 'Instalação de cortinas, recebimento e instalação de eletros e móveis', weight: 8 },
+      { description: 'Vistoria Bwild, limpeza fina e vistoria cliente para entrega da unidade', weight: 2 },
+    ],
+  },
+];
 
 export interface ScheduleActivity {
   id: string;
@@ -147,6 +181,35 @@ function AutoTextarea({
 }
 
 export function ScheduleCard({ formData, onChange, activities, onActivitiesChange }: ScheduleCardProps) {
+  const { toast } = useToast();
+
+  const applyScheduleTemplate = (template: ScheduleTemplate) => {
+    const startDate = formData.planned_start_date;
+    const newActivities: ScheduleActivity[] = [];
+    let currentStart: Date | null = startDate ? new Date(startDate + 'T00:00:00') : null;
+
+    for (const entry of template.entries) {
+      const act: ScheduleActivity = {
+        id: crypto.randomUUID(),
+        description: entry.description,
+        weight: entry.weight.toString(),
+        plannedStart: '',
+        plannedEnd: '',
+      };
+
+      if (currentStart) {
+        act.plannedStart = toISO(currentStart);
+        const friday = getFridayOfWeek(currentStart);
+        act.plannedEnd = toISO(friday);
+        currentStart = getNextMonday(friday);
+      }
+
+      newActivities.push(act);
+    }
+
+    onActivitiesChange(newActivities);
+    toast({ title: `Template "${template.name}" aplicado com ${template.entries.length} etapas` });
+  };
   useEffect(() => {
     const days = parseInt(formData.business_days_duration, 10);
     if (formData.planned_start_date && days > 0) {
@@ -313,6 +376,31 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted/50 text-muted-foreground text-sm">Em definição</div>
             )}
           </div>
+        </div>
+
+        {/* Schedule Template Selector */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-1.5 text-sm">
+            <LayoutTemplate className="h-4 w-4" />
+            Template de Cronograma
+          </Label>
+          <Select
+            onValueChange={(id) => {
+              const tpl = SCHEDULE_TEMPLATES.find(t => t.id === id);
+              if (tpl) applyScheduleTemplate(tpl);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um template (opcional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {SCHEDULE_TEMPLATES.map(t => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name} — {t.entries.length} etapas
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Activities / Etapas */}
