@@ -45,10 +45,7 @@ export function ActiveFilterChips({ filters, onFiltersChange }: ActiveFilterChip
         variant="ghost"
         size="sm"
         className="shrink-0 h-6 text-[11px] text-destructive px-2"
-        onClick={() => {
-          const { emptyFilters } = require('./types');
-          onFiltersChange(emptyFilters);
-        }}
+        onClick={() => onFiltersChange(emptyFilters)}
       >
         Limpar todos
       </Button>
