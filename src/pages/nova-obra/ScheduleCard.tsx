@@ -181,6 +181,35 @@ function AutoTextarea({
 }
 
 export function ScheduleCard({ formData, onChange, activities, onActivitiesChange }: ScheduleCardProps) {
+  const { toast } = useToast();
+
+  const applyScheduleTemplate = (template: ScheduleTemplate) => {
+    const startDate = formData.planned_start_date;
+    const newActivities: ScheduleActivity[] = [];
+    let currentStart: Date | null = startDate ? new Date(startDate + 'T00:00:00') : null;
+
+    for (const entry of template.entries) {
+      const act: ScheduleActivity = {
+        id: crypto.randomUUID(),
+        description: entry.description,
+        weight: entry.weight.toString(),
+        plannedStart: '',
+        plannedEnd: '',
+      };
+
+      if (currentStart) {
+        act.plannedStart = toISO(currentStart);
+        const friday = getFridayOfWeek(currentStart);
+        act.plannedEnd = toISO(friday);
+        currentStart = getNextMonday(friday);
+      }
+
+      newActivities.push(act);
+    }
+
+    onActivitiesChange(newActivities);
+    toast({ title: `Template "${template.name}" aplicado com ${template.entries.length} etapas` });
+  };
   useEffect(() => {
     const days = parseInt(formData.business_days_duration, 10);
     if (formData.planned_start_date && days > 0) {
