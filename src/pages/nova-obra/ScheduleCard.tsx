@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Calendar, Plus, Trash2, LayoutTemplate } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -182,6 +182,12 @@ function AutoTextarea({
 
 export function ScheduleCard({ formData, onChange, activities, onActivitiesChange }: ScheduleCardProps) {
   const { toast } = useToast();
+  const skipNormalizeRef = useRef(false);
+
+  const safeSetActivities = useCallback((acts: ScheduleActivity[]) => {
+    skipNormalizeRef.current = true;
+    onActivitiesChange(acts);
+  }, [onActivitiesChange]);
 
   const applyScheduleTemplate = (template: ScheduleTemplate) => {
     const startDate = formData.planned_start_date;
@@ -207,9 +213,10 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
       newActivities.push(act);
     }
 
-    onActivitiesChange(newActivities);
+    safeSetActivities(newActivities);
     toast({ title: `Template "${template.name}" aplicado com ${template.entries.length} etapas` });
   };
+
   useEffect(() => {
     const days = parseInt(formData.business_days_duration, 10);
     if (formData.planned_start_date && days > 0) {
@@ -223,11 +230,15 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
   }, [formData.planned_start_date, formData.business_days_duration]);
 
   useEffect(() => {
+    if (skipNormalizeRef.current) {
+      skipNormalizeRef.current = false;
+      return;
+    }
     const normalized = normalizeActivitiesWithDates(activities, formData.planned_start_date);
     if (normalized) {
-      onActivitiesChange(normalized);
+      safeSetActivities(normalized);
     }
-  }, [activities, formData.planned_start_date, onActivitiesChange]);
+  }, [activities, formData.planned_start_date, safeSetActivities]);
 
   const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
 
