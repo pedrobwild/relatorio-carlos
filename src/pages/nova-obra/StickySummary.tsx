@@ -80,10 +80,16 @@ function Section({ icon, label, stepIndex, currentStep, completedSteps, children
 }
 
 export function StickySummary({ formData, currentStep, completedSteps }: StickySummaryProps) {
+  const navigate = useNavigate();
   const hasProject = !!formData.name;
   const hasSchedule = !!formData.planned_start_date || !!formData.planned_end_date || formData.is_project_phase;
   const hasFinancial = !!formData.contract_value;
   const hasCustomer = !!formData.customer_name;
+
+  const handleSaveDraft = () => {
+    toast.success('Rascunho salvo! Você pode continuar depois.');
+    navigate('/gestao');
+  };
 
   return (
     <div className="hidden lg:block w-72 shrink-0">
