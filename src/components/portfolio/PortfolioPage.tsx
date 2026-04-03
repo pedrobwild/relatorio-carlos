@@ -198,7 +198,13 @@ export default function PortfolioPage() {
                   )}
                 </div>
               ) : (
-                <ProjectsListView projects={filtered} />
+                <ProjectsListView
+                  projects={filtered}
+                  onProjectClick={(p) => {
+                    setPreviewProject(p);
+                    setDrawerOpen(true);
+                  }}
+                />
               )}
             </PortfolioGridPlaceholder>
           </div>
@@ -206,8 +212,9 @@ export default function PortfolioPage() {
       </main>
 
       {/* Preview Drawer */}
-      <PortfolioPreviewDrawer
+      <WorkQuickPreviewDrawer
         project={previewProject}
+        summary={summaries.find(s => s.id === previewProject?.id) ?? null}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
       />
