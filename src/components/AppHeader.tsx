@@ -15,7 +15,7 @@ interface AppHeaderProps {
 export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) {
   const navigate = useNavigate();
   const { user, loading, signOut, isAuthenticated } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  
 
   const handleSignOut = async () => {
     // CRITICAL: signOut already cleans up local state and the onAuthStateChange
