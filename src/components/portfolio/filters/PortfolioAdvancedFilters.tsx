@@ -75,30 +75,12 @@ export function PortfolioAdvancedFilters({
     return Array.from(set).sort();
   }, [projects]);
 
-  const customers = useMemo(() => {
-    const set = new Set<string>();
-    projects.forEach(p => { if (p.customer_name) set.add(p.customer_name); });
-    return Array.from(set).sort();
-  }, [projects]);
-
-  const cities = useMemo(() => {
-    const set = new Set<string>();
-    projects.forEach(p => { if (p.cidade) set.add(p.cidade); });
-    return Array.from(set).sort();
-  }, [projects]);
-
-  const units = useMemo(() => {
-    const set = new Set<string>();
-    projects.forEach(p => { if (p.unit_name) set.add(p.unit_name); });
-    return Array.from(set).sort();
-  }, [projects]);
 
   const toggleArray = (arr: string[], value: string) =>
     arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
 
   const activeCount = [
     draft.status.length, draft.phase.length, draft.engineers.length,
-    draft.customers.length, draft.cities.length, draft.units.length,
     draft.health.length, draft.criticality.length,
     draft.hasPendingDocs !== null ? 1 : 0,
     draft.hasPendingSign !== null ? 1 : 0,
@@ -182,57 +164,6 @@ export function PortfolioAdvancedFilters({
               </FilterSection>
             )}
 
-            {/* Customer */}
-            {customers.length > 0 && (
-              <FilterSection title="Cliente">
-                <div className="flex flex-wrap gap-1.5 max-h-[120px] overflow-y-auto">
-                  {customers.map(name => (
-                    <ToggleChip
-                      key={name}
-                      label={name}
-                      selected={draft.customers.includes(name)}
-                      onClick={() => setDraft(d => ({ ...d, customers: toggleArray(d.customers, name) }))}
-                    />
-                  ))}
-                </div>
-              </FilterSection>
-            )}
-
-            {/* Region / City / Unit */}
-            {(cities.length > 0 || units.length > 0) && (
-              <FilterSection title="Região / Cidade / Unidade">
-                {cities.length > 0 && (
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground uppercase tracking-wider">Cidade</Label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {cities.map(c => (
-                        <ToggleChip
-                          key={c}
-                          label={c}
-                          selected={draft.cities.includes(c)}
-                          onClick={() => setDraft(d => ({ ...d, cities: toggleArray(d.cities, c) }))}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {units.length > 0 && (
-                  <div className="space-y-1.5 mt-3">
-                    <Label className="text-[11px] text-muted-foreground uppercase tracking-wider">Unidade</Label>
-                    <div className="flex flex-wrap gap-1.5 max-h-[100px] overflow-y-auto">
-                      {units.map(u => (
-                        <ToggleChip
-                          key={u}
-                          label={u}
-                          selected={draft.units.includes(u)}
-                          onClick={() => setDraft(d => ({ ...d, units: toggleArray(d.units, u) }))}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </FilterSection>
-            )}
 
             <Separator />
 
