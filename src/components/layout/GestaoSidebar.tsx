@@ -62,6 +62,11 @@ export function GestaoSidebar() {
       label: "Ferramentas",
       items: [
         {
+          label: "Fornecedores",
+          icon: Truck,
+          path: "/gestao/fornecedores",
+        },
+        {
           label: "Calendário de Compras",
           icon: CalendarDays,
           path: "/gestao/calendario-compras",
