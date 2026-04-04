@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2 } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2, GripVertical } from 'lucide-react';
 import { isHoliday } from '@/lib/businessDays';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -174,6 +174,44 @@ const Cronograma = () => {
   const [saving, setSaving] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [savingBaseline, setSavingBaseline] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const clearDragState = useCallback(() => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDragStart = useCallback((event: React.DragEvent<HTMLButtonElement>, index: number) => {
+    setDraggedIndex(index);
+    setDragOverIndex(index);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(index));
+  }, []);
+
+  const handleRowDragOver = useCallback((event: React.DragEvent<HTMLDivElement>, index: number) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  }, [dragOverIndex]);
+
+  const handleRowDrop = useCallback((event: React.DragEvent<HTMLDivElement>, toIndex: number) => {
+    event.preventDefault();
+    const fromIndex = draggedIndex ?? Number(event.dataTransfer.getData('text/plain'));
+    if (Number.isNaN(fromIndex) || fromIndex === toIndex) {
+      clearDragState();
+      return;
+    }
+    setActivities(prev => {
+      const reordered = [...prev];
+      const [moved] = reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, moved);
+      return reordered;
+    });
+    clearDragState();
+  }, [clearDragState, draggedIndex]);
 
   const totalWeight = useMemo(
     () => activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0),
@@ -436,8 +474,9 @@ const Cronograma = () => {
           {/* Desktop grid */}
           <div className="hidden md:block overflow-x-auto">
             <div className="min-w-[700px]">
-              <div className="grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
-                <div className="py-3 pl-4 pr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</div>
+              <div className="grid grid-cols-[44px_56px_minmax(320px,1fr)_170px_170px_88px_52px] bg-muted/60 border-b border-border/60">
+                <div className="py-3 pl-2" />
+                <div className="py-3 pr-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</div>
                 <div className="py-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrição</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Início Prev.</div>
                 <div className="py-3 px-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Término Prev.</div>
@@ -452,12 +491,28 @@ const Cronograma = () => {
                     <div
                       key={activity.id}
                       className={cn(
-                        'grid grid-cols-[56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30',
+                        'grid grid-cols-[44px_56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30 group/row',
                         index % 2 === 1 && 'bg-muted/15',
                         rowError && 'bg-destructive/5 hover:bg-destructive/10',
+                        draggedIndex === index && 'opacity-55',
+                        dragOverIndex === index && draggedIndex !== index && 'bg-primary/10 ring-1 ring-inset ring-primary/30',
                       )}
+                      onDragOver={(e) => handleRowDragOver(e, index)}
+                      onDrop={(e) => handleRowDrop(e, index)}
                     >
-                      <div className="pl-4 pr-2 py-2.5 text-sm font-bold text-muted-foreground tabular-nums">
+                      <div className="pl-2 py-2.5 flex items-center justify-center">
+                        <button
+                          type="button"
+                          draggable
+                          aria-label={`Reordenar atividade ${index + 1}`}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/30 opacity-0 transition-all cursor-grab active:cursor-grabbing group-hover/row:opacity-100 hover:bg-accent hover:text-foreground"
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragEnd={clearDragState}
+                        >
+                          <GripVertical className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="pr-2 py-2.5 text-sm font-bold text-muted-foreground tabular-nums">
                         {index + 1}
                       </div>
 
