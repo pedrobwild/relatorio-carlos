@@ -2351,6 +2351,66 @@ export type Database = {
           },
         ]
       }
+      obra_tasks: {
+        Row: {
+          cost: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          project_id: string
+          responsible_user_id: string | null
+          sort_order: number
+          status: Database["public"]["Enums"]["obra_task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id: string
+          responsible_user_id?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["obra_task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          project_id?: string
+          responsible_user_id?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["obra_task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obra_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "obra_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obras: {
         Row: {
           codigo_interno: string | null
@@ -5009,6 +5069,7 @@ export type Database = {
         | "pausada"
         | "finalizada"
         | "cancelada"
+      obra_task_status: "pendente" | "em_andamento" | "pausado" | "concluido"
       party_type: "customer" | "company"
       pending_item_status: "pending" | "completed" | "cancelled"
       pending_item_type:
@@ -5244,6 +5305,7 @@ export const Constants = {
         "finalizada",
         "cancelada",
       ],
+      obra_task_status: ["pendente", "em_andamento", "pausado", "concluido"],
       party_type: ["customer", "company"],
       pending_item_status: ["pending", "completed", "cancelled"],
       pending_item_type: [
