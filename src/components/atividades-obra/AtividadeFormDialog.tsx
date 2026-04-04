@@ -78,9 +78,9 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sem responsável</SelectItem>
-                {members?.map((m: any) => (
-                  <SelectItem key={m.user_id} value={m.user_id}>
-                    {m.user_name || m.user_email || 'Sem nome'}
+                {staffUsers.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome} ({u.perfil})
                   </SelectItem>
                 ))}
               </SelectContent>
