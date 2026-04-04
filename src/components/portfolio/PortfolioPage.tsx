@@ -93,7 +93,7 @@ export default function PortfolioPage() {
         </div>
       </AppHeader>
 
-      <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-4 space-y-4">
+      <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-3 space-y-2.5">
         {/* Stale data banner */}
         {isStale && !isLoading && projects.length > 0 && (
           <StaleDataBanner onRefresh={() => refetch()} isRefetching={isRefetching} />
