@@ -220,7 +220,26 @@ function ProjectRow({
           </div>
         </TableCell>
 
-        {/* Status */}
+        {/* Etapa Atual */}
+        <TableCell className="py-2">
+          {currentStage ? (
+            <div className="flex items-center gap-1.5 min-w-0">
+              {currentStage.isAwaitingStart ? (
+                <Hourglass className="h-3 w-3 shrink-0 text-amber-500" />
+              ) : (
+                <HardHat className="h-3 w-3 shrink-0 text-primary" />
+              )}
+              <span className={cn(
+                'text-[11px] font-medium truncate max-w-[120px]',
+                currentStage.isAwaitingStart ? 'text-amber-600 dark:text-amber-400' : 'text-foreground/80',
+              )}>
+                {currentStage.description}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] text-muted-foreground/40">—</span>
+          )}
+        </TableCell>
         <TableCell className="text-center py-2">
           <Badge variant="outline" className={cn(statusColors[project.status], 'text-[9px] font-semibold px-1.5 py-0 h-[18px] whitespace-nowrap')}>
             {statusLabels[project.status]}
