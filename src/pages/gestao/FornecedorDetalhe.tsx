@@ -394,7 +394,7 @@ export default function FornecedorDetalhe() {
                   <TabsTrigger value="anexos">Anexos</TabsTrigger>
                 </TabsList>
                 <TabsContent value="precos">
-                  <SupplierPricesTab fornecedorId={supplier.id} />
+                  <SupplierPricesTab fornecedorId={supplier.id} fornecedorNome={supplier.nome} />
                 </TabsContent>
                 <TabsContent value="anexos">
                   <SupplierAttachmentsTab fornecedorId={supplier.id} />

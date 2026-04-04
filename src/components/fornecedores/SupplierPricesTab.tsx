@@ -8,7 +8,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Pencil, X, Check } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Check, ArrowRight } from "lucide-react";
+import { SendToProjectDialog } from "./SendToProjectDialog";
 
 interface PriceItem {
   id: string;
@@ -22,6 +23,7 @@ interface PriceItem {
 
 interface Props {
   fornecedorId: string;
+  fornecedorNome?: string;
 }
 
 const emptyPrice = (fornecedorId: string): Partial<PriceItem> => ({
@@ -33,12 +35,13 @@ const emptyPrice = (fornecedorId: string): Partial<PriceItem> => ({
   observacoes: null,
 });
 
-export function SupplierPricesTab({ fornecedorId }: Props) {
+export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) {
   const qc = useQueryClient();
   const qk = ["fornecedor_precos", fornecedorId];
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<PriceItem>>(emptyPrice(fornecedorId));
   const [adding, setAdding] = useState(false);
+  const [sendItem, setSendItem] = useState<PriceItem | null>(null);
 
   const { data: prices = [], isLoading } = useQuery({
     queryKey: qk,
@@ -201,6 +204,15 @@ export function SupplierPricesTab({ fornecedorId }: Props) {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-primary"
+                        title="Enviar para Obra"
+                        onClick={() => setSendItem(p)}
+                      >
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(p)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -221,6 +233,15 @@ export function SupplierPricesTab({ fornecedorId }: Props) {
             )}
           </TableBody>
         </Table>
+      )}
+
+      {sendItem && (
+        <SendToProjectDialog
+          open={!!sendItem}
+          onOpenChange={(open) => !open && setSendItem(null)}
+          priceItem={sendItem}
+          fornecedorNome={fornecedorNome}
+        />
       )}
     </div>
   );
