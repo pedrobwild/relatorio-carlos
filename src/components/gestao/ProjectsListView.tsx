@@ -20,9 +20,9 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const statusColors: Record<string, string> = {
-  active: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20',
-  completed: 'bg-primary/10 text-primary border-primary/20',
-  paused: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20',
+  active: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+  completed: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+  paused: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
@@ -63,19 +63,29 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="rounded-lg border border-border/50 bg-card overflow-x-auto shadow-sm">
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="w-8" />
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Obra</TableHead>
-              <TableHead className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
-              <TableHead className="w-12 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Saúde</TableHead>
-              <TableHead className="w-20 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Entrega</TableHead>
-              <TableHead className="w-24 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Prazo</TableHead>
-              <TableHead className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Avanço</TableHead>
-              <TableHead className="w-24 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Resp.</TableHead>
-              <TableHead className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pend.</TableHead>
+            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border/60">
+              <TableHead className="w-8 px-1" />
+              <TableHead className="py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Obra
+              </TableHead>
+              <TableHead className="w-[64px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                Status
+              </TableHead>
+              <TableHead className="w-[50px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                Saúde
+              </TableHead>
+              <TableHead className="w-[110px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                Entrega
+              </TableHead>
+              <TableHead className="w-[72px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                Avanço
+              </TableHead>
+              <TableHead className="w-[44px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                Pend.
+              </TableHead>
               <TableHead className="w-8" />
             </TableRow>
           </TableHeader>
@@ -95,7 +105,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={10} className="p-0">
+                        <TableCell colSpan={8} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -108,7 +118,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -177,126 +187,114 @@ function ProjectRow({
     <CollapsibleTrigger asChild>
       <TableRow
         className={cn(
-          'cursor-pointer transition-colors group/row',
+          'cursor-pointer transition-colors group/row border-b border-border/40',
           isOverdue
-            ? 'bg-destructive/[0.03] hover:bg-destructive/[0.07]'
+            ? 'bg-red-50/60 hover:bg-red-50 dark:bg-destructive/[0.04] dark:hover:bg-destructive/[0.08]'
             : isApproaching
-              ? 'bg-amber-500/[0.03] hover:bg-amber-500/[0.07]'
+              ? 'bg-amber-50/40 hover:bg-amber-50/70 dark:bg-amber-500/[0.03] dark:hover:bg-amber-500/[0.06]'
               : 'hover:bg-muted/40',
         )}
       >
         {/* Expand */}
-        <TableCell className="w-8 px-1.5">
-          <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
+        <TableCell className="w-10 px-2 py-3">
+          <ChevronDown className={cn('h-4 w-4 text-muted-foreground/60 transition-transform', isExpanded && 'rotate-180')} />
         </TableCell>
 
         {/* Name */}
-        <TableCell className="py-2.5" onClick={(e) => { e.stopPropagation(); onNavigate(); }}>
+        <TableCell className="py-3" onClick={(e) => { e.stopPropagation(); onNavigate(); }}>
           <div className="min-w-0">
-            <p className="font-semibold text-[13px] truncate max-w-[220px] group-hover/row:text-primary transition-colors">
+            <p className="font-semibold text-sm truncate max-w-[260px] group-hover/row:text-primary transition-colors leading-tight">
               {project.name}
             </p>
             {project.unit_name && (
-              <p className="text-[10px] text-primary/60 font-medium truncate">{project.unit_name}</p>
+              <p className="text-[11px] text-primary/60 font-medium truncate mt-0.5">{project.unit_name}</p>
             )}
             {project.customer_name && (
-              <p className="text-[11px] text-muted-foreground truncate">{project.customer_name}</p>
+              <p className="text-[11px] text-muted-foreground truncate mt-0.5">{project.customer_name}</p>
             )}
           </div>
         </TableCell>
 
         {/* Status */}
-        <TableCell className="text-center px-1">
-          <Badge variant="outline" className={cn(statusColors[project.status], 'text-[9px] px-1.5 py-0')}>
+        <TableCell className="text-center py-3">
+          <Badge variant="outline" className={cn(statusColors[project.status], 'text-[10px] font-medium px-2 py-0.5 whitespace-nowrap')}>
             {statusLabels[project.status]}
           </Badge>
         </TableCell>
 
         {/* Health */}
-        <TableCell className="text-center px-1">
+        <TableCell className="text-center py-3">
           {summary ? (
             <div className="flex justify-center">
               <HealthScoreBadge project={summary} size="sm" />
             </div>
           ) : (
-            <span className="text-[10px] text-muted-foreground">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           )}
         </TableCell>
 
-        {/* Entrega */}
-        <TableCell className="text-center px-1">
+        {/* Entrega + Prazo combined */}
+        <TableCell className="text-center py-3">
           {plannedEnd ? (
-            <span className={cn(
-              'text-[13px] font-bold tabular-nums whitespace-nowrap',
-              isFinished ? 'text-[hsl(var(--success))]' :
-              isOverdue ? 'text-destructive' :
-              isApproaching ? 'text-[hsl(var(--warning))]' :
-              'text-foreground',
-            )}>
-              {format(plannedEnd, "dd/MM", { locale: ptBR })}
-            </span>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className={cn(
+                'text-sm font-bold tabular-nums whitespace-nowrap',
+                isFinished ? 'text-emerald-600 dark:text-emerald-400' :
+                isOverdue ? 'text-destructive' :
+                isApproaching ? 'text-amber-600 dark:text-amber-400' :
+                'text-foreground',
+              )}>
+                {format(plannedEnd, "dd/MM", { locale: ptBR })}
+              </span>
+              {isFinished ? (
+                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
+                  <CheckCircle className="h-2.5 w-2.5" /> Entregue
+                </span>
+              ) : isOverdue ? (
+                <span className="text-[9px] text-destructive font-semibold flex items-center gap-0.5 animate-pulse">
+                  <CalendarX className="h-2.5 w-2.5" /> {Math.abs(daysRemaining!)}d atraso
+                </span>
+              ) : isApproaching ? (
+                <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5">
+                  <Clock className="h-2.5 w-2.5" /> {daysRemaining}d
+                </span>
+              ) : (
+                <span className="text-[9px] text-muted-foreground tabular-nums">{daysRemaining}d restantes</span>
+              )}
+            </div>
           ) : (
-            <span className="text-[10px] text-muted-foreground italic">—</span>
-          )}
-        </TableCell>
-
-        {/* Prazo */}
-        <TableCell className="text-center px-1">
-          {plannedEnd ? (
-            isFinished ? (
-              <Badge variant="outline" className="text-[9px] gap-0.5 bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20 px-1.5 py-0">
-                <CheckCircle className="h-2.5 w-2.5" /> Entregue
-              </Badge>
-            ) : isOverdue ? (
-              <Badge variant="outline" className="text-[9px] gap-0.5 bg-destructive/10 text-destructive border-destructive/20 px-1.5 py-0 animate-pulse">
-                <CalendarX className="h-2.5 w-2.5" /> {Math.abs(daysRemaining!)}d atraso
-              </Badge>
-            ) : isApproaching ? (
-              <Badge variant="outline" className="text-[9px] gap-0.5 bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20 px-1.5 py-0">
-                <Clock className="h-2.5 w-2.5" /> {daysRemaining}d
-              </Badge>
-            ) : (
-              <span className="text-[11px] text-muted-foreground tabular-nums">{daysRemaining}d</span>
-            )
-          ) : (
-            <span className="text-[10px] text-muted-foreground">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           )}
         </TableCell>
 
         {/* Progress */}
-        <TableCell className="text-center px-1">
-          <div className="flex items-center gap-1.5 justify-center">
-            <div className="w-10 h-1 bg-muted rounded-full overflow-hidden">
+        <TableCell className="text-center py-3">
+          <div className="flex items-center gap-2 justify-center">
+            <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full bg-primary transition-all"
                 style={{ width: `${Math.min(100, progress)}%` }}
               />
             </div>
-            <span className="text-[10px] font-medium tabular-nums text-muted-foreground w-6 text-right">
+            <span className="text-[11px] font-medium tabular-nums text-muted-foreground w-7 text-right">
               {Math.round(progress)}%
             </span>
           </div>
         </TableCell>
 
-        {/* Engineer */}
-        <TableCell className="px-1">
-          <span className="text-[12px] truncate block max-w-[90px]">
-            {project.engineer_name
-              ? project.engineer_name.split(' ')[0]
-              : <span className="text-muted-foreground italic text-[10px]">—</span>}
-          </span>
-        </TableCell>
+
+
 
         {/* Pending */}
-        <TableCell className="text-center px-1">
+        <TableCell className="text-center py-3">
           {pendingCount === 0 ? (
-            <span className="text-[10px] text-[hsl(var(--success))] font-medium">✓</span>
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mx-auto" />
           ) : (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center justify-center gap-0.5">
-                  {overdueCount > 0 && <AlertTriangle className="h-3 w-3 text-destructive" />}
-                  <span className={cn('text-[12px] font-semibold tabular-nums', overdueCount > 0 ? 'text-destructive' : 'text-[hsl(var(--warning))]')}>
+                  {overdueCount > 0 && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                  <span className={cn('text-xs font-bold tabular-nums', overdueCount > 0 ? 'text-destructive' : 'text-amber-600 dark:text-amber-400')}>
                     {pendingCount}
                   </span>
                 </div>
@@ -311,15 +309,15 @@ function ProjectRow({
         </TableCell>
 
         {/* Action */}
-        <TableCell className="px-1">
+        <TableCell className="py-3 px-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover/row:opacity-100 transition-opacity"
+            className="h-7 w-7 opacity-0 group-hover/row:opacity-100 transition-opacity"
             title="Ver portal"
             onClick={(e) => { e.stopPropagation(); onNavigate(); }}
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3.5 w-3.5" />
           </Button>
         </TableCell>
       </TableRow>
