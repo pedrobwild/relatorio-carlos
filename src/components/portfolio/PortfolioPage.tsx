@@ -132,7 +132,7 @@ export default function PortfolioPage() {
         )}
 
         {/* Content: Sidebar + Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] xl:grid-cols-[220px_1fr] gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-[190px_1fr] xl:grid-cols-[200px_1fr] gap-2.5">
           {/* Sidebar */}
           <aside className="order-2 lg:order-1 space-y-4">
             {summariesLoading && summaries.length === 0 ? (
