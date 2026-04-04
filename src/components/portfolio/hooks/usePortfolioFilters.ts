@@ -16,6 +16,7 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon';
 export type ViewMode = 'cards' | 'list' | 'table';
+export type ScopeFilter = 'all' | 'obras' | 'projetos';
 
 export function usePortfolioFilters(
   projects: ProjectWithCustomer[],
@@ -32,6 +33,9 @@ export function usePortfolioFilters(
 
   // ── Preset ──────────────────────────────────────────────────────────────
   const [activePreset, setActivePreset] = useState<PortfolioPreset>('all');
+
+  // ── Scope (obras vs projetos) ──────────────────────────────────────────
+  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('all');
 
   // ── KPI filter ──────────────────────────────────────────────────────────
   const [kpiFilter, setKpiFilter] = useState<KpiFilterKey | null>(null);
@@ -74,6 +78,13 @@ export function usePortfolioFilters(
   const filtered = useMemo(() => {
     let result = projects;
 
+    // Scope filter (obras vs projetos)
+    if (scopeFilter === 'obras') {
+      result = result.filter(p => !p.is_project_phase);
+    } else if (scopeFilter === 'projetos') {
+      result = result.filter(p => !!p.is_project_phase);
+    }
+
     // Text search
     if (search) {
       const q = search.toLowerCase();
@@ -115,7 +126,7 @@ export function usePortfolioFilters(
     }
 
     return result;
-  }, [projects, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters]);
+  }, [projects, scopeFilter, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
   const handlePresetChange = useCallback((p: PortfolioPreset) => {
@@ -126,6 +137,7 @@ export function usePortfolioFilters(
   const handleClearAll = useCallback(() => {
     setSearch('');
     setActivePreset('all');
+    setScopeFilter('all');
     setKpiFilter(null);
     setAdvancedFilters(emptyFilters);
   }, [setSearch]);
@@ -133,12 +145,12 @@ export function usePortfolioFilters(
   return {
     // State
     search, activePreset, kpiFilter, advancedFilters,
-    viewMode, filtersOpen,
+    viewMode, filtersOpen, scopeFilter,
     // Derived
     filtered, advancedFilterCount, totalFilterCount, hasAnyFilter,
     // Setters
     setSearch, setKpiFilter, setAdvancedFilters,
     setFiltersOpen, handlePresetChange, handleViewModeChange,
-    handleClearAll,
+    handleClearAll, setScopeFilter,
   };
 }

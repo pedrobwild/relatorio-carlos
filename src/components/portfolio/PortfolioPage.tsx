@@ -107,6 +107,8 @@ export default function PortfolioPage() {
           onPresetChange={filters.handlePresetChange}
           viewMode={filters.viewMode}
           onViewModeChange={filters.handleViewModeChange}
+          scopeFilter={filters.scopeFilter}
+          onScopeChange={filters.setScopeFilter}
           totalCount={projects.length}
           filteredCount={filters.filtered.length}
           activeFilterCount={filters.advancedFilterCount}
