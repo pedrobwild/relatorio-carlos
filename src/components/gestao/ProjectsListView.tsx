@@ -129,8 +129,6 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
-                </TableCell>
-              </TableRow>
             )}
           </TableBody>
         </Table>
