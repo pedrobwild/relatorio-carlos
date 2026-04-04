@@ -137,6 +137,7 @@ export function usePortfolioFilters(
   const handleClearAll = useCallback(() => {
     setSearch('');
     setActivePreset('all');
+    setScopeFilter('all');
     setKpiFilter(null);
     setAdvancedFilters(emptyFilters);
   }, [setSearch]);
