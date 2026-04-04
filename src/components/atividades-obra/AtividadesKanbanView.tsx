@@ -7,13 +7,13 @@ import { MoreHorizontal, Pencil, Trash2, Calendar, DollarSign, User } from 'luci
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Props {
   tasks: ObraTask[];
   isLoading: boolean;
-  members: any[];
   onUpdateStatus: (id: string, status: ObraTaskStatus) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<ObraTaskInput>) => void;
@@ -33,14 +33,15 @@ const columnBg: Record<ObraTaskStatus, string> = {
   concluido: 'bg-green-50 dark:bg-green-950/20',
 };
 
-export function AtividadesKanbanView({ tasks, isLoading, members, onUpdateStatus, onDelete, onUpdate }: Props) {
+export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<ObraTaskStatus | null>(null);
+  const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
     if (!userId) return null;
-    const m = members?.find((m: any) => m.user_id === userId);
-    return m?.user_name || m?.user_email || null;
+    const u = staffUsers.find(u => u.id === userId);
+    return u?.nome || u?.email || null;
   };
 
   if (isLoading) {
@@ -171,7 +172,7 @@ export function AtividadesKanbanView({ tasks, isLoading, members, onUpdateStatus
             setEditTask(null);
           }
         }}
-        members={members}
+        
         initialData={editTask}
       />
     </>

@@ -8,13 +8,13 @@ import { MoreHorizontal, Pencil, Trash2, Calendar, DollarSign } from 'lucide-rea
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Props {
   tasks: ObraTask[];
   isLoading: boolean;
-  members: any[];
   onUpdateStatus: (id: string, status: ObraTaskStatus) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<ObraTaskInput>) => void;
@@ -27,13 +27,14 @@ const statusVariant: Record<ObraTaskStatus, string> = {
   concluido: 'bg-green-500/15 text-green-700 border-green-300',
 };
 
-export function AtividadesListView({ tasks, isLoading, members, onUpdateStatus, onDelete, onUpdate }: Props) {
+export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
     if (!userId) return '—';
-    const m = members?.find((m: any) => m.user_id === userId);
-    return m?.user_name || m?.user_email || '—';
+    const u = staffUsers.find(u => u.id === userId);
+    return u?.nome || u?.email || '—';
   };
 
   if (isLoading) {
@@ -147,7 +148,7 @@ export function AtividadesListView({ tasks, isLoading, members, onUpdateStatus, 
             setEditTask(null);
           }
         }}
-        members={members}
+        
         initialData={editTask}
       />
     </>

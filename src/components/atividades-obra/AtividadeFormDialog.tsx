@@ -6,16 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ObraTaskInput, ObraTask } from '@/hooks/useObraTasks';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: ObraTaskInput) => void;
-  members: any[];
   initialData?: ObraTask | null;
 }
 
-export function AtividadeFormDialog({ open, onOpenChange, onSubmit, members, initialData }: Props) {
+export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData }: Props) {
+  const { data: staffUsers = [] } = useStaffUsers();
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsible_user_id || '');
@@ -77,9 +78,9 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, members, ini
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sem responsável</SelectItem>
-                {members?.map((m: any) => (
-                  <SelectItem key={m.user_id} value={m.user_id}>
-                    {m.user_name || m.user_email || 'Sem nome'}
+                {staffUsers.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.nome} ({u.perfil})
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useObraTasks, ObraTaskInput } from '@/hooks/useObraTasks';
-import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Plus, LayoutList, Columns3 } from 'lucide-react';
@@ -13,7 +12,6 @@ import { AtividadeFormDialog } from '@/components/atividades-obra/AtividadeFormD
 export default function AtividadesObra() {
   const { projectId } = useProjectNavigation();
   const { tasks, isLoading, createTask, updateTask, deleteTask } = useObraTasks(projectId);
-  const { members } = useProjectMembers(projectId);
   const [view, setView] = useState<'list' | 'kanban'>('list');
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -52,7 +50,6 @@ export default function AtividadesObra() {
         <AtividadesListView
           tasks={tasks}
           isLoading={isLoading}
-          members={members}
           onUpdateStatus={(id, status) => updateTask.mutate({ id, updates: { status } })}
           onDelete={(id) => deleteTask.mutate(id)}
           onUpdate={(id, updates) => updateTask.mutate({ id, updates })}
@@ -61,7 +58,6 @@ export default function AtividadesObra() {
         <AtividadesKanbanView
           tasks={tasks}
           isLoading={isLoading}
-          members={members}
           onUpdateStatus={(id, status) => updateTask.mutate({ id, updates: { status } })}
           onDelete={(id) => deleteTask.mutate(id)}
           onUpdate={(id, updates) => updateTask.mutate({ id, updates })}
@@ -72,7 +68,6 @@ export default function AtividadesObra() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSubmit={handleCreate}
-        members={members}
       />
     </PageContainer>
   );
