@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, AlertTriangle, FileSignature, FileText, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key } from 'lucide-react';
+import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -15,6 +15,7 @@ import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -77,12 +78,14 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="min-w-[180px] text-xs whitespace-nowrap">Obra</TableHead>
               <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">Status</TableHead>
               <TableHead className="w-[60px] text-center text-xs whitespace-nowrap">Saúde</TableHead>
-              <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">Prazo</TableHead>
+              <TableHead className="w-[140px] text-center text-xs whitespace-nowrap">
+                <span className="flex items-center justify-center gap-1">
+                  📅 Entrega
+                </span>
+              </TableHead>
               <TableHead className="w-[70px] text-center text-xs whitespace-nowrap">Progresso</TableHead>
               <TableHead className="min-w-[120px] text-xs whitespace-nowrap">Engenheiro</TableHead>
               <TableHead className="w-[90px] text-center text-xs whitespace-nowrap">Pendências</TableHead>
-              <TableHead className="w-[90px] text-center text-xs whitespace-nowrap">Assinaturas</TableHead>
-              <TableHead className="w-[80px] text-center text-xs whitespace-nowrap">Docs</TableHead>
               <TableHead className="w-[120px] text-center text-xs whitespace-nowrap">Financeiro</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
@@ -103,7 +106,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={12} className="p-0">
+                        <TableCell colSpan={10} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -116,7 +119,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={12} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -133,7 +136,6 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 
   return (
     <div className="px-4 py-3 space-y-3">
-      {/* Studio info row */}
       {hasStudioInfo && (
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
           {(project.endereco_completo || project.cidade) && (
@@ -159,7 +161,6 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
           )}
         </div>
       )}
-      {/* Dashboard summary */}
       <ObraExpandedRow projectId={project.id} contractValue={contractValue} />
     </div>
   );
@@ -180,8 +181,6 @@ function ProjectRow({
 }) {
   const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
-  const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
-  const pendingDocs = summary?.pending_documents ?? 0;
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 
@@ -191,11 +190,16 @@ function ProjectRow({
   const isFinished = !!actualEnd;
   const daysRemaining = plannedEnd && !isFinished ? differenceInDays(plannedEnd, today) : null;
   const isOverdue = daysRemaining !== null && daysRemaining < 0;
+  const isApproaching = daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 14;
 
   return (
     <CollapsibleTrigger asChild>
       <TableRow
-        className="cursor-pointer hover:bg-muted/50 transition-colors"
+        className={cn(
+          'cursor-pointer hover:bg-muted/50 transition-colors',
+          isOverdue && 'bg-destructive/[0.03] hover:bg-destructive/[0.06]',
+          isApproaching && !isOverdue && 'bg-amber-500/[0.03] hover:bg-amber-500/[0.06]',
+        )}
       >
         {/* Expand toggle */}
         <TableCell className="w-[30px] px-2">
@@ -212,7 +216,7 @@ function ProjectRow({
           </Button>
         </TableCell>
 
-        {/* Name + Customer + Studio info */}
+        {/* Name + Customer */}
         <TableCell onClick={(e) => { e.stopPropagation(); onNavigate(); }}>
           <div className="min-w-0">
             <p className="font-semibold text-sm truncate">{project.name}</p>
@@ -222,18 +226,10 @@ function ProjectRow({
             {project.customer_name && (
               <p className="text-xs text-muted-foreground truncate">{project.customer_name}</p>
             )}
-            {(project.tamanho_imovel_m2 || project.tipo_de_locacao) && (
-              <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">
-                {[
-                  project.tamanho_imovel_m2 ? `${project.tamanho_imovel_m2}m²` : null,
-                  project.tipo_de_locacao,
-                ].filter(Boolean).join(' · ')}
-              </p>
-            )}
           </div>
         </TableCell>
 
-        {/* Status — composite label */}
+        {/* Status */}
         <TableCell className="text-center">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -249,9 +245,6 @@ function ProjectRow({
             <TooltipContent className="max-w-[200px]">
               <p className="text-xs font-medium mb-1">Status da Obra: {statusLabels[project.status]}</p>
               <p className="text-xs text-muted-foreground">{statusTooltips[project.status]}</p>
-              {project.is_project_phase && (
-                <p className="text-xs text-accent-foreground mt-1">Fase de Projeto — planejamento e aprovações</p>
-              )}
             </TooltipContent>
           </Tooltip>
         </TableCell>
@@ -267,33 +260,54 @@ function ProjectRow({
           )}
         </TableCell>
 
-        {/* Prazo */}
+        {/* ENTREGA — Prominent delivery date */}
         <TableCell className="text-center">
           {plannedEnd ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
-                    {project.planned_start_date && format(parseLocalDate(project.planned_start_date), 'dd/MM', { locale: ptBR })} – {format(plannedEnd, 'dd/MM', { locale: ptBR })}
+                <div className="flex flex-col items-center gap-1">
+                  {/* Big delivery date */}
+                  <span className={cn(
+                    'text-sm font-bold tabular-nums',
+                    isFinished ? 'text-[hsl(var(--success))]' :
+                    isOverdue ? 'text-destructive' :
+                    isApproaching ? 'text-amber-600 dark:text-amber-400' :
+                    'text-foreground',
+                  )}>
+                    {format(plannedEnd, "dd/MM/yy", { locale: ptBR })}
                   </span>
+                  {/* Status badge */}
                   {isFinished ? (
-                    <span className="flex items-center gap-0.5 text-xs font-medium text-[hsl(var(--success))]">
+                    <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20 px-1.5 py-0">
                       <CheckCircle className="h-3 w-3" /> Entregue
-                    </span>
+                    </Badge>
                   ) : isOverdue ? (
-                    <span className="flex items-center gap-0.5 text-xs font-medium text-destructive">
-                      <AlertTriangle className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-0.5 text-xs font-medium text-[hsl(var(--success))]">
+                    <Badge variant="outline" className="text-[10px] gap-0.5 bg-destructive/10 text-destructive border-destructive/20 px-1.5 py-0 animate-pulse">
+                      <CalendarX className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
+                    </Badge>
+                  ) : isApproaching ? (
+                    <Badge variant="outline" className="text-[10px] gap-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-1.5 py-0">
                       <Clock className="h-3 w-3" /> {daysRemaining}d restantes
+                    </Badge>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {daysRemaining}d restantes
                     </span>
                   )}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                Início: {project.planned_start_date ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yyyy') : 'N/D'}<br />
-                Término: {format(plannedEnd, 'dd/MM/yyyy')}
+                <p className="text-xs">
+                  Início: {project.planned_start_date ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yyyy') : 'N/D'}
+                </p>
+                <p className="text-xs font-medium">
+                  Entrega: {format(plannedEnd, 'dd/MM/yyyy')}
+                </p>
+                {actualEnd && (
+                  <p className="text-xs text-[hsl(var(--success))]">
+                    Entregue em: {format(actualEnd, 'dd/MM/yyyy')}
+                  </p>
+                )}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -340,40 +354,6 @@ function ProjectRow({
                   ? `${overdueCount} em atraso de ${pendingCount} total`
                   : `${pendingCount} pendência(s) dentro do prazo`}
               </TooltipContent>
-            </Tooltip>
-          )}
-        </TableCell>
-
-        {/* Formalizations */}
-        <TableCell className="text-center">
-          {unsignedFormalizations === 0 ? (
-            <span className="text-xs text-muted-foreground">—</span>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center justify-center gap-1">
-                  <FileSignature className="h-3.5 w-3.5 text-[hsl(var(--warning))]" />
-                  <span className="text-sm font-medium text-[hsl(var(--warning))]">{unsignedFormalizations}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>{unsignedFormalizations} assinatura(s) pendente(s)</TooltipContent>
-            </Tooltip>
-          )}
-        </TableCell>
-
-        {/* Documents */}
-        <TableCell className="text-center">
-          {pendingDocs === 0 ? (
-            <span className="text-xs text-muted-foreground">—</span>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center justify-center gap-1">
-                  <FileText className="h-3.5 w-3.5 text-[hsl(var(--warning))]" />
-                  <span className="text-sm font-medium text-[hsl(var(--warning))]">{pendingDocs}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>{pendingDocs} documento(s) pendente(s)</TooltipContent>
             </Tooltip>
           )}
         </TableCell>
