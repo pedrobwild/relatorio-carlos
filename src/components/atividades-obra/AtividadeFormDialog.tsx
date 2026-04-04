@@ -15,7 +15,8 @@ interface Props {
   initialData?: ObraTask | null;
 }
 
-export function AtividadeFormDialog({ open, onOpenChange, onSubmit, members, initialData }: Props) {
+export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData }: Props) {
+  const { data: staffUsers = [] } = useStaffUsers();
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsible_user_id || '');
