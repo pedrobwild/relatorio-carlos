@@ -58,6 +58,6 @@ export function useCurrentStages(projectIds: string[]) {
       return map;
     },
     enabled: projectIds.length > 0,
-    staleTime: QUERY_TIMING.staleTime,
+    staleTime: QUERY_TIMING.default.staleTime,
   });
 }
