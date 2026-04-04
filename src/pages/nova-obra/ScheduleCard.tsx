@@ -1,11 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { Calendar, Plus, Trash2, LayoutTemplate } from 'lucide-react';
+import { Calendar, Plus, Trash2, LayoutTemplate, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { addBusinessDays, isHoliday } from '@/lib/businessDays';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -205,6 +206,7 @@ function AutoTextarea({
 export function ScheduleCard({ formData, onChange, activities, onActivitiesChange }: ScheduleCardProps) {
   const { toast } = useToast();
   const skipNormalizeRef = useRef(false);
+  const prevStartDateRef = useRef(formData.planned_start_date);
 
   const safeSetActivities = useCallback((acts: ScheduleActivity[]) => {
     skipNormalizeRef.current = true;
@@ -251,9 +253,35 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     }
   }, [formData.planned_start_date, formData.business_days_duration]);
 
-  useEffect(() => {
+  const recalculateAllDates = useCallback((acts: ScheduleActivity[], startDate: string): ScheduleActivity[] => {
+    if (!startDate || acts.length === 0) return acts;
+    const result: ScheduleActivity[] = [];
+    let currentStart: Date = new Date(startDate + 'T00:00:00');
+
+    for (let i = 0; i < acts.length; i++) {
+      const friday = getFridayOfWeek(currentStart);
+      result.push({
+        ...acts[i],
+        plannedStart: toISO(currentStart),
+        plannedEnd: toISO(friday),
+      });
+      currentStart = getNextMonday(friday);
+    }
+    return result;
+  }, []);
+
+   useEffect(() => {
     if (skipNormalizeRef.current) {
       skipNormalizeRef.current = false;
+      prevStartDateRef.current = formData.planned_start_date;
+      return;
+    }
+
+    const startDateChanged = prevStartDateRef.current !== formData.planned_start_date;
+    prevStartDateRef.current = formData.planned_start_date;
+
+    if (startDateChanged && formData.planned_start_date && activities.length > 0 && activities[0].plannedStart) {
+      safeSetActivities(recalculateAllDates(activities, formData.planned_start_date));
       return;
     }
 
@@ -261,11 +289,30 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     if (normalized) {
       safeSetActivities(normalized);
     }
-  }, [activities, formData.planned_start_date, safeSetActivities]);
+  }, [activities, formData.planned_start_date, safeSetActivities, recalculateAllDates]);
 
   const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
 
   const totalWeight = activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0);
+
+  const moveActivity = useCallback((index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= activities.length) return;
+    const reordered = [...activities];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    const recalculated = recalculateAllDates(reordered, formData.planned_start_date);
+    safeSetActivities(recalculated);
+  }, [activities, formData.planned_start_date, recalculateAllDates, safeSetActivities]);
+
+  const handleRecalculateDates = useCallback(() => {
+    if (!formData.planned_start_date) {
+      toast({ title: 'Defina a data de início primeiro', variant: 'destructive' });
+      return;
+    }
+    const recalculated = recalculateAllDates(activities, formData.planned_start_date);
+    safeSetActivities(recalculated);
+    toast({ title: 'Datas recalculadas com base na data de início' });
+  }, [activities, formData.planned_start_date, recalculateAllDates, safeSetActivities, toast]);
 
   const updateActivity = (id: string, field: keyof ScheduleActivity, value: string) => {
     const updated = activities.map((a) => {
@@ -304,7 +351,12 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
   };
 
   const removeActivity = (id: string) => {
-    onActivitiesChange(activities.filter((a) => a.id !== id));
+    const filtered = activities.filter((a) => a.id !== id);
+    if (formData.planned_start_date && filtered.length > 0) {
+      safeSetActivities(recalculateAllDates(filtered, formData.planned_start_date));
+    } else {
+      onActivitiesChange(filtered);
+    }
   };
 
   return (
@@ -444,22 +496,44 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               <h4 className="text-sm font-medium">Etapas da Obra</h4>
               <p className="text-xs text-muted-foreground">Adicione as etapas do cronograma (opcional)</p>
             </div>
-            {activities.length > 0 && (
-              <span className={cn(
-                "text-xs font-medium px-2 py-0.5 rounded-full",
-                Math.abs(totalWeight - 100) < 0.05
-                  ? "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]"
-                  : "bg-muted text-muted-foreground"
-              )}>
-                Peso: {totalWeight.toFixed(1)}%
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {activities.length > 0 && (
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={handleRecalculateDates}
+                          disabled={!formData.planned_start_date}
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Recalcular datas a partir do início</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span className={cn(
+                    "text-xs font-medium px-2 py-0.5 rounded-full",
+                    Math.abs(totalWeight - 100) < 0.05
+                      ? "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]"
+                      : "bg-muted text-muted-foreground"
+                  )}>
+                    Peso: {totalWeight.toFixed(1)}%
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           {activities.length > 0 && (
             <div className="space-y-3">
               {/* Header - desktop only */}
-              <div className="hidden sm:grid grid-cols-[1fr_130px_130px_70px_40px] gap-2 text-xs font-medium text-muted-foreground px-1">
+              <div className="hidden sm:grid grid-cols-[32px_1fr_130px_130px_70px_40px] gap-2 text-xs font-medium text-muted-foreground px-1">
+                <span />
                 <span>Descrição</span>
                 <span>Início Prev.</span>
                 <span>Término Prev.</span>
@@ -470,12 +544,46 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               {activities.map((act, idx) => (
                 <div
                   key={act.id}
-                  className="rounded-lg border bg-card p-3 sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start"
+                  className="rounded-lg border bg-card p-3 sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[32px_1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start"
                 >
-                  {/* Mobile label */}
-                  <span className="text-xs font-medium text-muted-foreground sm:hidden">
-                    Etapa {idx + 1}
-                  </span>
+                  {/* Reorder buttons */}
+                  <div className="hidden sm:flex flex-col gap-0.5 pt-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      onClick={() => moveActivity(idx, 'up')}
+                      disabled={idx === 0}
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      onClick={() => moveActivity(idx, 'down')}
+                      disabled={idx === activities.length - 1}
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </Button>
+                  </div>
+
+                  {/* Mobile label with reorder */}
+                  <div className="flex items-center justify-between sm:hidden">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Etapa {idx + 1}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(idx, 'up')} disabled={idx === 0}>
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(idx, 'down')} disabled={idx === activities.length - 1}>
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
 
                   <AutoTextarea
                     value={act.description}
