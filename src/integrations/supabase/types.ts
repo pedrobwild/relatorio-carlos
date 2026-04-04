@@ -4999,6 +4999,10 @@ export type Database = {
         | "pending_item_created"
         | "report_published"
         | "general"
+        | "nc_created"
+        | "nc_status_changed"
+        | "nc_pending_approval"
+        | "nc_assigned"
       obra_status:
         | "planejamento"
         | "em_andamento"
@@ -5228,6 +5232,10 @@ export const Constants = {
         "pending_item_created",
         "report_published",
         "general",
+        "nc_created",
+        "nc_status_changed",
+        "nc_pending_approval",
+        "nc_assigned",
       ],
       obra_status: [
         "planejamento",
