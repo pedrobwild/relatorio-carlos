@@ -339,24 +339,6 @@ function ProjectRow({
           )}
         </TableCell>
 
-        {/* Financial */}
-        <TableCell className="text-center">
-          {contractValue > 0 ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="text-xs font-medium tabular-nums">
-                  R$ {(contractValue / 1000).toFixed(0)}k
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                Contrato: R$ {contractValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
-          )}
-        </TableCell>
-
         {/* Action */}
         <TableCell>
           <Button
