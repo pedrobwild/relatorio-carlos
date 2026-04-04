@@ -93,7 +93,7 @@ export default function PortfolioPage() {
         </div>
       </AppHeader>
 
-      <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-4 space-y-4">
+      <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-3 space-y-2.5">
         {/* Stale data banner */}
         {isStale && !isLoading && projects.length > 0 && (
           <StaleDataBanner onRefresh={() => refetch()} isRefetching={isRefetching} />
@@ -132,7 +132,7 @@ export default function PortfolioPage() {
         )}
 
         {/* Content: Sidebar + Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] xl:grid-cols-[220px_1fr] gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-[190px_1fr] xl:grid-cols-[200px_1fr] gap-2.5">
           {/* Sidebar */}
           <aside className="order-2 lg:order-1 space-y-4">
             {summariesLoading && summaries.length === 0 ? (
