@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Calendar, Weight, ListChecks, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ interface TabAtividadesProps {
   onAdd: (a: { description: string; planned_start: string; planned_end: string; weight: string }) => Promise<boolean>;
   onUpdate: (id: string, field: string, value: string | number | null) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onReorder: (fromIndex: number, toIndex: number) => Promise<void>;
 }
 
 function WeightBar({ total }: { total: number }) {
@@ -173,22 +174,45 @@ function ActivityRow({
   index,
   onUpdate,
   onDelete,
+  isDragging,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   activity: Activity;
   index: number;
   onUpdate: TabAtividadesProps['onUpdate'];
   onDelete: TabAtividadesProps['onDelete'];
+  isDragging: boolean;
+  isDragOver: boolean;
+  onDragStart: (event: React.DragEvent<HTMLButtonElement>, index: number) => void;
+  onDragOver: (event: React.DragEvent<HTMLDivElement>, index: number) => void;
+  onDrop: (event: React.DragEvent<HTMLDivElement>, index: number) => void;
+  onDragEnd: () => void;
 }) {
   return (
     <>
       {/* Desktop row */}
       <div className={cn(
         'hidden md:grid md:grid-cols-[1fr_130px_130px_130px_130px_70px_44px] gap-0 items-start group/row border-b border-border/40 last:border-b-0 transition-colors hover:bg-accent/30',
-        index % 2 === 1 && 'bg-muted/20'
+        index % 2 === 1 && 'bg-muted/20',
+        isDragging && 'opacity-55',
+        isDragOver && 'bg-primary/10 ring-1 ring-inset ring-primary/30'
       )}>
-        <div className="p-2 pl-3 flex items-start gap-2">
+        <div className="p-2 pl-3 flex items-start gap-2" onDragOver={(event) => onDragOver(event, index)} onDrop={(event) => onDrop(event, index)}>
           <div className="flex items-center gap-1 shrink-0 pt-2">
-            <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 opacity-0 group-hover/row:opacity-100 transition-opacity cursor-grab" />
+            <button
+              type="button"
+              draggable
+              aria-label={`Reordenar atividade ${index + 1}`}
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/40 opacity-0 transition-all cursor-grab active:cursor-grabbing group-hover/row:opacity-100 hover:bg-accent hover:text-foreground"
+              onDragStart={(event) => onDragStart(event, index)}
+              onDragEnd={onDragEnd}
+            >
+              <GripVertical className="h-3.5 w-3.5" />
+            </button>
             <span className="text-xs font-bold text-muted-foreground tabular-nums w-5 text-right">{index + 1}</span>
           </div>
           <AutoResizeTextarea
@@ -306,8 +330,43 @@ function EmptyState() {
   );
 }
 
-export function TabAtividades({ activities, onAdd, onUpdate, onDelete }: TabAtividadesProps) {
+export function TabAtividades({ activities, onAdd, onUpdate, onDelete, onReorder }: TabAtividadesProps) {
   const totalWeight = activities.reduce((sum, a) => sum + (a.weight || 0), 0);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const clearDragState = useCallback(() => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDragStart = useCallback((event: React.DragEvent<HTMLButtonElement>, index: number) => {
+    setDraggedIndex(index);
+    setDragOverIndex(index);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(index));
+  }, []);
+
+  const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>, index: number) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  }, [dragOverIndex]);
+
+  const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>, index: number) => {
+    event.preventDefault();
+
+    const sourceIndex = draggedIndex ?? Number(event.dataTransfer.getData('text/plain'));
+    if (Number.isNaN(sourceIndex) || sourceIndex === index) {
+      clearDragState();
+      return;
+    }
+
+    await onReorder(sourceIndex, index);
+    clearDragState();
+  }, [clearDragState, draggedIndex, onReorder]);
 
   return (
     <div className="space-y-4">
@@ -356,6 +415,12 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete }: TabAtiv
                   index={i}
                   onUpdate={onUpdate}
                   onDelete={onDelete}
+                  isDragging={draggedIndex === i}
+                  isDragOver={dragOverIndex === i && draggedIndex !== i}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragEnd={clearDragState}
                 />
               ))}
             </div>
