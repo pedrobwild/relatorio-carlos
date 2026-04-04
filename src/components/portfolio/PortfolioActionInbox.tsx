@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  FileSignature, Ban, FileX, ClipboardX, Milestone,
+  Ban, ClipboardX, Milestone, CalendarX, Clock,
   HeartPulse, ChevronRight, ArrowRight, Inbox,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
