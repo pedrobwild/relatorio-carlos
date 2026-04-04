@@ -27,13 +27,14 @@ const statusVariant: Record<ObraTaskStatus, string> = {
   concluido: 'bg-green-500/15 text-green-700 border-green-300',
 };
 
-export function AtividadesListView({ tasks, isLoading, members, onUpdateStatus, onDelete, onUpdate }: Props) {
+export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
     if (!userId) return '—';
-    const m = members?.find((m: any) => m.user_id === userId);
-    return m?.user_name || m?.user_email || '—';
+    const u = staffUsers.find(u => u.id === userId);
+    return u?.nome || u?.email || '—';
   };
 
   if (isLoading) {
