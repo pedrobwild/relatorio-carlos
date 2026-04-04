@@ -178,7 +178,6 @@ function ProjectRow({
   const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const progress = summary?.progress_percentage ?? 0;
-  const progress = summary?.progress_percentage ?? 0;
 
   const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
