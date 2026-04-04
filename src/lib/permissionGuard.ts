@@ -12,7 +12,18 @@ import type { ModulePermission, ProjectPermission } from '@/types/permissions';
 
 const MODULE_PERMISSIONS: Record<AppRole, ModulePermission[]> = {
   customer: ['works:read'],
-  engineer: ['users:read', 'works:read', 'works:write', 'templates:read'],
+  engineer: [
+    'users:read',
+    'users:write',
+    'users:delete',
+    'works:read',
+    'works:write',
+    'works:delete',
+    'templates:read',
+    'templates:write',
+    'templates:delete',
+    'system:admin',
+  ],
   manager: [
     'users:read',
     'users:write',
@@ -37,11 +48,14 @@ const MODULE_PERMISSIONS: Record<AppRole, ModulePermission[]> = {
   gestor: [
     'users:read',
     'users:write',
+    'users:delete',
     'works:read',
     'works:write',
     'works:delete',
     'templates:read',
     'templates:write',
+    'templates:delete',
+    'system:admin',
   ],
   suprimentos: [
     'works:read',
