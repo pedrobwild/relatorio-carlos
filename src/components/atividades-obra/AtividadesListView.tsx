@@ -60,11 +60,12 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[30%]">Ação</TableHead>
+              <TableHead className="w-[25%]">Ação</TableHead>
               <TableHead>Responsável</TableHead>
               <TableHead>Prazo</TableHead>
               <TableHead>Custo</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Conclusão</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
