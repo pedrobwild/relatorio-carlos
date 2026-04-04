@@ -10,6 +10,7 @@ import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput }
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AtividadeDetailSheet } from './AtividadeDetailSheet';
 
 interface Props {
   tasks: ObraTask[];
@@ -35,6 +36,7 @@ const columnBg: Record<ObraTaskStatus, string> = {
 
 export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const [detailTask, setDetailTask] = useState<ObraTask | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<ObraTaskStatus | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
@@ -109,6 +111,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                       draggable
                       onDragStart={(e) => handleDragStart(e, task.id)}
                       className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                      onClick={() => setDetailTask(task)}
                     >
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-start justify-between gap-1">
@@ -179,6 +182,12 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
         }}
         
         initialData={editTask}
+      />
+
+      <AtividadeDetailSheet
+        task={detailTask}
+        open={!!detailTask}
+        onOpenChange={(open) => !open && setDetailTask(null)}
       />
     </>
   );
