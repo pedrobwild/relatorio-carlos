@@ -105,6 +105,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     <ProjectRow
                       project={project}
                       summary={summary}
+                      currentStage={stagesMap?.get(project.id)}
                       isExpanded={isExpanded}
                       onToggle={() => toggleExpanded(project.id)}
                       onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
