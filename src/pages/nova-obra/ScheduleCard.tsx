@@ -268,6 +268,42 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
 
   const totalWeight = activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0);
 
+  const recalculateAllDates = useCallback((acts: ScheduleActivity[], startDate: string): ScheduleActivity[] => {
+    if (!startDate || acts.length === 0) return acts;
+    const result: ScheduleActivity[] = [];
+    let currentStart: Date = new Date(startDate + 'T00:00:00');
+
+    for (let i = 0; i < acts.length; i++) {
+      const friday = getFridayOfWeek(currentStart);
+      result.push({
+        ...acts[i],
+        plannedStart: toISO(currentStart),
+        plannedEnd: toISO(friday),
+      });
+      currentStart = getNextMonday(friday);
+    }
+    return result;
+  }, []);
+
+  const moveActivity = useCallback((index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= activities.length) return;
+    const reordered = [...activities];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    const recalculated = recalculateAllDates(reordered, formData.planned_start_date);
+    safeSetActivities(recalculated);
+  }, [activities, formData.planned_start_date, recalculateAllDates, safeSetActivities]);
+
+  const handleRecalculateDates = useCallback(() => {
+    if (!formData.planned_start_date) {
+      toast({ title: 'Defina a data de início primeiro', variant: 'destructive' });
+      return;
+    }
+    const recalculated = recalculateAllDates(activities, formData.planned_start_date);
+    safeSetActivities(recalculated);
+    toast({ title: 'Datas recalculadas com base na data de início' });
+  }, [activities, formData.planned_start_date, recalculateAllDates, safeSetActivities, toast]);
+
   const updateActivity = (id: string, field: keyof ScheduleActivity, value: string) => {
     const updated = activities.map((a) => {
       if (a.id !== id) return a;
@@ -305,7 +341,12 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
   };
 
   const removeActivity = (id: string) => {
-    onActivitiesChange(activities.filter((a) => a.id !== id));
+    const filtered = activities.filter((a) => a.id !== id);
+    if (formData.planned_start_date && filtered.length > 0) {
+      safeSetActivities(recalculateAllDates(filtered, formData.planned_start_date));
+    } else {
+      onActivitiesChange(filtered);
+    }
   };
 
   return (
