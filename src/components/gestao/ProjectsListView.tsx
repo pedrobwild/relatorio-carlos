@@ -77,11 +77,8 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="w-[50px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Saúde
               </TableHead>
-              <TableHead className="w-[68px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+              <TableHead className="w-[110px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Entrega
-              </TableHead>
-              <TableHead className="w-[90px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                Prazo
               </TableHead>
               <TableHead className="w-[72px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Avanço
