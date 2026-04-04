@@ -28,6 +28,8 @@ interface PortfolioCommandBarProps {
   onPresetChange: (preset: PortfolioPreset) => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  scopeFilter: ScopeFilter;
+  onScopeChange: (scope: ScopeFilter) => void;
   totalCount: number;
   filteredCount: number;
   activeFilterCount: number;
