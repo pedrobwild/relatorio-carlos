@@ -38,8 +38,8 @@ interface PortfolioCommandBarProps {
 
 export function PortfolioCommandBar({
   search, onSearchChange, activePreset, onPresetChange,
-  viewMode, onViewModeChange, totalCount, filteredCount,
-  activeFilterCount, onOpenFilters,
+  viewMode, onViewModeChange, scopeFilter, onScopeChange,
+  totalCount, filteredCount, activeFilterCount, onOpenFilters,
 }: PortfolioCommandBarProps) {
   const navigate = useNavigate();
   const showingSubset = filteredCount < totalCount;
