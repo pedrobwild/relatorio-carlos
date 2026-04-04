@@ -295,6 +295,14 @@ const App = () => (
                 </StaffRoute>
               }
             />
+            <Route
+              path="/obra/:projectId/atividades"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<AtividadesObra />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
             
             {/* Root route - redirect based on role */}
             <Route path="/" element={<ProtectedRoute><AuthRedirectPage /></ProtectedRoute>} />
