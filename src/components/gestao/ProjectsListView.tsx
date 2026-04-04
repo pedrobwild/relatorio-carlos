@@ -83,7 +83,6 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="w-[70px] text-center text-xs whitespace-nowrap">Progresso</TableHead>
               <TableHead className="min-w-[120px] text-xs whitespace-nowrap">Engenheiro</TableHead>
               <TableHead className="w-[90px] text-center text-xs whitespace-nowrap">Pendências</TableHead>
-              <TableHead className="w-[120px] text-center text-xs whitespace-nowrap">Financeiro</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
@@ -103,7 +102,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={11} className="p-0">
+                        <TableCell colSpan={10} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -116,7 +115,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -179,7 +178,6 @@ function ProjectRow({
   const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const progress = summary?.progress_percentage ?? 0;
-  const contractValue = project.contract_value ?? 0;
 
   const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
@@ -337,24 +335,6 @@ function ProjectRow({
                   : `${pendingCount} pendência(s) dentro do prazo`}
               </TooltipContent>
             </Tooltip>
-          )}
-        </TableCell>
-
-        {/* Financial */}
-        <TableCell className="text-center">
-          {contractValue > 0 ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="text-xs font-medium tabular-nums">
-                  R$ {(contractValue / 1000).toFixed(0)}k
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                Contrato: R$ {contractValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
           )}
         </TableCell>
 
