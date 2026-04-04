@@ -23,13 +23,13 @@ interface MobileFormalizacoesProps {
   basePath: string;
   onCreateNew: () => void;
   canCreate: boolean;
-  isAdmin: boolean;
+  isStaff: boolean;
 }
 
 export function MobileFormalizacoes({
   formalizacoes, isLoading, activeTab, setActiveTab,
   searchTerm, setSearchTerm, typeFilter, setTypeFilter,
-  pendingCount, signedCount, basePath, onCreateNew, canCreate, isAdmin,
+  pendingCount, signedCount, basePath, onCreateNew, canCreate, isStaff,
 }: MobileFormalizacoesProps) {
   return (
     <div className="lg:hidden space-y-5">
@@ -152,7 +152,7 @@ export function MobileFormalizacoes({
                     ? 'Você está em dia com todas as formalizações.'
                     : 'Crie uma nova formalização para começar.'}
                 </p>
-                {activeTab !== 'pendentes' && isAdmin && (
+                {activeTab !== 'pendentes' && isStaff && (
                   <Button onClick={onCreateNew} className="mt-4" size="sm">
                     <Plus className="h-4 w-4 mr-1.5" />
                     Nova formalização
