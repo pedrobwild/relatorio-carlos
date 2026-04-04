@@ -14,7 +14,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface Props {
   tasks: ObraTask[];
   isLoading: boolean;
-  members: any[];
   onUpdateStatus: (id: string, status: ObraTaskStatus) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<ObraTaskInput>) => void;
