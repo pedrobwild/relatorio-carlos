@@ -2351,11 +2351,48 @@ export type Database = {
           },
         ]
       }
+      obra_task_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_status: Database["public"]["Enums"]["obra_task_status"]
+          old_status: Database["public"]["Enums"]["obra_task_status"] | null
+          task_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_status: Database["public"]["Enums"]["obra_task_status"]
+          old_status?: Database["public"]["Enums"]["obra_task_status"] | null
+          task_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_status?: Database["public"]["Enums"]["obra_task_status"]
+          old_status?: Database["public"]["Enums"]["obra_task_status"] | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obra_task_status_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "obra_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obra_tasks: {
         Row: {
+          completed_at: string | null
           cost: number | null
           created_at: string
           created_by: string
+          days_overdue: number | null
           description: string | null
           due_date: string | null
           id: string
@@ -2367,9 +2404,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          completed_at?: string | null
           cost?: number | null
           created_at?: string
           created_by?: string
+          days_overdue?: number | null
           description?: string | null
           due_date?: string | null
           id?: string
@@ -2381,9 +2420,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          completed_at?: string | null
           cost?: number | null
           created_at?: string
           created_by?: string
+          days_overdue?: number | null
           description?: string | null
           due_date?: string | null
           id?: string

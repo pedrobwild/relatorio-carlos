@@ -60,11 +60,12 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[30%]">Ação</TableHead>
+              <TableHead className="w-[25%]">Ação</TableHead>
               <TableHead>Responsável</TableHead>
               <TableHead>Prazo</TableHead>
               <TableHead>Custo</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Conclusão</TableHead>
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
@@ -114,6 +115,18 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
                         ))}
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                  <TableCell>
+                    {task.status === 'concluido' && task.completed_at ? (
+                      <div className="text-xs space-y-0.5">
+                        <span>{format(new Date(task.completed_at), 'dd/MM/yy', { locale: ptBR })}</span>
+                        {task.days_overdue != null && (
+                          <p className={task.days_overdue > 0 ? 'text-destructive font-medium' : 'text-green-600 font-medium'}>
+                            {task.days_overdue > 0 ? `${task.days_overdue}d atraso` : task.days_overdue === 0 ? 'No prazo' : `${Math.abs(task.days_overdue)}d antecipado`}
+                          </p>
+                        )}
+                      </div>
+                    ) : '—'}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
