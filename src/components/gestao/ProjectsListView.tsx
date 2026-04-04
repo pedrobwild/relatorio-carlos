@@ -292,14 +292,8 @@ function ProjectRow({
           </div>
         </TableCell>
 
-        {/* Engineer */}
-        <TableCell className="py-3">
-          <span className="text-xs truncate block max-w-[80px]">
-            {project.engineer_name
-              ? project.engineer_name.split(' ')[0]
-              : <span className="text-muted-foreground italic">—</span>}
-          </span>
-        </TableCell>
+
+
 
         {/* Pending */}
         <TableCell className="text-center py-3">
