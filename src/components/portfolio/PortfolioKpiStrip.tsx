@@ -35,7 +35,7 @@ interface PortfolioKpiStripProps {
 // ─── Definitions ─────────────────────────────────────────────────────────────
 
 const kpiDefinitions: KpiDefinition[] = [
-  { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-3.5 w-3.5" />, accent: 'success' },
+  { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-3.5 w-3.5" />, accent: 'success' },
   { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-3.5 w-3.5" />, accent: 'destructive' },
   { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-3.5 w-3.5" />, accent: 'warning' },
   { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-3.5 w-3.5" />, accent: 'destructive' },
