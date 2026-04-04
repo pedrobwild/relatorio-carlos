@@ -40,7 +40,7 @@ function FormalizacaoSkeleton() {
 const FormalizacoesContent = () => {
   const navigate = useNavigate();
   const { paths, projectId } = useProjectNavigation();
-  const { isAdmin } = useUserRole();
+  const { isStaff } = useUserRole();
   const { can } = useCan();
   const [activeTab, setActiveTab] = useState('pendentes');
   const [searchTerm, setSearchTerm] = useState('');

@@ -15,7 +15,7 @@ import { downloadBoleto } from "@/hooks/useBoletoUpload";
 const FinanceiroContent = () => {
   const { project, loading: projectLoading } = useProject();
   const { data: payments = [], isLoading: paymentsLoading } = useProjectPayments(project?.id);
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  const { isStaff, loading: roleLoading } = useUserRole();
   const markPaidMutation = useMarkPaymentPaid();
 
   const today = new Date();
@@ -159,8 +159,8 @@ const FinanceiroContent = () => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-h2">Histórico de Parcelas</h2>
-              {isAdmin && (
-                <Badge variant="outline" className="text-xs">Admin: pode editar</Badge>
+              {isStaff && (
+                <Badge variant="outline" className="text-xs">Equipe: pode editar</Badge>
               )}
             </div>
             <div className="space-y-2">
@@ -202,7 +202,7 @@ const FinanceiroContent = () => {
                       </div>
                       <div className="text-right shrink-0 flex flex-col items-end gap-2">
                         <p className="text-h3 tabular-nums">{formatCurrency(payment.amount)}</p>
-                        {isAdmin ? (
+                        {isStaff ? (
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground">{payment.paid_at ? "Pago" : "Pendente"}</span>
                             <Switch
@@ -226,14 +226,14 @@ const FinanceiroContent = () => {
                         ) : (
                           <Badge variant="outline" className="text-tiny text-muted-foreground">Aguardando pagamento</Badge>
                         )}
-                        {isAdmin && !payment.paid_at && (
+                        {isStaff && !payment.paid_at && (
                           <BoletoUploadButton
                             paymentId={payment.id}
                             projectId={project.id}
                             boletoPath={payment.boleto_path}
                           />
                         )}
-                        {isAdmin && payment.boleto_path && (
+                        {isStaff && payment.boleto_path && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -281,9 +281,9 @@ const FinanceiroContent = () => {
                 />
               </div>
             </div>
-            {isAdmin && (
+            {isStaff && (
               <div className="mt-4">
-                <Badge variant="outline" className="text-xs">Admin: pode editar pagamentos</Badge>
+                <Badge variant="outline" className="text-xs">Equipe: pode editar pagamentos</Badge>
               </div>
             )}
           </div>
@@ -315,7 +315,7 @@ const FinanceiroContent = () => {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-h3 tabular-nums">{formatCurrency(payment.amount)}</p>
-                      {isAdmin ? (
+                      {isStaff ? (
                         <div className="flex items-center gap-2 mt-2 justify-end">
                           <span className="text-xs text-muted-foreground">{payment.paid_at ? "Pago" : "Pend."}</span>
                           <Switch
@@ -339,7 +339,7 @@ const FinanceiroContent = () => {
                       ) : (
                         <span className="text-tiny text-muted-foreground">Aguardando pagamento</span>
                       )}
-                      {isAdmin && !payment.paid_at && (
+                      {isStaff && !payment.paid_at && (
                         <div className="mt-1">
                           <BoletoUploadButton
                             paymentId={payment.id}
