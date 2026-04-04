@@ -115,7 +115,7 @@ export function CustomerRoute({ children }: { children: ReactNode }) {
 // Admin: full system access including user management
 export function AdminRoute({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['admin']}>
+    <ProtectedRoute allowedRoles={['admin', 'manager', 'engineer', 'gestor']}>
       {children}
     </ProtectedRoute>
   );
