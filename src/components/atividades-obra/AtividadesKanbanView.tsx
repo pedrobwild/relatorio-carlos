@@ -11,6 +11,7 @@ import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AtividadeDetailSheet } from './AtividadeDetailSheet';
+import { cn } from '@/lib/utils';
 
 interface Props {
   tasks: ObraTask[];
@@ -28,10 +29,17 @@ const columnColors: Record<ObraTaskStatus, string> = {
 };
 
 const columnBg: Record<ObraTaskStatus, string> = {
-  pendente: 'bg-yellow-50 dark:bg-yellow-950/20',
-  em_andamento: 'bg-blue-50 dark:bg-blue-950/20',
-  pausado: 'bg-orange-50 dark:bg-orange-950/20',
-  concluido: 'bg-green-50 dark:bg-green-950/20',
+  pendente: 'bg-yellow-50/60 dark:bg-yellow-950/20',
+  em_andamento: 'bg-blue-50/60 dark:bg-blue-950/20',
+  pausado: 'bg-orange-50/60 dark:bg-orange-950/20',
+  concluido: 'bg-green-50/60 dark:bg-green-950/20',
+};
+
+const dotColors: Record<ObraTaskStatus, string> = {
+  pendente: 'bg-yellow-500',
+  em_andamento: 'bg-blue-500',
+  pausado: 'bg-orange-500',
+  concluido: 'bg-green-500',
 };
 
 export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
@@ -48,12 +56,12 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="space-y-3">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
+          <div key={i} className="min-w-[260px] md:min-w-0 space-y-3">
+            <Skeleton className="h-10 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
           </div>
         ))}
       </div>
@@ -82,26 +90,32 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-h-[400px]">
+      {/* Horizontal scroll on mobile, grid on desktop */}
+      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 min-h-[400px] scrollbar-hide">
         {TASK_STATUSES.map(col => {
           const colTasks = tasks.filter(t => t.status === col.value);
           return (
             <div
               key={col.value}
-              className={`rounded-lg border-t-4 ${columnColors[col.value]} ${
-                dragOverColumn === col.value ? 'ring-2 ring-primary/40' : ''
-              }`}
+              className={cn(
+                'min-w-[280px] md:min-w-0 rounded-2xl border-t-[3px] transition-all flex flex-col',
+                columnColors[col.value],
+                dragOverColumn === col.value && 'ring-2 ring-primary/40 shadow-lg',
+              )}
               onDragOver={(e) => handleDragOver(e, col.value)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, col.value)}
             >
-              <div className={`p-3 rounded-t-lg ${columnBg[col.value]}`}>
+              <div className={cn('p-3 rounded-t-xl', columnBg[col.value])}>
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">{col.label}</h3>
-                  <Badge variant="secondary" className="text-xs">{colTasks.length}</Badge>
+                  <div className="flex items-center gap-2">
+                    <div className={cn('w-2.5 h-2.5 rounded-full', dotColors[col.value])} />
+                    <h3 className="font-bold text-sm">{col.label}</h3>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] font-bold h-5 min-w-[20px] justify-center">{colTasks.length}</Badge>
                 </div>
               </div>
-              <div className="p-2 space-y-2 min-h-[200px] bg-muted/30 rounded-b-lg">
+              <div className="p-2 space-y-2 flex-1 bg-muted/20 rounded-b-2xl">
                 {colTasks.map(task => {
                   const responsible = getMemberName(task.responsible_user_id);
                   const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
@@ -110,54 +124,63 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                       key={task.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, task.id)}
-                      className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                      className="cursor-grab active:cursor-grabbing hover:shadow-md transition-all rounded-xl border-border/40 active:scale-[0.98]"
                       onClick={() => setDetailTask(task)}
                     >
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-start justify-between gap-1">
-                          <span className={`font-medium text-sm leading-tight ${task.status === 'concluido' ? 'line-through opacity-60' : ''}`}>
+                          <span className={cn(
+                            'font-semibold text-sm leading-tight',
+                            task.status === 'concluido' && 'line-through opacity-60'
+                          )}>
                             {task.title}
                           </span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 rounded-lg" onClick={e => e.stopPropagation()}>
                                 <MoreHorizontal className="h-3.5 w-3.5" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setEditTask(task)}>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditTask(task); }}>
                                 <Pencil className="h-4 w-4 mr-2" /> Editar
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive" onClick={() => onDelete(task.id)}>
+                              <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}>
                                 <Trash2 className="h-4 w-4 mr-2" /> Excluir
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
                         {task.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{task.description}</p>
                         )}
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                           {responsible && (
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 bg-muted/50 rounded-md px-1.5 py-0.5">
                               <User className="h-3 w-3" /> {responsible}
                             </span>
                           )}
                           {task.due_date && (
-                            <span className={`flex items-center gap-1 ${isOverdue ? 'text-destructive font-medium' : ''}`}>
+                            <span className={cn(
+                              'flex items-center gap-1 rounded-md px-1.5 py-0.5',
+                              isOverdue ? 'bg-destructive/10 text-destructive font-semibold' : 'bg-muted/50'
+                            )}>
                               <Calendar className="h-3 w-3" />
                               {format(new Date(task.due_date + 'T00:00:00'), 'dd/MM', { locale: ptBR })}
                             </span>
                           )}
                           {task.cost != null && (
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 bg-muted/50 rounded-md px-1.5 py-0.5">
                               <DollarSign className="h-3 w-3" />
                               {task.cost.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
                             </span>
                           )}
                         </div>
                         {task.status === 'concluido' && task.completed_at && task.days_overdue != null && (
-                          <p className={`text-xs font-medium ${task.days_overdue > 0 ? 'text-destructive' : 'text-green-600'}`}>
+                          <p className={cn(
+                            'text-[11px] font-semibold',
+                            task.days_overdue > 0 ? 'text-destructive' : 'text-green-600'
+                          )}>
                             {task.days_overdue > 0 ? `${task.days_overdue}d atraso` : task.days_overdue === 0 ? '✓ No prazo' : `✓ ${Math.abs(task.days_overdue)}d antecipado`}
                           </p>
                         )}
@@ -165,6 +188,11 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                     </Card>
                   );
                 })}
+                {colTasks.length === 0 && (
+                  <div className="flex items-center justify-center h-24 text-xs text-muted-foreground/50 border-2 border-dashed border-border/30 rounded-xl">
+                    Arraste aqui
+                  </div>
+                )}
               </div>
             </div>
           );
