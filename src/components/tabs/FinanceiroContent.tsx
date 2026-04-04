@@ -15,7 +15,7 @@ import { downloadBoleto } from "@/hooks/useBoletoUpload";
 const FinanceiroContent = () => {
   const { project, loading: projectLoading } = useProject();
   const { data: payments = [], isLoading: paymentsLoading } = useProjectPayments(project?.id);
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  const { isStaff, loading: roleLoading } = useUserRole();
   const markPaidMutation = useMarkPaymentPaid();
 
   const today = new Date();

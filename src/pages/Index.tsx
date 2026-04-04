@@ -220,8 +220,8 @@ const Index = () => {
                   activities={reportData.activities}
                   isProjectPhase={project?.is_project_phase}
                   milestoneDates={milestoneDates}
-                  canEditMilestones={isAdmin}
-                  onMilestoneDateChange={isAdmin ? handleMilestoneDateChange : undefined}
+                  canEditMilestones={isStaff}
+                  onMilestoneDateChange={isStaff ? handleMilestoneDateChange : undefined}
                 />
               )}
               <ProjectSubNav className="mt-3 -mx-3 md:mx-0 rounded-none md:rounded-xl" />
