@@ -34,6 +34,9 @@ export function usePortfolioFilters(
   // ── Preset ──────────────────────────────────────────────────────────────
   const [activePreset, setActivePreset] = useState<PortfolioPreset>('all');
 
+  // ── Scope (obras vs projetos) ──────────────────────────────────────────
+  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('all');
+
   // ── KPI filter ──────────────────────────────────────────────────────────
   const [kpiFilter, setKpiFilter] = useState<KpiFilterKey | null>(null);
 
