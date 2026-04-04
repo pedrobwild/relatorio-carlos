@@ -170,10 +170,11 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, isExpanded, onToggle, onNavigate,
+  project, summary, currentStage, isExpanded, onToggle, onNavigate,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
+  currentStage?: CurrentStageInfo;
   isExpanded: boolean;
   onToggle: () => void;
   onNavigate: () => void;
