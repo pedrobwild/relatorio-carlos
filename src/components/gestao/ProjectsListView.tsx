@@ -87,7 +87,6 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                 Avanço
               </TableHead>
               <TableHead className="w-[44px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-              <TableHead className="w-[44px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Pend.
               </TableHead>
               <TableHead className="w-8" />
