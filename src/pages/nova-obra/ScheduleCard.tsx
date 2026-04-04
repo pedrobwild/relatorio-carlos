@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { Calendar, Plus, Trash2, LayoutTemplate, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { Calendar, Plus, Trash2, LayoutTemplate, ArrowUp, ArrowDown, RefreshCw, GripVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -207,6 +207,8 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
   const { toast } = useToast();
   const skipNormalizeRef = useRef(false);
   const prevStartDateRef = useRef(formData.planned_start_date);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const safeSetActivities = useCallback((acts: ScheduleActivity[]) => {
     skipNormalizeRef.current = true;
@@ -295,14 +297,64 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
 
   const totalWeight = activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0);
 
+  const reorderActivities = useCallback((fromIndex: number, toIndex: number) => {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= activities.length ||
+      toIndex >= activities.length
+    ) {
+      return;
+    }
+
+    const reordered = [...activities];
+    const [movedActivity] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, movedActivity);
+
+    const nextActivities = formData.planned_start_date
+      ? recalculateAllDates(reordered, formData.planned_start_date)
+      : reordered;
+
+    safeSetActivities(nextActivities);
+  }, [activities, formData.planned_start_date, recalculateAllDates, safeSetActivities]);
+
   const moveActivity = useCallback((index: number, direction: 'up' | 'down') => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= activities.length) return;
-    const reordered = [...activities];
-    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
-    const recalculated = recalculateAllDates(reordered, formData.planned_start_date);
-    safeSetActivities(recalculated);
-  }, [activities, formData.planned_start_date, recalculateAllDates, safeSetActivities]);
+    reorderActivities(index, targetIndex);
+  }, [reorderActivities]);
+
+  const clearDragState = useCallback(() => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDragStart = useCallback((event: React.DragEvent<HTMLElement>, index: number) => {
+    setDraggedIndex(index);
+    setDragOverIndex(index);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', activities[index]?.id ?? String(index));
+  }, [activities]);
+
+  const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>, index: number) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  }, [dragOverIndex]);
+
+  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>, index: number) => {
+    event.preventDefault();
+
+    if (draggedIndex === null) {
+      clearDragState();
+      return;
+    }
+
+    reorderActivities(draggedIndex, index);
+    clearDragState();
+  }, [clearDragState, draggedIndex, reorderActivities]);
 
   const handleRecalculateDates = useCallback(() => {
     if (!formData.planned_start_date) {
@@ -532,7 +584,7 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
           {activities.length > 0 && (
             <div className="space-y-3">
               {/* Header - desktop only */}
-              <div className="hidden sm:grid grid-cols-[32px_1fr_130px_130px_70px_40px] gap-2 text-xs font-medium text-muted-foreground px-1">
+              <div className="hidden sm:grid grid-cols-[56px_1fr_130px_130px_70px_40px] gap-2 text-xs font-medium text-muted-foreground px-1">
                 <span />
                 <span>Descrição</span>
                 <span>Início Prev.</span>
@@ -544,10 +596,29 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               {activities.map((act, idx) => (
                 <div
                   key={act.id}
-                  className="rounded-lg border bg-card p-3 sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[32px_1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start"
+                  onDragOver={(event) => handleDragOver(event, idx)}
+                  onDrop={(event) => handleDrop(event, idx)}
+                  className={cn(
+                    "rounded-lg border bg-card p-3 transition-all sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[56px_1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start",
+                    draggedIndex === idx && "opacity-60",
+                    dragOverIndex === idx && draggedIndex !== idx && "bg-accent/40 ring-1 ring-border rounded-xl"
+                  )}
                 >
-                  {/* Reorder buttons */}
-                  <div className="hidden sm:flex flex-col gap-0.5 pt-0.5">
+                  {/* Reorder controls */}
+                  <div className="hidden sm:flex flex-col items-center gap-1 pt-0.5">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      draggable={activities.length > 1}
+                      onDragStart={(event) => handleDragStart(event, idx)}
+                      onDragEnd={clearDragState}
+                      className="h-7 w-7 min-h-[28px] min-w-[28px] cursor-grab p-0 text-muted-foreground hover:text-foreground active:cursor-grabbing disabled:cursor-not-allowed"
+                      disabled={activities.length < 2}
+                      aria-label={`Arrastar etapa ${idx + 1}`}
+                    >
+                      <GripVertical className="h-3.5 w-3.5" />
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"
@@ -572,9 +643,24 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
 
                   {/* Mobile label with reorder */}
                   <div className="flex items-center justify-between sm:hidden">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Etapa {idx + 1}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        draggable={activities.length > 1}
+                        onDragStart={(event) => handleDragStart(event, idx)}
+                        onDragEnd={clearDragState}
+                        className="h-7 w-7 cursor-grab p-0 text-muted-foreground hover:text-foreground active:cursor-grabbing disabled:cursor-not-allowed"
+                        disabled={activities.length < 2}
+                        aria-label={`Arrastar etapa ${idx + 1}`}
+                      >
+                        <GripVertical className="h-3.5 w-3.5" />
+                      </Button>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Etapa {idx + 1}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1">
                       <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(idx, 'up')} disabled={idx === 0}>
                         <ArrowUp className="h-3.5 w-3.5" />
