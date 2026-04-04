@@ -35,12 +35,13 @@ const emptyPrice = (fornecedorId: string): Partial<PriceItem> => ({
   observacoes: null,
 });
 
-export function SupplierPricesTab({ fornecedorId }: Props) {
+export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) {
   const qc = useQueryClient();
   const qk = ["fornecedor_precos", fornecedorId];
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<PriceItem>>(emptyPrice(fornecedorId));
   const [adding, setAdding] = useState(false);
+  const [sendItem, setSendItem] = useState<PriceItem | null>(null);
 
   const { data: prices = [], isLoading } = useQuery({
     queryKey: qk,
