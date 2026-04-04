@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
-  HardHat, AlertTriangle, Ban, Milestone, Ghost,
-  TrendingDown, CalendarX, CalendarClock,
+  HardHat, AlertTriangle, Ban, Ghost,
+  CalendarX, CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -15,9 +15,7 @@ export type KpiFilterKey =
   | 'blocked'
   | 'overdue'
   | 'approaching-deadline'
-  | 'milestone-7d'
-  | 'stale-7d'
-  | 'financial-deviation';
+  | 'stale-7d';
 
 export interface KpiDefinition {
   key: KpiFilterKey;
@@ -37,32 +35,22 @@ interface PortfolioKpiStripProps {
 // ─── Definitions ─────────────────────────────────────────────────────────────
 
 const kpiDefinitions: KpiDefinition[] = [
-  { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
-  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
-  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'milestone-7d', label: 'Marco em 7d', description: 'Prazo final nos próximos 7 dias', icon: <Milestone className="h-4 w-4" />, accent: 'warning' },
-  { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade registrada há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
-  { key: 'financial-deviation', label: 'Desvio financeiro', description: 'Soma de desvios sobre contratos ativos', icon: <TrendingDown className="h-4 w-4" />, accent: 'muted' },
+  { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-3.5 w-3.5" />, accent: 'success' },
+  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-3.5 w-3.5" />, accent: 'destructive' },
+  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-3.5 w-3.5" />, accent: 'warning' },
+  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-3.5 w-3.5" />, accent: 'destructive' },
+  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-3.5 w-3.5" />, accent: 'destructive' },
+  { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-3.5 w-3.5" />, accent: 'warning' },
 ];
 
 // ─── Accent styles ───────────────────────────────────────────────────────────
 
-const iconBg: Record<string, string> = {
-  default: 'bg-muted/60 text-foreground',
-  success: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  destructive: 'bg-destructive/10 text-destructive',
-  muted: 'bg-muted/60 text-muted-foreground',
-};
-
-const valueColor: Record<string, string> = {
-  default: 'text-foreground',
-  success: 'text-emerald-600 dark:text-emerald-400',
-  warning: 'text-amber-600 dark:text-amber-400',
-  destructive: 'text-destructive',
-  muted: 'text-foreground',
+const accentStyles: Record<string, { iconBg: string; value: string; activeBorder: string }> = {
+  default: { iconBg: 'bg-muted/60 text-foreground', value: 'text-foreground', activeBorder: 'border-primary/40' },
+  success: { iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', value: 'text-emerald-600 dark:text-emerald-400', activeBorder: 'border-emerald-500/40' },
+  warning: { iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', value: 'text-amber-600 dark:text-amber-400', activeBorder: 'border-amber-500/40' },
+  destructive: { iconBg: 'bg-destructive/10 text-destructive', value: 'text-destructive', activeBorder: 'border-destructive/40' },
+  muted: { iconBg: 'bg-muted/60 text-muted-foreground', value: 'text-foreground', activeBorder: 'border-primary/40' },
 };
 
 // ─── Compute KPI values ──────────────────────────────────────────────────────
@@ -70,18 +58,16 @@ const valueColor: Record<string, string> = {
 function computeKpiValues(
   projects: ProjectWithCustomer[],
   summaries: ProjectSummary[],
-): Map<KpiFilterKey, number | string> {
+): Map<KpiFilterKey, number> {
   const summaryMap = new Map<string, ProjectSummary>();
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
   const MS_STALE = 7 * 24 * 60 * 60 * 1000;
-  const MS_7D = 7 * 24 * 60 * 60 * 1000;
   const MS_14D = 14 * 24 * 60 * 60 * 1000;
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
-  let milestone7d = 0, stale7d = 0;
-  let overdueCount = 0, approachingCount = 0;
+  let stale7d = 0, overdueCount = 0, approachingCount = 0;
 
   for (const p of projects) {
     const s = summaryMap.get(p.id);
@@ -91,12 +77,8 @@ function computeKpiValues(
 
     if (p.planned_end_date && p.status === 'active') {
       const daysLeft = new Date(p.planned_end_date).getTime() - now;
-      if (daysLeft < 0) {
-        overdueCount++;
-      } else if (daysLeft <= MS_14D) {
-        approachingCount++;
-      }
-      if (daysLeft >= 0 && daysLeft <= MS_7D) milestone7d++;
+      if (daysLeft < 0) overdueCount++;
+      else if (daysLeft <= MS_14D) approachingCount++;
     }
 
     if (p.status === 'active') {
@@ -106,15 +88,13 @@ function computeKpiValues(
     }
   }
 
-  const map = new Map<KpiFilterKey, number | string>();
+  const map = new Map<KpiFilterKey, number>();
   map.set('active', activeCount);
   map.set('overdue', overdueCount);
   map.set('approaching-deadline', approachingCount);
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
-  map.set('milestone-7d', milestone7d);
   map.set('stale-7d', stale7d);
-  map.set('financial-deviation', '—');
   return map;
 }
 
@@ -127,14 +107,15 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 lg:mx-0 lg:px-0"
+      className="grid grid-cols-3 md:grid-cols-6 gap-2"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
       {kpiDefinitions.map((kpi) => {
-        const val = values.get(kpi.key) ?? '—';
+        const val = values.get(kpi.key) ?? 0;
         const isSelected = activeFilter === kpi.key;
         const isZero = val === 0;
+        const style = accentStyles[kpi.accent];
 
         return (
           <button
@@ -145,36 +126,35 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'group relative flex items-center gap-3 shrink-0 rounded-xl border px-4 py-3 min-w-[150px] max-w-[190px]',
+              'group relative flex items-center gap-2.5 rounded-lg border px-3 py-2.5',
               'transition-all duration-150 cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               isSelected
-                ? 'border-primary/40 bg-primary/5 shadow-sm ring-1 ring-primary/20'
-                : 'border-border/30 bg-card hover:border-border/60 hover:bg-muted/20 hover:shadow-sm',
-              isZero && !isSelected && 'opacity-50',
-              // Pulse effect for overdue when count > 0
-              kpi.key === 'overdue' && !isZero && !isSelected && 'border-destructive/40 bg-destructive/5',
+                ? `${style.activeBorder} bg-primary/5 shadow-sm ring-1 ring-primary/20`
+                : 'border-border/40 bg-card hover:border-border/70 hover:shadow-sm',
+              isZero && !isSelected && 'opacity-45',
+              kpi.key === 'overdue' && !isZero && !isSelected && 'border-destructive/30 bg-destructive/[0.04]',
             )}
           >
             <div className={cn(
-              'flex items-center justify-center h-9 w-9 rounded-lg shrink-0 transition-colors',
-              iconBg[kpi.accent],
+              'flex items-center justify-center h-7 w-7 rounded-md shrink-0',
+              style.iconBg,
             )} aria-hidden="true">
               {kpi.icon}
             </div>
             <div className="min-w-0 text-left">
               <p className={cn(
-                'text-lg font-bold tabular-nums leading-none transition-colors',
-                isSelected || !isZero ? valueColor[kpi.accent] : 'text-muted-foreground',
+                'text-base font-bold tabular-nums leading-none',
+                isSelected || !isZero ? style.value : 'text-muted-foreground',
               )}>
                 {val}
               </p>
-              <p className="text-[11px] font-medium text-muted-foreground mt-0.5 truncate leading-tight">
+              <p className="text-[10px] font-medium text-muted-foreground mt-0.5 truncate leading-tight">
                 {kpi.label}
               </p>
             </div>
             {isSelected && (
-              <div className="absolute -bottom-px left-4 right-4 h-0.5 rounded-full bg-primary" />
+              <div className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-primary" />
             )}
           </button>
         );
@@ -195,7 +175,6 @@ export function applyKpiFilter(
 
   const now = Date.now();
   const MS_STALE = 7 * 24 * 60 * 60 * 1000;
-  const MS_7D = 7 * 24 * 60 * 60 * 1000;
   const MS_14D = 14 * 24 * 60 * 60 * 1000;
 
   switch (filter) {
@@ -219,12 +198,6 @@ export function applyKpiFilter(
       });
     case 'blocked':
       return projects.filter(p => p.status === 'paused');
-    case 'milestone-7d':
-      return projects.filter(p => {
-        if (!p.planned_end_date || p.status !== 'active') return false;
-        const diff = new Date(p.planned_end_date).getTime() - now;
-        return diff >= 0 && diff <= MS_7D;
-      });
     case 'stale-7d':
       return projects.filter(p => {
         if (p.status !== 'active') return false;
@@ -233,8 +206,6 @@ export function applyKpiFilter(
         const refTime = ref ? new Date(ref).getTime() : 0;
         return refTime > 0 && now - refTime > MS_STALE;
       });
-    case 'financial-deviation':
-      return projects.filter(p => p.status === 'active');
     default:
       return projects;
   }
