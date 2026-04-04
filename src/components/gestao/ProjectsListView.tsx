@@ -67,32 +67,32 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border/60">
-              <TableHead className="w-10 px-2" />
-              <TableHead className="min-w-[200px] py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-8 px-1" />
+              <TableHead className="py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Obra
               </TableHead>
-              <TableHead className="w-[72px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[64px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Status
               </TableHead>
-              <TableHead className="w-[56px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[50px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Saúde
               </TableHead>
-              <TableHead className="w-[80px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[68px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Entrega
               </TableHead>
-              <TableHead className="w-[100px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[90px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Prazo
               </TableHead>
-              <TableHead className="w-[80px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[72px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Avanço
               </TableHead>
-              <TableHead className="w-[80px] py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[64px] py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Resp.
               </TableHead>
-              <TableHead className="w-[56px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <TableHead className="w-[44px] text-center py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                 Pend.
               </TableHead>
-              <TableHead className="w-10" />
+              <TableHead className="w-8" />
             </TableRow>
           </TableHeader>
           <TableBody>
