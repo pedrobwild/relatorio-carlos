@@ -94,16 +94,16 @@ export function MilestonesBar({ milestoneItems, canEdit, isMobile = false, onMil
     }
   }, [onMilestoneDateChange]);
 
-  // Hide for clients when no milestone dates are filled
-  const hasAnyDate = milestoneItems.some(m => !!m.value);
-  if (!canEdit && !hasAnyDate) return null;
+  // For clients (non-editors), only show milestones that have dates
+  const visibleItems = canEdit ? milestoneItems : milestoneItems.filter(m => !!m.value);
+  if (visibleItems.length === 0) return null;
 
   if (isMobile) {
     return (
       <div className="mb-3">
         <span className="text-meta font-semibold uppercase tracking-wider block mb-1.5">Marcos do Projeto</span>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-          {milestoneItems.map((m) => (
+          {visibleItems.map((m) => (
             <div key={m.label} className="flex items-baseline justify-between gap-1">
               {canEdit && onMilestoneDateChange ? (
                 <Popover open={editingMilestone === m.key} onOpenChange={(open) => setEditingMilestone(open ? m.key : null)}>
