@@ -35,12 +35,12 @@ interface PortfolioKpiStripProps {
 // ─── Definitions ─────────────────────────────────────────────────────────────
 
 const kpiDefinitions: KpiDefinition[] = [
-  { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-3.5 w-3.5" />, accent: 'success' },
-  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-3.5 w-3.5" />, accent: 'destructive' },
-  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-3.5 w-3.5" />, accent: 'warning' },
-  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-3.5 w-3.5" />, accent: 'destructive' },
-  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-3.5 w-3.5" />, accent: 'destructive' },
-  { key: 'stale-7d', label: 'Sem update', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-3.5 w-3.5" />, accent: 'warning' },
+  { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
+  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
+  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'stale-7d', label: 'Sem update', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
 ];
 
 // ─── Accent styles ───────────────────────────────────────────────────────────
@@ -51,30 +51,35 @@ const accentConfig = {
     value: 'text-emerald-700 dark:text-emerald-400',
     activeBg: 'bg-emerald-50 border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/30 ring-1 ring-emerald-200/50 dark:ring-emerald-500/20',
     highlight: '',
+    dot: 'bg-emerald-500',
   },
   destructive: {
     icon: 'text-destructive',
     value: 'text-destructive',
     activeBg: 'bg-red-50 border-red-300 dark:bg-destructive/10 dark:border-destructive/30 ring-1 ring-red-200/50 dark:ring-destructive/20',
     highlight: 'border-red-200 bg-red-50/40 dark:border-destructive/20 dark:bg-destructive/[0.04]',
+    dot: 'bg-destructive',
   },
   warning: {
     icon: 'text-amber-600 dark:text-amber-400',
     value: 'text-amber-700 dark:text-amber-400',
     activeBg: 'bg-amber-50 border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/30 ring-1 ring-amber-200/50 dark:ring-amber-500/20',
     highlight: '',
+    dot: 'bg-amber-500',
   },
   default: {
     icon: 'text-foreground',
     value: 'text-foreground',
     activeBg: 'bg-primary/5 border-primary/30 ring-1 ring-primary/10',
     highlight: '',
+    dot: 'bg-primary',
   },
   muted: {
     icon: 'text-muted-foreground',
     value: 'text-foreground',
     activeBg: 'bg-primary/5 border-primary/30 ring-1 ring-primary/10',
     highlight: '',
+    dot: 'bg-muted-foreground',
   },
 };
 
@@ -132,7 +137,7 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="grid grid-cols-6 gap-1.5"
+      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-6"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
@@ -152,27 +157,28 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'relative flex items-center gap-1.5 rounded-lg border px-2.5 py-2',
-              'transition-all duration-150 cursor-pointer select-none',
+              'relative flex flex-col items-center gap-1.5 rounded-xl border px-4 py-2.5 min-w-[80px] shrink-0',
+              'md:flex-row md:gap-2 md:px-3 md:py-2 md:min-w-0',
+              'transition-all duration-150 cursor-pointer select-none active:scale-[0.96]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
               isSelected
                 ? `${accent.activeBg} shadow-sm`
                 : shouldHighlight
                   ? accent.highlight
-                  : 'border-border/40 bg-card/80 hover:border-border/70 hover:bg-card',
-              isZero && !isSelected && 'opacity-35',
+                  : 'border-border/40 bg-card hover:border-border/70 hover:bg-card/90',
+              isZero && !isSelected && 'opacity-40',
             )}
           >
             <div className={cn('shrink-0', isSelected || !isZero ? accent.icon : 'text-muted-foreground/60')} aria-hidden="true">
               {kpi.icon}
             </div>
             <span className={cn(
-              'text-base font-bold tabular-nums leading-none',
+              'text-xl font-bold tabular-nums leading-none md:text-base',
               isSelected || !isZero ? accent.value : 'text-muted-foreground',
             )}>
               {val}
             </span>
-            <span className="text-[10px] font-medium text-muted-foreground truncate leading-none hidden sm:inline">
+            <span className="text-[10px] font-medium text-muted-foreground leading-tight text-center md:text-left md:truncate">
               {kpi.label}
             </span>
           </button>

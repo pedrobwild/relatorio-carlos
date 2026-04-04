@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Plus, CalendarDays, FolderOpen, Settings, MoreHorizontal } from "lucide-react";
+import { LayoutDashboard, Plus, CalendarDays, FolderOpen, Settings, MoreHorizontal, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useState } from "react";
@@ -10,10 +10,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 
 /**
- * GestaoBottomNav — fixed bottom nav for /gestao routes on mobile.
- * Features a prominent FAB-style "Nova Obra" center button.
+ * GestaoBottomNav — polished mobile-first bottom nav for /gestao routes.
+ * Monday.com-inspired: colored active pill, elevated FAB, rich secondary drawer.
  */
 export function GestaoBottomNav() {
   const location = useLocation();
@@ -21,10 +22,11 @@ export function GestaoBottomNav() {
   const [moreOpen, setMoreOpen] = useState(false);
 
   const secondaryItems = [
-    { label: "Calendário de Compras", icon: CalendarDays, to: "/gestao/calendario-compras" },
-    { label: "Arquivos", icon: FolderOpen, to: "/gestao/arquivos" },
+    { label: "Fornecedores", icon: Truck, to: "/gestao/fornecedores", description: "Gerencie seus fornecedores" },
+    { label: "Calendário de Compras", icon: CalendarDays, to: "/gestao/calendario-compras", description: "Acompanhe compras programadas" },
+    { label: "Arquivos", icon: FolderOpen, to: "/gestao/arquivos", description: "Documentos e anexos" },
     ...(isAdmin
-      ? [{ label: "Configurações", icon: Settings, to: "/admin" }]
+      ? [{ label: "Configurações", icon: Settings, to: "/admin", description: "Configurações do sistema" }]
       : []),
   ];
 
@@ -34,89 +36,146 @@ export function GestaoBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card/95 backdrop-blur-md pb-safe md:hidden"
+      className="fixed bottom-0 inset-x-0 z-50 md:hidden"
       aria-label="Navegação gestão"
     >
-      <div className="flex items-stretch justify-around h-14 relative">
-        {/* Painel */}
-        <NavLink
-          to="/gestao"
-          end
-          className={({ isActive }) =>
-            cn(
-              "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 text-[10px] font-medium transition-colors active:scale-[0.95]",
-              isActive ? "text-primary" : "text-muted-foreground"
-            )
-          }
-        >
-          <LayoutDashboard className="h-5 w-5" />
-          <span>Painel</span>
-        </NavLink>
-
-        {/* FAB - Nova Obra (center, elevated) */}
-        <div className="flex flex-col items-center justify-center flex-1 min-w-0">
+      {/* Frosted glass bar */}
+      <div className="border-t border-border/60 bg-card/90 backdrop-blur-xl backdrop-saturate-150 pb-safe">
+        <div className="flex items-end justify-around h-16 relative px-2">
+          {/* Painel */}
           <NavLink
-            to="/gestao/nova-obra"
+            to="/gestao"
+            end
             className={({ isActive }) =>
               cn(
-                "flex items-center justify-center h-12 w-12 rounded-full shadow-lg -mt-5 transition-all active:scale-[0.92]",
-                isActive
-                  ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+                "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-[0.92]",
               )
             }
-            aria-label="Nova Obra"
           >
-            <Plus className="h-6 w-6" />
+            {({ isActive }) => (
+              <>
+                <div className={cn(
+                  "flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200",
+                  isActive
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground"
+                )}>
+                  <LayoutDashboard className="h-5 w-5" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-semibold leading-none transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}>
+                  Painel
+                </span>
+                {isActive && (
+                  <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+                )}
+              </>
+            )}
           </NavLink>
-          <span className="text-[10px] font-medium text-primary mt-0.5">Nova</span>
-        </div>
 
-        {/* Mais */}
-        <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-          <SheetTrigger asChild>
-            <button
-              className={cn(
-                "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 text-[10px] font-medium transition-colors active:scale-[0.95]",
-                isSecondaryActive ? "text-primary" : "text-muted-foreground"
-              )}
-              aria-label="Mais opções"
+          {/* FAB - Nova Obra (center, elevated) */}
+          <div className="flex flex-col items-center flex-1 min-w-0 -mt-3">
+            <NavLink
+              to="/gestao/nova-obra"
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center justify-center h-14 w-14 rounded-2xl shadow-lg transition-all active:scale-[0.90]",
+                  "bg-gradient-to-br from-primary to-[hsl(var(--primary-dark))]",
+                  "text-primary-foreground",
+                  isActive
+                    ? "ring-[3px] ring-primary/25 shadow-primary/30 shadow-xl scale-105"
+                    : "hover:shadow-xl hover:shadow-primary/20"
+                )
+              }
+              aria-label="Nova Obra"
             >
-              <MoreHorizontal className="h-5 w-5" />
-              <span>Mais</span>
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
-            <SheetHeader className="pb-2">
-              <SheetTitle className="text-base">Ferramentas</SheetTitle>
-            </SheetHeader>
-            <nav className="space-y-1">
-              {secondaryItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname.startsWith(item.to);
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setMoreOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left transition-colors min-h-[48px]",
-                      isActive
-                        ? "bg-primary/10 text-primary font-semibold"
-                        : "text-foreground hover:bg-muted/60"
-                    )}
-                  >
-                    <Icon className="h-5 w-5 shrink-0" />
-                    <span className="flex-1 text-sm">{item.label}</span>
-                    {isActive && (
-                      <span className="text-xs text-primary/70">Atual</span>
-                    )}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          </SheetContent>
-        </Sheet>
+              <Plus className="h-6 w-6" strokeWidth={2.5} />
+            </NavLink>
+            <span className="text-[10px] font-bold text-primary mt-1 leading-none">Nova</span>
+          </div>
+
+          {/* Mais */}
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+            <SheetTrigger asChild>
+              <button
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-[0.92]",
+                )}
+                aria-label="Mais opções"
+              >
+                <div className={cn(
+                  "relative flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200",
+                  isSecondaryActive
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground"
+                )}>
+                  <MoreHorizontal className="h-5 w-5" />
+                  {isSecondaryActive && (
+                    <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary" />
+                  )}
+                </div>
+                <span className={cn(
+                  "text-[10px] font-semibold leading-none transition-colors",
+                  isSecondaryActive ? "text-primary" : "text-muted-foreground"
+                )}>
+                  Mais
+                </span>
+                {isSecondaryActive && (
+                  <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+                )}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-3xl pb-safe">
+              <SheetHeader className="pb-3">
+                <SheetTitle className="text-base font-bold">Ferramentas</SheetTitle>
+              </SheetHeader>
+              <nav className="space-y-1">
+                {secondaryItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname.startsWith(item.to);
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setMoreOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3.5 w-full px-4 py-3.5 rounded-2xl text-left transition-all min-h-[52px] active:scale-[0.98]",
+                        isActive
+                          ? "bg-primary/10 border border-primary/20"
+                          : "hover:bg-muted/60"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex items-center justify-center w-10 h-10 rounded-xl shrink-0",
+                        isActive
+                          ? "bg-primary/15 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className={cn(
+                          "text-sm font-medium block",
+                          isActive ? "text-primary font-semibold" : "text-foreground"
+                        )}>
+                          {item.label}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground leading-tight">{item.description}</span>
+                      </div>
+                      {isActive && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 bg-primary/10 text-primary border-0 shrink-0">
+                          Atual
+                        </Badge>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </nav>
   );
