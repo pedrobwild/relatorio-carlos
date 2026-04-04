@@ -42,6 +42,8 @@ interface ProjectsListViewProps {
 export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
+  const projectIds = useMemo(() => projects.map(p => p.id), [projects]);
+  const { data: stagesMap } = useCurrentStages(projectIds);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
