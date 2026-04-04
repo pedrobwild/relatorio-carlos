@@ -206,6 +206,7 @@ function AutoTextarea({
 export function ScheduleCard({ formData, onChange, activities, onActivitiesChange }: ScheduleCardProps) {
   const { toast } = useToast();
   const skipNormalizeRef = useRef(false);
+  const prevStartDateRef = useRef(formData.planned_start_date);
 
   const safeSetActivities = useCallback((acts: ScheduleActivity[]) => {
     skipNormalizeRef.current = true;
