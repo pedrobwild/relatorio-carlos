@@ -74,6 +74,9 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Obra
               </TableHead>
+              <TableHead className="w-[140px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
+                Etapa Atual
+              </TableHead>
               <TableHead className="w-[56px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Status
               </TableHead>
