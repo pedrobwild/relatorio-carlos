@@ -234,6 +234,15 @@ export function SupplierPricesTab({ fornecedorId, fornecedorNome = "" }: Props) 
           </TableBody>
         </Table>
       )}
+
+      {sendItem && (
+        <SendToProjectDialog
+          open={!!sendItem}
+          onOpenChange={(open) => !open && setSendItem(null)}
+          priceItem={sendItem}
+          fornecedorNome={fornecedorNome}
+        />
+      )}
     </div>
   );
 }
