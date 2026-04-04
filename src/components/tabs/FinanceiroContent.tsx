@@ -160,7 +160,7 @@ const FinanceiroContent = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-h2">Histórico de Parcelas</h2>
               {isStaff && (
-                <Badge variant="outline" className="text-xs">Admin: pode editar</Badge>
+                <Badge variant="outline" className="text-xs">Equipe: pode editar</Badge>
               )}
             </div>
             <div className="space-y-2">
@@ -283,7 +283,7 @@ const FinanceiroContent = () => {
             </div>
             {isStaff && (
               <div className="mt-4">
-                <Badge variant="outline" className="text-xs">Admin: pode editar pagamentos</Badge>
+                <Badge variant="outline" className="text-xs">Equipe: pode editar pagamentos</Badge>
               </div>
             )}
           </div>
