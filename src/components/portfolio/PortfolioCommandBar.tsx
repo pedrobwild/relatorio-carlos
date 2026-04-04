@@ -111,8 +111,33 @@ export function PortfolioCommandBar({
         </div>
       </div>
 
-      {/* Row 2: Search + Preset pills */}
+      {/* Row 2: Scope toggle + Search + Preset pills */}
       <div className="flex items-center gap-2">
+        {/* Scope toggle */}
+        <div className="flex items-center rounded-md border border-border/40 bg-muted/20 p-0.5 shrink-0" role="radiogroup" aria-label="Escopo">
+          {([
+            { key: 'all' as ScopeFilter, label: 'Tudo' },
+            { key: 'obras' as ScopeFilter, label: 'Obras' },
+            { key: 'projetos' as ScopeFilter, label: 'Projetos' },
+          ]).map(({ key, label }) => (
+            <button
+              key={key}
+              role="radio"
+              aria-checked={scopeFilter === key}
+              className={cn(
+                'whitespace-nowrap px-2.5 py-1 rounded text-[11px] font-medium transition-all',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                scopeFilter === key
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground/60 hover:text-foreground'
+              )}
+              onClick={() => onScopeChange(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40 pointer-events-none" />
           <Input
