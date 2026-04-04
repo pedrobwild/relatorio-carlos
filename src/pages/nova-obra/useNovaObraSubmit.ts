@@ -54,9 +54,11 @@ export function useNovaObraSubmit() {
     }
 
     // 1. Create project
-    const { data: project, error: projectError } = await supabase
+    const projectId = crypto.randomUUID();
+    const { error: projectError } = await supabase
       .from('projects')
       .insert({
+        id: projectId,
         name: formData.name.trim(),
         unit_name: formData.unit_name.trim() || null,
         address: formData.address.trim() || null,
@@ -68,11 +70,24 @@ export function useNovaObraSubmit() {
         contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
         created_by: user.id,
         is_project_phase: formData.is_project_phase,
-      })
-      .select()
-      .single();
+      });
 
     if (projectError) throw new Error('Falha ao criar projeto: ' + projectError.message);
+
+    const project = {
+      id: projectId,
+      name: formData.name.trim(),
+      unit_name: formData.unit_name.trim() || null,
+      address: formData.address.trim() || null,
+      bairro: formData.bairro.trim() || null,
+      cep: formData.cep.trim() || null,
+      planned_start_date: formData.planned_start_date || null,
+      planned_end_date: formData.planned_end_date || null,
+      contract_signing_date: formData.contract_signing_date || null,
+      contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
+      created_by: user.id,
+      is_project_phase: formData.is_project_phase,
+    };
 
     // 2. Add current user as engineer
     const { error: engineerError } = await supabase
