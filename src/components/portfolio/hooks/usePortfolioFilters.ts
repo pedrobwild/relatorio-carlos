@@ -145,12 +145,12 @@ export function usePortfolioFilters(
   return {
     // State
     search, activePreset, kpiFilter, advancedFilters,
-    viewMode, filtersOpen,
+    viewMode, filtersOpen, scopeFilter,
     // Derived
     filtered, advancedFilterCount, totalFilterCount, hasAnyFilter,
     // Setters
     setSearch, setKpiFilter, setAdvancedFilters,
     setFiltersOpen, handlePresetChange, handleViewModeChange,
-    handleClearAll,
+    handleClearAll, setScopeFilter,
   };
 }
