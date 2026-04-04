@@ -117,6 +117,18 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
                     </Select>
                   </TableCell>
                   <TableCell>
+                    {task.status === 'concluido' && task.completed_at ? (
+                      <div className="text-xs space-y-0.5">
+                        <span>{format(new Date(task.completed_at), 'dd/MM/yy', { locale: ptBR })}</span>
+                        {task.days_overdue != null && (
+                          <p className={task.days_overdue > 0 ? 'text-destructive font-medium' : 'text-green-600 font-medium'}>
+                            {task.days_overdue > 0 ? `${task.days_overdue}d atraso` : task.days_overdue === 0 ? 'No prazo' : `${Math.abs(task.days_overdue)}d antecipado`}
+                          </p>
+                        )}
+                      </div>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">

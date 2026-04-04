@@ -153,6 +153,11 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                             </span>
                           )}
                         </div>
+                        {task.status === 'concluido' && task.completed_at && task.days_overdue != null && (
+                          <p className={`text-xs font-medium ${task.days_overdue > 0 ? 'text-destructive' : 'text-green-600'}`}>
+                            {task.days_overdue > 0 ? `${task.days_overdue}d atraso` : task.days_overdue === 0 ? '✓ No prazo' : `✓ ${Math.abs(task.days_overdue)}d antecipado`}
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
                   );
