@@ -33,14 +33,15 @@ const columnBg: Record<ObraTaskStatus, string> = {
   concluido: 'bg-green-50 dark:bg-green-950/20',
 };
 
-export function AtividadesKanbanView({ tasks, isLoading, members, onUpdateStatus, onDelete, onUpdate }: Props) {
+export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<ObraTaskStatus | null>(null);
+  const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
     if (!userId) return null;
-    const m = members?.find((m: any) => m.user_id === userId);
-    return m?.user_name || m?.user_email || null;
+    const u = staffUsers.find(u => u.id === userId);
+    return u?.nome || u?.email || null;
   };
 
   if (isLoading) {
