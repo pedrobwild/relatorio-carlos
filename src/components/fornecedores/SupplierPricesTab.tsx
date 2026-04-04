@@ -8,7 +8,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Pencil, X, Check } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Check, ArrowRight } from "lucide-react";
+import { SendToProjectDialog } from "./SendToProjectDialog";
 
 interface PriceItem {
   id: string;
@@ -22,6 +23,7 @@ interface PriceItem {
 
 interface Props {
   fornecedorId: string;
+  fornecedorNome?: string;
 }
 
 const emptyPrice = (fornecedorId: string): Partial<PriceItem> => ({
