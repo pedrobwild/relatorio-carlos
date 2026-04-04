@@ -253,9 +253,19 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     }
   }, [formData.planned_start_date, formData.business_days_duration]);
 
-  useEffect(() => {
+   useEffect(() => {
     if (skipNormalizeRef.current) {
       skipNormalizeRef.current = false;
+      prevStartDateRef.current = formData.planned_start_date;
+      return;
+    }
+
+    const startDateChanged = prevStartDateRef.current !== formData.planned_start_date;
+    prevStartDateRef.current = formData.planned_start_date;
+
+    // If start date changed and activities already have dates, recalculate all
+    if (startDateChanged && formData.planned_start_date && activities.length > 0 && activities[0].plannedStart) {
+      safeSetActivities(recalculateAllDates(activities, formData.planned_start_date));
       return;
     }
 
@@ -263,7 +273,7 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     if (normalized) {
       safeSetActivities(normalized);
     }
-  }, [activities, formData.planned_start_date, safeSetActivities]);
+  }, [activities, formData.planned_start_date, safeSetActivities, recalculateAllDates]);
 
   const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
 
