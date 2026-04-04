@@ -16,6 +16,7 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon';
 export type ViewMode = 'cards' | 'list' | 'table';
+export type ScopeFilter = 'all' | 'obras' | 'projetos';
 
 export function usePortfolioFilters(
   projects: ProjectWithCustomer[],
