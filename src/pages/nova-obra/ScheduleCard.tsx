@@ -534,12 +534,46 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               {activities.map((act, idx) => (
                 <div
                   key={act.id}
-                  className="rounded-lg border bg-card p-3 sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start"
+                  className="rounded-lg border bg-card p-3 sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[32px_1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start"
                 >
-                  {/* Mobile label */}
-                  <span className="text-xs font-medium text-muted-foreground sm:hidden">
-                    Etapa {idx + 1}
-                  </span>
+                  {/* Reorder buttons */}
+                  <div className="hidden sm:flex flex-col gap-0.5 pt-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      onClick={() => moveActivity(idx, 'up')}
+                      disabled={idx === 0}
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      onClick={() => moveActivity(idx, 'down')}
+                      disabled={idx === activities.length - 1}
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </Button>
+                  </div>
+
+                  {/* Mobile label with reorder */}
+                  <div className="flex items-center justify-between sm:hidden">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Etapa {idx + 1}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(idx, 'up')} disabled={idx === 0}>
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveActivity(idx, 'down')} disabled={idx === activities.length - 1}>
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
 
                   <AutoTextarea
                     value={act.description}
