@@ -547,26 +547,26 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
                   className="rounded-lg border bg-card p-3 sm:p-0 sm:border-0 sm:bg-transparent space-y-2 sm:space-y-0 sm:grid sm:grid-cols-[32px_1fr_130px_130px_70px_40px] sm:gap-2 sm:items-start"
                 >
                   {/* Reorder buttons */}
-                  <div className="hidden sm:flex flex-col gap-0.5 pt-1">
+                  <div className="hidden sm:flex flex-col gap-0.5 pt-0.5">
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="h-7 w-7 min-h-[28px] min-w-[28px] p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
                       onClick={() => moveActivity(idx, 'up')}
                       disabled={idx === 0}
                     >
-                      <ArrowUp className="h-3 w-3" />
+                      <ArrowUp className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      className="h-7 w-7 min-h-[28px] min-w-[28px] p-0 text-muted-foreground hover:text-foreground disabled:opacity-30"
                       onClick={() => moveActivity(idx, 'down')}
                       disabled={idx === activities.length - 1}
                     >
-                      <ArrowDown className="h-3 w-3" />
+                      <ArrowDown className="h-3.5 w-3.5" />
                     </Button>
                   </div>
 
