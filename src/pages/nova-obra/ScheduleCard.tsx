@@ -486,22 +486,44 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               <h4 className="text-sm font-medium">Etapas da Obra</h4>
               <p className="text-xs text-muted-foreground">Adicione as etapas do cronograma (opcional)</p>
             </div>
-            {activities.length > 0 && (
-              <span className={cn(
-                "text-xs font-medium px-2 py-0.5 rounded-full",
-                Math.abs(totalWeight - 100) < 0.05
-                  ? "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]"
-                  : "bg-muted text-muted-foreground"
-              )}>
-                Peso: {totalWeight.toFixed(1)}%
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {activities.length > 0 && (
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={handleRecalculateDates}
+                          disabled={!formData.planned_start_date}
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Recalcular datas a partir do início</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span className={cn(
+                    "text-xs font-medium px-2 py-0.5 rounded-full",
+                    Math.abs(totalWeight - 100) < 0.05
+                      ? "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]"
+                      : "bg-muted text-muted-foreground"
+                  )}>
+                    Peso: {totalWeight.toFixed(1)}%
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           {activities.length > 0 && (
             <div className="space-y-3">
               {/* Header - desktop only */}
-              <div className="hidden sm:grid grid-cols-[1fr_130px_130px_70px_40px] gap-2 text-xs font-medium text-muted-foreground px-1">
+              <div className="hidden sm:grid grid-cols-[32px_1fr_130px_130px_70px_40px] gap-2 text-xs font-medium text-muted-foreground px-1">
+                <span />
                 <span>Descrição</span>
                 <span>Início Prev.</span>
                 <span>Término Prev.</span>
