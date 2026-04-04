@@ -148,7 +148,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
             setEditTask(null);
           }
         }}
-        members={members}
+        
         initialData={editTask}
       />
     </>

@@ -171,7 +171,7 @@ export function AtividadesKanbanView({ tasks, isLoading, members, onUpdateStatus
             setEditTask(null);
           }
         }}
-        members={members}
+        
         initialData={editTask}
       />
     </>
