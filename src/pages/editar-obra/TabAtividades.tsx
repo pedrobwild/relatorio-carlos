@@ -200,8 +200,10 @@ function ActivityRow({
         index % 2 === 1 && 'bg-muted/20',
         isDragging && 'opacity-55',
         isDragOver && 'bg-primary/10 ring-1 ring-inset ring-primary/30'
-      )}>
-        <div className="p-2 pl-3 flex items-start gap-2" onDragOver={(event) => onDragOver(event, index)} onDrop={(event) => onDrop(event, index)}>
+      )}
+      onDragOver={(event) => onDragOver(event, index)}
+      onDrop={(event) => onDrop(event, index)}>
+        <div className="p-2 pl-3 flex items-start gap-2">
           <div className="flex items-center gap-1 shrink-0 pt-2">
             <button
               type="button"
@@ -258,7 +260,15 @@ function ActivityRow({
       </div>
 
       {/* Mobile card */}
-      <div className="md:hidden border-b border-border/40 last:border-b-0 p-3 space-y-2.5">
+      <div
+        className={cn(
+          'md:hidden border-b border-border/40 last:border-b-0 p-3 space-y-2.5',
+          isDragging && 'opacity-55',
+          isDragOver && 'bg-primary/10 ring-1 ring-inset ring-primary/30'
+        )}
+        onDragOver={(event) => onDragOver(event, index)}
+        onDrop={(event) => onDrop(event, index)}
+      >
         <div className="flex items-start gap-2">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold bg-primary/10 text-primary shrink-0 mt-1">{index + 1}</span>
           <div className="flex-1 min-w-0">

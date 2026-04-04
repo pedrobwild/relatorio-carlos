@@ -174,7 +174,13 @@ export default function EditarObra() {
               </TabsContent>
 
               <TabsContent value="atividades">
-                <TabAtividades activities={data.activities} onAdd={data.addActivity} onUpdate={data.updateActivity} onDelete={data.deleteActivity} />
+                <TabAtividades
+                  activities={data.activities}
+                  onAdd={data.addActivity}
+                  onUpdate={data.updateActivity}
+                  onDelete={data.deleteActivity}
+                  onReorder={data.reorderActivities}
+                />
               </TabsContent>
 
               <TabsContent value="pagamentos">
