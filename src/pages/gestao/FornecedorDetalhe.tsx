@@ -171,13 +171,12 @@ export default function FornecedorDetalhe() {
   }
 
   const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
-    if (!value) return null;
     return (
       <div className="flex items-start gap-2.5">
         <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
         <div>
           <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-sm">{value}</p>
+          <p className={`text-sm ${!value ? "text-muted-foreground/50 italic" : ""}`}>{value || "Não informado"}</p>
         </div>
       </div>
     );
@@ -309,24 +308,23 @@ export default function FornecedorDetalhe() {
                 </>
               ) : (
                 <>
-                  {supplier.cnpj_cpf && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">CNPJ/CPF</p>
-                      <p className="text-sm font-mono">{supplier.cnpj_cpf}</p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-xs text-muted-foreground">Razão Social</p>
+                    <p className={`text-sm ${!supplier.razao_social ? "text-muted-foreground/50 italic" : ""}`}>{supplier.razao_social || "Não informado"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">CNPJ/CPF</p>
+                    <p className={`text-sm font-mono ${!supplier.cnpj_cpf ? "text-muted-foreground/50 italic" : ""}`}>{supplier.cnpj_cpf || "Não informado"}</p>
+                  </div>
                   <InfoItem icon={Phone} label="Telefone" value={supplier.telefone} />
                   <InfoItem icon={Mail} label="Email" value={supplier.email} />
                   <InfoItem icon={Globe} label="Site" value={supplier.site} />
-                  <InfoItem
-                    icon={MapPin}
-                    label="Localização"
-                    value={
-                      [supplier.endereco, supplier.cidade, supplier.estado, supplier.cep]
-                        .filter(Boolean)
-                        .join(", ") || null
-                    }
-                  />
+                  <InfoItem icon={MapPin} label="Endereço" value={supplier.endereco} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <InfoItem icon={MapPin} label="Cidade" value={supplier.cidade} />
+                    <InfoItem icon={MapPin} label="Estado" value={supplier.estado} />
+                  </div>
+                  <InfoItem icon={MapPin} label="CEP" value={supplier.cep} />
                 </>
               )}
             </CardContent>
