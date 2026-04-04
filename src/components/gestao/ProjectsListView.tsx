@@ -78,11 +78,8 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="min-w-[180px] text-xs whitespace-nowrap">Obra</TableHead>
               <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">Status</TableHead>
               <TableHead className="w-[60px] text-center text-xs whitespace-nowrap">Saúde</TableHead>
-              <TableHead className="w-[140px] text-center text-xs whitespace-nowrap">
-                <span className="flex items-center justify-center gap-1">
-                  📅 Entrega
-                </span>
-              </TableHead>
+              <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">📅 Entrega</TableHead>
+              <TableHead className="w-[110px] text-center text-xs whitespace-nowrap">Prazo</TableHead>
               <TableHead className="w-[70px] text-center text-xs whitespace-nowrap">Progresso</TableHead>
               <TableHead className="min-w-[120px] text-xs whitespace-nowrap">Engenheiro</TableHead>
               <TableHead className="w-[90px] text-center text-xs whitespace-nowrap">Pendências</TableHead>
