@@ -8,7 +8,7 @@ export interface StaffUser {
   perfil: string;
 }
 
-const STAFF_ROLES = ['admin', 'engineer', 'gestor', 'manager'];
+const STAFF_ROLES = ['admin', 'engineer', 'gestor', 'manager'] as const;
 
 export function useStaffUsers() {
   return useQuery({
