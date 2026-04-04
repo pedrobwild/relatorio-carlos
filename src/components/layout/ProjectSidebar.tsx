@@ -18,6 +18,7 @@ import {
   LucideIcon,
   Building2,
   UserCircle,
+  ListChecks,
 } from "lucide-react";
 import {
   Sidebar,
@@ -158,6 +159,13 @@ export function ProjectSidebar() {
           label: L("vistorias"),
           icon: ClipboardCheck,
           path: paths.vistorias,
+          disabledInProjectPhase: true,
+          staffOnly: true,
+        },
+        {
+          label: L("atividades"),
+          icon: ListChecks,
+          path: paths.atividades,
           disabledInProjectPhase: true,
           staffOnly: true,
         },

@@ -24,6 +24,7 @@ export const navigationLabels: NavLabels = {
     financeiro:     { staff: "Financeiro",        client: "Pagamentos e Custos" },
     formalizacoes:  { staff: "Formalizações",     client: "Aprovações" },
     dadosCliente:   { staff: "Dados do Cliente",   client: "Dados do Cliente" },
+    atividades:     { staff: "Atividades",         client: "Atividades" },
   },
   breadcrumb: {
     relatorio:      { staff: "Relatório",        client: "Diário da Obra" },
@@ -38,6 +39,7 @@ export const navigationLabels: NavLabels = {
     compras:        { staff: "Compras",           client: "Compras" },
     vistorias:      { staff: "Vistorias & NC",     client: "Vistorias" },
     jornada:        { staff: "Jornada",           client: "Minha Jornada" },
+    atividades:     { staff: "Atividades",         client: "Atividades" },
   },
 } as const;
 

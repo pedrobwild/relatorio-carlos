@@ -143,7 +143,7 @@ export default function Formalizacoes() {
             basePath={paths.formalizacoes}
             onCreateNew={() => navigate(paths.formalizacoesNova)}
             canCreate={canCreate}
-            isAdmin={isAdmin}
+            isStaff={isAdmin}
           />
         </PageContainer>
       </main>
