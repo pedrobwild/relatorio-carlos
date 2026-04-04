@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX } from 'lucide-react';
+import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
 import { format, differenceInDays } from 'date-fns';
@@ -41,6 +42,8 @@ interface ProjectsListViewProps {
 export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
+  const projectIds = useMemo(() => projects.map(p => p.id), [projects]);
+  const { data: stagesMap } = useCurrentStages(projectIds);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
@@ -71,6 +74,9 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Obra
               </TableHead>
+              <TableHead className="w-[140px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
+                Etapa Atual
+              </TableHead>
               <TableHead className="w-[56px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Status
               </TableHead>
@@ -99,13 +105,14 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     <ProjectRow
                       project={project}
                       summary={summary}
+                      currentStage={stagesMap?.get(project.id)}
                       isExpanded={isExpanded}
                       onToggle={() => toggleExpanded(project.id)}
                       onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={8} className="p-0">
+                        <TableCell colSpan={9} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -118,7 +125,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -163,10 +170,11 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, isExpanded, onToggle, onNavigate,
+  project, summary, currentStage, isExpanded, onToggle, onNavigate,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
+  currentStage?: CurrentStageInfo;
   isExpanded: boolean;
   onToggle: () => void;
   onNavigate: () => void;
@@ -212,7 +220,26 @@ function ProjectRow({
           </div>
         </TableCell>
 
-        {/* Status */}
+        {/* Etapa Atual */}
+        <TableCell className="py-2">
+          {currentStage ? (
+            <div className="flex items-center gap-1.5 min-w-0">
+              {currentStage.isAwaitingStart ? (
+                <Hourglass className="h-3 w-3 shrink-0 text-amber-500" />
+              ) : (
+                <HardHat className="h-3 w-3 shrink-0 text-primary" />
+              )}
+              <span className={cn(
+                'text-[11px] font-medium truncate max-w-[120px]',
+                currentStage.isAwaitingStart ? 'text-amber-600 dark:text-amber-400' : 'text-foreground/80',
+              )}>
+                {currentStage.description}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] text-muted-foreground/40">—</span>
+          )}
+        </TableCell>
         <TableCell className="text-center py-2">
           <Badge variant="outline" className={cn(statusColors[project.status], 'text-[9px] font-semibold px-1.5 py-0 h-[18px] whitespace-nowrap')}>
             {statusLabels[project.status]}
