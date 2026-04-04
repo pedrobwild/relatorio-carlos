@@ -8,6 +8,7 @@ import { MoreHorizontal, Pencil, Trash2, Calendar, DollarSign } from 'lucide-rea
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
