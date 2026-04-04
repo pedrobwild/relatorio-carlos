@@ -35,22 +35,47 @@ interface PortfolioKpiStripProps {
 // ─── Definitions ─────────────────────────────────────────────────────────────
 
 const kpiDefinitions: KpiDefinition[] = [
-  { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-3.5 w-3.5" />, accent: 'success' },
-  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-3.5 w-3.5" />, accent: 'destructive' },
-  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-3.5 w-3.5" />, accent: 'warning' },
-  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-3.5 w-3.5" />, accent: 'destructive' },
-  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-3.5 w-3.5" />, accent: 'destructive' },
-  { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-3.5 w-3.5" />, accent: 'warning' },
+  { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
+  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
+  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
 ];
 
 // ─── Accent styles ───────────────────────────────────────────────────────────
 
-const accentStyles: Record<string, { iconBg: string; value: string; activeBorder: string }> = {
-  default: { iconBg: 'bg-muted/60 text-foreground', value: 'text-foreground', activeBorder: 'border-primary/40' },
-  success: { iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', value: 'text-emerald-600 dark:text-emerald-400', activeBorder: 'border-emerald-500/40' },
-  warning: { iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', value: 'text-amber-600 dark:text-amber-400', activeBorder: 'border-amber-500/40' },
-  destructive: { iconBg: 'bg-destructive/10 text-destructive', value: 'text-destructive', activeBorder: 'border-destructive/40' },
-  muted: { iconBg: 'bg-muted/60 text-muted-foreground', value: 'text-foreground', activeBorder: 'border-primary/40' },
+const accentConfig = {
+  success: {
+    icon: 'text-emerald-600 dark:text-emerald-400',
+    value: 'text-emerald-600 dark:text-emerald-400',
+    activeBg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30',
+    highlight: '',
+  },
+  destructive: {
+    icon: 'text-destructive',
+    value: 'text-destructive',
+    activeBg: 'bg-red-50 border-red-200 dark:bg-destructive/10 dark:border-destructive/30',
+    highlight: 'border-red-200/60 bg-red-50/50 dark:border-destructive/20 dark:bg-destructive/[0.04]',
+  },
+  warning: {
+    icon: 'text-amber-600 dark:text-amber-400',
+    value: 'text-amber-600 dark:text-amber-400',
+    activeBg: 'bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30',
+    highlight: '',
+  },
+  default: {
+    icon: 'text-foreground',
+    value: 'text-foreground',
+    activeBg: 'bg-primary/5 border-primary/30',
+    highlight: '',
+  },
+  muted: {
+    icon: 'text-muted-foreground',
+    value: 'text-foreground',
+    activeBg: 'bg-primary/5 border-primary/30',
+    highlight: '',
+  },
 };
 
 // ─── Compute KPI values ──────────────────────────────────────────────────────
@@ -107,7 +132,7 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="grid grid-cols-3 md:grid-cols-6 gap-2"
+      className="grid grid-cols-3 lg:grid-cols-6 gap-2.5"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
@@ -115,7 +140,8 @@ export function PortfolioKpiStrip({
         const val = values.get(kpi.key) ?? 0;
         const isSelected = activeFilter === kpi.key;
         const isZero = val === 0;
-        const style = accentStyles[kpi.accent];
+        const accent = accentConfig[kpi.accent];
+        const shouldHighlight = kpi.key === 'overdue' && !isZero && !isSelected;
 
         return (
           <button
@@ -126,35 +152,33 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'group relative flex items-center gap-2.5 rounded-lg border px-3 py-2.5',
+              'relative flex items-center gap-3 rounded-xl border px-3.5 py-3',
               'transition-all duration-150 cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               isSelected
-                ? `${style.activeBorder} bg-primary/5 shadow-sm ring-1 ring-primary/20`
-                : 'border-border/40 bg-card hover:border-border/70 hover:shadow-sm',
-              isZero && !isSelected && 'opacity-45',
-              kpi.key === 'overdue' && !isZero && !isSelected && 'border-destructive/30 bg-destructive/[0.04]',
+                ? `${accent.activeBg} shadow-sm`
+                : shouldHighlight
+                  ? accent.highlight
+                  : 'border-border/50 bg-card hover:border-border hover:shadow-sm',
+              isZero && !isSelected && 'opacity-40',
             )}
           >
-            <div className={cn(
-              'flex items-center justify-center h-7 w-7 rounded-md shrink-0',
-              style.iconBg,
-            )} aria-hidden="true">
+            <div className={cn('shrink-0', isSelected || !isZero ? accent.icon : 'text-muted-foreground')} aria-hidden="true">
               {kpi.icon}
             </div>
             <div className="min-w-0 text-left">
               <p className={cn(
-                'text-base font-bold tabular-nums leading-none',
-                isSelected || !isZero ? style.value : 'text-muted-foreground',
+                'text-lg font-bold tabular-nums leading-none',
+                isSelected || !isZero ? accent.value : 'text-muted-foreground',
               )}>
                 {val}
               </p>
-              <p className="text-[10px] font-medium text-muted-foreground mt-0.5 truncate leading-tight">
+              <p className="text-[10px] font-medium text-muted-foreground mt-1 truncate leading-tight">
                 {kpi.label}
               </p>
             </div>
             {isSelected && (
-              <div className="absolute -bottom-px left-3 right-3 h-0.5 rounded-full bg-primary" />
+              <div className="absolute -bottom-px left-4 right-4 h-0.5 rounded-full bg-current opacity-60" />
             )}
           </button>
         );
