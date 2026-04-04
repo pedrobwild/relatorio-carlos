@@ -11,6 +11,7 @@ import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput }
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AtividadeDetailSheet } from './AtividadeDetailSheet';
 
 interface Props {
   tasks: ObraTask[];
@@ -29,6 +30,7 @@ const statusVariant: Record<ObraTaskStatus, string> = {
 
 export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const [detailTask, setDetailTask] = useState<ObraTask | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
@@ -74,7 +76,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
               const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
               return (
                 <TableRow key={task.id} className={task.status === 'concluido' ? 'opacity-60' : ''}>
-                  <TableCell>
+                  <TableCell className="cursor-pointer" onClick={() => setDetailTask(task)}>
                     <div>
                       <span className={`font-medium ${task.status === 'concluido' ? 'line-through' : ''}`}>{task.title}</span>
                       {task.description && (
@@ -163,6 +165,12 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
         }}
         
         initialData={editTask}
+      />
+
+      <AtividadeDetailSheet
+        task={detailTask}
+        open={!!detailTask}
+        onOpenChange={(open) => !open && setDetailTask(null)}
       />
     </>
   );
