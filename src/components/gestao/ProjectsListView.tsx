@@ -233,41 +233,35 @@ function ProjectRow({
           )}
         </TableCell>
 
-        {/* Entrega */}
+        {/* Entrega + Prazo combined */}
         <TableCell className="text-center py-3">
           {plannedEnd ? (
-            <span className={cn(
-              'text-sm font-bold tabular-nums whitespace-nowrap',
-              isFinished ? 'text-emerald-600 dark:text-emerald-400' :
-              isOverdue ? 'text-destructive' :
-              isApproaching ? 'text-amber-600 dark:text-amber-400' :
-              'text-foreground',
-            )}>
-              {format(plannedEnd, "dd/MM", { locale: ptBR })}
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
-          )}
-        </TableCell>
-
-        {/* Prazo */}
-        <TableCell className="text-center py-3">
-          {plannedEnd ? (
-            isFinished ? (
-              <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 px-2 py-0.5 whitespace-nowrap">
-                <CheckCircle className="h-3 w-3" /> Entregue
-              </Badge>
-            ) : isOverdue ? (
-              <Badge variant="outline" className="text-[10px] gap-1 bg-red-50 text-destructive border-red-200 dark:bg-destructive/10 dark:border-destructive/20 px-2 py-0.5 animate-pulse whitespace-nowrap font-semibold">
-                <CalendarX className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
-              </Badge>
-            ) : isApproaching ? (
-              <Badge variant="outline" className="text-[10px] gap-1 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 px-2 py-0.5 whitespace-nowrap">
-                <Clock className="h-3 w-3" /> {daysRemaining}d
-              </Badge>
-            ) : (
-              <span className="text-xs text-muted-foreground tabular-nums">{daysRemaining}d</span>
-            )
+            <div className="flex flex-col items-center gap-0.5">
+              <span className={cn(
+                'text-sm font-bold tabular-nums whitespace-nowrap',
+                isFinished ? 'text-emerald-600 dark:text-emerald-400' :
+                isOverdue ? 'text-destructive' :
+                isApproaching ? 'text-amber-600 dark:text-amber-400' :
+                'text-foreground',
+              )}>
+                {format(plannedEnd, "dd/MM", { locale: ptBR })}
+              </span>
+              {isFinished ? (
+                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
+                  <CheckCircle className="h-2.5 w-2.5" /> Entregue
+                </span>
+              ) : isOverdue ? (
+                <span className="text-[9px] text-destructive font-semibold flex items-center gap-0.5 animate-pulse">
+                  <CalendarX className="h-2.5 w-2.5" /> {Math.abs(daysRemaining!)}d atraso
+                </span>
+              ) : isApproaching ? (
+                <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5">
+                  <Clock className="h-2.5 w-2.5" /> {daysRemaining}d
+                </span>
+              ) : (
+                <span className="text-[9px] text-muted-foreground tabular-nums">{daysRemaining}d restantes</span>
+              )}
+            </div>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>
           )}
