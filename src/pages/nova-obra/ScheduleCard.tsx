@@ -253,32 +253,6 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     }
   }, [formData.planned_start_date, formData.business_days_duration]);
 
-   useEffect(() => {
-    if (skipNormalizeRef.current) {
-      skipNormalizeRef.current = false;
-      prevStartDateRef.current = formData.planned_start_date;
-      return;
-    }
-
-    const startDateChanged = prevStartDateRef.current !== formData.planned_start_date;
-    prevStartDateRef.current = formData.planned_start_date;
-
-    // If start date changed and activities already have dates, recalculate all
-    if (startDateChanged && formData.planned_start_date && activities.length > 0 && activities[0].plannedStart) {
-      safeSetActivities(recalculateAllDates(activities, formData.planned_start_date));
-      return;
-    }
-
-    const normalized = normalizeActivitiesWithDates(activities, formData.planned_start_date);
-    if (normalized) {
-      safeSetActivities(normalized);
-    }
-  }, [activities, formData.planned_start_date, safeSetActivities, recalculateAllDates]);
-
-  const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
-
-  const totalWeight = activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0);
-
   const recalculateAllDates = useCallback((acts: ScheduleActivity[], startDate: string): ScheduleActivity[] => {
     if (!startDate || acts.length === 0) return acts;
     const result: ScheduleActivity[] = [];
@@ -295,6 +269,31 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
     }
     return result;
   }, []);
+
+   useEffect(() => {
+    if (skipNormalizeRef.current) {
+      skipNormalizeRef.current = false;
+      prevStartDateRef.current = formData.planned_start_date;
+      return;
+    }
+
+    const startDateChanged = prevStartDateRef.current !== formData.planned_start_date;
+    prevStartDateRef.current = formData.planned_start_date;
+
+    if (startDateChanged && formData.planned_start_date && activities.length > 0 && activities[0].plannedStart) {
+      safeSetActivities(recalculateAllDates(activities, formData.planned_start_date));
+      return;
+    }
+
+    const normalized = normalizeActivitiesWithDates(activities, formData.planned_start_date);
+    if (normalized) {
+      safeSetActivities(normalized);
+    }
+  }, [activities, formData.planned_start_date, safeSetActivities, recalculateAllDates]);
+
+  const isEndDateAutoCalculated = !!(formData.planned_start_date && parseInt(formData.business_days_duration, 10) > 0);
+
+  const totalWeight = activities.reduce((sum, a) => sum + (parseFloat(a.weight) || 0), 0);
 
   const moveActivity = useCallback((index: number, direction: 'up' | 'down') => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
