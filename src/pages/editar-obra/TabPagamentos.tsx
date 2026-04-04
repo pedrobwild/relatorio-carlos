@@ -99,67 +99,69 @@ export function TabPagamentos({ payments, onAdd, onUpdate, onTogglePaid, onDelet
 
           {/* Table */}
           {payments.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">Parcela</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="w-28">Valor</TableHead>
-                  <TableHead>Forma Pgto</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-12"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium">#{p.installment_number}</TableCell>
-                    <TableCell><Input value={p.description} onChange={(e) => onUpdate(p.id, 'description', e.target.value)} className="h-8" /></TableCell>
-                    <TableCell><Input type="number" step="0.01" value={p.amount} onChange={(e) => onUpdate(p.id, 'amount', parseFloat(e.target.value))} className="h-8 w-28" /></TableCell>
-                    <TableCell>
-                      <Select value={p.payment_method || ''} onValueChange={(v) => onUpdate(p.id, 'payment_method', v || null)}>
-                        <SelectTrigger className="h-8 w-32"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <Input type="date" value={p.due_date || ''} onChange={(e) => onUpdate(p.id, 'due_date', e.target.value || null)} className="h-8 w-36" disabled={!p.due_date && p.due_date !== ''} />
-                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-                          <input type="checkbox" checked={p.due_date === null} onChange={(e) => { onUpdate(p.id, 'due_date', e.target.checked ? null : format(new Date(), 'yyyy-MM-dd')); }} className="rounded" />
-                          Em definição
-                        </label>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button variant={p.paid_at ? 'default' : 'outline'} size="sm" onClick={() => onTogglePaid(p)} className={p.paid_at ? 'bg-emerald-600 hover:bg-emerald-700' : ''}>
-                        {p.paid_at ? 'Pago' : 'Marcar pago'}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Remover parcela?</AlertDialogTitle>
-                            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onDelete(p.id)}>Remover</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[900px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16 whitespace-nowrap">Parcela</TableHead>
+                    <TableHead className="min-w-[180px] whitespace-nowrap">Descrição</TableHead>
+                    <TableHead className="w-28 whitespace-nowrap">Valor</TableHead>
+                    <TableHead className="whitespace-nowrap">Forma Pgto</TableHead>
+                    <TableHead className="whitespace-nowrap">Vencimento</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="w-12"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {payments.map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-medium whitespace-nowrap">#{p.installment_number}</TableCell>
+                      <TableCell><Input value={p.description} onChange={(e) => onUpdate(p.id, 'description', e.target.value)} className="h-8 min-w-[160px]" /></TableCell>
+                      <TableCell><Input type="number" step="0.01" value={p.amount} onChange={(e) => onUpdate(p.id, 'amount', parseFloat(e.target.value))} className="h-8 w-28" /></TableCell>
+                      <TableCell>
+                        <Select value={p.payment_method || ''} onValueChange={(v) => onUpdate(p.id, 'payment_method', v || null)}>
+                          <SelectTrigger className="h-8 w-32"><SelectValue placeholder="—" /></SelectTrigger>
+                          <SelectContent>
+                            {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Input type="date" value={p.due_date || ''} onChange={(e) => onUpdate(p.id, 'due_date', e.target.value || null)} className="h-8 w-36" disabled={!p.due_date && p.due_date !== ''} />
+                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+                            <input type="checkbox" checked={p.due_date === null} onChange={(e) => { onUpdate(p.id, 'due_date', e.target.checked ? null : format(new Date(), 'yyyy-MM-dd')); }} className="rounded" />
+                            Em definição
+                          </label>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant={p.paid_at ? 'default' : 'outline'} size="sm" onClick={() => onTogglePaid(p)} className={`whitespace-nowrap ${p.paid_at ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
+                          {p.paid_at ? 'Pago' : 'Marcar pago'}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover parcela?</AlertDialogTitle>
+                              <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => onDelete(p.id)}>Remover</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">Nenhuma parcela cadastrada. Adicione a primeira acima.</p>
           )}
