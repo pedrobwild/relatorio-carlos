@@ -78,11 +78,8 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="min-w-[180px] text-xs whitespace-nowrap">Obra</TableHead>
               <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">Status</TableHead>
               <TableHead className="w-[60px] text-center text-xs whitespace-nowrap">Saúde</TableHead>
-              <TableHead className="w-[140px] text-center text-xs whitespace-nowrap">
-                <span className="flex items-center justify-center gap-1">
-                  📅 Entrega
-                </span>
-              </TableHead>
+              <TableHead className="w-[100px] text-center text-xs whitespace-nowrap">📅 Entrega</TableHead>
+              <TableHead className="w-[110px] text-center text-xs whitespace-nowrap">Prazo</TableHead>
               <TableHead className="w-[70px] text-center text-xs whitespace-nowrap">Progresso</TableHead>
               <TableHead className="min-w-[120px] text-xs whitespace-nowrap">Engenheiro</TableHead>
               <TableHead className="w-[90px] text-center text-xs whitespace-nowrap">Pendências</TableHead>
@@ -106,7 +103,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={10} className="p-0">
+                        <TableCell colSpan={11} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -119,7 +116,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -260,58 +257,43 @@ function ProjectRow({
           )}
         </TableCell>
 
-        {/* ENTREGA — Prominent delivery date */}
+        {/* Data de Entrega */}
         <TableCell className="text-center">
           {plannedEnd ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex flex-col items-center gap-1">
-                  {/* Big delivery date */}
-                  <span className={cn(
-                    'text-sm font-bold tabular-nums',
-                    isFinished ? 'text-[hsl(var(--success))]' :
-                    isOverdue ? 'text-destructive' :
-                    isApproaching ? 'text-amber-600 dark:text-amber-400' :
-                    'text-foreground',
-                  )}>
-                    {format(plannedEnd, "dd/MM/yy", { locale: ptBR })}
-                  </span>
-                  {/* Status badge */}
-                  {isFinished ? (
-                    <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20 px-1.5 py-0">
-                      <CheckCircle className="h-3 w-3" /> Entregue
-                    </Badge>
-                  ) : isOverdue ? (
-                    <Badge variant="outline" className="text-[10px] gap-0.5 bg-destructive/10 text-destructive border-destructive/20 px-1.5 py-0 animate-pulse">
-                      <CalendarX className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
-                    </Badge>
-                  ) : isApproaching ? (
-                    <Badge variant="outline" className="text-[10px] gap-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-1.5 py-0">
-                      <Clock className="h-3 w-3" /> {daysRemaining}d restantes
-                    </Badge>
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {daysRemaining}d restantes
-                    </span>
-                  )}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">
-                  Início: {project.planned_start_date ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yyyy') : 'N/D'}
-                </p>
-                <p className="text-xs font-medium">
-                  Entrega: {format(plannedEnd, 'dd/MM/yyyy')}
-                </p>
-                {actualEnd && (
-                  <p className="text-xs text-[hsl(var(--success))]">
-                    Entregue em: {format(actualEnd, 'dd/MM/yyyy')}
-                  </p>
-                )}
-              </TooltipContent>
-            </Tooltip>
+            <span className={cn(
+              'text-sm font-bold tabular-nums',
+              isFinished ? 'text-[hsl(var(--success))]' :
+              isOverdue ? 'text-destructive' :
+              isApproaching ? 'text-[hsl(var(--warning))]' :
+              'text-foreground',
+            )}>
+              {format(plannedEnd, "dd/MM/yy", { locale: ptBR })}
+            </span>
           ) : (
             <span className="text-xs text-muted-foreground italic">A definir</span>
+          )}
+        </TableCell>
+
+        {/* Prazo — days remaining / status */}
+        <TableCell className="text-center">
+          {plannedEnd ? (
+            isFinished ? (
+              <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20 px-1.5 py-0">
+                <CheckCircle className="h-3 w-3" /> Entregue
+              </Badge>
+            ) : isOverdue ? (
+              <Badge variant="outline" className="text-[10px] gap-0.5 bg-destructive/10 text-destructive border-destructive/20 px-1.5 py-0 animate-pulse">
+                <CalendarX className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
+              </Badge>
+            ) : isApproaching ? (
+              <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20 px-1.5 py-0">
+                <Clock className="h-3 w-3" /> {daysRemaining}d
+              </Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground tabular-nums">{daysRemaining}d</span>
+            )
+          ) : (
+            <span className="text-xs text-muted-foreground">—</span>
           )}
         </TableCell>
 
