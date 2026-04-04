@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
   HardHat, AlertTriangle, Ban, Milestone, Ghost,
-  FileText, FileSignature, TrendingDown,
+  TrendingDown, CalendarX, CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -13,10 +13,10 @@ export type KpiFilterKey =
   | 'active'
   | 'critical'
   | 'blocked'
+  | 'overdue'
+  | 'approaching-deadline'
   | 'milestone-7d'
   | 'stale-7d'
-  | 'pending-docs'
-  | 'pending-sign'
   | 'financial-deviation';
 
 export interface KpiDefinition {
@@ -38,12 +38,12 @@ interface PortfolioKpiStripProps {
 
 const kpiDefinitions: KpiDefinition[] = [
   { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
+  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
   { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-4 w-4" />, accent: 'destructive' },
   { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
   { key: 'milestone-7d', label: 'Marco em 7d', description: 'Prazo final nos próximos 7 dias', icon: <Milestone className="h-4 w-4" />, accent: 'warning' },
   { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade registrada há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
-  { key: 'pending-docs', label: 'Docs pendentes', description: 'Documentos aguardando envio', icon: <FileText className="h-4 w-4" />, accent: 'warning' },
-  { key: 'pending-sign', label: 'Assinaturas', description: 'Formalizações aguardando assinatura', icon: <FileSignature className="h-4 w-4" />, accent: 'warning' },
   { key: 'financial-deviation', label: 'Desvio financeiro', description: 'Soma de desvios sobre contratos ativos', icon: <TrendingDown className="h-4 w-4" />, accent: 'muted' },
 ];
 
@@ -77,10 +77,11 @@ function computeKpiValues(
   const now = Date.now();
   const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
+  const MS_14D = 14 * 24 * 60 * 60 * 1000;
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
   let milestone7d = 0, stale7d = 0;
-  let pendingDocsTotal = 0, pendingSignTotal = 0;
+  let overdueCount = 0, approachingCount = 0;
 
   for (const p of projects) {
     const s = summaryMap.get(p.id);
@@ -90,6 +91,11 @@ function computeKpiValues(
 
     if (p.planned_end_date && p.status === 'active') {
       const daysLeft = new Date(p.planned_end_date).getTime() - now;
+      if (daysLeft < 0) {
+        overdueCount++;
+      } else if (daysLeft <= MS_14D) {
+        approachingCount++;
+      }
       if (daysLeft >= 0 && daysLeft <= MS_7D) milestone7d++;
     }
 
@@ -98,21 +104,16 @@ function computeKpiValues(
       const refTime = ref ? new Date(ref).getTime() : 0;
       if (refTime > 0 && now - refTime > MS_STALE) stale7d++;
     }
-
-    if (s) {
-      pendingDocsTotal += s.pending_documents;
-      pendingSignTotal += s.unsigned_formalizations;
-    }
   }
 
   const map = new Map<KpiFilterKey, number | string>();
   map.set('active', activeCount);
+  map.set('overdue', overdueCount);
+  map.set('approaching-deadline', approachingCount);
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
   map.set('milestone-7d', milestone7d);
   map.set('stale-7d', stale7d);
-  map.set('pending-docs', pendingDocsTotal);
-  map.set('pending-sign', pendingSignTotal);
   map.set('financial-deviation', '—');
   return map;
 }
@@ -151,6 +152,8 @@ export function PortfolioKpiStrip({
                 ? 'border-primary/40 bg-primary/5 shadow-sm ring-1 ring-primary/20'
                 : 'border-border/30 bg-card hover:border-border/60 hover:bg-muted/20 hover:shadow-sm',
               isZero && !isSelected && 'opacity-50',
+              // Pulse effect for overdue when count > 0
+              kpi.key === 'overdue' && !isZero && !isSelected && 'border-destructive/40 bg-destructive/5',
             )}
           >
             <div className={cn(
@@ -193,10 +196,22 @@ export function applyKpiFilter(
   const now = Date.now();
   const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_7D = 7 * 24 * 60 * 60 * 1000;
+  const MS_14D = 14 * 24 * 60 * 60 * 1000;
 
   switch (filter) {
     case 'active':
       return projects.filter(p => p.status === 'active');
+    case 'overdue':
+      return projects.filter(p => {
+        if (!p.planned_end_date || p.status !== 'active') return false;
+        return new Date(p.planned_end_date).getTime() < now;
+      });
+    case 'approaching-deadline':
+      return projects.filter(p => {
+        if (!p.planned_end_date || p.status !== 'active') return false;
+        const diff = new Date(p.planned_end_date).getTime() - now;
+        return diff >= 0 && diff <= MS_14D;
+      });
     case 'critical':
       return projects.filter(p => {
         const s = summaryMap.get(p.id);
@@ -217,16 +232,6 @@ export function applyKpiFilter(
         const ref = s?.last_activity_at ?? p.created_at;
         const refTime = ref ? new Date(ref).getTime() : 0;
         return refTime > 0 && now - refTime > MS_STALE;
-      });
-    case 'pending-docs':
-      return projects.filter(p => {
-        const s = summaryMap.get(p.id);
-        return s && s.pending_documents > 0;
-      });
-    case 'pending-sign':
-      return projects.filter(p => {
-        const s = summaryMap.get(p.id);
-        return s && s.unsigned_formalizations > 0;
       });
     case 'financial-deviation':
       return projects.filter(p => p.status === 'active');
