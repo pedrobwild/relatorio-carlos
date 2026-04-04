@@ -94,6 +94,10 @@ export function MilestonesBar({ milestoneItems, canEdit, isMobile = false, onMil
     }
   }, [onMilestoneDateChange]);
 
+  // Hide for clients when no milestone dates are filled
+  const hasAnyDate = milestoneItems.some(m => !!m.value);
+  if (!canEdit && !hasAnyDate) return null;
+
   if (isMobile) {
     return (
       <div className="mb-3">
