@@ -227,11 +227,14 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
   ],
 
   gestor: [
-    // Similar to manager — general supervision
+    // All features (same as admin)
+    'documents:upload',
+    'documents:delete',
     'documents:view',
     'formalizations:create',
     'formalizations:sign',
     'formalizations:void',
+    'formalizations:delete',
     'formalizations:view',
     'schedule:edit',
     'schedule:save_baseline',
@@ -251,11 +254,14 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'journey:view',
     'projects:create',
     'projects:edit',
+    'projects:delete',
     'projects:duplicate',
     'projects:view',
     'users:create',
     'users:edit',
+    'users:delete',
     'admin:view_audit',
+    'admin:manage_system',
     'reports:export_pdf',
     'reports:edit_weekly',
     'inspections:create',
