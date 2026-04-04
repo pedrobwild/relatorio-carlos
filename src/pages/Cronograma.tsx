@@ -317,19 +317,64 @@ const Cronograma = () => {
     field: keyof ActivityFormData,
     value: string | string[],
   ) => {
-    setActivities(activities.map((act) => {
-      if (act.id !== id) return act;
-      const updated = { ...act, [field]: value };
-      // Auto-fill end date when start date is set and end date is empty or was auto-filled
+    setActivities(prev => {
+      const newActivities = prev.map((act) => {
+        if (act.id !== id) return act;
+        const updated = { ...act, [field]: value };
+        // Auto-fill end date when start date is set
+        if (field === 'plannedStart' && typeof value === 'string' && value) {
+          const startDate = new Date(value + 'T00:00:00');
+          if (!isNaN(startDate.getTime())) {
+            // Keep the same duration (in calendar days) if there was an existing range
+            if (act.plannedStart && act.plannedEnd) {
+              const oldStart = new Date(act.plannedStart + 'T00:00:00');
+              const oldEnd = new Date(act.plannedEnd + 'T00:00:00');
+              const durationDays = Math.round((oldEnd.getTime() - oldStart.getTime()) / (1000 * 60 * 60 * 24));
+              const newEnd = new Date(startDate);
+              newEnd.setDate(newEnd.getDate() + durationDays);
+              updated.plannedEnd = toISO(newEnd);
+            } else {
+              updated.plannedEnd = toISO(getFridayOfWeek(startDate));
+            }
+          }
+        }
+        return updated;
+      });
+
+      // If plannedStart changed, cascade dates to all subsequent activities
       if (field === 'plannedStart' && typeof value === 'string' && value) {
-        const startDate = new Date(value + 'T00:00:00');
-        if (!isNaN(startDate.getTime())) {
-          const friday = getFridayOfWeek(startDate);
-          updated.plannedEnd = toISO(friday);
+        const changedIndex = newActivities.findIndex(a => a.id === id);
+        if (changedIndex >= 0 && changedIndex < newActivities.length - 1) {
+          for (let i = changedIndex + 1; i < newActivities.length; i++) {
+            const prevAct = newActivities[i - 1];
+            const currAct = newActivities[i];
+            if (!prevAct.plannedEnd) break;
+
+            // Preserve original duration of this activity
+            let durationDays = 4; // default Mon-Fri
+            if (currAct.plannedStart && currAct.plannedEnd) {
+              const cs = new Date(currAct.plannedStart + 'T00:00:00');
+              const ce = new Date(currAct.plannedEnd + 'T00:00:00');
+              durationDays = Math.round((ce.getTime() - cs.getTime()) / (1000 * 60 * 60 * 24));
+              if (durationDays < 0) durationDays = 4;
+            }
+
+            const prevEnd = new Date(prevAct.plannedEnd + 'T00:00:00');
+            const nextStart = getNextMonday(prevEnd);
+            const nextEnd = new Date(nextStart);
+            nextEnd.setDate(nextEnd.getDate() + durationDays);
+
+            newActivities[i] = {
+              ...currAct,
+              plannedStart: toISO(nextStart),
+              plannedEnd: toISO(nextEnd),
+            };
+          }
         }
       }
-      return updated;
-    }));
+
+      return newActivities;
+    });
   };
 
   // Date validation
