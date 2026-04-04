@@ -137,7 +137,7 @@ export function MilestonesBar({ milestoneItems, canEdit, isMobile = false, onMil
       <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
         <span className="text-meta font-semibold uppercase tracking-wider text-muted-foreground shrink-0">Marcos</span>
         <div className="flex items-center gap-3 flex-nowrap shrink-0">
-          {milestoneItems.map((m, i) => (
+          {visibleItems.map((m, i) => (
             <div key={m.label} className="flex items-center gap-3">
               {i > 0 && <span className="text-border">·</span>}
               {canEdit && onMilestoneDateChange ? (
