@@ -9,9 +9,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import type { PortfolioPreset, ViewMode } from './hooks/usePortfolioFilters';
+import type { PortfolioPreset, ViewMode, ScopeFilter } from './hooks/usePortfolioFilters';
 
-export type { PortfolioPreset, ViewMode };
+export type { PortfolioPreset, ViewMode, ScopeFilter };
 
 const presets: { key: PortfolioPreset; label: string }[] = [
   { key: 'all', label: 'Todas' },
