@@ -18,6 +18,7 @@ import {
   LucideIcon,
   Building2,
   UserCircle,
+  ListChecks,
 } from "lucide-react";
 import {
   Sidebar,
