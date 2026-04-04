@@ -78,6 +78,13 @@ export function usePortfolioFilters(
   const filtered = useMemo(() => {
     let result = projects;
 
+    // Scope filter (obras vs projetos)
+    if (scopeFilter === 'obras') {
+      result = result.filter(p => !p.is_project_phase);
+    } else if (scopeFilter === 'projetos') {
+      result = result.filter(p => !!p.is_project_phase);
+    }
+
     // Text search
     if (search) {
       const q = search.toLowerCase();
@@ -119,7 +126,7 @@ export function usePortfolioFilters(
     }
 
     return result;
-  }, [projects, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters]);
+  }, [projects, scopeFilter, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
   const handlePresetChange = useCallback((p: PortfolioPreset) => {
