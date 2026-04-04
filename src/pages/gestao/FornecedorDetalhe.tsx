@@ -171,13 +171,12 @@ export default function FornecedorDetalhe() {
   }
 
   const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
-    if (!value) return null;
     return (
       <div className="flex items-start gap-2.5">
         <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
         <div>
           <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-sm">{value}</p>
+          <p className={`text-sm ${!value ? "text-muted-foreground/50 italic" : ""}`}>{value || "Não informado"}</p>
         </div>
       </div>
     );
