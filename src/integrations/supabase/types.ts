@@ -2351,6 +2351,38 @@ export type Database = {
           },
         ]
       }
+      obra_task_comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obra_task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "obra_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obra_task_status_history: {
         Row: {
           changed_by: string | null
