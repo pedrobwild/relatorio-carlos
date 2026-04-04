@@ -72,10 +72,6 @@ export function MilestonesBar({ milestoneItems, canEdit, isMobile = false, onMil
   const [editingMilestone, setEditingMilestone] = useState<MilestoneKey | null>(null);
   const [savingMilestone, setSavingMilestone] = useState(false);
 
-  // Hide for clients when no milestone dates are filled
-  const hasAnyDate = milestoneItems.some(m => !!m.value);
-  if (!canEdit && !hasAnyDate) return null;
-
   const handleSelect = useCallback(async (key: MilestoneKey, date: Date | undefined) => {
     if (!onMilestoneDateChange) return;
     setSavingMilestone(true);
@@ -97,6 +93,10 @@ export function MilestonesBar({ milestoneItems, canEdit, isMobile = false, onMil
       setEditingMilestone(null);
     }
   }, [onMilestoneDateChange]);
+
+  // Hide for clients when no milestone dates are filled
+  const hasAnyDate = milestoneItems.some(m => !!m.value);
+  if (!canEdit && !hasAnyDate) return null;
 
   if (isMobile) {
     return (
