@@ -40,7 +40,7 @@ export function AtividadesKanbanView({ tasks, isLoading, members, onUpdateStatus
   const getMemberName = (userId: string | null) => {
     if (!userId) return null;
     const m = members?.find((m: any) => m.user_id === userId);
-    return m?.display_name || m?.email || null;
+    return m?.user_name || m?.user_email || null;
   };
 
   if (isLoading) {

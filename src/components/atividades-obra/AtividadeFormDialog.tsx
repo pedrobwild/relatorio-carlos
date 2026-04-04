@@ -79,7 +79,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, members, ini
                 <SelectItem value="none">Sem responsável</SelectItem>
                 {members?.map((m: any) => (
                   <SelectItem key={m.user_id} value={m.user_id}>
-                    {m.display_name || m.email || 'Sem nome'}
+                    {m.user_name || m.user_email || 'Sem nome'}
                   </SelectItem>
                 ))}
               </SelectContent>

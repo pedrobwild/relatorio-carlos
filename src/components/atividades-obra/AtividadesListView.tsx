@@ -33,7 +33,7 @@ export function AtividadesListView({ tasks, isLoading, members, onUpdateStatus, 
   const getMemberName = (userId: string | null) => {
     if (!userId) return '—';
     const m = members?.find((m: any) => m.user_id === userId);
-    return m?.display_name || m?.email || '—';
+    return m?.user_name || m?.user_email || '—';
   };
 
   if (isLoading) {
