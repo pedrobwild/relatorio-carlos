@@ -285,6 +285,51 @@ export function useEditarObraData(projectId: string | undefined) {
     }
   };
 
+  const reorderActivities = async (fromIndex: number, toIndex: number) => {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= activities.length ||
+      toIndex >= activities.length
+    ) {
+      return;
+    }
+
+    const reordered = [...activities];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+
+    const normalized = reordered.map((activity, index) => ({
+      ...activity,
+      sort_order: index + 1,
+    }));
+
+    const previousActivities = activities;
+    setActivities(normalized);
+
+    try {
+      const updates = normalized.map((activity) =>
+        supabase
+          .from('project_activities')
+          .update({ sort_order: activity.sort_order })
+          .eq('id', activity.id)
+      );
+
+      const results = await Promise.all(updates);
+      const failed = results.find((result) => result.error);
+      if (failed?.error) {
+        throw failed.error;
+      }
+
+      toast({ title: 'Ordem das atividades atualizada' });
+    } catch (err: unknown) {
+      setActivities(previousActivities);
+      const message = err instanceof Error ? err.message : 'Erro';
+      toast({ title: 'Erro ao reordenar', description: message, variant: 'destructive' });
+    }
+  };
+
   // Payments
   const addPayment = async (newPayment: { description: string; amount: string; due_date: string; dueDatePending: boolean; payment_method: string }) => {
     if (!newPayment.description || !newPayment.amount) {
@@ -403,6 +448,7 @@ export function useEditarObraData(projectId: string | undefined) {
     addActivity,
     updateActivity,
     deleteActivity,
+    reorderActivities,
     addPayment,
     updatePayment,
     togglePaymentPaid,
