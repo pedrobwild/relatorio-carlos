@@ -156,23 +156,6 @@ function buildActionItems(
       });
     }
 
-    if (p.planned_end_date && p.status === 'active') {
-      const diff = new Date(p.planned_end_date).getTime() - now;
-      if (diff >= 0 && diff <= MS_7D) {
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-        items.push({
-          id: `milestone-${p.id}`,
-          projectName: p.name,
-          projectId: p.id,
-          reason: 'Prazo final se aproximando',
-          responsible: p.engineer_name ?? null,
-          urgency: days <= 2 ? 'critical' : 'high',
-          deadline: `${days}d`,
-          icon: <Milestone className="h-4 w-4" />,
-          cta: 'Ver',
-        });
-      }
-    }
   }
 
   const urgencyOrder: Record<Urgency, number> = { critical: 0, high: 1, medium: 2 };
