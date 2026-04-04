@@ -163,6 +163,13 @@ export function ProjectSidebar() {
           staffOnly: true,
         },
         {
+          label: L("atividades"),
+          icon: ListChecks,
+          path: paths.atividades,
+          disabledInProjectPhase: true,
+          staffOnly: true,
+        },
+        {
           label: L("pendencias"),
           icon: AlertCircle,
           path: paths.pendencias,
