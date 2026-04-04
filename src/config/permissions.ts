@@ -83,44 +83,43 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
   ],
 
   engineer: [
-    // Documents
+    // All features (same as admin)
+    'documents:upload',
+    'documents:delete',
     'documents:view',
-    // Formalizations
     'formalizations:create',
     'formalizations:sign',
     'formalizations:void',
+    'formalizations:delete',
     'formalizations:view',
-    // Schedule
     'schedule:edit',
     'schedule:save_baseline',
     'schedule:import',
     'schedule:view',
-    // Purchases
     'purchases:create',
     'purchases:edit',
+    'purchases:delete',
     'purchases:view',
-    // Payments
     'payments:upload_boleto',
     'payments:mark_paid',
     'payments:view',
-    // Journey
     'journey:edit_stages',
     'journey:edit_csm',
     'journey:manage_slots',
     'journey:complete_todos',
     'journey:view',
-    // Projects
     'projects:create',
     'projects:edit',
+    'projects:delete',
     'projects:duplicate',
     'projects:view',
-    // Users
     'users:create',
     'users:edit',
-    // Reports
+    'users:delete',
+    'admin:view_audit',
+    'admin:manage_system',
     'reports:export_pdf',
     'reports:edit_weekly',
-    // Inspections & NCs
     'inspections:create',
     'inspections:edit',
     'inspections:view',
@@ -128,6 +127,7 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'ncs:create',
     'ncs:treat',
     'ncs:verify',
+    'ncs:approve',
     'ncs:view',
   ],
 
