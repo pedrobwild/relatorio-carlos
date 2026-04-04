@@ -132,7 +132,7 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="flex items-stretch gap-1.5 overflow-x-auto scrollbar-hide pb-0.5"
+      className="grid grid-cols-6 gap-1.5"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
@@ -152,7 +152,7 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'relative flex items-center gap-2 rounded-lg border px-3 py-2 min-w-0 flex-1',
+              'relative flex items-center gap-1.5 rounded-lg border px-2.5 py-2',
               'transition-all duration-150 cursor-pointer select-none',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
               isSelected
