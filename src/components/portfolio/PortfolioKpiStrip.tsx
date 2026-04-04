@@ -35,12 +35,12 @@ interface PortfolioKpiStripProps {
 // ─── Definitions ─────────────────────────────────────────────────────────────
 
 const kpiDefinitions: KpiDefinition[] = [
-  { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
-  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
-  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
+  { key: 'active', label: 'Em andamento', description: 'Obras ativas em execução', icon: <HardHat className="h-3.5 w-3.5" />, accent: 'success' },
+  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-3.5 w-3.5" />, accent: 'destructive' },
+  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-3.5 w-3.5" />, accent: 'warning' },
+  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-3.5 w-3.5" />, accent: 'destructive' },
+  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-3.5 w-3.5" />, accent: 'destructive' },
+  { key: 'stale-7d', label: 'Sem update 7d+', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-3.5 w-3.5" />, accent: 'warning' },
 ];
 
 // ─── Accent styles ───────────────────────────────────────────────────────────
@@ -48,32 +48,32 @@ const kpiDefinitions: KpiDefinition[] = [
 const accentConfig = {
   success: {
     icon: 'text-emerald-600 dark:text-emerald-400',
-    value: 'text-emerald-600 dark:text-emerald-400',
-    activeBg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30',
+    value: 'text-emerald-700 dark:text-emerald-400',
+    activeBg: 'bg-emerald-50 border-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/30 ring-1 ring-emerald-200/50 dark:ring-emerald-500/20',
     highlight: '',
   },
   destructive: {
     icon: 'text-destructive',
     value: 'text-destructive',
-    activeBg: 'bg-red-50 border-red-200 dark:bg-destructive/10 dark:border-destructive/30',
-    highlight: 'border-red-200/60 bg-red-50/50 dark:border-destructive/20 dark:bg-destructive/[0.04]',
+    activeBg: 'bg-red-50 border-red-300 dark:bg-destructive/10 dark:border-destructive/30 ring-1 ring-red-200/50 dark:ring-destructive/20',
+    highlight: 'border-red-200 bg-red-50/40 dark:border-destructive/20 dark:bg-destructive/[0.04]',
   },
   warning: {
     icon: 'text-amber-600 dark:text-amber-400',
-    value: 'text-amber-600 dark:text-amber-400',
-    activeBg: 'bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30',
+    value: 'text-amber-700 dark:text-amber-400',
+    activeBg: 'bg-amber-50 border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/30 ring-1 ring-amber-200/50 dark:ring-amber-500/20',
     highlight: '',
   },
   default: {
     icon: 'text-foreground',
     value: 'text-foreground',
-    activeBg: 'bg-primary/5 border-primary/30',
+    activeBg: 'bg-primary/5 border-primary/30 ring-1 ring-primary/10',
     highlight: '',
   },
   muted: {
     icon: 'text-muted-foreground',
     value: 'text-foreground',
-    activeBg: 'bg-primary/5 border-primary/30',
+    activeBg: 'bg-primary/5 border-primary/30 ring-1 ring-primary/10',
     highlight: '',
   },
 };
@@ -132,7 +132,7 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="grid grid-cols-3 lg:grid-cols-6 gap-2.5"
+      className="flex items-stretch gap-1.5 overflow-x-auto scrollbar-hide pb-0.5"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
@@ -141,7 +141,7 @@ export function PortfolioKpiStrip({
         const isSelected = activeFilter === kpi.key;
         const isZero = val === 0;
         const accent = accentConfig[kpi.accent];
-        const shouldHighlight = kpi.key === 'overdue' && !isZero && !isSelected;
+        const shouldHighlight = (kpi.key === 'overdue' || kpi.key === 'critical') && !isZero && !isSelected;
 
         return (
           <button
@@ -152,34 +152,29 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'relative flex items-center gap-3 rounded-xl border px-3.5 py-3',
-              'transition-all duration-150 cursor-pointer',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              'relative flex items-center gap-2 rounded-lg border px-3 py-2 min-w-0 flex-1',
+              'transition-all duration-150 cursor-pointer select-none',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
               isSelected
                 ? `${accent.activeBg} shadow-sm`
                 : shouldHighlight
                   ? accent.highlight
-                  : 'border-border/50 bg-card hover:border-border hover:shadow-sm',
-              isZero && !isSelected && 'opacity-40',
+                  : 'border-border/40 bg-card/80 hover:border-border/70 hover:bg-card',
+              isZero && !isSelected && 'opacity-35',
             )}
           >
-            <div className={cn('shrink-0', isSelected || !isZero ? accent.icon : 'text-muted-foreground')} aria-hidden="true">
+            <div className={cn('shrink-0', isSelected || !isZero ? accent.icon : 'text-muted-foreground/60')} aria-hidden="true">
               {kpi.icon}
             </div>
-            <div className="min-w-0 text-left">
-              <p className={cn(
-                'text-lg font-bold tabular-nums leading-none',
-                isSelected || !isZero ? accent.value : 'text-muted-foreground',
-              )}>
-                {val}
-              </p>
-              <p className="text-[10px] font-medium text-muted-foreground mt-1 truncate leading-tight">
-                {kpi.label}
-              </p>
-            </div>
-            {isSelected && (
-              <div className="absolute -bottom-px left-4 right-4 h-0.5 rounded-full bg-current opacity-60" />
-            )}
+            <span className={cn(
+              'text-base font-bold tabular-nums leading-none',
+              isSelected || !isZero ? accent.value : 'text-muted-foreground',
+            )}>
+              {val}
+            </span>
+            <span className="text-[10px] font-medium text-muted-foreground truncate leading-none hidden sm:inline">
+              {kpi.label}
+            </span>
           </button>
         );
       })}
