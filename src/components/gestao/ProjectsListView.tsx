@@ -115,7 +115,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
