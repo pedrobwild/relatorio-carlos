@@ -71,18 +71,23 @@ function buildActionItems(
   for (const p of projects) {
     const s = summaryMap.get(p.id);
 
-    if (s && s.unsigned_formalizations > 0) {
-      items.push({
-        id: `sign-${p.id}`,
-        projectName: p.name,
-        projectId: p.id,
-        reason: `${s.unsigned_formalizations} assinatura(s) pendente(s)`,
-        responsible: p.engineer_name ?? null,
-        urgency: 'critical',
-        deadline: 'Hoje',
-        icon: <FileSignature className="h-4 w-4" />,
-        cta: 'Assinar',
-      });
+    // Overdue delivery date — most critical
+    if (p.planned_end_date && p.status === 'active' && !p.actual_end_date) {
+      const diff = new Date(p.planned_end_date).getTime() - now;
+      if (diff < 0) {
+        const daysOverdue = Math.ceil(Math.abs(diff) / (1000 * 60 * 60 * 24));
+        items.push({
+          id: `overdue-${p.id}`,
+          projectName: p.name,
+          projectId: p.id,
+          reason: `Prazo estourado há ${daysOverdue} dia(s)`,
+          responsible: p.engineer_name ?? null,
+          urgency: 'critical',
+          deadline: `${daysOverdue}d atraso`,
+          icon: <CalendarX className="h-4 w-4" />,
+          cta: 'Verificar',
+        });
+      }
     }
 
     if (p.status === 'paused') {
@@ -99,18 +104,23 @@ function buildActionItems(
       });
     }
 
-    if (s && s.pending_documents > 0) {
-      items.push({
-        id: `docs-${p.id}`,
-        projectName: p.name,
-        projectId: p.id,
-        reason: `${s.pending_documents} documento(s) pendente(s)`,
-        responsible: p.engineer_name ?? null,
-        urgency: 'high',
-        deadline: null,
-        icon: <FileX className="h-4 w-4" />,
-        cta: 'Enviar',
-      });
+    // Approaching deadline
+    if (p.planned_end_date && p.status === 'active' && !p.actual_end_date) {
+      const diff = new Date(p.planned_end_date).getTime() - now;
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      if (days >= 0 && days <= 14) {
+        items.push({
+          id: `approaching-${p.id}`,
+          projectName: p.name,
+          projectId: p.id,
+          reason: days === 0 ? 'Entrega é hoje!' : `Faltam ${days} dia(s) para entrega`,
+          responsible: p.engineer_name ?? null,
+          urgency: days <= 3 ? 'critical' : days <= 7 ? 'high' : 'medium',
+          deadline: `${days}d`,
+          icon: <Clock className="h-4 w-4" />,
+          cta: 'Ver',
+        });
+      }
     }
 
     if (p.status === 'active') {
