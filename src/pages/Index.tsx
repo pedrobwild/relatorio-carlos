@@ -205,8 +205,8 @@ const Index = () => {
                   activities={reportData.activities}
                   isProjectPhase={project?.is_project_phase}
                   milestoneDates={milestoneDates}
-                  canEditMilestones={isAdmin}
-                  onMilestoneDateChange={isAdmin ? handleMilestoneDateChange : undefined}
+                  canEditMilestones={isStaff}
+                  onMilestoneDateChange={isStaff ? handleMilestoneDateChange : undefined}
                 />
               )}
               {hasShell && (
