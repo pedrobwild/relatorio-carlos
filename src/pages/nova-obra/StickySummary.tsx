@@ -1,4 +1,4 @@
-import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle, Save, HeartPulse } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle, Save, HeartPulse, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { FormData } from './types';
@@ -82,22 +82,20 @@ function Section({ icon, label, stepIndex, currentStep, completedSteps, children
 
 export function StickySummary({ formData, currentStep, completedSteps }: StickySummaryProps) {
   const navigate = useNavigate();
-  const hasProject = !!formData.name;
-  const hasSchedule = !!formData.planned_start_date || !!formData.planned_end_date || formData.is_project_phase;
-  const hasFinancial = !!formData.contract_value;
-  const hasCustomer = !!formData.customer_name;
+  const hasCadastro = !!formData.name || !!formData.customer_name;
+  const hasComercial = !!formData.contract_value;
+  const hasPlanejamento = !!formData.planned_start_date || !!formData.planned_end_date || formData.is_project_phase;
+  const hasReview = hasCadastro && hasComercial;
 
-  // Health score preview based on filled data
   const healthPreview = useMemo(() => {
-    const completeness = [hasProject, hasSchedule, hasFinancial, hasCustomer].filter(Boolean).length;
+    const completeness = [hasCadastro, hasComercial, hasPlanejamento, hasReview].filter(Boolean).length;
     const pct = Math.round((completeness / 4) * 100);
     const missingFields: string[] = [];
-    if (!hasProject) missingFields.push('Dados básicos');
-    if (!hasSchedule) missingFields.push('Cronograma');
-    if (!hasFinancial) missingFields.push('Orçamento');
-    if (!hasCustomer) missingFields.push('Cliente');
+    if (!hasCadastro) missingFields.push('Cadastro Base');
+    if (!hasComercial) missingFields.push('Comercial');
+    if (!hasPlanejamento) missingFields.push('Planejamento');
     return { pct, missingFields };
-  }, [hasProject, hasSchedule, hasFinancial, hasCustomer]);
+  }, [hasCadastro, hasComercial, hasPlanejamento, hasReview]);
 
   const handleSaveDraft = () => {
     toast.success('Rascunho salvo! Você pode continuar depois.');
@@ -111,17 +109,18 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
           Resumo
         </p>
 
-        {/* Step 0 — Dados Básicos */}
+        {/* Step 0 — Cadastro Base */}
         <Section
           icon={<Building2 className="h-4 w-4" />}
-          label="Dados Básicos"
+          label="Cadastro Base"
           stepIndex={0}
           currentStep={currentStep}
           completedSteps={completedSteps}
-          hasContent={hasProject}
+          hasContent={!!formData.name || !!formData.customer_name}
         >
-          <p className="font-medium text-foreground">{formData.name}</p>
+          {formData.name && <p className="font-medium text-foreground">{formData.name}</p>}
           {formData.unit_name && <p>{formData.unit_name}</p>}
+          {formData.customer_name && <p>{formData.customer_name}</p>}
           {(formData.address || formData.bairro) && (
             <p className="flex items-center gap-1">
               <MapPin className="h-3 w-3 shrink-0" />
@@ -130,56 +129,50 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
           )}
         </Section>
 
-        {/* Step 1 — Cronograma */}
+        {/* Step 1 — Comercial */}
         <Section
-          icon={<Calendar className="h-4 w-4" />}
-          label="Cronograma"
+          icon={<DollarSign className="h-4 w-4" />}
+          label="Comercial"
           stepIndex={1}
           currentStep={currentStep}
           completedSteps={completedSteps}
-          hasContent={hasSchedule}
+          hasContent={hasComercial}
+        >
+          <p className="font-medium text-foreground">{formatCurrency(formData.contract_value)}</p>
+        </Section>
+
+        {/* Step 2 — Planejamento */}
+        <Section
+          icon={<Calendar className="h-4 w-4" />}
+          label="Planejamento"
+          stepIndex={2}
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+          hasContent={hasPlanejamento}
         >
           {formData.is_project_phase && !formData.planned_start_date ? (
             <p>Fase de projeto — datas em definição</p>
           ) : (
             <>
-              {formData.planned_start_date && (
-                <p>Início: {formatDate(formData.planned_start_date)}</p>
-              )}
-              {formData.planned_end_date && (
-                <p>Término: {formatDate(formData.planned_end_date)}</p>
-              )}
-              {formData.business_days_duration && (
-                <p>{formData.business_days_duration} dias úteis</p>
-              )}
+              {formData.planned_start_date && <p>Início: {formatDate(formData.planned_start_date)}</p>}
+              {formData.planned_end_date && <p>Término: {formatDate(formData.planned_end_date)}</p>}
+              {formData.business_days_duration && <p>{formData.business_days_duration} dias úteis</p>}
             </>
           )}
         </Section>
 
-        {/* Step 2 — Orçamento */}
+        {/* Step 3 — Revisão */}
         <Section
-          icon={<DollarSign className="h-4 w-4" />}
-          label="Orçamento"
-          stepIndex={2}
-          currentStep={currentStep}
-          completedSteps={completedSteps}
-          hasContent={hasFinancial}
-        >
-          <p className="font-medium text-foreground">{formatCurrency(formData.contract_value)}</p>
-        </Section>
-
-        {/* Step 3 — Cliente */}
-        <Section
-          icon={<User className="h-4 w-4" />}
-          label="Cliente"
+          icon={<Check className="h-4 w-4" />}
+          label="Revisão"
           stepIndex={3}
           currentStep={currentStep}
           completedSteps={completedSteps}
-          hasContent={hasCustomer}
+          hasContent={false}
         >
-          <p className="font-medium text-foreground">{formData.customer_name}</p>
-          {formData.customer_email && <p>{formData.customer_email}</p>}
+          <p className="italic">Pendente</p>
         </Section>
+
         {/* Health Preview */}
         <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2">
           <div className="flex items-center gap-2">
@@ -214,7 +207,6 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
           )}
         </div>
 
-        {/* Save Draft Button */}
         <Button
           variant="outline"
           size="sm"

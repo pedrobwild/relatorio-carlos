@@ -23,21 +23,21 @@ import { MobileSummarySheet } from './nova-obra/MobileSummarySheet';
 import { cn } from '@/lib/utils';
 
 const STEPS: Step[] = [
-  { label: 'Dados Básicos', description: 'Nome, código e configurações iniciais do projeto (~2 min)' },
-  { label: 'Cronograma', description: 'Datas de início/término e atividades planejadas (~3 min)' },
-  { label: 'Orçamento', description: 'Valores que comporão o gráfico de saúde financeira (~1 min)' },
-  { label: 'Cliente', description: 'Dados de acesso ao portal do cliente (~2 min)' },
+  { label: 'Cadastro Base', description: 'Obra, imóvel e contratante (~3 min)' },
+  { label: 'Comercial', description: 'Valor do contrato e orçamento (~1 min)' },
+  { label: 'Planejamento', description: 'Cronograma, datas e atividades (~3 min)' },
+  { label: 'Revisão', description: 'Confira os dados e cadastre a obra' },
 ];
 
-const STEP_SHORT_LABELS = ['Dados', 'Cronograma', 'Orçamento', 'Cliente'];
-const STEP_CTA_LABELS = ['Próximo: Cronograma', 'Próximo: Orçamento', 'Próximo: Cliente', 'Cadastrar Obra'];
+const STEP_SHORT_LABELS = ['Cadastro', 'Comercial', 'Planejamento', 'Revisão'];
+const STEP_CTA_LABELS = ['Próximo: Comercial', 'Próximo: Planejamento', 'Próximo: Revisão', 'Cadastrar Obra'];
 
 // Fields required per step for validation gating
 const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
-  0: ['name'],
+  0: ['name', 'customer_name', 'customer_email'],
   1: [],
   2: [],
-  3: ['customer_name', 'customer_email'],
+  3: [],
 };
 
 const DRAFT_KEY = 'nova-obra-draft';
@@ -98,7 +98,7 @@ export default function NovaObra() {
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
   const [scheduleActivities, setScheduleActivities] = useState<ScheduleActivity[]>(draft?.scheduleActivities ?? []);
   const [draftRestored, setDraftRestored] = useState(!!draft);
-  const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
+  const [direction, setDirection] = useState(1);
 
   // Auto-save draft on formData, activities or step change
   useEffect(() => {
@@ -141,12 +141,16 @@ export default function NovaObra() {
     }
 
     // Step-specific validations
-    if (step === 1 && !formData.is_project_phase) {
-      if (!formData.planned_start_date) newErrors.planned_start_date = 'Data de início é obrigatória';
-      if (!formData.planned_end_date) newErrors.planned_end_date = 'Data de término é obrigatória';
+    if (step === 0) {
+      if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
+        newErrors.customer_email = 'E-mail inválido';
+      }
+      if (formData.create_user && formData.customer_password.length < 6) {
+        newErrors.customer_password = 'Senha deve ter no mínimo 6 caracteres';
+      }
     }
 
-    if (step === 2) {
+    if (step === 1) {
       if (formData.contract_value) {
         const numVal = parseFloat(formData.contract_value);
         if (isNaN(numVal) || numVal < 0) {
@@ -155,13 +159,9 @@ export default function NovaObra() {
       }
     }
 
-    if (step === 3) {
-      if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
-        newErrors.customer_email = 'E-mail inválido';
-      }
-      if (formData.create_user && formData.customer_password.length < 6) {
-        newErrors.customer_password = 'Senha deve ter no mínimo 6 caracteres';
-      }
+    if (step === 2 && !formData.is_project_phase) {
+      if (!formData.planned_start_date) newErrors.planned_start_date = 'Data de início é obrigatória';
+      if (!formData.planned_end_date) newErrors.planned_end_date = 'Data de término é obrigatória';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -268,7 +268,6 @@ export default function NovaObra() {
             </Button>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg sm:text-xl font-bold leading-tight">Nova Obra</h1>
-              {/* Mobile: current step context */}
               <p className="text-xs text-muted-foreground sm:hidden">
                 Etapa {currentStep + 1} de {STEPS.length} · {STEP_SHORT_LABELS[currentStep]}
               </p>
@@ -277,9 +276,8 @@ export default function NovaObra() {
           </div>
         </div>
 
-        {/* Mobile progress bar — animated, tappable */}
+        {/* Mobile progress bar */}
         <div className="sm:hidden px-4 pb-3 space-y-2">
-          {/* Continuous progress bar */}
           <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
             <motion.div
               className="absolute left-0 top-0 h-full bg-primary rounded-full"
@@ -288,7 +286,6 @@ export default function NovaObra() {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
             />
           </div>
-          {/* Step labels — tappable */}
           <div className="flex">
             {STEP_SHORT_LABELS.map((label, i) => (
               <button
@@ -327,7 +324,7 @@ export default function NovaObra() {
         <div className="flex gap-8 items-start">
           {/* Main form */}
           <div className="flex-1 min-w-0 max-w-3xl">
-            {/* Draft restored banner — compact on mobile */}
+            {/* Draft restored banner */}
             {draftRestored && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
@@ -363,7 +360,6 @@ export default function NovaObra() {
             )}
 
             <form onSubmit={handleSubmit}>
-              {/* Animated step transitions on mobile */}
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={currentStep}
@@ -373,7 +369,7 @@ export default function NovaObra() {
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="space-y-6"
                 >
-                  {/* Step 0: Dados Básicos */}
+                  {/* Step 0: Cadastro Base — Obra + Imóvel + Contratante */}
                   {currentStep === 0 && (
                     <>
                       {templates && templates.length > 0 && (
@@ -390,27 +386,27 @@ export default function NovaObra() {
                         </div>
                       )}
                       <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
+                      <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
                     </>
                   )}
 
-                  {/* Step 1: Cronograma */}
+                  {/* Step 1: Comercial */}
                   {currentStep === 1 && (
-                    <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
-                  )}
-
-                  {/* Step 2: Orçamento e Financeiro */}
-                  {currentStep === 2 && (
                     <div className="space-y-6">
                       <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
                       <FinancialCard formData={formData} onChange={handleChange} />
                     </div>
                   )}
 
-                  {/* Step 3: Cliente + Review */}
+                  {/* Step 2: Planejamento */}
+                  {currentStep === 2 && (
+                    <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
+                  )}
+
+                  {/* Step 3: Revisão */}
                   {currentStep === 3 && (
                     <div className="space-y-6">
                       <ReviewSummary formData={formData} />
-                      <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
                     </div>
                   )}
                 </motion.div>
@@ -460,7 +456,7 @@ export default function NovaObra() {
           />
         </div>
 
-        {/* Mobile bottom sheet summary — only on desktop-ish */}
+        {/* Mobile bottom sheet summary */}
         <div className="hidden lg:block">
           <MobileSummarySheet
             formData={formData}
@@ -471,7 +467,7 @@ export default function NovaObra() {
         </div>
       </main>
 
-      {/* Mobile sticky bottom navigation — keyboard-aware */}
+      {/* Mobile sticky bottom navigation */}
       <div className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur-md border-t border-border sm:hidden keyboard-aware">
         <div className="px-4 py-3 pb-safe">
           <div className="flex gap-3">

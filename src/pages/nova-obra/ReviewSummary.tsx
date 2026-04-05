@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Calendar, DollarSign, User, MapPin, CheckCircle2 } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User, MapPin, CheckCircle2, Home } from 'lucide-react';
 import type { FormData } from './types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -32,19 +32,25 @@ export function ReviewSummary({ formData }: ReviewSummaryProps) {
       icon: Building2,
       label: 'Obra',
       value: formData.name || 'Sem nome',
-      sub: [formData.unit_name, formData.is_project_phase && 'Fase de projeto'].filter(Boolean).join(' · '),
+      sub: [formData.unit_name, formData.nome_do_empreendimento, formData.is_project_phase && 'Fase de projeto'].filter(Boolean).join(' · '),
       filled: !!formData.name,
     },
     {
-      icon: MapPin,
-      label: 'Local',
-      value: [formData.address, formData.bairro].filter(Boolean).join(', ') || '—',
-      sub: formData.cep || '',
+      icon: Home,
+      label: 'Imóvel',
+      value: [formData.address, formData.bairro, formData.cidade_imovel].filter(Boolean).join(', ') || '—',
+      sub: [formData.cep, formData.tipo_de_locacao, formData.tamanho_imovel_m2 && `${formData.tamanho_imovel_m2}m²`].filter(Boolean).join(' · '),
       filled: !!(formData.address || formData.bairro),
     },
     {
+      icon: DollarSign,
+      label: 'Comercial',
+      value: formatCurrency(formData.contract_value),
+      filled: !!formData.contract_value,
+    },
+    {
       icon: Calendar,
-      label: 'Período',
+      label: 'Planejamento',
       value: formData.is_project_phase && !formData.planned_start_date
         ? 'Em definição'
         : `${formatDate(formData.planned_start_date)} → ${formatDate(formData.planned_end_date)}`,
@@ -52,16 +58,10 @@ export function ReviewSummary({ formData }: ReviewSummaryProps) {
       filled: !!(formData.planned_start_date && formData.planned_end_date),
     },
     {
-      icon: DollarSign,
-      label: 'Contrato',
-      value: formatCurrency(formData.contract_value),
-      filled: !!formData.contract_value,
-    },
-    {
       icon: User,
-      label: 'Cliente',
-      value: formData.customer_name || '(preencher abaixo)',
-      sub: formData.customer_email || '',
+      label: 'Contratante',
+      value: formData.customer_name || '(preencher)',
+      sub: [formData.customer_email, formData.cpf].filter(Boolean).join(' · '),
       filled: !!(formData.customer_name && formData.customer_email),
     },
   ];

@@ -13,7 +13,7 @@ interface MobileSummarySheetProps {
   totalSteps: number;
 }
 
-const stepLabels = ['Dados', 'Cronograma', 'Orçamento', 'Cliente'];
+const stepLabels = ['Cadastro', 'Comercial', 'Planejamento', 'Revisão'];
 
 export function MobileSummarySheet({ formData, currentStep, completedSteps, totalSteps }: MobileSummarySheetProps) {
   const [expanded, setExpanded] = useState(false);
@@ -29,7 +29,6 @@ export function MobileSummarySheet({ formData, currentStep, completedSteps, tota
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
-      {/* Backdrop */}
       {expanded && (
         <div className="fixed inset-0 bg-black/20 z-[-1]" onClick={() => setExpanded(false)} />
       )}
@@ -38,14 +37,12 @@ export function MobileSummarySheet({ formData, currentStep, completedSteps, tota
         'bg-card border-t border-border shadow-lg transition-all duration-300 rounded-t-xl',
         expanded ? 'max-h-[60dvh]' : 'max-h-16',
       )}>
-        {/* Collapsed bar */}
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
           className="w-full flex items-center justify-between px-4 py-3 min-h-[56px]"
         >
           <div className="flex items-center gap-3">
-            {/* Step dots */}
             <div className="flex items-center gap-1">
               {Array.from({ length: totalSteps }).map((_, i) => (
                 <div
@@ -66,7 +63,6 @@ export function MobileSummarySheet({ formData, currentStep, completedSteps, tota
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronUp className="h-4 w-4 text-muted-foreground" />}
         </button>
 
-        {/* Expanded content */}
         {expanded && (
           <div className="px-4 pb-4 space-y-3 overflow-y-auto max-h-[calc(60dvh-56px)]">
             {stepLabels.map((label, i) => {

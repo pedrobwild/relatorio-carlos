@@ -24,9 +24,9 @@ export function CustomerCard({ formData, errors, sendInvite, onSendInviteChange,
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-body">
           <User className="h-5 w-5" />
-          Dados do Cliente
+          Dados do Contratante
         </CardTitle>
-        <CardDescription>Informações do cliente e criação de acesso ao portal</CardDescription>
+        <CardDescription>Informações pessoais, documentos e criação de acesso ao portal</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -41,6 +41,42 @@ export function CustomerCard({ formData, errors, sendInvite, onSendInviteChange,
             />
             {errors.customer_name && <p className="text-xs text-destructive">{errors.customer_name}</p>}
           </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="nacionalidade">Nacionalidade</Label>
+            <Input id="nacionalidade" value={formData.nacionalidade} onChange={(e) => onChange('nacionalidade', e.target.value)} placeholder="Ex: brasileira" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="estado_civil">Estado civil</Label>
+            <Input id="estado_civil" value={formData.estado_civil} onChange={(e) => onChange('estado_civil', e.target.value)} placeholder="Ex: casada" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="profissao">Profissão</Label>
+            <Input id="profissao" value={formData.profissao} onChange={(e) => onChange('profissao', e.target.value)} placeholder="Ex: engenheira civil" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="cpf">CPF</Label>
+            <Input id="cpf" value={formData.cpf} onChange={(e) => onChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="rg">RG</Label>
+            <Input id="rg" value={formData.rg} onChange={(e) => onChange('rg', e.target.value)} placeholder="0000.000" />
+          </div>
+          <div className="sm:col-span-2 space-y-1">
+            <Label htmlFor="endereco_residencial">Endereço residencial</Label>
+            <Input id="endereco_residencial" value={formData.endereco_residencial} onChange={(e) => onChange('endereco_residencial', e.target.value)} placeholder="Rua, número, bairro, cidade/UF, CEP" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="cidade_cliente">Cidade</Label>
+            <Input id="cidade_cliente" value={formData.cidade_cliente} onChange={(e) => onChange('cidade_cliente', e.target.value)} placeholder="Ex: São Paulo" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="estado_cliente">Estado</Label>
+            <Input id="estado_cliente" value={formData.estado_cliente} onChange={(e) => onChange('estado_cliente', e.target.value)} placeholder="Ex: SP" />
+          </div>
+
+          <Separator className="sm:col-span-2" />
+
           <div className="space-y-1">
             <Label htmlFor="customer_email">E-mail *</Label>
             <Input
@@ -53,7 +89,7 @@ export function CustomerCard({ formData, errors, sendInvite, onSendInviteChange,
             />
             {errors.customer_email && <p className="text-xs text-destructive">{errors.customer_email}</p>}
           </div>
-          <div>
+          <div className="space-y-1">
             <Label htmlFor="customer_phone">Telefone</Label>
             <Input id="customer_phone" value={formData.customer_phone} onChange={(e) => onChange('customer_phone', e.target.value)} placeholder="(00) 00000-0000" />
           </div>
