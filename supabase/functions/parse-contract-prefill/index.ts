@@ -56,6 +56,20 @@ INSTRUÇÕES:
 10. Liste campos que não foram encontrados em "missing_fields" usando os nomes dos campos do JSON.
 11. Em "confidence", atribua de 0.0 a 1.0 para cada campo preenchido.
 
+ATENÇÃO ESPECIAL — DADOS DO IMÓVEL (seção "studio"):
+Os dados do imóvel a ser reformado frequentemente NÃO estão em uma seção separada.
+Eles costumam aparecer em parágrafos descritivos como:
+- "Imóvel-apartamento de nº 1014 ... empreendimento denominado Exalt Ibirapuera By EZ, na R. Borges Lagoa, 232 - Vila Clementino, São Paulo - SP, 04038-000"
+- "unidade autônoma nº ... localizada no condomínio ..."
+Você DEVE extrair desses parágrafos:
+- nome_do_empreendimento: nome do edifício/condomínio (ex: "Exalt Ibirapuera By EZ")
+- unit_name: número do apartamento/unidade (ex: "1014")
+- endereco_completo: rua e número (ex: "R. Borges Lagoa, 232")
+- bairro: bairro mencionado (ex: "Vila Clementino")
+- cidade: cidade (ex: "São Paulo")
+- cep: CEP se presente (ex: "04038-000")
+NÃO confunda endereço residencial do contratante com endereço do imóvel da obra.
+
 CAMPOS A EXTRAIR:
 
 customer: dados do CONTRATANTE (pessoa que contrata a reforma)
