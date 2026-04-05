@@ -4010,7 +4010,15 @@ export type Database = {
           actual_start_date: string | null
           address: string | null
           bairro: string | null
+          budget_code: string | null
+          budget_value: number | null
           cep: string | null
+          city: string | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
+          condominium: string | null
+          consultora_comercial: string | null
           contract_signing_date: string | null
           contract_value: number | null
           created_at: string
@@ -4022,13 +4030,20 @@ export type Database = {
           date_mobilization_start: string | null
           date_official_delivery: string | null
           date_official_start: string | null
+          estimated_duration_weeks: number | null
+          external_id: string | null
+          external_system: string | null
           id: string
           is_project_phase: boolean
           name: string
+          neighborhood: string | null
+          notes: string | null
           org_id: string | null
           planned_end_date: string | null
           planned_start_date: string | null
+          property_type: string | null
           status: string
+          total_area: number | null
           unit_name: string | null
           updated_at: string
         }
@@ -4037,7 +4052,15 @@ export type Database = {
           actual_start_date?: string | null
           address?: string | null
           bairro?: string | null
+          budget_code?: string | null
+          budget_value?: number | null
           cep?: string | null
+          city?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          condominium?: string | null
+          consultora_comercial?: string | null
           contract_signing_date?: string | null
           contract_value?: number | null
           created_at?: string
@@ -4049,13 +4072,20 @@ export type Database = {
           date_mobilization_start?: string | null
           date_official_delivery?: string | null
           date_official_start?: string | null
+          estimated_duration_weeks?: number | null
+          external_id?: string | null
+          external_system?: string | null
           id?: string
           is_project_phase?: boolean
           name: string
+          neighborhood?: string | null
+          notes?: string | null
           org_id?: string | null
           planned_end_date?: string | null
           planned_start_date?: string | null
+          property_type?: string | null
           status?: string
+          total_area?: number | null
           unit_name?: string | null
           updated_at?: string
         }
@@ -4064,7 +4094,15 @@ export type Database = {
           actual_start_date?: string | null
           address?: string | null
           bairro?: string | null
+          budget_code?: string | null
+          budget_value?: number | null
           cep?: string | null
+          city?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          condominium?: string | null
+          consultora_comercial?: string | null
           contract_signing_date?: string | null
           contract_value?: number | null
           created_at?: string
@@ -4076,13 +4114,20 @@ export type Database = {
           date_mobilization_start?: string | null
           date_official_delivery?: string | null
           date_official_start?: string | null
+          estimated_duration_weeks?: number | null
+          external_id?: string | null
+          external_system?: string | null
           id?: string
           is_project_phase?: boolean
           name?: string
+          neighborhood?: string | null
+          notes?: string | null
           org_id?: string | null
           planned_end_date?: string | null
           planned_start_date?: string | null
+          property_type?: string | null
           status?: string
+          total_area?: number | null
           unit_name?: string | null
           updated_at?: string
         }
