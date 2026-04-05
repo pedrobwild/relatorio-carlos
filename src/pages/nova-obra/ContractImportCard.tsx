@@ -222,7 +222,7 @@ export function ContractImportCard({
 
         {/* Success */}
         {isSuccess && (
-          <div className="space-y-3">
+          <div className="space-y-3" role="status" aria-live="polite">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <FileText className="h-4 w-4 text-primary shrink-0" />
