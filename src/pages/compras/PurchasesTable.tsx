@@ -202,7 +202,7 @@ function PurchaseRow({
               <p className={cn(
                 'text-xs',
                 purchase.actual_cost > (purchase.estimated_cost || 0)
-                  ? 'text-destructive' : 'text-green-600'
+                  ? 'text-destructive' : 'text-[hsl(var(--success))]'
               )}>
                 Real: {fmt(purchase.actual_cost)}
               </p>
