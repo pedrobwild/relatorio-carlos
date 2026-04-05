@@ -47,124 +47,107 @@ const DocumentCard = ({
   onViewHistory,
   onVersionUploaded,
   isStaff,
+  onOpenViewer,
 }: { 
   doc: ProjectDocument; 
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
   isStaff: boolean;
+  onOpenViewer: (doc: ProjectDocument) => void;
 }) => {
-  const handleDownload = async () => {
+  const handleDownload = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!doc.url) return;
-    
-    const response = await fetch(doc.url);
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = doc.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    try {
+      const response = await fetch(doc.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = doc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      window.open(doc.url, '_blank');
+    }
   };
 
-  const isPdf = doc.mime_type === 'application/pdf';
+  const handleShare = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!doc.url) return;
+    if (navigator.share) {
+      try { await navigator.share({ title: doc.name, url: doc.url }); } catch { /* cancelled */ }
+    } else {
+      try {
+        await navigator.clipboard.writeText(doc.url);
+        const { toast } = await import('sonner');
+        toast.success('Link copiado');
+      } catch {
+        window.open(doc.url, '_blank');
+      }
+    }
+  };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/50 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" tabIndex={0}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-              {categoryIcons[doc.document_type]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-body font-semibold line-clamp-1">{doc.name}</h3>
-              </div>
-              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
-                <span>v{doc.version}</span>
-                <span>•</span>
-                <span>{format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
-                {doc.checksum && (
-                  <>
-                    <span>•</span>
-                    <span className="flex items-center gap-1" title={`SHA256: ${doc.checksum}`}>
-                      <ShieldCheck className="w-3 h-3" />
-                      Verificado
-                    </span>
-                  </>
-                )}
-              </div>
-              {doc.description && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{doc.description}</p>
-              )}
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
-          </div>
+    <div
+      className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:bg-accent/50 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98]"
+      tabIndex={0}
+      onClick={() => onOpenViewer(doc)}
+      role="button"
+      aria-label={`Abrir ${doc.name}`}
+    >
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+          {categoryIcons[doc.document_type]}
         </div>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl w-[95vw] h-[90dvh] max-h-[95dvh] p-0 flex flex-col">
-        <DialogHeader className="p-4 border-b border-border shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-base">{doc.name}</DialogTitle>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-muted-foreground">Versão {doc.version}</span>
-                {doc.checksum && (
-                  <span className="text-xs text-muted-foreground font-mono" title={doc.checksum}>
-                    SHA256: {doc.checksum.substring(0, 8)}...
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-2"
-                onClick={() => onViewHistory(doc.id)}
-              >
-                <History className="w-4 h-4" />
-                <span className="hidden sm:inline">Histórico</span>
-              </Button>
-              {isStaff && (
-                <DocumentVersionUpload document={doc} onSuccess={onVersionUploaded} />
-              )}
-              <Button onClick={handleDownload} size="sm" className="gap-2">
-                <Download className="w-4 h-4" />
-                Download
-              </Button>
-            </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-body font-semibold line-clamp-1">{doc.name}</h3>
+          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
+            <span>v{doc.version}</span>
+            <span>•</span>
+            <span>{format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+            {doc.checksum && (
+              <>
+                <span>•</span>
+                <span className="flex items-center gap-1" title={`SHA256: ${doc.checksum}`}>
+                  <ShieldCheck className="w-3 h-3" />
+                  Verificado
+                </span>
+              </>
+            )}
           </div>
-        </DialogHeader>
-        <div className="flex-1 overflow-hidden">
-          {doc.url ? (
-            <DocumentViewer 
-              url={doc.url} 
-              title={doc.name}
-              mimeType={doc.mime_type}
-              className="h-full rounded-none border-0"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-                <p className="text-body text-muted-foreground">Pré-visualização não disponível</p>
-                <p className="text-xs text-muted-foreground mt-1">O link do documento pode ter expirado.</p>
-                <div className="flex gap-2 mt-4 justify-center">
-                  <Button onClick={handleDownload} className="gap-2">
-                    <Download className="w-4 h-4" />
-                    Baixar arquivo
-                  </Button>
-                  <Button variant="outline" onClick={() => window.location.reload()} className="gap-2">Recarregar</Button>
-                </div>
-              </div>
-            </div>
+          {doc.description && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{doc.description}</p>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+        {/* Quick actions — always visible on mobile, on-hover on desktop */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 min-h-[44px] min-w-[44px] touch-manipulation sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+            onClick={handleDownload}
+            aria-label="Baixar"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 min-h-[44px] min-w-[44px] touch-manipulation sm:hidden"
+            onClick={handleShare}
+            aria-label="Compartilhar"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+          <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0 hidden sm:block" />
+        </div>
+      </div>
+    </div>
+  );
+};
   );
 };
 
