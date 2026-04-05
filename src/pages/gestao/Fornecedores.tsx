@@ -550,7 +550,7 @@ export default function Fornecedores() {
               <div className="space-y-1.5">
                 <Label>Subcategoria *</Label>
                 <Select
-                  value={form.supplier_subcategory || ""}
+                  value={form.supplier_subcategory ?? undefined}
                   onValueChange={(v) => setForm((p) => ({ ...p, supplier_subcategory: v }))}
                   disabled={!form.supplier_type}
                 >
