@@ -157,10 +157,11 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'relative flex flex-col items-center gap-1.5 rounded-xl border px-4 py-2.5 min-w-[80px] shrink-0',
+              'relative flex flex-col items-center gap-1 rounded-xl border px-3 py-2.5 min-w-[72px] shrink-0',
               'md:flex-row md:gap-2 md:px-3 md:py-2 md:min-w-0',
               'transition-all duration-150 cursor-pointer select-none active:scale-[0.96]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+              'min-h-[64px] md:min-h-0',
               isSelected
                 ? `${accent.activeBg} shadow-sm`
                 : shouldHighlight

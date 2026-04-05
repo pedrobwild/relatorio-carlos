@@ -8,6 +8,7 @@ import { PortfolioKpiStrip } from './PortfolioKpiStrip';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
+import { MobileProjectList } from './MobileProjectList';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
 import { ProjectsCardView } from '@/components/gestao/ProjectsCardView';
 import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
@@ -93,7 +94,7 @@ export default function PortfolioPage() {
         </div>
       </AppHeader>
 
-      <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-3 space-y-2.5">
+      <main className="max-w-[1440px] mx-auto px-4 lg:px-6 py-3 space-y-2.5 pb-20 md:pb-4">
         {/* Stale data banner */}
         {isStale && !isLoading && projects.length > 0 && (
           <StaleDataBanner onRefresh={() => refetch()} isRefetching={isRefetching} />
@@ -135,8 +136,8 @@ export default function PortfolioPage() {
 
         {/* Content: Sidebar + Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[190px_1fr] xl:grid-cols-[200px_1fr] gap-2.5">
-          {/* Sidebar */}
-          <aside className="order-2 lg:order-1 space-y-4">
+          {/* Sidebar — desktop only */}
+          <aside className="hidden lg:block order-2 lg:order-1 space-y-4">
             {summariesLoading && summaries.length === 0 ? (
               <SidebarSkeleton />
             ) : summariesError && summaries.length === 0 ? (
@@ -172,26 +173,28 @@ export default function PortfolioPage() {
                 onClearFilters={filters.handleClearAll}
                 activeFilterCount={filters.totalFilterCount}
               />
-            ) : filters.viewMode === 'cards' ? (
-              <ProjectsCardView
-                projects={filters.filtered}
-                onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-              />
             ) : (
               <>
-                {/* Mobile: always show cards for better usability */}
+                {/* Mobile: compact list view (default) */}
                 <div className="block md:hidden">
-                  <ProjectsCardView
+                  <MobileProjectList
                     projects={filters.filtered}
                     onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
                   />
                 </div>
-                {/* Desktop: show list/table view */}
+                {/* Desktop: respects view mode */}
                 <div className="hidden md:block">
-                  <ProjectsListView
-                    projects={filters.filtered}
-                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-                  />
+                  {filters.viewMode === 'cards' ? (
+                    <ProjectsCardView
+                      projects={filters.filtered}
+                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                    />
+                  ) : (
+                    <ProjectsListView
+                      projects={filters.filtered}
+                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                    />
+                  )}
                 </div>
               </>
             )}
