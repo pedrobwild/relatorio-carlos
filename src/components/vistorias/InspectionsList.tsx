@@ -149,9 +149,9 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
                             </Badge>
                           )}
                         </div>
-                        {(inspection as any).inspector_user_name && (
+                        {inspection.inspector_user_name && (
                           <p className="text-xs text-muted-foreground truncate mt-0.5">
-                            Vistoriador: {(inspection as any).inspector_user_name}
+                            Vistoriador: {inspection.inspector_user_name}
                           </p>
                         )}
                         {inspection.activity_description && (

@@ -298,15 +298,15 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
           </Badge>
         </div>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-          {(inspection as any).inspector_user_name && (
+          {inspection.inspector_user_name && (
             <span className="flex items-center gap-1">
               <User className="h-3 w-3" />
-              {(inspection as any).inspector_user_name}
+              {inspection.inspector_user_name}
             </span>
           )}
-          {(inspection as any).client_present && (
+          {inspection.client_present && (
             <span className="flex items-center gap-1">
-              🏠 Cliente{(inspection as any).client_name ? `: ${(inspection as any).client_name}` : ''}
+              🏠 Cliente{inspection.client_name ? `: ${inspection.client_name}` : ''}
             </span>
           )}
         </div>
