@@ -10,6 +10,7 @@ import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { getTemporalStatusLabel } from '@/lib/temporalStatus';
 import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -106,9 +107,16 @@ function ProjectCard({
         <div className="flex items-center gap-2.5">
           {summary && <HealthScoreBadge project={summary} size="md" showLabel />}
         </div>
-        <Badge variant="outline" className={cn('text-[10px] shrink-0', statusColors[project.status])}>
-          {statusLabels[project.status] ?? project.status}
-        </Badge>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="outline" className={cn('text-[10px] shrink-0', statusColors[project.status])}>
+              {statusLabels[project.status] ?? project.status}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="text-xs">
+            {getTemporalStatusLabel(project.status, null, project.created_at)}
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Health breakdown mini-bars */}

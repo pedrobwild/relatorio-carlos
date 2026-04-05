@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { Pencil, Trash2, Copy, Eye, Download, Tag } from 'lucide-react';
+import { Pencil, Trash2, Copy, Eye, Download, Tag, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { ProjectTemplate } from '@/hooks/useProjectTemplates';
+import { useTemplateVersions } from '@/hooks/useProjectTemplates';
 import { type ActivityItem, totalDays, getCategoryLabel } from './types';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TemplateCardProps {
   template: ProjectTemplate;
@@ -24,6 +28,9 @@ export function TemplateCard({ template: t, onPreview, onEdit, onDuplicate, onEx
   const isMobile = useIsMobile();
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { data: versions } = useTemplateVersions(t.id);
+  const latestVersion = versions?.[0];
+  const versionCount = versions?.length ?? 0;
 
   const longPressHandlers = useLongPress({
     onLongPress: () => setActionSheetOpen(true),
@@ -59,6 +66,23 @@ export function TemplateCard({ template: t, onPreview, onEdit, onDuplicate, onEx
                 <Tag className="h-3 w-3" />
                 {getCategoryLabel(t.category)}
               </Badge>
+            )}
+            {versionCount > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="gap-1 text-primary border-primary/30">
+                      <History className="h-3 w-3" />
+                      v{latestVersion?.version_number ?? 1}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      {versionCount} versão(ões) · Última: {latestVersion ? formatDistanceToNow(new Date(latestVersion.created_at), { locale: ptBR, addSuffix: true }) : '—'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             {acts.length > 0 && (
               <Badge variant="outline">

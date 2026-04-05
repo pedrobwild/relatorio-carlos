@@ -11,6 +11,7 @@ import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { getTemporalStatusLabel } from '@/lib/temporalStatus';
 import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -117,7 +118,7 @@ function MobileProjectRow({
           <p className="font-semibold text-[13px] text-foreground truncate leading-tight flex-1 min-w-0">
             {project.name}
           </p>
-          <div className={cn('w-2 h-2 rounded-full shrink-0', status.dot)} title={status.label} aria-label={`Status: ${status.label}`} role="img" />
+          <div className={cn('w-2 h-2 rounded-full shrink-0', status.dot)} title={getTemporalStatusLabel(project.status, null, project.created_at)} aria-label={`Status: ${status.label}`} role="img" />
         </div>
 
         {/* Row 2: Customer + unit */}
