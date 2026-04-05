@@ -312,9 +312,9 @@ function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { 
             {daysInfo && (
               <>
                 <span className="text-muted-foreground/50">·</span>
-                <span className={cn(
+                 <span className={cn(
                   'font-semibold',
-                  isOverdue ? 'text-destructive' : act.computedStatus === 'upcoming' ? 'text-amber-600' : 'text-blue-600'
+                  isOverdue ? 'text-destructive' : act.computedStatus === 'upcoming' ? 'text-[hsl(var(--warning))]' : 'text-primary'
                 )}>
                   {daysInfo}
                 </span>
