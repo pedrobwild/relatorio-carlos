@@ -127,6 +127,11 @@ function MobileProjectRow({
           </p>
         )}
 
+        {/* Row 2.5: Health breakdown mini-bars */}
+        {summary && (
+          <HealthScoreBreakdown project={summary} />
+        )}
+
         {/* Row 3: Progress bar + delivery + alerts */}
         <div className="flex items-center gap-2">
           {/* Progress */}

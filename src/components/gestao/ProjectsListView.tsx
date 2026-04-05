@@ -261,9 +261,16 @@ function ProjectRow({
         {/* Health */}
         <TableCell className="text-center py-2">
           {summary ? (
-            <div className="flex justify-center">
-              <HealthScoreBadge project={summary} size="sm" />
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex justify-center">
+                  <HealthScoreBadge project={summary} size="sm" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="p-2 w-48">
+                <HealthScoreBreakdown project={summary} />
+              </TooltipContent>
+            </Tooltip>
           ) : (
             <span className="text-[10px] text-muted-foreground/40">—</span>
           )}

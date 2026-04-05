@@ -111,6 +111,11 @@ function ProjectCard({
         </Badge>
       </div>
 
+      {/* Health breakdown mini-bars */}
+      {summary && (
+        <HealthScoreBreakdown project={summary} className="px-1" />
+      )}
+
       {/* Row 2: Delivery date — prominent */}
       {plannedEnd && (
         <div className={cn(
