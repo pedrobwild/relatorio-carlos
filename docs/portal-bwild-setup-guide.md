@@ -84,11 +84,11 @@ CREATE TABLE IF NOT EXISTS integration_sync_log (
 
 ### Passo 4 — Configurar o secret de autenticação
 
-No painel do Supabase do Portal BWild, adicione o secret:
+No Portal BWild, o secret já está configurado:
 
 | Nome | Valor | Descrição |
 |------|-------|-----------|
-| `ENVISION_INTEGRATION_KEY` | *(mesma chave que está em `INTEGRATION_INBOUND_KEY` no Envision)* | Chave compartilhada para autenticar chamadas de integração |
+| `INTEGRATION_API_KEY` | *(mesma chave compartilhada entre os dois sistemas)* | Chave para autenticar chamadas de integração |
 
 ### Passo 5 — Deploy das Edge Functions
 
