@@ -3,23 +3,25 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Calendar, DollarSign, User, Clock, MessageSquare, Send, Trash2, ArrowRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Calendar, DollarSign, User, Clock, MessageSquare, Send, Trash2, ArrowRight, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { TASK_STATUSES, type ObraTask } from '@/hooks/useObraTasks';
+import { TASK_STATUSES, type ObraTask, type ObraTaskStatus } from '@/hooks/useObraTasks';
 import { useObraTaskComments } from '@/hooks/useObraTaskComments';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   task: ObraTask | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdateStatus?: (id: string, status: ObraTaskStatus) => void;
 }
 
 const statusLabels: Record<string, string> = {
@@ -43,12 +45,13 @@ const statusDots: Record<string, string> = {
   concluido: 'bg-green-500',
 };
 
-export function AtividadeDetailSheet({ task, open, onOpenChange }: Props) {
+export function AtividadeDetailSheet({ task, open, onOpenChange, onUpdateStatus }: Props) {
   const { user } = useAuth();
   const { comments, commentsLoading, statusHistory, historyLoading, addComment, deleteComment } =
     useObraTaskComments(task?.id);
   const { data: staffUsers = [] } = useStaffUsers();
   const [newComment, setNewComment] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const getMemberName = (userId: string | null) => {
     if (!userId) return '—';
@@ -80,29 +83,48 @@ export function AtividadeDetailSheet({ task, open, onOpenChange }: Props) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-lg w-full p-0 flex flex-col h-full">
-        {/* Header with colored status bar */}
-        <div className={cn(
-          "h-1 w-full shrink-0",
-          statusDots[task.status] || 'bg-muted'
-        )} />
-        
-        <SheetHeader className="px-5 pt-4 pb-3 shrink-0">
+        {/* Status bar */}
+        <div className={cn("h-1 w-full shrink-0", statusDots[task.status] || 'bg-muted')} />
+
+        <SheetHeader className="px-4 pt-4 pb-3 shrink-0">
           <div className="flex items-start justify-between gap-3">
-            <SheetTitle className="text-left text-lg font-bold leading-tight flex-1">{task.title}</SheetTitle>
+            <SheetTitle className="text-left text-base sm:text-lg font-bold leading-tight flex-1">
+              {task.title}
+            </SheetTitle>
             <Badge variant="outline" className={cn('shrink-0 text-xs font-semibold', statusColors[task.status] || '')}>
               {statusLabels[task.status] || task.status}
             </Badge>
           </div>
         </SheetHeader>
 
+        {/* Quick status buttons - mobile optimized */}
+        {onUpdateStatus && task.status !== 'concluido' && (
+          <div className="px-4 pb-3 shrink-0">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {TASK_STATUSES.filter(s => s.value !== task.status).map(s => (
+                <Button
+                  key={s.value}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs rounded-lg gap-1.5 whitespace-nowrap shrink-0"
+                  onClick={() => onUpdateStatus(task.id, s.value)}
+                >
+                  <div className={cn('w-2 h-2 rounded-full', statusDots[s.value])} />
+                  {s.value === 'concluido' ? 'Concluir' : s.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-5 pb-4">
-            {/* Task Details — card style */}
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-3 mb-5">
+          <div className="px-4 pb-4 space-y-4">
+            {/* Task info - compact grid */}
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
               {task.description && (
                 <p className="text-sm text-muted-foreground leading-relaxed">{task.description}</p>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <DetailItem
                   icon={<User className="h-4 w-4" />}
                   label="Responsável"
@@ -139,57 +161,73 @@ export function AtividadeDetailSheet({ task, open, onOpenChange }: Props) {
               </div>
             </div>
 
-            {/* Status History — timeline style */}
-            <section className="mb-5">
-              <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                Histórico
-              </h3>
-              {historyLoading ? (
-                <div className="space-y-2">
-                  {[1, 2].map(i => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
-                </div>
-              ) : statusHistory.length === 0 ? (
-                <p className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 text-center">Nenhuma mudança registrada.</p>
-              ) : (
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border" />
-                  <div className="space-y-3">
-                    {statusHistory.map(h => (
-                      <div key={h.id} className="flex items-start gap-3 relative">
-                        <div className={cn(
-                          "w-[19px] h-[19px] rounded-full border-2 border-background shrink-0 mt-0.5 z-10",
-                          statusDots[h.new_status] || 'bg-muted-foreground'
-                        )} />
-                        <div className="flex-1 min-w-0 bg-card rounded-lg border border-border/40 p-2.5">
-                          <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                            {h.old_status && (
-                              <>
-                                <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 h-4', statusColors[h.old_status] || '')}>
-                                  {statusLabels[h.old_status] || h.old_status}
-                                </Badge>
-                                <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                              </>
-                            )}
-                            <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 h-4', statusColors[h.new_status] || '')}>
-                              {statusLabels[h.new_status] || h.new_status}
-                            </Badge>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">
-                            {h.changed_by_name || 'Sistema'} · {format(new Date(h.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                          </p>
+            {/* History - collapsible */}
+            <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full py-2 touch-target">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  Histórico
+                  {statusHistory.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-bold">{statusHistory.length}</Badge>
+                  )}
+                </h3>
+                <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', historyOpen && 'rotate-180')} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <AnimatePresence>
+                  {historyOpen && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {historyLoading ? (
+                        <div className="space-y-2">
+                          {[1, 2].map(i => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
+                      ) : statusHistory.length === 0 ? (
+                        <p className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 text-center">Nenhuma mudança registrada.</p>
+                      ) : (
+                        <div className="relative">
+                          <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border" />
+                          <div className="space-y-2.5">
+                            {statusHistory.map(h => (
+                              <div key={h.id} className="flex items-start gap-3 relative">
+                                <div className={cn(
+                                  "w-[19px] h-[19px] rounded-full border-2 border-background shrink-0 mt-0.5 z-10",
+                                  statusDots[h.new_status] || 'bg-muted-foreground'
+                                )} />
+                                <div className="flex-1 min-w-0 bg-card rounded-lg border border-border/40 p-2">
+                                  <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                    {h.old_status && (
+                                      <>
+                                        <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 h-4', statusColors[h.old_status] || '')}>
+                                          {statusLabels[h.old_status] || h.old_status}
+                                        </Badge>
+                                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                      </>
+                                    )}
+                                    <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0 h-4', statusColors[h.new_status] || '')}>
+                                      {statusLabels[h.new_status] || h.new_status}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {h.changed_by_name || 'Sistema'} · {format(new Date(h.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </CollapsibleContent>
+            </Collapsible>
 
-            <Separator className="mb-5" />
-
-            {/* Comments */}
+            {/* Comments - always visible */}
             <section>
               <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -200,23 +238,23 @@ export function AtividadeDetailSheet({ task, open, onOpenChange }: Props) {
               </h3>
               {commentsLoading ? (
                 <div className="space-y-3">
-                  {[1, 2].map(i => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+                  {[1, 2].map(i => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
                 </div>
               ) : comments.length === 0 ? (
                 <p className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 text-center mb-3">
                   Nenhum comentário. Seja o primeiro!
                 </p>
               ) : (
-                <div className="space-y-3 mb-3">
+                <div className="space-y-2.5 mb-3">
                   {comments.map(c => (
-                    <div key={c.id} className="flex gap-2.5 group">
-                      <Avatar className="h-8 w-8 shrink-0 mt-0.5">
+                    <div key={c.id} className="flex gap-2 group">
+                      <Avatar className="h-7 w-7 shrink-0 mt-0.5">
                         <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
                           {getInitials(c.author_name || 'U')}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1 min-w-0 bg-muted/30 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 min-w-0 bg-muted/30 rounded-xl p-2.5">
+                        <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-xs font-semibold">{c.author_name}</span>
                           <span className="text-[10px] text-muted-foreground">
                             {format(new Date(c.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
@@ -225,7 +263,7 @@ export function AtividadeDetailSheet({ task, open, onOpenChange }: Props) {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-5 w-5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-6 w-6 ml-auto opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity"
                               onClick={() => deleteComment.mutate(c.id)}
                             >
                               <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
@@ -242,22 +280,22 @@ export function AtividadeDetailSheet({ task, open, onOpenChange }: Props) {
           </div>
         </ScrollArea>
 
-        {/* Comment input — sticky bottom with safe area */}
-        <div className="border-t bg-card/95 backdrop-blur-sm p-4 pb-safe shrink-0">
+        {/* Comment input — sticky bottom, keyboard-aware */}
+        <div className="border-t bg-card/95 backdrop-blur-sm p-3 pb-safe shrink-0 keyboard-aware">
           <div className="flex gap-2 items-end">
             <Textarea
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Escreva um comentário..."
-              className="min-h-[44px] max-h-[120px] resize-none text-sm rounded-xl border-border/50 bg-muted/20"
+              placeholder="Comentário..."
+              className="min-h-[40px] max-h-[100px] resize-none text-sm rounded-xl border-border/50 bg-muted/20"
               rows={1}
             />
             <Button
               size="icon"
               onClick={handleAddComment}
               disabled={!newComment.trim() || addComment.isPending}
-              className="shrink-0 h-11 w-11 rounded-xl"
+              className="shrink-0 h-10 w-10 rounded-xl"
             >
               <Send className="h-4 w-4" />
             </Button>
