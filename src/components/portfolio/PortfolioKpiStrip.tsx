@@ -238,6 +238,21 @@ export function applyKpiFilter(
       });
     case 'blocked':
       return projects.filter(p => p.status === 'paused');
+    case 'health-critical':
+      return projects.filter(p => {
+        if (p.status !== 'active') return false;
+        const s = summaryMap.get(p.id);
+        if (!s) return false;
+        return computeHealthScore(s).score < 40;
+      });
+    case 'health-attention':
+      return projects.filter(p => {
+        if (p.status !== 'active') return false;
+        const s = summaryMap.get(p.id);
+        if (!s) return false;
+        const score = computeHealthScore(s).score;
+        return score >= 40 && score < 60;
+      });
     case 'stale-7d':
       return projects.filter(p => {
         if (p.status !== 'active') return false;
