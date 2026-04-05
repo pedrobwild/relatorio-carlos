@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+
 import { PageContainer } from '@/components/layout/PageContainer';
+import { VistoriasPageSkeleton } from '@/components/skeletons/VistoriasPageSkeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useInspections } from '@/hooks/useInspections';
@@ -41,11 +42,7 @@ export default function Vistorias() {
     return (
       <div className="py-6">
         <PageContainer maxWidth="full">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
+          <VistoriasPageSkeleton />
         </PageContainer>
       </div>
     );

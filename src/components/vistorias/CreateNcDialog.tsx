@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +30,8 @@ import { useCreateNonConformity, type NcSeverity } from '@/hooks/useNonConformit
 import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn } from '@/lib/utils';
 import { NC_CATEGORIES, parseCurrencyInput } from './ncConstants';
+import { useFormDraft } from '@/hooks/useFormDraft';
+import { toast } from 'sonner';
 
 const severityOptions: { value: NcSeverity; label: string }[] = [
   { value: 'low', label: 'Baixa' },
@@ -60,25 +62,37 @@ export function CreateNcDialog({
   const createNc = useCreateNonConformity();
   const { members } = useProjectMembers(projectId);
 
-  const [title, setTitle] = useState(prefillTitle || '');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>('');
-  const [severity, setSeverity] = useState<NcSeverity>('high');
-  const [responsibleUserId, setResponsibleUserId] = useState<string>('');
-  const [deadline, setDeadline] = useState<Date | undefined>();
-  const [estimatedCostInput, setEstimatedCostInput] = useState('');
+  const draftKey = `create-nc-${projectId}`;
+  const defaultValues = {
+    title: prefillTitle || '',
+    description: '',
+    category: '',
+    severity: 'high' as NcSeverity,
+    responsibleUserId: '',
+    deadline: undefined as string | undefined,
+    estimatedCostInput: '',
+  };
 
+  const { values: draft, updateField, clearDraft, hasDraft } = useFormDraft({
+    key: draftKey,
+    initialValues: defaultValues,
+  });
+
+  // Reset when dialog opens with prefill (ignore draft for prefill scenarios)
   useEffect(() => {
-    if (open) {
-      setTitle(prefillTitle || '');
-      setDescription('');
-      setCategory('');
-      setSeverity('high');
-      setResponsibleUserId('');
-      setDeadline(undefined);
-      setEstimatedCostInput('');
+    if (open && prefillTitle) {
+      updateField('title', prefillTitle);
     }
-  }, [open, prefillTitle]);
+  }, [open, prefillTitle, updateField]);
+
+  // Convenience aliases
+  const title = draft.title;
+  const description = draft.description;
+  const category = draft.category;
+  const severity = draft.severity;
+  const responsibleUserId = draft.responsibleUserId;
+  const deadline = draft.deadline ? new Date(draft.deadline) : undefined;
+  const estimatedCostInput = draft.estimatedCostInput;
 
   const handleSubmit = () => {
     if (!title.trim() || !category) return;
@@ -99,6 +113,7 @@ export function CreateNcDialog({
       },
       {
         onSuccess: () => {
+          clearDraft();
           onOpenChange(false);
           onSuccess?.();
         },
@@ -112,7 +127,15 @@ export function CreateNcDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[100dvh] sm:max-h-[85dvh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-base sm:text-lg">Registrar Não Conformidade</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-base sm:text-lg">Registrar Não Conformidade</DialogTitle>
+            {hasDraft && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <FileText className="h-3 w-3" />
+                Rascunho salvo
+              </span>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -124,7 +147,7 @@ export function CreateNcDialog({
             <Input
               id="nc-title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => updateField('title', e.target.value)}
               placeholder="Descreva a não conformidade..."
               className="h-11"
             />
@@ -138,7 +161,7 @@ export function CreateNcDialog({
             <Textarea
               id="nc-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => updateField('description', e.target.value)}
               placeholder="Detalhes adicionais..."
               rows={3}
               className="min-h-[44px]"
@@ -150,7 +173,7 @@ export function CreateNcDialog({
             <Label className="text-sm font-medium">
               Categoria <span className="text-destructive">*</span>
             </Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} onValueChange={(v) => updateField('category', v)}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Selecionar categoria..." />
               </SelectTrigger>
@@ -169,7 +192,7 @@ export function CreateNcDialog({
             <Label className="text-sm font-medium">
               Severidade <span className="text-destructive">*</span>
             </Label>
-            <Select value={severity} onValueChange={(v) => setSeverity(v as NcSeverity)}>
+            <Select value={severity} onValueChange={(v) => updateField('severity', v as NcSeverity)}>
               <SelectTrigger className="h-11">
                 <SelectValue />
               </SelectTrigger>
@@ -186,7 +209,7 @@ export function CreateNcDialog({
           {/* Responsável */}
           <div className="space-y-1.5">
             <Label className="text-sm font-medium">Responsável</Label>
-            <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
+            <Select value={responsibleUserId} onValueChange={(v) => updateField('responsibleUserId', v)}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Selecionar responsável..." />
               </SelectTrigger>
@@ -220,7 +243,7 @@ export function CreateNcDialog({
                 <Calendar
                   mode="single"
                   selected={deadline}
-                  onSelect={setDeadline}
+                  onSelect={(d) => updateField('deadline', d ? d.toISOString() : undefined)}
                   disabled={(date) => date < new Date()}
                   initialFocus
                   className={cn('p-3 pointer-events-auto')}
@@ -234,7 +257,7 @@ export function CreateNcDialog({
             <Label className="text-sm font-medium">Custo Estimado (R$)</Label>
             <Input
               value={estimatedCostInput}
-              onChange={(e) => setEstimatedCostInput(e.target.value)}
+              onChange={(e) => updateField('estimatedCostInput', e.target.value)}
               placeholder="0,00"
               inputMode="decimal"
               className="h-11"
@@ -245,7 +268,7 @@ export function CreateNcDialog({
         <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 mt-4">
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => { clearDraft(); onOpenChange(false); }}
             className="h-11 sm:h-10 w-full sm:w-auto"
           >
             Cancelar
