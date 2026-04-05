@@ -141,7 +141,9 @@ function buildActionItems(
         id: `health-${p.id}`,
         projectName: p.name,
         projectId: p.id,
-        reason: `${s.overdue_count} item(ns) em atraso`,
+        reason: s.overdue_count === 1
+          ? '1 pendência vencida — ação imediata necessária'
+          : `${s.overdue_count} pendências vencidas — priorize resolução`,
         responsible: p.engineer_name ?? null,
         urgency: 'critical',
         deadline: null,
