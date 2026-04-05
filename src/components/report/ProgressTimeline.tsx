@@ -62,7 +62,7 @@ const ProgressTimeline = ({ rooms }: ProgressTimelineProps) => {
     const timeDelta = Date.now() - touchStartRef.current.time;
     const velocity = Math.abs(swipeOffset) / timeDelta;
     if (Math.abs(swipeOffset) > 50 || velocity > 0.3) {
-      swipeOffset > 0 ? handlePrevious() : handleNext();
+      if (swipeOffset > 0) { handlePrevious(); } else { handleNext(); }
     }
     touchStartRef.current = null;
     setSwipeOffset(0);

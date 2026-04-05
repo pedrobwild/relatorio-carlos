@@ -28,7 +28,7 @@ export function usePortfolioFilters(
   // ── Search ──────────────────────────────────────────────────────────────
   const search = searchParams.get('q') || '';
   const setSearch = useCallback((v: string) => {
-    setSearchParams(prev => { v ? prev.set('q', v) : prev.delete('q'); return prev; }, { replace: true });
+    setSearchParams(prev => { if (v) { prev.set('q', v); } else { prev.delete('q'); } return prev; }, { replace: true });
   }, [setSearchParams]);
 
   // ── Preset ──────────────────────────────────────────────────────────────
