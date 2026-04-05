@@ -174,6 +174,17 @@ export default function FormalizacaoNova() {
     }
   };
 
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="text-center space-y-2">
+          <p className="text-destructive font-medium">Erro ao carregar perfil</p>
+          <p className="text-sm text-muted-foreground">Recarregue a página e tente novamente.</p>
+        </div>
+      </div>
+    );
+  }
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 'template':
