@@ -376,7 +376,54 @@
 
   /* Safe area padding for mobile */
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Bottom nav spacing — use on page content containers on mobile */
+  .pb-bottom-nav {
+    padding-bottom: var(--bottom-nav-offset);
+  }
+  @media (min-width: 768px) {
+    .pb-bottom-nav {
+      padding-bottom: 0;
+    }
+  }
+
+  /* Margin variant */
+  .mb-bottom-nav {
+    margin-bottom: var(--bottom-nav-offset);
+  }
+  @media (min-width: 768px) {
+    .mb-bottom-nav {
+      margin-bottom: 0;
+    }
+  }
+
+  /* Sticky CTA positioning — sits above bottom nav on mobile */
+  .bottom-cta {
+    bottom: var(--bottom-nav-offset);
+  }
+  @media (min-width: 768px) {
+    .bottom-cta {
+      bottom: 0;
+    }
+  }
+
+  /* Touch target — explicit opt-in for links and small elements */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Keyboard avoidance — use on sticky footers */
+  @supports (padding-bottom: env(keyboard-inset-height, 0px)) {
+    .keyboard-aware {
+      transition: padding-bottom 0.2s ease;
+      padding-bottom: env(keyboard-inset-height, 0px);
+    }
   }
 
   /* Hover lift effect for cards */
