@@ -155,3 +155,47 @@ export const initialFormData: FormData = {
   customer_password: '',
   create_user: true,
 };
+
+// ── Contract AI Import Types ──
+
+export type ContractParseStatus = 'idle' | 'uploading' | 'parsing' | 'success' | 'error';
+
+export interface ContractConflict {
+  field: string;
+  values: string[];
+  reason: string;
+}
+
+export interface ContractParseResult {
+  customer: Record<string, string | null>;
+  studio: Record<string, string | null>;
+  commercial: Record<string, unknown>;
+  project: Record<string, string | null>;
+  confidence: Record<string, number>;
+  conflicts: ContractConflict[];
+  missing_fields: string[];
+}
+
+export interface ContractImportState {
+  file: File | null;
+  parseStatus: ContractParseStatus;
+  parseResult: ContractParseResult | null;
+  errorMessage: string;
+  aiPrefilledFields: Set<string>;
+  aiConflicts: ContractConflict[];
+  aiMissingFields: string[];
+  aiSourceDocumentName: string;
+  aiLastAppliedAt: string | null;
+}
+
+export const initialContractImportState: ContractImportState = {
+  file: null,
+  parseStatus: 'idle',
+  parseResult: null,
+  errorMessage: '',
+  aiPrefilledFields: new Set(),
+  aiConflicts: [],
+  aiMissingFields: [],
+  aiSourceDocumentName: '',
+  aiLastAppliedAt: null,
+};
