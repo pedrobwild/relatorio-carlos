@@ -120,7 +120,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
         <div className="grid gap-3">
           {filtered.map((inspection) => {
             const cfg = statusConfig[inspection.status as InspectionStatus] || statusConfig.draft;
-            const typeConfig = getInspectionTypeConfig((inspection as any).inspection_type || 'rotina');
+            const typeConfig = getInspectionTypeConfig(inspection.inspection_type || 'rotina');
             return (
               <Card
                 key={inspection.id}
