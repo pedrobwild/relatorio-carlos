@@ -67,11 +67,31 @@ export function CustomerCard({ formData, errors, sendInvite, onSendInviteChange,
           </div>
           <div className="space-y-1">
             <Label htmlFor="cpf" className="inline-flex items-center">CPF{ai('cpf')}</Label>
-            <Input id="cpf" value={formData.cpf} onChange={(e) => onChange('cpf', e.target.value)} placeholder="000.000.000-00" />
+            <Input
+              id="cpf"
+              value={formData.cpf}
+              onChange={(e) => onChange('cpf', formatCpf(e.target.value))}
+              placeholder="000.000.000-00"
+              maxLength={14}
+              className={errors.cpf ? 'border-destructive' : ''}
+              aria-invalid={!!errors.cpf}
+              aria-describedby={errors.cpf ? 'cpf-error' : undefined}
+            />
+            {errors.cpf && <p id="cpf-error" className="text-xs text-destructive">{errors.cpf}</p>}
           </div>
           <div className="space-y-1">
             <Label htmlFor="rg" className="inline-flex items-center">RG{ai('rg')}</Label>
-            <Input id="rg" value={formData.rg} onChange={(e) => onChange('rg', e.target.value)} placeholder="0000.000" />
+            <Input
+              id="rg"
+              value={formData.rg}
+              onChange={(e) => onChange('rg', formatRg(e.target.value))}
+              placeholder="00.000.000-0"
+              maxLength={12}
+              className={errors.rg ? 'border-destructive' : ''}
+              aria-invalid={!!errors.rg}
+              aria-describedby={errors.rg ? 'rg-error' : undefined}
+            />
+            {errors.rg && <p id="rg-error" className="text-xs text-destructive">{errors.rg}</p>}
           </div>
           <div className="sm:col-span-2 space-y-1">
             <Label htmlFor="endereco_residencial" className="inline-flex items-center">Endereço residencial{ai('endereco_residencial')}</Label>
