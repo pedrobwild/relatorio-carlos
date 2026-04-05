@@ -5,6 +5,7 @@ import {
   AlertTriangle, CalendarX, CheckCircle, Clock, ChevronRight,
 } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
+import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
