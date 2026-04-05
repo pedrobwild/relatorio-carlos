@@ -532,7 +532,7 @@ export default function Fornecedores() {
               <div className="space-y-1.5">
                 <Label>Categoria *</Label>
                 <Select
-                  value={form.supplier_type || ""}
+                  value={form.supplier_type ?? undefined}
                   onValueChange={handleSupplierTypeChange}
                 >
                   <SelectTrigger>
