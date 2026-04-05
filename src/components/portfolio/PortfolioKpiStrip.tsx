@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
   HardHat, AlertTriangle, Ban, Ghost,
-  CalendarX, CalendarClock,
+  CalendarX, CalendarClock, HeartPulse,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
