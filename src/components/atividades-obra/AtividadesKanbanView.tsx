@@ -10,6 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
+import { DeleteTaskDialog } from './DeleteTaskDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { cn } from '@/lib/utils';
