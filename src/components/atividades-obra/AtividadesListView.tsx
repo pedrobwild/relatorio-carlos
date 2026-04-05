@@ -78,7 +78,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
               const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
               return (
                 <TableRow key={task.id} className={task.status === 'concluido' ? 'opacity-60' : ''}>
-                  <TableCell className="cursor-pointer" onClick={() => setDetailTask(task)}>
+                  <TableCell className="cursor-pointer" onClick={() => navigate(`/obra/${projectId}/atividades/${task.id}`)}>
                     <div>
                       <span className={`font-medium ${task.status === 'concluido' ? 'line-through' : ''}`}>{task.title}</span>
                       {task.description && (
