@@ -111,6 +111,7 @@ export function ProjectSidebar() {
           icon: Building2,
           path: paths.relatorio,
           staffOnly: true,
+          disabledInProjectPhase: true,
         },
       ],
     },
@@ -173,8 +174,6 @@ export function ProjectSidebar() {
           label: L("atividades"),
           icon: ListChecks,
           path: paths.atividades,
-          disabledInProjectPhase: true,
-          staffOnly: true,
         },
         {
           label: L("pendencias"),

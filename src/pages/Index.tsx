@@ -1,4 +1,4 @@
-import { useRef, useCallback, lazy, Suspense } from "react";
+import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, GanttChartSquare, Calendar, DollarSign, FolderOpen, ClipboardSignature, TrendingUp } from "lucide-react";
@@ -61,6 +61,13 @@ const Index = () => {
     handleReportClick, handleBackToList, handlePreviousWeek, handleNextWeek,
     saveWeeklyReport,
   } = useProjectPortal();
+
+  // Redirect to Jornada when project is in project phase
+  useEffect(() => {
+    if (!projectLoading && project?.is_project_phase && projectId) {
+      navigate(`/obra/${projectId}/jornada`, { replace: true });
+    }
+  }, [projectLoading, project?.is_project_phase, projectId, navigate]);
 
   const handleExportPDF = useCallback(async () => {
     if (!reportRef.current) return;
