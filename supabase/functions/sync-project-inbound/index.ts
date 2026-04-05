@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
       condominium: project.condominium ?? null,
       neighborhood: project.neighborhood ?? null,
       city: project.city ?? null,
-      unit: project.unit ?? null,
+      unit_name: project.unit ?? project.unit_name ?? null,
       property_type: project.property_type ?? "Apartamento",
       total_area: project.total_area ?? null,
       estimated_duration_weeks: project.estimated_duration_weeks ?? null,
