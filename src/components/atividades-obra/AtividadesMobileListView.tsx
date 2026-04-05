@@ -34,6 +34,7 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
   const navigate = useNavigate();
   const { projectId } = useProjectNavigation();
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ObraTask | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
