@@ -162,3 +162,67 @@ This function pushes Envision suppliers TO Portal BWild.
 | produtos_servicos | produtos_servicos |
 | nota_avaliacao | nota |
 | status (ativo/inativo) | is_active (boolean) |
+
+---
+
+## Fluxo 2: Contrato Fechado → Projeto
+
+### Endpoint no Portal BWild (já implementado)
+
+**URL**: `https://fvblcyzdcqkiihyhfrrw.supabase.co/functions/v1/sync-project-inbound`
+
+**Método**: POST
+
+**Headers obrigatórios**:
+- `Content-Type: application/json`
+- `Authorization: Bearer <ENVISION_SERVICE_ROLE_KEY>`
+- `x-integration-key: <INTEGRATION_API_KEY>`
+
+### Payload esperado
+
+```json
+{
+  "_source_system": "envision",
+  "_source_id": "<budget_id>",
+  "project_name": "Reforma Apt 301 - Edifício Aurora",
+  "client_name": "João Silva",
+  "client_phone": "(11) 99999-0000",
+  "client_email": "joao@email.com",
+  "condominio": "Edifício Aurora",
+  "bairro": "Jardins",
+  "city": "São Paulo",
+  "cep": "01403-000",
+  "address": "Rua Augusta, 1200",
+  "metragem": 85,
+  "unit": "Apt 301",
+  "total_value": 250000.00,
+  "planned_start_date": "2026-05-01",
+  "planned_end_date": "2026-08-30",
+  "contract_signing_date": "2026-04-05"
+}
+```
+
+### O que o Portal BWild faz automaticamente:
+1. Cria ou reutiliza a **Org** do cliente (por nome)
+2. Cria o **Projeto** com todos os dados do orçamento
+3. Cria o registro de **Customer** vinculado ao projeto
+4. Inicializa a **Jornada do Projeto** (etapas padrão)
+5. Registra na **Auditoria** a origem da criação
+6. Grava o resultado no **integration_sync_log** (idempotente)
+
+### Mapeamento Envision → Portal BWild
+
+| Envision (budgets) | Portal BWild (projects) |
+|---|---|
+| project_name | name |
+| client_name | org.name + project_customers.customer_name |
+| client_email | project_customers.customer_email |
+| client_phone | project_customers.customer_phone |
+| address + condominio + bairro + city | address (concatenado) |
+| bairro | bairro |
+| cep | cep |
+| unit + metragem | unit_name |
+| total (soma seções) | contract_value |
+| planned_start_date | planned_start_date |
+| planned_end_date | planned_end_date |
+| contract_signing_date | contract_signing_date |
