@@ -11,9 +11,11 @@ import { DatePickerField } from '@/components/DatePickerField';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectActivities, ActivityInput } from '@/hooks/useProjectActivities';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import { ImportScheduleModal } from '@/components/ImportScheduleModal';
+import { CronogramaMobileView } from '@/components/cronograma/CronogramaMobileView';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { cn } from '@/lib/utils';
 
