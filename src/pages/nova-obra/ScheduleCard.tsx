@@ -425,11 +425,19 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {formData.is_project_phase && (
-          <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+        {/* Context banner */}
+        <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg space-y-1">
+          {formData.is_project_phase ? (
             <p>Obra em fase de projeto. As datas podem ser definidas agora ou marcadas como "Em definição".</p>
-          </div>
-        )}
+          ) : formData.budget_uploaded ? (
+            <p className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+              Orçamento anexado — o cronograma pode ser refinado com base nele após a criação.
+            </p>
+          ) : (
+            <p>Defina as datas manualmente ou aplique um template de cronograma.</p>
+          )}
+        </div>
 
         {formData.is_project_phase && (
           <div className="space-y-2">
