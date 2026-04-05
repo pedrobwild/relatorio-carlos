@@ -19,6 +19,7 @@ export function useNovaObraSubmit() {
     sendInvite: boolean,
     budgetFile?: File | null,
     manualActivities?: ScheduleActivity[],
+    contractFile?: File,
   ) => {
     if (!user) throw new Error('Você precisa estar logado');
 
