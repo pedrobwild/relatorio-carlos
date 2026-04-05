@@ -148,8 +148,6 @@ const DocumentCard = ({
     </div>
   );
 };
-  );
-};
 
 const CategorySection = ({ 
   category, 
