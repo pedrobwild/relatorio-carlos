@@ -1,4 +1,4 @@
-import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle, Save } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle, Save, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { FormData } from './types';
@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useMemo } from 'react';
 
 interface StickySummaryProps {
   formData: FormData;
