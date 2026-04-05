@@ -16,7 +16,9 @@ export type KpiFilterKey =
   | 'blocked'
   | 'overdue'
   | 'approaching-deadline'
-  | 'stale-7d';
+  | 'stale-7d'
+  | 'health-critical'
+  | 'health-attention';
 
 export interface KpiDefinition {
   key: KpiFilterKey;
