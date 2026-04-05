@@ -149,7 +149,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditTask(task); }}>
                                 <Pencil className="h-4 w-4 mr-2" /> Editar
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}>
+                              <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget(task); }}>
                                 <Trash2 className="h-4 w-4 mr-2" /> Excluir
                               </DropdownMenuItem>
                             </DropdownMenuContent>
