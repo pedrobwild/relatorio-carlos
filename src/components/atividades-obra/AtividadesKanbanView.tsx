@@ -45,7 +45,8 @@ const dotColors: Record<ObraTaskStatus, string> = {
 
 export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
-  const [detailTask, setDetailTask] = useState<ObraTask | null>(null);
+  const navigate = useNavigate();
+  const { projectId } = useProjectNavigation();
   const [dragOverColumn, setDragOverColumn] = useState<ObraTaskStatus | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
