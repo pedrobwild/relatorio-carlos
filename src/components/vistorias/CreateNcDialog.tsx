@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +30,8 @@ import { useCreateNonConformity, type NcSeverity } from '@/hooks/useNonConformit
 import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { cn } from '@/lib/utils';
 import { NC_CATEGORIES, parseCurrencyInput } from './ncConstants';
+import { useFormDraft } from '@/hooks/useFormDraft';
+import { toast } from 'sonner';
 
 const severityOptions: { value: NcSeverity; label: string }[] = [
   { value: 'low', label: 'Baixa' },
