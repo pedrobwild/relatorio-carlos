@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
-import { statusConfig, isServiceCategory, ITEM_CATEGORIES, SERVICE_CATEGORIES } from './types';
+import { statusConfig, isServiceCategory } from './types';
+import { getAllSupplierSubcategories } from '@/constants/supplierCategories';
 import { ObservationsModal } from './ObservationsModal';
 import { PaymentFlowModal } from './PaymentFlowModal';
 import { CadastroModal } from './CadastroModal';
@@ -415,7 +416,7 @@ export function PurchasesTable({
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(p);
     }
-    const order = [...ITEM_CATEGORIES, ...SERVICE_CATEGORIES, 'Outros'];
+    const order = [...getAllSupplierSubcategories(), 'Outros'];
     const sorted = new Map<string, ProjectPurchase[]>();
     for (const cat of order) {
       if (map.has(cat)) sorted.set(cat, map.get(cat)!);

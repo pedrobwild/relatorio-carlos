@@ -4,6 +4,7 @@ import { format, differenceInDays, parseISO, subDays } from 'date-fns';
 import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { useProjectActivities } from '@/hooks/useProjectActivities';
 import { emptyPurchase } from './types';
+import { isValidSupplierSubcategory } from '@/constants/supplierCategories';
 
 export function useComprasState() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -16,18 +17,56 @@ export function useComprasState() {
 
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterActivity, setFilterActivity] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterSubcategory, setFilterSubcategory] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState<ProjectPurchase | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<PurchaseInput>>(emptyPurchase);
 
+  const handleCategoryFilterChange = (value: string) => {
+    setFilterCategory(value);
+    // Reset subcategory when category changes
+    setFilterSubcategory('all');
+  };
+
+  const clearAllFilters = () => {
+    setFilterStatus('all');
+    setFilterActivity('all');
+    setFilterCategory('all');
+    setFilterSubcategory('all');
+  };
+
+  /**
+   * Filtering strategy:
+   * - filterCategory / filterSubcategory operate on the purchase's `category` field,
+   *   which stores the item subcategory (e.g., "Eletrodomésticos", "Marcenaria").
+   * - We infer the supplier_type from the category value using the taxonomy.
+   * - This avoids needing a JOIN to fornecedores for basic filtering.
+   */
   const filteredPurchases = useMemo(() => {
     return purchases.filter(p => {
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterActivity !== 'all' && p.activity_id !== filterActivity) return false;
+      
+      // Category filter: match purchase category against supplier type taxonomy
+      if (filterCategory !== 'all' && p.category) {
+        const isInType = isValidSupplierSubcategory(filterCategory, p.category);
+        if (!isInType) return false;
+      } else if (filterCategory !== 'all' && !p.category) {
+        return false; // No category → doesn't match any specific filter
+      }
+      
+      // Subcategory filter: exact match on purchase category
+      if (filterSubcategory !== 'all') {
+        if (p.category !== filterSubcategory) return false;
+      }
+      
       return true;
     });
-  }, [purchases, filterStatus, filterActivity]);
+  }, [purchases, filterStatus, filterActivity, filterCategory, filterSubcategory]);
+
+  const hasActiveFilters = filterStatus !== 'all' || filterActivity !== 'all' || filterCategory !== 'all' || filterSubcategory !== 'all';
 
   const handleOpenDialog = (purchase?: ProjectPurchase) => {
     if (purchase) {
@@ -39,6 +78,7 @@ export function useComprasState() {
         quantity: purchase.quantity,
         unit: purchase.unit,
         estimated_cost: purchase.estimated_cost || undefined,
+        category: purchase.category || undefined,
         supplier_name: purchase.supplier_name || '',
         supplier_contact: purchase.supplier_contact || '',
         lead_time_days: purchase.lead_time_days,
@@ -91,6 +131,7 @@ export function useComprasState() {
       quantity: formData.quantity || 1,
       unit: formData.unit || 'un',
       estimated_cost: formData.estimated_cost || null,
+      category: formData.category || null,
       supplier_name: formData.supplier_name || null,
       supplier_contact: formData.supplier_contact || null,
       lead_time_days: formData.lead_time_days || 7,
@@ -164,6 +205,10 @@ export function useComprasState() {
     getDaysUntilDeadline,
     filterStatus, setFilterStatus,
     filterActivity, setFilterActivity,
+    filterCategory, handleCategoryFilterChange,
+    filterSubcategory, setFilterSubcategory,
+    hasActiveFilters,
+    clearAllFilters,
     isDialogOpen, setIsDialogOpen,
     editingPurchase,
     deleteId, setDeleteId,

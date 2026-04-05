@@ -14,6 +14,11 @@ import { useComprasState } from './compras/useComprasState';
 import { ComprasKPICards } from './compras/ComprasKPICards';
 import { PurchasesTable } from './compras/PurchasesTable';
 import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
+import {
+  SUPPLIER_TYPES,
+  SUPPLIER_TYPE_LABELS,
+  getSubcategoriesByType,
+} from '@/constants/supplierCategories';
 
 export default function Compras() {
   const state = useComprasState();
@@ -43,6 +48,12 @@ export default function Compras() {
     state.filteredPurchases.filter(p => p.status !== 'cancelled').length,
     [state.filteredPurchases]
   );
+
+  const availableSubcategories = state.filterCategory !== 'all'
+    ? getSubcategoriesByType(state.filterCategory)
+    : [];
+
+  const hasAnyFilter = searchQuery || state.hasActiveFilters;
 
   if (state.isLoading) {
     return (
@@ -106,10 +117,11 @@ export default function Compras() {
                 className="pl-9 h-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Buscar itens de compra"
               />
             </div>
             <Select value={state.filterStatus} onValueChange={state.setFilterStatus}>
-              <SelectTrigger className="w-40 h-9">
+              <SelectTrigger className="w-40 h-9" aria-label="Filtrar por status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -122,7 +134,7 @@ export default function Compras() {
               </SelectContent>
             </Select>
             <Select value={state.filterActivity} onValueChange={state.setFilterActivity}>
-              <SelectTrigger className="w-56 h-9">
+              <SelectTrigger className="w-56 h-9" aria-label="Filtrar por atividade">
                 <SelectValue placeholder="Atividade" />
               </SelectTrigger>
               <SelectContent>
@@ -130,15 +142,41 @@ export default function Compras() {
                 {state.activities.map(a => <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>)}
               </SelectContent>
             </Select>
-            {(searchQuery || state.filterStatus !== 'all' || state.filterActivity !== 'all') && (
+            <Select value={state.filterCategory} onValueChange={state.handleCategoryFilterChange}>
+              <SelectTrigger className="w-44 h-9" aria-label="Filtrar por tipo de fornecedor">
+                <Filter className="h-3.5 w-3.5 mr-1" />
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                {SUPPLIER_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>
+                    {SUPPLIER_TYPE_LABELS[type]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {state.filterCategory !== 'all' && availableSubcategories.length > 0 && (
+              <Select value={state.filterSubcategory} onValueChange={state.setFilterSubcategory}>
+                <SelectTrigger className="w-48 h-9" aria-label="Filtrar por subcategoria">
+                  <SelectValue placeholder="Subcategoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas subcategorias</SelectItem>
+                  {availableSubcategories.map(sub => (
+                    <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {hasAnyFilter && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-9 text-xs"
                 onClick={() => {
                   setSearchQuery('');
-                  state.setFilterStatus('all');
-                  state.setFilterActivity('all');
+                  state.clearAllFilters();
                 }}
               >
                 Limpar filtros

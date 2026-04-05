@@ -94,11 +94,31 @@ export default function Fornecedores() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("ativo");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [form, setForm] = useState<Partial<Supplier>>(emptyForm());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const handleCategoryFilterChange = (value: string) => {
+    setCategoryFilter(value);
+    // Reset subcategory when category changes (it may be invalid for new type)
+    setSubcategoryFilter("all");
+  };
+
+  const availableSubcategories = categoryFilter !== "all"
+    ? getSubcategoriesByType(categoryFilter)
+    : [];
+
+  const hasActiveFilters = search || categoryFilter !== "all" || subcategoryFilter !== "all" || statusFilter !== "ativo";
+
+  const clearAllFilters = () => {
+    setSearch("");
+    setCategoryFilter("all");
+    setSubcategoryFilter("all");
+    setStatusFilter("ativo");
+  };
 
   const { data: suppliers = [], isLoading } = useQuery({
     queryKey: ["fornecedores"],
@@ -200,10 +220,8 @@ export default function Fornecedores() {
 
   const filtered = suppliers.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
-    if (categoryFilter !== "all") {
-      // Filter by new supplier_type when set
-      if (s.supplier_type !== categoryFilter && s.categoria !== categoryFilter) return false;
-    }
+    if (categoryFilter !== "all" && s.supplier_type !== categoryFilter) return false;
+    if (subcategoryFilter !== "all" && s.supplier_subcategory !== subcategoryFilter) return false;
     if (search) {
       const q = search.toLowerCase();
       return (
@@ -269,15 +287,16 @@ export default function Fornecedores() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, CNPJ, produto/serviço, cidade..."
+                placeholder="Buscar por nome, CNPJ, subcategoria, cidade..."
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                aria-label="Buscar fornecedores"
               />
             </div>
-            <div className="flex gap-2">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[160px]">
+            <div className="flex flex-wrap gap-2">
+              <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+                <SelectTrigger className="w-[160px]" aria-label="Filtrar por categoria">
                   <Filter className="h-4 w-4 mr-1" />
                   <SelectValue />
                 </SelectTrigger>
@@ -290,8 +309,21 @@ export default function Fornecedores() {
                   ))}
                 </SelectContent>
               </Select>
+              {categoryFilter !== "all" && (
+                <Select value={subcategoryFilter} onValueChange={setSubcategoryFilter}>
+                  <SelectTrigger className="w-[180px]" aria-label="Filtrar por subcategoria">
+                    <SelectValue placeholder="Subcategoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas subcategorias</SelectItem>
+                    {availableSubcategories.map((sub) => (
+                      <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[120px]">
+                <SelectTrigger className="w-[120px]" aria-label="Filtrar por status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -300,6 +332,11 @@ export default function Fornecedores() {
                   <SelectItem value="inativo">Inativos</SelectItem>
                 </SelectContent>
               </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" className="h-10 text-xs" onClick={clearAllFilters}>
+                  Limpar filtros
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
