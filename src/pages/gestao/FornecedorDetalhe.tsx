@@ -121,6 +121,23 @@ export default function FornecedorDetalhe() {
     },
   });
 
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await invokeFunction<{ success: boolean; target_id: string }>(
+        "sync-suppliers-outbound",
+        { supplier_id: id }
+      );
+      if (error) throw new Error(typeof error === "string" ? error : "Erro na sincronização");
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Fornecedor sincronizado com Envision" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Erro ao sincronizar", description: err.message, variant: "destructive" });
+    },
+  });
+
   const startEdit = () => {
     if (supplier) {
       setForm({
