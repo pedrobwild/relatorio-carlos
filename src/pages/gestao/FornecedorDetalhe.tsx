@@ -19,8 +19,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X,
+  ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X, RefreshCw,
 } from "lucide-react";
+import { invokeFunction } from "@/infra/edgeFunctions";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
 import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
