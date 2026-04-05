@@ -344,6 +344,7 @@ const Documentos = () => {
                         onViewHistory={handleViewHistory}
                         onVersionUploaded={refetch}
                         isStaff={isStaff}
+                        onOpenViewer={setViewerDoc}
                       />
                     ))}
                   </div>
