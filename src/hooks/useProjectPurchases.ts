@@ -275,7 +275,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   
   const overduePurchases = purchases.filter(p => {
     if (p.status === 'delivered' || p.status === 'cancelled') return false;
-    const requiredDate = new Date(p.required_by_date);
+    const requiredDate = new Date(p.required_by_date + 'T00:00:00');
     return requiredDate < today;
   });
 
