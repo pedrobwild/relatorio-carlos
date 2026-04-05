@@ -692,6 +692,15 @@ export default function AtividadeDetalhe() {
         }}
         initialData={task}
       />
+
+      <DeleteTaskDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        taskTitle={task.title}
+        onConfirm={() => {
+          deleteTask.mutateAsync(task.id).then(goBack).catch(() => {});
+        }}
+      />
     </PageContainer>
   );
 }
