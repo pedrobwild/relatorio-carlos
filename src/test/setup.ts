@@ -33,11 +33,16 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 
 // Polyfill pointer capture for Radix UI (not available in jsdom)
 if (!Element.prototype.hasPointerCapture) {
-  Element.prototype.hasPointerCapture = vi.fn().mockReturnValue(false);
+  Element.prototype.hasPointerCapture = vi.fn().mockReturnValue(false) as any;
 }
 if (!Element.prototype.setPointerCapture) {
-  Element.prototype.setPointerCapture = vi.fn();
+  Element.prototype.setPointerCapture = vi.fn() as any;
 }
 if (!Element.prototype.releasePointerCapture) {
-  Element.prototype.releasePointerCapture = vi.fn();
+  Element.prototype.releasePointerCapture = vi.fn() as any;
+}
+
+// Polyfill scrollIntoView for Radix Select in jsdom
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn() as any;
 }
