@@ -155,12 +155,14 @@ const CategorySection = ({
   onViewHistory,
   onVersionUploaded,
   isStaff,
+  onOpenViewer,
 }: { 
   category: DocumentCategory; 
   documents: ProjectDocument[];
   onViewHistory: (docId: string) => void;
   onVersionUploaded: () => void;
   isStaff: boolean;
+  onOpenViewer: (doc: ProjectDocument) => void;
 }) => {
   if (documents.length === 0) return null;
 
@@ -181,6 +183,7 @@ const CategorySection = ({
             onViewHistory={onViewHistory}
             onVersionUploaded={onVersionUploaded}
             isStaff={isStaff}
+            onOpenViewer={onOpenViewer}
           />
         ))}
       </div>
