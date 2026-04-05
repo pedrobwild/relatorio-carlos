@@ -10,10 +10,10 @@ import {
   completeInspection,
 } from '@/infra/repositories/inspectionsRepository';
 
-// Re-export types and import for local use
-export type { InspectionItem, InspectionStatus } from '@/infra/repositories/inspectionsRepository';
-import type { Inspection, InspectionItemResult } from '@/infra/repositories/inspectionsRepository';
-export type { Inspection, InspectionItemResult } from '@/infra/repositories/inspectionsRepository';
+// Re-export types for consumers; use inline type imports to avoid duplicate-import lint errors
+export type { InspectionItem, InspectionStatus, Inspection, InspectionItemResult } from '@/infra/repositories/inspectionsRepository';
+type _Inspection = import('@/infra/repositories/inspectionsRepository').Inspection;
+type _InspectionItemResult = import('@/infra/repositories/inspectionsRepository').InspectionItemResult;
 
 // ── Queries ──
 

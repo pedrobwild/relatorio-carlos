@@ -10,10 +10,11 @@ import {
   transitionNcStatus,
 } from '@/infra/repositories/ncsRepository';
 
-// Re-export types and import for local use
-export type { NcHistoryEntry } from '@/infra/repositories/ncsRepository';
-import type { NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
-export type { NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+// Re-export types for consumers; use inline type imports to avoid duplicate-import lint errors
+export type { NcHistoryEntry, NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+type _NonConformity = import('@/infra/repositories/ncsRepository').NonConformity;
+type _NcSeverity = import('@/infra/repositories/ncsRepository').NcSeverity;
+type _NcStatus = import('@/infra/repositories/ncsRepository').NcStatus;
 
 // ── Queries ──
 
