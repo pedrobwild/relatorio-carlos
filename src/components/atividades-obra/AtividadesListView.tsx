@@ -169,12 +169,6 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
         initialData={editTask}
       />
 
-      <AtividadeDetailSheet
-        task={detailTask}
-        open={!!detailTask}
-        onOpenChange={(open) => !open && setDetailTask(null)}
-        onUpdateStatus={onUpdateStatus}
-      />
     </>
   );
 }
