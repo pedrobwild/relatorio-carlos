@@ -1,60 +1,60 @@
 
-## Diagnóstico
+## Agente IA de Monitoramento de Sincronização
 
-### Problemas identificados:
+### Arquitetura
 
-1. **Bottom padding inconsistente**: `pb-20`, `pb-24`, `pb-16`, `pb-14` espalhados em ~15 arquivos. Os shells (GestaoShell=`pb-16`, ProjectShell=`pb-14`) já aplicam padding, mas páginas filhas TAMBÉM adicionam (`pb-20`, `pb-24`), causando duplo padding.
+```
+Sync falha → Trigger DB → Edge Function "sync-monitor-agent"
+  → Analisa erro com IA (Lovable AI / Gemini Flash)
+  → Corrige payload automaticamente
+  → Reenvia para a Edge Function correta
+  → Registra resultado na integration_sync_log
+  → Cria notificação para admins
+```
 
-2. **Safe-area ad-hoc**: `pb-safe` usado em 12 arquivos, mas é classe customizada sem definição clara. Bottom navs usam `pb-safe` mas as páginas não compensam consistentemente.
+### Componentes
 
-3. **ResponsivePageShell subutilizado**: Existe mas quase nenhuma página usa — cada página reimplementa `max-w-X mx-auto px-4 sm:px-6 md:px-8`.
+#### 1. Trigger no Banco (tempo real)
+- Trigger na tabela `integration_sync_log` que dispara quando `sync_status = 'failed'`
+- Chama a edge function `sync-monitor-agent` via `pg_net`
 
-4. **useIsMobile() vs CSS**: 8 componentes usam o hook JS, outros usam `md:hidden`/`block md:hidden`. Sem padrão claro de quando usar qual.
+#### 2. Edge Function `sync-monitor-agent`
+- Recebe o registro falhado (payload, error_message, entity_type)
+- Envia para Lovable AI (Gemini Flash) com prompt especializado:
+  - Analisa o `error_message` e o `payload`
+  - Identifica a causa (coluna inexistente, valor inválido, tipo incorreto, campo obrigatório ausente)
+  - Gera o payload corrigido
+- Reenvia o payload corrigido para a edge function correspondente (`sync-supplier-inbound` ou `sync-project-inbound`)
+- Atualiza o `integration_sync_log` com:
+  - `sync_status: 'auto_corrected'` ou `'retry_failed'`
+  - `error_message` atualizada com o diagnóstico da IA
+  - Incrementa `attempts`
+- Cria notificação para admins informando a correção
 
-5. **Shells com padding inconsistente**: GestaoShell usa `pb-16 md:pb-0`, ProjectShell usa `pb-14 md:pb-0` — deveriam ser iguais.
+#### 3. Dashboard de Monitoramento (painel admin)
+- Nova aba "Integrações" em `/admin/sistema`
+- Cards com métricas: total sincronizados, falhados, corrigidos automaticamente
+- Tabela de logs com filtros por status, entidade, sistema
+- Detalhes de cada sync com payload original vs corrigido
 
-6. **Sem utilitários de keyboard avoidance**: Formulários em páginas como NovaObra têm sticky CTAs mas sem tratamento de teclado virtual.
+#### 4. Limites de segurança
+- Máximo 3 tentativas automáticas por registro
+- Se a IA não conseguir corrigir, marca como `'needs_manual_review'`
+- Notificação urgente para admins em caso de falhas repetidas
 
-7. **Estados (empty/error/loading) não reutilizáveis**: Existem em PortfolioStates.tsx mas são específicos do portfólio, não genéricos.
+### Fluxo detalhado
 
-8. **Touch targets inconsistentes**: Alguns botões/links têm 44px, outros não.
+1. Envision envia dados → `sync-supplier-inbound` ou `sync-project-inbound`
+2. Se falhar → registro na `integration_sync_log` com `status = 'failed'`
+3. Trigger detecta → chama `sync-monitor-agent`
+4. IA analisa o erro e payload
+5. IA gera payload corrigido
+6. Reenvio automático para a function correta
+7. Se sucesso → `status = 'auto_corrected'`
+8. Se falhar novamente → incrementa attempts, se < 3 volta ao passo 4
+9. Se esgotou tentativas → `status = 'needs_manual_review'` + notificação
 
----
-
-## Plano de implementação (por impacto):
-
-### 1. Utilitários CSS globais para safe-area e bottom-nav (~index.css)
-- Definir `--bottom-nav-height: 56px` (h-14) como token
-- Criar classes utilitárias: `pb-bottom-nav`, `bottom-bottom-nav`, `mb-bottom-nav`
-- Padronizar `pb-safe` com fallback correto
-
-### 2. Normalizar shells (GestaoShell + ProjectShell)
-- Unificar bottom padding para `pb-[var(--bottom-nav-offset)] md:pb-0`
-- Remover paddings duplicados das páginas filhas
-
-### 3. Melhorar ResponsivePageShell como padrão canônico
-- Adicionar prop `stickyFooter` para CTAs sticky
-- Adicionar suporte a `bottomNavOffset` automático
-- Exportar como padrão recomendado
-
-### 4. Criar estados genéricos reutilizáveis
-- `EmptyState`, `ErrorState`, `LoadingSkeleton` genéricos em `src/components/ui/`
-- Com props para ícone, título, descrição, ação
-
-### 5. Utilitário de keyboard avoidance
-- CSS `@supports` com `env(keyboard-inset-height)` + classe `keyboard-aware`
-
-### 6. Normalizar touch targets
-- Classe utilitária `touch-target` (min 44x44) no design system
-
----
-
-**Arquivos a criar/editar:**
-- `src/index.css` — tokens e utilitários
-- `src/components/mobile/ResponsivePageShell.tsx` — melhorias
-- `src/components/layout/GestaoShell.tsx` — normalizar padding
-- `src/components/layout/ProjectShell.tsx` — normalizar padding
-- `src/components/ui/states.tsx` — estados genéricos (novo)
-- `src/components/portfolio/PortfolioPage.tsx` — remover pb-20 ad-hoc
-
-**Não tocar:** desktop layout, sidebar, rotas, lógica de negócio.
+### Tecnologias
+- **IA**: Lovable AI Gateway (google/gemini-3-flash-preview)
+- **Trigger**: pg_net para chamada assíncrona
+- **Notificações**: Sistema de notificações existente

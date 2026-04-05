@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.sync-supplier-inbound]
 verify_jwt = false
+
+[functions.sync-monitor-agent]
+verify_jwt = false
