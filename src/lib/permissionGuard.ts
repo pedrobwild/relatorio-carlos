@@ -64,6 +64,10 @@ const MODULE_PERMISSIONS: Record<AppRole, ModulePermission[]> = {
   financeiro: [
     'works:read',
   ],
+  cs: [
+    'works:read',
+    'works:write',
+  ],
 };
 
 /**

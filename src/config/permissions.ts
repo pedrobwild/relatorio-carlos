@@ -309,6 +309,29 @@ const PERMISSIONS: Record<AppRole, Feature[]> = {
     'inspections:view',
     'ncs:view',
   ],
+
+  cs: [
+    // Customer Success: journey management, formalizations, documents, and customer-facing features
+    'documents:upload',
+    'documents:view',
+    'formalizations:create',
+    'formalizations:sign',
+    'formalizations:view',
+    'schedule:view',
+    'purchases:view',
+    'payments:view',
+    'journey:edit_stages',
+    'journey:edit_csm',
+    'journey:manage_slots',
+    'journey:complete_todos',
+    'journey:view',
+    'projects:view',
+    'projects:edit',
+    'reports:export_pdf',
+    'reports:edit_weekly',
+    'inspections:view',
+    'ncs:view',
+  ],
 };
 
 /**

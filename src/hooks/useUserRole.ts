@@ -4,7 +4,7 @@ import { useAuth } from './useAuth';
 import { debugAuth } from '@/lib/debugAuth';
 import { logError, logInfo } from '@/lib/errorLogger';
 
-export type AppRole = 'engineer' | 'admin' | 'customer' | 'manager' | 'suprimentos' | 'financeiro' | 'gestor';
+export type AppRole = 'engineer' | 'admin' | 'customer' | 'manager' | 'suprimentos' | 'financeiro' | 'gestor' | 'cs';
 
 interface UserRoleState {
   roles: AppRole[];
@@ -142,7 +142,7 @@ export function useUserRole(): UserRoleState {
   // Compute derived states based on all roles
   const isAdmin = roles.includes('admin');
   const isManager = roles.includes('manager');
-  const isStaff = roles.includes('engineer') || isAdmin || isManager || roles.includes('gestor') || roles.includes('suprimentos') || roles.includes('financeiro');
+  const isStaff = roles.includes('engineer') || isAdmin || isManager || roles.includes('gestor') || roles.includes('suprimentos') || roles.includes('financeiro') || roles.includes('cs');
   const isCustomer = roles.includes('customer');
 
   return {
