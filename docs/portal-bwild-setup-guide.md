@@ -184,7 +184,7 @@ curl -X POST https://<PORTAL_BWILD_URL>/functions/v1/sync-supplier-inbound \
 - [ ] SQL de migração executado (tabela `projects` com colunas de integração)
 - [ ] Tabela `fornecedores` criada
 - [ ] Tabela `integration_sync_log` criada
-- [ ] Secret `ENVISION_INTEGRATION_KEY` configurado no Portal BWild
+- [x] Secret `INTEGRATION_API_KEY` configurado no Portal BWild
 - [ ] Edge function `sync-project-inbound` deployada
 - [ ] Edge function `sync-supplier-inbound` deployada
 - [ ] Teste com curl do sync-project-inbound ✓
