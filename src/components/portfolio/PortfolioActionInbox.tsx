@@ -75,7 +75,7 @@ function buildActionItems(
           id: `overdue-${p.id}`,
           projectName: p.name,
           projectId: p.id,
-          reason: `${daysOverdue}d atraso na entrega`,
+          reason: daysOverdue === 1 ? 'Entrega venceu ontem' : `Entrega vencida há ${daysOverdue} dias`,
           responsible: p.engineer_name ?? null,
           urgency: 'critical',
           deadline: `${daysOverdue}d`,
