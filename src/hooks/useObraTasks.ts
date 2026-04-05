@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
 export type ObraTaskStatus = 'pendente' | 'em_andamento' | 'pausado' | 'concluido';
+export type ObraTaskPriority = 'baixa' | 'media' | 'alta' | 'critica';
 
 export interface ObraTask {
   id: string;
@@ -12,7 +13,9 @@ export interface ObraTask {
   description: string | null;
   responsible_user_id: string | null;
   due_date: string | null;
+  start_date: string | null;
   cost: number | null;
+  priority: ObraTaskPriority;
   status: ObraTaskStatus;
   sort_order: number;
   created_by: string;
