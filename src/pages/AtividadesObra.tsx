@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useObraTasks, ObraTaskInput } from '@/hooks/useObraTasks';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Plus, LayoutList, Columns3 } from 'lucide-react';
 import { AtividadesListView } from '@/components/atividades-obra/AtividadesListView';
 import { AtividadesKanbanView } from '@/components/atividades-obra/AtividadesKanbanView';
+import { AtividadesMobileListView } from '@/components/atividades-obra/AtividadesMobileListView';
 import { AtividadeFormDialog } from '@/components/atividades-obra/AtividadeFormDialog';
 import { cn } from '@/lib/utils';
 
 export default function AtividadesObra() {
   const { projectId } = useProjectNavigation();
   const { tasks, isLoading, createTask, updateTask, deleteTask } = useObraTasks(projectId);
+  const isMobile = useIsMobile();
   const [view, setView] = useState<'list' | 'kanban'>('kanban');
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -27,9 +30,41 @@ export default function AtividadesObra() {
     concluido: tasks.filter(t => t.status === 'concluido').length,
   };
 
+  // Mobile: dedicated optimized view
+  if (isMobile) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold tracking-tight">Atividades</h1>
+            <p className="text-xs text-muted-foreground">Tarefas internas da equipe</p>
+          </div>
+          <Button onClick={() => setDialogOpen(true)} size="sm" className="h-9 gap-1.5 rounded-lg font-semibold shrink-0">
+            <Plus className="h-4 w-4" />
+            Nova
+          </Button>
+        </div>
+
+        <AtividadesMobileListView
+          tasks={tasks}
+          isLoading={isLoading}
+          onUpdateStatus={(id, status) => updateTask.mutate({ id, updates: { status } })}
+          onDelete={(id) => deleteTask.mutate(id)}
+          onUpdate={(id, updates) => updateTask.mutate({ id, updates })}
+        />
+
+        <AtividadeFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onSubmit={handleCreate}
+        />
+      </PageContainer>
+    );
+  }
+
+  // Desktop: original view with toggle
   return (
     <PageContainer>
-      {/* Header — mobile optimized */}
       <div className="flex flex-col gap-3 mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -38,14 +73,11 @@ export default function AtividadesObra() {
           </div>
           <Button onClick={() => setDialogOpen(true)} size="sm" className="h-9 gap-1.5 rounded-lg font-semibold shrink-0">
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Nova Atividade</span>
-            <span className="sm:hidden">Nova</span>
+            Nova Atividade
           </Button>
         </div>
 
-        {/* Stats + View toggle row */}
         <div className="flex items-center justify-between gap-2">
-          {/* Mini stats */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
               <span className="font-bold text-foreground tabular-nums">{statusCounts.total}</span> total
@@ -65,7 +97,6 @@ export default function AtividadesObra() {
             </div>
           </div>
 
-          {/* View toggle */}
           <div className="flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5 shrink-0" role="radiogroup">
             {([
               { mode: 'list' as const, icon: LayoutList, label: 'Lista' },
@@ -84,7 +115,7 @@ export default function AtividadesObra() {
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{label}</span>
+                {label}
               </button>
             ))}
           </div>
