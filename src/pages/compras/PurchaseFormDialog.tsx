@@ -6,6 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { PurchaseInput } from '@/hooks/useProjectPurchases';
+import {
+  SUPPLIER_TYPES,
+  SUPPLIER_TYPE_LABELS,
+  getSubcategoriesByType,
+  inferTypeFromSubcategory,
+  isValidSupplierSubcategory,
+} from '@/constants/supplierCategories';
+import { useMemo } from 'react';
 
 interface Activity {
   id: string;
@@ -30,6 +38,32 @@ export function PurchaseFormDialog({
   open, onOpenChange, isEditing, formData, setFormData,
   activities, onActivityChange, onLeadTimeChange, onSubmit, isSubmitting,
 }: PurchaseFormDialogProps) {
+  // Infer the supplier type from the current category (subcategory)
+  const inferredType = useMemo(() => {
+    if (!formData.category) return null;
+    return inferTypeFromSubcategory(formData.category);
+  }, [formData.category]);
+
+  const [selectedType, setSelectedType] = useMemo(() => {
+    // We use inferredType as a derived state; no real useState needed here
+    return [inferredType, () => {}] as const;
+  }, [inferredType]);
+
+  const handleTypeChange = (type: string) => {
+    // When user changes the type, reset category if it doesn't belong
+    if (formData.category && !isValidSupplierSubcategory(type, formData.category)) {
+      setFormData(prev => ({ ...prev, category: undefined }));
+    }
+  };
+
+  const handleCategoryChange = (subcategory: string) => {
+    setFormData(prev => ({ ...prev, category: subcategory }));
+  };
+
+  // Determine which type is effectively selected (inferred from category, or user choice)
+  const effectiveType = inferredType;
+  const availableSubcategories = effectiveType ? getSubcategoriesByType(effectiveType) : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[95dvh] overflow-y-auto">
@@ -47,6 +81,55 @@ export function PurchaseFormDialog({
             <div className="col-span-2">
               <Label htmlFor="description">Descrição</Label>
               <Textarea id="description" value={formData.description || ''} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Detalhes adicionais do item" rows={2} />
+            </div>
+
+            {/* Item Category (using supplier taxonomy as subcategories) */}
+            <div>
+              <Label htmlFor="category_type">Tipo (categoria do item)</Label>
+              <Select
+                value={effectiveType || ''}
+                onValueChange={(v) => {
+                  handleTypeChange(v);
+                  // If no category set yet, just let the user pick subcategory next
+                  if (!formData.category) {
+                    // Set a temporary marker so subcategory select appears
+                    setFormData(prev => ({ ...prev, category: undefined, _tempType: v } as any));
+                  }
+                }}
+              >
+                <SelectTrigger aria-label="Tipo de categoria do item">
+                  <SelectValue placeholder="Prestador ou Produto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUPPLIER_TYPES.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {SUPPLIER_TYPE_LABELS[type]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="category_sub">Categoria do Item</Label>
+              <Select
+                value={formData.category || ''}
+                onValueChange={handleCategoryChange}
+              >
+                <SelectTrigger aria-label="Categoria específica do item de compra">
+                  <SelectValue placeholder={effectiveType || (formData as any)?._tempType ? "Selecione..." : "Escolha o tipo primeiro"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(effectiveType
+                    ? getSubcategoriesByType(effectiveType)
+                    : (formData as any)?._tempType
+                      ? getSubcategoriesByType((formData as any)._tempType)
+                      : []
+                  ).map(sub => (
+                    <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
