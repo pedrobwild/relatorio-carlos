@@ -111,6 +111,7 @@ export function ProjectSidebar() {
           icon: Building2,
           path: paths.relatorio,
           staffOnly: true,
+          disabledInProjectPhase: true,
         },
       ],
     },
