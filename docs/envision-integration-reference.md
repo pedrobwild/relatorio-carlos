@@ -4,6 +4,10 @@
 
 This document contains the reference implementation for the Envision side of the bidirectional supplier sync with Portal BWild.
 
+**Portal BWild triggers sync automatically** via a PostgreSQL trigger on the `fornecedores` table. Every INSERT or UPDATE fires `sync_supplier_to_envision()` which calls the outbound edge function via `pg_net`.
+
+This document contains the reference implementation for the Envision side of the bidirectional supplier sync with Portal BWild.
+
 ## Secrets to configure in the Envision project
 
 | Secret | Value |
