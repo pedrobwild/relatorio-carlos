@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Send, Check, X, RotateCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -167,7 +167,7 @@ export default function NovaObra() {
   });
 
   // Track which fields user has manually edited after AI prefill
-  const [userEditedFields] = useState<Set<string>>(new Set());
+  const userEditedFieldsRef = useRef<Set<string>>(new Set());
 
   // Auto-save draft — includes contract metadata
   useEffect(() => {
@@ -199,7 +199,7 @@ export default function NovaObra() {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
     // Track manual edits to prevent AI overwrite
-    userEditedFields.add(field);
+    userEditedFieldsRef.current.add(field);
     if (field === 'planned_start_date' && typeof value === 'string') {
       autoCalculateEndDate(value);
     }
@@ -208,20 +208,22 @@ export default function NovaObra() {
     }
   };
 
-  // Apply AI parse result to formData — uses functional setState to avoid stale closures
+  // Apply AI parse result to formData — side effects extracted from state updater
   const handleApplyPrefill = useCallback((result: ContractParseResult, fileName: string) => {
     console.log('[AI Prefill] Full result:', JSON.stringify(result, null, 2));
-    setFormData(prev => {
-      const prefilledFields = new Set<string>();
-      const updates: Partial<FormData> = {};
 
+    const prefilledFields = new Set<string>();
+    const updates: Partial<FormData> = {};
+
+    // Build updates based on current formData (read via ref-like access through setFormData)
+    setFormData(prev => {
       for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
-        if (userEditedFields.has(formField)) {
+        if (userEditedFieldsRef.current.has(formField)) {
           console.log(`[AI Prefill] Skipping ${formField} — user edited`);
           continue;
         }
 
-        const sectionData = result[mapping.section] as Record<string, unknown>;
+        const sectionData = result[mapping.section] as Record<string, unknown> | undefined;
         const aiValue = sectionData?.[mapping.aiField];
         console.log(`[AI Prefill] ${formField}: section=${mapping.section}, aiField=${mapping.aiField}, value=`, aiValue);
 
@@ -230,6 +232,7 @@ export default function NovaObra() {
           if (!currentValue || currentValue === '' || currentValue === initialFormData[formField as keyof FormData]) {
             (updates as Record<string, unknown>)[formField] = aiValue;
             prefilledFields.add(formField);
+            console.log(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
           } else {
             console.log(`[AI Prefill] ${formField} skipped — current value:`, currentValue);
           }
@@ -248,25 +251,29 @@ export default function NovaObra() {
 
       updates.contract_document_name = fileName;
 
-      setContractState(prev => ({
-        ...prev,
-        aiPrefilledFields: prefilledFields,
-        aiConflicts: result.conflicts || [],
-        aiMissingFields: result.missing_fields || [],
-        aiSourceDocumentName: fileName,
-        aiLastAppliedAt: new Date().toISOString(),
-      }));
-
-      toast({
-        title: `${prefilledFields.size} campos preenchidos automaticamente`,
-        description: result.conflicts?.length
-          ? `Atenção: ${result.conflicts.length} divergência(s) encontrada(s)`
-          : 'Revise os dados antes de prosseguir',
-      });
+      console.log('[AI Prefill] Final updates:', JSON.stringify(updates, null, 2));
+      console.log('[AI Prefill] Prefilled fields:', Array.from(prefilledFields));
 
       return { ...prev, ...updates };
     });
-  }, [userEditedFields, toast]);
+
+    // Side effects OUTSIDE the state updater
+    setContractState(prev => ({
+      ...prev,
+      aiPrefilledFields: prefilledFields,
+      aiConflicts: result.conflicts || [],
+      aiMissingFields: result.missing_fields || [],
+      aiSourceDocumentName: fileName,
+      aiLastAppliedAt: new Date().toISOString(),
+    }));
+
+    toast({
+      title: `${prefilledFields.size} campos preenchidos automaticamente`,
+      description: result.conflicts?.length
+        ? `Atenção: ${result.conflicts.length} divergência(s) encontrada(s)`
+        : 'Revise os dados antes de prosseguir',
+    });
+  }, [toast]);
 
   const validateStep = useCallback((step: number): boolean => {
     const requiredFields = STEP_REQUIRED_FIELDS[step] || [];
