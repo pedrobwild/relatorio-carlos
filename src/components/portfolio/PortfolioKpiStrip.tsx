@@ -102,12 +102,20 @@ function computeKpiValues(
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
   let stale7d = 0, overdueCount = 0, approachingCount = 0;
+  let healthCritical = 0, healthAttention = 0;
 
   for (const p of projects) {
     const s = summaryMap.get(p.id);
     if (p.status === 'active') activeCount++;
     if (p.status === 'paused') blockedCount++;
     if (s && p.status === 'active' && s.overdue_count > 0) criticalCount++;
+
+    // Health score filtering
+    if (s && p.status === 'active') {
+      const hs = computeHealthScore(s);
+      if (hs.score < 40) healthCritical++;
+      else if (hs.score < 60) healthAttention++;
+    }
 
     if (p.planned_end_date && p.status === 'active') {
       const daysLeft = new Date(p.planned_end_date).getTime() - now;
