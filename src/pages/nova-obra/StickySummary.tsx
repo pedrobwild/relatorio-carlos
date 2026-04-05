@@ -83,7 +83,7 @@ function Section({ icon, label, stepIndex, currentStep, completedSteps, children
 export function StickySummary({ formData, currentStep, completedSteps }: StickySummaryProps) {
   const navigate = useNavigate();
   const hasCadastro = !!formData.name || !!formData.customer_name;
-  const hasComercial = !!formData.contract_value;
+  const hasComercial = !!formData.contract_value || formData.budget_uploaded;
   const hasPlanejamento = !!formData.planned_start_date || !!formData.planned_end_date || formData.is_project_phase;
   const hasReview = hasCadastro && hasComercial;
 
@@ -139,6 +139,14 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
           hasContent={hasComercial}
         >
           <p className="font-medium text-foreground">{formatCurrency(formData.contract_value)}</p>
+          {formData.payment_method && (
+            <p>{formData.payment_method === 'pix' ? 'PIX' : formData.payment_method === 'boleto' ? 'Boleto' : formData.payment_method}</p>
+          )}
+          {formData.budget_uploaded && (
+            <p className="flex items-center gap-1 text-primary">
+              <Check className="h-3 w-3" /> Orçamento anexado
+            </p>
+          )}
         </Section>
 
         {/* Step 2 — Planejamento */}

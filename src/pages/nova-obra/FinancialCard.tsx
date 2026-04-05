@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, FileCheck2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrencyBRL, parseCurrencyBRL } from '@/lib/currencyMask';
 import type { FormData } from './types';
 
@@ -11,11 +13,19 @@ interface FinancialCardProps {
   onChange: (field: keyof FormData, value: string | boolean) => void;
 }
 
+const PAYMENT_METHODS = [
+  { value: '', label: 'Selecione...' },
+  { value: 'pix', label: 'PIX' },
+  { value: 'boleto', label: 'Boleto Bancário' },
+  { value: 'transferencia', label: 'Transferência Bancária' },
+  { value: 'cartao', label: 'Cartão de Crédito' },
+  { value: 'financiamento', label: 'Financiamento' },
+  { value: 'outro', label: 'Outro' },
+];
+
 export function FinancialCard({ formData, onChange }: FinancialCardProps) {
-  // Display formatted version; keep raw value in formData
   const [displayValue, setDisplayValue] = useState(() => {
     if (!formData.contract_value) return '';
-    // Convert existing decimal string to cents-based display
     const cents = Math.round(parseFloat(formData.contract_value) * 100).toString();
     return formatCurrencyBRL(cents);
   });
@@ -36,11 +46,12 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-body">
           <DollarSign className="h-5 w-5" />
-          Financeiro
+          Dados Comerciais
         </CardTitle>
-        <CardDescription>Dados financeiros e condições de pagamento</CardDescription>
+        <CardDescription>Valor do contrato, forma de pagamento e condições comerciais</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
+        {/* Valor do Contrato */}
         <div className="space-y-1">
           <Label htmlFor="contract_value">Valor Total do Contrato (R$)</Label>
           <div className="relative">
@@ -58,9 +69,60 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
             <p className="text-xs text-destructive">O valor do contrato não pode ser negativo.</p>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Parcelas, forma e status de pagamento podem ser configurados na edição da obra.
-        </p>
+
+        {/* Forma de Pagamento */}
+        <div className="space-y-1">
+          <Label htmlFor="payment_method">Forma de Pagamento</Label>
+          <Select
+            value={formData.payment_method}
+            onValueChange={(v) => onChange('payment_method', v)}
+          >
+            <SelectTrigger id="payment_method">
+              <SelectValue placeholder="Selecione a forma de pagamento" />
+            </SelectTrigger>
+            <SelectContent>
+              {PAYMENT_METHODS.filter(m => m.value).map((m) => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Data de Assinatura */}
+        <div className="space-y-1">
+          <Label htmlFor="contract_signed_at">Data de Assinatura do Contrato</Label>
+          <Input
+            id="contract_signed_at"
+            type="date"
+            value={formData.contract_signed_at}
+            onChange={(e) => onChange('contract_signed_at', e.target.value)}
+          />
+          <p className="text-[11px] text-muted-foreground">Opcional. Pode ser preenchida depois.</p>
+        </div>
+
+        {/* Observações Comerciais */}
+        <div className="space-y-1">
+          <Label htmlFor="commercial_notes">Observações Comerciais</Label>
+          <Textarea
+            id="commercial_notes"
+            value={formData.commercial_notes}
+            onChange={(e) => onChange('commercial_notes', e.target.value)}
+            placeholder="Condições especiais, observações sobre o contrato..."
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+
+        {/* Status do orçamento */}
+        {formData.budget_uploaded && formData.budget_file_name && (
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border bg-muted/30">
+            <FileCheck2 className="h-4 w-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium truncate">{formData.budget_file_name}</p>
+              <p className="text-[10px] text-muted-foreground">Orçamento anexado</p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -27,6 +27,11 @@ export const formSchema = z.object({
   installment_value: z.string().optional(),
   payment_method: z.string().optional(),
   payment_status: z.string().optional(),
+  contract_signed_at: z.string().optional(),
+  commercial_notes: z.string().trim().max(1000).optional(),
+  contract_document_name: z.string().trim().max(200).optional(),
+  budget_uploaded: z.boolean(),
+  budget_file_name: z.string().optional(),
 
   // ── Contratante ──
   customer_name: z.string().trim().min(1, 'Nome do cliente é obrigatório').max(200),
@@ -81,6 +86,11 @@ export interface FormData {
   installment_value: string;
   payment_method: string;
   payment_status: string;
+  contract_signed_at: string;
+  commercial_notes: string;
+  contract_document_name: string;
+  budget_uploaded: boolean;
+  budget_file_name: string;
 
   // Contratante
   customer_name: string;
@@ -124,6 +134,11 @@ export const initialFormData: FormData = {
   installment_value: '',
   payment_method: '',
   payment_status: 'pending',
+  contract_signed_at: '',
+  commercial_notes: '',
+  contract_document_name: '',
+  budget_uploaded: false,
+  budget_file_name: '',
 
   customer_name: '',
   customer_email: '',

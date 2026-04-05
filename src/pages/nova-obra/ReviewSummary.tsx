@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Calendar, DollarSign, User, MapPin, CheckCircle2, Home } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User, Home, CheckCircle2, FileSpreadsheet, AlertTriangle } from 'lucide-react';
 import type { FormData } from './types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -9,6 +9,15 @@ import { cn } from '@/lib/utils';
 interface ReviewSummaryProps {
   formData: FormData;
 }
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  pix: 'PIX',
+  boleto: 'Boleto Bancário',
+  transferencia: 'Transferência Bancária',
+  cartao: 'Cartão de Crédito',
+  financiamento: 'Financiamento',
+  outro: 'Outro',
+};
 
 export function ReviewSummary({ formData }: ReviewSummaryProps) {
   const formatDate = (d: string) => {
@@ -46,7 +55,18 @@ export function ReviewSummary({ formData }: ReviewSummaryProps) {
       icon: DollarSign,
       label: 'Comercial',
       value: formatCurrency(formData.contract_value),
+      sub: [
+        formData.payment_method && (PAYMENT_METHOD_LABELS[formData.payment_method] || formData.payment_method),
+        formData.contract_signed_at && `Assinado em ${formatDate(formData.contract_signed_at)}`,
+      ].filter(Boolean).join(' · '),
       filled: !!formData.contract_value,
+    },
+    {
+      icon: FileSpreadsheet,
+      label: 'Orçamento',
+      value: formData.budget_uploaded ? formData.budget_file_name || 'Anexado' : 'Não anexado',
+      sub: formData.budget_uploaded ? 'Pronto para processamento' : 'Opcional — pode ser adicionado depois',
+      filled: formData.budget_uploaded,
     },
     {
       icon: Calendar,
@@ -67,6 +87,7 @@ export function ReviewSummary({ formData }: ReviewSummaryProps) {
   ];
 
   const filledCount = items.filter(i => i.filled).length;
+  const missingCritical = !formData.name || !formData.customer_name || !formData.customer_email;
 
   return (
     <Card className="border-primary/20 bg-primary/5">
@@ -108,6 +129,27 @@ export function ReviewSummary({ formData }: ReviewSummaryProps) {
             </div>
           );
         })}
+
+        {/* Missing critical fields warning */}
+        {missingCritical && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-primary/10">
+            <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
+            <p className="text-[11px] text-destructive font-medium">
+              Campos obrigatórios pendentes: {[
+                !formData.name && 'Nome da obra',
+                !formData.customer_name && 'Nome do cliente',
+                !formData.customer_email && 'E-mail do cliente',
+              ].filter(Boolean).join(', ')}
+            </p>
+          </div>
+        )}
+
+        {formData.commercial_notes && (
+          <div className="mt-3 pt-3 border-t border-primary/10">
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-1">Obs. Comerciais</p>
+            <p className="text-xs text-muted-foreground line-clamp-3">{formData.commercial_notes}</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
