@@ -153,6 +153,7 @@ const Cronograma = () => {
   const navigate = useNavigate();
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
+  const isMobile = useIsMobile();
   const {
     activities: existingActivities,
     loading: activitiesLoading,
@@ -161,6 +162,7 @@ const Cronograma = () => {
     clearBaseline,
     hasBaseline,
   } = useProjectActivities(projectId);
+  const [mobileEditMode, setMobileEditMode] = useState(false);
 
   const createFirstActivity = (): ActivityFormData => {
     const first = createEmptyActivity();
