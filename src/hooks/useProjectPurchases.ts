@@ -306,6 +306,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
     purchases,
     isLoading,
     error,
+    isError,
     addPurchase,
     updatePurchase,
     deletePurchase,
