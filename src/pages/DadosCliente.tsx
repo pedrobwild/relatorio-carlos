@@ -272,17 +272,27 @@ export default function DadosCliente() {
                 <Label>CPF *</Label>
                 <Input
                   value={customer.cpf || ''}
-                  onChange={(e) => updateCustomer('cpf', e.target.value || null)}
+                  onChange={(e) => updateCustomer('cpf', formatCpf(e.target.value) || null)}
                   placeholder="000.000.000-00"
+                  maxLength={14}
+                  className={customer.cpf && !isValidCpf(customer.cpf) ? 'border-destructive' : ''}
                 />
+                {customer.cpf && !isValidCpf(customer.cpf) && (
+                  <p className="text-xs text-destructive mt-1">CPF inválido</p>
+                )}
               </div>
               <div>
                 <Label>RG *</Label>
                 <Input
                   value={customer.rg || ''}
-                  onChange={(e) => updateCustomer('rg', e.target.value || null)}
-                  placeholder="0000.000"
+                  onChange={(e) => updateCustomer('rg', formatRg(e.target.value) || null)}
+                  placeholder="00.000.000-0"
+                  maxLength={12}
+                  className={customer.rg && !isValidRg(customer.rg) ? 'border-destructive' : ''}
                 />
+                {customer.rg && !isValidRg(customer.rg) && (
+                  <p className="text-xs text-destructive mt-1">RG inválido</p>
+                )}
               </div>
               <div className="sm:col-span-2">
                 <Label>Endereço residencial *</Label>
