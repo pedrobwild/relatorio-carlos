@@ -12,6 +12,9 @@ import {
   Minimize2,
   MoreHorizontal,
   RotateCcw,
+  Share2,
+  RefreshCw,
+  WifiOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 import "@/lib/pdfWorker";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -30,17 +34,11 @@ interface DocumentViewerProps {
   url: string;
   title?: string;
   mimeType?: string | null;
-  /** Current page callback for comment linking */
   onPageChange?: (page: number) => void;
-  /** Show download button */
   showDownload?: boolean;
-  /** Custom className for container */
   className?: string;
 }
 
-/**
- * Enhanced document viewer with PDF/image support, approval stamp, and zoom controls
- */
 export function DocumentViewer({ 
   url, 
   title,
@@ -56,31 +54,30 @@ export function DocumentViewer({
   const [containerWidth, setContainerWidth] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
-  // Pan/drag state
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   
-  // Swipe handling
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const minSwipeDistance = 50;
 
   const isPdf = mimeType === 'application/pdf' || url?.toLowerCase().includes('.pdf');
   const isImage = mimeType?.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url || '');
-  
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
+    setLoadError(false);
   };
 
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   const handleContainerRef = useCallback((node: HTMLDivElement | null) => {
-    // Cleanup previous observer
     if (resizeObserverRef.current) {
       resizeObserverRef.current.disconnect();
       resizeObserverRef.current = null;
@@ -88,46 +85,27 @@ export function DocumentViewer({
     containerRef.current = node;
     if (node) {
       const observer = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          setContainerWidth(entry.contentRect.width);
-        }
+        for (const entry of entries) setContainerWidth(entry.contentRect.width);
       });
       observer.observe(node);
       resizeObserverRef.current = observer;
     }
   }, []);
 
-  const goToPrevPage = () => {
-    const newPage = Math.max(pageNumber - 1, 1);
-    setPageNumber(newPage);
-    onPageChange?.(newPage);
-  };
-
-  const goToNextPage = () => {
-    const newPage = Math.min(pageNumber + 1, numPages);
-    setPageNumber(newPage);
-    onPageChange?.(newPage);
-  };
-
-  const zoomIn = () => setScale((prev) => Math.min(prev + 0.25, 3));
-  const zoomOut = () => setScale((prev) => Math.max(prev - 0.25, 0.5));
+  const goToPrevPage = () => { const p = Math.max(pageNumber - 1, 1); setPageNumber(p); onPageChange?.(p); };
+  const goToNextPage = () => { const p = Math.min(pageNumber + 1, numPages); setPageNumber(p); onPageChange?.(p); };
+  const zoomIn = () => setScale(prev => Math.min(prev + 0.25, 3));
+  const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5));
   const resetZoom = () => setScale(1);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
-    
-    if (!isFullscreen) {
-      containerRef.current.requestFullscreen?.();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen?.();
-      setIsFullscreen(false);
-    }
+    if (!isFullscreen) { containerRef.current.requestFullscreen?.(); setIsFullscreen(true); }
+    else { document.exitFullscreen?.(); setIsFullscreen(false); }
   };
 
   const handleDownload = async () => {
     if (!url) return;
-    
     try {
       const response = await fetch(url);
       const blob = await response.blob();
@@ -144,30 +122,44 @@ export function DocumentViewer({
     }
   };
 
-  // Mouse drag handlers for panning
+  const handleShare = async () => {
+    if (!navigator.share) {
+      // Fallback: copy URL
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success('Link copiado');
+      } catch {
+        window.open(url, '_blank');
+      }
+      return;
+    }
+    try {
+      await navigator.share({ title: title || 'Documento', url });
+    } catch {
+      // User cancelled share
+    }
+  };
+
+  const handleRetry = () => {
+    setLoadError(false);
+    setRetryCount(prev => prev + 1);
+  };
+
+  // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (scale > 1) {
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
-      if (scrollContainerRef.current) {
-        setScrollStart({
-          x: scrollContainerRef.current.scrollLeft,
-          y: scrollContainerRef.current.scrollTop,
-        });
-      }
+      if (scrollContainerRef.current) setScrollStart({ x: scrollContainerRef.current.scrollLeft, y: scrollContainerRef.current.scrollTop });
       e.preventDefault();
     }
   };
-
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isPanning && scrollContainerRef.current) {
-      const dx = e.clientX - panStart.x;
-      const dy = e.clientY - panStart.y;
-      scrollContainerRef.current.scrollLeft = scrollStart.x - dx;
-      scrollContainerRef.current.scrollTop = scrollStart.y - dy;
+      scrollContainerRef.current.scrollLeft = scrollStart.x - (e.clientX - panStart.x);
+      scrollContainerRef.current.scrollTop = scrollStart.y - (e.clientY - panStart.y);
     }
   };
-
   const handleMouseUp = () => setIsPanning(false);
   const handleMouseLeave = () => setIsPanning(false);
 
@@ -177,34 +169,21 @@ export function DocumentViewer({
     if (scale > 1 && e.touches.length === 1) {
       setIsPanning(true);
       setPanStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-      if (scrollContainerRef.current) {
-        setScrollStart({
-          x: scrollContainerRef.current.scrollLeft,
-          y: scrollContainerRef.current.scrollTop,
-        });
-      }
+      if (scrollContainerRef.current) setScrollStart({ x: scrollContainerRef.current.scrollLeft, y: scrollContainerRef.current.scrollTop });
     }
   };
-
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX;
     if (isPanning && scrollContainerRef.current && scale > 1) {
-      const dx = e.touches[0].clientX - panStart.x;
-      const dy = e.touches[0].clientY - panStart.y;
-      scrollContainerRef.current.scrollLeft = scrollStart.x - dx;
-      scrollContainerRef.current.scrollTop = scrollStart.y - dy;
+      scrollContainerRef.current.scrollLeft = scrollStart.x - (e.touches[0].clientX - panStart.x);
+      scrollContainerRef.current.scrollTop = scrollStart.y - (e.touches[0].clientY - panStart.y);
     }
   };
-
   const handleTouchEnd = () => {
     const distance = touchStartX.current - touchEndX.current;
-    const isSwipe = Math.abs(distance) > minSwipeDistance;
-
-    if (isSwipe && scale === 1 && isPdf) {
-      if (distance > 0) goToNextPage();
-      else goToPrevPage();
+    if (Math.abs(distance) > minSwipeDistance && scale === 1 && isPdf) {
+      if (distance > 0) goToNextPage(); else goToPrevPage();
     }
-    
     setIsPanning(false);
     touchStartX.current = 0;
     touchEndX.current = 0;
@@ -213,40 +192,51 @@ export function DocumentViewer({
   const safeContainerWidth = containerWidth > 0 ? containerWidth : 320;
   const pageWidth = Math.min(safeContainerWidth - 32, 800) * scale;
 
+  const errorFallback = (
+    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-4 px-4">
+      {!navigator.onLine ? (
+        <>
+          <WifiOff className="h-10 w-10 text-muted-foreground/50" />
+          <p className="text-sm text-center">Sem conexão com a internet</p>
+          <Button onClick={handleRetry} variant="outline" className="gap-2 h-11 touch-manipulation">
+            <RefreshCw className="w-4 h-4" /> Tentar novamente
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-center">Não foi possível carregar o documento</p>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button onClick={handleRetry} variant="outline" className="gap-2 h-11 touch-manipulation">
+              <RefreshCw className="w-4 h-4" /> Tentar novamente
+            </Button>
+            <Button onClick={handleDownload} className="gap-2 h-11 touch-manipulation">
+              <Download className="w-4 h-4" /> Baixar arquivo
+            </Button>
+            <Button variant="outline" onClick={() => window.open(url, '_blank')} className="gap-2 h-11 touch-manipulation">
+              <ExternalLink className="w-4 h-4" /> Abrir em nova aba
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div 
       ref={handleContainerRef}
-      className={cn(
-        "flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full relative",
-        className
-      )}
+      className={cn("flex flex-col bg-muted/30 rounded-xl border border-border overflow-hidden h-full relative", className)}
     >
-
       {/* Controls */}
       <div className="flex items-center justify-between px-2 sm:px-3 py-2 bg-card border-b border-border shrink-0">
         {isPdf ? (
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={goToPrevPage}
-              disabled={pageNumber <= 1}
-              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-              aria-label="Página anterior"
-            >
+            <Button variant="ghost" size="icon" onClick={goToPrevPage} disabled={pageNumber <= 1} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Página anterior">
               <ChevronLeft className="w-5 h-5" />
             </Button>
             <span className="text-sm font-medium min-w-[60px] sm:min-w-[80px] text-center tabular-nums">
               {pageNumber} / {numPages}
             </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={goToNextPage}
-              disabled={pageNumber >= numPages}
-              className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation"
-              aria-label="Próxima página"
-            >
+            <Button variant="ghost" size="icon" onClick={goToNextPage} disabled={pageNumber >= numPages} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Próxima página">
               <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
@@ -268,7 +258,7 @@ export function DocumentViewer({
           {scale > 1 && (
             <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
               <Move className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Arraste</span>
+              <span>Arraste</span>
             </div>
           )}
           <div className="border-l border-border h-6 mx-2" />
@@ -285,34 +275,38 @@ export function DocumentViewer({
           </Button>
         </div>
 
-        {/* Mobile toolbar — compact "⋯" menu */}
+        {/* Mobile toolbar */}
         <div className="flex sm:hidden items-center gap-1">
+          {/* Share button — always visible on mobile */}
+          <Button variant="ghost" size="icon" onClick={handleShare} className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Compartilhar">
+            <Share2 className="w-5 h-5" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-11 w-11 min-h-[44px] min-w-[44px] touch-manipulation" aria-label="Mais opções">
                 <MoreHorizontal className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={zoomIn} disabled={scale >= 3}>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={zoomIn} disabled={scale >= 3} className="min-h-[44px]">
                 <ZoomIn className="w-4 h-4 mr-2" /> Aumentar zoom
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={zoomOut} disabled={scale <= 0.5}>
+              <DropdownMenuItem onClick={zoomOut} disabled={scale <= 0.5} className="min-h-[44px]">
                 <ZoomOut className="w-4 h-4 mr-2" /> Diminuir zoom
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={resetZoom}>
+              <DropdownMenuItem onClick={resetZoom} className="min-h-[44px]">
                 <RotateCcw className="w-4 h-4 mr-2" /> Zoom {Math.round(scale * 100)}% → 100%
               </DropdownMenuItem>
               {showDownload && (
-                <DropdownMenuItem onClick={handleDownload}>
+                <DropdownMenuItem onClick={handleDownload} className="min-h-[44px]">
                   <Download className="w-4 h-4 mr-2" /> Baixar
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => window.open(url, '_blank')}>
+              <DropdownMenuItem onClick={() => window.open(url, '_blank')} className="min-h-[44px]">
                 <ExternalLink className="w-4 h-4 mr-2" /> Abrir em nova aba
               </DropdownMenuItem>
               {typeof document !== 'undefined' && document.fullscreenEnabled && (
-                <DropdownMenuItem onClick={toggleFullscreen}>
+                <DropdownMenuItem onClick={toggleFullscreen} className="min-h-[44px]">
                   {isFullscreen ? <Minimize2 className="w-4 h-4 mr-2" /> : <Maximize2 className="w-4 h-4 mr-2" />}
                   {isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
                 </DropdownMenuItem>
@@ -325,14 +319,8 @@ export function DocumentViewer({
       {/* Document Content */}
       <div
         ref={scrollContainerRef}
-        className={cn(
-          "flex-1 min-h-0 overflow-auto",
-          scale > 1 && "cursor-grab",
-          isPanning && "cursor-grabbing"
-        )}
-        style={{ 
-          WebkitOverflowScrolling: "touch",
-        }}
+        className={cn("flex-1 min-h-0 overflow-auto", scale > 1 && "cursor-grab", isPanning && "cursor-grabbing")}
+        style={{ WebkitOverflowScrolling: "touch" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -341,35 +329,25 @@ export function DocumentViewer({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div 
-          className="flex justify-center p-4" 
-          style={{ minWidth: scale > 1 ? `${pageWidth + 32}px` : 'auto' }}
-        >
-          {isPdf ? (
+        <div className="flex justify-center p-4" style={{ minWidth: scale > 1 ? `${pageWidth + 32}px` : 'auto' }}>
+          {loadError ? (
+            errorFallback
+          ) : isPdf ? (
             <Document
+              key={retryCount}
               file={url}
               onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={(error) => console.error('[DocumentViewer] PDF load error:', error?.message || error)}
+              onLoadError={(error) => {
+                console.error('[DocumentViewer] PDF load error:', error?.message || error);
+                setLoadError(true);
+              }}
               loading={
-                <div className="flex items-center justify-center h-64">
+                <div className="flex flex-col items-center justify-center h-64 gap-2">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  <span className="text-xs text-muted-foreground">Carregando documento...</span>
                 </div>
               }
-              error={
-                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                  <p>Erro ao carregar PDF</p>
-                  <div className="flex gap-2 mt-4">
-                    <Button onClick={handleDownload} className="gap-2">
-                      <Download className="w-4 h-4" />
-                      Baixar arquivo
-                    </Button>
-                    <Button variant="outline" onClick={() => window.open(url, '_blank')} className="gap-2">
-                      <ExternalLink className="w-4 h-4" />
-                      Abrir em nova aba
-                    </Button>
-                  </div>
-                </div>
-              }
+              error={errorFallback}
             >
               <Page
                 pageNumber={pageNumber}
@@ -389,26 +367,21 @@ export function DocumentViewer({
               <img
                 src={url}
                 alt={title || 'Documento'}
-                onLoad={() => setImageLoaded(true)}
-                style={{ 
-                  transform: `scale(${scale})`,
-                  transformOrigin: 'center center',
-                  display: imageLoaded ? 'block' : 'none',
-                }}
+                onLoad={() => { setImageLoaded(true); setLoadError(false); }}
+                onError={() => setLoadError(true)}
+                style={{ transform: `scale(${scale})`, transformOrigin: 'center center', display: imageLoaded ? 'block' : 'none' }}
                 className="max-w-full h-auto shadow-lg rounded-lg transition-transform"
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-              <p>Pré-visualização não disponível</p>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleDownload} className="gap-2">
-                  <Download className="w-4 h-4" />
-                  Baixar arquivo
+            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-4 px-4">
+              <p className="text-sm text-center">Pré-visualização não disponível para este tipo de arquivo</p>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button onClick={handleDownload} className="gap-2 h-11 touch-manipulation">
+                  <Download className="w-4 h-4" /> Baixar arquivo
                 </Button>
-                <Button variant="outline" onClick={() => window.open(url, '_blank')} className="gap-2">
-                  <ExternalLink className="w-4 h-4" />
-                  Abrir em nova aba
+                <Button variant="outline" onClick={() => window.open(url, '_blank')} className="gap-2 h-11 touch-manipulation">
+                  <ExternalLink className="w-4 h-4" /> Abrir em nova aba
                 </Button>
               </div>
             </div>
