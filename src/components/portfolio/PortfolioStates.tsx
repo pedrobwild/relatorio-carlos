@@ -177,8 +177,8 @@ export function EmptyPortfolio({ onCreateProject }: EmptyPortfolioProps) {
         Nenhuma obra cadastrada
       </h3>
       <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
-        Cadastre sua primeira obra para começar a gerenciar cronogramas,
-        financeiro, documentação e toda a jornada do cliente.
+        Crie sua primeira obra para começar a gerenciar cronogramas,
+        pendências, documentos e toda a jornada do cliente em um só lugar.
       </p>
       <Button onClick={onCreateProject} className="gap-2">
         <Plus className="h-4 w-4" />
