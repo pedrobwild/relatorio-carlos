@@ -1357,6 +1357,51 @@ export type Database = {
           },
         ]
       }
+      integration_sync_log: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          entity_type: string
+          error_message: string | null
+          id: string
+          payload: Json | null
+          source_id: string
+          source_system: string
+          sync_status: string
+          synced_at: string | null
+          target_id: string | null
+          target_system: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          source_id: string
+          source_system: string
+          sync_status?: string
+          synced_at?: string | null
+          target_id?: string | null
+          target_system: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          source_id?: string
+          source_system?: string
+          sync_status?: string
+          synced_at?: string | null
+          target_id?: string | null
+          target_system?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
