@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { DeleteTaskDialog } from '@/components/atividades-obra/DeleteTaskDialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useObraTasks, TASK_STATUSES, type ObraTaskStatus, type ObraTaskInput, type ObraTaskPriority } from '@/hooks/useObraTasks';
 import { useObraTaskComments } from '@/hooks/useObraTaskComments';
