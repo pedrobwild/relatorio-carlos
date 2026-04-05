@@ -47,8 +47,18 @@ export const formSchema = z.object({
   estado_cliente: z.string().trim().max(50).optional(),
 
   // ── Acesso ──
-  customer_password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres').max(72),
+  // FIX: password only required when create_user is true
+  customer_password: z.string().max(72).optional(),
   create_user: z.boolean(),
+}).refine((data) => {
+  // Password validation only when create_user is enabled
+  if (data.create_user) {
+    return !!data.customer_password && data.customer_password.length >= 6;
+  }
+  return true;
+}, {
+  message: 'Senha deve ter no mínimo 6 caracteres',
+  path: ['customer_password'],
 }).refine((data) => {
   if (!data.is_project_phase) {
     return !!data.planned_start_date && !!data.planned_end_date;
