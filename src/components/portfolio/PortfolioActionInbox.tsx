@@ -126,7 +126,7 @@ function buildActionItems(
           id: `stale-${p.id}`,
           projectName: p.name,
           projectId: `stale-${p.id}`,
-          reason: `${staleDays}d sem atualização`,
+          reason: `Parada há ${staleDays} dias — verifique se há bloqueio`,
           responsible: p.engineer_name ?? null,
           urgency: (staleDays ?? 8) >= 14 ? 'high' : 'medium',
           deadline: null,
