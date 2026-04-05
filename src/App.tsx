@@ -311,17 +311,17 @@ const App = () => (
             <Route
               path="/obra/:projectId/atividades"
               element={
-                <ProtectedRoute>
+                <StaffRoute>
                   <ProjectPage>{withSuspense(<AtividadesObra />)}</ProjectPage>
-                </ProtectedRoute>
+                </StaffRoute>
               }
             />
             <Route
               path="/obra/:projectId/atividades/:taskId"
               element={
-                <ProtectedRoute>
+                <StaffRoute>
                   <ProjectPage>{withSuspense(<AtividadeDetalhe />)}</ProjectPage>
-                </ProtectedRoute>
+                </StaffRoute>
               }
             />
             
