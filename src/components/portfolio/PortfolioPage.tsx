@@ -8,6 +8,7 @@ import { PortfolioKpiStrip } from './PortfolioKpiStrip';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
+import { MobileProjectList } from './MobileProjectList';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
 import { ProjectsCardView } from '@/components/gestao/ProjectsCardView';
 import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
