@@ -91,6 +91,12 @@ export function MobileSummarySheet({ formData, currentStep, completedSteps, tota
                   {isCompleted && i === 0 && formData.name && (
                     <span className="text-xs text-muted-foreground truncate ml-auto">{formData.name}</span>
                   )}
+                  {isCompleted && i === 1 && (formData.contract_value || formData.budget_uploaded) && (
+                    <span className="text-xs text-muted-foreground truncate ml-auto">
+                      {formData.contract_value ? `R$ ${parseFloat(formData.contract_value).toLocaleString('pt-BR')}` : ''}
+                      {formData.budget_uploaded ? ' · Orçamento ✓' : ''}
+                    </span>
+                  )}
                 </div>
               );
             })}
