@@ -87,6 +87,18 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
   const hasFinancial = !!formData.contract_value;
   const hasCustomer = !!formData.customer_name;
 
+  // Health score preview based on filled data
+  const healthPreview = useMemo(() => {
+    const completeness = [hasProject, hasSchedule, hasFinancial, hasCustomer].filter(Boolean).length;
+    const pct = Math.round((completeness / 4) * 100);
+    const missingFields: string[] = [];
+    if (!hasProject) missingFields.push('Dados básicos');
+    if (!hasSchedule) missingFields.push('Cronograma');
+    if (!hasFinancial) missingFields.push('Orçamento');
+    if (!hasCustomer) missingFields.push('Cliente');
+    return { pct, missingFields };
+  }, [hasProject, hasSchedule, hasFinancial, hasCustomer]);
+
   const handleSaveDraft = () => {
     toast.success('Rascunho salvo! Você pode continuar depois.');
     navigate('/gestao');
