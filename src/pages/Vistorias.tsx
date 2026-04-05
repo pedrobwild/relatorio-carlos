@@ -12,10 +12,7 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useInspections } from '@/hooks/useInspections';
 import { useNonConformities } from '@/hooks/useNonConformities';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
-import { NonConformitiesList } from '@/components/vistorias/NonConformitiesList';
-import { NcSummaryCards, type NcFilter } from '@/components/vistorias/NcSummaryCards';
-import { NcTimelineChart } from '@/components/vistorias/NcTimelineChart';
-import { NcConsolidatedReport } from '@/components/vistorias/NcConsolidatedReport';
+import { NcManagementPanel } from '@/components/vistorias/NcManagementPanel';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
@@ -39,7 +36,6 @@ export default function Vistorias() {
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
   const [selectedNc, setSelectedNc] = useState<NonConformity | null>(null);
   const [showSearch, setShowSearch] = useState(false);
-  const [ncSummaryFilter, setNcSummaryFilter] = useState<NcFilter>(null);
   const [createNcContext, setCreateNcContext] = useState<{
     inspectionId?: string;
     inspectionItemId?: string;
@@ -137,32 +133,13 @@ export default function Vistorias() {
               />
             </TabsContent>
 
-            <TabsContent value="ncs" className="space-y-4">
-              <NcSummaryCards
-                nonConformities={nonConformities}
-                activeFilter={ncSummaryFilter}
-                onFilterChange={setNcSummaryFilter}
-              />
-              <NcTimelineChart nonConformities={nonConformities} />
-              <NcConsolidatedReport nonConformities={nonConformities} />
-              {can('ncs:create') && (
-                <div className="flex justify-end">
-                  <Button
-                    onClick={() => setCreateNcContext({})}
-                    size="sm"
-                    variant="outline"
-                    className="gap-2 h-10 min-w-[44px]"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">Nova NC</span>
-                  </Button>
-                </div>
-              )}
-              <NonConformitiesList
+            <TabsContent value="ncs">
+              <NcManagementPanel
                 nonConformities={nonConformities}
                 searchQuery={searchQuery}
                 onSelect={setSelectedNc}
-                summaryFilter={ncSummaryFilter}
+                onCreateNc={() => setCreateNcContext({})}
+                canCreate={can('ncs:create')}
               />
             </TabsContent>
 
