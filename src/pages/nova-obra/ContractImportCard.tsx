@@ -196,8 +196,8 @@ export function ContractImportCard({
 
         {/* Processing state */}
         {isProcessing && (
-          <div className="flex items-center gap-3 py-4 justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <div className="flex items-center gap-3 py-4 justify-center" role="status" aria-live="polite">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
             <div>
               <p className="text-sm font-medium">
                 {contractState.parseStatus === 'uploading' ? 'Enviando contrato...' : 'Analisando contrato com IA...'}
