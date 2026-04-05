@@ -50,9 +50,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         } else {
           setProject(data);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching project:', err);
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'Erro desconhecido ao carregar projeto');
       } finally {
         setLoading(false);
       }

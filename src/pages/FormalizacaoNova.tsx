@@ -60,7 +60,7 @@ export default function FormalizacaoNova() {
   });
 
   // Fetch user profile to get customer_org_id
-  const { data: profile } = useQuery({
+  const { data: profile, error: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;

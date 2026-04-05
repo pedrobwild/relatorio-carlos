@@ -92,6 +92,13 @@ export function useLinkCustomerOnLogin(user: User | null) {
     };
 
     // Defer the database call to avoid blocking auth state updates
-    setTimeout(linkCustomerToProjects, 0);
+    let cancelled = false;
+    const originalFn = linkCustomerToProjects;
+    const safeFn = async () => {
+      if (!cancelled) await originalFn();
+    };
+    safeFn();
+
+    return () => { cancelled = true; };
   }, [user?.id, user?.email]);
 }
