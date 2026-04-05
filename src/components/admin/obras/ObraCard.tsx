@@ -27,13 +27,7 @@ interface ObraCardProps {
 }
 
 export function ObraCard({ project, onView, onEdit, onDelete }: ObraCardProps) {
-  const daysRemaining = useMemo(() => {
-    if (!project.planned_end_date) return null;
-    return Math.ceil(
-      (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
-  }, [project.planned_end_date]);
-
+  // TODO: Use daysRemaining for deadline indicators in the card UI
   return (
     <Card>
       <CardContent className="p-4">
