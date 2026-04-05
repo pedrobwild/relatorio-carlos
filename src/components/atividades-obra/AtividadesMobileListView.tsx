@@ -97,7 +97,10 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
                 task={task}
                 responsibleName={getMemberName(task.responsible_user_id)}
                 onUpdateStatus={onUpdateStatus}
-                onDelete={onDelete}
+                onDelete={(id) => {
+                  const t = tasks.find(x => x.id === id);
+                  if (t) setDeleteTarget(t);
+                }}
                 onOpenDetail={(task) => navigate(`/obra/${projectId}/atividades/${task.id}`)}
                 onEdit={setEditTask}
               />
