@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { AiFieldIndicator } from './AiFieldIndicator';
+import { formatCpf, formatRg } from '@/lib/documentValidation';
 import type { FormData } from './types';
 
 interface CustomerCardProps {
