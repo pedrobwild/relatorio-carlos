@@ -107,7 +107,7 @@ function buildActionItems(
           id: `approaching-${p.id}`,
           projectName: p.name,
           projectId: p.id,
-          reason: days === 0 ? 'Entrega hoje' : `${days}d para entrega`,
+          reason: days === 0 ? 'Entrega prevista para hoje!' : days === 1 ? 'Entrega amanhã' : `Faltam ${days} dias para entrega`,
           responsible: p.engineer_name ?? null,
           urgency: days <= 3 ? 'critical' : days <= 7 ? 'high' : 'medium',
           deadline: `${days}d`,
