@@ -28,7 +28,7 @@ export function MobileSummarySheet({ formData, currentStep, completedSteps, tota
   };
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40">
       {expanded && (
         <div className="fixed inset-0 bg-black/20 z-[-1]" onClick={() => setExpanded(false)} />
       )}

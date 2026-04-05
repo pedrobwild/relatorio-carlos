@@ -8,7 +8,7 @@ import { addBusinessDays } from '@/lib/businessDays';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { formSchema, initialFormData, initialContractImportState, type FormData, type ContractImportState, type ContractParseResult } from './nova-obra/types';
+import { formSchema, initialFormData, initialContractImportState, type FormData, type ContractImportState, type ContractParseResult, type ContractConflict } from './nova-obra/types';
 import { useNovaObraSubmit } from './nova-obra/useNovaObraSubmit';
 import { TemplateSelectorCard } from './nova-obra/TemplateSelectorCard';
 import { ProjectInfoCard } from './nova-obra/ProjectInfoCard';
@@ -49,6 +49,8 @@ interface NovaObraDraft {
   savedAt?: number;
   contractSourceDoc?: string;
   aiPrefilledFields?: string[];
+  aiConflicts?: ContractConflict[];
+  aiMissingFields?: string[];
 }
 
 function loadDraft(): NovaObraDraft | null {
@@ -61,9 +63,26 @@ function loadDraft(): NovaObraDraft | null {
   return null;
 }
 
-function saveDraft(formData: FormData, step: number, scheduleActivities: ScheduleActivity[], contractSourceDoc?: string, aiPrefilledFields?: string[]) {
+function saveDraft(
+  formData: FormData,
+  step: number,
+  scheduleActivities: ScheduleActivity[],
+  contractSourceDoc?: string,
+  aiPrefilledFields?: string[],
+  aiConflicts?: ContractConflict[],
+  aiMissingFields?: string[],
+) {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, step, scheduleActivities, savedAt: Date.now(), contractSourceDoc, aiPrefilledFields }));
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      formData,
+      step,
+      scheduleActivities,
+      savedAt: Date.now(),
+      contractSourceDoc,
+      aiPrefilledFields,
+      aiConflicts,
+      aiMissingFields,
+    }));
   } catch { /* ignore */ }
 }
 
@@ -131,7 +150,7 @@ export default function NovaObra() {
   const [draftRestored, setDraftRestored] = useState(!!draft);
   const [direction, setDirection] = useState(1);
 
-  // Contract import state
+  // Contract import state — restore from draft including conflicts/missing
   const [contractState, setContractState] = useState<ContractImportState>(() => {
     if (draft?.aiPrefilledFields && draft.aiPrefilledFields.length > 0) {
       return {
@@ -139,6 +158,8 @@ export default function NovaObra() {
         parseStatus: 'success' as const,
         aiPrefilledFields: new Set(draft.aiPrefilledFields),
         aiSourceDocumentName: draft.contractSourceDoc || '',
+        aiConflicts: draft.aiConflicts || [],
+        aiMissingFields: draft.aiMissingFields || [],
         aiLastAppliedAt: new Date().toISOString(),
       };
     }
@@ -148,7 +169,7 @@ export default function NovaObra() {
   // Track which fields user has manually edited after AI prefill
   const [userEditedFields] = useState<Set<string>>(new Set());
 
-  // Auto-save draft
+  // Auto-save draft — includes contract metadata
   useEffect(() => {
     saveDraft(
       formData,
@@ -156,8 +177,10 @@ export default function NovaObra() {
       scheduleActivities,
       contractState.aiSourceDocumentName,
       Array.from(contractState.aiPrefilledFields),
+      contractState.aiConflicts,
+      contractState.aiMissingFields,
     );
-  }, [formData, currentStep, scheduleActivities, contractState.aiSourceDocumentName, contractState.aiPrefilledFields]);
+  }, [formData, currentStep, scheduleActivities, contractState.aiSourceDocumentName, contractState.aiPrefilledFields, contractState.aiConflicts, contractState.aiMissingFields]);
 
   const templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
@@ -175,7 +198,7 @@ export default function NovaObra() {
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
-    // Track manual edits
+    // Track manual edits to prevent AI overwrite
     userEditedFields.add(field);
     if (field === 'planned_start_date' && typeof value === 'string') {
       autoCalculateEndDate(value);
@@ -209,12 +232,6 @@ export default function NovaObra() {
 
     if (Object.keys(updates).length > 0) {
       setFormData(prev => ({ ...prev, ...updates }));
-    }
-
-    // Build conflict field set
-    const conflictFieldSet = new Set<string>();
-    for (const conflict of result.conflicts || []) {
-      conflictFieldSet.add(conflict.field);
     }
 
     setContractState(prev => ({
@@ -253,7 +270,7 @@ export default function NovaObra() {
       if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
         newErrors.customer_email = 'E-mail inválido';
       }
-      if (formData.create_user && formData.customer_password.length < 6) {
+      if (formData.create_user && (!formData.customer_password || formData.customer_password.length < 6)) {
         newErrors.customer_password = 'Senha deve ter no mínimo 6 caracteres';
       }
     }
@@ -370,7 +387,6 @@ export default function NovaObra() {
   const aiConflictFields = useMemo(() => {
     const s = new Set<string>();
     for (const c of contractState.aiConflicts) {
-      // Map conflict field name to form field name
       for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
         if (mapping.aiField === c.field || formField === c.field) {
           s.add(formField);
@@ -386,7 +402,7 @@ export default function NovaObra() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')} className="h-11 w-11 shrink-0 touch-target" aria-label="Voltar">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')} className="h-11 w-11 shrink-0 touch-target" aria-label="Voltar para gestão">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
@@ -400,8 +416,8 @@ export default function NovaObra() {
         </div>
 
         {/* Mobile progress bar */}
-        <div className="sm:hidden px-4 pb-3 space-y-2">
-          <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className="sm:hidden px-4 pb-3 space-y-2" role="navigation" aria-label="Progresso do cadastro">
+          <div className="relative h-1.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin={1} aria-valuemax={STEPS.length}>
             <motion.div
               className="absolute left-0 top-0 h-full bg-primary rounded-full"
               initial={false}
@@ -409,10 +425,13 @@ export default function NovaObra() {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
             />
           </div>
-          <div className="flex">
+          <div className="flex" role="tablist">
             {STEP_SHORT_LABELS.map((label, i) => (
               <button
                 key={i}
+                role="tab"
+                aria-selected={i === currentStep}
+                aria-label={`${label}: etapa ${i + 1} de ${STEPS.length}${completedSteps.has(i) ? ', concluída' : ''}`}
                 onClick={() => goToStep(i)}
                 className={cn(
                   "flex-1 text-center py-1 text-[10px] font-medium transition-colors touch-target relative",
@@ -423,7 +442,7 @@ export default function NovaObra() {
               >
                 <span className="flex items-center justify-center gap-1">
                   {completedSteps.has(i) && i !== currentStep && (
-                    <Check className="h-2.5 w-2.5 text-primary" />
+                    <Check className="h-2.5 w-2.5 text-primary" aria-hidden="true" />
                   )}
                   {label}
                 </span>
@@ -453,8 +472,9 @@ export default function NovaObra() {
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 mb-4"
+                role="status"
               >
-                <RotateCcw className="h-4 w-4 text-primary shrink-0" />
+                <RotateCcw className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Rascunho restaurado</p>
                   {draft?.savedAt && (
@@ -464,13 +484,18 @@ export default function NovaObra() {
                 <Button type="button" variant="ghost" size="sm" className="h-8 text-xs shrink-0" onClick={handleClearDraft}>
                   Limpar
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setDraftRestored(false)}>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setDraftRestored(false)} aria-label="Fechar aviso de rascunho">
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit}>
+            {/* Live region for screen readers */}
+            <div aria-live="polite" aria-atomic="true" className="sr-only">
+              Etapa {currentStep + 1} de {STEPS.length}: {STEPS[currentStep].label}
+            </div>
+
+            <form onSubmit={handleSubmit} noValidate>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={currentStep}
@@ -573,7 +598,12 @@ export default function NovaObra() {
                 <div>
                   {isLastStep ? (
                     <Button type="submit" disabled={loading} className="min-h-[44px]">
-                      {loading ? 'Cadastrando...' : (
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                          Cadastrando...
+                        </>
+                      ) : (
                         <>
                           <Send className="h-4 w-4 mr-2" />
                           Cadastrar Obra
@@ -599,15 +629,13 @@ export default function NovaObra() {
           />
         </div>
 
-        {/* Mobile bottom sheet summary */}
-        <div className="hidden lg:block">
-          <MobileSummarySheet
-            formData={formData}
-            currentStep={currentStep}
-            completedSteps={completedSteps}
-            totalSteps={STEPS.length}
-          />
-        </div>
+        {/* Mobile bottom sheet summary — visible on small screens only */}
+        <MobileSummarySheet
+          formData={formData}
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+          totalSteps={STEPS.length}
+        />
       </main>
 
       {/* Mobile sticky bottom navigation */}
@@ -629,7 +657,7 @@ export default function NovaObra() {
               <Button onClick={handleSubmit} disabled={loading} className="h-12 flex-[2] rounded-xl text-sm font-semibold gap-2">
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                     Cadastrando...
                   </>
                 ) : (

@@ -196,8 +196,8 @@ export function ContractImportCard({
 
         {/* Processing state */}
         {isProcessing && (
-          <div className="flex items-center gap-3 py-4 justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <div className="flex items-center gap-3 py-4 justify-center" role="status" aria-live="polite">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
             <div>
               <p className="text-sm font-medium">
                 {contractState.parseStatus === 'uploading' ? 'Enviando contrato...' : 'Analisando contrato com IA...'}
@@ -209,9 +209,9 @@ export function ContractImportCard({
 
         {/* Error */}
         {isError && (
-          <div className="space-y-2">
+          <div className="space-y-2" role="alert">
             <div className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
               <p className="text-sm font-medium">{contractState.errorMessage}</p>
             </div>
             <Button variant="outline" size="sm" onClick={handleClear}>
@@ -222,7 +222,7 @@ export function ContractImportCard({
 
         {/* Success */}
         {isSuccess && (
-          <div className="space-y-3">
+          <div className="space-y-3" role="status" aria-live="polite">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <FileText className="h-4 w-4 text-primary shrink-0" />
