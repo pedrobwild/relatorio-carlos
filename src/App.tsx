@@ -62,6 +62,7 @@ const Cronograma = lazy(() => import("./pages/Cronograma"));
 const Compras = lazy(() => import("./pages/Compras"));
 const Vistorias = lazy(() => import("./pages/Vistorias"));
 const AtividadesObra = lazy(() => import("./pages/AtividadesObra"));
+const AtividadeDetalhe = lazy(() => import("./pages/AtividadeDetalhe"));
 const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
 const DadosCliente = lazy(() => import("./pages/DadosCliente"));
 
@@ -301,6 +302,14 @@ const App = () => (
               element={
                 <StaffRoute>
                   <ProjectPage>{withSuspense(<AtividadesObra />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/atividades/:taskId"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<AtividadeDetalhe />)}</ProjectPage>
                 </StaffRoute>
               }
             />

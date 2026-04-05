@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { type ObraTask, type ObraTaskStatus, type ObraTaskInput, TASK_STATUSES } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { AtividadeMobileCard } from './AtividadeMobileCard';
-import { AtividadeDetailSheet } from './AtividadeDetailSheet';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { EmptyState, PageSkeleton } from '@/components/ui/states';
 import { ClipboardList } from 'lucide-react';
@@ -29,7 +30,8 @@ const filters: { value: FilterValue; label: string; dot?: string }[] = [
 
 export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [filter, setFilter] = useState<FilterValue>('all');
-  const [detailTask, setDetailTask] = useState<ObraTask | null>(null);
+  const navigate = useNavigate();
+  const { projectId } = useProjectNavigation();
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
@@ -94,7 +96,7 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
                 responsibleName={getMemberName(task.responsible_user_id)}
                 onUpdateStatus={onUpdateStatus}
                 onDelete={onDelete}
-                onOpenDetail={setDetailTask}
+                onOpenDetail={(task) => navigate(`/obra/${projectId}/atividades/${task.id}`)}
                 onEdit={setEditTask}
               />
             ))}
@@ -102,11 +104,6 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
         </div>
       )}
 
-      <AtividadeDetailSheet
-        task={detailTask}
-        open={!!detailTask}
-        onOpenChange={(open) => !open && setDetailTask(null)}
-      />
 
       <AtividadeFormDialog
         open={!!editTask}

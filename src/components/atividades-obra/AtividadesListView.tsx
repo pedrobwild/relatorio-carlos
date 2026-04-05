@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput }
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AtividadeDetailSheet } from './AtividadeDetailSheet';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 
 interface Props {
   tasks: ObraTask[];
@@ -30,7 +31,8 @@ const statusVariant: Record<ObraTaskStatus, string> = {
 
 export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
-  const [detailTask, setDetailTask] = useState<ObraTask | null>(null);
+  const navigate = useNavigate();
+  const { projectId } = useProjectNavigation();
   const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
@@ -76,7 +78,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
               const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
               return (
                 <TableRow key={task.id} className={task.status === 'concluido' ? 'opacity-60' : ''}>
-                  <TableCell className="cursor-pointer" onClick={() => setDetailTask(task)}>
+                  <TableCell className="cursor-pointer" onClick={() => navigate(`/obra/${projectId}/atividades/${task.id}`)}>
                     <div>
                       <span className={`font-medium ${task.status === 'concluido' ? 'line-through' : ''}`}>{task.title}</span>
                       {task.description && (
@@ -167,12 +169,6 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
         initialData={editTask}
       />
 
-      <AtividadeDetailSheet
-        task={detailTask}
-        open={!!detailTask}
-        onOpenChange={(open) => !open && setDetailTask(null)}
-        onUpdateStatus={onUpdateStatus}
-      />
     </>
   );
 }

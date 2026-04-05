@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput }
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AtividadeDetailSheet } from './AtividadeDetailSheet';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -44,7 +45,8 @@ const dotColors: Record<ObraTaskStatus, string> = {
 
 export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
-  const [detailTask, setDetailTask] = useState<ObraTask | null>(null);
+  const navigate = useNavigate();
+  const { projectId } = useProjectNavigation();
   const [dragOverColumn, setDragOverColumn] = useState<ObraTaskStatus | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
@@ -125,7 +127,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                       draggable
                       onDragStart={(e) => handleDragStart(e, task.id)}
                       className="cursor-grab active:cursor-grabbing hover:shadow-md transition-all rounded-xl border-border/40 active:scale-[0.98]"
-                      onClick={() => setDetailTask(task)}
+                      onClick={() => navigate(`/obra/${projectId}/atividades/${task.id}`)}
                     >
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-start justify-between gap-1">
@@ -212,12 +214,6 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
         initialData={editTask}
       />
 
-      <AtividadeDetailSheet
-        task={detailTask}
-        open={!!detailTask}
-        onOpenChange={(open) => !open && setDetailTask(null)}
-        onUpdateStatus={onUpdateStatus}
-      />
     </>
   );
 }
