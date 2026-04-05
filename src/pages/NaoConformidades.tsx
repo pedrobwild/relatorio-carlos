@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Plus, AlertTriangle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
@@ -10,6 +9,7 @@ import { useNonConformities } from '@/hooks/useNonConformities';
 import { NcManagementPanel } from '@/components/vistorias/NcManagementPanel';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
+import { NcPageSkeleton } from '@/components/skeletons/NcPageSkeleton';
 import type { NonConformity } from '@/hooks/useNonConformities';
 import { useCan } from '@/hooks/useCan';
 
@@ -29,11 +29,7 @@ export default function NaoConformidades() {
     return (
       <div className="py-6">
         <PageContainer maxWidth="full">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
+          <NcPageSkeleton />
         </PageContainer>
       </div>
     );
