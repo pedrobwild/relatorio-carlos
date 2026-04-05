@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useStaffUsers } from './useStaffUsers';
 import { toast } from 'sonner';
 
 export interface ObraTaskComment {
@@ -25,11 +26,18 @@ export interface ObraTaskStatusHistory {
 export function useObraTaskComments(taskId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: staffUsers = [] } = useStaffUsers();
   const commentsKey = ['obra-task-comments', taskId];
   const historyKey = ['obra-task-status-history', taskId];
 
+  // Build a profile lookup from already-cached staff users
+  const profileLookup = (userId: string): string => {
+    const u = staffUsers.find(s => s.id === userId);
+    return u?.nome || u?.email || 'Usuário';
+  };
+
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
-    queryKey: commentsKey,
+    queryKey: [...commentsKey, staffUsers.length],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('obra_task_comments')
@@ -38,29 +46,16 @@ export function useObraTaskComments(taskId: string | undefined) {
         .order('created_at', { ascending: true });
       if (error) throw error;
 
-      // Enrich with author names
-      const authorIds = [...new Set((data || []).map(c => c.author_id))];
-      let profiles: Record<string, string> = {};
-      if (authorIds.length > 0) {
-        const { data: users } = await supabase
-          .from('users_profile')
-          .select('id, nome, email')
-          .in('id', authorIds);
-        if (users) {
-          profiles = Object.fromEntries(users.map(u => [u.id, u.nome || u.email || 'Usuário']));
-        }
-      }
-
       return (data || []).map(c => ({
         ...c,
-        author_name: profiles[c.author_id] || 'Usuário',
+        author_name: profileLookup(c.author_id),
       })) as ObraTaskComment[];
     },
-    enabled: !!taskId,
+    enabled: !!taskId && staffUsers.length > 0,
   });
 
   const { data: statusHistory = [], isLoading: historyLoading } = useQuery({
-    queryKey: historyKey,
+    queryKey: [...historyKey, staffUsers.length],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('obra_task_status_history')
@@ -69,24 +64,12 @@ export function useObraTaskComments(taskId: string | undefined) {
         .order('created_at', { ascending: true });
       if (error) throw error;
 
-      const changerIds = [...new Set((data || []).filter(h => h.changed_by).map(h => h.changed_by!))];
-      let profiles: Record<string, string> = {};
-      if (changerIds.length > 0) {
-        const { data: users } = await supabase
-          .from('users_profile')
-          .select('id, nome, email')
-          .in('id', changerIds);
-        if (users) {
-          profiles = Object.fromEntries(users.map(u => [u.id, u.nome || u.email || 'Usuário']));
-        }
-      }
-
       return (data || []).map(h => ({
         ...h,
-        changed_by_name: h.changed_by ? (profiles[h.changed_by] || 'Usuário') : null,
+        changed_by_name: h.changed_by ? profileLookup(h.changed_by) : null,
       })) as ObraTaskStatusHistory[];
     },
-    enabled: !!taskId,
+    enabled: !!taskId && staffUsers.length > 0,
   });
 
   const addComment = useMutation({
