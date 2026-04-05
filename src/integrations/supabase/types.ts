@@ -1100,6 +1100,8 @@ export type Database = {
           email: string | null
           endereco: string | null
           estado: string | null
+          external_id: string | null
+          external_system: string | null
           id: string
           nome: string
           nota_avaliacao: number | null
@@ -1125,6 +1127,8 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           estado?: string | null
+          external_id?: string | null
+          external_system?: string | null
           id?: string
           nome: string
           nota_avaliacao?: number | null
@@ -1150,6 +1154,8 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           estado?: string | null
+          external_id?: string | null
+          external_system?: string | null
           id?: string
           nome?: string
           nota_avaliacao?: number | null
