@@ -298,7 +298,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   };
 
   const getDaysUntilDeadline = (purchase: ProjectPurchase): number => {
-    const requiredDate = new Date(purchase.required_by_date);
+    const requiredDate = new Date(purchase.required_by_date + 'T00:00:00');
     return Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 

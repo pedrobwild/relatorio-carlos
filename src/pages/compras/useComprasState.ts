@@ -114,8 +114,12 @@ export function useComprasState() {
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    await deletePurchase.mutateAsync(deleteId);
-    setDeleteId(null);
+    try {
+      await deletePurchase.mutateAsync(deleteId);
+      setDeleteId(null);
+    } catch {
+      // Error toast already handled by mutation onError
+    }
   };
 
   const handleStatusChange = async (id: string, newStatus: PurchaseStatus) => {
