@@ -45,8 +45,8 @@ export function PortfolioCommandBar({
   const showingSubset = filteredCount < totalCount;
 
   return (
-    <div className="space-y-2.5">
-      {/* Row 1: Title + Actions — mobile-first layout */}
+    <div className="space-y-2">
+      {/* Row 1: Title + Actions */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-lg font-bold tracking-tight text-foreground whitespace-nowrap sm:text-xl">
@@ -121,21 +121,20 @@ export function PortfolioCommandBar({
         </div>
       </div>
 
-      {/* Row 2: Search + Scope + Presets — mobile-optimized */}
+      {/* Row 2: Search — full width on mobile, with scope toggle on desktop */}
       <div className="flex items-center gap-2">
-        {/* Search — full width on mobile */}
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Buscar obra, cliente…"
-            className="pl-9 h-9 bg-card border-border/50 text-sm rounded-lg placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:border-primary/40"
+            className="pl-9 h-10 md:h-9 bg-card border-border/50 text-sm rounded-xl md:rounded-lg placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:border-primary/40"
           />
         </div>
 
-        {/* Scope toggle — compact on mobile */}
-        <div className="flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5 shrink-0" role="radiogroup" aria-label="Escopo">
+        {/* Scope toggle — desktop only */}
+        <div className="hidden md:flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5 shrink-0" role="radiogroup" aria-label="Escopo">
           {([
             { key: 'all' as ScopeFilter, label: 'Tudo' },
             { key: 'obras' as ScopeFilter, label: 'Obras' },
@@ -160,8 +159,8 @@ export function PortfolioCommandBar({
         </div>
       </div>
 
-      {/* Row 3: Preset pills — horizontally scrollable on mobile */}
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-0.5" role="tablist" aria-label="Presets de visualização">
+      {/* Row 3: Preset pills — scrollable on mobile */}
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-0.5 md:mx-0 md:px-0" role="tablist" aria-label="Presets de visualização">
         {presets.map(({ key, label }) => (
           <button
             key={key}
@@ -169,8 +168,9 @@ export function PortfolioCommandBar({
             aria-selected={activePreset === key}
             onClick={() => onPresetChange(key)}
             className={cn(
-              'whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0',
+              'whitespace-nowrap px-3.5 py-2 md:py-1.5 rounded-full text-xs font-semibold transition-all shrink-0',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+              'min-h-[36px] md:min-h-0',
               activePreset === key
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
