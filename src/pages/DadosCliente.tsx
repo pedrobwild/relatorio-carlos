@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Save, User, Building2, Loader2, Search } from 'lucide-react';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
+import { formatCpf, formatRg, isValidCpf, isValidRg } from '@/lib/documentValidation';
 
 interface CustomerData {
   id: string;
