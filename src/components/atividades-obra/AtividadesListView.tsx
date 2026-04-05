@@ -32,6 +32,7 @@ const statusVariant: Record<ObraTaskStatus, string> = {
 
 export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ObraTask | null>(null);
   const navigate = useNavigate();
   const { projectId } = useProjectNavigation();
   const { data: staffUsers = [] } = useStaffUsers();
