@@ -440,7 +440,7 @@ export default function FornecedorDetalhe() {
               <CardTitle className="text-base">Histórico de Compras</CardTitle>
             </CardHeader>
             <CardContent>
-              <SupplierPurchaseHistoryTab supplierName={supplier.nome} />
+              <SupplierPurchaseHistoryTab fornecedorId={supplier.id} />
             </CardContent>
           </Card>
         </div>
