@@ -63,7 +63,7 @@ export function ProtectedRoute({
   }
 
   // Check role if specified - user needs at least ONE of the allowed roles
-  if (allowedRoles && roles.length > 0 && !hasAnyRole(allowedRoles)) {
+  if (allowedRoles && !hasAnyRole(allowedRoles)) {
     debugNav('ProtectedRoute: no matching role', { 
       userRoles: roles, 
       allowedRoles, 
