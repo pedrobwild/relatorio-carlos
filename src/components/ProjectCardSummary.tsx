@@ -4,9 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
-import type { ProjectWithCustomer } from '@/infra/repositories';
+import { journeyRepo, type ProjectWithCustomer } from '@/infra/repositories';
 import { useQuery } from '@tanstack/react-query';
-import { journeyRepo } from '@/infra/repositories';
 import { calcWeightedProgress } from '@/lib/progressCalc';
 
 type ProjectData = ProjectWithCustomer & { is_project_phase?: boolean };

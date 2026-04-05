@@ -13,7 +13,7 @@ export function MeetingScheduledCard({ availability }: MeetingScheduledCardProps
   const meetText = availability.meeting_details_text || '';
 
   const meetLink = useMemo(() => {
-    const match = meetText.match(/https:\/\/meet\.google\.com\/[a-z\-]+/i);
+    const match = meetText.match(/https:\/\/meet\.google\.com\/[a-z-]+/i);
     return match ? match[0] : null;
   }, [meetText]);
 

@@ -10,15 +10,9 @@ import {
   transitionNcStatus,
 } from '@/infra/repositories/ncsRepository';
 
-// Re-export types from repository for consumer convenience
-export type {
-  NonConformity,
-  NcHistoryEntry,
-  NcSeverity,
-  NcStatus,
-} from '@/infra/repositories/ncsRepository';
-
-import type { NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+// eslint-disable-next-line no-duplicate-imports
+import type { NonConformity, NcHistoryEntry, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+export type { NonConformity, NcHistoryEntry, NcSeverity, NcStatus };
 
 // ── Queries ──
 

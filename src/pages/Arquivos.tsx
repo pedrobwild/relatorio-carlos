@@ -19,8 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { DocumentViewer } from '@/components/DocumentViewer';
 import { useFilesQuery, useDeleteFileMutation, useArchiveFileMutation } from '@/hooks/useFilesQuery';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
-import { getSignedUrl } from '@/infra/repositories/files.repository';
-import type { FileMetadata } from '@/infra/repositories/files.repository';
+import { getSignedUrl, type FileMetadata } from '@/infra/repositories/files.repository';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {

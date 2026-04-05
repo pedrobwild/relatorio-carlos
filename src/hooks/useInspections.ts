@@ -10,15 +10,9 @@ import {
   completeInspection,
 } from '@/infra/repositories/inspectionsRepository';
 
-// Re-export types from repository for consumer convenience
-export type {
-  Inspection,
-  InspectionItem,
-  InspectionStatus,
-  InspectionItemResult,
-} from '@/infra/repositories/inspectionsRepository';
-
-import type { Inspection, InspectionItemResult } from '@/infra/repositories/inspectionsRepository';
+// eslint-disable-next-line no-duplicate-imports
+import type { Inspection, InspectionItemResult, InspectionItem, InspectionStatus } from '@/infra/repositories/inspectionsRepository';
+export type { Inspection, InspectionItem, InspectionStatus, InspectionItemResult };
 
 // ── Queries ──
 

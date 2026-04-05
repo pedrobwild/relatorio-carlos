@@ -5,8 +5,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
  * Throws { status, message } on failure.
  */
 export async function authenticateRequest(req: Request) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw { status: 500, message: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY' };
+  }
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
   const authHeader = req.headers.get('Authorization');
@@ -14,7 +17,11 @@ export async function authenticateRequest(req: Request) {
     throw { status: 401, message: 'Authorization required' };
   }
 
-  const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  if (!anonKey) {
+    throw { status: 500, message: 'Missing SUPABASE_ANON_KEY' };
+  }
+  const supabaseUser = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 

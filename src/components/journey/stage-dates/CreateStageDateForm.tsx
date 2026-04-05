@@ -1,5 +1,5 @@
-import { Check } from 'lucide-react';
-import { Plus } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { journeyCopy } from '@/constants/journeyCopy';

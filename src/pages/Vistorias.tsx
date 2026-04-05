@@ -9,7 +9,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { VistoriasPageSkeleton } from '@/components/skeletons/VistoriasPageSkeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { useInspections } from '@/hooks/useInspections';
+import { useInspections, type Inspection } from '@/hooks/useInspections';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspectionDialog';
@@ -17,7 +17,6 @@ import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailD
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
 import { CorrectiveActionTemplatesAdmin } from '@/components/vistorias/CorrectiveActionTemplatesAdmin';
 import { useNonConformities } from '@/hooks/useNonConformities';
-import type { Inspection } from '@/hooks/useInspections';
 import { useCan } from '@/hooks/useCan';
 
 export default function Vistorias() {

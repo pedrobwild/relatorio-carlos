@@ -95,7 +95,7 @@ export function StagePhotoGallery({ stageId, projectId, isAdmin }: StagePhotoGal
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 loading="lazy"
               />
-              {(isAdmin || true) && (
+              {isAdmin && (
                 <button
                   className="absolute top-1 right-1 bg-background/80 backdrop-blur-sm rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => {

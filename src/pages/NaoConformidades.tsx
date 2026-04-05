@@ -5,12 +5,11 @@ import { Input } from '@/components/ui/input';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { useNonConformities } from '@/hooks/useNonConformities';
+import { useNonConformities, type NonConformity } from '@/hooks/useNonConformities';
 import { NcManagementPanel } from '@/components/vistorias/NcManagementPanel';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
 import { NcPageSkeleton } from '@/components/skeletons/NcPageSkeleton';
-import type { NonConformity } from '@/hooks/useNonConformities';
 import { useCan } from '@/hooks/useCan';
 
 export default function NaoConformidades() {

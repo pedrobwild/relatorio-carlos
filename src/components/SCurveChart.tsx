@@ -31,7 +31,7 @@ const SCurveChart = ({
 
   const handleToggleFullChart = () => {
     const newValue = !showFullChart;
-    onShowFullChartChange ? onShowFullChartChange(newValue) : setInternalShowFull(newValue);
+    if (onShowFullChartChange) { onShowFullChartChange(newValue); } else { setInternalShowFull(newValue); }
   };
 
   const windowedData = useMemo(() => {

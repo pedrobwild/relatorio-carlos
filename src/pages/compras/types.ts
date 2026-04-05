@@ -1,6 +1,5 @@
 import { Clock, Package, Truck, CheckCircle2, X } from 'lucide-react';
-import { PurchaseStatus } from '@/hooks/useProjectPurchases';
-import type { PurchaseInput } from '@/hooks/useProjectPurchases';
+import { type PurchaseInput, type PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { getAllSupplierSubcategories, SUPPLIER_SUBCATEGORIES_BY_TYPE } from '@/constants/supplierCategories';
 
 export const statusConfig: Record<PurchaseStatus, { label: string; color: string; icon: React.ElementType }> = {
