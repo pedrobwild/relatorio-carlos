@@ -18,7 +18,7 @@ export type {
   NcStatus,
 } from '@/infra/repositories/ncsRepository';
 
-import type { NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+import type { NonConformity, NcSeverity } from '@/infra/repositories/ncsRepository';
 
 // ── Queries ──
 

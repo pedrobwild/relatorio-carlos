@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Download } from "lucide-react";
+import { Download, type LucideIcon } from "lucide-react";
 import PDFViewer from "@/components/PDFViewer";
 import type { ProjectDocument } from "@/hooks/useDocuments";
-import type { LucideIcon } from "lucide-react";
 
 interface Props {
   doc: ProjectDocument;

@@ -17,7 +17,6 @@ import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailD
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
 import { CorrectiveActionTemplatesAdmin } from '@/components/vistorias/CorrectiveActionTemplatesAdmin';
 import { useNonConformities } from '@/hooks/useNonConformities';
-import type { Inspection } from '@/hooks/useInspections';
 import { useCan } from '@/hooks/useCan';
 
 export default function Vistorias() {

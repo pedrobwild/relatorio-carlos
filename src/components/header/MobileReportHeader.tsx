@@ -7,10 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { ProjectSwitcherSheet } from "@/components/mobile/ProjectSwitcherSheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { formatDateShort } from "./types";
+import { formatDateShort, type ProjectMetrics, type MilestoneItem, type MilestoneKey } from "./types";
 import { MilestonesBar } from "./ProjectStateSection";
 import { ProgressSection } from "./ProgressSection";
-import type { ProjectMetrics, MilestoneItem, MilestoneKey } from "./types";
 import type { ProjectWithCustomer } from "@/infra/repositories";
 import type { Activity } from "@/types/report";
 
