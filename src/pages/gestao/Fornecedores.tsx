@@ -220,10 +220,8 @@ export default function Fornecedores() {
 
   const filtered = suppliers.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
-    if (categoryFilter !== "all") {
-      // Filter by new supplier_type when set
-      if (s.supplier_type !== categoryFilter && s.categoria !== categoryFilter) return false;
-    }
+    if (categoryFilter !== "all" && s.supplier_type !== categoryFilter) return false;
+    if (subcategoryFilter !== "all" && s.supplier_subcategory !== subcategoryFilter) return false;
     if (search) {
       const q = search.toLowerCase();
       return (
