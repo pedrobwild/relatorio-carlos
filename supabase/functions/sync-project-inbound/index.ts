@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     const expectedKey = Deno.env.get("INTEGRATION_API_KEY");
 
     if (!expectedKey) {
-      throw new Error("ENVISION_INTEGRATION_KEY not configured");
+      throw new Error("INTEGRATION_API_KEY not configured");
     }
     if (integrationKey !== expectedKey) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
