@@ -289,7 +289,7 @@ export default function NovaObra() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 sm:pb-6">
+      <main className="max-w-5xl mx-auto px-4 py-6 pb-bottom-nav sm:pb-6">
         {/* Desktop Stepper */}
         <div className="mb-8 lg:max-w-3xl hidden sm:block">
           <FormStepper

@@ -19,7 +19,7 @@ export function GestaoShell({ children }: GestaoShellProps) {
       <div className="min-h-screen flex w-full">
         <GestaoSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="pb-16 md:pb-0">{children}</div>
+          <div className="pb-bottom-nav">{children}</div>
         </div>
       </div>
       <GestaoBottomNav />
