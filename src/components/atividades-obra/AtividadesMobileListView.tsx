@@ -121,6 +121,18 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
         }}
         initialData={editTask}
       />
+
+      <DeleteTaskDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        taskTitle={deleteTarget?.title || ''}
+        onConfirm={() => {
+          if (deleteTarget) {
+            onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </>
   );
 }
