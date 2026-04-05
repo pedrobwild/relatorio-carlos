@@ -11,9 +11,11 @@ import { DatePickerField } from '@/components/DatePickerField';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectActivities, ActivityInput } from '@/hooks/useProjectActivities';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import { ImportScheduleModal } from '@/components/ImportScheduleModal';
+import { CronogramaMobileView } from '@/components/cronograma/CronogramaMobileView';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { cn } from '@/lib/utils';
 
@@ -151,6 +153,7 @@ const Cronograma = () => {
   const navigate = useNavigate();
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
+  const isMobile = useIsMobile();
   const {
     activities: existingActivities,
     loading: activitiesLoading,
@@ -159,6 +162,7 @@ const Cronograma = () => {
     clearBaseline,
     hasBaseline,
   } = useProjectActivities(projectId);
+  const [mobileEditMode, setMobileEditMode] = useState(false);
 
   const createFirstActivity = (): ActivityFormData => {
     const first = createEmptyActivity();
@@ -442,6 +446,44 @@ const Cronograma = () => {
         <div className="max-w-7xl mx-auto p-4">
           <ContentSkeleton variant="table" rows={6} />
         </div>
+      </div>
+    );
+  }
+
+  // Mobile: monitoring view (unless user requested edit mode)
+  if (isMobile && !mobileEditMode) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PageHeader
+          title="Cronograma"
+          showLogo={false}
+          maxWidth="md"
+          onBack={() => {
+            if (window.history.length > 1) navigate(-1);
+            else navigate('/gestao', { replace: true });
+          }}
+          breadcrumbs={[
+            { label: 'Gestão', href: '/gestao' },
+            { label: project?.name || 'Obra', href: `/obra/${projectId}` },
+            { label: 'Cronograma' },
+          ]}
+        />
+        <div className="max-w-lg mx-auto p-4">
+          <CronogramaMobileView
+            activities={existingActivities}
+            loading={activitiesLoading}
+            hasBaseline={hasBaseline}
+            onEditMode={() => setMobileEditMode(true)}
+            onImport={() => setImportModalOpen(true)}
+            onSaveBaseline={async () => { await saveBaseline(); }}
+            projectName={project?.name}
+          />
+        </div>
+        <ImportScheduleModal
+          open={importModalOpen}
+          onOpenChange={setImportModalOpen}
+          onImport={handleImportActivities}
+        />
       </div>
     );
   }
