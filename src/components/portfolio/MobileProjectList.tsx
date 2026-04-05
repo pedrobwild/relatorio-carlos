@@ -46,7 +46,7 @@ export function MobileProjectList({ projects, onProjectClick }: MobileProjectLis
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="list" aria-label="Lista de obras">
       {projects.map((project) => (
         <MobileProjectRow
           key={project.id}
