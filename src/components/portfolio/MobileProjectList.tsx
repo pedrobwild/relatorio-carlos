@@ -46,7 +46,7 @@ export function MobileProjectList({ projects, onProjectClick }: MobileProjectLis
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="list" aria-label="Lista de obras">
       {projects.map((project) => (
         <MobileProjectRow
           key={project.id}
@@ -83,7 +83,9 @@ function MobileProjectRow({
   return (
     <button
       type="button"
+      role="listitem"
       onClick={onClick}
+      aria-label={`${project.name}${overdueCount > 0 ? `, ${overdueCount} atividades atrasadas` : ''}, ${Math.round(progress)}% concluído`}
       className={cn(
         'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border bg-card text-left',
         'transition-all active:scale-[0.98] active:bg-muted/50',
@@ -114,7 +116,7 @@ function MobileProjectRow({
           <p className="font-semibold text-[13px] text-foreground truncate leading-tight flex-1 min-w-0">
             {project.name}
           </p>
-          <div className={cn('w-2 h-2 rounded-full shrink-0', status.dot)} title={status.label} />
+          <div className={cn('w-2 h-2 rounded-full shrink-0', status.dot)} title={status.label} aria-label={`Status: ${status.label}`} role="img" />
         </div>
 
         {/* Row 2: Customer + unit */}

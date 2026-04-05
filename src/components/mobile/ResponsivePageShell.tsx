@@ -37,6 +37,7 @@ export function ResponsivePageShell({
   return (
     <>
       <main
+        id="main-content"
         className={cn(
           "mx-auto w-full px-4 sm:px-6 md:px-8",
           "overflow-x-hidden min-w-0",

@@ -214,7 +214,7 @@ export function EvidenceUpload({
 
       {/* Upload progress bar */}
       {uploading && uploadProgress > 0 && (
-        <div className="h-1 bg-muted rounded-full overflow-hidden">
+        <div className="h-1 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={uploadProgress} aria-valuemin={0} aria-valuemax={100} aria-label="Progresso do upload">
           <div className="h-full bg-primary transition-all duration-200 rounded-full" style={{ width: `${uploadProgress}%` }} />
         </div>
       )}
