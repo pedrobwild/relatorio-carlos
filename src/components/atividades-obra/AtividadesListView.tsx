@@ -171,6 +171,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
         task={detailTask}
         open={!!detailTask}
         onOpenChange={(open) => !open && setDetailTask(null)}
+        onUpdateStatus={onUpdateStatus}
       />
     </>
   );
