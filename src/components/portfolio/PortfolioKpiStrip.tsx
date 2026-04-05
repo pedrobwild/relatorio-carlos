@@ -39,9 +39,10 @@ interface PortfolioKpiStripProps {
 
 const kpiDefinitions: KpiDefinition[] = [
   { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
+  { key: 'health-critical', label: 'Saúde crítica', description: 'Health Score abaixo de 40', icon: <HeartPulse className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'health-attention', label: 'Atenção', description: 'Health Score entre 40-59', icon: <HeartPulse className="h-4 w-4" />, accent: 'warning' },
   { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
   { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
-  { key: 'critical', label: 'Críticas', description: 'Health Score abaixo de 50', icon: <AlertTriangle className="h-4 w-4" />, accent: 'destructive' },
   { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
   { key: 'stale-7d', label: 'Sem update', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
 ];
