@@ -163,6 +163,13 @@ export function ProjectSidebar() {
           staffOnly: true,
         },
         {
+          label: "Não Conformidades",
+          icon: AlertCircle,
+          path: paths.naoConformidades,
+          disabledInProjectPhase: true,
+          staffOnly: true,
+        },
+        {
           label: L("atividades"),
           icon: ListChecks,
           path: paths.atividades,

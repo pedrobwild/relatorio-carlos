@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, ClipboardCheck, AlertTriangle, Search, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, ClipboardCheck, Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,33 +8,27 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { useProject } from '@/contexts/ProjectContext';
 import { useInspections } from '@/hooks/useInspections';
-import { useNonConformities } from '@/hooks/useNonConformities';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
-import { NcManagementPanel } from '@/components/vistorias/NcManagementPanel';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspectionDialog';
 import { InspectionDetailDialog } from '@/components/vistorias/InspectionDetailDialog';
-import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
 import { CorrectiveActionTemplatesAdmin } from '@/components/vistorias/CorrectiveActionTemplatesAdmin';
-import type { Inspection, InspectionItem } from '@/hooks/useInspections';
-import type { NonConformity } from '@/hooks/useNonConformities';
+import { useNonConformities } from '@/hooks/useNonConformities';
+import type { Inspection } from '@/hooks/useInspections';
 import { useCan } from '@/hooks/useCan';
 
 export default function Vistorias() {
   const { projectId } = useProjectNavigation();
-  const { project } = useProject();
   const { data: inspections = [], isLoading: loadingInspections } = useInspections(projectId);
-  const { data: nonConformities = [], isLoading: loadingNcs } = useNonConformities(projectId);
+  const { data: nonConformities = [] } = useNonConformities(projectId);
   const { can } = useCan();
 
   const [tab, setTab] = useState('vistorias');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
-  const [selectedNc, setSelectedNc] = useState<NonConformity | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [createNcContext, setCreateNcContext] = useState<{
     inspectionId?: string;
@@ -43,11 +37,7 @@ export default function Vistorias() {
   } | null>(null);
   const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null);
 
-  const openNcs = useMemo(() => nonConformities.filter(nc => nc.status !== 'closed'), [nonConformities]);
-
-  const isLoading = loadingInspections || loadingNcs;
-
-  if (isLoading) {
+  if (loadingInspections) {
     return (
       <div className="py-6">
         <PageContainer maxWidth="full">
@@ -64,7 +54,7 @@ export default function Vistorias() {
   return (
     <>
       <PageHeader
-        title="Vistorias & NC"
+        title="Vistorias"
         maxWidth="full"
         showLogo={false}
       >
@@ -88,29 +78,49 @@ export default function Vistorias() {
 
       <div className="py-4 md:py-6">
         <PageContainer maxWidth="full">
-          <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <TabsList className="w-full sm:w-auto overflow-x-auto">
-                <TabsTrigger value="vistorias" className="gap-1.5 min-h-[44px] flex-1 sm:flex-none">
-                  <ClipboardCheck className="h-4 w-4" />
-                  <span className="hidden xs:inline">Vistorias</span>
-                  <Badge variant="secondary" className="ml-1">{inspections.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="ncs" className="gap-1.5 min-h-[44px] flex-1 sm:flex-none">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span className="truncate">NCs</span>
-                  {openNcs.length > 0 && (
-                    <Badge variant="destructive" className="ml-1">{openNcs.length}</Badge>
-                  )}
-                </TabsTrigger>
-                {can('admin:manage_system') && (
+          {can('admin:manage_system') ? (
+            <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="vistorias" className="gap-1.5 min-h-[44px] flex-1 sm:flex-none">
+                    <ClipboardCheck className="h-4 w-4" />
+                    <span>Vistorias</span>
+                    <Badge variant="secondary" className="ml-1">{inspections.length}</Badge>
+                  </TabsTrigger>
                   <TabsTrigger value="config" className="gap-1.5 min-h-[44px] flex-1 sm:flex-none">
                     <Settings className="h-4 w-4" />
                     <span className="hidden xs:inline">Config</span>
                   </TabsTrigger>
-                )}
-              </TabsList>
+                </TabsList>
 
+                <div className={`relative w-full sm:w-64 ${showSearch ? 'block' : 'hidden md:block'}`}>
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-10"
+                    autoFocus={showSearch}
+                  />
+                </div>
+              </div>
+
+              <TabsContent value="vistorias">
+                <InspectionsList
+                  inspections={inspections}
+                  nonConformities={nonConformities}
+                  searchQuery={searchQuery}
+                  onSelect={setSelectedInspection}
+                  onDuplicate={(insp) => setDuplicateSourceId(insp.id)}
+                />
+              </TabsContent>
+
+              <TabsContent value="config" className="space-y-4">
+                <CorrectiveActionTemplatesAdmin />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <div className="space-y-4">
               <div className={`relative w-full sm:w-64 ${showSearch ? 'block' : 'hidden md:block'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -121,9 +131,6 @@ export default function Vistorias() {
                   autoFocus={showSearch}
                 />
               </div>
-            </div>
-
-            <TabsContent value="vistorias">
               <InspectionsList
                 inspections={inspections}
                 nonConformities={nonConformities}
@@ -131,24 +138,8 @@ export default function Vistorias() {
                 onSelect={setSelectedInspection}
                 onDuplicate={(insp) => setDuplicateSourceId(insp.id)}
               />
-            </TabsContent>
-
-            <TabsContent value="ncs">
-              <NcManagementPanel
-                nonConformities={nonConformities}
-                searchQuery={searchQuery}
-                onSelect={setSelectedNc}
-                onCreateNc={() => setCreateNcContext({})}
-                canCreate={can('ncs:create')}
-              />
-            </TabsContent>
-
-            {can('admin:manage_system') && (
-              <TabsContent value="config" className="space-y-4">
-                <CorrectiveActionTemplatesAdmin />
-              </TabsContent>
-            )}
-          </Tabs>
+            </div>
+          )}
         </PageContainer>
       </div>
 
@@ -178,14 +169,6 @@ export default function Vistorias() {
         />
       )}
 
-      {selectedNc && (
-        <NcDetailDialog
-          nc={selectedNc}
-          open={!!selectedNc}
-          onOpenChange={(open) => !open && setSelectedNc(null)}
-        />
-      )}
-
       {createNcContext && projectId && (
         <CreateNcDialog
           open={!!createNcContext}
@@ -194,10 +177,7 @@ export default function Vistorias() {
           inspectionId={createNcContext.inspectionId}
           inspectionItemId={createNcContext.inspectionItemId}
           prefillTitle={createNcContext.prefillTitle}
-          onSuccess={() => {
-            setCreateNcContext(null);
-            setTab('ncs');
-          }}
+          onSuccess={() => setCreateNcContext(null)}
         />
       )}
 

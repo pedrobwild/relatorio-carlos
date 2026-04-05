@@ -62,6 +62,7 @@ const FormalizacaoDetalhe = lazy(() => import("./pages/FormalizacaoDetalhe"));
 const Cronograma = lazy(() => import("./pages/Cronograma"));
 const Compras = lazy(() => import("./pages/Compras"));
 const Vistorias = lazy(() => import("./pages/Vistorias"));
+const NaoConformidades = lazy(() => import("./pages/NaoConformidades"));
 const AtividadesObra = lazy(() => import("./pages/AtividadesObra"));
 const AtividadeDetalhe = lazy(() => import("./pages/AtividadeDetalhe"));
 const JornadaProjeto = lazy(() => import("./pages/JornadaProjeto"));
@@ -288,6 +289,14 @@ const App = () => (
               element={
                 <StaffRoute>
                   <ProjectPage>{withSuspense(<Vistorias />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/nao-conformidades"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<NaoConformidades />)}</ProjectPage>
                 </StaffRoute>
               }
             />
