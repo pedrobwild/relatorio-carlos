@@ -216,6 +216,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
         task={detailTask}
         open={!!detailTask}
         onOpenChange={(open) => !open && setDetailTask(null)}
+        onUpdateStatus={onUpdateStatus}
       />
     </>
   );
