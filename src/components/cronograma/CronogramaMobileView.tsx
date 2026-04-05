@@ -43,9 +43,9 @@ function getActivityStatus(act: ProjectActivity): ActivityStatus {
 
 const statusConfig: Record<ActivityStatus, { icon: typeof AlertTriangle; label: string; color: string; dot: string }> = {
   overdue: { icon: AlertTriangle, label: 'Atrasada', color: 'text-destructive', dot: 'bg-destructive' },
-  in_progress: { icon: Play, label: 'Em andamento', color: 'text-blue-600', dot: 'bg-blue-500' },
-  upcoming: { icon: Clock, label: 'Próxima', color: 'text-amber-600', dot: 'bg-amber-500' },
-  completed: { icon: CheckCircle2, label: 'Concluída', color: 'text-green-600', dot: 'bg-green-500' },
+  in_progress: { icon: Play, label: 'Em andamento', color: 'text-primary', dot: 'bg-primary' },
+  upcoming: { icon: Clock, label: 'Próxima', color: 'text-[hsl(var(--warning))]', dot: 'bg-[hsl(var(--warning))]' },
+  completed: { icon: CheckCircle2, label: 'Concluída', color: 'text-[hsl(var(--success))]', dot: 'bg-[hsl(var(--success))]' },
   pending: { icon: Circle, label: 'Pendente', color: 'text-muted-foreground', dot: 'bg-muted-foreground' },
 };
 
