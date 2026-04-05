@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,6 @@ import bwildLogo from '@/assets/bwild-logo-transparent.png';
 import { z } from 'zod';
 import { logError, logInfo, logWarn } from '@/lib/errorLogger';
 
-type AppRole = 'engineer' | 'admin' | 'customer';
-
 const loginSchema = z.object({
   email: z.string().trim().min(1, 'Informe seu e-mail.').email('Digite um e-mail válido.'),
   password: z.string().min(1, 'Informe sua senha.'),
@@ -32,18 +30,22 @@ export default function Auth() {
   const [capsLockOn, setCapsLockOn] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const hasRedirectedRef = useRef(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const redirectBasedOnRole = async (userId: string) => {
     try {
-      const { data: roleData } = await supabase
+      const { data: roleRows } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .single();
-      const role = (roleData?.role as AppRole) || 'customer';
-      if (role === 'engineer' || role === 'admin') {
+        .eq('user_id', userId);
+
+      const isStaff = (roleRows ?? []).some(({ role }) =>
+        ['engineer', 'admin', 'manager', 'gestor', 'suprimentos', 'financeiro'].includes(role)
+      );
+
+      if (isStaff) {
         navigate('/gestao', { replace: true });
       } else {
         navigate('/minhas-obras', { replace: true });
@@ -53,8 +55,13 @@ export default function Auth() {
     }
   };
 
+  const redirectOnce = async (userId: string) => {
+    if (hasRedirectedRef.current) return;
+    hasRedirectedRef.current = true;
+    await redirectBasedOnRole(userId);
+  };
+
   useEffect(() => {
-    let hasHandledInitialSession = false;
     let isMounted = true;
     let sessionCheckTimeout: number | null = null;
 
@@ -77,6 +84,24 @@ export default function Auth() {
       setCheckingSession(false);
     }, 8000);
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!isMounted) return;
+
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+          finishSessionCheck();
+          setTimeout(() => {
+            if (isMounted) void redirectOnce(session.user.id);
+          }, 0);
+        }
+
+        if (event === 'SIGNED_OUT') {
+          hasRedirectedRef.current = false;
+          finishSessionCheck();
+        }
+      }
+    );
+
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!isMounted) return;
       if (error) {
@@ -85,28 +110,17 @@ export default function Auth() {
         finishSessionCheck();
         return;
       }
+
       if (session?.user) {
-        hasHandledInitialSession = true;
-        redirectBasedOnRole(session.user.id);
+        void redirectOnce(session.user.id);
+        return;
       }
+
       finishSessionCheck();
     }).catch((err) => {
       console.warn('Session check error:', err);
       finishSessionCheck();
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!isMounted) return;
-        if (event === 'SIGNED_IN' && session?.user && !hasHandledInitialSession) {
-          hasHandledInitialSession = true;
-          setTimeout(() => {
-            if (isMounted) redirectBasedOnRole(session.user.id);
-          }, 0);
-        }
-        if (event === 'SIGNED_OUT') finishSessionCheck();
-      }
-    );
 
     return () => {
       isMounted = false;
@@ -141,7 +155,7 @@ export default function Auth() {
     logInfo('Login attempt', { identifierType: 'email' });
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -165,6 +179,12 @@ export default function Auth() {
         }
         return;
       }
+
+      const signedInUserId = data.user?.id ?? data.session?.user?.id;
+      if (signedInUserId) {
+        await redirectOnce(signedInUserId);
+      }
+
       logInfo('Login successful');
       // Keep loading=true until redirect via onAuthStateChange
     } catch (error) {
