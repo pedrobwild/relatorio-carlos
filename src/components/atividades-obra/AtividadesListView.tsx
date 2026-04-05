@@ -167,10 +167,20 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
             setEditTask(null);
           }
         }}
-        
         initialData={editTask}
       />
 
+      <DeleteTaskDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        taskTitle={deleteTarget?.title || ''}
+        onConfirm={() => {
+          if (deleteTarget) {
+            onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </>
   );
 }

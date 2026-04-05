@@ -212,10 +212,20 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
             setEditTask(null);
           }
         }}
-        
         initialData={editTask}
       />
 
+      <DeleteTaskDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        taskTitle={deleteTarget?.title || ''}
+        onConfirm={() => {
+          if (deleteTarget) {
+            onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </>
   );
 }
