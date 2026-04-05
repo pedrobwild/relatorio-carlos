@@ -114,13 +114,13 @@ export function useProjectActivities(projectId: string | undefined) {
       return newActivities;
     },
     onSuccess: () => {
-      toast.success('Cronograma salvo com sucesso!');
+      // Toast handled by caller (Cronograma.tsx) to avoid double notification
       if (projectId) {
         invalidateActivityQueries(projectId);
       }
     },
     onError: () => {
-      toast.error('Erro ao salvar cronograma');
+      // Error toast handled by caller
     },
   });
 
