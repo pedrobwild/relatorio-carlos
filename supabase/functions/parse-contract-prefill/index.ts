@@ -260,6 +260,8 @@ Deno.serve(async (req) => {
       missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],
     };
 
+    console.log('parse-contract-prefill result studio:', JSON.stringify(result.studio));
+    console.log('parse-contract-prefill result customer:', JSON.stringify(result.customer));
     return jsonResponse({ success: true, data: result });
   } catch (error) {
     console.error('parse-contract-prefill error:', error);

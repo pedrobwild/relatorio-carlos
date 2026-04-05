@@ -210,21 +210,28 @@ export default function NovaObra() {
 
   // Apply AI parse result to formData — uses functional setState to avoid stale closures
   const handleApplyPrefill = useCallback((result: ContractParseResult, fileName: string) => {
+    console.log('[AI Prefill] Full result:', JSON.stringify(result, null, 2));
     setFormData(prev => {
       const prefilledFields = new Set<string>();
       const updates: Partial<FormData> = {};
 
       for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
-        if (userEditedFields.has(formField)) continue;
+        if (userEditedFields.has(formField)) {
+          console.log(`[AI Prefill] Skipping ${formField} — user edited`);
+          continue;
+        }
 
         const sectionData = result[mapping.section] as Record<string, unknown>;
         const aiValue = sectionData?.[mapping.aiField];
+        console.log(`[AI Prefill] ${formField}: section=${mapping.section}, aiField=${mapping.aiField}, value=`, aiValue);
 
         if (aiValue != null && aiValue !== '' && typeof aiValue === 'string') {
           const currentValue = prev[formField as keyof FormData];
           if (!currentValue || currentValue === '' || currentValue === initialFormData[formField as keyof FormData]) {
             (updates as Record<string, unknown>)[formField] = aiValue;
             prefilledFields.add(formField);
+          } else {
+            console.log(`[AI Prefill] ${formField} skipped — current value:`, currentValue);
           }
         }
       }
