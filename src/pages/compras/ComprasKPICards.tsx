@@ -89,8 +89,8 @@ export function ComprasKPICards({
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-md bg-blue-500/10">
-              <Package className="h-4 w-4 text-blue-600" />
+            <div className="p-1.5 rounded-md bg-primary/10">
+              <Package className="h-4 w-4 text-primary" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground leading-none mb-1">Em Andamento</p>
