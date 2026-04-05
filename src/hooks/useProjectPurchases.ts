@@ -287,7 +287,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   const getUrgencyLevel = (purchase: ProjectPurchase): UrgencyLevel => {
     if (purchase.status === 'delivered' || purchase.status === 'cancelled') return 'normal';
     
-    const requiredDate = new Date(purchase.required_by_date);
+    const requiredDate = new Date(purchase.required_by_date + 'T00:00:00');
     const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysUntil < 0) return 'overdue';
