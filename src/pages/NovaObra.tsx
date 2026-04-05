@@ -208,52 +208,58 @@ export default function NovaObra() {
     }
   };
 
-  // Apply AI parse result to formData
+  // Apply AI parse result to formData — uses functional setState to avoid stale closures
   const handleApplyPrefill = useCallback((result: ContractParseResult, fileName: string) => {
-    const prefilledFields = new Set<string>();
-    const updates: Partial<FormData> = {};
+    setFormData(prev => {
+      const prefilledFields = new Set<string>();
+      const updates: Partial<FormData> = {};
 
-    for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
-      // Don't overwrite fields the user has already manually edited
-      if (userEditedFields.has(formField)) continue;
+      for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
+        if (userEditedFields.has(formField)) continue;
 
-      const sectionData = result[mapping.section] as Record<string, unknown>;
-      const aiValue = sectionData?.[mapping.aiField];
+        const sectionData = result[mapping.section] as Record<string, unknown>;
+        const aiValue = sectionData?.[mapping.aiField];
 
-      if (aiValue != null && aiValue !== '' && typeof aiValue === 'string') {
-        const currentValue = formData[formField as keyof FormData];
-        // Only overwrite empty fields or if current value is default
-        if (!currentValue || currentValue === '' || currentValue === initialFormData[formField as keyof FormData]) {
-          (updates as Record<string, unknown>)[formField] = aiValue;
-          prefilledFields.add(formField);
+        if (aiValue != null && aiValue !== '' && typeof aiValue === 'string') {
+          const currentValue = prev[formField as keyof FormData];
+          if (!currentValue || currentValue === '' || currentValue === initialFormData[formField as keyof FormData]) {
+            (updates as Record<string, unknown>)[formField] = aiValue;
+            prefilledFields.add(formField);
+          }
         }
       }
-    }
 
-    if (Object.keys(updates).length > 0) {
-      setFormData(prev => ({ ...prev, ...updates }));
-    }
+      // Fallback: if 'name' wasn't filled but studio.nome_do_empreendimento exists, use it
+      if (!updates.name && !prev.name) {
+        const studioName = (result.studio as Record<string, unknown>)?.nome_do_empreendimento;
+        const unitName = (result.studio as Record<string, unknown>)?.unit_name;
+        if (typeof studioName === 'string' && studioName) {
+          updates.name = unitName ? `${studioName} - ${unitName}` : studioName;
+          prefilledFields.add('name');
+        }
+      }
 
-    setContractState(prev => ({
-      ...prev,
-      aiPrefilledFields: prefilledFields,
-      aiConflicts: result.conflicts || [],
-      aiMissingFields: result.missing_fields || [],
-      aiSourceDocumentName: fileName,
-      aiLastAppliedAt: new Date().toISOString(),
-      contract_document_name: fileName,
-    }));
+      updates.contract_document_name = fileName;
 
-    // Also set contract_document_name
-    setFormData(prev => ({ ...prev, contract_document_name: fileName }));
+      setContractState(prev => ({
+        ...prev,
+        aiPrefilledFields: prefilledFields,
+        aiConflicts: result.conflicts || [],
+        aiMissingFields: result.missing_fields || [],
+        aiSourceDocumentName: fileName,
+        aiLastAppliedAt: new Date().toISOString(),
+      }));
 
-    toast({
-      title: `${prefilledFields.size} campos preenchidos automaticamente`,
-      description: result.conflicts?.length
-        ? `Atenção: ${result.conflicts.length} divergência(s) encontrada(s)`
-        : 'Revise os dados antes de prosseguir',
+      toast({
+        title: `${prefilledFields.size} campos preenchidos automaticamente`,
+        description: result.conflicts?.length
+          ? `Atenção: ${result.conflicts.length} divergência(s) encontrada(s)`
+          : 'Revise os dados antes de prosseguir',
+      });
+
+      return { ...prev, ...updates };
     });
-  }, [formData, userEditedFields, toast]);
+  }, [userEditedFields, toast]);
 
   const validateStep = useCallback((step: number): boolean => {
     const requiredFields = STEP_REQUIRED_FIELDS[step] || [];
