@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
 import { createQueryPersister, QUERY_CACHE_VERSION } from "@/lib/queryPersister";
 import { TabDiscardDetector } from "@/components/TabDiscardDetector";
+import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
 import { ProjectShell } from "@/components/layout/ProjectShell";
 import { GestaoShell } from "@/components/layout/GestaoShell";
@@ -140,6 +141,7 @@ const App = () => (
         <Sonner />
         <TabDiscardDetector />
         <BrowserRouter>
+          <NetworkStatusBanner />
           <a href="#main-content" className="skip-to-content">Pular para o conteúdo</a>
           <Routes>
             {/* Public routes */}
