@@ -31,6 +31,7 @@ export function UserMenu() {
     gestor: 'Supervisor',
     suprimentos: 'Suprimentos',
     financeiro: 'Financeiro',
+    cs: 'Customer Success',
     customer: 'Cliente',
   };
 

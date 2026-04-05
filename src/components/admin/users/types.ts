@@ -11,6 +11,7 @@ export const roleLabels: Record<AppRole, string> = {
   gestor: 'Gestor',
   suprimentos: 'Suprimentos',
   financeiro: 'Financeiro',
+  cs: 'Customer Success',
 };
 
 export const roleColors: Record<AppRole, string> = {
@@ -21,6 +22,7 @@ export const roleColors: Record<AppRole, string> = {
   gestor: 'bg-accent/10 text-accent-foreground border-accent/20',
   suprimentos: 'bg-primary/10 text-primary border-primary/20',
   financeiro: 'bg-primary/10 text-primary border-primary/20',
+  cs: 'bg-secondary/10 text-secondary-foreground border-secondary/20',
 };
 
 export interface ProjectOption {
