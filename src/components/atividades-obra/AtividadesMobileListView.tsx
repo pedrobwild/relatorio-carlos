@@ -104,11 +104,6 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
         </div>
       )}
 
-      <AtividadeDetailSheet
-        task={detailTask}
-        open={!!detailTask}
-        onOpenChange={(open) => !open && setDetailTask(null)}
-      />
 
       <AtividadeFormDialog
         open={!!editTask}
