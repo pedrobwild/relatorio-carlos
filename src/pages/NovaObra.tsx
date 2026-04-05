@@ -210,7 +210,7 @@ export default function NovaObra() {
 
   // Apply AI parse result to formData — side effects extracted from state updater
   const handleApplyPrefill = useCallback((result: ContractParseResult, fileName: string) => {
-    console.log('[AI Prefill] Full result:', JSON.stringify(result, null, 2));
+    if (import.meta.env.DEV) console.log('[AI Prefill] Full result:', JSON.stringify(result, null, 2));
 
     const prefilledFields = new Set<string>();
     const updates: Partial<FormData> = {};

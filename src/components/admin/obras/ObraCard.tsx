@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { User, Calendar, Eye, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,8 +17,7 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
-
-export const statusColors: Record<string, string> = {
+import { statusColors, statusLabels } from './obraCardUtils';
   active: 'bg-success/10 text-[hsl(var(--success))] border-success/20',
   completed: 'bg-primary/10 text-primary border-primary/20',
   paused: 'bg-warning/10 text-[hsl(var(--warning))] border-warning/20',
