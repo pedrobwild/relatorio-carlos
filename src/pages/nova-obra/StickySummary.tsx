@@ -83,7 +83,7 @@ function Section({ icon, label, stepIndex, currentStep, completedSteps, children
 export function StickySummary({ formData, currentStep, completedSteps }: StickySummaryProps) {
   const navigate = useNavigate();
   const hasCadastro = !!formData.name || !!formData.customer_name;
-  const hasComercial = !!formData.contract_value;
+  const hasComercial = !!formData.contract_value || formData.budget_uploaded;
   const hasPlanejamento = !!formData.planned_start_date || !!formData.planned_end_date || formData.is_project_phase;
   const hasReview = hasCadastro && hasComercial;
 

@@ -393,7 +393,7 @@ export default function NovaObra() {
                   {/* Step 1: Comercial */}
                   {currentStep === 1 && (
                     <div className="space-y-6">
-                      <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
+                      <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} formData={formData} onChange={handleChange} />
                       <FinancialCard formData={formData} onChange={handleChange} />
                     </div>
                   )}
