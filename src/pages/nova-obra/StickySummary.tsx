@@ -1,4 +1,4 @@
-import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle, Save } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User, MapPin, Check, Circle, Save, HeartPulse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { FormData } from './types';
@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useMemo } from 'react';
 
 interface StickySummaryProps {
   formData: FormData;
@@ -85,6 +86,18 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
   const hasSchedule = !!formData.planned_start_date || !!formData.planned_end_date || formData.is_project_phase;
   const hasFinancial = !!formData.contract_value;
   const hasCustomer = !!formData.customer_name;
+
+  // Health score preview based on filled data
+  const healthPreview = useMemo(() => {
+    const completeness = [hasProject, hasSchedule, hasFinancial, hasCustomer].filter(Boolean).length;
+    const pct = Math.round((completeness / 4) * 100);
+    const missingFields: string[] = [];
+    if (!hasProject) missingFields.push('Dados básicos');
+    if (!hasSchedule) missingFields.push('Cronograma');
+    if (!hasFinancial) missingFields.push('Orçamento');
+    if (!hasCustomer) missingFields.push('Cliente');
+    return { pct, missingFields };
+  }, [hasProject, hasSchedule, hasFinancial, hasCustomer]);
 
   const handleSaveDraft = () => {
     toast.success('Rascunho salvo! Você pode continuar depois.');
@@ -167,6 +180,40 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
           <p className="font-medium text-foreground">{formData.customer_name}</p>
           {formData.customer_email && <p>{formData.customer_email}</p>}
         </Section>
+        {/* Health Preview */}
+        <div className="rounded-lg border border-border/50 bg-muted/20 p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <HeartPulse className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Completude
+            </span>
+            <span className={cn(
+              'ml-auto text-sm font-bold tabular-nums',
+              healthPreview.pct === 100 ? 'text-[hsl(var(--success))]' :
+              healthPreview.pct >= 50 ? 'text-[hsl(var(--warning))]' :
+              'text-destructive',
+            )}>
+              {healthPreview.pct}%
+            </span>
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className={cn(
+                'h-full rounded-full transition-all',
+                healthPreview.pct === 100 ? 'bg-[hsl(var(--success))]' :
+                healthPreview.pct >= 50 ? 'bg-[hsl(var(--warning))]' :
+                'bg-destructive',
+              )}
+              style={{ width: `${healthPreview.pct}%` }}
+            />
+          </div>
+          {healthPreview.missingFields.length > 0 && (
+            <p className="text-[10px] text-muted-foreground/70">
+              Faltam: {healthPreview.missingFields.join(', ')}
+            </p>
+          )}
+        </div>
+
         {/* Save Draft Button */}
         <Button
           variant="outline"

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertTriangle, Clock, CalendarX, CheckCircle } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
+import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
@@ -109,6 +110,11 @@ function ProjectCard({
           {statusLabels[project.status] ?? project.status}
         </Badge>
       </div>
+
+      {/* Health breakdown mini-bars */}
+      {summary && (
+        <HealthScoreBreakdown project={summary} className="px-1" />
+      )}
 
       {/* Row 2: Delivery date — prominent */}
       {plannedEnd && (

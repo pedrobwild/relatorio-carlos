@@ -5,6 +5,7 @@ import {
   AlertTriangle, CalendarX, CheckCircle, Clock, ChevronRight,
 } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
+import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
@@ -124,6 +125,11 @@ function MobileProjectRow({
           <p className="text-[11px] text-muted-foreground truncate leading-tight">
             {[project.customer_name, project.unit_name].filter(Boolean).join(' · ')}
           </p>
+        )}
+
+        {/* Row 2.5: Health breakdown mini-bars */}
+        {summary && (
+          <HealthScoreBreakdown project={summary} />
         )}
 
         {/* Row 3: Progress bar + delivery + alerts */}
