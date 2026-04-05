@@ -33,8 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
-import type { ProjectWithCustomer } from '@/infra/repositories';
-import { projectsRepo } from '@/infra/repositories';
+import { projectsRepo, type ProjectWithCustomer } from '@/infra/repositories';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
