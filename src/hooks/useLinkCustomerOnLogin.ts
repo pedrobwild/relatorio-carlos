@@ -68,7 +68,7 @@ export function useLinkCustomerOnLogin(user: User | null) {
           await supabase
             .from('project_members')
             .upsert(
-              { project_id: proj.project_id, user_id: user.id, role: 'viewer' as any },
+              { project_id: proj.project_id, user_id: user.id, role: 'viewer' },
               { onConflict: 'project_id,user_id' }
             );
         }
