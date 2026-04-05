@@ -293,6 +293,14 @@ const App = () => (
               }
             />
             <Route
+              path="/obra/:projectId/nao-conformidades"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<NaoConformidades />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
               path="/obra/:projectId/dados-cliente"
               element={
                 <StaffRoute>
