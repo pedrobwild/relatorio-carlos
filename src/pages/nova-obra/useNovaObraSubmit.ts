@@ -66,7 +66,7 @@ export function useNovaObraSubmit() {
         cep: formData.cep.trim() || null,
         planned_start_date: formData.planned_start_date || null,
         planned_end_date: formData.planned_end_date || null,
-        contract_signing_date: formData.contract_signing_date || null,
+        contract_signing_date: formData.contract_signed_at || formData.contract_signing_date || null,
         contract_value: formData.contract_value ? parseFloat(formData.contract_value) : null,
         created_by: user.id,
         is_project_phase: formData.is_project_phase,
