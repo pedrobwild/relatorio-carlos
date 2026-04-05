@@ -30,7 +30,8 @@ const filters: { value: FilterValue; label: string; dot?: string }[] = [
 
 export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [filter, setFilter] = useState<FilterValue>('all');
-  const [detailTask, setDetailTask] = useState<ObraTask | null>(null);
+  const navigate = useNavigate();
+  const { projectId } = useProjectNavigation();
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
