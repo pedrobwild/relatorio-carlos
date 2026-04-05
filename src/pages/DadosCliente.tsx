@@ -95,6 +95,15 @@ export default function DadosCliente() {
 
   const handleSave = async () => {
     if (!projectId) return;
+    // Validate CPF/RG before saving
+    if (customer?.cpf && !isValidCpf(customer.cpf)) {
+      toast.error('CPF inválido. Corrija antes de salvar.');
+      return;
+    }
+    if (customer?.rg && !isValidRg(customer.rg)) {
+      toast.error('RG inválido. Corrija antes de salvar.');
+      return;
+    }
     setSaving(true);
     try {
       if (customer) {
