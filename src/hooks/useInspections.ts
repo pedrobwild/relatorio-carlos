@@ -10,15 +10,10 @@ import {
   completeInspection,
 } from '@/infra/repositories/inspectionsRepository';
 
-// Re-export types from repository for consumer convenience
-export type {
-  Inspection,
-  InspectionItem,
-  InspectionStatus,
-  InspectionItemResult,
-} from '@/infra/repositories/inspectionsRepository';
-
+// Re-export types and import for local use
+export type { InspectionItem, InspectionStatus } from '@/infra/repositories/inspectionsRepository';
 import type { Inspection, InspectionItemResult } from '@/infra/repositories/inspectionsRepository';
+export type { Inspection, InspectionItemResult } from '@/infra/repositories/inspectionsRepository';
 
 // ── Queries ──
 

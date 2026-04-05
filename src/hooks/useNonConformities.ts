@@ -10,15 +10,10 @@ import {
   transitionNcStatus,
 } from '@/infra/repositories/ncsRepository';
 
-// Re-export types from repository for consumer convenience
-export type {
-  NonConformity,
-  NcHistoryEntry,
-  NcSeverity,
-  NcStatus,
-} from '@/infra/repositories/ncsRepository';
-
+// Re-export types and import for local use
+export type { NcHistoryEntry } from '@/infra/repositories/ncsRepository';
 import type { NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+export type { NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
 
 // ── Queries ──
 

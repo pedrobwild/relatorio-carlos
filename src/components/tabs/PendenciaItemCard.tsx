@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { AlertTriangle, Clock, FileSignature, Receipt, Palette, Ruler, ShoppingCart, Calendar, ChevronRight, CheckCircle2, MessageSquareWarning } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { ptBR } from "date-fns/locale";
 import { usePendencias, getStatus, getDaysOverdue, getDaysRemaining, type PendingType, type PendingStatus, type PendingItem } from "@/hooks/usePendencias";
 import { ApprovalDialog } from "@/components/pendencias/ApprovalDialog";
 import { cn } from "@/lib/utils";
-import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 // ---- helpers ----
