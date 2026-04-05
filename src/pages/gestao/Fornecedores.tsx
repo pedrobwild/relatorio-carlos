@@ -24,15 +24,25 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
+import {
+  SUPPLIER_TYPE_LABELS,
+  SUPPLIER_TYPES,
+  getSubcategoriesByType,
+  isValidSupplierSubcategory,
+  type SupplierType,
+} from "@/constants/supplierCategories";
 
-type SupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
+// Legacy enum kept for backward compat with DB column `categoria`
+type LegacySupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
 
 interface Supplier {
   id: string;
   nome: string;
   razao_social: string | null;
   cnpj_cpf: string | null;
-  categoria: SupplierCategory;
+  categoria: LegacySupplierCategory;
+  supplier_type: string | null;
+  supplier_subcategory: string | null;
   telefone: string | null;
   email: string | null;
   site: string | null;
@@ -49,7 +59,7 @@ interface Supplier {
   created_at: string;
 }
 
-const CATEGORY_LABELS: Record<SupplierCategory, string> = {
+const LEGACY_CATEGORY_LABELS: Record<LegacySupplierCategory, string> = {
   materiais: "Materiais",
   mao_de_obra: "Mão de Obra",
   servicos: "Serviços",
@@ -57,19 +67,13 @@ const CATEGORY_LABELS: Record<SupplierCategory, string> = {
   outros: "Outros",
 };
 
-const CATEGORY_COLORS: Record<SupplierCategory, string> = {
-  materiais: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  mao_de_obra: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  servicos: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  equipamentos: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  outros: "bg-muted text-muted-foreground",
-};
-
 const emptyForm = (): Partial<Supplier> => ({
   nome: "",
   razao_social: "",
   cnpj_cpf: "",
   categoria: "outros",
+  supplier_type: null,
+  supplier_subcategory: null,
   telefone: "",
   email: "",
   site: "",
@@ -164,9 +168,28 @@ export default function Fornecedores() {
     setDialogOpen(true);
   };
 
+  const handleSupplierTypeChange = (value: string) => {
+    setForm((p) => {
+      const newForm = { ...p, supplier_type: value };
+      // Reset subcategory if it's invalid for the new type
+      if (p.supplier_subcategory && !isValidSupplierSubcategory(value, p.supplier_subcategory)) {
+        newForm.supplier_subcategory = null;
+      }
+      return newForm;
+    });
+  };
+
   const handleSave = () => {
     if (!form.nome?.trim()) {
       toast({ title: "Nome é obrigatório", variant: "destructive" });
+      return;
+    }
+    if (!form.supplier_type) {
+      toast({ title: "Categoria é obrigatória", variant: "destructive" });
+      return;
+    }
+    if (!form.supplier_subcategory) {
+      toast({ title: "Subcategoria é obrigatória", variant: "destructive" });
       return;
     }
     const payload = { ...form };
@@ -177,14 +200,18 @@ export default function Fornecedores() {
 
   const filtered = suppliers.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
-    if (categoryFilter !== "all" && s.categoria !== categoryFilter) return false;
+    if (categoryFilter !== "all") {
+      // Filter by new supplier_type when set
+      if (s.supplier_type !== categoryFilter && s.categoria !== categoryFilter) return false;
+    }
     if (search) {
       const q = search.toLowerCase();
       return (
         s.nome.toLowerCase().includes(q) ||
         s.produtos_servicos?.toLowerCase().includes(q) ||
         s.cnpj_cpf?.toLowerCase().includes(q) ||
-        s.cidade?.toLowerCase().includes(q)
+        s.cidade?.toLowerCase().includes(q) ||
+        s.supplier_subcategory?.toLowerCase().includes(q)
       );
     }
     return true;
@@ -203,6 +230,21 @@ export default function Fornecedores() {
         <span className="ml-1 text-xs text-muted-foreground">{rating.toFixed(1)}</span>
       </div>
     );
+  };
+
+  /** Display the best available category label for a supplier */
+  const getCategoryDisplay = (s: Supplier) => {
+    if (s.supplier_type && s.supplier_subcategory) {
+      return {
+        label: s.supplier_subcategory,
+        type: SUPPLIER_TYPE_LABELS[s.supplier_type as SupplierType] || s.supplier_type,
+      };
+    }
+    // Fallback to legacy
+    return {
+      label: LEGACY_CATEGORY_LABELS[s.categoria] || s.categoria,
+      type: null,
+    };
   };
 
   return (
@@ -241,8 +283,10 @@ export default function Fornecedores() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas categorias</SelectItem>
-                  {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  {SUPPLIER_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {SUPPLIER_TYPE_LABELS[type]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -272,31 +316,24 @@ export default function Fornecedores() {
         <Card>
           <CardContent className="pt-4 pb-4">
             <p className="text-xs text-muted-foreground">Ativos</p>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-2xl font-bold text-[hsl(var(--success))]">
               {suppliers.filter((s) => s.status === "ativo").length}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground">Categorias</p>
+            <p className="text-xs text-muted-foreground">Prestadores</p>
             <p className="text-2xl font-bold">
-              {new Set(suppliers.map((s) => s.categoria)).size}
+              {suppliers.filter((s) => s.supplier_type === "prestadores").length}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-muted-foreground">Avaliação média</p>
+            <p className="text-xs text-muted-foreground">Produtos</p>
             <p className="text-2xl font-bold">
-              {suppliers.filter((s) => s.nota_avaliacao).length
-                ? (
-                    suppliers
-                      .filter((s) => s.nota_avaliacao)
-                      .reduce((a, s) => a + (s.nota_avaliacao || 0), 0) /
-                    suppliers.filter((s) => s.nota_avaliacao).length
-                  ).toFixed(1)
-                : "—"}
+              {suppliers.filter((s) => s.supplier_type === "produtos").length}
             </p>
           </CardContent>
         </Card>
@@ -332,71 +369,79 @@ export default function Fornecedores() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((s) => (
-                  <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/gestao/fornecedores/${s.id}`)}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{s.nome}</p>
-                        {s.produtos_servicos && (
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {s.produtos_servicos}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Badge variant="secondary" className={CATEGORY_COLORS[s.categoria]}>
-                        {CATEGORY_LABELS[s.categoria]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <div className="flex flex-col gap-0.5 text-xs">
-                        {s.telefone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" /> {s.telefone}
+                {filtered.map((s) => {
+                  const catDisplay = getCategoryDisplay(s);
+                  return (
+                    <TableRow key={s.id} className="cursor-pointer" onClick={() => navigate(`/gestao/fornecedores/${s.id}`)}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{s.nome}</p>
+                          {s.produtos_servicos && (
+                            <p className="text-xs text-muted-foreground line-clamp-1">
+                              {s.produtos_servicos}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="flex flex-col gap-0.5">
+                          <Badge variant="secondary" className="w-fit">
+                            {catDisplay.label}
+                          </Badge>
+                          {catDisplay.type && (
+                            <span className="text-[10px] text-muted-foreground">{catDisplay.type}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="flex flex-col gap-0.5 text-xs">
+                          {s.telefone && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" /> {s.telefone}
+                            </span>
+                          )}
+                          {s.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" /> {s.email}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {(s.cidade || s.estado) && (
+                          <span className="flex items-center gap-1 text-xs">
+                            <MapPin className="h-3 w-3" />
+                            {[s.cidade, s.estado].filter(Boolean).join(", ")}
                           </span>
                         )}
-                        {s.email && (
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" /> {s.email}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {(s.cidade || s.estado) && (
-                        <span className="flex items-center gap-1 text-xs">
-                          <MapPin className="h-3 w-3" />
-                          {[s.cidade, s.estado].filter(Boolean).join(", ")}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm">
-                      {s.prazo_entrega_dias ? `${s.prazo_entrega_dias}d` : "—"}
-                    </TableCell>
-                    <TableCell>{renderStars(s.nota_avaliacao)}</TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant={s.status === "ativo" ? "default" : "secondary"}>
-                        {s.status === "ativo" ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(s)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive"
-                          onClick={() => setDeleteConfirm(s.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm">
+                        {s.prazo_entrega_dias ? `${s.prazo_entrega_dias}d` : "—"}
+                      </TableCell>
+                      <TableCell>{renderStars(s.nota_avaliacao)}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant={s.status === "ativo" ? "default" : "secondary"}>
+                          {s.status === "ativo" ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(s)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={() => setDeleteConfirm(s.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -438,7 +483,7 @@ export default function Fornecedores() {
               </div>
             </div>
 
-            {/* Row 2 */}
+            {/* Row 2: CNPJ + Taxonomy */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label>CNPJ/CPF</Label>
@@ -448,19 +493,46 @@ export default function Fornecedores() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Categoria</Label>
+                <Label>Categoria *</Label>
                 <Select
-                  value={form.categoria || "outros"}
-                  onValueChange={(v) => setForm((p) => ({ ...p, categoria: v as SupplierCategory }))}
+                  value={form.supplier_type || ""}
+                  onValueChange={handleSupplierTypeChange}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    {SUPPLIER_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {SUPPLIER_TYPE_LABELS[type]}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label>Subcategoria *</Label>
+                <Select
+                  value={form.supplier_subcategory || ""}
+                  onValueChange={(v) => setForm((p) => ({ ...p, supplier_subcategory: v }))}
+                  disabled={!form.supplier_type}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={form.supplier_type ? "Selecione..." : "Escolha a categoria primeiro"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSubcategoriesByType(form.supplier_type).map((sub) => (
+                      <SelectItem key={sub} value={sub}>
+                        {sub}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label>Status</Label>
                 <Select

@@ -1109,6 +1109,8 @@ export type Database = {
           razao_social: string | null
           site: string | null
           status: string
+          supplier_subcategory: string | null
+          supplier_type: string | null
           telefone: string | null
           updated_at: string
         }
@@ -1132,6 +1134,8 @@ export type Database = {
           razao_social?: string | null
           site?: string | null
           status?: string
+          supplier_subcategory?: string | null
+          supplier_type?: string | null
           telefone?: string | null
           updated_at?: string
         }
@@ -1155,6 +1159,8 @@ export type Database = {
           razao_social?: string | null
           site?: string | null
           status?: string
+          supplier_subcategory?: string | null
+          supplier_type?: string | null
           telefone?: string | null
           updated_at?: string
         }

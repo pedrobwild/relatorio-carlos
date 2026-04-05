@@ -1,6 +1,7 @@
 import { Clock, Package, Truck, CheckCircle2, X } from 'lucide-react';
 import { PurchaseStatus } from '@/hooks/useProjectPurchases';
 import type { PurchaseInput } from '@/hooks/useProjectPurchases';
+import { getAllSupplierSubcategories, SUPPLIER_SUBCATEGORIES_BY_TYPE } from '@/constants/supplierCategories';
 
 export const statusConfig: Record<PurchaseStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: { label: 'Pendente', color: 'bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30', icon: Clock },
@@ -23,30 +24,25 @@ export const emptyPurchase: Partial<PurchaseInput> = {
   notes: '',
 };
 
-export const ITEM_CATEGORIES = [
-  'Eletrodomésticos',
-  'Móveis',
-  'Iluminação',
-  'Vidros e Espelhos',
-  'Acessórios',
-  'Revestimentos',
-  'Pisos',
-  'Enxoval',
-] as const;
+/**
+ * Purchase-item categories — derived from the central supplier taxonomy.
+ *
+ * These are used for the `category` field on `project_purchases`.
+ * They classify the *item being purchased*, not the supplier itself.
+ *
+ * The supplier taxonomy (supplier_type + supplier_subcategory) lives in
+ * `src/constants/supplierCategories.ts` and is the single source of truth.
+ */
 
-export const SERVICE_CATEGORIES = [
-  'Técnico de Ar-Condicionado',
-  'Gesseiro',
-  'Pintor',
-  'Instalador de Piso',
-  'Serviços Gerais',
-  'Eletricista',
-  'Marcenaria',
-  'Empreiteira',
-] as const;
+/** @deprecated Use SUPPLIER_SUBCATEGORIES_BY_TYPE['produtos'] instead */
+export const ITEM_CATEGORIES = SUPPLIER_SUBCATEGORIES_BY_TYPE.produtos;
 
-export const ALL_CATEGORIES = [...ITEM_CATEGORIES, ...SERVICE_CATEGORIES] as const;
+/** @deprecated Use SUPPLIER_SUBCATEGORIES_BY_TYPE['prestadores'] instead */
+export const SERVICE_CATEGORIES = SUPPLIER_SUBCATEGORIES_BY_TYPE.prestadores;
+
+/** @deprecated Use getAllSupplierSubcategories() instead */
+export const ALL_CATEGORIES = getAllSupplierSubcategories();
 
 export function isServiceCategory(category: string): boolean {
-  return (SERVICE_CATEGORIES as readonly string[]).includes(category);
+  return (SUPPLIER_SUBCATEGORIES_BY_TYPE.prestadores as readonly string[]).includes(category);
 }
