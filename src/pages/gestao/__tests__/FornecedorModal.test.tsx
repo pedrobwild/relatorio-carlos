@@ -3,12 +3,9 @@
  *
  * Covers the two-level taxonomy (supplier_type + supplier_subcategory)
  * in the create and edit dialog inside Fornecedores.tsx.
- *
- * Strategy: render the page with mocked Supabase, interact with the
- * dialog, and assert on form state, validation, and dependent selects.
  */
 
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -22,31 +19,29 @@ import {
 // ── Mocks ────────────────────────────────────────────────────
 
 const mockInsert = vi.fn().mockResolvedValue({ data: null, error: null });
-const mockUpdate = vi.fn().mockResolvedValue({ data: null, error: null });
-const mockDelete = vi.fn().mockResolvedValue({ data: null, error: null });
+const mockUpdate = vi.fn();
+const mockDelete = vi.fn();
 
-const mockFrom = vi.fn((table: string) => {
-  const chain = {
-    select: vi.fn().mockReturnValue(chain),
-    order: vi.fn().mockReturnValue(chain),
-    eq: vi.fn().mockReturnValue(chain),
+function createMockChain(data: any[] = []) {
+  const chain: any = {
+    select: vi.fn(() => chain),
+    order: vi.fn().mockResolvedValue({ data, error: null }),
+    eq: vi.fn(() => chain),
     single: vi.fn().mockResolvedValue({ data: null, error: null }),
     insert: mockInsert,
-    update: (...args: any[]) => {
-      mockUpdate(...args);
+    update: vi.fn((payload: any) => {
+      mockUpdate(payload);
       return { eq: vi.fn().mockResolvedValue({ data: null, error: null }) };
-    },
-    delete: () => {
+    }),
+    delete: vi.fn(() => {
       mockDelete();
       return { eq: vi.fn().mockResolvedValue({ data: null, error: null }) };
-    },
-    then: (resolve: any) => resolve({ data: [], error: null }),
+    }),
   };
-  // Make the chain thenable so react-query awaits it
-  (chain as any)[Symbol.toStringTag] = 'Promise';
-  chain.order = vi.fn().mockResolvedValue({ data: [], error: null });
   return chain;
-});
+}
+
+const mockFrom = vi.fn((_table: string) => createMockChain());
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -56,7 +51,7 @@ vi.mock('@/integrations/supabase/client', () => ({
         data: { subscription: { unsubscribe: vi.fn() } },
       })),
     },
-    from: (...args: any[]) => mockFrom(...args),
+    from: (table: string) => mockFrom(table),
   },
 }));
 
@@ -65,10 +60,9 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-// Mock useNavigate
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
-  return { ...actual, useNavigate: () => vi.fn() };
+  return { ...(actual as any), useNavigate: () => vi.fn() };
 });
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -87,13 +81,51 @@ function createWrapper() {
 async function openNewDialog(user: ReturnType<typeof userEvent.setup>) {
   const btn = await screen.findByRole('button', { name: /novo fornecedor/i });
   await user.click(btn);
-  // Wait for dialog to appear
   return screen.findByRole('dialog');
 }
 
-function getDialogContent() {
-  return screen.getByRole('dialog');
-}
+// ── Existing supplier fixtures ───────────────────────────────
+
+const classifiedSupplier = {
+  id: 'sup-1',
+  nome: 'Marcenaria Bela',
+  razao_social: null,
+  cnpj_cpf: null,
+  categoria: 'mao_de_obra',
+  supplier_type: 'prestadores',
+  supplier_subcategory: 'Marcenaria',
+  telefone: '11999999999',
+  email: 'marc@test.com',
+  site: null,
+  cidade: 'São Paulo',
+  estado: 'SP',
+  cep: null,
+  endereco: null,
+  produtos_servicos: 'Móveis sob medida',
+  condicoes_pagamento: null,
+  prazo_entrega_dias: 30,
+  nota_avaliacao: 4.5,
+  observacoes: null,
+  status: 'ativo',
+  created_at: '2025-01-01T00:00:00Z',
+};
+
+const legacySupplier = {
+  ...classifiedSupplier,
+  id: 'sup-legacy',
+  nome: 'Fornecedor Antigo',
+  categoria: 'materiais',
+  supplier_type: null,
+  supplier_subcategory: null,
+  telefone: null,
+  email: null,
+  cidade: null,
+  estado: null,
+  produtos_servicos: null,
+  prazo_entrega_dias: null,
+  nota_avaliacao: null,
+  created_at: '2024-01-01T00:00:00Z',
+};
 
 // ── Tests ────────────────────────────────────────────────────
 
@@ -103,63 +135,50 @@ describe('Supplier Modal — Create', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     user = userEvent.setup();
-    // Default: return empty suppliers list
-    mockFrom.mockImplementation(() => ({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [], error: null }),
-      insert: mockInsert,
-      update: mockUpdate,
-      delete: mockDelete,
-    }));
+    mockFrom.mockImplementation(() => createMockChain([]));
   });
 
   it('renders Categoria and Subcategoria fields', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
-
+    const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('Categoria *')).toBeInTheDocument();
     expect(within(dialog).getByText('Subcategoria *')).toBeInTheDocument();
   });
 
-  it('subcategoria starts empty and disabled', async () => {
+  it('subcategoria select starts disabled', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
-
-    // The subcategory trigger should show placeholder text
-    const subcatTrigger = within(dialog).getAllByRole('combobox')[1]; // second select
-    expect(subcatTrigger).toHaveAttribute('data-disabled', '');
+    const dialog = screen.getByRole('dialog');
+    const triggers = within(dialog).getAllByRole('combobox');
+    // Subcategory is the second combobox in the form (after categoria, skipping filter selects)
+    // Find the one with "Escolha a categoria primeiro" placeholder
+    const subTrigger = triggers.find(t => t.textContent?.includes('Escolha a categoria'));
+    expect(subTrigger).toBeTruthy();
+    expect(subTrigger).toHaveAttribute('data-disabled', '');
   });
 
   it('shows only Prestadores subcategories when Prestadores is selected', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
-
-    // Click Categoria select
+    const dialog = screen.getByRole('dialog');
     const triggers = within(dialog).getAllByRole('combobox');
-    const categoriaTrigger = triggers.find(t => 
-      t.textContent?.includes('Selecione') || t.textContent === ''
-    ) || triggers[0];
 
-    await user.click(categoriaTrigger);
+    // Find the Categoria combobox (contains "Selecione...")
+    const catTrigger = triggers.find(t => t.textContent?.includes('Selecione'));
+    await user.click(catTrigger!);
+    await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores }));
 
-    // Select Prestadores
-    const prestadoresOption = await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores });
-    await user.click(prestadoresOption);
+    // Now open subcategory
+    const updatedTriggers = within(dialog).getAllByRole('combobox');
+    const subTrigger = updatedTriggers.find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    await user.click(subTrigger!);
 
-    // Now click subcategory
-    // After selecting type, subcategory should be enabled
-    const subTrigger = within(dialog).getAllByRole('combobox')[1];
-    await user.click(subTrigger);
-
-    // Verify Prestadores subcategories are visible
+    // Should show Prestadores subcategories
     for (const sub of SUPPLIER_SUBCATEGORIES_BY_TYPE.prestadores.slice(0, 3)) {
       expect(await screen.findByRole('option', { name: sub })).toBeInTheDocument();
     }
-
-    // Verify Produtos subcategories are NOT visible
+    // Should NOT show Produtos subcategories
     for (const sub of SUPPLIER_SUBCATEGORIES_BY_TYPE.produtos.slice(0, 2)) {
       expect(screen.queryByRole('option', { name: sub })).not.toBeInTheDocument();
     }
@@ -168,16 +187,16 @@ describe('Supplier Modal — Create', () => {
   it('shows only Produtos subcategories when Produtos is selected', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
-
+    const dialog = screen.getByRole('dialog');
     const triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[0]);
 
-    const produtosOption = await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.produtos });
-    await user.click(produtosOption);
+    const catTrigger = triggers.find(t => t.textContent?.includes('Selecione'));
+    await user.click(catTrigger!);
+    await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.produtos }));
 
-    const subTrigger = within(dialog).getAllByRole('combobox')[1];
-    await user.click(subTrigger);
+    const updatedTriggers = within(dialog).getAllByRole('combobox');
+    const subTrigger = updatedTriggers.find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    await user.click(subTrigger!);
 
     for (const sub of SUPPLIER_SUBCATEGORIES_BY_TYPE.produtos.slice(0, 3)) {
       expect(await screen.findByRole('option', { name: sub })).toBeInTheDocument();
@@ -188,20 +207,14 @@ describe('Supplier Modal — Create', () => {
     const { toast } = await import('@/hooks/use-toast');
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
+    const dialog = screen.getByRole('dialog');
 
-    // Fill name only
-    const nameInput = within(dialog).getByRole('textbox', { name: '' }); // first text input
     const inputs = within(dialog).getAllByRole('textbox');
     await user.type(inputs[0], 'Fornecedor Teste');
 
-    // Click save
-    const saveBtn = within(dialog).getByRole('button', { name: /cadastrar/i });
-    await user.click(saveBtn);
+    await user.click(within(dialog).getByRole('button', { name: /cadastrar/i }));
 
-    expect(toast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Categoria é obrigatória' })
-    );
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Categoria é obrigatória' }));
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
@@ -209,49 +222,42 @@ describe('Supplier Modal — Create', () => {
     const { toast } = await import('@/hooks/use-toast');
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
+    const dialog = screen.getByRole('dialog');
 
-    // Fill name
     const inputs = within(dialog).getAllByRole('textbox');
     await user.type(inputs[0], 'Fornecedor Teste');
 
-    // Select category but not subcategory
-    const triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[0]);
-    const option = await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores });
-    await user.click(option);
+    // Select category only
+    const catTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione'));
+    await user.click(catTrigger!);
+    await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores }));
 
-    const saveBtn = within(dialog).getByRole('button', { name: /cadastrar/i });
-    await user.click(saveBtn);
+    await user.click(within(dialog).getByRole('button', { name: /cadastrar/i }));
 
-    expect(toast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Subcategoria é obrigatória' })
-    );
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Subcategoria é obrigatória' }));
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it('submits successfully with valid Categoria + Subcategoria', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
+    const dialog = screen.getByRole('dialog');
 
     // Fill name
     const inputs = within(dialog).getAllByRole('textbox');
     await user.type(inputs[0], 'Marceneiro Top');
 
     // Select Prestadores
-    const triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[0]);
+    const catTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione'));
+    await user.click(catTrigger!);
     await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores }));
 
     // Select Marcenaria
-    // Re-query since DOM may have changed
-    const updatedTriggers = within(dialog).getAllByRole('combobox');
-    await user.click(updatedTriggers[1]);
+    const subTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    await user.click(subTrigger!);
     await user.click(await screen.findByRole('option', { name: 'Marcenaria' }));
 
-    const saveBtn = within(dialog).getByRole('button', { name: /cadastrar/i });
-    await user.click(saveBtn);
+    await user.click(within(dialog).getByRole('button', { name: /cadastrar/i }));
 
     await waitFor(() => {
       expect(mockInsert).toHaveBeenCalledWith(
@@ -271,136 +277,94 @@ describe('Supplier Modal — Dependent Reset', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     user = userEvent.setup();
-    mockFrom.mockImplementation(() => ({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [], error: null }),
-      insert: mockInsert,
-      update: mockUpdate,
-      delete: mockDelete,
-    }));
+    mockFrom.mockImplementation(() => createMockChain([]));
   });
 
   it('resets subcategoria when switching from Prestadores to Produtos', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
+    const dialog = screen.getByRole('dialog');
 
     // Select Prestadores
-    let triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[0]);
+    let catTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione'));
+    await user.click(catTrigger!);
     await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores }));
 
     // Select Marcenaria
-    triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[1]);
+    let subTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    await user.click(subTrigger!);
     await user.click(await screen.findByRole('option', { name: 'Marcenaria' }));
 
-    // Verify Marcenaria is shown in the trigger
-    triggers = within(dialog).getAllByRole('combobox');
-    expect(triggers[1].textContent).toContain('Marcenaria');
+    // Verify Marcenaria is shown
+    let triggers = within(dialog).getAllByRole('combobox');
+    const marcenariaShown = triggers.some(t => t.textContent?.includes('Marcenaria'));
+    expect(marcenariaShown).toBe(true);
 
-    // Now switch to Produtos
-    await user.click(triggers[0]);
+    // Switch to Produtos
+    catTrigger = triggers.find(t => t.textContent?.includes(SUPPLIER_TYPE_LABELS.prestadores));
+    await user.click(catTrigger!);
     await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.produtos }));
 
-    // Subcategory should have been reset (Marcenaria is invalid for Produtos)
+    // Marcenaria should be gone
     triggers = within(dialog).getAllByRole('combobox');
-    expect(triggers[1].textContent).not.toContain('Marcenaria');
+    const stillShowsMarcenaria = triggers.some(t => t.textContent?.includes('Marcenaria'));
+    expect(stillShowsMarcenaria).toBe(false);
   });
 
-  it('preserves subcategoria if it is valid for the new category', async () => {
-    // Edge case: if somehow a subcategory existed in both types.
-    // Currently none overlap, so switching always resets.
-    // This test just ensures no crash on the switch.
+  it('switching back does not leave inconsistent state', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
+    const dialog = screen.getByRole('dialog');
 
-    // Select Produtos then switch to Prestadores
-    let triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[0]);
+    // Select Produtos > Eletrodomésticos
+    let catTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione'));
+    await user.click(catTrigger!);
     await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.produtos }));
 
-    triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[1]);
+    let subTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    await user.click(subTrigger!);
     await user.click(await screen.findByRole('option', { name: 'Eletrodomésticos' }));
 
     // Switch to Prestadores
-    triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[0]);
+    let triggers = within(dialog).getAllByRole('combobox');
+    catTrigger = triggers.find(t => t.textContent?.includes(SUPPLIER_TYPE_LABELS.produtos));
+    await user.click(catTrigger!);
     await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores }));
 
-    // Eletrodomésticos should have been reset
+    // Eletrodomésticos should be cleared
     triggers = within(dialog).getAllByRole('combobox');
-    expect(triggers[1].textContent).not.toContain('Eletrodomésticos');
+    expect(triggers.some(t => t.textContent?.includes('Eletrodomésticos'))).toBe(false);
+
+    // Should be able to submit with new valid subcategory
+    subTrigger = triggers.find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    expect(subTrigger).toBeTruthy();
   });
 });
 
 describe('Supplier Modal — Edit', () => {
   let user: ReturnType<typeof userEvent.setup>;
 
-  const existingSupplier = {
-    id: 'sup-1',
-    nome: 'Marcenaria Bela',
-    razao_social: null,
-    cnpj_cpf: null,
-    categoria: 'mao_de_obra' as const,
-    supplier_type: 'prestadores',
-    supplier_subcategory: 'Marcenaria',
-    telefone: '11999999999',
-    email: 'marc@test.com',
-    site: null,
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: null,
-    endereco: null,
-    produtos_servicos: 'Móveis sob medida',
-    condicoes_pagamento: null,
-    prazo_entrega_dias: 30,
-    nota_avaliacao: 4.5,
-    observacoes: null,
-    status: 'ativo',
-    created_at: '2025-01-01T00:00:00Z',
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     user = userEvent.setup();
-    mockFrom.mockImplementation(() => ({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [existingSupplier], error: null }),
-      insert: mockInsert,
-      update: (...args: any[]) => {
-        mockUpdate(...args);
-        return { eq: vi.fn().mockResolvedValue({ data: null, error: null }) };
-      },
-      delete: () => {
-        mockDelete();
-        return { eq: vi.fn().mockResolvedValue({ data: null, error: null }) };
-      },
-    }));
+    mockFrom.mockImplementation(() => createMockChain([classifiedSupplier]));
   });
 
-  it('loads saved supplier_type and supplier_subcategory in edit mode', async () => {
+  it('loads saved supplier_type and supplier_subcategory', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
 
-    // Wait for the table to render with the supplier
-    const editBtn = await screen.findByRole('button', { name: '' }); // pencil icon
-    // Find the edit button within the row
     const rows = await screen.findAllByRole('row');
     const supplierRow = rows.find(r => r.textContent?.includes('Marcenaria Bela'));
     expect(supplierRow).toBeTruthy();
 
-    const editButton = within(supplierRow!).getAllByRole('button')[0]; // first button = edit
+    const editButton = within(supplierRow!).getAllByRole('button')[0];
     await user.click(editButton);
 
     const dialog = await screen.findByRole('dialog');
     const triggers = within(dialog).getAllByRole('combobox');
 
-    // Category trigger should show Prestadores
-    expect(triggers[0].textContent).toContain(SUPPLIER_TYPE_LABELS.prestadores);
-    // Subcategory trigger should show Marcenaria
-    expect(triggers[1].textContent).toContain('Marcenaria');
+    expect(triggers.some(t => t.textContent?.includes(SUPPLIER_TYPE_LABELS.prestadores))).toBe(true);
+    expect(triggers.some(t => t.textContent?.includes('Marcenaria'))).toBe(true);
   });
 
   it('submits updated values correctly', async () => {
@@ -408,22 +372,21 @@ describe('Supplier Modal — Edit', () => {
 
     const rows = await screen.findAllByRole('row');
     const supplierRow = rows.find(r => r.textContent?.includes('Marcenaria Bela'));
-    const editButton = within(supplierRow!).getAllByRole('button')[0];
-    await user.click(editButton);
+    await user.click(within(supplierRow!).getAllByRole('button')[0]);
 
     const dialog = await screen.findByRole('dialog');
-    
-    // Change to Produtos > Eletrodomésticos
-    const triggers = within(dialog).getAllByRole('combobox');
-    await user.click(triggers[0]);
+
+    // Change to Produtos
+    const catTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes(SUPPLIER_TYPE_LABELS.prestadores));
+    await user.click(catTrigger!);
     await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.produtos }));
 
-    const updatedTriggers = within(dialog).getAllByRole('combobox');
-    await user.click(updatedTriggers[1]);
+    // Select Eletrodomésticos
+    const subTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    await user.click(subTrigger!);
     await user.click(await screen.findByRole('option', { name: 'Eletrodomésticos' }));
 
-    const saveBtn = within(dialog).getByRole('button', { name: /salvar/i });
-    await user.click(saveBtn);
+    await user.click(within(dialog).getByRole('button', { name: /salvar/i }));
 
     await waitFor(() => {
       expect(mockUpdate).toHaveBeenCalledWith(
@@ -439,86 +402,41 @@ describe('Supplier Modal — Edit', () => {
 describe('Supplier Modal — Legacy Compatibility', () => {
   let user: ReturnType<typeof userEvent.setup>;
 
-  const legacySupplier = {
-    id: 'sup-legacy',
-    nome: 'Fornecedor Antigo',
-    razao_social: null,
-    cnpj_cpf: null,
-    categoria: 'materiais' as const,
-    supplier_type: null,
-    supplier_subcategory: null,
-    telefone: null,
-    email: null,
-    site: null,
-    cidade: null,
-    estado: null,
-    cep: null,
-    endereco: null,
-    produtos_servicos: null,
-    condicoes_pagamento: null,
-    prazo_entrega_dias: null,
-    nota_avaliacao: null,
-    observacoes: null,
-    status: 'ativo',
-    created_at: '2024-01-01T00:00:00Z',
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     user = userEvent.setup();
-    mockFrom.mockImplementation(() => ({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [legacySupplier], error: null }),
-      insert: mockInsert,
-      update: (...args: any[]) => {
-        mockUpdate(...args);
-        return { eq: vi.fn().mockResolvedValue({ data: null, error: null }) };
-      },
-      delete: () => {
-        mockDelete();
-        return { eq: vi.fn().mockResolvedValue({ data: null, error: null }) };
-      },
-    }));
+    mockFrom.mockImplementation(() => createMockChain([legacySupplier]));
   });
 
-  it('renders legacy supplier in the list without crashing', async () => {
+  it('renders legacy supplier without crashing', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     expect(await screen.findByText('Fornecedor Antigo')).toBeInTheDocument();
   });
 
-  it('opens edit for legacy supplier and shows empty taxonomy fields', async () => {
+  it('opens edit for legacy supplier and shows empty taxonomy', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
 
     const rows = await screen.findAllByRole('row');
     const legacyRow = rows.find(r => r.textContent?.includes('Fornecedor Antigo'));
-    expect(legacyRow).toBeTruthy();
-
-    const editButton = within(legacyRow!).getAllByRole('button')[0];
-    await user.click(editButton);
+    await user.click(within(legacyRow!).getAllByRole('button')[0]);
 
     const dialog = await screen.findByRole('dialog');
     const triggers = within(dialog).getAllByRole('combobox');
-
-    // Category should show placeholder (not selected)
-    expect(triggers[0].textContent).toContain('Selecione');
+    expect(triggers.some(t => t.textContent?.includes('Selecione'))).toBe(true);
   });
 
-  it('requires filling taxonomy before saving legacy supplier', async () => {
+  it('requires taxonomy before saving legacy supplier', async () => {
     const { toast } = await import('@/hooks/use-toast');
     render(<Fornecedores />, { wrapper: createWrapper() });
 
     const rows = await screen.findAllByRole('row');
     const legacyRow = rows.find(r => r.textContent?.includes('Fornecedor Antigo'));
-    const editButton = within(legacyRow!).getAllByRole('button')[0];
-    await user.click(editButton);
+    await user.click(within(legacyRow!).getAllByRole('button')[0]);
 
     const dialog = await screen.findByRole('dialog');
-    const saveBtn = within(dialog).getByRole('button', { name: /salvar/i });
-    await user.click(saveBtn);
+    await user.click(within(dialog).getByRole('button', { name: /salvar/i }));
 
-    expect(toast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Categoria é obrigatória' })
-    );
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Categoria é obrigatória' }));
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });
@@ -529,45 +447,32 @@ describe('Supplier Modal — Accessibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     user = userEvent.setup();
-    mockFrom.mockImplementation(() => ({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [], error: null }),
-      insert: mockInsert,
-      update: mockUpdate,
-      delete: mockDelete,
-    }));
+    mockFrom.mockImplementation(() => createMockChain([]));
   });
 
-  it('has associated labels for Categoria and Subcategoria', async () => {
+  it('has associated labels', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
-
-    // Labels should exist
+    const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('Categoria *')).toBeInTheDocument();
     expect(within(dialog).getByText('Subcategoria *')).toBeInTheDocument();
     expect(within(dialog).getByText('Nome *')).toBeInTheDocument();
   });
 
-  it('select triggers are keyboard-focusable', async () => {
+  it('comboboxes are keyboard-focusable', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-    const dialog = getDialogContent();
-
+    const dialog = screen.getByRole('dialog');
     const triggers = within(dialog).getAllByRole('combobox');
-    // All comboboxes should be focusable
     for (const trigger of triggers) {
       trigger.focus();
       expect(trigger).toHaveFocus();
     }
   });
 
-  it('dialog has proper title role', async () => {
+  it('dialog has proper heading', async () => {
     render(<Fornecedores />, { wrapper: createWrapper() });
     await openNewDialog(user);
-
-    const dialog = screen.getByRole('dialog');
-    // Should contain the dialog title
-    expect(within(dialog).getByText('Novo Fornecedor')).toBeInTheDocument();
+    expect(within(screen.getByRole('dialog')).getByText('Novo Fornecedor')).toBeInTheDocument();
   });
 });
