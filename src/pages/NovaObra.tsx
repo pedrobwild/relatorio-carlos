@@ -232,7 +232,7 @@ export default function NovaObra() {
           if (!currentValue || currentValue === '' || currentValue === initialFormData[formField as keyof FormData]) {
             (updates as Record<string, unknown>)[formField] = aiValue;
             prefilledFields.add(formField);
-            console.log(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
+            if (import.meta.env.DEV) console.log(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
           } else {
             console.log(`[AI Prefill] ${formField} skipped — current value:`, currentValue);
           }
