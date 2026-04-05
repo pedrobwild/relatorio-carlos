@@ -19,8 +19,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X,
+  ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X, RefreshCw,
 } from "lucide-react";
+import { invokeFunction } from "@/infra/edgeFunctions";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
 import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
@@ -117,6 +118,23 @@ export default function FornecedorDetalhe() {
       queryClient.invalidateQueries({ queryKey: ["fornecedores"] });
       toast({ title: "Fornecedor removido" });
       navigate("/gestao/fornecedores");
+    },
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await invokeFunction<{ success: boolean; target_id: string }>(
+        "sync-suppliers-outbound",
+        { supplier_id: id }
+      );
+      if (error) throw new Error(typeof error === "string" ? error : "Erro na sincronização");
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Fornecedor sincronizado com Envision" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Erro ao sincronizar", description: err.message, variant: "destructive" });
     },
   });
 
@@ -260,6 +278,16 @@ export default function FornecedorDetalhe() {
             </>
           ) : (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => syncMutation.mutate()}
+                disabled={syncMutation.isPending}
+              >
+                <RefreshCw className={`h-4 w-4 ${syncMutation.isPending ? "animate-spin" : ""}`} />
+                {syncMutation.isPending ? "Sincronizando..." : "Sync Envision"}
+              </Button>
               <Button variant="outline" size="sm" className="gap-1.5" onClick={startEdit}>
                 <Pencil className="h-4 w-4" /> Editar
               </Button>
