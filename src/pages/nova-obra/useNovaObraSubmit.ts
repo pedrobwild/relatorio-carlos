@@ -19,6 +19,7 @@ export function useNovaObraSubmit() {
     sendInvite: boolean,
     budgetFile?: File | null,
     manualActivities?: ScheduleActivity[],
+    contractFile?: File,
   ) => {
     if (!user) throw new Error('Você precisa estar logado');
 
@@ -292,6 +293,34 @@ export function useNovaObraSubmit() {
         } catch (parseError) {
           console.error('Budget parsing error:', parseError);
         }
+      }
+    }
+
+    // 12. Upload contract file if provided
+    if (contractFile) {
+      const timestamp = Date.now();
+      const sanitizedName = contractFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `${project.id}/contrato/${timestamp}_${sanitizedName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('project-documents')
+        .upload(storagePath, contractFile, { contentType: contractFile.type, upsert: false });
+
+      if (!uploadError) {
+        await supabase.from('project_documents').insert({
+          project_id: project.id,
+          document_type: 'contrato_cliente',
+          name: `Contrato - ${formData.customer_name.trim()}`,
+          storage_path: storagePath,
+          storage_bucket: 'project-documents',
+          mime_type: contractFile.type,
+          size_bytes: contractFile.size,
+          uploaded_by: user!.id,
+          status: 'approved',
+          version: 1,
+        });
+      } else {
+        console.error('Contract upload error:', uploadError);
       }
     }
 

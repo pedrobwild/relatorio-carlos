@@ -1,0 +1,241 @@
+import { corsHeaders, corsResponse, jsonResponse } from '../_shared/cors.ts';
+
+interface ContractParseResult {
+  customer: {
+    customer_name: string | null;
+    customer_email: string | null;
+    customer_phone: string | null;
+    nacionalidade: string | null;
+    estado_civil: string | null;
+    profissao: string | null;
+    cpf: string | null;
+    rg: string | null;
+    endereco_residencial: string | null;
+    cidade: string | null;
+    estado: string | null;
+  };
+  studio: {
+    nome_do_empreendimento: string | null;
+    endereco_completo: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    cep: string | null;
+    complemento: string | null;
+    tamanho_imovel_m2: string | null;
+    tipo_de_locacao: string | null;
+    data_recebimento_chaves: string | null;
+    unit_name: string | null;
+  };
+  commercial: {
+    contract_value: string | null;
+    payment_method: string | null;
+    payment_schedule: Array<{ description: string; value: number; due_date: string | null }>;
+    contract_signed_at: string | null;
+    document_type: string;
+  };
+  project: {
+    suggested_project_name: string | null;
+  };
+  confidence: Record<string, number>;
+  conflicts: Array<{ field: string; values: string[]; reason: string }>;
+  missing_fields: string[];
+}
+
+const SYSTEM_PROMPT = `Você é um extrator de dados contratuais especializado em contratos de reforma e construção civil, especialmente da BWild Arquitetura e Reformas.
+
+INSTRUÇÕES:
+1. Extraia TODOS os dados estruturados do contrato PDF fornecido.
+2. Priorize a qualificação formal das partes (CONTRATANTE e CONTRATADA).
+3. Também analise ANEXOS quando trouxerem informações de unidade, metragem ou endereço do imóvel.
+4. Use null para qualquer campo sem informação confiável — NUNCA invente dados.
+5. Datas devem estar no formato YYYY-MM-DD.
+6. Valores monetários devem ser numéricos em string, sem R$ ou pontos de milhar (ex: "85000.00").
+7. CPF deve manter formato original com pontuação se presente.
+8. Para metragem (tamanho_imovel_m2), extrair apenas o número.
+9. Se encontrar informações conflitantes entre corpo do contrato e anexos, liste em "conflicts".
+10. Liste campos que não foram encontrados em "missing_fields" usando os nomes dos campos do JSON.
+11. Em "confidence", atribua de 0.0 a 1.0 para cada campo preenchido.
+
+CAMPOS A EXTRAIR:
+
+customer: dados do CONTRATANTE (pessoa que contrata a reforma)
+- customer_name: nome completo
+- customer_email: e-mail
+- customer_phone: telefone/celular
+- nacionalidade, estado_civil, profissao
+- cpf, rg
+- endereco_residencial: endereço residencial completo
+- cidade, estado: da residência
+
+studio: dados do IMÓVEL a ser reformado (pode diferir da residência do contratante)
+- nome_do_empreendimento: nome do edifício/condomínio
+- endereco_completo: endereço do imóvel
+- bairro, cidade, cep, complemento
+- tamanho_imovel_m2: metragem (apenas número)
+- tipo_de_locacao: classificar em Residencial, Comercial, Apartamento, Casa, Studio, Cobertura ou Sala Comercial
+- data_recebimento_chaves: formato YYYY-MM-DD
+- unit_name: identificação da unidade (ex: "Apto 502")
+
+commercial: dados financeiros
+- contract_value: valor total como string numérica
+- payment_method: pix, boleto, transferencia, cartao, financiamento ou outro
+- payment_schedule: array de parcelas [{description, value, due_date}]
+- contract_signed_at: data de assinatura YYYY-MM-DD
+- document_type: sempre "contrato_cliente"
+
+project:
+- suggested_project_name: sugerir nome para o projeto baseado no empreendimento + unidade
+
+Retorne APENAS JSON válido, sem markdown ou texto adicional.`;
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return corsResponse();
+
+  try {
+    const contentType = req.headers.get('content-type') || '';
+
+    let fileBase64 = '';
+    let fileName = 'contract.pdf';
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      const file = formData.get('file') as File | null;
+      if (!file) {
+        return jsonResponse({ error: 'Nenhum arquivo enviado' }, 400);
+      }
+
+      // Validate
+      if (file.size > 20 * 1024 * 1024) {
+        return jsonResponse({ error: 'Arquivo excede 20MB' }, 400);
+      }
+      if (!file.type.includes('pdf')) {
+        return jsonResponse({ error: 'Apenas arquivos PDF são aceitos' }, 400);
+      }
+
+      fileName = file.name;
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      fileBase64 = btoa(binary);
+    } else {
+      // JSON body with base64
+      const body = await req.json();
+      if (!body.file_base64) {
+        return jsonResponse({ error: 'Arquivo não fornecido' }, 400);
+      }
+      fileBase64 = body.file_base64;
+      fileName = body.file_name || 'contract.pdf';
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      return jsonResponse({ error: 'Serviço de IA não configurado' }, 500);
+    }
+
+    // Truncate very large PDFs to avoid token limits
+    const truncatedBase64 = fileBase64.substring(0, 80000);
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: `Analise o contrato PDF a seguir e extraia os dados estruturados.\n\nNome do arquivo: ${fileName}\n\n[Conteúdo do PDF em base64]:\n${truncatedBase64}`,
+          },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.05,
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errText = await aiResponse.text();
+      console.error('AI gateway error:', aiResponse.status, errText);
+
+      if (aiResponse.status === 429) {
+        return jsonResponse({ error: 'Serviço sobrecarregado. Tente novamente em alguns segundos.' }, 429);
+      }
+      if (aiResponse.status === 402) {
+        return jsonResponse({ error: 'Créditos de IA esgotados.' }, 402);
+      }
+
+      return jsonResponse({ error: 'Falha na análise do contrato' }, 500);
+    }
+
+    const aiResult = await aiResponse.json();
+    const content = aiResult.choices?.[0]?.message?.content;
+
+    if (!content) {
+      return jsonResponse({ error: 'Resposta vazia da IA' }, 500);
+    }
+
+    let parsed: ContractParseResult;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      console.error('Failed to parse AI response as JSON');
+      return jsonResponse({ error: 'Resposta da IA em formato inválido' }, 500);
+    }
+
+    // Ensure required structure
+    const result: ContractParseResult = {
+      customer: {
+        customer_name: null,
+        customer_email: null,
+        customer_phone: null,
+        nacionalidade: null,
+        estado_civil: null,
+        profissao: null,
+        cpf: null,
+        rg: null,
+        endereco_residencial: null,
+        cidade: null,
+        estado: null,
+        ...parsed.customer,
+      },
+      studio: {
+        nome_do_empreendimento: null,
+        endereco_completo: null,
+        bairro: null,
+        cidade: null,
+        cep: null,
+        complemento: null,
+        tamanho_imovel_m2: null,
+        tipo_de_locacao: null,
+        data_recebimento_chaves: null,
+        unit_name: null,
+        ...parsed.studio,
+      },
+      commercial: {
+        contract_value: null,
+        payment_method: null,
+        payment_schedule: [],
+        contract_signed_at: null,
+        document_type: 'contrato_cliente',
+        ...parsed.commercial,
+      },
+      project: {
+        suggested_project_name: null,
+        ...parsed.project,
+      },
+      confidence: parsed.confidence || {},
+      conflicts: Array.isArray(parsed.conflicts) ? parsed.conflicts : [],
+      missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],
+    };
+
+    return jsonResponse({ success: true, data: result });
+  } catch (error) {
+    console.error('parse-contract-prefill error:', error);
+    return jsonResponse({ error: error instanceof Error ? error.message : 'Erro desconhecido' }, 500);
+  }
+});

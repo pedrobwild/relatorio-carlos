@@ -8,15 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
+import { AiFieldIndicator } from './AiFieldIndicator';
 import type { FormData } from './types';
 
 interface ProjectInfoCardProps {
   formData: FormData;
   errors: Record<string, string>;
   onChange: (field: keyof FormData, value: string | boolean) => void;
+  aiPrefilledFields?: Set<string>;
+  aiConflictFields?: Set<string>;
 }
 
-export function ProjectInfoCard({ formData, errors, onChange }: ProjectInfoCardProps) {
+export function ProjectInfoCard({ formData, errors, onChange, aiPrefilledFields = new Set(), aiConflictFields = new Set() }: ProjectInfoCardProps) {
   const { lookup, loading: cepLoading } = useCepLookup();
 
   const handleCepChange = (rawValue: string) => {
@@ -48,6 +51,10 @@ export function ProjectInfoCard({ formData, errors, onChange }: ProjectInfoCardP
     }
   };
 
+  const ai = (field: string) => (
+    <AiFieldIndicator fieldName={field} aiPrefilledFields={aiPrefilledFields} aiConflictFields={aiConflictFields} />
+  );
+
   return (
     <div className="space-y-6">
       {/* Obra */}
@@ -78,7 +85,10 @@ export function ProjectInfoCard({ formData, errors, onChange }: ProjectInfoCardP
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2 space-y-1">
-              <Label htmlFor="name">Condomínio / Empreendimento *</Label>
+              <Label htmlFor="name" className="inline-flex items-center">
+                Condomínio / Empreendimento *
+                {ai('name')}
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -89,11 +99,17 @@ export function ProjectInfoCard({ formData, errors, onChange }: ProjectInfoCardP
               {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="unit_name">Unidade / Apartamento</Label>
+              <Label htmlFor="unit_name" className="inline-flex items-center">
+                Unidade / Apartamento
+                {ai('unit_name')}
+              </Label>
               <Input id="unit_name" value={formData.unit_name} onChange={(e) => onChange('unit_name', e.target.value)} placeholder="Ex: Apartamento 502" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="nome_do_empreendimento">Nome do empreendimento</Label>
+              <Label htmlFor="nome_do_empreendimento" className="inline-flex items-center">
+                Nome do empreendimento
+                {ai('nome_do_empreendimento')}
+              </Label>
               <Input id="nome_do_empreendimento" value={formData.nome_do_empreendimento} onChange={(e) => onChange('nome_do_empreendimento', e.target.value)} placeholder="Ex: Residencial Park" />
             </div>
           </div>
@@ -111,9 +127,11 @@ export function ProjectInfoCard({ formData, errors, onChange }: ProjectInfoCardP
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* CEP with auto-fill */}
             <div className="space-y-1">
-              <Label htmlFor="cep">CEP</Label>
+              <Label htmlFor="cep" className="inline-flex items-center">
+                CEP
+                {ai('cep')}
+              </Label>
               <div className="flex gap-2">
                 <Input
                   id="cep"
@@ -138,32 +156,50 @@ export function ProjectInfoCard({ formData, errors, onChange }: ProjectInfoCardP
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="complemento">Complemento</Label>
+              <Label htmlFor="complemento" className="inline-flex items-center">
+                Complemento
+                {ai('complemento')}
+              </Label>
               <Input id="complemento" value={formData.complemento} onChange={(e) => onChange('complemento', e.target.value)} placeholder="Apto, Bloco" />
             </div>
 
             <div className="sm:col-span-2 space-y-1">
-              <Label htmlFor="address">Endereço do imóvel</Label>
+              <Label htmlFor="address" className="inline-flex items-center">
+                Endereço do imóvel
+                {ai('address')}
+              </Label>
               <Input id="address" value={formData.address} onChange={(e) => onChange('address', e.target.value)} placeholder="Rua, número" />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="bairro">Bairro</Label>
+              <Label htmlFor="bairro" className="inline-flex items-center">
+                Bairro
+                {ai('bairro')}
+              </Label>
               <Input id="bairro" value={formData.bairro} onChange={(e) => onChange('bairro', e.target.value)} placeholder="Ex: Pinheiros" />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="cidade_imovel">Cidade</Label>
+              <Label htmlFor="cidade_imovel" className="inline-flex items-center">
+                Cidade
+                {ai('cidade_imovel')}
+              </Label>
               <Input id="cidade_imovel" value={formData.cidade_imovel} onChange={(e) => onChange('cidade_imovel', e.target.value)} placeholder="Ex: São Paulo" />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="tamanho_imovel_m2">Metragem (m²)</Label>
+              <Label htmlFor="tamanho_imovel_m2" className="inline-flex items-center">
+                Metragem (m²)
+                {ai('tamanho_imovel_m2')}
+              </Label>
               <Input id="tamanho_imovel_m2" type="number" step="0.01" value={formData.tamanho_imovel_m2} onChange={(e) => onChange('tamanho_imovel_m2', e.target.value)} placeholder="Ex: 31" />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="tipo_de_locacao">Tipo de locação</Label>
+              <Label htmlFor="tipo_de_locacao" className="inline-flex items-center">
+                Tipo de locação
+                {ai('tipo_de_locacao')}
+              </Label>
               <Select value={formData.tipo_de_locacao} onValueChange={(v) => onChange('tipo_de_locacao', v)}>
                 <SelectTrigger id="tipo_de_locacao">
                   <SelectValue placeholder="Selecione" />
@@ -181,7 +217,10 @@ export function ProjectInfoCard({ formData, errors, onChange }: ProjectInfoCardP
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="data_recebimento_chaves">Data recebimento das chaves</Label>
+              <Label htmlFor="data_recebimento_chaves" className="inline-flex items-center">
+                Data recebimento das chaves
+                {ai('data_recebimento_chaves')}
+              </Label>
               <Input id="data_recebimento_chaves" type="date" value={formData.data_recebimento_chaves} onChange={(e) => onChange('data_recebimento_chaves', e.target.value)} />
             </div>
           </div>
