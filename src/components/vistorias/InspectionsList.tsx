@@ -64,7 +64,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
 
   // Only show type filter if there are inspections with different types
   const usedTypes = useMemo(() => {
-    const types = new Set(inspections.map(i => (i as any).inspection_type || 'rotina'));
+    const types = new Set(inspections.map(i => (i.inspection_type || 'rotina') as InspectionType));
     return INSPECTION_TYPES.filter(t => types.has(t.value));
   }, [inspections]);
 
