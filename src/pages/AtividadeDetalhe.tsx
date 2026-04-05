@@ -646,7 +646,7 @@ export default function AtividadeDetalhe() {
             <DropdownMenuItem onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4 mr-2" /> Editar
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive" onClick={() => { deleteTask.mutate(task.id); goBack(); }}>
+            <DropdownMenuItem className="text-destructive" onClick={() => { deleteTask.mutateAsync(task.id).then(goBack).catch(() => {}); }}>
               <Trash2 className="h-4 w-4 mr-2" /> Excluir
             </DropdownMenuItem>
           </DropdownMenuContent>

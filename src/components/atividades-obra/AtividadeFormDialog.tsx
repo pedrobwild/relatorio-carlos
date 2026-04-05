@@ -38,7 +38,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData 
     onSubmit({
       title: title.trim(),
       description: description || null,
-      responsible_user_id: responsibleUserId || null,
+      responsible_user_id: (responsibleUserId && responsibleUserId !== 'none') ? responsibleUserId : null,
       due_date: dueDate || null,
       start_date: startDate || null,
       cost: cost ? parseFloat(cost) : null,
