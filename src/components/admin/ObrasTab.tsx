@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Search, Eye, Settings, Trash2, ChevronDown, ChevronRight, UserCircle } from 'lucide-react';
+import { Building2, Search, Eye, Settings, Trash2, ChevronDown, ChevronRight, UserCircle, Plus } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -38,7 +39,6 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
-import { Plus } from 'lucide-react';
 import { ObraCard } from './obras/ObraCard';
 import { statusColors, statusLabels } from './obras/obraCardUtils';
 import { ObraExpandedRow } from './obras/ObraExpandedRow';

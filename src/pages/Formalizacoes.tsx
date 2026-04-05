@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Sparkles, FileText } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useFormalizacoes } from '@/hooks/useFormalizacoes';
@@ -15,8 +16,6 @@ import { FormalizacaoCard, FormalizacaoSkeleton } from '@/components/tabs/formal
 import { DesktopSidebar } from '@/components/tabs/formalizacoes/DesktopSidebar';
 import { MobileFormalizacoes } from '@/components/tabs/formalizacoes/MobileFormalizacoes';
 import { Card } from '@/components/ui/card';
-import { Sparkles, FileText } from 'lucide-react';
-
 export default function Formalizacoes() {
   const navigate = useNavigate();
   const { paths, projectId } = useProjectNavigation();
