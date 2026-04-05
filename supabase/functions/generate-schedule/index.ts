@@ -332,7 +332,7 @@ Deno.serve(async (req) => {
     }
 
     // Process in background using EdgeRuntime.waitUntil
-    // @ts-ignore - EdgeRuntime is available in Supabase Edge Functions
+    // @ts-expect-error EdgeRuntime is a Supabase Edge Functions global not in TS types
     EdgeRuntime.waitUntil(processScheduleJob(job.id, payload));
 
     return new Response(JSON.stringify({ jobId: job.id, status: "pending" }), {

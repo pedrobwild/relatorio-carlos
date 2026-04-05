@@ -81,11 +81,11 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
     if (hasActualEnd) {
       status = 'completed';
       progress = 100;
-    } else if (hasActualStart) {
+    } else if (hasActualStart && actualStart) {
       status = today > plannedEnd ? 'delayed' : 'in-progress';
-      const totalPlanned = differenceInDays(plannedEnd, actualStart!) + 1;
-      const elapsed = differenceInDays(today, actualStart!) + 1;
-      progress = Math.min(100, Math.max(0, Math.round((elapsed / totalPlanned) * 100)));
+      const totalPlanned = differenceInDays(plannedEnd, actualStart) + 1;
+      const elapsed = differenceInDays(today, actualStart) + 1;
+      progress = Math.min(100, Math.max(0, Math.round((elapsed / Math.max(totalPlanned, 1)) * 100)));
     } else {
       status = today > plannedStart ? 'delayed' : 'pending';
       progress = 0;
@@ -93,16 +93,16 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
 
     // Calculate delays
     let delayDays = 0;
-    if (hasActualEnd) {
-      delayDays = differenceInDays(actualEnd!, plannedEnd);
+    if (hasActualEnd && actualEnd) {
+      delayDays = differenceInDays(actualEnd, plannedEnd);
     } else if (hasActualStart && today > plannedEnd) {
       delayDays = differenceInDays(today, plannedEnd);
     }
 
     // Duration calculations
     const plannedDuration = differenceInDays(plannedEnd, plannedStart) + 1;
-    const actualDuration = hasActualEnd && actualStart 
-      ? differenceInDays(actualEnd!, actualStart) + 1 
+    const actualDuration = hasActualEnd && actualStart && actualEnd
+      ? differenceInDays(actualEnd, actualStart) + 1 
       : hasActualStart && actualStart
         ? differenceInDays(today, actualStart) + 1
         : null;

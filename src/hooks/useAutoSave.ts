@@ -47,9 +47,13 @@ export function useAutoSave<T>({
   // Serialize data for comparison - only used for change detection
   const serializedData = JSON.stringify(data);
 
+  // Guard against concurrent saves
+  const isSavingRef = useRef(false);
+
   // Stable performSave that reads from refs
   const performSave = useCallback(async () => {
     if (!enabledRef.current) return;
+    if (isSavingRef.current) return; // Prevent concurrent saves
     
     const currentData = dataRef.current;
     const currentSerialized = JSON.stringify(currentData);
@@ -59,6 +63,7 @@ export function useAutoSave<T>({
       return;
     }
     
+    isSavingRef.current = true;
     try {
       setIsSaving(true);
       await onSaveRef.current(currentData);
@@ -71,6 +76,7 @@ export function useAutoSave<T>({
       // This ensures we'll retry on next change/visibility event
       toast.error('Erro ao salvar o relatório. Suas alterações foram mantidas, tente novamente.');
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }, []); // No dependencies - uses refs

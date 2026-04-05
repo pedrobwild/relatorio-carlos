@@ -594,7 +594,10 @@ export async function duplicateProject(input: {
     }
 
     if (input.options.includeJourney) {
-      await supabase.rpc('initialize_project_journey', { p_project_id: newProject.id });
+      const { error: journeyError } = await supabase.rpc('initialize_project_journey', { p_project_id: newProject.id });
+      if (journeyError) {
+        console.error('Journey initialization error:', journeyError);
+      }
     }
 
     return { data: { ...newProject, status: newProject.status as ProjectStatus }, error: null };
