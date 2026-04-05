@@ -77,7 +77,9 @@ export function useObraTasks(projectId: string | undefined) {
           description: input.description || null,
           responsible_user_id: input.responsible_user_id || null,
           due_date: input.due_date || null,
+          start_date: input.start_date || null,
           cost: input.cost ?? null,
+          priority: input.priority || 'media',
           status: input.status || 'pendente',
           sort_order: maxOrder,
         })
