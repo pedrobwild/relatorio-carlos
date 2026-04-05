@@ -81,34 +81,45 @@ export function useProjectActivities(projectId: string | undefined) {
         throw new Error('Projeto ou usuário não encontrado');
       }
 
-      // Delete existing activities for this project
-      const { error: deleteError } = await supabase
+      // Insert new activities first, then delete old ones (safer order)
+      const activitiesToInsert = newActivities.map((activity, index) => ({
+        project_id: projectId,
+        description: activity.description,
+        planned_start: activity.planned_start,
+        planned_end: activity.planned_end,
+        actual_start: activity.actual_start || null,
+        actual_end: activity.actual_end || null,
+        weight: activity.weight,
+        sort_order: index,
+        created_by: user.id,
+        predecessor_ids: activity.predecessor_ids || [],
+      }));
+
+      // Fetch existing IDs to delete after insert
+      const { data: existingRows } = await supabase
         .from('project_activities')
-        .delete()
+        .select('id')
         .eq('project_id', projectId);
 
-      if (deleteError) throw deleteError;
+      const oldIds = (existingRows ?? []).map(r => r.id);
 
       // Insert new activities
-      if (newActivities.length > 0) {
-        const activitiesToInsert = newActivities.map((activity, index) => ({
-          project_id: projectId,
-          description: activity.description,
-          planned_start: activity.planned_start,
-          planned_end: activity.planned_end,
-          actual_start: activity.actual_start || null,
-          actual_end: activity.actual_end || null,
-          weight: activity.weight,
-          sort_order: index,
-          created_by: user.id,
-          predecessor_ids: activity.predecessor_ids || [],
-        }));
-
+      if (activitiesToInsert.length > 0) {
         const { error: insertError } = await supabase
           .from('project_activities')
           .insert(activitiesToInsert);
 
         if (insertError) throw insertError;
+      }
+
+      // Delete old activities only after successful insert
+      if (oldIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('project_activities')
+          .delete()
+          .in('id', oldIds);
+
+        if (deleteError) throw deleteError;
       }
 
       return newActivities;
