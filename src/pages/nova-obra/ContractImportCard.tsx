@@ -209,9 +209,9 @@ export function ContractImportCard({
 
         {/* Error */}
         {isError && (
-          <div className="space-y-2">
+          <div className="space-y-2" role="alert">
             <div className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
               <p className="text-sm font-medium">{contractState.errorMessage}</p>
             </div>
             <Button variant="outline" size="sm" onClick={handleClear}>
