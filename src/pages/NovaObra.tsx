@@ -1,10 +1,12 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Send, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Send, Check, X, RotateCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useProjectTemplates, type ProjectTemplate, type TemplateActivity } from '@/hooks/useProjectTemplates';
 import { addBusinessDays } from '@/lib/businessDays';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { formSchema, initialFormData, type FormData } from './nova-obra/types';
 import { useNovaObraSubmit } from './nova-obra/useNovaObraSubmit';
@@ -28,6 +30,7 @@ const STEPS: Step[] = [
 ];
 
 const STEP_SHORT_LABELS = ['Dados', 'Cronograma', 'Orçamento', 'Cliente'];
+const STEP_CTA_LABELS = ['Próximo: Cronograma', 'Próximo: Orçamento', 'Próximo: Cliente', 'Cadastrar Obra'];
 
 // Fields required per step for validation gating
 const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
@@ -43,6 +46,7 @@ interface NovaObraDraft {
   formData: FormData;
   step: number;
   scheduleActivities?: ScheduleActivity[];
+  savedAt?: number;
 }
 
 function loadDraft(): NovaObraDraft | null {
@@ -65,11 +69,22 @@ function clearDraft() {
   try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
 }
 
+function formatDraftAge(savedAt?: number): string {
+  if (!savedAt) return '';
+  const minutes = Math.floor((Date.now() - savedAt) / 60000);
+  if (minutes < 1) return 'agora';
+  if (minutes < 60) return `${minutes}min atrás`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h atrás`;
+  return `${Math.floor(hours / 24)}d atrás`;
+}
+
 export default function NovaObra() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: templates } = useProjectTemplates();
   const { submit, user } = useNovaObraSubmit();
+  const isMobile = useIsMobile();
 
   const draft = useMemo(() => loadDraft(), []);
   const [currentStep, setCurrentStep] = useState(draft?.step ?? 0);
@@ -83,6 +98,7 @@ export default function NovaObra() {
   const [budgetFile, setBudgetFile] = useState<File | null>(null);
   const [scheduleActivities, setScheduleActivities] = useState<ScheduleActivity[]>(draft?.scheduleActivities ?? []);
   const [draftRestored, setDraftRestored] = useState(!!draft);
+  const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
 
   // Auto-save draft on formData, activities or step change
   useEffect(() => {
@@ -156,13 +172,13 @@ export default function NovaObra() {
   }, [formData]);
 
   const goToStep = (target: number) => {
-    // Can always go back
     if (target < currentStep) {
+      setDirection(-1);
       setCurrentStep(target);
       return;
     }
-    // Must validate current step to go forward
     if (validateStep(currentStep)) {
+      setDirection(1);
       setCompletedSteps(prev => new Set([...prev, currentStep]));
       setCurrentStep(target);
     } else {
@@ -180,13 +196,11 @@ export default function NovaObra() {
       return;
     }
 
-    // Validate final step
     if (!validateStep(currentStep)) {
       toast({ title: 'Erro de validação', description: 'Verifique os campos obrigatórios', variant: 'destructive' });
       return;
     }
 
-    // Full zod validation
     const result = formSchema.safeParse(formData);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -195,7 +209,6 @@ export default function NovaObra() {
       });
       setErrors(newErrors);
 
-      // Navigate to the first step with an error
       const errorFields = Object.keys(newErrors);
       for (let s = 0; s < STEPS.length; s++) {
         const stepFields = STEP_REQUIRED_FIELDS[s] || [];
@@ -233,63 +246,74 @@ export default function NovaObra() {
   };
 
   const isLastStep = currentStep === STEPS.length - 1;
+  const progressPercent = ((currentStep + 1) / STEPS.length) * 100;
+
+  const handleClearDraft = () => {
+    clearDraft();
+    setFormData(initialFormData);
+    setScheduleActivities([]);
+    setCurrentStep(0);
+    setCompletedSteps(new Set());
+    setDraftRestored(false);
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with sticky progress bar on mobile */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')} className="min-h-[44px] min-w-[44px] h-11 w-11" aria-label="Voltar">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')} className="h-11 w-11 shrink-0 touch-target" aria-label="Voltar">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-h3 font-bold">Nova Obra</h1>
-              <p className="text-tiny text-muted-foreground hidden sm:block">Cadastre uma nova obra</p>
-            </div>
-            {/* Mobile step indicator in header */}
-            <div className="flex items-center gap-1 sm:hidden">
-              <span className="text-xs font-semibold text-primary tabular-nums">{currentStep + 1}/{STEPS.length}</span>
+              <h1 className="text-lg sm:text-xl font-bold leading-tight">Nova Obra</h1>
+              {/* Mobile: current step context */}
+              <p className="text-xs text-muted-foreground sm:hidden">
+                Etapa {currentStep + 1} de {STEPS.length} · {STEP_SHORT_LABELS[currentStep]}
+              </p>
+              <p className="text-xs text-muted-foreground hidden sm:block">Cadastre uma nova obra</p>
             </div>
           </div>
         </div>
-        {/* Mobile sticky progress bar */}
-        <div className="sm:hidden">
-          <div className="flex gap-0.5 px-4 pb-2">
-            {STEPS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goToStep(i)}
-                className={cn(
-                  "flex-1 h-1.5 rounded-full transition-all",
-                  completedSteps.has(i) ? "bg-primary" :
-                  i === currentStep ? "bg-primary/60" :
-                  "bg-muted"
-                )}
-                aria-label={`Etapa ${i + 1}: ${STEP_SHORT_LABELS[i]}`}
-              />
-            ))}
+
+        {/* Mobile progress bar — animated, tappable */}
+        <div className="sm:hidden px-4 pb-3 space-y-2">
+          {/* Continuous progress bar */}
+          <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+            <motion.div
+              className="absolute left-0 top-0 h-full bg-primary rounded-full"
+              initial={false}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            />
           </div>
-          <div className="flex justify-between px-4 pb-2">
+          {/* Step labels — tappable */}
+          <div className="flex">
             {STEP_SHORT_LABELS.map((label, i) => (
               <button
                 key={i}
                 onClick={() => goToStep(i)}
                 className={cn(
-                  "text-[10px] font-medium transition-colors flex-1 text-center",
-                  i === currentStep ? "text-primary" :
+                  "flex-1 text-center py-1 text-[10px] font-medium transition-colors touch-target relative",
+                  i === currentStep ? "text-primary font-bold" :
                   completedSteps.has(i) ? "text-foreground" :
-                  "text-muted-foreground"
+                  "text-muted-foreground/60"
                 )}
               >
-                {label}
+                <span className="flex items-center justify-center gap-1">
+                  {completedSteps.has(i) && i !== currentStep && (
+                    <Check className="h-2.5 w-2.5 text-primary" />
+                  )}
+                  {label}
+                </span>
               </button>
             ))}
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6 pb-bottom-nav sm:pb-6">
+      <main className="max-w-5xl mx-auto px-4 py-4 sm:py-6 pb-[88px] sm:pb-6">
         {/* Desktop Stepper */}
         <div className="mb-8 lg:max-w-3xl hidden sm:block">
           <FormStepper
@@ -303,86 +327,97 @@ export default function NovaObra() {
         <div className="flex gap-8 items-start">
           {/* Main form */}
           <div className="flex-1 min-w-0 max-w-3xl">
-            {/* Draft restored banner */}
+            {/* Draft restored banner — compact on mobile */}
             {draftRestored && (
-              <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3 mb-2">
-                <p className="text-sm text-muted-foreground">Rascunho restaurado automaticamente.</p>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      clearDraft();
-                      setFormData(initialFormData);
-                      setScheduleActivities([]);
-                      setCurrentStep(0);
-                      setCompletedSteps(new Set());
-                      setDraftRestored(false);
-                    }}
-                  >
-                    Limpar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => {
-                      clearDraft();
-                      setDraftRestored(false);
-                      navigate('/gestao');
-                      toast({ title: 'Rascunho excluído' });
-                    }}
-                  >
-                    Excluir rascunho
-                  </Button>
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 mb-4"
+              >
+                <RotateCcw className="h-4 w-4 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Rascunho restaurado</p>
+                  {draft?.savedAt && (
+                    <p className="text-[11px] text-muted-foreground">Salvo {formatDraftAge(draft.savedAt)}</p>
+                  )}
                 </div>
-              </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs shrink-0"
+                  onClick={handleClearDraft}
+                >
+                  Limpar
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => setDraftRestored(false)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Step 0: Dados Básicos */}
-              <div className={cn(currentStep !== 0 && 'hidden')}>
-                {templates && templates.length > 0 && (
-                  <div className="mb-6">
-                    <TemplateSelectorCard
-                      templates={templates}
-                      selectedTemplate={selectedTemplate}
-                      onSelectTemplate={setSelectedTemplate}
-                      formData={formData}
-                      onFormChange={handleChange}
-                      customFieldValues={customFieldValues}
-                      onCustomFieldChange={setCustomFieldValues}
-                    />
-                  </div>
-                )}
-                <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
-              </div>
+            <form onSubmit={handleSubmit}>
+              {/* Animated step transitions on mobile */}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={currentStep}
+                  initial={isMobile ? { opacity: 0, x: direction * 40 } : false}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={isMobile ? { opacity: 0, x: direction * -40 } : undefined}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="space-y-6"
+                >
+                  {/* Step 0: Dados Básicos */}
+                  {currentStep === 0 && (
+                    <>
+                      {templates && templates.length > 0 && (
+                        <div className="mb-6">
+                          <TemplateSelectorCard
+                            templates={templates}
+                            selectedTemplate={selectedTemplate}
+                            onSelectTemplate={setSelectedTemplate}
+                            formData={formData}
+                            onFormChange={handleChange}
+                            customFieldValues={customFieldValues}
+                            onCustomFieldChange={setCustomFieldValues}
+                          />
+                        </div>
+                      )}
+                      <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
+                    </>
+                  )}
 
-              {/* Step 1: Cronograma */}
-              <div className={cn(currentStep !== 1 && 'hidden')}>
-                <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
-              </div>
+                  {/* Step 1: Cronograma */}
+                  {currentStep === 1 && (
+                    <ScheduleCard formData={formData} onChange={handleChange} activities={scheduleActivities} onActivitiesChange={setScheduleActivities} />
+                  )}
 
-              {/* Step 2: Orçamento e Financeiro */}
-              <div className={cn(currentStep !== 2 && 'hidden')}>
-                <div className="space-y-6">
-                  <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
-                  <FinancialCard formData={formData} onChange={handleChange} />
-                </div>
-              </div>
+                  {/* Step 2: Orçamento e Financeiro */}
+                  {currentStep === 2 && (
+                    <div className="space-y-6">
+                      <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} />
+                      <FinancialCard formData={formData} onChange={handleChange} />
+                    </div>
+                  )}
 
-              {/* Step 3: Cliente - with Review Summary */}
-              <div className={cn(currentStep !== 3 && 'hidden')}>
-                <div className="space-y-6">
-                  <ReviewSummary formData={formData} />
-                  <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
-                </div>
-              </div>
+                  {/* Step 3: Cliente + Review */}
+                  {currentStep === 3 && (
+                    <div className="space-y-6">
+                      <ReviewSummary formData={formData} />
+                      <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
               {/* Desktop Navigation buttons */}
-              <div className="hidden sm:flex flex-row justify-between gap-3 pt-2">
+              <div className="hidden sm:flex flex-row justify-between gap-3 pt-6">
                 <div>
                   {currentStep > 0 ? (
                     <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px]">
@@ -425,44 +460,53 @@ export default function NovaObra() {
           />
         </div>
 
-        {/* Mobile bottom sheet summary */}
-        <MobileSummarySheet
-          formData={formData}
-          currentStep={currentStep}
-          completedSteps={completedSteps}
-          totalSteps={STEPS.length}
-        />
+        {/* Mobile bottom sheet summary — only on desktop-ish */}
+        <div className="hidden lg:block">
+          <MobileSummarySheet
+            formData={formData}
+            currentStep={currentStep}
+            completedSteps={completedSteps}
+            totalSteps={STEPS.length}
+          />
+        </div>
       </main>
 
-      {/* Mobile sticky bottom navigation */}
-      <div className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur-md border-t border-border px-4 py-3 pb-safe sm:hidden">
-        <div className="flex gap-3">
-          {currentStep > 0 ? (
-            <Button type="button" variant="outline" onClick={handleBack} className="min-h-[44px] flex-1">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Voltar
-            </Button>
-          ) : (
-            <Button type="button" variant="outline" onClick={() => navigate('/gestao')} className="min-h-[44px] flex-1">
-              Cancelar
-            </Button>
-          )}
+      {/* Mobile sticky bottom navigation — keyboard-aware */}
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur-md border-t border-border sm:hidden keyboard-aware">
+        <div className="px-4 py-3 pb-safe">
+          <div className="flex gap-3">
+            {currentStep > 0 ? (
+              <Button type="button" variant="outline" onClick={handleBack} className="h-12 flex-1 rounded-xl text-sm font-medium">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Voltar
+              </Button>
+            ) : (
+              <Button type="button" variant="ghost" onClick={() => navigate('/gestao')} className="h-12 px-4 rounded-xl text-sm text-muted-foreground">
+                Cancelar
+              </Button>
+            )}
 
-          {isLastStep ? (
-            <Button onClick={handleSubmit} disabled={loading} className="min-h-[44px] flex-[2]">
-              {loading ? 'Cadastrando...' : (
-                <>
-                  <Send className="h-4 w-4 mr-1" />
-                  Cadastrar
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button type="button" onClick={handleNext} className="min-h-[44px] flex-[2]">
-              Próximo
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          )}
+            {isLastStep ? (
+              <Button onClick={handleSubmit} disabled={loading} className="h-12 flex-[2] rounded-xl text-sm font-semibold gap-2">
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Cadastrando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Cadastrar Obra
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button type="button" onClick={handleNext} className="h-12 flex-[2] rounded-xl text-sm font-semibold gap-1">
+                {STEP_CTA_LABELS[currentStep]}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
