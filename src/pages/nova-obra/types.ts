@@ -27,6 +27,11 @@ export const formSchema = z.object({
   installment_value: z.string().optional(),
   payment_method: z.string().optional(),
   payment_status: z.string().optional(),
+  contract_signed_at: z.string().optional(),
+  commercial_notes: z.string().trim().max(1000).optional(),
+  contract_document_name: z.string().trim().max(200).optional(),
+  budget_uploaded: z.boolean(),
+  budget_file_name: z.string().optional(),
 
   // ── Contratante ──
   customer_name: z.string().trim().min(1, 'Nome do cliente é obrigatório').max(200),
