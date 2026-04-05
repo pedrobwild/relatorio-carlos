@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
   try {
     // --- Auth ---
     const integrationKey = req.headers.get("x-integration-key");
-    const expectedKey = Deno.env.get("ENVISION_INTEGRATION_KEY");
+    const expectedKey = Deno.env.get("INTEGRATION_API_KEY");
 
     if (!expectedKey) {
       throw new Error("ENVISION_INTEGRATION_KEY not configured");
