@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { DeleteTaskDialog } from '@/components/atividades-obra/DeleteTaskDialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useObraTasks, TASK_STATUSES, type ObraTaskStatus, type ObraTaskInput, type ObraTaskPriority } from '@/hooks/useObraTasks';
 import { useObraTaskComments } from '@/hooks/useObraTaskComments';
@@ -88,6 +89,7 @@ export default function AtividadeDetalhe() {
   const [descriptionDraft, setDescriptionDraft] = useState('');
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [showSubtaskInput, setShowSubtaskInput] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const goBack = () => navigate(`/obra/${projectId}/atividades`);
@@ -646,7 +648,7 @@ export default function AtividadeDetalhe() {
             <DropdownMenuItem onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4 mr-2" /> Editar
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive" onClick={() => { deleteTask.mutateAsync(task.id).then(goBack).catch(() => {}); }}>
+            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirmOpen(true)}>
               <Trash2 className="h-4 w-4 mr-2" /> Excluir
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -689,6 +691,15 @@ export default function AtividadeDetalhe() {
           setEditOpen(false);
         }}
         initialData={task}
+      />
+
+      <DeleteTaskDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        taskTitle={task.title}
+        onConfirm={() => {
+          deleteTask.mutateAsync(task.id).then(goBack).catch(() => {});
+        }}
       />
     </PageContainer>
   );

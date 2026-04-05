@@ -6,6 +6,7 @@ import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { AtividadeMobileCard } from './AtividadeMobileCard';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
+import { DeleteTaskDialog } from './DeleteTaskDialog';
 import { EmptyState, PageSkeleton } from '@/components/ui/states';
 import { ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
   const navigate = useNavigate();
   const { projectId } = useProjectNavigation();
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ObraTask | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
   const getMemberName = (userId: string | null) => {
@@ -95,7 +97,10 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
                 task={task}
                 responsibleName={getMemberName(task.responsible_user_id)}
                 onUpdateStatus={onUpdateStatus}
-                onDelete={onDelete}
+                onDelete={(id) => {
+                  const t = tasks.find(x => x.id === id);
+                  if (t) setDeleteTarget(t);
+                }}
                 onOpenDetail={(task) => navigate(`/obra/${projectId}/atividades/${task.id}`)}
                 onEdit={setEditTask}
               />
@@ -115,6 +120,18 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
           }
         }}
         initialData={editTask}
+      />
+
+      <DeleteTaskDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        taskTitle={deleteTarget?.title || ''}
+        onConfirm={() => {
+          if (deleteTarget) {
+            onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
       />
     </>
   );

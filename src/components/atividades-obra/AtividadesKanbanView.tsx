@@ -10,6 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
+import { DeleteTaskDialog } from './DeleteTaskDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,7 @@ const dotColors: Record<ObraTaskStatus, string> = {
 
 export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ObraTask | null>(null);
   const navigate = useNavigate();
   const { projectId } = useProjectNavigation();
   const [dragOverColumn, setDragOverColumn] = useState<ObraTaskStatus | null>(null);
@@ -147,7 +149,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditTask(task); }}>
                                 <Pencil className="h-4 w-4 mr-2" /> Editar
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}>
+                              <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteTarget(task); }}>
                                 <Trash2 className="h-4 w-4 mr-2" /> Excluir
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -210,10 +212,20 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
             setEditTask(null);
           }
         }}
-        
         initialData={editTask}
       />
 
+      <DeleteTaskDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        taskTitle={deleteTarget?.title || ''}
+        onConfirm={() => {
+          if (deleteTarget) {
+            onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </>
   );
 }

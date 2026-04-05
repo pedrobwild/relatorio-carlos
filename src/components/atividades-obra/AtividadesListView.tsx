@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
+import { DeleteTaskDialog } from './DeleteTaskDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 
@@ -31,6 +32,7 @@ const statusVariant: Record<ObraTaskStatus, string> = {
 
 export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete, onUpdate }: Props) {
   const [editTask, setEditTask] = useState<ObraTask | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ObraTask | null>(null);
   const navigate = useNavigate();
   const { projectId } = useProjectNavigation();
   const { data: staffUsers = [] } = useStaffUsers();
@@ -143,7 +145,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
                         <DropdownMenuItem onClick={() => setEditTask(task)}>
                           <Pencil className="h-4 w-4 mr-2" /> Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => onDelete(task.id)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(task)}>
                           <Trash2 className="h-4 w-4 mr-2" /> Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -165,10 +167,20 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
             setEditTask(null);
           }
         }}
-        
         initialData={editTask}
       />
 
+      <DeleteTaskDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        taskTitle={deleteTarget?.title || ''}
+        onConfirm={() => {
+          if (deleteTarget) {
+            onDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </>
   );
 }

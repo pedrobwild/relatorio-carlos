@@ -93,6 +93,7 @@ export function AtividadeMobileCard({ task, responsibleName, onUpdateStatus, onD
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onEdit(task)}>Editar</DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive" onClick={() => onDelete(task.id)}>Excluir</DropdownMenuItem>
+
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
