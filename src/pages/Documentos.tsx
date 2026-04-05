@@ -404,6 +404,153 @@ const Documentos = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Document Viewer — Sheet on mobile, Dialog on desktop */}
+      {viewerDoc && (
+        isMobile ? (
+          <Sheet open={!!viewerDoc} onOpenChange={(open) => !open && setViewerDoc(null)}>
+            <SheetContent side="bottom" className="h-[95dvh] flex flex-col p-0 rounded-t-2xl">
+              <div className="shrink-0 border-b border-border px-4 pt-4 pb-3">
+                <SheetHeader className="p-0">
+                  <SheetTitle className="text-left text-base line-clamp-1">{viewerDoc.name}</SheetTitle>
+                </SheetHeader>
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  <span>v{viewerDoc.version}</span>
+                  {viewerDoc.checksum && (
+                    <span className="font-mono truncate" title={viewerDoc.checksum}>
+                      SHA256: {viewerDoc.checksum.substring(0, 8)}…
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 overflow-hidden min-h-0">
+                {viewerDoc.url ? (
+                  <DocumentViewer 
+                    url={viewerDoc.url} 
+                    title={viewerDoc.name}
+                    mimeType={viewerDoc.mime_type}
+                    className="h-full rounded-none border-0"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 px-4">
+                    <FileText className="w-12 h-12 text-muted-foreground/30" />
+                    <p className="text-sm text-muted-foreground text-center">Pré-visualização não disponível</p>
+                    <Button variant="outline" onClick={() => window.location.reload()} className="gap-2 h-11 touch-manipulation">
+                      Recarregar
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {/* Sticky bottom actions */}
+              <div className="shrink-0 border-t border-border px-4 py-3 pb-safe bg-card/95 backdrop-blur-md flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-11 touch-manipulation gap-2 text-sm"
+                  onClick={() => handleViewHistory(viewerDoc.id)}
+                >
+                  <History className="w-4 h-4" />
+                  Histórico
+                </Button>
+                {isStaff && (
+                  <DocumentVersionUpload document={viewerDoc} onSuccess={refetch} />
+                )}
+                <Button
+                  className="flex-1 h-11 touch-manipulation gap-2 text-sm"
+                  onClick={async () => {
+                    if (!viewerDoc.url) return;
+                    try {
+                      const res = await fetch(viewerDoc.url);
+                      const blob = await res.blob();
+                      const blobUrl = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = blobUrl;
+                      a.download = viewerDoc.name;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(blobUrl);
+                    } catch {
+                      window.open(viewerDoc.url, '_blank');
+                    }
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                  Baixar
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        ) : (
+          <Dialog open={!!viewerDoc} onOpenChange={(open) => !open && setViewerDoc(null)}>
+            <DialogContent className="max-w-4xl w-[95vw] h-[90dvh] max-h-[95dvh] p-0 flex flex-col">
+              <DialogHeader className="p-4 border-b border-border shrink-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DialogTitle className="text-base">{viewerDoc.name}</DialogTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground">Versão {viewerDoc.version}</span>
+                      {viewerDoc.checksum && (
+                        <span className="text-xs text-muted-foreground font-mono" title={viewerDoc.checksum}>
+                          SHA256: {viewerDoc.checksum.substring(0, 8)}...
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" className="gap-2" onClick={() => handleViewHistory(viewerDoc.id)}>
+                      <History className="w-4 h-4" />
+                      Histórico
+                    </Button>
+                    {isStaff && <DocumentVersionUpload document={viewerDoc} onSuccess={refetch} />}
+                    <Button
+                      size="sm"
+                      className="gap-2"
+                      onClick={async () => {
+                        if (!viewerDoc.url) return;
+                        try {
+                          const res = await fetch(viewerDoc.url);
+                          const blob = await res.blob();
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = blobUrl;
+                          a.download = viewerDoc.name;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          window.URL.revokeObjectURL(blobUrl);
+                        } catch {
+                          window.open(viewerDoc.url, '_blank');
+                        }
+                      }}
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="flex-1 overflow-hidden">
+                {viewerDoc.url ? (
+                  <DocumentViewer 
+                    url={viewerDoc.url} 
+                    title={viewerDoc.name}
+                    mimeType={viewerDoc.mime_type}
+                    className="h-full rounded-none border-0"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <FileText className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                      <p className="text-body text-muted-foreground">Pré-visualização não disponível</p>
+                      <Button variant="outline" onClick={() => window.location.reload()} className="gap-2 mt-4">Recarregar</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )
+      )}
     </div>
   );
 };
