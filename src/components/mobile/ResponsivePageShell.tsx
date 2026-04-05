@@ -7,6 +7,8 @@ interface ResponsivePageShellProps {
   maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
   /** Remove default vertical padding */
   noPaddingY?: boolean;
+  /** Render a sticky CTA footer (mobile-first, sits above bottom nav) */
+  stickyFooter?: React.ReactNode;
 }
 
 const maxWidthMap = {
@@ -23,25 +25,43 @@ const maxWidthMap = {
  * - Overflow containment (no horizontal scroll)
  * - Safe-area padding for notched devices
  * - Consistent vertical rhythm
+ * - Optional sticky CTA footer positioned above bottom nav
  */
 export function ResponsivePageShell({
   children,
   className,
   maxWidth = "lg",
   noPaddingY = false,
+  stickyFooter,
 }: ResponsivePageShellProps) {
   return (
-    <main
-      className={cn(
-        "mx-auto w-full px-4 sm:px-6 md:px-8",
-        "overflow-x-hidden min-w-0",
-        maxWidthMap[maxWidth],
-        !noPaddingY && "py-4 md:py-8",
-        "pb-safe",
-        className
+    <>
+      <main
+        className={cn(
+          "mx-auto w-full px-4 sm:px-6 md:px-8",
+          "overflow-x-hidden min-w-0",
+          maxWidthMap[maxWidth],
+          !noPaddingY && "py-4 md:py-8",
+          stickyFooter && "pb-20 md:pb-8", // extra room for sticky CTA
+          "pb-safe",
+          className
+        )}
+      >
+        {children}
+      </main>
+
+      {stickyFooter && (
+        <div
+          className={cn(
+            "fixed inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border",
+            "px-4 py-3 bottom-cta keyboard-aware",
+          )}
+        >
+          <div className={cn("mx-auto w-full", maxWidthMap[maxWidth])}>
+            {stickyFooter}
+          </div>
+        </div>
       )}
-    >
-      {children}
-    </main>
+    </>
   );
 }
