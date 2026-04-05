@@ -24,7 +24,8 @@ const ScheduleTable = ({
     ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
     : new Date().getFullYear();
 
-  const currentActivityIndex = useMemo(() => {
+  // TODO: Use currentActivityIndex for visual highlighting of the active row
+  const _currentActivityIndex = useMemo(() => {
     if (!reportDate) return -1;
     const currentDate = new Date(reportDate + "T00:00:00");
     return activities.findIndex(a => {

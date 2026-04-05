@@ -39,7 +39,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
 import { Plus } from 'lucide-react';
-import { ObraCard, statusColors, statusLabels } from './obras/ObraCard';
+import { ObraCard } from './obras/ObraCard';
+import { statusColors, statusLabels } from './obras/obraCardUtils';
 import { ObraExpandedRow } from './obras/ObraExpandedRow';
 
 export function ObrasTab() {

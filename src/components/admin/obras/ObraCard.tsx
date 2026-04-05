@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { User, Calendar, Eye, Settings, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,20 +17,7 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
-
-export const statusColors: Record<string, string> = {
-  active: 'bg-success/10 text-[hsl(var(--success))] border-success/20',
-  completed: 'bg-primary/10 text-primary border-primary/20',
-  paused: 'bg-warning/10 text-[hsl(var(--warning))] border-warning/20',
-  cancelled: 'bg-destructive/10 text-destructive border-destructive/20',
-};
-
-export const statusLabels: Record<string, string> = {
-  active: 'Em andamento',
-  completed: 'Concluída',
-  paused: 'Pausada',
-  cancelled: 'Cancelada',
-};
+import { statusColors, statusLabels } from './obraCardUtils';
 
 interface ObraCardProps {
   project: ProjectWithCustomer;
@@ -41,13 +27,7 @@ interface ObraCardProps {
 }
 
 export function ObraCard({ project, onView, onEdit, onDelete }: ObraCardProps) {
-  const daysRemaining = useMemo(() => {
-    if (!project.planned_end_date) return null;
-    return Math.ceil(
-      (new Date(project.planned_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
-  }, [project.planned_end_date]);
-
+  // TODO: Use daysRemaining for deadline indicators in the card UI
   return (
     <Card>
       <CardContent className="p-4">

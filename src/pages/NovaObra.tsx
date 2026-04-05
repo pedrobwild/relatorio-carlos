@@ -210,7 +210,7 @@ export default function NovaObra() {
 
   // Apply AI parse result to formData — side effects extracted from state updater
   const handleApplyPrefill = useCallback((result: ContractParseResult, fileName: string) => {
-    console.log('[AI Prefill] Full result:', JSON.stringify(result, null, 2));
+    if (import.meta.env.DEV) console.log('[AI Prefill] Full result:', JSON.stringify(result, null, 2));
 
     const prefilledFields = new Set<string>();
     const updates: Partial<FormData> = {};
@@ -219,22 +219,22 @@ export default function NovaObra() {
     setFormData(prev => {
       for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
         if (userEditedFieldsRef.current.has(formField)) {
-          console.log(`[AI Prefill] Skipping ${formField} — user edited`);
+          if (import.meta.env.DEV) console.log(`[AI Prefill] Skipping ${formField} — user edited`);
           continue;
         }
 
         const sectionData = result[mapping.section] as Record<string, unknown> | undefined;
         const aiValue = sectionData?.[mapping.aiField];
-        console.log(`[AI Prefill] ${formField}: section=${mapping.section}, aiField=${mapping.aiField}, value=`, aiValue);
+        if (import.meta.env.DEV) console.log(`[AI Prefill] ${formField}: section=${mapping.section}, aiField=${mapping.aiField}, value=`, aiValue);
 
         if (aiValue != null && aiValue !== '' && typeof aiValue === 'string') {
           const currentValue = prev[formField as keyof FormData];
           if (!currentValue || currentValue === '' || currentValue === initialFormData[formField as keyof FormData]) {
             (updates as Record<string, unknown>)[formField] = aiValue;
             prefilledFields.add(formField);
-            console.log(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
+            if (import.meta.env.DEV) console.log(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
           } else {
-            console.log(`[AI Prefill] ${formField} skipped — current value:`, currentValue);
+            if (import.meta.env.DEV) console.log(`[AI Prefill] ${formField} skipped — current value:`, currentValue);
           }
         }
       }
@@ -251,8 +251,10 @@ export default function NovaObra() {
 
       updates.contract_document_name = fileName;
 
-      console.log('[AI Prefill] Final updates:', JSON.stringify(updates, null, 2));
-      console.log('[AI Prefill] Prefilled fields:', Array.from(prefilledFields));
+      if (import.meta.env.DEV) {
+        console.log('[AI Prefill] Final updates:', JSON.stringify(updates, null, 2));
+        console.log('[AI Prefill] Prefilled fields:', Array.from(prefilledFields));
+      }
 
       return { ...prev, ...updates };
     });

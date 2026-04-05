@@ -20,7 +20,7 @@ serve(async (req) => {
       return jsonResponse({ error: 'user_id is required' }, 400);
     }
 
-    console.log('Updating user:', user_id, { display_name, email });
+    console.log('Updating user:', user_id);
 
     const { error: profileError } = await supabaseAdmin
       .from('profiles')

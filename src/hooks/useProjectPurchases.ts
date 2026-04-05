@@ -79,7 +79,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: purchases = [], isLoading, error } = useQuery({
+  const { data: purchases = [], isLoading, error, isError } = useQuery({
     queryKey: queryKeys.purchases.list(projectId),
     queryFn: async () => {
       if (!projectId) return [];
@@ -306,6 +306,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
     purchases,
     isLoading,
     error,
+    isError,
     addPurchase,
     updatePurchase,
     deletePurchase,
