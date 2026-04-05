@@ -52,7 +52,7 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
   }, [tasks]);
 
   if (isLoading) {
-    return <PageSkeleton lines={5} />;
+    return <PageSkeleton rows={5} />;
   }
 
   return (
