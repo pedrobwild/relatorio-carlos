@@ -59,6 +59,11 @@
     --shadow-md: 0 4px 6px -1px hsl(220 14% 10% / 0.1);
     --shadow-lg: 0 10px 15px -3px hsl(220 14% 10% / 0.1);
 
+    /* Mobile layout tokens */
+    --bottom-nav-height: 56px; /* h-14 */
+    --bottom-nav-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+    --sticky-cta-height: 64px;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 212 43% 24%;
     --sidebar-primary: 204 100% 25%;
