@@ -62,25 +62,37 @@ export function CreateNcDialog({
   const createNc = useCreateNonConformity();
   const { members } = useProjectMembers(projectId);
 
-  const [title, setTitle] = useState(prefillTitle || '');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>('');
-  const [severity, setSeverity] = useState<NcSeverity>('high');
-  const [responsibleUserId, setResponsibleUserId] = useState<string>('');
-  const [deadline, setDeadline] = useState<Date | undefined>();
-  const [estimatedCostInput, setEstimatedCostInput] = useState('');
+  const draftKey = `create-nc-${projectId}`;
+  const defaultValues = {
+    title: prefillTitle || '',
+    description: '',
+    category: '',
+    severity: 'high' as NcSeverity,
+    responsibleUserId: '',
+    deadline: undefined as string | undefined,
+    estimatedCostInput: '',
+  };
 
+  const { values: draft, updateField, clearDraft, hasDraft } = useFormDraft({
+    key: draftKey,
+    initialValues: defaultValues,
+  });
+
+  // Reset when dialog opens with prefill (ignore draft for prefill scenarios)
   useEffect(() => {
-    if (open) {
-      setTitle(prefillTitle || '');
-      setDescription('');
-      setCategory('');
-      setSeverity('high');
-      setResponsibleUserId('');
-      setDeadline(undefined);
-      setEstimatedCostInput('');
+    if (open && prefillTitle) {
+      updateField('title', prefillTitle);
     }
-  }, [open, prefillTitle]);
+  }, [open, prefillTitle, updateField]);
+
+  // Convenience aliases
+  const title = draft.title;
+  const description = draft.description;
+  const category = draft.category;
+  const severity = draft.severity;
+  const responsibleUserId = draft.responsibleUserId;
+  const deadline = draft.deadline ? new Date(draft.deadline) : undefined;
+  const estimatedCostInput = draft.estimatedCostInput;
 
   const handleSubmit = () => {
     if (!title.trim() || !category) return;
