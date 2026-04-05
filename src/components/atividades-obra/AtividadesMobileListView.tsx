@@ -6,6 +6,7 @@ import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { AtividadeMobileCard } from './AtividadeMobileCard';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
+import { DeleteTaskDialog } from './DeleteTaskDialog';
 import { EmptyState, PageSkeleton } from '@/components/ui/states';
 import { ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
