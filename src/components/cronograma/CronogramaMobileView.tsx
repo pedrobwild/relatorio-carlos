@@ -137,10 +137,10 @@ export function CronogramaMobileView({
                 <AlertTriangle className="h-3.5 w-3.5" /> {stats.overdue}
               </span>
             )}
-            <span className="flex items-center gap-1 text-blue-600">
+            <span className="flex items-center gap-1 text-primary">
               <Play className="h-3 w-3" /> {stats.inProgress}
             </span>
-            <span className="flex items-center gap-1 text-green-600">
+            <span className="flex items-center gap-1 text-[hsl(var(--success))]">
               <CheckCircle2 className="h-3 w-3" /> {stats.completed}
             </span>
           </div>
