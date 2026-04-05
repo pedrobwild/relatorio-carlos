@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { SupplierTaxonomyFields } from "@/components/fornecedores/SupplierTaxonomyFields";
+import { normalizeSupplierTaxonomy } from "@/components/fornecedores/supplierTaxonomy";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -24,9 +26,6 @@ import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttach
 import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
 import {
   SUPPLIER_TYPE_LABELS,
-  SUPPLIER_TYPES,
-  getSubcategoriesByType,
-  isValidSupplierSubcategory,
   type SupplierType,
 } from "@/constants/supplierCategories";
 
@@ -87,7 +86,12 @@ export default function FornecedorDetalhe() {
   });
 
   useEffect(() => {
-    if (supplier && !editing) setForm({ ...supplier });
+    if (supplier && !editing) {
+      setForm({
+        ...supplier,
+        ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
+      });
+    }
   }, [supplier, editing]);
 
   const saveMutation = useMutation({
@@ -117,23 +121,23 @@ export default function FornecedorDetalhe() {
   });
 
   const startEdit = () => {
-    if (supplier) setForm({ ...supplier });
+    if (supplier) {
+      setForm({
+        ...supplier,
+        ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
+      });
+    }
     setEditing(true);
   };
 
   const cancelEdit = () => {
-    if (supplier) setForm({ ...supplier });
+    if (supplier) {
+      setForm({
+        ...supplier,
+        ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
+      });
+    }
     setEditing(false);
-  };
-
-  const handleSupplierTypeChange = (value: string) => {
-    setForm((p) => {
-      const newForm = { ...p, supplier_type: value };
-      if (p.supplier_subcategory && !isValidSupplierSubcategory(value, p.supplier_subcategory)) {
-        newForm.supplier_subcategory = null;
-      }
-      return newForm;
-    });
   };
 
   const handleSave = () => {
@@ -141,7 +145,19 @@ export default function FornecedorDetalhe() {
       toast({ title: "Nome é obrigatório", variant: "destructive" });
       return;
     }
-    const payload = { ...form };
+
+    const normalizedTaxonomy = normalizeSupplierTaxonomy(form.supplier_type, form.supplier_subcategory);
+
+    if (!normalizedTaxonomy.supplier_type) {
+      toast({ title: "Categoria é obrigatória", variant: "destructive" });
+      return;
+    }
+    if (!normalizedTaxonomy.supplier_subcategory) {
+      toast({ title: "Subcategoria é obrigatória", variant: "destructive" });
+      return;
+    }
+
+    const payload = { ...form, ...normalizedTaxonomy };
     delete (payload as any).id;
     delete (payload as any).created_at;
     if (payload.prazo_entrega_dias === undefined || payload.prazo_entrega_dias === null) delete payload.prazo_entrega_dias;
@@ -195,9 +211,11 @@ export default function FornecedorDetalhe() {
 
   const s = editing ? form : supplier;
 
+  const normalizedSupplierTaxonomy = normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory);
+
   /** Best available category display */
-  const categoryDisplay = supplier.supplier_type && supplier.supplier_subcategory
-    ? `${SUPPLIER_TYPE_LABELS[supplier.supplier_type as SupplierType] || supplier.supplier_type} › ${supplier.supplier_subcategory}`
+  const categoryDisplay = normalizedSupplierTaxonomy.supplier_type && normalizedSupplierTaxonomy.supplier_subcategory
+    ? `${SUPPLIER_TYPE_LABELS[normalizedSupplierTaxonomy.supplier_type as SupplierType] || normalizedSupplierTaxonomy.supplier_type} › ${normalizedSupplierTaxonomy.supplier_subcategory}`
     : LEGACY_CATEGORY_LABELS[supplier.categoria] || supplier.categoria;
 
   return (
@@ -273,34 +291,12 @@ export default function FornecedorDetalhe() {
                     <Input value={form.cnpj_cpf || ""} onChange={(e) => setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))} />
                   </div>
                   {/* New taxonomy selects */}
-                  <div className="space-y-1.5">
-                    <Label>Categoria *</Label>
-                    <Select value={form.supplier_type || ""} onValueChange={handleSupplierTypeChange}>
-                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                      <SelectContent>
-                        {SUPPLIER_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {SUPPLIER_TYPE_LABELS[type]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Subcategoria *</Label>
-                    <Select
-                      value={form.supplier_subcategory || ""}
-                      onValueChange={(v) => setForm((p) => ({ ...p, supplier_subcategory: v }))}
-                      disabled={!form.supplier_type}
-                    >
-                      <SelectTrigger><SelectValue placeholder={form.supplier_type ? "Selecione..." : "Escolha a categoria primeiro"} /></SelectTrigger>
-                      <SelectContent>
-                        {getSubcategoriesByType(form.supplier_type).map((sub) => (
-                          <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <SupplierTaxonomyFields
+                    supplierType={form.supplier_type}
+                    supplierSubcategory={form.supplier_subcategory}
+                    onSupplierTypeChange={(value) => setForm((p) => ({ ...p, supplier_type: value }))}
+                    onSupplierSubcategoryChange={(value) => setForm((p) => ({ ...p, supplier_subcategory: value }))}
+                  />
                   <div className="space-y-1.5">
                     <Label>Status</Label>
                     <Select value={form.status || "ativo"} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}>
