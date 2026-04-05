@@ -24,7 +24,7 @@ serve(async (req) => {
       clientIp = realIp;
     }
 
-    console.log('Client IP detected:', clientIp);
+    console.log('Client IP detected');
 
     return new Response(
       JSON.stringify({ ip: clientIp }),
