@@ -251,8 +251,10 @@ export default function NovaObra() {
 
       updates.contract_document_name = fileName;
 
-      console.log('[AI Prefill] Final updates:', JSON.stringify(updates, null, 2));
-      console.log('[AI Prefill] Prefilled fields:', Array.from(prefilledFields));
+      if (import.meta.env.DEV) {
+        console.log('[AI Prefill] Final updates:', JSON.stringify(updates, null, 2));
+        console.log('[AI Prefill] Prefilled fields:', Array.from(prefilledFields));
+      }
 
       return { ...prev, ...updates };
     });
