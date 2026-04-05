@@ -9,7 +9,7 @@ import type { FormData, ContractImportState, ContractParseResult, ContractConfli
 
 interface ContractImportCardProps {
   contractState: ContractImportState;
-  onContractStateChange: (state: ContractImportState) => void;
+  onContractStateChange: (updater: (prev: ContractImportState) => ContractImportState) => void;
   formData: FormData;
   onApplyPrefill: (result: ContractParseResult, fileName: string) => void;
 }
@@ -27,28 +27,28 @@ export function ContractImportCard({
 
   const handleFile = async (file: File) => {
     if (!file.type.includes('pdf')) {
-      onContractStateChange({
-        ...contractState,
+      onContractStateChange(prev => ({
+        ...prev,
         parseStatus: 'error',
         errorMessage: 'Apenas arquivos PDF são aceitos.',
-      });
+      }));
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      onContractStateChange({
-        ...contractState,
+      onContractStateChange(prev => ({
+        ...prev,
         parseStatus: 'error',
         errorMessage: 'Arquivo excede o limite de 20MB.',
-      });
+      }));
       return;
     }
 
-    onContractStateChange({
-      ...contractState,
+    onContractStateChange(prev => ({
+      ...prev,
       file,
       parseStatus: 'uploading',
       errorMessage: '',
-    });
+    }));
 
     try {
       // Convert to base64
@@ -60,12 +60,12 @@ export function ContractImportCard({
       }
       const fileBase64 = btoa(binary);
 
-      onContractStateChange({
-        ...contractState,
+      onContractStateChange(prev => ({
+        ...prev,
         file,
         parseStatus: 'parsing',
         errorMessage: '',
-      });
+      }));
 
       // Call edge function
       const { data: sessionData } = await supabase.auth.getSession();
@@ -96,8 +96,8 @@ export function ContractImportCard({
 
       const parseResult: ContractParseResult = result.data;
 
-      onContractStateChange({
-        ...contractState,
+      onContractStateChange(prev => ({
+        ...prev,
         file,
         parseStatus: 'success',
         parseResult,
@@ -105,18 +105,18 @@ export function ContractImportCard({
         aiConflicts: parseResult.conflicts || [],
         aiMissingFields: parseResult.missing_fields || [],
         aiSourceDocumentName: file.name,
-      });
+      }));
 
       // Apply prefill
       onApplyPrefill(parseResult, file.name);
     } catch (err) {
       console.error('Contract parse error:', err);
-      onContractStateChange({
-        ...contractState,
+      onContractStateChange(prev => ({
+        ...prev,
         file,
         parseStatus: 'error',
         errorMessage: err instanceof Error ? err.message : 'Erro ao processar contrato',
-      });
+      }));
     }
   };
 
@@ -128,7 +128,7 @@ export function ContractImportCard({
   };
 
   const handleClear = () => {
-    onContractStateChange({
+    onContractStateChange(() => ({
       file: null,
       parseStatus: 'idle',
       parseResult: null,
@@ -138,7 +138,7 @@ export function ContractImportCard({
       aiMissingFields: [],
       aiSourceDocumentName: '',
       aiLastAppliedAt: null,
-    });
+    }));
   };
 
   const isProcessing = contractState.parseStatus === 'uploading' || contractState.parseStatus === 'parsing';
