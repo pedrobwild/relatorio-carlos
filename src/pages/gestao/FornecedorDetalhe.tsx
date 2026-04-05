@@ -278,6 +278,16 @@ export default function FornecedorDetalhe() {
             </>
           ) : (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => syncMutation.mutate()}
+                disabled={syncMutation.isPending}
+              >
+                <RefreshCw className={`h-4 w-4 ${syncMutation.isPending ? "animate-spin" : ""}`} />
+                {syncMutation.isPending ? "Sincronizando..." : "Sync Envision"}
+              </Button>
               <Button variant="outline" size="sm" className="gap-1.5" onClick={startEdit}>
                 <Pencil className="h-4 w-4" /> Editar
               </Button>
