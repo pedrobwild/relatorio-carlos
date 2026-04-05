@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+
 import { PageContainer } from '@/components/layout/PageContainer';
 import { VistoriasPageSkeleton } from '@/components/skeletons/VistoriasPageSkeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
