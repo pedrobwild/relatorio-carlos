@@ -58,7 +58,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
       <ProjectLayoutProvider value={{ hasShell: false }}>
         <div className="relative min-h-[100dvh]">
           {isSwitching && <ProjectSwitchOverlay />}
-          <div className="pb-14 md:pb-0">{children}</div>
+          <div className="pb-bottom-nav">{children}</div>
         </div>
         <MobileBottomNav />
         <FloatingApprovalBanner projectId={projectId} />
