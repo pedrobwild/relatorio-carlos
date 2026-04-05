@@ -254,9 +254,16 @@ function ProjectRow({
           )}
         </TableCell>
         <TableCell className="text-center py-2">
-          <Badge variant="outline" className={cn(statusColors[project.status], 'text-[9px] font-semibold px-1.5 py-0 h-[18px] whitespace-nowrap')}>
-            {statusLabels[project.status]}
-          </Badge>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className={cn(statusColors[project.status], 'text-[9px] font-semibold px-1.5 py-0 h-[18px] whitespace-nowrap')}>
+                {statusLabels[project.status]}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {getTemporalStatusLabel(project.status, null, project.created_at)}
+            </TooltipContent>
+          </Tooltip>
         </TableCell>
 
         {/* Health */}
