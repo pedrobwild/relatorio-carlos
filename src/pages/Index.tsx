@@ -179,7 +179,7 @@ const Index = () => {
               onMilestoneDateChange={isStaff ? handleMilestoneDateChange : undefined}
             />
             <ProjectSubNav className="mt-3 -mx-3 md:-mx-4 lg:-mx-6 xl:-mx-8" />
-            <OnboardingChecklist projectId={projectId} />
+            {!project?.is_project_phase && <OnboardingChecklist projectId={projectId} />}
             {canEditSchedule && (
               <EmptyState
                 variant="schedule"
