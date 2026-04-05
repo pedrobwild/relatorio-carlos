@@ -102,10 +102,10 @@ export function useNovaObraSubmit() {
       warnings.push({ step: 'Membro', message: 'Falha ao vincular seu acesso — entre em contato com suporte' });
     }
 
-    // 4. Add customer with full contratante data — important but not blocking
+    // 4. Add customer with full contratante data — upsert to handle retry safely
     const { error: customerError } = await supabase
       .from('project_customers')
-      .insert({
+      .upsert({
         project_id: projectId,
         customer_name: formData.customer_name.trim(),
         customer_email: formData.customer_email.trim().toLowerCase(),
@@ -120,7 +120,7 @@ export function useNovaObraSubmit() {
         endereco_residencial: formData.endereco_residencial.trim() || null,
         cidade: formData.cidade_cliente.trim() || null,
         estado: formData.estado_cliente.trim() || null,
-      });
+      }, { onConflict: 'project_id,customer_email' });
     if (customerError) {
       console.error('Customer creation error:', customerError);
       warnings.push({ step: 'Contratante', message: 'Dados do contratante não foram salvos — edite na tela de Dados do Cliente' });
