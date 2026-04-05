@@ -67,6 +67,23 @@ export function TemplateCard({ template: t, onPreview, onEdit, onDuplicate, onEx
                 {getCategoryLabel(t.category)}
               </Badge>
             )}
+            {versionCount > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="gap-1 text-primary border-primary/30">
+                      <History className="h-3 w-3" />
+                      v{latestVersion?.version_number ?? 1}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      {versionCount} versão(ões) · Última: {latestVersion ? formatDistanceToNow(new Date(latestVersion.created_at), { locale: ptBR, addSuffix: true }) : '—'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {acts.length > 0 && (
               <Badge variant="outline">
                 {acts.length} atividades · {totalDays(acts)}d
