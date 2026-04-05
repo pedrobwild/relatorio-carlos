@@ -137,6 +137,8 @@ function computeKpiValues(
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
   map.set('stale-7d', stale7d);
+  map.set('health-critical', healthCritical);
+  map.set('health-attention', healthAttention);
   return map;
 }
 
