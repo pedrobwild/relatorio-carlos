@@ -7,6 +7,7 @@ import { UsersTab } from '@/components/admin/UsersTab';
 import { ObrasTab } from '@/components/admin/ObrasTab';
 import { TemplatesTab } from '@/components/admin/TemplatesTab';
 import { FilesCleanupCard } from '@/components/admin/FilesCleanupCard';
+import { IntegrationMonitorCard } from '@/components/admin/IntegrationMonitorCard';
 import { InspectionTemplatesTab } from '@/components/admin/InspectionTemplatesTab';
 import bwildLogo from '@/assets/bwild-logo-dark.png';
 
