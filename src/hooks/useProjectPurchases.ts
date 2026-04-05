@@ -129,7 +129,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
     });
 
     const approaching = pendingPurchases.filter(p => {
-      const requiredDate = new Date(p.required_by_date);
+      const requiredDate = new Date(p.required_by_date + 'T00:00:00');
       const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       return daysUntil > 7 && daysUntil <= 14;
     });
