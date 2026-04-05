@@ -30,7 +30,9 @@ export interface ObraTaskInput {
   description?: string | null;
   responsible_user_id?: string | null;
   due_date?: string | null;
+  start_date?: string | null;
   cost?: number | null;
+  priority?: ObraTaskPriority;
   status?: ObraTaskStatus;
 }
 
