@@ -17,6 +17,7 @@ import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { getTemporalStatusLabel } from '@/lib/temporalStatus';
 import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
