@@ -83,7 +83,9 @@ function MobileProjectRow({
   return (
     <button
       type="button"
+      role="listitem"
       onClick={onClick}
+      aria-label={`${project.name}${overdueCount > 0 ? `, ${overdueCount} atividades atrasadas` : ''}, ${Math.round(progress)}% concluído`}
       className={cn(
         'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border bg-card text-left',
         'transition-all active:scale-[0.98] active:bg-muted/50',
