@@ -1,10 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-integration-key",
-};
+import { corsResponse, jsonResponse } from "../_shared/cors.ts";
 
 /**
  * sync-project-inbound (Portal BWild)
@@ -16,9 +11,7 @@ const corsHeaders = {
  *   { project: { ...fields }, source_id: string }
  */
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return corsResponse();
 
   try {
     // --- Auth ---
@@ -26,17 +19,19 @@ Deno.serve(async (req) => {
     const expectedKey = Deno.env.get("INTEGRATION_API_KEY");
 
     if (!expectedKey) {
-      throw new Error("INTEGRATION_API_KEY not configured");
+      return jsonResponse({ error: "INTEGRATION_API_KEY not configured" }, 500);
     }
     if (integrationKey !== expectedKey) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return jsonResponse({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }, 500);
+    }
+
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = await req.json();
@@ -50,10 +45,7 @@ Deno.serve(async (req) => {
     if (project && !project.client_name?.trim()) errors.push("project.client_name é obrigatório");
 
     if (errors.length > 0) {
-      return new Response(JSON.stringify({ error: "Validation failed", details: errors }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Validation failed", details: errors }, 400);
     }
 
     // --- Map to local projects schema ---
@@ -88,7 +80,11 @@ Deno.serve(async (req) => {
     let projectId: string;
 
     if (existing) {
-      await db.from("projects").update(projectPayload).eq("id", existing.id);
+      const { error: updateErr } = await db.from("projects").update(projectPayload).eq("id", existing.id);
+      if (updateErr) {
+        console.error("[sync-project-inbound] Update error:", updateErr.message);
+        return jsonResponse({ error: updateErr.message }, 500);
+      }
       projectId = existing.id;
     } else {
       const { data: inserted, error: insertErr } = await db
@@ -119,19 +115,14 @@ Deno.serve(async (req) => {
       onConflict: "source_system,entity_type,source_id",
     });
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       status: "success",
       project_id: projectId,
       action: existing ? "updated" : "created",
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
-    console.error("sync-project-inbound error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("sync-project-inbound error:", errMsg);
+    return jsonResponse({ error: errMsg }, 500);
   }
 });
