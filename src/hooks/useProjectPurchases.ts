@@ -112,7 +112,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
     );
     
     const overdue = pendingPurchases.filter(p => {
-      const requiredDate = new Date(p.required_by_date);
+      const requiredDate = new Date(p.required_by_date + 'T00:00:00');
       return requiredDate < today;
     });
 
