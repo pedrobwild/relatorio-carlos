@@ -1,25 +1,48 @@
 import { z } from 'zod';
 
 export const formSchema = z.object({
+  // ── Obra / Imóvel ──
   name: z.string().trim().min(1, 'Condomínio é obrigatório').max(200),
   unit_name: z.string().trim().max(100).optional(),
+  nome_do_empreendimento: z.string().trim().max(200).optional(),
   address: z.string().trim().max(300).optional(),
   bairro: z.string().trim().max(100).optional(),
   cep: z.string().trim().max(10).optional(),
+  complemento: z.string().trim().max(200).optional(),
+  cidade_imovel: z.string().trim().max(100).optional(),
+  tamanho_imovel_m2: z.string().optional(),
+  tipo_de_locacao: z.string().optional(),
+  data_recebimento_chaves: z.string().optional(),
+  is_project_phase: z.boolean(),
+
+  // ── Cronograma ──
   planned_start_date: z.string().optional(),
   planned_end_date: z.string().optional(),
   business_days_duration: z.string().optional(),
   contract_signing_date: z.string().optional(),
+
+  // ── Comercial / Financeiro ──
   contract_value: z.string().optional(),
   num_installments: z.string().optional(),
   installment_value: z.string().optional(),
   payment_method: z.string().optional(),
   payment_status: z.string().optional(),
+
+  // ── Contratante ──
   customer_name: z.string().trim().min(1, 'Nome do cliente é obrigatório').max(200),
   customer_email: z.string().trim().email('E-mail inválido').max(255),
   customer_phone: z.string().trim().max(20).optional(),
+  nacionalidade: z.string().trim().max(100).optional(),
+  estado_civil: z.string().trim().max(50).optional(),
+  profissao: z.string().trim().max(100).optional(),
+  cpf: z.string().trim().max(20).optional(),
+  rg: z.string().trim().max(20).optional(),
+  endereco_residencial: z.string().trim().max(300).optional(),
+  cidade_cliente: z.string().trim().max(100).optional(),
+  estado_cliente: z.string().trim().max(50).optional(),
+
+  // ── Acesso ──
   customer_password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres').max(72),
-  is_project_phase: z.boolean(),
   create_user: z.boolean(),
 }).refine((data) => {
   if (!data.is_project_phase) {
@@ -32,47 +55,88 @@ export const formSchema = z.object({
 });
 
 export interface FormData {
+  // Obra / Imóvel
   name: string;
   unit_name: string;
+  nome_do_empreendimento: string;
   address: string;
   bairro: string;
   cep: string;
+  complemento: string;
+  cidade_imovel: string;
+  tamanho_imovel_m2: string;
+  tipo_de_locacao: string;
+  data_recebimento_chaves: string;
+  is_project_phase: boolean;
+
+  // Cronograma
   planned_start_date: string;
   planned_end_date: string;
   business_days_duration: string;
   contract_signing_date: string;
+
+  // Comercial / Financeiro
   contract_value: string;
   num_installments: string;
   installment_value: string;
   payment_method: string;
   payment_status: string;
+
+  // Contratante
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  nacionalidade: string;
+  estado_civil: string;
+  profissao: string;
+  cpf: string;
+  rg: string;
+  endereco_residencial: string;
+  cidade_cliente: string;
+  estado_cliente: string;
+
+  // Acesso
   customer_password: string;
-  is_project_phase: boolean;
   create_user: boolean;
 }
 
 export const initialFormData: FormData = {
   name: '',
   unit_name: '',
+  nome_do_empreendimento: '',
   address: '',
   bairro: '',
   cep: '',
+  complemento: '',
+  cidade_imovel: '',
+  tamanho_imovel_m2: '',
+  tipo_de_locacao: '',
+  data_recebimento_chaves: '',
+  is_project_phase: false,
+
   planned_start_date: '',
   planned_end_date: '',
   business_days_duration: '',
   contract_signing_date: '',
+
   contract_value: '',
   num_installments: '',
   installment_value: '',
   payment_method: '',
   payment_status: 'pending',
+
   customer_name: '',
   customer_email: '',
   customer_phone: '',
+  nacionalidade: '',
+  estado_civil: '',
+  profissao: '',
+  cpf: '',
+  rg: '',
+  endereco_residencial: '',
+  cidade_cliente: '',
+  estado_cliente: '',
+
   customer_password: '',
-  is_project_phase: false,
   create_user: true,
 };

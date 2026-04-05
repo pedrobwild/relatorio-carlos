@@ -101,7 +101,7 @@ export function useNovaObraSubmit() {
       .insert({ project_id: project.id, user_id: user.id, role: 'owner' });
     if (memberError) console.error('Member assignment error:', memberError);
 
-    // 4. Add customer
+    // 4. Add customer with full contratante data
     const { error: customerError } = await supabase
       .from('project_customers')
       .insert({
@@ -111,8 +111,39 @@ export function useNovaObraSubmit() {
         customer_phone: formData.customer_phone.trim() || null,
         customer_user_id: createdUserId || null,
         invitation_sent_at: sendInvite ? new Date().toISOString() : null,
+        nacionalidade: formData.nacionalidade.trim() || null,
+        estado_civil: formData.estado_civil.trim() || null,
+        profissao: formData.profissao.trim() || null,
+        cpf: formData.cpf.trim() || null,
+        rg: formData.rg.trim() || null,
+        endereco_residencial: formData.endereco_residencial.trim() || null,
+        cidade: formData.cidade_cliente.trim() || null,
+        estado: formData.estado_cliente.trim() || null,
       });
     if (customerError) console.error('Customer creation error:', customerError);
+
+    // 4b. Persist studio/property info
+    const hasStudioData = formData.nome_do_empreendimento || formData.complemento ||
+      formData.tamanho_imovel_m2 || formData.tipo_de_locacao || formData.data_recebimento_chaves ||
+      formData.cidade_imovel;
+
+    if (hasStudioData) {
+      const { error: studioError } = await supabase
+        .from('project_studio_info')
+        .upsert({
+          project_id: project.id,
+          nome_do_empreendimento: formData.nome_do_empreendimento.trim() || null,
+          endereco_completo: formData.address.trim() || null,
+          bairro: formData.bairro.trim() || null,
+          cidade: formData.cidade_imovel.trim() || null,
+          cep: formData.cep.trim() || null,
+          complemento: formData.complemento.trim() || null,
+          tamanho_imovel_m2: formData.tamanho_imovel_m2 ? parseFloat(formData.tamanho_imovel_m2) : null,
+          tipo_de_locacao: formData.tipo_de_locacao || null,
+          data_recebimento_chaves: formData.data_recebimento_chaves || null,
+        });
+      if (studioError) console.error('Studio info creation error:', studioError);
+    }
 
     // 5. If user was created, add as project member viewer
     if (createdUserId) {
@@ -160,7 +191,6 @@ export function useNovaObraSubmit() {
       const { error: actError } = await supabase.from('project_activities').insert(rows);
       if (actError) console.error('Activities creation error:', actError);
     } else if (manualActivities && manualActivities.length > 0) {
-      // 7b. Create activities from manual input
       const validActivities = manualActivities.filter((a) => a.description.trim());
       if (validActivities.length > 0) {
         const activityIds: string[] = [];
@@ -184,7 +214,6 @@ export function useNovaObraSubmit() {
         if (actError) console.error('Manual activities creation error:', actError);
       }
     }
-
 
     if (formData.num_installments && parseInt(formData.num_installments) > 0) {
       const numInstallments = parseInt(formData.num_installments);
