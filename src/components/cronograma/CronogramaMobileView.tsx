@@ -149,7 +149,7 @@ export function CronogramaMobileView({
           value={stats.progress}
           className={cn(
             'h-2.5 rounded-full',
-            stats.overdue > 0 ? '[&>div]:bg-amber-500' : '[&>div]:bg-green-500'
+            stats.overdue > 0 ? '[&>div]:bg-[hsl(var(--warning))]' : '[&>div]:bg-[hsl(var(--success))]'
           )}
         />
         <p className="text-[11px] text-muted-foreground">
