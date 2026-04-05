@@ -89,6 +89,7 @@ export default function AtividadeDetalhe() {
   const [descriptionDraft, setDescriptionDraft] = useState('');
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [showSubtaskInput, setShowSubtaskInput] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const goBack = () => navigate(`/obra/${projectId}/atividades`);
