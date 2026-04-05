@@ -480,6 +480,11 @@ export default function NovaObra() {
                   {draft?.savedAt && (
                     <p className="text-[11px] text-muted-foreground">Salvo {formatDraftAge(draft.savedAt)}</p>
                   )}
+                  {(draft?.contractSourceDoc || draft?.formData?.contract_document_name) && (
+                    <p className="text-[11px] text-muted-foreground">
+                      ⚠ Arquivos (contrato/orçamento) precisam ser reenviados
+                    </p>
+                  )}
                 </div>
                 <Button type="button" variant="ghost" size="sm" className="h-8 text-xs shrink-0" onClick={handleClearDraft}>
                   Limpar

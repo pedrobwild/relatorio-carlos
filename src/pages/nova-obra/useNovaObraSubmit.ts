@@ -120,7 +120,7 @@ export function useNovaObraSubmit() {
         endereco_residencial: formData.endereco_residencial.trim() || null,
         cidade: formData.cidade_cliente.trim() || null,
         estado: formData.estado_cliente.trim() || null,
-      });
+      }, { onConflict: 'project_id,customer_email' });
     if (customerError) {
       console.error('Customer creation error:', customerError);
       warnings.push({ step: 'Contratante', message: 'Dados do contratante não foram salvos — edite na tela de Dados do Cliente' });
