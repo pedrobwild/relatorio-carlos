@@ -330,7 +330,7 @@ function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { 
                   (differenceInCalendarDays(new Date(), new Date(act.actual_start + 'T00:00:00')) /
                   Math.max(1, differenceInCalendarDays(new Date(act.planned_end + 'T00:00:00'), new Date(act.actual_start + 'T00:00:00')))) * 100
                 ))}
-                className="h-1.5 rounded-full [&>div]:bg-blue-500"
+                className="h-1.5 rounded-full [&>div]:bg-primary"
               />
             </div>
           )}

@@ -71,11 +71,19 @@ export function useDragHandlers(
   const handleDragEnd = useCallback(() => {
     if (dragState) {
       const activity = activities[dragState.activityIndex];
+      const currentStart = activity?.plannedStart;
+      const currentEnd = activity?.plannedEnd;
+      const hasChanged = currentStart !== dragState.originalStart || currentEnd !== dragState.originalEnd;
+
       ganttLogger.log('Date change completed', {
         activityId: activity?.id,
         from: { start: dragState.originalStart, end: dragState.originalEnd },
+        changed: hasChanged,
       });
-      toast.success('Datas atualizadas');
+
+      if (hasChanged) {
+        toast.success('Datas atualizadas');
+      }
     }
     setDragState(null);
   }, [dragState, activities]);
