@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EvidenceUploadProps {
   projectId: string;
@@ -25,7 +26,9 @@ export function EvidenceUpload({
   disabled = false,
   maxFiles = 5,
 }: EvidenceUploadProps) {
+  const isMobile = useIsMobile();
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,21 +44,15 @@ export function EvidenceUpload({
   };
 
   useEffect(() => {
-    // Load signed URLs for any paths not yet cached
     value.forEach(path => {
       setSignedUrls(prev => {
-        if (!prev[path]) {
-          loadSignedUrl(path);
-        }
+        if (!prev[path]) loadSignedUrl(path);
         return prev;
       });
     });
-    // Clean up stale entries
     setSignedUrls(prev => {
       const pathSet = new Set(value);
-      const cleaned = Object.fromEntries(
-        Object.entries(prev).filter(([k]) => pathSet.has(k))
-      );
+      const cleaned = Object.fromEntries(Object.entries(prev).filter(([k]) => pathSet.has(k)));
       return Object.keys(cleaned).length !== Object.keys(prev).length ? cleaned : prev;
     });
   }, [value]);
@@ -71,22 +68,21 @@ export function EvidenceUpload({
 
     const filesToUpload = Array.from(files).slice(0, remaining);
     setUploading(true);
+    setUploadProgress(0);
 
     try {
       const newPaths: string[] = [];
+      const total = filesToUpload.length;
 
-      for (const file of filesToUpload) {
-        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      for (let idx = 0; idx < total; idx++) {
+        const file = filesToUpload[idx];
         const uuid = crypto.randomUUID();
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
         const storagePath = `${projectId}/${entityId}/${uuid}_${safeName}`;
 
         const { error } = await supabase.storage
           .from('inspection-evidences')
-          .upload(storagePath, file, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+          .upload(storagePath, file, { cacheControl: '3600', upsert: false });
 
         if (error) {
           toast.error(`Erro ao enviar ${file.name}: ${error.message}`);
@@ -94,6 +90,7 @@ export function EvidenceUpload({
         }
 
         newPaths.push(storagePath);
+        setUploadProgress(Math.round(((idx + 1) / total) * 100));
 
         // Pre-load signed URL
         const { data: urlData } = await supabase.storage
@@ -108,10 +105,11 @@ export function EvidenceUpload({
         onChange([...value, ...newPaths]);
         toast.success(`${newPaths.length} foto(s) enviada(s)`);
       }
-    } catch (err) {
+    } catch {
       toast.error('Erro ao enviar fotos');
     } finally {
       setUploading(false);
+      setUploadProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (cameraInputRef.current) cameraInputRef.current.value = '';
     }
@@ -136,6 +134,8 @@ export function EvidenceUpload({
   };
 
   const showError = required && value.length === 0;
+  const thumbSize = isMobile ? 'w-20 h-20' : 'w-16 h-16';
+  const deleteButtonSize = isMobile ? 'min-w-[32px] min-h-[32px]' : 'min-w-[28px] min-h-[28px]';
 
   return (
     <div className="space-y-2">
@@ -143,13 +143,13 @@ export function EvidenceUpload({
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {value.map((path, idx) => (
-            <div key={path} className="relative group w-16 h-16 rounded-md overflow-hidden border bg-muted cursor-pointer" onClick={() => signedUrls[path] && setLightboxIndex(idx)}>
+            <div
+              key={path}
+              className={cn('relative group rounded-lg overflow-hidden border bg-muted cursor-pointer', thumbSize)}
+              onClick={() => signedUrls[path] && setLightboxIndex(idx)}
+            >
               {signedUrls[path] ? (
-                <img
-                  src={signedUrls[path]}
-                  alt="Evidência"
-                  className="w-full h-full object-cover"
-                />
+                <img src={signedUrls[path]} alt="Evidência" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -159,9 +159,13 @@ export function EvidenceUpload({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleRemove(path); }}
-                  className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-bl-md p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity min-w-[28px] min-h-[28px] flex items-center justify-center"
+                  className={cn(
+                    'absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-bl-lg p-1 flex items-center justify-center transition-opacity touch-manipulation',
+                    deleteButtonSize,
+                    isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  )}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
@@ -172,55 +176,46 @@ export function EvidenceUpload({
       {/* Upload buttons */}
       {!disabled && value.length < maxFiles && (
         <div className="flex items-center gap-2">
-          {/* File picker */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp,image/heic"
-            multiple
-            className="hidden"
-            onChange={(e) => handleUpload(e.target.files)}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs h-11 min-w-[44px]"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ImagePlus className="h-4 w-4" />
-            )}
-            Foto
-          </Button>
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/heic" multiple className="hidden" onChange={(e) => handleUpload(e.target.files)} />
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleUpload(e.target.files)} />
 
-          {/* Camera capture (mobile) */}
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => handleUpload(e.target.files)}
-          />
+          {/* Camera button — primary on mobile */}
           <Button
             type="button"
-            variant="outline"
+            variant={isMobile ? 'default' : 'outline'}
             size="sm"
-            className="gap-1.5 text-xs h-11 min-w-[44px]"
+            className={cn('gap-1.5 text-xs h-11 min-w-[44px] touch-manipulation', isMobile && 'flex-1')}
             onClick={() => cameraInputRef.current?.click()}
             disabled={uploading}
           >
-            <Camera className="h-4 w-4" />
-            <span className="hidden sm:inline">Câmera</span>
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+            {isMobile ? (uploading ? `Enviando ${uploadProgress}%` : 'Tirar Foto') : <span className="hidden sm:inline">Câmera</span>}
           </Button>
 
-          {uploading && (
-            <span className="text-xs text-muted-foreground">Enviando...</span>
-          )}
+          {/* Gallery button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs h-11 min-w-[44px] touch-manipulation"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <ImagePlus className="h-4 w-4" />
+            {!isMobile && 'Galeria'}
+          </Button>
+
+          {/* File count */}
+          <span className="text-[10px] text-muted-foreground shrink-0">
+            {value.length}/{maxFiles}
+          </span>
+        </div>
+      )}
+
+      {/* Upload progress bar */}
+      {uploading && uploadProgress > 0 && (
+        <div className="h-1 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary transition-all duration-200 rounded-full" style={{ width: `${uploadProgress}%` }} />
         </div>
       )}
 
@@ -244,25 +239,15 @@ export function EvidenceUpload({
               />
               {value.length > 1 && (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-black/50 text-white hover:bg-black/70"
-                    onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + value.length) % value.length); }}
-                  >
-                    <ChevronLeft className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 text-white hover:bg-black/70 touch-manipulation" onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + value.length) % value.length); }}>
+                    <ChevronLeft className="h-6 w-6" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-black/50 text-white hover:bg-black/70"
-                    onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % value.length); }}
-                  >
-                    <ChevronRight className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 text-white hover:bg-black/70 touch-manipulation" onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % value.length); }}>
+                    <ChevronRight className="h-6 w-6" />
                   </Button>
                 </>
               )}
-              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-xs">
+              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm bg-black/50 px-3 py-1 rounded-full">
                 {lightboxIndex + 1} / {value.length}
               </span>
             </>
