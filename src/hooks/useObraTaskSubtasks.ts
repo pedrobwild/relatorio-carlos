@@ -27,7 +27,7 @@ export function useObraTaskSubtasks(taskId: string | undefined) {
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return (data || []) as ObraTaskSubtask[];
+      return (data || []) as unknown as ObraTaskSubtask[];
     },
     enabled: !!taskId,
   });
