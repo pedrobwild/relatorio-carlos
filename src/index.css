@@ -299,6 +299,22 @@
   /* Better focus states for accessibility */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
+    outline-style: solid;
+  }
+
+  /* Skip to content link */
+  .skip-to-content {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-semibold;
+  }
+
+  /* Reduced motion: disable all animations and transitions */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Safe area insets for notched devices */

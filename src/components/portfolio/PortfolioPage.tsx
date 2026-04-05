@@ -100,6 +100,11 @@ export default function PortfolioPage() {
           <StaleDataBanner onRefresh={() => refetch()} isRefetching={isRefetching} />
         )}
 
+        {/* Live region for filter count announcements */}
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {filters.filtered.length} de {projects.length} obras exibidas
+        </div>
+
         {/* Command Bar */}
         <PortfolioCommandBar
           search={filters.search}
