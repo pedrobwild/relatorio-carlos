@@ -41,7 +41,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
   const filtered = useMemo(() => {
     let result = inspections;
     if (filterStatus) result = result.filter(i => i.status === filterStatus);
-    if (filterTypes.length > 0) result = result.filter(i => filterTypes.includes((i as any).inspection_type || 'rotina'));
+    if (filterTypes.length > 0) result = result.filter(i => filterTypes.includes((i.inspection_type || 'rotina') as InspectionType));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(i =>
