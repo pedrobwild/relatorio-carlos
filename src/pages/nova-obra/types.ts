@@ -86,6 +86,11 @@ export interface FormData {
   installment_value: string;
   payment_method: string;
   payment_status: string;
+  contract_signed_at: string;
+  commercial_notes: string;
+  contract_document_name: string;
+  budget_uploaded: boolean;
+  budget_file_name: string;
 
   // Contratante
   customer_name: string;
