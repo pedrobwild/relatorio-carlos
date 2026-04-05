@@ -173,26 +173,28 @@ export default function PortfolioPage() {
                 onClearFilters={filters.handleClearAll}
                 activeFilterCount={filters.totalFilterCount}
               />
-            ) : filters.viewMode === 'cards' ? (
-              <ProjectsCardView
-                projects={filters.filtered}
-                onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-              />
             ) : (
               <>
-                {/* Mobile: always show cards for better usability */}
+                {/* Mobile: compact list view (default) */}
                 <div className="block md:hidden">
-                  <ProjectsCardView
+                  <MobileProjectList
                     projects={filters.filtered}
                     onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
                   />
                 </div>
-                {/* Desktop: show list/table view */}
+                {/* Desktop: respects view mode */}
                 <div className="hidden md:block">
-                  <ProjectsListView
-                    projects={filters.filtered}
-                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-                  />
+                  {filters.viewMode === 'cards' ? (
+                    <ProjectsCardView
+                      projects={filters.filtered}
+                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                    />
+                  ) : (
+                    <ProjectsListView
+                      projects={filters.filtered}
+                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                    />
+                  )}
                 </div>
               </>
             )}
