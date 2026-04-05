@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { Pencil, Trash2, Copy, Eye, Download, Tag } from 'lucide-react';
+import { Pencil, Trash2, Copy, Eye, Download, Tag, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { ProjectTemplate } from '@/hooks/useProjectTemplates';
+import { useTemplateVersions } from '@/hooks/useProjectTemplates';
 import { type ActivityItem, totalDays, getCategoryLabel } from './types';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TemplateCardProps {
   template: ProjectTemplate;
