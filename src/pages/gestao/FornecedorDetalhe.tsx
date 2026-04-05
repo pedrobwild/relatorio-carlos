@@ -87,7 +87,7 @@ export default function FornecedorDetalhe() {
 
   useEffect(() => {
     if (supplier && !editing) setForm({ ...supplier });
-  }, [supplier]);
+  }, [supplier, editing]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<Supplier>) => {
