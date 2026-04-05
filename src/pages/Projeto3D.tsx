@@ -37,7 +37,7 @@ const Projeto3D = () => {
   const projeto3dDoc = getLatestByCategory('projeto_3d')[0];
   const loading = projectLoading || docsLoading;
 
-  // TODO: Load video from storage as well
+  // FIXME(BWD-xxx): Load video from Supabase Storage bucket project-documents/videos/
   const videoUrl = "/videos/projeto-3d-tour.mov";
   const hasVideo = true;
 

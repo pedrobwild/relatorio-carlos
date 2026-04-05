@@ -60,7 +60,7 @@ export default function FormalizacaoNova() {
   });
 
   // Fetch user profile to get customer_org_id
-  const { data: profile } = useQuery({
+  const { data: profile, error: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -173,6 +173,17 @@ export default function FormalizacaoNova() {
       });
     }
   };
+
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="text-center space-y-2">
+          <p className="text-destructive font-medium">Erro ao carregar perfil</p>
+          <p className="text-sm text-muted-foreground">Recarregue a página e tente novamente.</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderStepContent = () => {
     switch (currentStep) {

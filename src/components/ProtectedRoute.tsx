@@ -63,7 +63,7 @@ export function ProtectedRoute({
   }
 
   // Check role if specified - user needs at least ONE of the allowed roles
-  if (allowedRoles && roles.length > 0 && !hasAnyRole(allowedRoles)) {
+  if (allowedRoles && !hasAnyRole(allowedRoles)) {
     debugNav('ProtectedRoute: no matching role', { 
       userRoles: roles, 
       allowedRoles, 
@@ -115,7 +115,7 @@ export function CustomerRoute({ children }: { children: ReactNode }) {
 // Admin: full system access including user management
 export function AdminRoute({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['admin', 'manager', 'engineer', 'gestor']}>
+    <ProtectedRoute allowedRoles={['admin']}>
       {children}
     </ProtectedRoute>
   );
