@@ -127,7 +127,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                       draggable
                       onDragStart={(e) => handleDragStart(e, task.id)}
                       className="cursor-grab active:cursor-grabbing hover:shadow-md transition-all rounded-xl border-border/40 active:scale-[0.98]"
-                      onClick={() => setDetailTask(task)}
+                      onClick={() => navigate(`/obra/${projectId}/atividades/${task.id}`)}
                     >
                       <CardContent className="p-3 space-y-2">
                         <div className="flex items-start justify-between gap-1">
