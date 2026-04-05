@@ -225,7 +225,7 @@ export default function NovaObra() {
 
         const sectionData = result[mapping.section] as Record<string, unknown> | undefined;
         const aiValue = sectionData?.[mapping.aiField];
-        console.log(`[AI Prefill] ${formField}: section=${mapping.section}, aiField=${mapping.aiField}, value=`, aiValue);
+        if (import.meta.env.DEV) console.log(`[AI Prefill] ${formField}: section=${mapping.section}, aiField=${mapping.aiField}, value=`, aiValue);
 
         if (aiValue != null && aiValue !== '' && typeof aiValue === 'string') {
           const currentValue = prev[formField as keyof FormData];
