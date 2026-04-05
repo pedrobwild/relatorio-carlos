@@ -174,8 +174,6 @@ export function ProjectSidebar() {
           label: L("atividades"),
           icon: ListChecks,
           path: paths.atividades,
-          disabledInProjectPhase: true,
-          staffOnly: true,
         },
         {
           label: L("pendencias"),

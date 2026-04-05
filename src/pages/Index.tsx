@@ -62,6 +62,13 @@ const Index = () => {
     saveWeeklyReport,
   } = useProjectPortal();
 
+  // Redirect to Jornada when project is in project phase
+  useEffect(() => {
+    if (!projectLoading && project?.is_project_phase && projectId) {
+      navigate(`/obra/${projectId}/jornada`, { replace: true });
+    }
+  }, [projectLoading, project?.is_project_phase, projectId, navigate]);
+
   const handleExportPDF = useCallback(async () => {
     if (!reportRef.current) return;
     const operationId = 'pdf-export';
