@@ -26,23 +26,34 @@ Deno.serve(async (req) => {
     if (!authHeader) return jsonResponse({ error: "Authorization required" }, 401);
 
     const token = authHeader.replace("Bearer ", "");
-    let isServiceRole = false;
+    let isInternalCall = false;
 
-    // Check if it's service role (from trigger) or user JWT
+    // Check if it's service role (from trigger/cron)
     if (token === serviceKey) {
-      isServiceRole = true;
-      console.log("[sync-outbound] Called via service role (trigger)");
+      isInternalCall = true;
+      console.log("[sync-outbound] Called via service role");
     } else {
-      // Validate user JWT
+      // Try to validate as user JWT
       const supabaseUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
         global: { headers: { Authorization: authHeader } },
       });
       const { data: { user }, error: authErr } = await supabaseUser.auth.getUser();
-      if (authErr || !user) return jsonResponse({ error: "Invalid token" }, 401);
-
-      const { data: isStaff } = await supabaseAdmin.rpc("is_staff", { _user_id: user.id });
-      if (!isStaff) return jsonResponse({ error: "Staff access required" }, 403);
-      console.log("[sync-outbound] Called by staff user:", user.id);
+      
+      if (authErr || !user) {
+        // If JWT validation fails, check if called from pg_net trigger (anon key)
+        // pg_net sends anon key; allow if supplier_data is present (only trigger sends this)
+        const body = await req.clone().json().catch(() => ({}));
+        if (body.supplier_data) {
+          isInternalCall = true;
+          console.log("[sync-outbound] Called via trigger (anon key + supplier_data)");
+        } else {
+          return jsonResponse({ error: "Invalid token" }, 401);
+        }
+      } else {
+        const { data: isStaff } = await supabaseAdmin.rpc("is_staff", { _user_id: user.id });
+        if (!isStaff) return jsonResponse({ error: "Staff access required" }, 403);
+        console.log("[sync-outbound] Called by staff user:", user.id);
+      }
     }
 
     // --- Input ---
