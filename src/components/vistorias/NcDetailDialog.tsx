@@ -102,6 +102,23 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
     nc.actual_cost != null ? String(nc.actual_cost) : ''
   );
 
+  // Re-sync state when the NC prop changes (e.g. after mutation invalidation)
+  useEffect(() => {
+    setEditTitle(nc.title);
+    setEditDescription(nc.description || '');
+    setEditSeverity(nc.severity);
+    setEditCategory(nc.category || '');
+    setEditDeadline(nc.deadline ? parseISO(nc.deadline) : undefined);
+    setEditEstimatedCost(nc.estimated_cost != null ? String(nc.estimated_cost) : '');
+    setCorrectiveAction(nc.corrective_action || '');
+    setPhotosBefore(nc.evidence_photos_before ?? nc.evidence_photo_paths ?? []);
+    setPhotosAfter(nc.evidence_photos_after ?? []);
+    setRootCause(nc.root_cause || '');
+    setActualCostInput(nc.actual_cost != null ? String(nc.actual_cost) : '');
+    setEditing(false);
+    setActionNotes('');
+  }, [nc.id]);
+
   const handleSaveEdit = () => {
     if (!editTitle.trim()) return;
     const parsedCost = parseCurrencyInput(editEstimatedCost);
