@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { type ObraTask, type ObraTaskStatus, type ObraTaskInput, TASK_STATUSES } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { AtividadeMobileCard } from './AtividadeMobileCard';
-import { AtividadeDetailSheet } from './AtividadeDetailSheet';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { EmptyState, PageSkeleton } from '@/components/ui/states';
 import { ClipboardList } from 'lucide-react';
