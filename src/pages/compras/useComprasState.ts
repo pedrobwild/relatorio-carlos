@@ -100,18 +100,26 @@ export function useComprasState() {
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
     };
-    if (editingPurchase) {
-      await updatePurchase.mutateAsync({ id: editingPurchase.id, ...input });
-    } else {
-      await addPurchase.mutateAsync(input);
+    try {
+      if (editingPurchase) {
+        await updatePurchase.mutateAsync({ id: editingPurchase.id, ...input });
+      } else {
+        await addPurchase.mutateAsync(input);
+      }
+      setIsDialogOpen(false);
+    } catch {
+      // Error toast already handled by mutation onError
     }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    await deletePurchase.mutateAsync(deleteId);
-    setDeleteId(null);
+    try {
+      await deletePurchase.mutateAsync(deleteId);
+      setDeleteId(null);
+    } catch {
+      // Error toast already handled by mutation onError
+    }
   };
 
   const handleStatusChange = async (id: string, newStatus: PurchaseStatus) => {

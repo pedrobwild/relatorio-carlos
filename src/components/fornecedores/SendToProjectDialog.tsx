@@ -65,6 +65,7 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
         estimated_cost: priceItem.preco_unitario * quantity,
         supplier_name: fornecedorNome,
         required_by_date: requiredBy,
+        lead_time_days: 7,
         notes: notes || null,
         status: "pending",
         created_by: user.id,

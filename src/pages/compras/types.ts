@@ -3,10 +3,10 @@ import { PurchaseStatus } from '@/hooks/useProjectPurchases';
 import type { PurchaseInput } from '@/hooks/useProjectPurchases';
 
 export const statusConfig: Record<PurchaseStatus, { label: string; color: string; icon: React.ElementType }> = {
-  pending: { label: 'Pendente', color: 'bg-amber-500/20 text-amber-700 border-amber-500/30', icon: Clock },
-  ordered: { label: 'Pedido', color: 'bg-blue-500/20 text-blue-700 border-blue-500/30', icon: Package },
-  in_transit: { label: 'Em Trânsito', color: 'bg-purple-500/20 text-purple-700 border-purple-500/30', icon: Truck },
-  delivered: { label: 'Concluído', color: 'bg-green-500/20 text-green-700 border-green-500/30', icon: CheckCircle2 },
+  pending: { label: 'Pendente', color: 'bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30', icon: Clock },
+  ordered: { label: 'Pedido', color: 'bg-primary/20 text-primary border-primary/30', icon: Package },
+  in_transit: { label: 'Em Trânsito', color: 'bg-accent text-accent-foreground border-accent', icon: Truck },
+  delivered: { label: 'Concluído', color: 'bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border-[hsl(var(--success))]/30', icon: CheckCircle2 },
   cancelled: { label: 'Cancelado', color: 'bg-muted text-muted-foreground border-muted', icon: X },
 };
 

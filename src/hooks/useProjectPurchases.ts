@@ -112,24 +112,24 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
     );
     
     const overdue = pendingPurchases.filter(p => {
-      const requiredDate = new Date(p.required_by_date);
+      const requiredDate = new Date(p.required_by_date + 'T00:00:00');
       return requiredDate < today;
     });
 
     const critical = pendingPurchases.filter(p => {
-      const requiredDate = new Date(p.required_by_date);
+      const requiredDate = new Date(p.required_by_date + 'T00:00:00');
       const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       return daysUntil >= 0 && daysUntil <= 3;
     });
 
     const warning = pendingPurchases.filter(p => {
-      const requiredDate = new Date(p.required_by_date);
+      const requiredDate = new Date(p.required_by_date + 'T00:00:00');
       const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       return daysUntil > 3 && daysUntil <= 7;
     });
 
     const approaching = pendingPurchases.filter(p => {
-      const requiredDate = new Date(p.required_by_date);
+      const requiredDate = new Date(p.required_by_date + 'T00:00:00');
       const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       return daysUntil > 7 && daysUntil <= 14;
     });
@@ -275,7 +275,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   
   const overduePurchases = purchases.filter(p => {
     if (p.status === 'delivered' || p.status === 'cancelled') return false;
-    const requiredDate = new Date(p.required_by_date);
+    const requiredDate = new Date(p.required_by_date + 'T00:00:00');
     return requiredDate < today;
   });
 
@@ -287,7 +287,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   const getUrgencyLevel = (purchase: ProjectPurchase): UrgencyLevel => {
     if (purchase.status === 'delivered' || purchase.status === 'cancelled') return 'normal';
     
-    const requiredDate = new Date(purchase.required_by_date);
+    const requiredDate = new Date(purchase.required_by_date + 'T00:00:00');
     const daysUntil = Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysUntil < 0) return 'overdue';
@@ -298,7 +298,7 @@ export function useProjectPurchases(projectId: string | undefined, showAlerts = 
   };
 
   const getDaysUntilDeadline = (purchase: ProjectPurchase): number => {
-    const requiredDate = new Date(purchase.required_by_date);
+    const requiredDate = new Date(purchase.required_by_date + 'T00:00:00');
     return Math.ceil((requiredDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 

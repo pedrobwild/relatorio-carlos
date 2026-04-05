@@ -202,7 +202,7 @@ function PurchaseRow({
               <p className={cn(
                 'text-xs',
                 purchase.actual_cost > (purchase.estimated_cost || 0)
-                  ? 'text-destructive' : 'text-green-600'
+                  ? 'text-destructive' : 'text-[hsl(var(--success))]'
               )}>
                 Real: {fmt(purchase.actual_cost)}
               </p>
@@ -495,7 +495,7 @@ export function PurchasesTable({
                   {categoryActual > 0 && (
                     <span className={cn(
                       'font-medium',
-                      categoryActual > categoryTotal ? 'text-destructive' : 'text-green-600',
+                      categoryActual > categoryTotal ? 'text-destructive' : 'text-[hsl(var(--success))]',
                     )}>
                       {fmt(categoryActual)}
                     </span>
