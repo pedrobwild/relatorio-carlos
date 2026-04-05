@@ -50,7 +50,7 @@ export function ExecutivoVersionsModal({ projectId, open, onOpenChange }: Props)
       await createVersion(selectedFile);
       setSelectedFile(null);
       setUploadMode(false);
-    } catch {}
+    } catch { /* error handled by mutation */ }
   }, [selectedFile, createVersion]);
 
   const handleRequestRevision = useCallback(async () => {

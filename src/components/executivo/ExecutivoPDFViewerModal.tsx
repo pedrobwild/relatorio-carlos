@@ -34,7 +34,7 @@ export function ExecutivoPDFViewerModal({ versionId, open, onOpenChange }: Props
     try {
       await addComment({ fileId, text: commentText.trim() });
       setCommentText('');
-    } catch {}
+    } catch { /* error handled by mutation */ }
     finally { setSaving(false); }
   }, [commentText, fileId, addComment]);
 
