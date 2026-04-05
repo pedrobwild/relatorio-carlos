@@ -114,7 +114,7 @@ export function ComprasKPICards({
               {costVariance !== null && (
                 <span className={cn(
                   "text-xs mt-0.5 block",
-                  costVariance > 0 ? "text-destructive" : "text-green-600"
+                  costVariance > 0 ? "text-destructive" : "text-[hsl(var(--success))]"
                 )}>
                   {costVariance > 0 ? '+' : ''}{costVariance.toFixed(1)}% real
                 </span>

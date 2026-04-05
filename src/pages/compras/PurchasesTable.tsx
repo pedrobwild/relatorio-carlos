@@ -495,7 +495,7 @@ export function PurchasesTable({
                   {categoryActual > 0 && (
                     <span className={cn(
                       'font-medium',
-                      categoryActual > categoryTotal ? 'text-destructive' : 'text-green-600',
+                      categoryActual > categoryTotal ? 'text-destructive' : 'text-[hsl(var(--success))]',
                     )}>
                       {fmt(categoryActual)}
                     </span>

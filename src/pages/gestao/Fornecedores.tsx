@@ -170,8 +170,8 @@ export default function Fornecedores() {
       return;
     }
     const payload = { ...form };
-    if (!payload.prazo_entrega_dias) delete payload.prazo_entrega_dias;
-    if (!payload.nota_avaliacao) delete payload.nota_avaliacao;
+    if (payload.prazo_entrega_dias === undefined || payload.prazo_entrega_dias === null) delete payload.prazo_entrega_dias;
+    if (payload.nota_avaliacao === undefined || payload.nota_avaliacao === null) delete payload.nota_avaliacao;
     saveMutation.mutate(payload);
   };
 
