@@ -151,7 +151,7 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-6"
+      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-7"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
