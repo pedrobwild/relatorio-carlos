@@ -1,10 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders, corsResponse, jsonResponse } from "../_shared/cors.ts";
 
 /**
  * sync-monitor-agent
@@ -15,14 +10,16 @@ const corsHeaders = {
  * Called by DB trigger when integration_sync_log.sync_status = 'failed'
  */
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return corsResponse();
 
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const INTEGRATION_API_KEY = Deno.env.get("INTEGRATION_API_KEY");
+
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    return jsonResponse({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }, 500);
+  }
 
   const db = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -40,30 +37,23 @@ Deno.serve(async (req) => {
     } = body;
 
     if (!sync_log_id || !error_message) {
-      return jsonRes({ error: "sync_log_id and error_message required" }, 400);
+      return jsonResponse({ error: "sync_log_id and error_message required" }, 400);
     }
 
     if (!LOVABLE_API_KEY) {
       console.error("[sync-monitor] LOVABLE_API_KEY not configured");
-      return jsonRes({ error: "AI not configured" }, 500);
+      return jsonResponse({ error: "AI not configured" }, 500);
     }
 
     console.log(
       `[sync-monitor] Analyzing failure for ${entity_type} ${source_id} (attempt ${attempts + 1})`
     );
 
-    // --- Get schema info for the target table ---
+    // --- Schema info for the target table ---
     const targetTable = entity_type === "supplier" ? "fornecedores" : "projects";
 
-    // Query column info directly via SQL
-    const { data: tableColumns } = await db
-      .from(targetTable)
-      .select()
-      .limit(0);
-
-    // Use hardcoded schema knowledge since information_schema isn't accessible via SDK
     const schemaInfo = entity_type === "supplier"
-      ? `nome (text, NOT NULL), razao_social (text), cnpj_cpf (text), categoria (supplier_category enum), supplier_type (text), supplier_subcategory (text), endereco (text), cidade (text), estado (text), cep (text), email (text), telefone (text), site (text), condicoes_pagamento (text), prazo_entrega_dias (integer), produtos_servicos (text), nota_avaliacao (numeric), observacoes (text), status (text: ativo/inativo), external_id (text), external_system (text)`
+      ? `nome (text, NOT NULL), razao_social (text), cnpj_cpf (text), categoria (supplier_category enum: materiais|mao_de_obra|servicos|equipamentos|outros), supplier_type (text), supplier_subcategory (text), endereco (text), cidade (text), estado (text), cep (text), email (text), telefone (text), site (text), condicoes_pagamento (text), prazo_entrega_dias (integer), produtos_servicos (text), nota_avaliacao (numeric), observacoes (text), status (text: ativo/inativo), external_id (text), external_system (text)`
       : `name (text, NOT NULL), client_name (text), client_phone (text), client_email (text), address (text), condominium (text), neighborhood (text), city (text), unit_name (text), property_type (text), total_area (numeric), estimated_duration_weeks (integer), budget_value (numeric), budget_code (text), status (text), notes (text), consultora_comercial (text), external_id (text), external_system (text)`;
 
     // --- Call AI to diagnose and fix ---
@@ -80,7 +70,7 @@ RULES:
 2. Map field names from the source payload to the correct column names
 3. Ensure data types match (e.g., numbers for numeric columns)
 4. Required fields must not be null
-5. For the 'fornecedores' table: 'nome' is required, 'status' should be 'ativo' or 'inativo', 'categoria' must be a valid supplier_category enum
+5. For the 'fornecedores' table: 'nome' is required, 'status' should be 'ativo' or 'inativo', 'categoria' MUST be one of: materiais, mao_de_obra, servicos, equipamentos, outros
 6. For the 'projects' table: 'name' is required
 7. Remove any fields that don't exist in the target table
 
@@ -116,7 +106,7 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -164,7 +154,6 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
       const errText = await aiResponse.text();
       console.error("[sync-monitor] AI error:", aiResponse.status, errText);
 
-      // Mark as needs manual review
       await db
         .from("integration_sync_log")
         .update({
@@ -174,7 +163,7 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
         })
         .eq("id", sync_log_id);
 
-      return jsonRes({ error: "AI analysis failed", status: aiResponse.status }, 500);
+      return jsonResponse({ error: "AI analysis failed", status: aiResponse.status }, 500);
     }
 
     const aiData = await aiResponse.json();
@@ -190,10 +179,16 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
           attempts: (attempts || 0) + 1,
         })
         .eq("id", sync_log_id);
-      return jsonRes({ error: "AI returned no structured response" }, 500);
+      return jsonResponse({ error: "AI returned no structured response" }, 500);
     }
 
-    let diagnosis: any;
+    let diagnosis: {
+      diagnosis: string;
+      root_cause: string;
+      corrected_payload: Record<string, unknown>;
+      confidence: string;
+      changes_made: string[];
+    };
     try {
       diagnosis = JSON.parse(toolCall.function.arguments);
     } catch {
@@ -206,12 +201,11 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
           attempts: (attempts || 0) + 1,
         })
         .eq("id", sync_log_id);
-      return jsonRes({ error: "Failed to parse AI diagnosis" }, 500);
+      return jsonResponse({ error: "Failed to parse AI diagnosis" }, 500);
     }
 
     console.log(`[sync-monitor] Diagnosis: ${diagnosis.diagnosis}`);
     console.log(`[sync-monitor] Confidence: ${diagnosis.confidence}`);
-    console.log(`[sync-monitor] Changes: ${diagnosis.changes_made.join(", ")}`);
 
     // --- Save AI diagnosis ---
     await db
@@ -231,7 +225,7 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
         .eq("id", sync_log_id);
 
       await notifyAdmins(db, entity_type, source_id, diagnosis.diagnosis, "needs_manual_review");
-      return jsonRes({
+      return jsonResponse({
         status: "needs_manual_review",
         diagnosis: diagnosis.diagnosis,
         confidence: "low",
@@ -244,7 +238,7 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
         ? "/functions/v1/sync-supplier-inbound"
         : "/functions/v1/sync-project-inbound";
 
-    let retryBody: any;
+    let retryBody: Record<string, unknown>;
     if (entity_type === "supplier") {
       retryBody = {
         fornecedor: diagnosis.corrected_payload,
@@ -271,8 +265,6 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
     if (retryResponse.ok) {
       console.log(`[sync-monitor] Retry SUCCESS for ${entity_type} ${source_id}`);
 
-      // The inbound function will update the sync log to 'success'
-      // We just need to preserve the AI diagnosis
       await db
         .from("integration_sync_log")
         .update({
@@ -291,13 +283,13 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
         "auto_corrected"
       );
 
-      return jsonRes({
+      return jsonResponse({
         status: "auto_corrected",
         diagnosis: diagnosis.diagnosis,
         changes: diagnosis.changes_made,
       });
     } else {
-      console.error(`[sync-monitor] Retry FAILED: ${retryResult}`);
+      console.error(`[sync-monitor] Retry FAILED for ${entity_type} ${source_id}`);
 
       const newAttempts = (attempts || 0) + 1;
       const finalStatus = newAttempts >= 3 ? "needs_manual_review" : "failed";
@@ -306,7 +298,7 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
         .from("integration_sync_log")
         .update({
           sync_status: finalStatus,
-          error_message: `Retry falhou: ${retryResult}`,
+          error_message: `Retry falhou (tentativa ${newAttempts}/3)`,
           ai_diagnosis: `${diagnosis.diagnosis}\n\n❌ Reenvio falhou (tentativa ${newAttempts}/3)`,
         })
         .eq("id", sync_log_id);
@@ -321,27 +313,22 @@ Analyze the error, diagnose the root cause, and produce a corrected payload that
         );
       }
 
-      return jsonRes({
+      return jsonResponse({
         status: finalStatus,
         diagnosis: diagnosis.diagnosis,
         retry_error: retryResult,
       });
     }
-  } catch (error: any) {
-    console.error("[sync-monitor] Error:", error);
-    return jsonRes({ error: error.message }, 500);
-  }
-
-  function jsonRes(body: unknown, status = 200) {
-    return new Response(JSON.stringify(body), {
-      status,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[sync-monitor] Error:", message);
+    return jsonResponse({ error: message }, 500);
   }
 });
 
 /**
- * Send notification to admin users about sync issues
+ * Send notification to admin users about sync issues.
+ * Uses 'general' notification type (valid enum value).
  */
 async function notifyAdmins(
   db: ReturnType<typeof createClient>,
@@ -351,7 +338,6 @@ async function notifyAdmins(
   status: string
 ) {
   try {
-    // Get admin user IDs
     const { data: admins } = await db
       .from("user_roles")
       .select("user_id")
@@ -370,7 +356,7 @@ async function notifyAdmins(
         user_id: admin.user_id,
         title,
         body: message,
-        type: "system_alert",
+        type: "general",
         action_url: "/admin?tab=sistema",
       });
     }

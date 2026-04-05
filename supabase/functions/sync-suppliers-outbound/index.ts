@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders, corsResponse, jsonResponse } from "../_shared/cors.ts";
+import { corsResponse, jsonResponse } from "../_shared/cors.ts";
 
 /**
  * sync-suppliers-outbound
@@ -18,8 +18,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !serviceKey) {
+      return jsonResponse({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }, 500);
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
     const authHeader = req.headers.get("Authorization");
@@ -31,28 +37,31 @@ Deno.serve(async (req) => {
     // Check if it's service role (from trigger/cron)
     if (token === serviceKey) {
       isInternalCall = true;
-      console.log("[sync-outbound] Called via service role");
     } else {
       // Try to validate as user JWT
-      const supabaseUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      if (!anonKey) {
+        return jsonResponse({ error: "Missing SUPABASE_ANON_KEY" }, 500);
+      }
+      const supabaseUser = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
       const { data: { user }, error: authErr } = await supabaseUser.auth.getUser();
       
       if (authErr || !user) {
-        // If JWT validation fails, check if called from pg_net trigger (anon key)
         // pg_net sends anon key; allow if supplier_data is present (only trigger sends this)
         const body = await req.clone().json().catch(() => ({}));
         if (body.supplier_data) {
           isInternalCall = true;
-          console.log("[sync-outbound] Called via trigger (anon key + supplier_data)");
         } else {
           return jsonResponse({ error: "Invalid token" }, 401);
         }
       } else {
-        const { data: isStaff } = await supabaseAdmin.rpc("is_staff", { _user_id: user.id });
+        const { data: isStaff, error: rpcErr } = await supabaseAdmin.rpc("is_staff", { _user_id: user.id });
+        if (rpcErr) {
+          console.error("[sync-outbound] RPC is_staff error:", rpcErr.message);
+          return jsonResponse({ error: "Failed to verify permissions" }, 500);
+        }
         if (!isStaff) return jsonResponse({ error: "Staff access required" }, 403);
-        console.log("[sync-outbound] Called by staff user:", user.id);
       }
     }
 
@@ -106,7 +115,7 @@ Deno.serve(async (req) => {
     };
 
     // --- Log sync attempt ---
-    const attempts = (existing as any)?.attempts ?? 0;
+    const attempts = (existing as Record<string, unknown>)?.attempts as number ?? 0;
     if (!existing) {
       await supabaseAdmin.from("integration_sync_log").insert({
         source_system: "portal_bwild",
@@ -134,7 +143,7 @@ Deno.serve(async (req) => {
     const integrationKey = Deno.env.get("INTEGRATION_API_KEY");
 
     if (!envisionUrl || !integrationKey || !envisionServiceKey) {
-      const errMsg = "Missing integration config";
+      const errMsg = "Missing integration config (ENVISION_SUPABASE_URL, ENVISION_SERVICE_ROLE_KEY, or INTEGRATION_API_KEY)";
       await updateSyncStatus(supabaseAdmin, supplier_id, "failed", errMsg);
       return jsonResponse({ error: errMsg }, 500);
     }
@@ -169,15 +178,13 @@ Deno.serve(async (req) => {
       .eq("entity_type", "supplier")
       .eq("source_id", supplier_id);
 
-    console.log(`[sync-outbound] Supplier ${supplier_id} synced → Envision: ${result.target_id}`);
-
     return jsonResponse({
       success: true,
       source_id: supplier_id,
       target_id: result.target_id,
     });
   } catch (error) {
-    console.error("[sync-outbound] Error:", error);
+    console.error("[sync-outbound] Error:", error instanceof Error ? error.message : error);
     return jsonResponse({ error: error instanceof Error ? error.message : "Unknown error" }, 500);
   }
 });

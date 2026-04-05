@@ -23,8 +23,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceKey) {
+      return jsonResponse({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }, 500);
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
     // --- Parse payload ---
@@ -78,7 +83,7 @@ Deno.serve(async (req) => {
         .eq("id", existingSync.target_id);
 
       if (updateErr) {
-        console.error("[sync-inbound] Update error:", updateErr);
+        console.error("[sync-inbound] Update error:", updateErr.message);
         await logSyncResult(supabaseAdmin, _source_system, _source_id, existingSync.id, "failed", updateErr.message);
         return jsonResponse({ error: updateErr.message }, 500);
       }
@@ -94,7 +99,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (insertErr || !newSupplier) {
-        console.error("[sync-inbound] Insert error:", insertErr);
+        console.error("[sync-inbound] Insert error:", insertErr?.message);
         const syncId = existingSync?.id;
         if (syncId) {
           await logSyncResult(supabaseAdmin, _source_system, _source_id, syncId, "failed", insertErr?.message);
@@ -139,27 +144,28 @@ Deno.serve(async (req) => {
 
 /**
  * Map Envision categoria to Portal BWild supplier_category enum.
- * Falls back to 'geral' if not mappable.
+ * Valid values: materiais, mao_de_obra, servicos, equipamentos, outros
  */
 function mapCategoria(cat: string | null | undefined): string {
-  if (!cat) return "geral";
-  const lower = cat.toLowerCase();
-  const validCategories = [
-    "material_construcao", "mao_de_obra", "equipamentos",
-    "eletrica", "hidraulica", "acabamento", "estrutural",
-    "pintura", "ferragens", "geral",
-  ];
+  if (!cat) return "outros";
+  const lower = cat.toLowerCase().trim();
+  
+  const validCategories = ["materiais", "mao_de_obra", "servicos", "equipamentos", "outros"];
   if (validCategories.includes(lower)) return lower;
-  // Try partial match
-  if (lower.includes("eletric")) return "eletrica";
-  if (lower.includes("hidraul")) return "hidraulica";
-  if (lower.includes("pintura")) return "pintura";
-  if (lower.includes("material")) return "material_construcao";
+  
+  // Fuzzy matching from Envision naming conventions
+  if (lower.includes("material") || lower.includes("construcao") || lower.includes("construção")) return "materiais";
+  if (lower.includes("mao") || lower.includes("mão") || lower.includes("obra") || lower.includes("trabalh")) return "mao_de_obra";
+  if (lower.includes("servic") || lower.includes("serviç")) return "servicos";
   if (lower.includes("equip")) return "equipamentos";
-  if (lower.includes("acabamento")) return "acabamento";
-  if (lower.includes("estrutur")) return "estrutural";
-  if (lower.includes("ferrag")) return "ferragens";
-  return "geral";
+  if (lower.includes("eletric") || lower.includes("elétric")) return "servicos";
+  if (lower.includes("hidraul") || lower.includes("hidrául")) return "servicos";
+  if (lower.includes("pintura")) return "servicos";
+  if (lower.includes("acabamento")) return "materiais";
+  if (lower.includes("estrutur")) return "materiais";
+  if (lower.includes("ferrag")) return "materiais";
+  
+  return "outros";
 }
 
 async function logSyncResult(
