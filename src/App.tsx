@@ -140,6 +140,7 @@ const App = () => (
         <Sonner />
         <TabDiscardDetector />
         <BrowserRouter>
+          <NetworkStatusBanner />
           <a href="#main-content" className="skip-to-content">Pular para o conteúdo</a>
           <Routes>
             {/* Public routes */}
