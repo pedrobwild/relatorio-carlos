@@ -2418,6 +2418,50 @@ export type Database = {
           },
         ]
       }
+      obra_task_subtasks: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          sort_order: number
+          task_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          task_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          task_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obra_task_subtasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "obra_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obra_tasks: {
         Row: {
           completed_at: string | null
@@ -2428,9 +2472,11 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          priority: string
           project_id: string
           responsible_user_id: string | null
           sort_order: number
+          start_date: string | null
           status: Database["public"]["Enums"]["obra_task_status"]
           title: string
           updated_at: string
@@ -2444,9 +2490,11 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          priority?: string
           project_id: string
           responsible_user_id?: string | null
           sort_order?: number
+          start_date?: string | null
           status?: Database["public"]["Enums"]["obra_task_status"]
           title: string
           updated_at?: string
@@ -2460,9 +2508,11 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          priority?: string
           project_id?: string
           responsible_user_id?: string | null
           sort_order?: number
+          start_date?: string | null
           status?: Database["public"]["Enums"]["obra_task_status"]
           title?: string
           updated_at?: string

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { ObraTaskInput, ObraTask } from '@/hooks/useObraTasks';
+import type { ObraTaskInput, ObraTask, ObraTaskPriority } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 
 interface Props {
@@ -15,13 +15,22 @@ interface Props {
   initialData?: ObraTask | null;
 }
 
+const priorities: { value: ObraTaskPriority; label: string }[] = [
+  { value: 'baixa', label: 'Baixa' },
+  { value: 'media', label: 'Média' },
+  { value: 'alta', label: 'Alta' },
+  { value: 'critica', label: 'Crítica' },
+];
+
 export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData }: Props) {
   const { data: staffUsers = [] } = useStaffUsers();
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsible_user_id || '');
   const [dueDate, setDueDate] = useState(initialData?.due_date || '');
+  const [startDate, setStartDate] = useState(initialData?.start_date || '');
   const [cost, setCost] = useState(initialData?.cost?.toString() || '');
+  const [priority, setPriority] = useState<ObraTaskPriority>(initialData?.priority || 'media');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +40,9 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData 
       description: description || null,
       responsible_user_id: responsibleUserId || null,
       due_date: dueDate || null,
+      start_date: startDate || null,
       cost: cost ? parseFloat(cost) : null,
+      priority,
     });
     resetForm();
   };
@@ -41,17 +52,20 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData 
     setDescription('');
     setResponsibleUserId('');
     setDueDate('');
+    setStartDate('');
     setCost('');
+    setPriority('media');
   };
 
-  // Reset when dialog opens with initial data
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && initialData) {
       setTitle(initialData.title);
       setDescription(initialData.description || '');
       setResponsibleUserId(initialData.responsible_user_id || '');
       setDueDate(initialData.due_date || '');
+      setStartDate(initialData.start_date || '');
       setCost(initialData.cost?.toString() || '');
+      setPriority(initialData.priority || 'media');
     } else if (!isOpen) {
       resetForm();
     }
@@ -70,32 +84,53 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData 
             <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Comprar material elétrico" required />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="responsible">Responsável</Label>
-            <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecionar responsável" />
-              </SelectTrigger>
-              <SelectContent position="popper" className="z-[9999]">
-                <SelectItem value="none">Sem responsável</SelectItem>
-                {staffUsers.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>
-                    {u.nome} ({u.perfil})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="responsible">Responsável</Label>
+              <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-[9999]">
+                  <SelectItem value="none">Sem responsável</SelectItem>
+                  {staffUsers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.nome} ({u.perfil})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="priority">Prioridade</Label>
+              <Select value={priority} onValueChange={(v) => setPriority(v as ObraTaskPriority)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {priorities.map(p => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="start_date">Data início</Label>
+              <Input id="start_date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="due_date">Prazo</Label>
               <Input id="due_date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="cost">Custo (R$)</Label>
-              <Input id="cost" type="number" step="0.01" min="0" value={cost} onChange={e => setCost(e.target.value)} placeholder="0,00" />
-            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cost">Custo (R$)</Label>
+            <Input id="cost" type="number" step="0.01" min="0" value={cost} onChange={e => setCost(e.target.value)} placeholder="0,00" />
           </div>
 
           <div className="space-y-2">

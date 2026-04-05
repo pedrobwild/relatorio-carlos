@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useObraTasks, TASK_STATUSES, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
+import { useObraTasks, TASK_STATUSES, type ObraTaskStatus, type ObraTaskInput, type ObraTaskPriority } from '@/hooks/useObraTasks';
 import { useObraTaskComments } from '@/hooks/useObraTaskComments';
+import { useObraTaskSubtasks } from '@/hooks/useObraTaskSubtasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -9,33 +10,26 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AtividadeFormDialog } from '@/components/atividades-obra/AtividadeFormDialog';
 import {
-  ChevronLeft,
-  ChevronUp,
-  ChevronDown,
-  Calendar,
-  DollarSign,
-  User,
-  Clock,
-  MessageSquare,
-  Send,
-  Trash2,
-  ArrowRight,
-  Pencil,
-  MoreHorizontal,
+  ChevronLeft, ChevronUp, ChevronDown,
+  Calendar, DollarSign, User, Clock, MessageSquare,
+  Send, Trash2, ArrowRight, Pencil, MoreHorizontal,
+  Plus, X, Flag, CalendarClock,
+  CheckSquare,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 const statusLabels: Record<string, string> = {
@@ -59,6 +53,20 @@ const statusDots: Record<string, string> = {
   concluido: 'bg-green-500',
 };
 
+const priorityConfig: Record<string, { label: string; color: string; icon: string }> = {
+  baixa: { label: 'Baixa', color: 'text-muted-foreground', icon: '▽' },
+  media: { label: 'Média', color: 'text-amber-600', icon: '═' },
+  alta: { label: 'Alta', color: 'text-orange-600', icon: '△' },
+  critica: { label: 'Crítica', color: 'text-destructive', icon: '⬆' },
+};
+
+const QUICK_COMMENTS = [
+  { emoji: '🎉', text: 'Ficou bom!' },
+  { emoji: '👋', text: 'Precisa de ajuda?' },
+  { emoji: '✅', text: 'Concluído!' },
+  { emoji: '⚠️', text: 'Atenção necessária' },
+];
+
 export default function AtividadeDetalhe() {
   const { projectId, taskId } = useParams<{ projectId: string; taskId: string }>();
   const navigate = useNavigate();
@@ -69,11 +77,18 @@ export default function AtividadeDetalhe() {
   const taskIndex = tasks.findIndex(t => t.id === taskId);
   const { comments, commentsLoading, statusHistory, historyLoading, addComment, deleteComment } =
     useObraTaskComments(taskId);
+  const { subtasks, addSubtask, toggleSubtask, deleteSubtask, completedCount, totalCount, progress } =
+    useObraTaskSubtasks(taskId);
   const { data: staffUsers = [] } = useStaffUsers();
 
   const [newComment, setNewComment] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState('');
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [showSubtaskInput, setShowSubtaskInput] = useState(false);
+  const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const goBack = () => navigate(`/obra/${projectId}/atividades`);
 
@@ -86,10 +101,11 @@ export default function AtividadeDetalhe() {
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-    addComment.mutate(newComment.trim());
-    setNewComment('');
+  const handleAddComment = (text?: string) => {
+    const content = text || newComment.trim();
+    if (!content) return;
+    addComment.mutate(content);
+    if (!text) setNewComment('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -103,8 +119,26 @@ export default function AtividadeDetalhe() {
     if (task) updateTask.mutate({ id: task.id, updates: { status } });
   };
 
-  const handleUpdate = (id: string, updates: Partial<ObraTaskInput>) => {
-    updateTask.mutate({ id, updates });
+  const handleUpdate = (_id: string, updates: Partial<ObraTaskInput>) => {
+    if (task) updateTask.mutate({ id: task.id, updates });
+  };
+
+  const handleAssignToMe = () => {
+    if (task && user) updateTask.mutate({ id: task.id, updates: { responsible_user_id: user.id } });
+  };
+
+  const handleSaveDescription = () => {
+    if (task) {
+      updateTask.mutate({ id: task.id, updates: { description: descriptionDraft || null } });
+      setEditingDescription(false);
+    }
+  };
+
+  const handleAddSubtask = () => {
+    if (!newSubtaskTitle.trim()) return;
+    addSubtask.mutate(newSubtaskTitle.trim());
+    setNewSubtaskTitle('');
+    subtaskInputRef.current?.focus();
   };
 
   const navigateTask = (dir: -1 | 1) => {
@@ -136,11 +170,13 @@ export default function AtividadeDetalhe() {
 
   const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
   const responsibleName = getMemberName(task.responsible_user_id);
+  const creatorName = getMemberName(task.created_by);
+  const prio = priorityConfig[task.priority] || priorityConfig.media;
 
-  // --- SIDEBAR CONTENT (reused on mobile as stacked section) ---
+  // ─── SIDEBAR ───────────────────────────────────────────────
   const sidebarContent = (
     <div className="space-y-5">
-      {/* Status buttons */}
+      {/* Quick status buttons */}
       {task.status !== 'concluido' && (
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Alterar status</p>
@@ -161,17 +197,57 @@ export default function AtividadeDetalhe() {
         </div>
       )}
 
-      {/* Info section */}
+      {/* Info card */}
       <div className="rounded-xl border border-border/50 bg-muted/20 p-4 space-y-4">
         <h3 className="text-sm font-bold">Informações</h3>
 
-        <InfoRow
-          icon={<User className="h-4 w-4" />}
-          label="Responsável"
-          value={responsibleName || 'Não atribuído'}
-          muted={!responsibleName}
-        />
+        {/* Responsável + Atribuir a mim */}
+        <div className="flex items-start gap-3">
+          <User className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Responsável</p>
+            {responsibleName ? (
+              <div className="flex items-center gap-2 mt-0.5">
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className="text-[8px] font-bold bg-primary/10 text-primary">
+                    {getInitials(responsibleName)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium">{responsibleName}</span>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground/50">Não atribuído</p>
+            )}
+            {(!task.responsible_user_id || task.responsible_user_id !== user?.id) && (
+              <button
+                onClick={handleAssignToMe}
+                className="text-xs text-primary hover:underline mt-1 font-medium"
+              >
+                Atribuir a mim
+              </button>
+            )}
+          </div>
+        </div>
 
+        {/* Relator (Reporter) */}
+        <div className="flex items-start gap-3">
+          <User className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <div className="min-w-0">
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Relator</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              {creatorName && (
+                <Avatar className="h-5 w-5">
+                  <AvatarFallback className="text-[8px] font-bold bg-primary/10 text-primary">
+                    {getInitials(creatorName)}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <span className="text-sm font-medium">{creatorName || 'Desconhecido'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Data limite */}
         <InfoRow
           icon={<Calendar className="h-4 w-4" />}
           label="Data limite"
@@ -182,6 +258,44 @@ export default function AtividadeDetalhe() {
           muted={!task.due_date}
         />
 
+        {/* Data início */}
+        <InfoRow
+          icon={<CalendarClock className="h-4 w-4" />}
+          label="Data início"
+          value={task.start_date
+            ? format(new Date(task.start_date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR })
+            : 'Nenhum'}
+          muted={!task.start_date}
+        />
+
+        {/* Prioridade */}
+        <div className="flex items-start gap-3">
+          <Flag className={cn('h-4 w-4 shrink-0 mt-0.5', prio.color)} />
+          <div className="min-w-0">
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Prioridade</p>
+            <Select
+              value={task.priority}
+              onValueChange={(v) => handleUpdate(task.id, { priority: v as ObraTaskPriority })}
+            >
+              <SelectTrigger className="h-7 w-auto border-0 p-0 focus:ring-0 shadow-none">
+                <span className={cn('text-sm font-medium flex items-center gap-1.5', prio.color)}>
+                  <span>{prio.icon}</span> {prio.label}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(priorityConfig).map(([key, cfg]) => (
+                  <SelectItem key={key} value={key}>
+                    <span className={cn('flex items-center gap-1.5', cfg.color)}>
+                      <span>{cfg.icon}</span> {cfg.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Custo */}
         {task.cost != null && (
           <InfoRow
             icon={<DollarSign className="h-4 w-4" />}
@@ -190,6 +304,7 @@ export default function AtividadeDetalhe() {
           />
         )}
 
+        {/* Conclusão */}
         {task.status === 'concluido' && task.completed_at && (
           <InfoRow
             icon={<Clock className="h-4 w-4" />}
@@ -209,20 +324,153 @@ export default function AtividadeDetalhe() {
     </div>
   );
 
-  // --- MAIN CONTENT (description, history, comments) ---
+  // ─── MAIN CONTENT ──────────────────────────────────────────
   const mainContent = (
     <div className="space-y-6">
-      {/* Description */}
+      {/* ── Description (inline editable) ── */}
       <section>
         <h3 className="text-sm font-bold mb-2">Descrição</h3>
-        {task.description ? (
-          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{task.description}</p>
+        {editingDescription ? (
+          <div className="space-y-2">
+            <Textarea
+              value={descriptionDraft}
+              onChange={e => setDescriptionDraft(e.target.value)}
+              placeholder="Adicione uma descrição detalhada..."
+              className="min-h-[100px] text-sm"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveDescription}>Salvar</Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditingDescription(false)}>Cancelar</Button>
+            </div>
+          </div>
         ) : (
-          <p className="text-sm text-muted-foreground/50 italic">Sem descrição</p>
+          <button
+            onClick={() => {
+              setDescriptionDraft(task.description || '');
+              setEditingDescription(true);
+            }}
+            className={cn(
+              'w-full text-left rounded-lg p-3 min-h-[60px] transition-colors border border-transparent',
+              'hover:bg-muted/40 hover:border-border/50',
+              task.description ? 'text-sm text-foreground' : 'text-sm text-muted-foreground/50 italic'
+            )}
+          >
+            {task.description ? (
+              <p className="whitespace-pre-wrap leading-relaxed">{task.description}</p>
+            ) : (
+              'Editar descrição'
+            )}
+          </button>
         )}
       </section>
 
-      {/* History */}
+      {/* ── Subtarefas (Checklist) ── */}
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-muted-foreground" />
+            Subtarefas
+            {totalCount > 0 && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-bold">
+                {completedCount}/{totalCount}
+              </Badge>
+            )}
+          </h3>
+          {!showSubtaskInput && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={() => {
+                setShowSubtaskInput(true);
+                setTimeout(() => subtaskInputRef.current?.focus(), 50);
+              }}
+            >
+              <Plus className="h-3 w-3" /> Adicionar
+            </Button>
+          )}
+        </div>
+
+        {totalCount > 0 && (
+          <Progress value={progress} className="h-1.5 mb-3" />
+        )}
+
+        <div className="space-y-1">
+          {subtasks.map(st => (
+            <div
+              key={st.id}
+              className="flex items-center gap-2 group rounded-lg px-2 py-1.5 hover:bg-muted/30 transition-colors"
+            >
+              <Checkbox
+                checked={st.completed}
+                onCheckedChange={(checked) =>
+                  toggleSubtask.mutate({ id: st.id, completed: !!checked })
+                }
+                className="shrink-0"
+              />
+              <span className={cn(
+                'text-sm flex-1 min-w-0 truncate',
+                st.completed && 'line-through text-muted-foreground'
+              )}>
+                {st.title}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                onClick={() => deleteSubtask.mutate(st.id)}
+              >
+                <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {showSubtaskInput && (
+          <div className="flex gap-2 mt-2">
+            <Input
+              ref={subtaskInputRef}
+              value={newSubtaskTitle}
+              onChange={e => setNewSubtaskTitle(e.target.value)}
+              placeholder="Adicionar subtarefa..."
+              className="h-8 text-sm"
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleAddSubtask();
+                if (e.key === 'Escape') {
+                  setShowSubtaskInput(false);
+                  setNewSubtaskTitle('');
+                }
+              }}
+            />
+            <Button size="sm" className="h-8 px-3" onClick={handleAddSubtask} disabled={!newSubtaskTitle.trim()}>
+              <Plus className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2"
+              onClick={() => { setShowSubtaskInput(false); setNewSubtaskTitle(''); }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+
+        {totalCount === 0 && !showSubtaskInput && (
+          <button
+            onClick={() => {
+              setShowSubtaskInput(true);
+              setTimeout(() => subtaskInputRef.current?.focus(), 50);
+            }}
+            className="text-sm text-muted-foreground/50 hover:text-muted-foreground transition-colors italic"
+          >
+            Adicionar subtarefa
+          </button>
+        )}
+      </section>
+
+      {/* ── History (collapsible) ── */}
       <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
         <CollapsibleTrigger className="flex items-center justify-between w-full py-2 touch-target">
           <h3 className="text-sm font-bold flex items-center gap-2">
@@ -277,7 +525,7 @@ export default function AtividadeDetalhe() {
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Comments */}
+      {/* ── Comments ── */}
       <section>
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -328,24 +576,38 @@ export default function AtividadeDetalhe() {
           </div>
         )}
 
-        {/* Comment input */}
-        <div className="flex gap-2 items-end">
-          <Textarea
-            value={newComment}
-            onChange={e => setNewComment(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Adicionar comentário..."
-            className="min-h-[40px] max-h-[100px] resize-none text-sm rounded-xl border-border/50 bg-muted/20"
-            rows={1}
-          />
-          <Button
-            size="icon"
-            onClick={handleAddComment}
-            disabled={!newComment.trim() || addComment.isPending}
-            className="shrink-0 h-10 w-10 rounded-xl"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+        {/* Comment input + quick suggestions */}
+        <div className="space-y-2">
+          <div className="flex gap-2 items-end">
+            <Textarea
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Adicionar comentário..."
+              className="min-h-[40px] max-h-[100px] resize-none text-sm rounded-xl border-border/50 bg-muted/20"
+              rows={1}
+            />
+            <Button
+              size="icon"
+              onClick={() => handleAddComment()}
+              disabled={!newComment.trim() || addComment.isPending}
+              className="shrink-0 h-10 w-10 rounded-xl"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+            {QUICK_COMMENTS.map(qc => (
+              <button
+                key={qc.text}
+                onClick={() => handleAddComment(`${qc.emoji} ${qc.text}`)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap shrink-0"
+              >
+                <span>{qc.emoji}</span>
+                <span>{qc.text}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
     </div>
@@ -364,24 +626,12 @@ export default function AtividadeDetalhe() {
           {statusLabels[task.status]}
         </Badge>
 
-        {/* Prev / Next nav */}
+        {/* Prev / Next */}
         <div className="flex items-center gap-0.5 ml-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            disabled={taskIndex <= 0}
-            onClick={() => navigateTask(-1)}
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={taskIndex <= 0} onClick={() => navigateTask(-1)}>
             <ChevronUp className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            disabled={taskIndex >= tasks.length - 1}
-            onClick={() => navigateTask(1)}
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={taskIndex >= tasks.length - 1} onClick={() => navigateTask(1)}>
             <ChevronDown className="h-4 w-4" />
           </Button>
         </div>
@@ -396,13 +646,7 @@ export default function AtividadeDetalhe() {
             <DropdownMenuItem onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4 mr-2" /> Editar
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => {
-                deleteTask.mutate(task.id);
-                goBack();
-              }}
-            >
+            <DropdownMenuItem className="text-destructive" onClick={() => { deleteTask.mutate(task.id); goBack(); }}>
               <Trash2 className="h-4 w-4 mr-2" /> Excluir
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -418,7 +662,7 @@ export default function AtividadeDetalhe() {
         {task.title}
       </h1>
 
-      {/* Two-column layout (desktop) / stacked (mobile) */}
+      {/* Two-column (desktop) / stacked (mobile) */}
       {isMobile ? (
         <div className="space-y-6 pb-bottom-nav">
           {sidebarContent}
