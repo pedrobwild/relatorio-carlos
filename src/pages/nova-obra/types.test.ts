@@ -37,6 +37,7 @@ describe('Nova Obra Types', () => {
         customer_email: 'c@e.com',
         create_user: false,
         customer_password: '',
+        is_project_phase: true,
       };
       const result = formSchema.safeParse(data);
       expect(result.success).toBe(true);
