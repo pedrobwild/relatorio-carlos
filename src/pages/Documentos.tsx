@@ -207,8 +207,10 @@ const Documentos = () => {
   }, [getLatestByCategory, journeyDocs]);
   const { isStaff } = useUserRole();
   const { can } = useCan();
+  const isMobile = useIsMobile();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
+  const [viewerDoc, setViewerDoc] = useState<ProjectDocument | null>(null);
   
   const canUpload = can('documents:upload');
 
