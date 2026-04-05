@@ -18,7 +18,7 @@ export type {
   InspectionItemResult,
 } from '@/infra/repositories/inspectionsRepository';
 
-import type { Inspection } from '@/infra/repositories/inspectionsRepository';
+import type { Inspection, InspectionItemResult } from '@/infra/repositories/inspectionsRepository';
 
 // ── Queries ──
 

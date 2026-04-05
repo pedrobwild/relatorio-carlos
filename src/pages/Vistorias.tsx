@@ -9,7 +9,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { VistoriasPageSkeleton } from '@/components/skeletons/VistoriasPageSkeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
-import { useInspections } from '@/hooks/useInspections';
+import { useInspections, type Inspection } from '@/hooks/useInspections';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
 import { DuplicateInspectionDialog } from '@/components/vistorias/DuplicateInspectionDialog';
