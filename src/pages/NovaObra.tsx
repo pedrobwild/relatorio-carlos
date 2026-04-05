@@ -219,7 +219,7 @@ export default function NovaObra() {
     setFormData(prev => {
       for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
         if (userEditedFieldsRef.current.has(formField)) {
-          console.log(`[AI Prefill] Skipping ${formField} — user edited`);
+          if (import.meta.env.DEV) console.log(`[AI Prefill] Skipping ${formField} — user edited`);
           continue;
         }
 
