@@ -281,7 +281,7 @@ export function InspectionDetailDialog({ inspection, projectId, open, onOpenChan
     }
   }, [items, mobileItemIndex]);
 
-  const typeConfig = getInspectionTypeConfig((inspection as any).inspection_type || 'rotina');
+  const typeConfig = getInspectionTypeConfig(inspection.inspection_type || 'rotina');
 
   const headerContent = (
     <>
