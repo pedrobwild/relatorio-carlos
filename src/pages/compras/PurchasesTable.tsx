@@ -416,7 +416,7 @@ export function PurchasesTable({
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(p);
     }
-    const order = [...ITEM_CATEGORIES, ...SERVICE_CATEGORIES, 'Outros'];
+    const order = [...getAllSupplierSubcategories(), 'Outros'];
     const sorted = new Map<string, ProjectPurchase[]>();
     for (const cat of order) {
       if (map.has(cat)) sorted.set(cat, map.get(cat)!);
