@@ -127,10 +127,10 @@ export function ProjectSlimHeader() {
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 min-w-0 overflow-hidden">
         {/* Level 1: Minhas Obras */}
         <Link
-          to="/minhas-obras"
+          to={isStaff ? "/gestao" : "/minhas-obras"}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:inline"
         >
-          Minhas Obras
+          {isStaff ? "Painel de Obras" : "Minhas Obras"}
         </Link>
         <ChevronRight className="h-3 w-3 text-muted-foreground/50 shrink-0 hidden sm:block" />
 
