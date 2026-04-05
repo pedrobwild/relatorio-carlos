@@ -10,11 +10,9 @@ import {
   transitionNcStatus,
 } from '@/infra/repositories/ncsRepository';
 
-// Re-export types for consumers; use inline type imports to avoid duplicate-import lint errors
-export type { NcHistoryEntry, NonConformity, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
-type _NonConformity = import('@/infra/repositories/ncsRepository').NonConformity;
-type _NcSeverity = import('@/infra/repositories/ncsRepository').NcSeverity;
-type _NcStatus = import('@/infra/repositories/ncsRepository').NcStatus;
+// eslint-disable-next-line no-duplicate-imports
+import type { NonConformity, NcHistoryEntry, NcSeverity, NcStatus } from '@/infra/repositories/ncsRepository';
+export type { NonConformity, NcHistoryEntry, NcSeverity, NcStatus };
 
 // ── Queries ──
 
