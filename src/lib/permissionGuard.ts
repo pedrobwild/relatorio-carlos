@@ -65,8 +65,16 @@ const MODULE_PERMISSIONS: Record<AppRole, ModulePermission[]> = {
     'works:read',
   ],
   cs: [
+    'users:read',
+    'users:write',
+    'users:delete',
     'works:read',
     'works:write',
+    'works:delete',
+    'templates:read',
+    'templates:write',
+    'templates:delete',
+    'system:admin',
   ],
 };
 
