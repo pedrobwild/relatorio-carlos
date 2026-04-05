@@ -334,7 +334,7 @@ export function useNovaObraSubmit() {
       if (!uploadError) {
         const { error: docError } = await supabase.from('project_documents').insert({
           project_id: projectId,
-          document_type: 'contrato_cliente',
+          document_type: 'contrato',
           name: `Contrato - ${formData.customer_name.trim()}`,
           storage_path: storagePath,
           storage_bucket: 'project-documents',
