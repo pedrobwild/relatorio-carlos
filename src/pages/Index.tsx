@@ -1,4 +1,4 @@
-import { useRef, useCallback, lazy, Suspense } from "react";
+import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, GanttChartSquare, Calendar, DollarSign, FolderOpen, ClipboardSignature, TrendingUp } from "lucide-react";
