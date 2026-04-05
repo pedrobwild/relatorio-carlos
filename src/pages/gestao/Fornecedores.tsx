@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -28,9 +28,10 @@ import {
   SUPPLIER_TYPE_LABELS,
   SUPPLIER_TYPES,
   getSubcategoriesByType,
-  isValidSupplierSubcategory,
   type SupplierType,
 } from "@/constants/supplierCategories";
+import { SupplierTaxonomyFields } from "@/components/fornecedores/SupplierTaxonomyFields";
+import { normalizeSupplierTaxonomy } from "@/components/fornecedores/supplierTaxonomy";
 
 // Legacy enum kept for backward compat with DB column `categoria`
 type LegacySupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
@@ -178,7 +179,10 @@ export default function Fornecedores() {
 
   const openEdit = (s: Supplier) => {
     setEditing(s);
-    setForm({ ...s });
+    setForm({
+      ...s,
+      ...normalizeSupplierTaxonomy(s.supplier_type, s.supplier_subcategory),
+    });
     setDialogOpen(true);
   };
 
@@ -188,31 +192,24 @@ export default function Fornecedores() {
     setDialogOpen(true);
   };
 
-  const handleSupplierTypeChange = (value: string) => {
-    setForm((p) => {
-      const newForm = { ...p, supplier_type: value };
-      // Reset subcategory if it's invalid for the new type
-      if (p.supplier_subcategory && !isValidSupplierSubcategory(value, p.supplier_subcategory)) {
-        newForm.supplier_subcategory = null;
-      }
-      return newForm;
-    });
-  };
-
   const handleSave = () => {
     if (!form.nome?.trim()) {
       toast({ title: "Nome é obrigatório", variant: "destructive" });
       return;
     }
-    if (!form.supplier_type) {
+
+    const normalizedTaxonomy = normalizeSupplierTaxonomy(form.supplier_type, form.supplier_subcategory);
+
+    if (!normalizedTaxonomy.supplier_type) {
       toast({ title: "Categoria é obrigatória", variant: "destructive" });
       return;
     }
-    if (!form.supplier_subcategory) {
+    if (!normalizedTaxonomy.supplier_subcategory) {
       toast({ title: "Subcategoria é obrigatória", variant: "destructive" });
       return;
     }
-    const payload = { ...form };
+
+    const payload = { ...form, ...normalizedTaxonomy };
     if (payload.prazo_entrega_dias === undefined || payload.prazo_entrega_dias === null) delete payload.prazo_entrega_dias;
     if (payload.nota_avaliacao === undefined || payload.nota_avaliacao === null) delete payload.nota_avaliacao;
     saveMutation.mutate(payload);
@@ -492,6 +489,9 @@ export default function Fornecedores() {
             <DialogTitle>
               {editing ? "Editar Fornecedor" : "Novo Fornecedor"}
             </DialogTitle>
+            <DialogDescription>
+              Preencha os dados do fornecedor e selecione a categoria principal com a subcategoria correspondente.
+            </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="dados" className="w-full">
@@ -529,43 +529,12 @@ export default function Fornecedores() {
                   onChange={(e) => setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label>Categoria *</Label>
-                <Select
-                  value={form.supplier_type ?? undefined}
-                  onValueChange={handleSupplierTypeChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SUPPLIER_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {SUPPLIER_TYPE_LABELS[type]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Subcategoria *</Label>
-                <Select
-                  value={form.supplier_subcategory ?? undefined}
-                  onValueChange={(v) => setForm((p) => ({ ...p, supplier_subcategory: v }))}
-                  disabled={!form.supplier_type}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={form.supplier_type ? "Selecione..." : "Escolha a categoria primeiro"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getSubcategoriesByType(form.supplier_type).map((sub) => (
-                      <SelectItem key={sub} value={sub}>
-                        {sub}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <SupplierTaxonomyFields
+                supplierType={form.supplier_type}
+                supplierSubcategory={form.supplier_subcategory}
+                onSupplierTypeChange={(value) => setForm((p) => ({ ...p, supplier_type: value }))}
+                onSupplierSubcategoryChange={(value) => setForm((p) => ({ ...p, supplier_subcategory: value }))}
+              />
             </div>
 
             {/* Status */}
