@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidCpf, isValidRg } from '@/lib/documentValidation';
 
 export const formSchema = z.object({
   // ── Obra / Imóvel ──
