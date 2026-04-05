@@ -28,6 +28,9 @@ export function TemplateCard({ template: t, onPreview, onEdit, onDuplicate, onEx
   const isMobile = useIsMobile();
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { data: versions } = useTemplateVersions(t.id);
+  const latestVersion = versions?.[0];
+  const versionCount = versions?.length ?? 0;
 
   const longPressHandlers = useLongPress({
     onLongPress: () => setActionSheetOpen(true),
