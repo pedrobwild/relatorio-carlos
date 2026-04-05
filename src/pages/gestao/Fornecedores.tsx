@@ -94,11 +94,31 @@ export default function Fornecedores() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("ativo");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [form, setForm] = useState<Partial<Supplier>>(emptyForm());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const handleCategoryFilterChange = (value: string) => {
+    setCategoryFilter(value);
+    // Reset subcategory when category changes (it may be invalid for new type)
+    setSubcategoryFilter("all");
+  };
+
+  const availableSubcategories = categoryFilter !== "all"
+    ? getSubcategoriesByType(categoryFilter)
+    : [];
+
+  const hasActiveFilters = search || categoryFilter !== "all" || subcategoryFilter !== "all" || statusFilter !== "ativo";
+
+  const clearAllFilters = () => {
+    setSearch("");
+    setCategoryFilter("all");
+    setSubcategoryFilter("all");
+    setStatusFilter("ativo");
+  };
 
   const { data: suppliers = [], isLoading } = useQuery({
     queryKey: ["fornecedores"],
