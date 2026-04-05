@@ -145,7 +145,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
                         <DropdownMenuItem onClick={() => setEditTask(task)}>
                           <Pencil className="h-4 w-4 mr-2" /> Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => onDelete(task.id)}>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(task)}>
                           <Trash2 className="h-4 w-4 mr-2" /> Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
