@@ -6,6 +6,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { ProjectWithCustomer } from '@/infra/repositories';
+import { computeHealthScore } from '@/lib/healthScore';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
