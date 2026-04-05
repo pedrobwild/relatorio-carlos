@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidCpf, isValidRg } from '@/lib/documentValidation';
 
 export const formSchema = z.object({
   // ── Obra / Imóvel ──
@@ -40,8 +41,14 @@ export const formSchema = z.object({
   nacionalidade: z.string().trim().max(100).optional(),
   estado_civil: z.string().trim().max(50).optional(),
   profissao: z.string().trim().max(100).optional(),
-  cpf: z.string().trim().max(20).optional(),
-  rg: z.string().trim().max(20).optional(),
+  cpf: z.string().trim().max(20).optional().refine(
+    (v) => !v || v.replace(/\D/g, '').length === 0 || isValidCpf(v),
+    { message: 'CPF inválido' }
+  ),
+  rg: z.string().trim().max(20).optional().refine(
+    (v) => !v || v.replace(/[^\dXx]/g, '').length === 0 || isValidRg(v),
+    { message: 'RG inválido' }
+  ),
   endereco_residencial: z.string().trim().max(300).optional(),
   cidade_cliente: z.string().trim().max(100).optional(),
   estado_cliente: z.string().trim().max(50).optional(),

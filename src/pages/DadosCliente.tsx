@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Save, User, Building2, Loader2, Search } from 'lucide-react';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
+import { formatCpf, formatRg, isValidCpf, isValidRg } from '@/lib/documentValidation';
 
 interface CustomerData {
   id: string;
@@ -94,6 +95,15 @@ export default function DadosCliente() {
 
   const handleSave = async () => {
     if (!projectId) return;
+    // Validate CPF/RG before saving
+    if (customer?.cpf && !isValidCpf(customer.cpf)) {
+      toast.error('CPF inválido. Corrija antes de salvar.');
+      return;
+    }
+    if (customer?.rg && !isValidRg(customer.rg)) {
+      toast.error('RG inválido. Corrija antes de salvar.');
+      return;
+    }
     setSaving(true);
     try {
       if (customer) {
@@ -271,17 +281,27 @@ export default function DadosCliente() {
                 <Label>CPF *</Label>
                 <Input
                   value={customer.cpf || ''}
-                  onChange={(e) => updateCustomer('cpf', e.target.value || null)}
+                  onChange={(e) => updateCustomer('cpf', formatCpf(e.target.value) || null)}
                   placeholder="000.000.000-00"
+                  maxLength={14}
+                  className={customer.cpf && !isValidCpf(customer.cpf) ? 'border-destructive' : ''}
                 />
+                {customer.cpf && !isValidCpf(customer.cpf) && (
+                  <p className="text-xs text-destructive mt-1">CPF inválido</p>
+                )}
               </div>
               <div>
                 <Label>RG *</Label>
                 <Input
                   value={customer.rg || ''}
-                  onChange={(e) => updateCustomer('rg', e.target.value || null)}
-                  placeholder="0000.000"
+                  onChange={(e) => updateCustomer('rg', formatRg(e.target.value) || null)}
+                  placeholder="00.000.000-0"
+                  maxLength={12}
+                  className={customer.rg && !isValidRg(customer.rg) ? 'border-destructive' : ''}
                 />
+                {customer.rg && !isValidRg(customer.rg) && (
+                  <p className="text-xs text-destructive mt-1">RG inválido</p>
+                )}
               </div>
               <div className="sm:col-span-2">
                 <Label>Endereço residencial *</Label>
