@@ -102,10 +102,10 @@ export function useNovaObraSubmit() {
       warnings.push({ step: 'Membro', message: 'Falha ao vincular seu acesso — entre em contato com suporte' });
     }
 
-    // 4. Add customer with full contratante data — important but not blocking
+    // 4. Add customer with full contratante data — upsert to handle retry safely
     const { error: customerError } = await supabase
       .from('project_customers')
-      .insert({
+      .upsert({
         project_id: projectId,
         customer_name: formData.customer_name.trim(),
         customer_email: formData.customer_email.trim().toLowerCase(),
