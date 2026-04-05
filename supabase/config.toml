@@ -47,3 +47,6 @@ verify_jwt = true
 
 [functions.ux-insights]
 verify_jwt = false
+
+[functions.sync-supplier-inbound]
+verify_jwt = false
