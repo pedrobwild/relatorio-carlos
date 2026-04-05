@@ -134,6 +134,11 @@ export const initialFormData: FormData = {
   installment_value: '',
   payment_method: '',
   payment_status: 'pending',
+  contract_signed_at: '',
+  commercial_notes: '',
+  contract_document_name: '',
+  budget_uploaded: false,
+  budget_file_name: '',
 
   customer_name: '',
   customer_email: '',
