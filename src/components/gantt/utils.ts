@@ -27,28 +27,6 @@ export function safeParseLocalDate(dateString: string | null | undefined): Date 
   return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
 }
 
-export function createGetBarStyle(startDate: Date, totalDays: number) {
-  return (startStr: string, endStr: string): BarStyle => {
-    const startD = safeParseLocalDate(startStr);
-    const endD = safeParseLocalDate(endStr);
-
-    if (!startD || !endD || !Number.isFinite(totalDays) || totalDays <= 0) {
-      return { left: '0%', width: '0%', isVisible: false };
-    }
-
-    const leftDays = differenceInDays(startD, startDate);
-    const widthDays = Math.max(0, differenceInDays(endD, startD) + 1);
-
-    const left = (leftDays / totalDays) * 100;
-    const width = (widthDays / totalDays) * 100;
-
-    return {
-      left: `${left}%`,
-      width: `${Math.max(width, 0.5)}%`,
-      isVisible: (left + width) > 0 && left < 100,
-    };
-  };
-}
 
 export function getTaskDisplayData(task: GanttTask): TaskDisplayData {
   return {

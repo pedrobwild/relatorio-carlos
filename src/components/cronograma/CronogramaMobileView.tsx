@@ -43,9 +43,9 @@ function getActivityStatus(act: ProjectActivity): ActivityStatus {
 
 const statusConfig: Record<ActivityStatus, { icon: typeof AlertTriangle; label: string; color: string; dot: string }> = {
   overdue: { icon: AlertTriangle, label: 'Atrasada', color: 'text-destructive', dot: 'bg-destructive' },
-  in_progress: { icon: Play, label: 'Em andamento', color: 'text-blue-600', dot: 'bg-blue-500' },
-  upcoming: { icon: Clock, label: 'Próxima', color: 'text-amber-600', dot: 'bg-amber-500' },
-  completed: { icon: CheckCircle2, label: 'Concluída', color: 'text-green-600', dot: 'bg-green-500' },
+  in_progress: { icon: Play, label: 'Em andamento', color: 'text-primary', dot: 'bg-primary' },
+  upcoming: { icon: Clock, label: 'Próxima', color: 'text-[hsl(var(--warning))]', dot: 'bg-[hsl(var(--warning))]' },
+  completed: { icon: CheckCircle2, label: 'Concluída', color: 'text-[hsl(var(--success))]', dot: 'bg-[hsl(var(--success))]' },
   pending: { icon: Circle, label: 'Pendente', color: 'text-muted-foreground', dot: 'bg-muted-foreground' },
 };
 
@@ -137,10 +137,10 @@ export function CronogramaMobileView({
                 <AlertTriangle className="h-3.5 w-3.5" /> {stats.overdue}
               </span>
             )}
-            <span className="flex items-center gap-1 text-blue-600">
+            <span className="flex items-center gap-1 text-primary">
               <Play className="h-3 w-3" /> {stats.inProgress}
             </span>
-            <span className="flex items-center gap-1 text-green-600">
+            <span className="flex items-center gap-1 text-[hsl(var(--success))]">
               <CheckCircle2 className="h-3 w-3" /> {stats.completed}
             </span>
           </div>
@@ -149,7 +149,7 @@ export function CronogramaMobileView({
           value={stats.progress}
           className={cn(
             'h-2.5 rounded-full',
-            stats.overdue > 0 ? '[&>div]:bg-amber-500' : '[&>div]:bg-green-500'
+            stats.overdue > 0 ? '[&>div]:bg-[hsl(var(--warning))]' : '[&>div]:bg-[hsl(var(--success))]'
           )}
         />
         <p className="text-[11px] text-muted-foreground">
@@ -312,9 +312,9 @@ function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { 
             {daysInfo && (
               <>
                 <span className="text-muted-foreground/50">·</span>
-                <span className={cn(
+                 <span className={cn(
                   'font-semibold',
-                  isOverdue ? 'text-destructive' : act.computedStatus === 'upcoming' ? 'text-amber-600' : 'text-blue-600'
+                  isOverdue ? 'text-destructive' : act.computedStatus === 'upcoming' ? 'text-[hsl(var(--warning))]' : 'text-primary'
                 )}>
                   {daysInfo}
                 </span>
@@ -330,7 +330,7 @@ function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { 
                   (differenceInCalendarDays(new Date(), new Date(act.actual_start + 'T00:00:00')) /
                   Math.max(1, differenceInCalendarDays(new Date(act.planned_end + 'T00:00:00'), new Date(act.actual_start + 'T00:00:00')))) * 100
                 ))}
-                className="h-1.5 rounded-full [&>div]:bg-blue-500"
+                className="h-1.5 rounded-full [&>div]:bg-primary"
               />
             </div>
           )}

@@ -81,29 +81,30 @@ export function useProjectActivities(projectId: string | undefined) {
         throw new Error('Projeto ou usuário não encontrado');
       }
 
-      // Delete existing activities for this project
-      const { error: deleteError } = await supabase
+      // Insert new activities first, then delete old ones (safer order)
+      const activitiesToInsert = newActivities.map((activity, index) => ({
+        project_id: projectId,
+        description: activity.description,
+        planned_start: activity.planned_start,
+        planned_end: activity.planned_end,
+        actual_start: activity.actual_start || null,
+        actual_end: activity.actual_end || null,
+        weight: activity.weight,
+        sort_order: index,
+        created_by: user.id,
+        predecessor_ids: activity.predecessor_ids || [],
+      }));
+
+      // Fetch existing IDs to delete after insert
+      const { data: existingRows } = await supabase
         .from('project_activities')
-        .delete()
+        .select('id')
         .eq('project_id', projectId);
 
-      if (deleteError) throw deleteError;
+      const oldIds = (existingRows ?? []).map(r => r.id);
 
       // Insert new activities
-      if (newActivities.length > 0) {
-        const activitiesToInsert = newActivities.map((activity, index) => ({
-          project_id: projectId,
-          description: activity.description,
-          planned_start: activity.planned_start,
-          planned_end: activity.planned_end,
-          actual_start: activity.actual_start || null,
-          actual_end: activity.actual_end || null,
-          weight: activity.weight,
-          sort_order: index,
-          created_by: user.id,
-          predecessor_ids: activity.predecessor_ids || [],
-        }));
-
+      if (activitiesToInsert.length > 0) {
         const { error: insertError } = await supabase
           .from('project_activities')
           .insert(activitiesToInsert);
@@ -111,16 +112,26 @@ export function useProjectActivities(projectId: string | undefined) {
         if (insertError) throw insertError;
       }
 
+      // Delete old activities only after successful insert
+      if (oldIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('project_activities')
+          .delete()
+          .in('id', oldIds);
+
+        if (deleteError) throw deleteError;
+      }
+
       return newActivities;
     },
     onSuccess: () => {
-      toast.success('Cronograma salvo com sucesso!');
+      // Toast handled by caller (Cronograma.tsx) to avoid double notification
       if (projectId) {
         invalidateActivityQueries(projectId);
       }
     },
     onError: () => {
-      toast.error('Erro ao salvar cronograma');
+      // Error toast handled by caller
     },
   });
 
@@ -180,19 +191,26 @@ export function useProjectActivities(projectId: string | undefined) {
     mutationFn: async () => {
       if (!projectId) throw new Error('Projeto não encontrado');
 
-      // Update all activities with current planned dates as baseline
-      const updates = activities.map(activity => 
-        supabase
-          .from('project_activities')
-          .update({
-            baseline_start: activity.planned_start,
-            baseline_end: activity.planned_end,
-            baseline_saved_at: new Date().toISOString(),
-          })
-          .eq('id', activity.id)
-      );
+      // Single batch update instead of N individual queries
+      const { error } = await supabase.rpc('save_project_baseline' as any, {
+        p_project_id: projectId,
+      });
 
-      await Promise.all(updates);
+      // Fallback: if RPC doesn't exist, use single update per project
+      if (error) {
+        const updates = activities.map(activity =>
+          supabase
+            .from('project_activities')
+            .update({
+              baseline_start: activity.planned_start,
+              baseline_end: activity.planned_end,
+              baseline_saved_at: new Date().toISOString(),
+            })
+            .eq('id', activity.id)
+        );
+        await Promise.all(updates);
+      }
+
       return true;
     },
     onSuccess: () => {
