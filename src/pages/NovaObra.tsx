@@ -234,7 +234,7 @@ export default function NovaObra() {
             prefilledFields.add(formField);
             if (import.meta.env.DEV) console.log(`[AI Prefill] ✓ ${formField} = "${aiValue}"`);
           } else {
-            console.log(`[AI Prefill] ${formField} skipped — current value:`, currentValue);
+            if (import.meta.env.DEV) console.log(`[AI Prefill] ${formField} skipped — current value:`, currentValue);
           }
         }
       }
