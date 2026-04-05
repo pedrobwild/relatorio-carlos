@@ -1365,7 +1365,9 @@ export type Database = {
       }
       integration_sync_log: {
         Row: {
+          ai_diagnosis: string | null
           attempts: number | null
+          corrected_payload: Json | null
           created_at: string | null
           entity_type: string
           error_message: string | null
@@ -1379,7 +1381,9 @@ export type Database = {
           target_system: string
         }
         Insert: {
+          ai_diagnosis?: string | null
           attempts?: number | null
+          corrected_payload?: Json | null
           created_at?: string | null
           entity_type: string
           error_message?: string | null
@@ -1393,7 +1397,9 @@ export type Database = {
           target_system: string
         }
         Update: {
+          ai_diagnosis?: string | null
           attempts?: number | null
+          corrected_payload?: Json | null
           created_at?: string | null
           entity_type?: string
           error_message?: string | null
