@@ -11,28 +11,26 @@ export type NonConformity = NcRow & {
 export type NcHistoryEntry = Database['public']['Tables']['nc_history']['Row'];
 
 export async function getNcsByProject(projectId: string): Promise<NonConformity[]> {
-  const { data, error } = await supabase
-    .from('non_conformities')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  const ncs = data ?? [];
-
-  // Fetch responsible user names
-  const responsibleIds = [...new Set(ncs.map(nc => nc.responsible_user_id).filter(Boolean))] as string[];
-  let nameMap: Record<string, string> = {};
-  if (responsibleIds.length > 0) {
-    const { data: profiles } = await supabase
+  // Run both queries in parallel to avoid waterfall
+  const [ncsResult, profilesResult] = await Promise.all([
+    supabase
+      .from('non_conformities')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false }),
+    supabase
       .from('users_profile')
-      .select('id, nome')
-      .in('id', responsibleIds);
-    if (profiles) {
-      nameMap = Object.fromEntries(profiles.map(p => [p.id, p.nome]));
-    }
+      .select('id, nome'),
+  ]);
+
+  if (ncsResult.error) throw ncsResult.error;
+
+  const nameMap: Record<string, string> = {};
+  if (profilesResult.data) {
+    profilesResult.data.forEach(p => { nameMap[p.id] = p.nome; });
   }
 
-  return ncs.map(nc => ({
+  return (ncsResult.data ?? []).map(nc => ({
     ...nc,
     responsible_user_name: nc.responsible_user_id ? nameMap[nc.responsible_user_id] ?? null : null,
   })) as NonConformity[];
@@ -81,13 +79,17 @@ export async function createNonConformity(params: {
 
   if (error) throw error;
 
-  // Log history
-  await supabase.from('nc_history').insert({
-    nc_id: data.id,
-    action: 'Não conformidade criada',
-    new_status: 'open' as NcStatus,
-    actor_id: params.created_by,
-  });
+  // Log history — use await to ensure it completes; catch to avoid blocking the main flow
+  try {
+    await supabase.from('nc_history').insert({
+      nc_id: data.id,
+      action: 'Não conformidade criada',
+      new_status: 'open' as NcStatus,
+      actor_id: params.created_by,
+    });
+  } catch (historyError) {
+    console.error('[NC History] Failed to log creation:', historyError);
+  }
 
   return data;
 }

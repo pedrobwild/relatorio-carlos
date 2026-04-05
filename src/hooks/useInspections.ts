@@ -95,9 +95,10 @@ export function useUpdateInspectionItem() {
         notes: params.notes,
         photo_paths: params.photo_paths,
       });
+      return params;
     },
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['inspection-items', vars.inspection_id] });
+    onSuccess: (params) => {
+      queryClient.invalidateQueries({ queryKey: ['inspection-items', params.inspection_id] });
     },
   });
 }
@@ -108,11 +109,12 @@ export function useCompleteInspection() {
   return useMutation({
     mutationFn: async (params: { id: string; project_id: string }) => {
       await completeInspection(params.id);
+      return params;
     },
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['inspections', vars.project_id] });
-      queryClient.invalidateQueries({ queryKey: ['inspection', vars.id] });
-      queryClient.invalidateQueries({ queryKey: ['inspection-items', vars.id] });
+    onSuccess: (params) => {
+      queryClient.invalidateQueries({ queryKey: ['inspections', params.project_id] });
+      queryClient.invalidateQueries({ queryKey: ['inspection', params.id] });
+      queryClient.invalidateQueries({ queryKey: ['inspection-items', params.id] });
       toast.success('Vistoria finalizada');
     },
   });
