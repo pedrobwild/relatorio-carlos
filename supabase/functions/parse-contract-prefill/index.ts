@@ -104,7 +104,6 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'Nenhum arquivo enviado' }, 400);
       }
 
-      // Validate
       if (file.size > 20 * 1024 * 1024) {
         return jsonResponse({ error: 'Arquivo excede 20MB' }, 400);
       }
@@ -121,7 +120,6 @@ Deno.serve(async (req) => {
       }
       fileBase64 = btoa(binary);
     } else {
-      // JSON body with base64
       const body = await req.json();
       if (!body.file_base64) {
         return jsonResponse({ error: 'Arquivo não fornecido' }, 400);
@@ -130,37 +128,49 @@ Deno.serve(async (req) => {
       fileName = body.file_name || 'contract.pdf';
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      return jsonResponse({ error: 'Serviço de IA não configurado' }, 500);
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
+      return jsonResponse({ error: 'Serviço de IA não configurado (ANTHROPIC_API_KEY)' }, 500);
     }
 
-    // Truncate very large PDFs to avoid token limits
-    const truncatedBase64 = fileBase64.substring(0, 80000);
-
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Claude supports native PDF via base64 document type — no truncation needed
+    const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8192,
+        system: SYSTEM_PROMPT,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
           {
             role: 'user',
-            content: `Analise o contrato PDF a seguir e extraia os dados estruturados.\n\nNome do arquivo: ${fileName}\n\n[Conteúdo do PDF em base64]:\n${truncatedBase64}`,
+            content: [
+              {
+                type: 'document',
+                source: {
+                  type: 'base64',
+                  media_type: 'application/pdf',
+                  data: fileBase64,
+                },
+              },
+              {
+                type: 'text',
+                text: `Analise o contrato PDF "${fileName}" acima e extraia os dados estruturados conforme o formato especificado. Retorne APENAS o JSON.`,
+              },
+            ],
           },
         ],
-        response_format: { type: 'json_object' },
         temperature: 0.05,
       }),
     });
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
-      console.error('AI gateway error:', aiResponse.status, errText);
+      console.error('Anthropic API error:', aiResponse.status, errText);
 
       if (aiResponse.status === 429) {
         return jsonResponse({ error: 'Serviço sobrecarregado. Tente novamente em alguns segundos.' }, 429);
@@ -173,7 +183,8 @@ Deno.serve(async (req) => {
     }
 
     const aiResult = await aiResponse.json();
-    const content = aiResult.choices?.[0]?.message?.content;
+    // Anthropic response format: { content: [{ type: "text", text: "..." }] }
+    const content = aiResult.content?.[0]?.text;
 
     if (!content) {
       return jsonResponse({ error: 'Resposta vazia da IA' }, 500);
@@ -181,9 +192,11 @@ Deno.serve(async (req) => {
 
     let parsed: ContractParseResult;
     try {
-      parsed = JSON.parse(content);
+      // Strip markdown code fences if present
+      const cleanContent = content.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      parsed = JSON.parse(cleanContent);
     } catch {
-      console.error('Failed to parse AI response as JSON');
+      console.error('Failed to parse AI response as JSON:', content.substring(0, 500));
       return jsonResponse({ error: 'Resposta da IA em formato inválido' }, 500);
     }
 
