@@ -450,6 +450,44 @@ const Cronograma = () => {
     );
   }
 
+  // Mobile: monitoring view (unless user requested edit mode)
+  if (isMobile && !mobileEditMode) {
+    return (
+      <div className="min-h-screen bg-background">
+        <PageHeader
+          title="Cronograma"
+          showLogo={false}
+          maxWidth="md"
+          onBack={() => {
+            if (window.history.length > 1) navigate(-1);
+            else navigate('/gestao', { replace: true });
+          }}
+          breadcrumbs={[
+            { label: 'Gestão', href: '/gestao' },
+            { label: project?.name || 'Obra', href: `/obra/${projectId}` },
+            { label: 'Cronograma' },
+          ]}
+        />
+        <div className="max-w-lg mx-auto p-4">
+          <CronogramaMobileView
+            activities={existingActivities}
+            loading={activitiesLoading}
+            hasBaseline={hasBaseline}
+            onEditMode={() => setMobileEditMode(true)}
+            onImport={() => setImportModalOpen(true)}
+            onSaveBaseline={async () => { await saveBaseline(); }}
+            projectName={project?.name}
+          />
+        </div>
+        <ImportScheduleModal
+          open={importModalOpen}
+          onOpenChange={setImportModalOpen}
+          onImport={handleImportActivities}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
