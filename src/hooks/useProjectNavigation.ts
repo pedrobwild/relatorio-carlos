@@ -27,6 +27,7 @@ export function useProjectNavigation() {
       jornada: getProjectPath('/jornada'),
       dadosCliente: getProjectPath('/dados-cliente'),
       atividades: getProjectPath('/atividades'),
+      naoConformidades: getProjectPath('/nao-conformidades'),
     }
   };
 }

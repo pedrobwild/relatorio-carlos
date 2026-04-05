@@ -43,7 +43,18 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
   const projectIds = useMemo(() => projects.map(p => p.id), [projects]);
-  const { data: stagesMap } = useCurrentStages(projectIds);
+  const { data: stagesMapRaw } = useCurrentStages(projectIds);
+  // Query persistence may serialize Map as plain object — normalize
+  const stagesMap = useMemo(() => {
+    if (!stagesMapRaw) return undefined;
+    if (stagesMapRaw instanceof Map) return stagesMapRaw;
+    // Deserialized as plain object
+    const map = new Map<string, CurrentStageInfo>();
+    for (const [k, v] of Object.entries(stagesMapRaw as Record<string, CurrentStageInfo>)) {
+      map.set(k, v);
+    }
+    return map;
+  }, [stagesMapRaw]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
