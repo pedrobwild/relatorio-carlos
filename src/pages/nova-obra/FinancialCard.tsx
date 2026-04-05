@@ -6,11 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrencyBRL, parseCurrencyBRL } from '@/lib/currencyMask';
+import { AiFieldIndicator } from './AiFieldIndicator';
 import type { FormData } from './types';
 
 interface FinancialCardProps {
   formData: FormData;
   onChange: (field: keyof FormData, value: string | boolean) => void;
+  aiPrefilledFields?: Set<string>;
+  aiConflictFields?: Set<string>;
 }
 
 const PAYMENT_METHODS = [
@@ -23,7 +26,7 @@ const PAYMENT_METHODS = [
   { value: 'outro', label: 'Outro' },
 ];
 
-export function FinancialCard({ formData, onChange }: FinancialCardProps) {
+export function FinancialCard({ formData, onChange, aiPrefilledFields = new Set(), aiConflictFields = new Set() }: FinancialCardProps) {
   const [displayValue, setDisplayValue] = useState(() => {
     if (!formData.contract_value) return '';
     const cents = Math.round(parseFloat(formData.contract_value) * 100).toString();
@@ -41,6 +44,10 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
   const numericValue = formData.contract_value ? parseFloat(formData.contract_value) : 0;
   const isInvalid = formData.contract_value !== '' && numericValue < 0;
 
+  const ai = (field: string) => (
+    <AiFieldIndicator fieldName={field} aiPrefilledFields={aiPrefilledFields} aiConflictFields={aiConflictFields} />
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -51,9 +58,11 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
         <CardDescription>Valor do contrato, forma de pagamento e condições comerciais</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Valor do Contrato */}
         <div className="space-y-1">
-          <Label htmlFor="contract_value">Valor Total do Contrato (R$)</Label>
+          <Label htmlFor="contract_value" className="inline-flex items-center">
+            Valor Total do Contrato (R$)
+            {ai('contract_value')}
+          </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
             <Input
@@ -70,13 +79,12 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
           )}
         </div>
 
-        {/* Forma de Pagamento */}
         <div className="space-y-1">
-          <Label htmlFor="payment_method">Forma de Pagamento</Label>
-          <Select
-            value={formData.payment_method}
-            onValueChange={(v) => onChange('payment_method', v)}
-          >
+          <Label htmlFor="payment_method" className="inline-flex items-center">
+            Forma de Pagamento
+            {ai('payment_method')}
+          </Label>
+          <Select value={formData.payment_method} onValueChange={(v) => onChange('payment_method', v)}>
             <SelectTrigger id="payment_method">
               <SelectValue placeholder="Selecione a forma de pagamento" />
             </SelectTrigger>
@@ -88,9 +96,11 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
           </Select>
         </div>
 
-        {/* Data de Assinatura */}
         <div className="space-y-1">
-          <Label htmlFor="contract_signed_at">Data de Assinatura do Contrato</Label>
+          <Label htmlFor="contract_signed_at" className="inline-flex items-center">
+            Data de Assinatura do Contrato
+            {ai('contract_signed_at')}
+          </Label>
           <Input
             id="contract_signed_at"
             type="date"
@@ -100,7 +110,6 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
           <p className="text-[11px] text-muted-foreground">Opcional. Pode ser preenchida depois.</p>
         </div>
 
-        {/* Observações Comerciais */}
         <div className="space-y-1">
           <Label htmlFor="commercial_notes">Observações Comerciais</Label>
           <Textarea
@@ -113,7 +122,6 @@ export function FinancialCard({ formData, onChange }: FinancialCardProps) {
           />
         </div>
 
-        {/* Status do orçamento */}
         {formData.budget_uploaded && formData.budget_file_name && (
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border bg-muted/30">
             <FileCheck2 className="h-4 w-4 text-primary shrink-0" />

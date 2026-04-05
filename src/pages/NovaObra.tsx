@@ -8,7 +8,7 @@ import { addBusinessDays } from '@/lib/businessDays';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { formSchema, initialFormData, type FormData } from './nova-obra/types';
+import { formSchema, initialFormData, initialContractImportState, type FormData, type ContractImportState, type ContractParseResult } from './nova-obra/types';
 import { useNovaObraSubmit } from './nova-obra/useNovaObraSubmit';
 import { TemplateSelectorCard } from './nova-obra/TemplateSelectorCard';
 import { ProjectInfoCard } from './nova-obra/ProjectInfoCard';
@@ -17,6 +17,7 @@ import { FinancialCard } from './nova-obra/FinancialCard';
 import { CustomerCard } from './nova-obra/CustomerCard';
 import { BudgetUploadCard } from './nova-obra/BudgetUploadCard';
 import { ReviewSummary } from './nova-obra/ReviewSummary';
+import { ContractImportCard } from './nova-obra/ContractImportCard';
 import { FormStepper, type Step } from '@/components/FormStepper';
 import { StickySummary } from './nova-obra/StickySummary';
 import { MobileSummarySheet } from './nova-obra/MobileSummarySheet';
@@ -32,7 +33,6 @@ const STEPS: Step[] = [
 const STEP_SHORT_LABELS = ['Cadastro', 'Comercial', 'Planejamento', 'Revisão'];
 const STEP_CTA_LABELS = ['Próximo: Comercial', 'Próximo: Planejamento', 'Próximo: Revisão', 'Cadastrar Obra'];
 
-// Fields required per step for validation gating
 const STEP_REQUIRED_FIELDS: Record<number, (keyof FormData)[]> = {
   0: ['name', 'customer_name', 'customer_email'],
   1: [],
@@ -47,6 +47,8 @@ interface NovaObraDraft {
   step: number;
   scheduleActivities?: ScheduleActivity[];
   savedAt?: number;
+  contractSourceDoc?: string;
+  aiPrefilledFields?: string[];
 }
 
 function loadDraft(): NovaObraDraft | null {
@@ -59,9 +61,9 @@ function loadDraft(): NovaObraDraft | null {
   return null;
 }
 
-function saveDraft(formData: FormData, step: number, scheduleActivities: ScheduleActivity[]) {
+function saveDraft(formData: FormData, step: number, scheduleActivities: ScheduleActivity[], contractSourceDoc?: string, aiPrefilledFields?: string[]) {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, step, scheduleActivities, savedAt: Date.now() }));
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, step, scheduleActivities, savedAt: Date.now(), contractSourceDoc, aiPrefilledFields }));
   } catch { /* ignore */ }
 }
 
@@ -78,6 +80,35 @@ function formatDraftAge(savedAt?: number): string {
   if (hours < 24) return `${hours}h atrás`;
   return `${Math.floor(hours / 24)}d atrás`;
 }
+
+// Map AI parse result fields to FormData fields
+const AI_FIELD_MAP: Record<string, { section: 'customer' | 'studio' | 'commercial' | 'project'; aiField: string }> = {
+  customer_name: { section: 'customer', aiField: 'customer_name' },
+  customer_email: { section: 'customer', aiField: 'customer_email' },
+  customer_phone: { section: 'customer', aiField: 'customer_phone' },
+  nacionalidade: { section: 'customer', aiField: 'nacionalidade' },
+  estado_civil: { section: 'customer', aiField: 'estado_civil' },
+  profissao: { section: 'customer', aiField: 'profissao' },
+  cpf: { section: 'customer', aiField: 'cpf' },
+  rg: { section: 'customer', aiField: 'rg' },
+  endereco_residencial: { section: 'customer', aiField: 'endereco_residencial' },
+  cidade_cliente: { section: 'customer', aiField: 'cidade' },
+  estado_cliente: { section: 'customer', aiField: 'estado' },
+  nome_do_empreendimento: { section: 'studio', aiField: 'nome_do_empreendimento' },
+  address: { section: 'studio', aiField: 'endereco_completo' },
+  bairro: { section: 'studio', aiField: 'bairro' },
+  cidade_imovel: { section: 'studio', aiField: 'cidade' },
+  cep: { section: 'studio', aiField: 'cep' },
+  complemento: { section: 'studio', aiField: 'complemento' },
+  tamanho_imovel_m2: { section: 'studio', aiField: 'tamanho_imovel_m2' },
+  tipo_de_locacao: { section: 'studio', aiField: 'tipo_de_locacao' },
+  data_recebimento_chaves: { section: 'studio', aiField: 'data_recebimento_chaves' },
+  unit_name: { section: 'studio', aiField: 'unit_name' },
+  contract_value: { section: 'commercial', aiField: 'contract_value' },
+  payment_method: { section: 'commercial', aiField: 'payment_method' },
+  contract_signed_at: { section: 'commercial', aiField: 'contract_signed_at' },
+  name: { section: 'project', aiField: 'suggested_project_name' },
+};
 
 export default function NovaObra() {
   const navigate = useNavigate();
@@ -100,10 +131,33 @@ export default function NovaObra() {
   const [draftRestored, setDraftRestored] = useState(!!draft);
   const [direction, setDirection] = useState(1);
 
-  // Auto-save draft on formData, activities or step change
+  // Contract import state
+  const [contractState, setContractState] = useState<ContractImportState>(() => {
+    if (draft?.aiPrefilledFields && draft.aiPrefilledFields.length > 0) {
+      return {
+        ...initialContractImportState,
+        parseStatus: 'success' as const,
+        aiPrefilledFields: new Set(draft.aiPrefilledFields),
+        aiSourceDocumentName: draft.contractSourceDoc || '',
+        aiLastAppliedAt: new Date().toISOString(),
+      };
+    }
+    return initialContractImportState;
+  });
+
+  // Track which fields user has manually edited after AI prefill
+  const [userEditedFields] = useState<Set<string>>(new Set());
+
+  // Auto-save draft
   useEffect(() => {
-    saveDraft(formData, currentStep, scheduleActivities);
-  }, [formData, currentStep, scheduleActivities]);
+    saveDraft(
+      formData,
+      currentStep,
+      scheduleActivities,
+      contractState.aiSourceDocumentName,
+      Array.from(contractState.aiPrefilledFields),
+    );
+  }, [formData, currentStep, scheduleActivities, contractState.aiSourceDocumentName, contractState.aiPrefilledFields]);
 
   const templateTotalDays = useMemo(() => {
     if (!selectedTemplate?.default_activities) return 0;
@@ -121,6 +175,8 @@ export default function NovaObra() {
   const handleChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
+    // Track manual edits
+    userEditedFields.add(field);
     if (field === 'planned_start_date' && typeof value === 'string') {
       autoCalculateEndDate(value);
     }
@@ -128,6 +184,59 @@ export default function NovaObra() {
       autoCalculateEndDate(formData.planned_start_date, value);
     }
   };
+
+  // Apply AI parse result to formData
+  const handleApplyPrefill = useCallback((result: ContractParseResult, fileName: string) => {
+    const prefilledFields = new Set<string>();
+    const updates: Partial<FormData> = {};
+
+    for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
+      // Don't overwrite fields the user has already manually edited
+      if (userEditedFields.has(formField)) continue;
+
+      const sectionData = result[mapping.section] as Record<string, unknown>;
+      const aiValue = sectionData?.[mapping.aiField];
+
+      if (aiValue != null && aiValue !== '' && typeof aiValue === 'string') {
+        const currentValue = formData[formField as keyof FormData];
+        // Only overwrite empty fields or if current value is default
+        if (!currentValue || currentValue === '' || currentValue === initialFormData[formField as keyof FormData]) {
+          (updates as Record<string, unknown>)[formField] = aiValue;
+          prefilledFields.add(formField);
+        }
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      setFormData(prev => ({ ...prev, ...updates }));
+    }
+
+    // Build conflict field set
+    const conflictFieldSet = new Set<string>();
+    for (const conflict of result.conflicts || []) {
+      conflictFieldSet.add(conflict.field);
+    }
+
+    setContractState(prev => ({
+      ...prev,
+      aiPrefilledFields: prefilledFields,
+      aiConflicts: result.conflicts || [],
+      aiMissingFields: result.missing_fields || [],
+      aiSourceDocumentName: fileName,
+      aiLastAppliedAt: new Date().toISOString(),
+      contract_document_name: fileName,
+    }));
+
+    // Also set contract_document_name
+    setFormData(prev => ({ ...prev, contract_document_name: fileName }));
+
+    toast({
+      title: `${prefilledFields.size} campos preenchidos automaticamente`,
+      description: result.conflicts?.length
+        ? `Atenção: ${result.conflicts.length} divergência(s) encontrada(s)`
+        : 'Revise os dados antes de prosseguir',
+    });
+  }, [formData, userEditedFields, toast]);
 
   const validateStep = useCallback((step: number): boolean => {
     const requiredFields = STEP_REQUIRED_FIELDS[step] || [];
@@ -140,7 +249,6 @@ export default function NovaObra() {
       }
     }
 
-    // Step-specific validations
     if (step === 0) {
       if (formData.customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
         newErrors.customer_email = 'E-mail inválido';
@@ -225,7 +333,7 @@ export default function NovaObra() {
     setErrors({});
 
     try {
-      await submit(formData, selectedTemplate, sendInvite, budgetFile, scheduleActivities);
+      await submit(formData, selectedTemplate, sendInvite, budgetFile, scheduleActivities, contractState.file ?? undefined);
       toast({
         title: 'Obra cadastrada!',
         description: formData.create_user
@@ -255,7 +363,22 @@ export default function NovaObra() {
     setCurrentStep(0);
     setCompletedSteps(new Set());
     setDraftRestored(false);
+    setContractState(initialContractImportState);
   };
+
+  // Conflict field set for indicators
+  const aiConflictFields = useMemo(() => {
+    const s = new Set<string>();
+    for (const c of contractState.aiConflicts) {
+      // Map conflict field name to form field name
+      for (const [formField, mapping] of Object.entries(AI_FIELD_MAP)) {
+        if (mapping.aiField === c.field || formField === c.field) {
+          s.add(formField);
+        }
+      }
+    }
+    return s;
+  }, [contractState.aiConflicts]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -338,22 +461,10 @@ export default function NovaObra() {
                     <p className="text-[11px] text-muted-foreground">Salvo {formatDraftAge(draft.savedAt)}</p>
                   )}
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs shrink-0"
-                  onClick={handleClearDraft}
-                >
+                <Button type="button" variant="ghost" size="sm" className="h-8 text-xs shrink-0" onClick={handleClearDraft}>
                   Limpar
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => setDraftRestored(false)}
-                >
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setDraftRestored(false)}>
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </motion.div>
@@ -369,11 +480,19 @@ export default function NovaObra() {
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="space-y-6"
                 >
-                  {/* Step 0: Cadastro Base — Obra + Imóvel + Contratante */}
+                  {/* Step 0: Cadastro Base */}
                   {currentStep === 0 && (
                     <>
+                      {/* Contract Import - top of step 0 */}
+                      <ContractImportCard
+                        contractState={contractState}
+                        onContractStateChange={setContractState}
+                        formData={formData}
+                        onApplyPrefill={handleApplyPrefill}
+                      />
+
                       {templates && templates.length > 0 && (
-                        <div className="mb-6">
+                        <div>
                           <TemplateSelectorCard
                             templates={templates}
                             selectedTemplate={selectedTemplate}
@@ -385,8 +504,22 @@ export default function NovaObra() {
                           />
                         </div>
                       )}
-                      <ProjectInfoCard formData={formData} errors={errors} onChange={handleChange} />
-                      <CustomerCard formData={formData} errors={errors} sendInvite={sendInvite} onSendInviteChange={setSendInvite} onChange={handleChange} />
+                      <ProjectInfoCard
+                        formData={formData}
+                        errors={errors}
+                        onChange={handleChange}
+                        aiPrefilledFields={contractState.aiPrefilledFields}
+                        aiConflictFields={aiConflictFields}
+                      />
+                      <CustomerCard
+                        formData={formData}
+                        errors={errors}
+                        sendInvite={sendInvite}
+                        onSendInviteChange={setSendInvite}
+                        onChange={handleChange}
+                        aiPrefilledFields={contractState.aiPrefilledFields}
+                        aiConflictFields={aiConflictFields}
+                      />
                     </>
                   )}
 
@@ -394,7 +527,12 @@ export default function NovaObra() {
                   {currentStep === 1 && (
                     <div className="space-y-6">
                       <BudgetUploadCard file={budgetFile} onFileChange={setBudgetFile} formData={formData} onChange={handleChange} />
-                      <FinancialCard formData={formData} onChange={handleChange} />
+                      <FinancialCard
+                        formData={formData}
+                        onChange={handleChange}
+                        aiPrefilledFields={contractState.aiPrefilledFields}
+                        aiConflictFields={aiConflictFields}
+                      />
                     </div>
                   )}
 
@@ -406,7 +544,12 @@ export default function NovaObra() {
                   {/* Step 3: Revisão */}
                   {currentStep === 3 && (
                     <div className="space-y-6">
-                      <ReviewSummary formData={formData} />
+                      <ReviewSummary
+                        formData={formData}
+                        contractSourceDoc={contractState.aiSourceDocumentName}
+                        aiPrefilledCount={contractState.aiPrefilledFields.size}
+                        aiConflictsCount={contractState.aiConflicts.length}
+                      />
                     </div>
                   )}
                 </motion.div>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Calendar, DollarSign, User, Home, CheckCircle2, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { Building2, Calendar, DollarSign, User, Home, CheckCircle2, FileSpreadsheet, AlertTriangle, Sparkles } from 'lucide-react';
 import type { FormData } from './types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,6 +8,9 @@ import { cn } from '@/lib/utils';
 
 interface ReviewSummaryProps {
   formData: FormData;
+  contractSourceDoc?: string;
+  aiPrefilledCount?: number;
+  aiConflictsCount?: number;
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -19,7 +22,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   outro: 'Outro',
 };
 
-export function ReviewSummary({ formData }: ReviewSummaryProps) {
+export function ReviewSummary({ formData, contractSourceDoc, aiPrefilledCount = 0, aiConflictsCount = 0 }: ReviewSummaryProps) {
   const formatDate = (d: string) => {
     if (!d) return 'Em definição';
     try {
@@ -100,6 +103,19 @@ export function ReviewSummary({ formData }: ReviewSummaryProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-0">
+        {/* Contract source badge */}
+        {contractSourceDoc && aiPrefilledCount > 0 && (
+          <div className="flex items-center gap-2 mb-3 pb-3 border-b border-primary/10">
+            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+            <p className="text-[11px] text-primary font-medium">
+              {aiPrefilledCount} campos preenchidos via contrato
+              {aiConflictsCount > 0 && (
+                <span className="text-destructive ml-1">· {aiConflictsCount} divergência(s)</span>
+              )}
+            </p>
+          </div>
+        )}
+
         {items.map((item, i) => {
           const Icon = item.icon;
           return (
@@ -130,7 +146,6 @@ export function ReviewSummary({ formData }: ReviewSummaryProps) {
           );
         })}
 
-        {/* Missing critical fields warning */}
         {missingCritical && (
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-primary/10">
             <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
