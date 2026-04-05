@@ -59,11 +59,11 @@ export function ComprasKPICards({
           <div className="flex items-center gap-2.5">
             <div className={cn(
               "p-1.5 rounded-md",
-              overdueCount > 0 ? "bg-destructive/10" : "bg-amber-500/10"
+              overdueCount > 0 ? "bg-destructive/10" : "bg-[hsl(var(--warning))]/10"
             )}>
               {overdueCount > 0
                 ? <AlertTriangle className="h-4 w-4 text-destructive" />
-                : <Clock className="h-4 w-4 text-amber-600" />
+                : <Clock className="h-4 w-4 text-[hsl(var(--warning))]" />
               }
             </div>
             <div className="min-w-0">
