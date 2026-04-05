@@ -70,7 +70,7 @@ export default function FormalizacaoDetalhe() {
   const showSignatureBlock = formalizacao.status === 'pending_signatures' && !!pendingPartyForUser;
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-6">
+    <div className="min-h-screen bg-background">
       <FormalizacaoHeader
         title={formalizacao.title ?? ''}
         status={formalizacao.status ?? ''}
