@@ -17,7 +17,11 @@ export async function authenticateRequest(req: Request) {
     throw { status: 401, message: 'Authorization required' };
   }
 
-  const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  if (!anonKey) {
+    throw { status: 500, message: 'Missing SUPABASE_ANON_KEY' };
+  }
+  const supabaseUser = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 
