@@ -22,15 +22,24 @@ import {
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
 import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
+import {
+  SUPPLIER_TYPE_LABELS,
+  SUPPLIER_TYPES,
+  getSubcategoriesByType,
+  isValidSupplierSubcategory,
+  type SupplierType,
+} from "@/constants/supplierCategories";
 
-type SupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
+type LegacySupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
 
 interface Supplier {
   id: string;
   nome: string;
   razao_social: string | null;
   cnpj_cpf: string | null;
-  categoria: SupplierCategory;
+  categoria: LegacySupplierCategory;
+  supplier_type: string | null;
+  supplier_subcategory: string | null;
   telefone: string | null;
   email: string | null;
   site: string | null;
@@ -47,20 +56,12 @@ interface Supplier {
   created_at: string;
 }
 
-const CATEGORY_LABELS: Record<SupplierCategory, string> = {
+const LEGACY_CATEGORY_LABELS: Record<LegacySupplierCategory, string> = {
   materiais: "Materiais",
   mao_de_obra: "Mão de Obra",
   servicos: "Serviços",
   equipamentos: "Equipamentos",
   outros: "Outros",
-};
-
-const CATEGORY_COLORS: Record<SupplierCategory, string> = {
-  materiais: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  mao_de_obra: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  servicos: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  equipamentos: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  outros: "bg-muted text-muted-foreground",
 };
 
 export default function FornecedorDetalhe() {
@@ -125,6 +126,16 @@ export default function FornecedorDetalhe() {
     setEditing(false);
   };
 
+  const handleSupplierTypeChange = (value: string) => {
+    setForm((p) => {
+      const newForm = { ...p, supplier_type: value };
+      if (p.supplier_subcategory && !isValidSupplierSubcategory(value, p.supplier_subcategory)) {
+        newForm.supplier_subcategory = null;
+      }
+      return newForm;
+    });
+  };
+
   const handleSave = () => {
     if (!form.nome?.trim()) {
       toast({ title: "Nome é obrigatório", variant: "destructive" });
@@ -184,6 +195,11 @@ export default function FornecedorDetalhe() {
 
   const s = editing ? form : supplier;
 
+  /** Best available category display */
+  const categoryDisplay = supplier.supplier_type && supplier.supplier_subcategory
+    ? `${SUPPLIER_TYPE_LABELS[supplier.supplier_type as SupplierType] || supplier.supplier_type} › ${supplier.supplier_subcategory}`
+    : LEGACY_CATEGORY_LABELS[supplier.categoria] || supplier.categoria;
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
@@ -205,8 +221,8 @@ export default function FornecedorDetalhe() {
               <Badge variant={supplier.status === "ativo" ? "default" : "secondary"}>
                 {supplier.status === "ativo" ? "Ativo" : "Inativo"}
               </Badge>
-              <Badge variant="secondary" className={CATEGORY_COLORS[supplier.categoria]}>
-                {CATEGORY_LABELS[supplier.categoria]}
+              <Badge variant="secondary">
+                {categoryDisplay}
               </Badge>
             </div>
           )}
@@ -256,28 +272,44 @@ export default function FornecedorDetalhe() {
                     <Label>CNPJ/CPF</Label>
                     <Input value={form.cnpj_cpf || ""} onChange={(e) => setForm((p) => ({ ...p, cnpj_cpf: e.target.value }))} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label>Categoria</Label>
-                      <Select value={form.categoria || "outros"} onValueChange={(v) => setForm((p) => ({ ...p, categoria: v as SupplierCategory }))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                            <SelectItem key={k} value={k}>{v}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Status</Label>
-                      <Select value={form.status || "ativo"} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ativo">Ativo</SelectItem>
-                          <SelectItem value="inativo">Inativo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  {/* New taxonomy selects */}
+                  <div className="space-y-1.5">
+                    <Label>Categoria *</Label>
+                    <Select value={form.supplier_type || ""} onValueChange={handleSupplierTypeChange}>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                      <SelectContent>
+                        {SUPPLIER_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {SUPPLIER_TYPE_LABELS[type]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Subcategoria *</Label>
+                    <Select
+                      value={form.supplier_subcategory || ""}
+                      onValueChange={(v) => setForm((p) => ({ ...p, supplier_subcategory: v }))}
+                      disabled={!form.supplier_type}
+                    >
+                      <SelectTrigger><SelectValue placeholder={form.supplier_type ? "Selecione..." : "Escolha a categoria primeiro"} /></SelectTrigger>
+                      <SelectContent>
+                        {getSubcategoriesByType(form.supplier_type).map((sub) => (
+                          <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Status</Label>
+                    <Select value={form.status || "ativo"} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1.5">
                     <Label>Telefone</Label>
@@ -408,7 +440,7 @@ export default function FornecedorDetalhe() {
               <CardTitle className="text-base">Histórico de Compras</CardTitle>
             </CardHeader>
             <CardContent>
-              <SupplierPurchaseHistoryTab fornecedorId={supplier.id} />
+              <SupplierPurchaseHistoryTab supplierName={supplier.nome} />
             </CardContent>
           </Card>
         </div>
