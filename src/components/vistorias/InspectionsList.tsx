@@ -41,7 +41,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
   const filtered = useMemo(() => {
     let result = inspections;
     if (filterStatus) result = result.filter(i => i.status === filterStatus);
-    if (filterTypes.length > 0) result = result.filter(i => filterTypes.includes((i as any).inspection_type || 'rotina'));
+    if (filterTypes.length > 0) result = result.filter(i => filterTypes.includes((i.inspection_type || 'rotina') as InspectionType));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(i =>
@@ -64,7 +64,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
 
   // Only show type filter if there are inspections with different types
   const usedTypes = useMemo(() => {
-    const types = new Set(inspections.map(i => (i as any).inspection_type || 'rotina'));
+    const types = new Set(inspections.map(i => (i.inspection_type || 'rotina') as InspectionType));
     return INSPECTION_TYPES.filter(t => types.has(t.value));
   }, [inspections]);
 
@@ -120,7 +120,7 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
         <div className="grid gap-3">
           {filtered.map((inspection) => {
             const cfg = statusConfig[inspection.status as InspectionStatus] || statusConfig.draft;
-            const typeConfig = getInspectionTypeConfig((inspection as any).inspection_type || 'rotina');
+            const typeConfig = getInspectionTypeConfig(inspection.inspection_type || 'rotina');
             return (
               <Card
                 key={inspection.id}
@@ -149,9 +149,9 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
                             </Badge>
                           )}
                         </div>
-                        {(inspection as any).inspector_user_name && (
+                        {inspection.inspector_user_name && (
                           <p className="text-xs text-muted-foreground truncate mt-0.5">
-                            Vistoriador: {(inspection as any).inspector_user_name}
+                            Vistoriador: {inspection.inspector_user_name}
                           </p>
                         )}
                         {inspection.activity_description && (

@@ -11,34 +11,30 @@ export type InspectionStatus = Database['public']['Enums']['inspection_status'];
 export type InspectionItemResult = Database['public']['Enums']['inspection_item_result'];
 
 export async function getInspectionsByProject(projectId: string): Promise<Inspection[]> {
-  const { data, error } = await supabase
-    .from('inspections')
-    .select('*, project_activities(description)')
-    .eq('project_id', projectId)
-    .order('inspection_date', { ascending: false });
-  if (error) throw error;
-  const inspections = (data ?? []).map((row: any) => ({
+  // Run both queries in parallel to avoid waterfall
+  const [inspectionsResult, profilesResult] = await Promise.all([
+    supabase
+      .from('inspections')
+      .select('*, project_activities(description)')
+      .eq('project_id', projectId)
+      .order('inspection_date', { ascending: false }),
+    supabase
+      .from('users_profile')
+      .select('id, nome'),
+  ]);
+
+  if (inspectionsResult.error) throw inspectionsResult.error;
+
+  const nameMap: Record<string, string> = {};
+  if (profilesResult.data) {
+    profilesResult.data.forEach(p => { nameMap[p.id] = p.nome; });
+  }
+
+  return (inspectionsResult.data ?? []).map((row: any) => ({
     ...row,
     activity_description: row.project_activities?.description ?? null,
     project_activities: undefined,
-  }));
-
-  // Fetch inspector user names
-  const inspectorIds = [...new Set(inspections.map((i: any) => i.inspector_user_id).filter(Boolean))] as string[];
-  let nameMap: Record<string, string> = {};
-  if (inspectorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from('users_profile')
-      .select('id, nome')
-      .in('id', inspectorIds);
-    if (profiles) {
-      nameMap = Object.fromEntries(profiles.map(p => [p.id, p.nome]));
-    }
-  }
-
-  return inspections.map((i: any) => ({
-    ...i,
-    inspector_user_name: i.inspector_user_id ? nameMap[i.inspector_user_id] ?? null : null,
+    inspector_user_name: row.inspector_user_id ? nameMap[row.inspector_user_id] ?? null : null,
   }));
 }
 
@@ -50,13 +46,12 @@ export async function getInspectionById(inspectionId: string): Promise<Inspectio
     .single();
   if (error) throw error;
 
-  // Fetch inspector name
   let inspector_user_name: string | null = null;
-  if ((data as any).inspector_user_id) {
+  if (data.inspector_user_id) {
     const { data: profile } = await supabase
       .from('users_profile')
       .select('nome')
-      .eq('id', (data as any).inspector_user_id)
+      .eq('id', data.inspector_user_id)
       .single();
     inspector_user_name = profile?.nome ?? null;
   }

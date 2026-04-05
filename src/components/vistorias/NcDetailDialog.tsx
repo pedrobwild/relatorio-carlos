@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign } from 'lucide-react';
@@ -101,6 +101,23 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const [actualCostInput, setActualCostInput] = useState<string>(
     nc.actual_cost != null ? String(nc.actual_cost) : ''
   );
+
+  // Re-sync state when the NC prop changes (e.g. after mutation invalidation)
+  useEffect(() => {
+    setEditTitle(nc.title);
+    setEditDescription(nc.description || '');
+    setEditSeverity(nc.severity);
+    setEditCategory(nc.category || '');
+    setEditDeadline(nc.deadline ? parseISO(nc.deadline) : undefined);
+    setEditEstimatedCost(nc.estimated_cost != null ? String(nc.estimated_cost) : '');
+    setCorrectiveAction(nc.corrective_action || '');
+    setPhotosBefore(nc.evidence_photos_before ?? nc.evidence_photo_paths ?? []);
+    setPhotosAfter(nc.evidence_photos_after ?? []);
+    setRootCause(nc.root_cause || '');
+    setActualCostInput(nc.actual_cost != null ? String(nc.actual_cost) : '');
+    setEditing(false);
+    setActionNotes('');
+  }, [nc.id]);
 
   const handleSaveEdit = () => {
     if (!editTitle.trim()) return;
