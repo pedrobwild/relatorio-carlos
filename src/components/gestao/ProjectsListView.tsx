@@ -226,6 +226,7 @@ function ProjectRow({
   onToggle: () => void;
   onNavigate: () => void;
 }) {
+  const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const progress = summary?.progress_percentage ?? 0;
