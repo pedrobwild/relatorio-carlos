@@ -35,10 +35,22 @@ import {
   useUpdateNonConformity,
   useUpdateNcEvidence,
   useNcHistory,
+  useDeleteNonConformity,
   type NonConformity,
   type NcStatus,
   type NcSeverity,
 } from '@/hooks/useNonConformities';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useCan } from '@/hooks/useCan';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { cn } from '@/lib/utils';
