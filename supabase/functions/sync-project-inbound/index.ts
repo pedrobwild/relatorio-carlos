@@ -49,6 +49,20 @@ Deno.serve(async (req) => {
     }
 
     // --- Map to local projects schema ---
+    // Find a system/admin user to set as created_by (required NOT NULL field)
+    const { data: adminUser } = await db
+      .from("users_profile")
+      .select("id")
+      .eq("perfil", "admin")
+      .eq("status", "ativo")
+      .limit(1)
+      .single();
+
+    if (!adminUser) {
+      console.error("[sync-project-inbound] No active admin user found for created_by");
+      return jsonResponse({ error: "No active admin user found to assign as project creator" }, 500);
+    }
+
     const projectPayload: Record<string, unknown> = {
       name: project.name.trim(),
       client_name: project.client_name.trim(),
@@ -67,6 +81,7 @@ Deno.serve(async (req) => {
       status: "draft",
       notes: project.notes ?? null,
       consultora_comercial: project.consultora_comercial ?? null,
+      contract_value: typeof project.budget_value === "number" ? project.budget_value : null,
     };
 
     // --- Upsert: check if already linked ---
