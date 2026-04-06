@@ -81,8 +81,10 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const { can } = useCan();
   const canApproveNc = can('ncs:approve');
   const canEdit = can('ncs:treat');
+  const { data: staffUsers = [] } = useStaffUsers();
 
-  const isEditable = canEdit && (nc.status === 'open' || nc.status === 'reopened');
+  const isEditable = canEdit && nc.status !== 'closed';
+  const canEditDeadline = canEdit && nc.status !== 'closed';
 
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(nc.title);
