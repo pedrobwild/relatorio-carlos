@@ -319,6 +319,17 @@ export function PurchaseFormDialog({
               </>
             )}
 
+            {/* Payment Schedule for Prestadores */}
+            {isPrestador && (formData.estimated_cost || 0) > 0 && (
+              <PaymentScheduleSection
+                totalValue={formData.estimated_cost || 0}
+                startDate={formData.start_date || formData.required_by_date || ''}
+                endDate={formData.end_date || ''}
+                installments={paymentInstallments}
+                onChange={onPaymentInstallmentsChange}
+              />
+            )}
+
             <div className="col-span-2">
               <Label htmlFor="notes">Observações</Label>
               <Textarea
