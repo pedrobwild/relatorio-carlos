@@ -187,7 +187,24 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   };
 
   const handleUpdateField = async (id: string, field: string, value: string | null) => {
-    const updateValue = field === 'estimated_cost' ? (value ? parseFloat(value) : null) : value;
+    let updateValue: string | number | null = value;
+    
+    // Parse numeric fields
+    if (field === 'estimated_cost' || field === 'actual_cost' || field === 'quantity') {
+      updateValue = value ? parseFloat(value) : null;
+      if (typeof updateValue === 'number' && isNaN(updateValue)) updateValue = null;
+    }
+    
+    // Ensure UUID fields get null instead of empty string
+    if (field === 'activity_id' || field === 'fornecedor_id') {
+      updateValue = value && value.trim() ? value : null;
+    }
+    
+    // Ensure date fields get null instead of empty string
+    if (['required_by_date', 'planned_purchase_date', 'order_date', 'expected_delivery_date', 'actual_delivery_date', 'start_date', 'end_date'].includes(field)) {
+      updateValue = value && value.trim() ? value : null;
+    }
+    
     await updatePurchase.mutateAsync({ id, [field]: updateValue });
   };
 
