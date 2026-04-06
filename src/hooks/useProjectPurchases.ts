@@ -7,6 +7,7 @@ import { queryKeys } from '@/lib/queryKeys';
 import { QUERY_TIMING } from '@/lib/queryClient';
 
 export type PurchaseStatus = 'pending' | 'ordered' | 'in_transit' | 'delivered' | 'cancelled';
+export type PurchaseType = 'produto' | 'prestador';
 
 export interface ProjectPurchase {
   id: string;
@@ -33,6 +34,8 @@ export interface ProjectPurchase {
   start_date: string | null;
   end_date: string | null;
   contract_file_path: string | null;
+  purchase_type: PurchaseType;
+  delivery_address: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -62,6 +65,8 @@ export interface PurchaseInput {
   start_date?: string | null;
   end_date?: string | null;
   contract_file_path?: string | null;
+  purchase_type?: PurchaseType;
+  delivery_address?: string | null;
 }
 
 

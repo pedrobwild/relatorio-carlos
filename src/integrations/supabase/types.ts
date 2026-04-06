@@ -4135,6 +4135,7 @@ export type Database = {
           contract_file_path: string | null
           created_at: string
           created_by: string
+          delivery_address: string | null
           description: string | null
           end_date: string | null
           estimated_cost: number | null
@@ -4148,6 +4149,7 @@ export type Database = {
           order_date: string | null
           planned_purchase_date: string | null
           project_id: string
+          purchase_type: string | null
           quantity: number
           required_by_date: string
           start_date: string | null
@@ -4165,6 +4167,7 @@ export type Database = {
           contract_file_path?: string | null
           created_at?: string
           created_by: string
+          delivery_address?: string | null
           description?: string | null
           end_date?: string | null
           estimated_cost?: number | null
@@ -4178,6 +4181,7 @@ export type Database = {
           order_date?: string | null
           planned_purchase_date?: string | null
           project_id: string
+          purchase_type?: string | null
           quantity?: number
           required_by_date: string
           start_date?: string | null
@@ -4195,6 +4199,7 @@ export type Database = {
           contract_file_path?: string | null
           created_at?: string
           created_by?: string
+          delivery_address?: string | null
           description?: string | null
           end_date?: string | null
           estimated_cost?: number | null
@@ -4208,6 +4213,7 @@ export type Database = {
           order_date?: string | null
           planned_purchase_date?: string | null
           project_id?: string
+          purchase_type?: string | null
           quantity?: number
           required_by_date?: string
           start_date?: string | null

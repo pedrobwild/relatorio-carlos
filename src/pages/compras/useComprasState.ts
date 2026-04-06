@@ -4,7 +4,6 @@ import { format, differenceInDays, parseISO, subDays } from 'date-fns';
 import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { useProjectActivities } from '@/hooks/useProjectActivities';
 import { emptyPurchase } from './types';
-import { isValidSupplierSubcategory } from '@/constants/supplierCategories';
 
 export function useComprasState() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -49,12 +48,9 @@ export function useComprasState() {
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterActivity !== 'all' && p.activity_id !== filterActivity) return false;
       
-      // Category filter: match purchase category against supplier type taxonomy
-      if (filterCategory !== 'all' && p.category) {
-        const isInType = isValidSupplierSubcategory(filterCategory, p.category);
-        if (!isInType) return false;
-      } else if (filterCategory !== 'all' && !p.category) {
-        return false; // No category → doesn't match any specific filter
+      // Category filter: now matches purchase_type ('produto' | 'prestador')
+      if (filterCategory !== 'all') {
+        if ((p.purchase_type || 'produto') !== filterCategory) return false;
       }
       
       // Subcategory filter: exact match on purchase category
@@ -87,6 +83,10 @@ export function useComprasState() {
         expected_delivery_date: purchase.expected_delivery_date || undefined,
         invoice_number: purchase.invoice_number || '',
         notes: purchase.notes || '',
+        purchase_type: purchase.purchase_type || 'produto',
+        delivery_address: purchase.delivery_address || '',
+        start_date: purchase.start_date || undefined,
+        end_date: purchase.end_date || undefined,
       });
     } else {
       setEditingPurchase(null);
@@ -140,6 +140,10 @@ export function useComprasState() {
       expected_delivery_date: formData.expected_delivery_date || null,
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
+      purchase_type: formData.purchase_type || 'produto',
+      delivery_address: formData.delivery_address || null,
+      start_date: formData.start_date || null,
+      end_date: formData.end_date || null,
     };
     try {
       if (editingPurchase) {

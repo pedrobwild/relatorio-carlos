@@ -14,11 +14,9 @@ import { useComprasState } from './compras/useComprasState';
 import { ComprasKPICards } from './compras/ComprasKPICards';
 import { PurchasesTable } from './compras/PurchasesTable';
 import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
-import {
-  SUPPLIER_TYPES,
-  SUPPLIER_TYPE_LABELS,
-  getSubcategoriesByType,
-} from '@/constants/supplierCategories';
+import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './compras/types';
+import { getSubcategoriesByType } from '@/constants/supplierCategories';
+import type { PurchaseType } from '@/hooks/useProjectPurchases';
 
 export default function Compras() {
   const state = useComprasState();
@@ -49,8 +47,9 @@ export default function Compras() {
     [state.filteredPurchases]
   );
 
-  const availableSubcategories = state.filterCategory !== 'all'
-    ? getSubcategoriesByType(state.filterCategory)
+  const supplierType = purchaseTypeToSupplierType(state.filterCategory);
+  const availableSubcategories = supplierType
+    ? getSubcategoriesByType(supplierType)
     : [];
 
   const hasAnyFilter = searchQuery || state.hasActiveFilters;
@@ -143,15 +142,15 @@ export default function Compras() {
               </SelectContent>
             </Select>
             <Select value={state.filterCategory} onValueChange={state.handleCategoryFilterChange}>
-              <SelectTrigger className="w-44 h-9" aria-label="Filtrar por tipo de fornecedor">
+              <SelectTrigger className="w-44 h-9" aria-label="Filtrar por tipo">
                 <Filter className="h-3.5 w-3.5 mr-1" />
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os tipos</SelectItem>
-                {SUPPLIER_TYPES.map(type => (
+                {(['produto', 'prestador'] as PurchaseType[]).map(type => (
                   <SelectItem key={type} value={type}>
-                    {SUPPLIER_TYPE_LABELS[type]}
+                    {PURCHASE_TYPE_LABELS[type]}
                   </SelectItem>
                 ))}
               </SelectContent>

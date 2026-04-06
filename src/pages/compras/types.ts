@@ -1,5 +1,5 @@
 import { Clock, Package, Truck, CheckCircle2, X } from 'lucide-react';
-import { type PurchaseInput, type PurchaseStatus } from '@/hooks/useProjectPurchases';
+import { type PurchaseInput, type PurchaseStatus, type PurchaseType } from '@/hooks/useProjectPurchases';
 import { getAllSupplierSubcategories, SUPPLIER_SUBCATEGORIES_BY_TYPE } from '@/constants/supplierCategories';
 
 export const statusConfig: Record<PurchaseStatus, { label: string; color: string; icon: React.ElementType }> = {
@@ -8,6 +8,16 @@ export const statusConfig: Record<PurchaseStatus, { label: string; color: string
   in_transit: { label: 'Em Trânsito', color: 'bg-accent text-accent-foreground border-accent', icon: Truck },
   delivered: { label: 'Concluído', color: 'bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border-[hsl(var(--success))]/30', icon: CheckCircle2 },
   cancelled: { label: 'Cancelado', color: 'bg-muted text-muted-foreground border-muted', icon: X },
+};
+
+export const PURCHASE_TYPE_LABELS: Record<PurchaseType, string> = {
+  produto: 'Produto',
+  prestador: 'Prestador',
+};
+
+export const PURCHASE_TYPE_ICONS: Record<PurchaseType, string> = {
+  produto: '📦',
+  prestador: '🔧',
 };
 
 export const emptyPurchase: Partial<PurchaseInput> = {
@@ -21,16 +31,12 @@ export const emptyPurchase: Partial<PurchaseInput> = {
   lead_time_days: 7,
   required_by_date: '',
   notes: '',
+  purchase_type: 'produto',
+  delivery_address: '',
 };
 
 /**
  * Purchase-item categories — derived from the central supplier taxonomy.
- *
- * These are used for the `category` field on `project_purchases`.
- * They classify the *item being purchased*, not the supplier itself.
- *
- * The supplier taxonomy (supplier_type + supplier_subcategory) lives in
- * `src/constants/supplierCategories.ts` and is the single source of truth.
  */
 
 /** @deprecated Use SUPPLIER_SUBCATEGORIES_BY_TYPE['produtos'] instead */
@@ -44,4 +50,11 @@ export const ALL_CATEGORIES = getAllSupplierSubcategories();
 
 export function isServiceCategory(category: string): boolean {
   return (SUPPLIER_SUBCATEGORIES_BY_TYPE.prestadores as readonly string[]).includes(category);
+}
+
+/** Map purchase_type to the supplier taxonomy type for subcategory lookups */
+export function purchaseTypeToSupplierType(purchaseType: PurchaseType | string | undefined): 'prestadores' | 'produtos' | null {
+  if (purchaseType === 'prestador') return 'prestadores';
+  if (purchaseType === 'produto') return 'produtos';
+  return null;
 }
