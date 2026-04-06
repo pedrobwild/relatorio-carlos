@@ -88,7 +88,7 @@ export default function OrcamentoDetalhe() {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
         .from('orcamento_sections')
-        .select('id, title, order_index, section_price, is_optional, orcamento_items(id, title, qty, unit, internal_unit_price, internal_total, bdi_percentage, order_index)')
+        .select('id, title, subtitle, notes, order_index, section_price, is_optional, cover_image_url, included_bullets, excluded_bullets, tags, cost, bdi_percentage, item_count, orcamento_items(id, title, description, qty, unit, internal_unit_price, internal_total, bdi_percentage, order_index, included_rooms, excluded_rooms, coverage_type, reference_url, notes)')
         .eq('orcamento_id', orcamentoId)
         .order('order_index', { ascending: true });
       if (error) throw error;
@@ -96,6 +96,22 @@ export default function OrcamentoDetalhe() {
         ...s,
         orcamento_items: (s.orcamento_items || []).sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0)),
       }));
+    },
+    enabled: !!orcamentoId,
+  });
+
+  // Fetch adjustments
+  const { data: adjustments } = useQuery({
+    queryKey: ['orcamentos', 'adjustments', orcamentoId],
+    queryFn: async () => {
+      if (!orcamentoId) return [];
+      const { data, error } = await supabase
+        .from('orcamento_adjustments')
+        .select('id, label, amount, sign, order_index')
+        .eq('orcamento_id', orcamentoId)
+        .order('order_index', { ascending: true });
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!orcamentoId,
   });
@@ -218,7 +234,9 @@ export default function OrcamentoDetalhe() {
   const prio = PRIORITIES[budget.priority] || PRIORITIES.normal;
   const links = (budget.reference_links ?? []).filter((l: string) => l?.trim());
 
-  // Calculate totals from sections
+  // Use server-side totals if available, otherwise calculate
+  const hasServerTotals = budget.total_value != null || budget.total_sale != null;
+
   let grandCost = 0;
   let grandSale = 0;
   const sectionSummaries = (sections || []).map((sec: any) => {
@@ -235,14 +253,23 @@ export default function OrcamentoDetalhe() {
       secSale += totalSale;
       return { ...item, cost, bdi, sale, totalCost, totalSale, qty };
     });
+    const effectiveCost = sec.cost != null ? Number(sec.cost) : secCost;
     const effectiveSale = sec.section_price != null && sec.section_price > 0 ? Number(sec.section_price) : secSale;
-    grandCost += secCost;
+    grandCost += effectiveCost;
     grandSale += effectiveSale;
-    const secBdi = secCost > 0 ? ((effectiveSale / secCost) - 1) * 100 : 0;
-    return { ...sec, itemRows, secCost, secSale: effectiveSale, secBdi };
+    const secBdi = sec.bdi_percentage != null ? Number(sec.bdi_percentage) : (effectiveCost > 0 ? ((effectiveSale / effectiveCost) - 1) * 100 : 0);
+    return { ...sec, itemRows, secCost: effectiveCost, secSale: effectiveSale, secBdi };
   });
-  const grandBdi = grandCost > 0 ? ((grandSale / grandCost) - 1) * 100 : 0;
-  const margin = grandSale - grandCost;
+
+  // Adjustments total
+  const adjustmentsTotal = (adjustments || []).reduce((sum: number, adj: any) => sum + (Number(adj.amount) * Number(adj.sign)), 0);
+
+  // Use server totals or calculated
+  const finalSale = hasServerTotals ? Number(budget.total_sale ?? grandSale) : grandSale;
+  const finalCost = hasServerTotals ? Number(budget.total_cost ?? grandCost) : grandCost;
+  const finalValue = hasServerTotals ? Number(budget.total_value ?? finalSale) : (grandSale + adjustmentsTotal);
+  const grandBdi = hasServerTotals && budget.avg_bdi != null ? Number(budget.avg_bdi) : (finalCost > 0 ? ((finalSale / finalCost) - 1) * 100 : 0);
+  const margin = hasServerTotals && budget.net_margin != null ? Number(budget.net_margin) : (finalSale - finalCost);
 
   return (
     <div className="p-4 sm:p-6">
@@ -384,17 +411,35 @@ export default function OrcamentoDetalhe() {
                 <CollapsibleContent>
                   <CardContent className="pt-0 space-y-4">
                     {/* Grand totals */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-lg bg-muted/50 border border-border">
-                      <MiniStat label="Total Venda" value={formatBRL(grandSale)} icon={<DollarSign className="h-3.5 w-3.5" />} accent />
-                      <MiniStat label="Total Custo" value={formatBRL(grandCost)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                      <MiniStat label="Total Venda" value={formatBRL(finalSale)} icon={<DollarSign className="h-3.5 w-3.5" />} accent />
+                      <MiniStat label="Total Custo" value={formatBRL(finalCost)} icon={<DollarSign className="h-3.5 w-3.5" />} />
                       <MiniStat label="BDI Médio" value={`${grandBdi.toFixed(1)}%`} icon={<TrendingUp className="h-3.5 w-3.5" />} />
                       <MiniStat label="Margem Líquida" value={formatBRL(margin)} icon={<TrendingUp className="h-3.5 w-3.5" />} accent={margin > 0} />
+                      {finalValue !== finalSale && (
+                        <MiniStat label="Valor Final" value={formatBRL(finalValue)} icon={<DollarSign className="h-3.5 w-3.5" />} accent />
+                      )}
                     </div>
 
                     {/* Sections */}
                     {sectionSummaries.map((sec: any) => (
                       <SectionBlock key={sec.id} section={sec} />
                     ))}
+
+                    {/* Adjustments */}
+                    {(adjustments || []).length > 0 && (
+                      <div className="p-3 rounded-lg border border-dashed border-border space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">Ajustes Financeiros</p>
+                        {adjustments!.map((adj: any) => (
+                          <div key={adj.id} className="flex justify-between text-sm">
+                            <span>{adj.label}</span>
+                            <span className={`font-medium tabular-nums ${Number(adj.sign) < 0 ? 'text-destructive' : 'text-[hsl(var(--success))]'}`}>
+                              {Number(adj.sign) < 0 ? '−' : '+'} {formatBRL(Math.abs(Number(adj.amount)))}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </CollapsibleContent>
               </Collapsible>
@@ -599,6 +644,9 @@ function MiniStat({ label, value, icon, accent }: { label: string; value: string
 
 function SectionBlock({ section }: { section: any }) {
   const [open, setOpen] = useState(false);
+  const includedBullets = section.included_bullets?.filter((b: string) => b?.trim()) || [];
+  const excludedBullets = section.excluded_bullets?.filter((b: string) => b?.trim()) || [];
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger className="w-full">
@@ -619,25 +667,69 @@ function SectionBlock({ section }: { section: any }) {
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="ml-5 mt-1 border-l-2 border-border pl-3 space-y-0">
-          <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-[11px] text-muted-foreground font-medium border-b border-border">
-            <span>Item</span>
-            <span className="text-right">Qtd</span>
-            <span className="text-right">$ Custo</span>
-            <span className="text-right">% BDI</span>
-            <span className="text-right">$ Venda</span>
-            <span className="text-right">Total Venda</span>
-          </div>
-          {section.itemRows.map((item: any) => (
-            <div key={item.id} className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-xs border-b border-border/50 last:border-b-0 hover:bg-muted/20">
-              <span className="truncate">{item.title || '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.qty || '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.cost > 0 ? formatBRL(item.cost) : '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.bdi > 0 ? `${item.bdi}%` : '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.sale > 0 ? formatBRL(item.sale) : '—'}</span>
-              <span className="text-right font-medium tabular-nums">{item.totalSale > 0 ? formatBRL(item.totalSale) : '—'}</span>
+        <div className="ml-5 mt-1 border-l-2 border-border pl-3 space-y-3">
+          {/* Section subtitle/notes */}
+          {(section.subtitle || section.notes) && (
+            <div className="px-2 py-1.5 space-y-1">
+              {section.subtitle && <p className="text-xs text-muted-foreground italic">{section.subtitle}</p>}
+              {section.notes && <p className="text-xs text-muted-foreground">{section.notes}</p>}
             </div>
-          ))}
+          )}
+
+          {/* Included / Excluded bullets */}
+          {(includedBullets.length > 0 || excludedBullets.length > 0) && (
+            <div className="px-2 py-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {includedBullets.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-medium text-[hsl(var(--success))] mb-1">✓ Incluso</p>
+                  <ul className="space-y-0.5">
+                    {includedBullets.map((b: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground">• {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {excludedBullets.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-medium text-destructive mb-1">✗ Não incluso</p>
+                  <ul className="space-y-0.5">
+                    {excludedBullets.map((b: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground">• {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Items table */}
+          <div className="space-y-0">
+            <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-[11px] text-muted-foreground font-medium border-b border-border">
+              <span>Item</span>
+              <span className="text-right">Qtd</span>
+              <span className="text-right">$ Custo</span>
+              <span className="text-right">% BDI</span>
+              <span className="text-right">$ Venda</span>
+              <span className="text-right">Total Venda</span>
+            </div>
+            {section.itemRows.map((item: any) => (
+              <div key={item.id} className="group">
+                <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-xs border-b border-border/50 last:border-b-0 hover:bg-muted/20">
+                  <div className="min-w-0">
+                    <span className="truncate block">{item.title || '—'}</span>
+                    {item.description && (
+                      <span className="text-[11px] text-muted-foreground truncate block">{item.description}</span>
+                    )}
+                  </div>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.qty || '—'}</span>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.cost > 0 ? formatBRL(item.cost) : '—'}</span>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.bdi > 0 ? `${item.bdi}%` : '—'}</span>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.sale > 0 ? formatBRL(item.sale) : '—'}</span>
+                  <span className="text-right font-medium tabular-nums">{item.totalSale > 0 ? formatBRL(item.totalSale) : '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>

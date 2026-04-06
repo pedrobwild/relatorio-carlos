@@ -2677,6 +2677,47 @@ export type Database = {
           },
         ]
       }
+      orcamento_adjustments: {
+        Row: {
+          amount: number
+          created_at: string
+          external_id: string | null
+          id: string
+          label: string
+          orcamento_id: string
+          order_index: number
+          sign: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          label: string
+          orcamento_id: string
+          order_index?: number
+          sign?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          label?: string
+          orcamento_id?: string
+          order_index?: number
+          sign?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_adjustments_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamento_eventos: {
         Row: {
           created_at: string
@@ -2728,36 +2769,54 @@ export type Database = {
       orcamento_items: {
         Row: {
           bdi_percentage: number | null
+          coverage_type: string | null
           created_at: string
+          description: string | null
+          excluded_rooms: string[] | null
           id: string
+          included_rooms: string[] | null
           internal_total: number | null
           internal_unit_price: number | null
+          notes: string | null
           order_index: number
           qty: number | null
+          reference_url: string | null
           section_id: string
           title: string
           unit: string | null
         }
         Insert: {
           bdi_percentage?: number | null
+          coverage_type?: string | null
           created_at?: string
+          description?: string | null
+          excluded_rooms?: string[] | null
           id?: string
+          included_rooms?: string[] | null
           internal_total?: number | null
           internal_unit_price?: number | null
+          notes?: string | null
           order_index?: number
           qty?: number | null
+          reference_url?: string | null
           section_id: string
           title: string
           unit?: string | null
         }
         Update: {
           bdi_percentage?: number | null
+          coverage_type?: string | null
           created_at?: string
+          description?: string | null
+          excluded_rooms?: string[] | null
           id?: string
+          included_rooms?: string[] | null
           internal_total?: number | null
           internal_unit_price?: number | null
+          notes?: string | null
           order_index?: number
           qty?: number | null
+          reference_url?: string | null
           section_id?: string
           title?: string
           unit?: string | null
@@ -2813,30 +2872,57 @@ export type Database = {
       }
       orcamento_sections: {
         Row: {
+          bdi_percentage: number | null
+          cost: number | null
+          cover_image_url: string | null
           created_at: string
+          excluded_bullets: string[] | null
           id: string
+          included_bullets: string[] | null
           is_optional: boolean
+          item_count: number | null
+          notes: string | null
           orcamento_id: string
           order_index: number
           section_price: number | null
+          subtitle: string | null
+          tags: string[] | null
           title: string
         }
         Insert: {
+          bdi_percentage?: number | null
+          cost?: number | null
+          cover_image_url?: string | null
           created_at?: string
+          excluded_bullets?: string[] | null
           id?: string
+          included_bullets?: string[] | null
           is_optional?: boolean
+          item_count?: number | null
+          notes?: string | null
           orcamento_id: string
           order_index?: number
           section_price?: number | null
+          subtitle?: string | null
+          tags?: string[] | null
           title: string
         }
         Update: {
+          bdi_percentage?: number | null
+          cost?: number | null
+          cover_image_url?: string | null
           created_at?: string
+          excluded_bullets?: string[] | null
           id?: string
+          included_bullets?: string[] | null
           is_optional?: boolean
+          item_count?: number | null
+          notes?: string | null
           orcamento_id?: string
           order_index?: number
           section_price?: number | null
+          subtitle?: string | null
+          tags?: string[] | null
           title?: string
         }
         Relationships: [
@@ -2851,6 +2937,7 @@ export type Database = {
       }
       orcamentos: {
         Row: {
+          avg_bdi: number | null
           bairro: string | null
           briefing: string | null
           city: string | null
@@ -2868,16 +2955,21 @@ export type Database = {
           internal_notes: string | null
           internal_status: Database["public"]["Enums"]["orcamento_status"]
           metragem: string | null
+          net_margin: number | null
           priority: Database["public"]["Enums"]["orcamento_priority"]
           project_id: string | null
           project_name: string
           property_type: string | null
           reference_links: string[] | null
           sequential_code: string | null
+          total_cost: number | null
+          total_sale: number | null
+          total_value: number | null
           unit: string | null
           updated_at: string
         }
         Insert: {
+          avg_bdi?: number | null
           bairro?: string | null
           briefing?: string | null
           city?: string | null
@@ -2895,16 +2987,21 @@ export type Database = {
           internal_notes?: string | null
           internal_status?: Database["public"]["Enums"]["orcamento_status"]
           metragem?: string | null
+          net_margin?: number | null
           priority?: Database["public"]["Enums"]["orcamento_priority"]
           project_id?: string | null
           project_name: string
           property_type?: string | null
           reference_links?: string[] | null
           sequential_code?: string | null
+          total_cost?: number | null
+          total_sale?: number | null
+          total_value?: number | null
           unit?: string | null
           updated_at?: string
         }
         Update: {
+          avg_bdi?: number | null
           bairro?: string | null
           briefing?: string | null
           city?: string | null
@@ -2922,12 +3019,16 @@ export type Database = {
           internal_notes?: string | null
           internal_status?: Database["public"]["Enums"]["orcamento_status"]
           metragem?: string | null
+          net_margin?: number | null
           priority?: Database["public"]["Enums"]["orcamento_priority"]
           project_id?: string | null
           project_name?: string
           property_type?: string | null
           reference_links?: string[] | null
           sequential_code?: string | null
+          total_cost?: number | null
+          total_sale?: number | null
+          total_value?: number | null
           unit?: string | null
           updated_at?: string
         }
