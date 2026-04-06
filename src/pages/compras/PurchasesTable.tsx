@@ -69,14 +69,6 @@ function ContractCell({ purchase, onUpdateField }: {
       const { error: uploadError } = await supabase.storage.from('project-documents').upload(path, file);
       if (uploadError) throw uploadError;
       
-      // Update the database record with the file path
-      const { error: dbError } = await supabase
-        .from('project_purchases')
-        .update({ contract_file_path: path })
-        .eq('id', purchase.id);
-      
-      if (dbError) throw dbError;
-      
       onUpdateField(purchase.id, 'contract_file_path', path);
       toast.success('Contrato anexado');
     } catch (err: unknown) {
