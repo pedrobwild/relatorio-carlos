@@ -209,7 +209,6 @@ function InvoiceCell({ purchase, onUpdateField }: {
 function StockTrackingSection({ purchase, onUpdateField }: {
   purchase: ProjectPurchase;
   onUpdateField: (id: string, field: string, value: string | null) => void;
-}) {
 ) {
   const stockDays = useMemo(() => {
     if (purchase.purchase_type !== 'produto' || purchase.delivery_location !== 'estoque') return null;
@@ -225,9 +224,6 @@ function StockTrackingSection({ purchase, onUpdateField }: {
   if (purchase.purchase_type !== 'produto' || purchase.delivery_location !== 'estoque') return null;
 
   return (
-
-
-
   return (
     <div className="mt-3 pt-3 border-t border-border/50">
       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
