@@ -102,7 +102,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
             <div
               key={col.value}
               className={cn(
-                'min-w-[280px] md:min-w-0 rounded-2xl border-t-[3px] transition-all flex flex-col',
+                'min-w-[260px] md:min-w-0 rounded-2xl border-t-[3px] transition-all flex flex-col',
                 columnColors[col.value],
                 dragOverColumn === col.value && 'ring-2 ring-primary/40 shadow-lg',
               )}
