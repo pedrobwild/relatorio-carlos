@@ -149,11 +149,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // --- AI Enrichment: use already-downloaded PDF to enrich project data ---
+    // --- AI Enrichment: reuse already-downloaded PDF bytes to avoid double download ---
     let aiEnrichment: Record<string, unknown> | null = null;
     if (contractFileUrl && isNewProject) {
       try {
-        aiEnrichment = await enrichProjectWithAI(db, projectId, project, contractFileUrl);
+        aiEnrichment = await enrichProjectWithAI(db, projectId, project, contractFileUrl, contractPdfBytes);
         console.log(`[sync-project-inbound] AI enrichment completed for project ${projectId}`);
       } catch (aiErr) {
         // Non-critical: don't fail the sync if AI enrichment fails
