@@ -107,7 +107,7 @@ export function NcKanbanView({ nonConformities, searchQuery, onSelect, showProje
   );
 }
 
-function NcKanbanCard({ nc, today, onSelect }: { nc: NonConformity; today: string; onSelect: (nc: NonConformity) => void }) {
+function NcKanbanCard({ nc, today, onSelect, showProjectBadge }: { nc: NonConformity & { project_name?: string | null }; today: string; onSelect: (nc: NonConformity) => void; showProjectBadge?: boolean }) {
   const sev = severityConfig[nc.severity];
   const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
   const reopenCount = nc.reopen_count ?? 0;
