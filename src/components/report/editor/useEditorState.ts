@@ -156,7 +156,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const removeIncident = (index: number) => {
-    setFormData(prev => ({ ...prev, incidents: prev.incidents.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, incidents: prev.incidents.filter((_, i) => i !== index) }));
   };
 
   // --- Gallery ---

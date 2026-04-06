@@ -45,7 +45,7 @@ const TaskItem = ({ task, animationDelay = 0 }: { task: LookaheadTask; animation
       <div className="flex-1">
         <div className="flex flex-wrap items-center gap-1.5 mb-1">
           <span className="text-xs font-semibold text-foreground bg-primary/10 px-1.5 py-0.5 rounded">
-            {format(new Date(task.date), "EEEE, dd/MM", { locale: ptBR })}
+            {(() => { try { const d = new Date(task.date); return isNaN(d.getTime()) ? task.date : format(d, "EEEE, dd/MM", { locale: ptBR }); } catch { return task.date; } })()}
           </span>
           {getRiskBadge(task.risk)}
         </div>
