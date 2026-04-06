@@ -127,9 +127,21 @@ Deno.serve(async (req) => {
       orcamentoId = await processBudget(db, source_id, projectId, project, budget);
     }
 
-    // --- AI Enrichment: download contract PDF and extract data ---
-    let aiEnrichment: Record<string, unknown> | null = null;
+    // --- Store contract PDF as project document ---
     const contractFileUrl = project.contract_file_url;
+    let contractPdfBytes: Uint8Array | null = null;
+
+    if (contractFileUrl) {
+      try {
+        contractPdfBytes = await downloadAndStoreContract(db, projectId, contractFileUrl, project.name?.trim() ?? "Contrato");
+        console.log(`[sync-project-inbound] Contract PDF stored for project ${projectId}`);
+      } catch (docErr) {
+        console.error("[sync-project-inbound] Contract storage error:", docErr instanceof Error ? docErr.message : docErr);
+      }
+    }
+
+    // --- AI Enrichment: use already-downloaded PDF to enrich project data ---
+    let aiEnrichment: Record<string, unknown> | null = null;
     if (contractFileUrl && isNewProject) {
       try {
         aiEnrichment = await enrichProjectWithAI(db, projectId, project, contractFileUrl);
