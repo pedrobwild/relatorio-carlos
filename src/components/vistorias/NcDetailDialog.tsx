@@ -319,8 +319,15 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 </Badge>
               )}
               {nc.deadline && (
-                <span className="text-xs text-muted-foreground flex items-center">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3" />
                   Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
+                </span>
+              )}
+              {nc.responsible_user_name && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  {nc.responsible_user_name}
                 </span>
               )}
             </div>
