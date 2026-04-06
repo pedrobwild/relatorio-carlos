@@ -156,7 +156,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                           </DropdownMenu>
                         </div>
                         {task.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{task.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{task.description}</p>
                         )}
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                           {responsible && (
