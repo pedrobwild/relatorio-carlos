@@ -149,7 +149,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const updateIncident = (index: number, field: keyof Incident, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       incidents: prev.incidents.map((inc, i) => i === index ? { ...inc, [field]: value } : inc),
     }));
