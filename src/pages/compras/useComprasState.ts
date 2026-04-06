@@ -76,6 +76,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       setEditingPurchase(purchase);
       setFormData({
         activity_id: purchase.activity_id,
+        fornecedor_id: purchase.fornecedor_id || undefined,
         item_name: purchase.item_name,
         description: purchase.description || '',
         quantity: purchase.quantity,
