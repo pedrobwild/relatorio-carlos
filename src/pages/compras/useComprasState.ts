@@ -82,6 +82,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
         quantity: purchase.quantity,
         unit: purchase.unit,
         estimated_cost: purchase.estimated_cost || undefined,
+        actual_cost: purchase.actual_cost || undefined,
         category: purchase.category || undefined,
         supplier_name: purchase.supplier_name || '',
         supplier_contact: purchase.supplier_contact || '',
