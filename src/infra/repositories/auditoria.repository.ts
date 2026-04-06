@@ -83,7 +83,11 @@ export async function listAudits(filters: AuditoriaFilters = {}): Promise<Audito
   }
 
   if (filters.search) {
-    query = query.or(`entidade.ilike.%${filters.search}%,entidade_id.ilike.%${filters.search}%`);
+    // Sanitize search input to prevent SQL injection via ilike patterns
+    const sanitized = filters.search.replace(/[%_\\]/g, '');
+    if (sanitized.length > 0) {
+      query = query.or(`entidade.ilike.%${sanitized}%,entidade_id.ilike.%${sanitized}%`);
+    }
   }
 
   const { data, error, count } = await query;
