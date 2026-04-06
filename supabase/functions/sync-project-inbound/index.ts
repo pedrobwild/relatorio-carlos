@@ -108,10 +108,14 @@ Deno.serve(async (req) => {
           ...projectPayload,
           external_id: source_id,
           external_system: "envision",
+          created_by: adminUser.id,
         })
         .select("id")
         .single();
-      if (insertErr) throw insertErr;
+      if (insertErr) {
+        console.error("[sync-project-inbound] Insert error:", JSON.stringify(insertErr));
+        throw insertErr;
+      }
       projectId = inserted.id;
     }
 
