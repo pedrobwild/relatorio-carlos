@@ -20,7 +20,7 @@ serve(async (req) => {
       return jsonResponse({ error: 'Email, password, and role are required' }, 400);
     }
 
-    const validRoles = ['admin', 'engineer', 'customer', 'manager', 'suprimentos', 'financeiro', 'gestor'];
+    const validRoles = ['admin', 'engineer', 'customer', 'manager', 'suprimentos', 'financeiro', 'gestor', 'cs'];
     if (!validRoles.includes(role)) {
       return jsonResponse({ error: 'Invalid role' }, 400);
     }
