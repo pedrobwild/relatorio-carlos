@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { WeeklyReportData, LookaheadTask, RiskIssue, ClientDecision, Incident, GalleryPhoto } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { toast } from "sonner";
