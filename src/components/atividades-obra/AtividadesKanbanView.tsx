@@ -110,7 +110,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, col.value)}
             >
-              <div className={cn('p-3 rounded-t-xl', columnBg[col.value])}>
+              <div className={cn('px-2.5 py-2 rounded-t-xl', columnBg[col.value])}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className={cn('w-2.5 h-2.5 rounded-full', dotColors[col.value])} />
