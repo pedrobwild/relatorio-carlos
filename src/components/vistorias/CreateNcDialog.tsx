@@ -454,7 +454,7 @@ export function CreateNcDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!title.trim() || !category || isSubmitting}
+            disabled={!title.trim() || !category || !deadline || isSubmitting}
             className="h-11 sm:h-10 w-full sm:w-auto"
           >
             {isSubmitting ? 'Criando...' : 'Registrar NC'}
