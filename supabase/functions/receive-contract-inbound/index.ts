@@ -116,6 +116,20 @@ Deno.serve(async (req) => {
     }
 
     // --- Create project_documents record ---
+    // Find an admin user for uploaded_by to satisfy FK constraint
+    const { data: adminUser } = await db
+      .from("users_profile")
+      .select("id")
+      .eq("perfil", "admin")
+      .eq("status", "ativo")
+      .limit(1)
+      .single();
+
+    if (!adminUser) {
+      await db.storage.from(bucket).remove([storagePath]);
+      return jsonResponse({ error: "No active admin user found for uploaded_by" }, 500);
+    }
+
     const { data: docRecord, error: docErr } = await db
       .from("project_documents")
       .insert({
@@ -128,7 +142,7 @@ Deno.serve(async (req) => {
         mime_type: mime_type,
         size_bytes: fileSize,
         status: "approved",
-        uploaded_by: "00000000-0000-0000-0000-000000000000", // system user placeholder
+        uploaded_by: adminUser.id,
       })
       .select("id")
       .single();
