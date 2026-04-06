@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { formalizationsRepo } from '@/infra/repositories';
+import { isSeedData as checkSeedData } from '@/pages/formalizacao-detalhe/types';
 
 interface SignatureData {
   id: string;
@@ -74,19 +75,14 @@ const parseUserAgent = (ua: string | null) => {
   return { browser, os, device };
 };
 
-// Check if this is seed/demo data (not a valid UUID format from the database)
-const isSeedData = (id: string) => {
-  // Valid UUIDs have format: 8-4-4-4-12 hex chars
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  // Seed data IDs contain non-hex characters like 'g' at the start
-  return !uuidRegex.test(id) || id.startsWith('g') || id.startsWith('party-');
-};
+// Use canonical isSeedData check from types module
+const isSeedDataById = (id: string) => checkSeedData({ id });
 
 export function DigitalSignatureLog({ formalizationId, signatures, parties, documentHash, lockedAt }: DigitalSignatureLogProps) {
   const { toast } = useToast();
   const [downloadingPartyId, setDownloadingPartyId] = useState<string | null>(null);
   
-  const isDemo = isSeedData(formalizationId);
+  const isDemo = isSeedDataById(formalizationId);
   
   const sortedSignatures = [...signatures].sort(
     (a, b) => new Date(a.acknowledged_at).getTime() - new Date(b.acknowledged_at).getTime()

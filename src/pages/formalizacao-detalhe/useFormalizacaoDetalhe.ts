@@ -36,7 +36,9 @@ export function useFormalizacaoDetalhe() {
   const events = (formalizacao?.events as unknown as any[] | null) || [];
 
   const isDraft = formalizacao?.status === 'draft';
-  const hasParties = parties.length >= 2;
+  const hasCustomer = parties.some(p => p.party_type === 'customer');
+  const hasCompany = parties.some(p => p.party_type === 'company');
+  const hasParties = hasCustomer && hasCompany;
 
   const pendingParties = parties.filter(
     (p) => p.must_sign && !acknowledgements.some((a) => a.party_id === p.id)
@@ -150,7 +152,7 @@ export function useFormalizacaoDetalhe() {
     try {
       await deleteFormalizacao.mutateAsync(id);
       toast({ title: 'Formalização excluída', description: 'O documento foi removido permanentemente.' });
-      navigate('/formalizacoes');
+      goBackToList();
     } catch (error) {
       console.error('Error deleting formalization:', error);
       toast({ title: 'Erro ao excluir', description: 'Não foi possível excluir a formalização. Tente novamente.', variant: 'destructive' });

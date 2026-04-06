@@ -22,7 +22,7 @@ async function logDomainEvent(params: {
   try {
     await supabase.rpc('log_domain_event', {
       _org_id: params.orgId,
-      _project_id: params.projectId ?? '',
+      _project_id: params.projectId || '',
       _entity_type: params.entityType,
       _entity_id: params.entityId,
       _event_type: params.eventType,
@@ -150,9 +150,9 @@ export function useUpdateFormalizacao() {
         .select()
         .maybeSingle();
 
-      if (!result) throw new Error('Formalização não encontrada ou sem permissão de acesso');
-
       if (error) throw error;
+
+      if (!result) throw new Error('Formalização não encontrada ou sem permissão de acesso');
 
       // Log domain event for update
       if (current) {
