@@ -95,6 +95,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const [editEstimatedCost, setEditEstimatedCost] = useState<string>(
     nc.estimated_cost != null ? String(nc.estimated_cost) : ''
   );
+  const [editResponsibleUserId, setEditResponsibleUserId] = useState<string>(nc.responsible_user_id || '');
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
