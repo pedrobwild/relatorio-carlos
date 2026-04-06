@@ -195,17 +195,20 @@ export default function OrcamentoDetalhe() {
   const commentMutation = useMutation({
     mutationFn: async (body: string) => {
       if (!orcamentoId || !user) throw new Error('Missing data');
-      await supabase.from('orcamento_notas').insert({
+      const { error: noteErr } = await supabase.from('orcamento_notas').insert({
         orcamento_id: orcamentoId,
         user_id: user.id,
         body,
       });
-      await supabase.from('orcamento_eventos').insert({
+      if (noteErr) throw noteErr;
+
+      const { error: evtErr } = await supabase.from('orcamento_eventos').insert({
         orcamento_id: orcamentoId,
         user_id: user.id,
         event_type: 'comment',
         note: body.slice(0, 200),
       });
+      if (evtErr) throw evtErr;
     },
     onSuccess: () => {
       setNewComment('');

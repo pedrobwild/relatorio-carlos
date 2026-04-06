@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.sync-monitor-agent]
 verify_jwt = false
+
+[functions.receive-budget-inbound]
+verify_jwt = false
+
+[functions.sync-project-inbound]
+verify_jwt = false
