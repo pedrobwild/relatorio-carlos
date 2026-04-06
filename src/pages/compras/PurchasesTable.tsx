@@ -322,18 +322,20 @@ function PurchaseRow({
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Custos</h4>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Previsto</label>
+                  <label className="text-xs text-muted-foreground block mb-1">
+                    {purchase.orcamento_item_id ? 'Custo Orçamento' : 'Previsto'}
+                  </label>
                   <InlineField
                     type="number"
                     value={purchase.estimated_cost}
                     placeholder="0,00"
                     prefix="R$"
-                    className="w-full"
+                    className={cn('w-full', purchase.orcamento_item_id && 'opacity-60')}
                     onSave={(v) => onUpdateField(purchase.id, 'estimated_cost', v || null)}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Real</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Custo Real</label>
                   <InlineField
                     type="number"
                     value={purchase.actual_cost}
@@ -347,6 +349,13 @@ function PurchaseRow({
                   />
                 </div>
               </div>
+              {/* Cost difference indicator */}
+              {purchase.estimated_cost != null && purchase.estimated_cost > 0 &&
+               purchase.actual_cost != null && purchase.actual_cost > 0 && (
+                <div className="pt-1">
+                  <CostDiffBadge estimated={purchase.estimated_cost} actual={purchase.actual_cost} showDetails />
+                </div>
+              )}
             </div>
 
             {/* Dates */}
