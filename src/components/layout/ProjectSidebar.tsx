@@ -13,6 +13,8 @@ import {
   Ruler,
   Map,
   ShoppingCart,
+  Package,
+  Wrench,
   ClipboardCheck,
   ChevronDown,
   LucideIcon,
