@@ -12,7 +12,7 @@ import { useState, useMemo } from 'react';
 import { format, parseISO, differenceInDays, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  AlertTriangle, Clock, Plus, ChevronRight, User, Tag,
+  AlertTriangle, Clock, Plus, ChevronRight, User, Tag, Building2,
   RotateCcw, BarChart3, ChevronDown, Filter, Search, X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
