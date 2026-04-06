@@ -214,7 +214,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       date: new Date().toISOString().split('T')[0],
       category: "progresso",
     }));
-    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...newPhotos] }));
+    setFormDataWithTracking(prev => ({ ...prev, gallery: [...prev.gallery, ...newPhotos] }));
     toast.success(`${validFiles.length} arquivo(s) adicionado(s)! O upload será feito ao salvar.`);
     event.target.value = "";
   };
