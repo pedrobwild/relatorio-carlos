@@ -458,6 +458,15 @@ function PurchaseRow({
             >
               <MessageSquare className="h-3.5 w-3.5" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => { e.stopPropagation(); setDateLogsOpen(true); }}
+              title="Histórico de Datas"
+            >
+              <History className="h-3.5 w-3.5" />
+            </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
