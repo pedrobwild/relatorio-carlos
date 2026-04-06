@@ -323,9 +323,9 @@ export function CreateNcDialog({
                 <SelectValue placeholder="Selecionar responsável..." />
               </SelectTrigger>
               <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
-                {staffMembers.map((m) => (
-                  <SelectItem key={m.user_id} value={m.user_id} className="min-h-[44px]">
-                    {m.user_name || m.user_email || m.user_id.slice(0, 8)}
+                {allResponsibleOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id} className="min-h-[44px]">
+                    {opt.name}
                   </SelectItem>
                 ))}
               </SelectContent>
