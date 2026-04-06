@@ -35,7 +35,8 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const hasMinutes = (records ?? []).some(r => r.category === 'conversation');
-  const showNextButton = !isAdmin && hasMinutes && stage.status !== 'completed';
+  // Show advance button for admin when minutes exist and stage not yet completed
+  const showNextButton = isAdmin && hasMinutes && stage.status !== 'completed';
 
   const handleAdvance = () => {
     completeStage.mutate(
