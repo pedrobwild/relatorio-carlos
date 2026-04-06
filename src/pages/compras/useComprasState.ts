@@ -4,8 +4,9 @@ import { format, differenceInDays, parseISO, subDays } from 'date-fns';
 import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { useProjectActivities } from '@/hooks/useProjectActivities';
 import { emptyPurchase } from './types';
+import type { PurchaseType } from '@/hooks/useProjectPurchases';
 
-export function useComprasState() {
+export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   const { projectId } = useParams<{ projectId: string }>();
   const {
     purchases, isLoading, addPurchase, updatePurchase, deletePurchase, updateStatus,
@@ -45,6 +46,9 @@ export function useComprasState() {
    */
   const filteredPurchases = useMemo(() => {
     return purchases.filter(p => {
+      // Filter by purchase type if specified
+      if (purchaseTypeFilter && (p.purchase_type || 'produto') !== purchaseTypeFilter) return false;
+      
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterActivity !== 'all' && p.activity_id !== filterActivity) return false;
       
@@ -60,7 +64,7 @@ export function useComprasState() {
       
       return true;
     });
-  }, [purchases, filterStatus, filterActivity, filterCategory, filterSubcategory]);
+  }, [purchases, purchaseTypeFilter, filterStatus, filterActivity, filterCategory, filterSubcategory]);
 
   const hasActiveFilters = filterStatus !== 'all' || filterActivity !== 'all' || filterCategory !== 'all' || filterSubcategory !== 'all';
 
@@ -90,7 +94,10 @@ export function useComprasState() {
       });
     } else {
       setEditingPurchase(null);
-      setFormData(emptyPurchase);
+      setFormData({
+        ...emptyPurchase,
+        ...(purchaseTypeFilter ? { purchase_type: purchaseTypeFilter } : {}),
+      });
     }
     setIsDialogOpen(true);
   };

@@ -13,6 +13,8 @@ import {
   Ruler,
   Map,
   ShoppingCart,
+  Package,
+  Wrench,
   ClipboardCheck,
   ChevronDown,
   LucideIcon,
@@ -152,9 +154,15 @@ export function ProjectSidebar() {
           disabledInProjectPhase: true,
         },
         {
-          label: L("compras"),
-          icon: ShoppingCart,
-          path: paths.compras,
+          label: "Produtos",
+          icon: Package,
+          path: paths.comprasProdutos,
+          disabledInProjectPhase: true,
+        },
+        {
+          label: "Prestadores",
+          icon: Wrench,
+          path: paths.comprasPrestadores,
           disabledInProjectPhase: true,
         },
         {
