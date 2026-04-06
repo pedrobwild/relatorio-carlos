@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EvidenceUpload } from './EvidenceUpload';
 import { CorrectiveActionTemplateSelector } from './CorrectiveActionTemplateSelector';
