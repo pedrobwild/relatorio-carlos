@@ -234,7 +234,9 @@ export default function OrcamentoDetalhe() {
   const prio = PRIORITIES[budget.priority] || PRIORITIES.normal;
   const links = (budget.reference_links ?? []).filter((l: string) => l?.trim());
 
-  // Calculate totals from sections
+  // Use server-side totals if available, otherwise calculate
+  const hasServerTotals = budget.total_value != null || budget.total_sale != null;
+
   let grandCost = 0;
   let grandSale = 0;
   const sectionSummaries = (sections || []).map((sec: any) => {
@@ -251,14 +253,23 @@ export default function OrcamentoDetalhe() {
       secSale += totalSale;
       return { ...item, cost, bdi, sale, totalCost, totalSale, qty };
     });
+    const effectiveCost = sec.cost != null ? Number(sec.cost) : secCost;
     const effectiveSale = sec.section_price != null && sec.section_price > 0 ? Number(sec.section_price) : secSale;
-    grandCost += secCost;
+    grandCost += effectiveCost;
     grandSale += effectiveSale;
-    const secBdi = secCost > 0 ? ((effectiveSale / secCost) - 1) * 100 : 0;
-    return { ...sec, itemRows, secCost, secSale: effectiveSale, secBdi };
+    const secBdi = sec.bdi_percentage != null ? Number(sec.bdi_percentage) : (effectiveCost > 0 ? ((effectiveSale / effectiveCost) - 1) * 100 : 0);
+    return { ...sec, itemRows, secCost: effectiveCost, secSale: effectiveSale, secBdi };
   });
-  const grandBdi = grandCost > 0 ? ((grandSale / grandCost) - 1) * 100 : 0;
-  const margin = grandSale - grandCost;
+
+  // Adjustments total
+  const adjustmentsTotal = (adjustments || []).reduce((sum: number, adj: any) => sum + (Number(adj.amount) * Number(adj.sign)), 0);
+
+  // Use server totals or calculated
+  const finalSale = hasServerTotals ? Number(budget.total_sale ?? grandSale) : grandSale;
+  const finalCost = hasServerTotals ? Number(budget.total_cost ?? grandCost) : grandCost;
+  const finalValue = hasServerTotals ? Number(budget.total_value ?? finalSale) : (grandSale + adjustmentsTotal);
+  const grandBdi = hasServerTotals && budget.avg_bdi != null ? Number(budget.avg_bdi) : (finalCost > 0 ? ((finalSale / finalCost) - 1) * 100 : 0);
+  const margin = hasServerTotals && budget.net_margin != null ? Number(budget.net_margin) : (finalSale - finalCost);
 
   return (
     <div className="p-4 sm:p-6">
