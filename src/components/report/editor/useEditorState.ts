@@ -55,7 +55,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   const handleSave = () => onSaveAndClose?.(formData);
 
   const updateExecutiveSummary = (value: string) => {
-    setFormData(prev => ({ ...prev, executiveSummary: value }));
+    setFormDataWithTracking(prev => ({ ...prev, executiveSummary: value }));
   };
 
   // --- Lookahead Tasks ---
