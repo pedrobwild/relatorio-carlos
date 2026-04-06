@@ -107,17 +107,28 @@ export function ComprasKPICards({
               <DollarSign className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-muted-foreground leading-none mb-1">Custo Previsto</p>
+              <p className="text-xs text-muted-foreground leading-none mb-1">Orçamento × Real</p>
               <span className="text-lg font-bold leading-none truncate block">
                 {fmt(totalEstimatedCost)}
               </span>
-              {costVariance !== null && (
-                <span className={cn(
-                  "text-xs mt-0.5 block",
-                  costVariance > 0 ? "text-destructive" : "text-[hsl(var(--success))]"
-                )}>
-                  {costVariance > 0 ? '+' : ''}{costVariance.toFixed(1)}% real
-                </span>
+              {totalActualCost > 0 && (
+                <>
+                  <span className="text-xs text-muted-foreground block">
+                    Real: {fmt(totalActualCost)}
+                  </span>
+                  {totalEstimatedCost > 0 && (() => {
+                    const diff = totalActualCost - totalEstimatedCost;
+                    const isOver = diff > 0;
+                    return (
+                      <span className={cn(
+                        "text-xs font-medium block",
+                        isOver ? "text-destructive" : "text-[hsl(var(--success))]"
+                      )}>
+                        {isOver ? '↑' : '↓'} {isOver ? '+' : ''}{fmt(diff)} ({isOver ? '+' : ''}{((diff / totalEstimatedCost) * 100).toFixed(1)}%)
+                      </span>
+                    );
+                  })()}
+                </>
               )}
             </div>
           </div>
