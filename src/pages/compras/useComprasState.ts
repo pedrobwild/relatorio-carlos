@@ -144,6 +144,10 @@ export function useComprasState() {
       expected_delivery_date: formData.expected_delivery_date || null,
       invoice_number: formData.invoice_number || null,
       notes: formData.notes || null,
+      purchase_type: formData.purchase_type || 'produto',
+      delivery_address: formData.delivery_address || null,
+      start_date: formData.start_date || null,
+      end_date: formData.end_date || null,
     };
     try {
       if (editingPurchase) {
