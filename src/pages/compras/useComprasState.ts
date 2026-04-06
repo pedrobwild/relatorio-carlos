@@ -94,7 +94,10 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       });
     } else {
       setEditingPurchase(null);
-      setFormData(emptyPurchase);
+      setFormData({
+        ...emptyPurchase,
+        ...(purchaseTypeFilter ? { purchase_type: purchaseTypeFilter } : {}),
+      });
     }
     setIsDialogOpen(true);
   };
