@@ -6,7 +6,7 @@ import { useMemo, useEffect } from 'react';
 import { queryKeys } from '@/lib/queryKeys';
 import { QUERY_TIMING } from '@/lib/queryClient';
 
-export type PurchaseStatus = 'pending' | 'ordered' | 'in_transit' | 'delivered' | 'cancelled';
+export type PurchaseStatus = 'pending' | 'awaiting_approval' | 'approved' | 'purchased' | 'ordered' | 'in_transit' | 'delivered' | 'sent_to_site' | 'cancelled';
 export type PurchaseType = 'produto' | 'prestador';
 
 export interface ProjectPurchase {
