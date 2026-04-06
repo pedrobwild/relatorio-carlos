@@ -355,6 +355,7 @@ function PurchaseRow({
   const isPrestador = purchase.purchase_type === 'prestador';
 
   return (
+    <>
     <Collapsible open={expanded} onOpenChange={setExpanded}>
       {/* Main row */}
       <div className={cn(
