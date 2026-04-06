@@ -250,7 +250,14 @@ export function JornadaTabContent({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => { setMobileDetailStageId(null); setActiveView(welcomeCompleted ? (journey.stages.find(s => s.status === 'in_progress' || s.status === 'waiting_action')?.id || journey.stages[0]?.id || 'welcome') : 'welcome'); }}
+                    onClick={() => {
+                      setMobileDetailStageId(null);
+                      // Reset to current active stage or welcome
+                      const currentStage = welcomeCompleted
+                        ? journey.stages.find(s => s.status === 'in_progress' || s.status === 'waiting_action')
+                        : null;
+                      setActiveView(currentStage?.id || journey.stages[0]?.id || 'welcome');
+                    }}
                     className="gap-1.5 -ml-2 mb-3 text-muted-foreground"
                   >
                     <ArrowLeft className="h-4 w-4" />

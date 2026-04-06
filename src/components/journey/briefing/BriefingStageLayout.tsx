@@ -35,7 +35,8 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const hasMinutes = (records ?? []).some(r => r.category === 'conversation');
-  const showNextButton = !isAdmin && hasMinutes && stage.status !== 'completed';
+  // Show advance button for admin when minutes exist and stage not yet completed
+  const showNextButton = isAdmin && hasMinutes && stage.status !== 'completed';
 
   const handleAdvance = () => {
     completeStage.mutate(
@@ -45,6 +46,10 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
           setConfirmOpen(false);
           toast.success('Etapa de Briefing concluída! Projeto 3D liberado.');
           onStageCompleted?.();
+        },
+        onError: (err) => {
+          toast.error('Erro ao concluir etapa. Tente novamente.');
+          console.error('BriefingStageLayout advance error:', err);
         },
       },
     );

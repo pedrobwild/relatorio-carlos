@@ -293,15 +293,21 @@ export function useCompleteStage() {
       if (completeError) throw completeError;
 
       // 2) Find current stage's sort_order to unlock the next one
-      const { data: currentStage } = await supabase
+      const { data: currentStage, error: fetchError } = await supabase
         .from('journey_stages')
         .select('sort_order')
         .eq('id', stageId)
         .single();
 
+      if (fetchError) {
+        console.error('Failed to fetch completed stage sort_order:', fetchError);
+        // Stage was completed but we failed to unlock next — still return success
+        return { projectId };
+      }
+
       if (currentStage) {
         // 3) Get the next stage by sort_order
-        const { data: nextStages } = await supabase
+        const { data: nextStages, error: nextError } = await supabase
           .from('journey_stages')
           .select('id, status')
           .eq('project_id', projectId)
@@ -309,11 +315,19 @@ export function useCompleteStage() {
           .order('sort_order', { ascending: true })
           .limit(1);
 
+        if (nextError) {
+          console.error('Failed to fetch next stage:', nextError);
+          return { projectId };
+        }
+
         if (nextStages && nextStages.length > 0 && nextStages[0].status === 'pending') {
-          await supabase
+          const { error: unlockError } = await supabase
             .from('journey_stages')
             .update({ status: 'in_progress' as JourneyStageStatus })
             .eq('id', nextStages[0].id);
+          if (unlockError) {
+            console.error('Failed to unlock next stage:', unlockError);
+          }
         }
       }
 
@@ -321,6 +335,9 @@ export function useCompleteStage() {
     },
     onSuccess: ({ projectId }) => {
       queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
+    },
+    onError: (error) => {
+      console.error('Failed to complete stage:', error);
     },
   });
 }
