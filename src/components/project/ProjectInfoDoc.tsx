@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DocToolbar } from './doc-editor/DocToolbar';
 import { SlashCommandMenu, useSlashCommands } from './doc-editor/SlashCommandMenu';
@@ -21,6 +21,12 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
   const initializedRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const isSavingRef = useRef(false);
+  const docExistsRef = useRef(false);
+
+  // Keep docExistsRef in sync
+  useEffect(() => {
+    docExistsRef.current = docExists;
+  }, [docExists]);
 
   useEffect(() => {
     fetchDoc();
@@ -42,9 +48,11 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
       if (data) {
         setContentHtml((data as any).content_html || '');
         setDocExists(true);
+        docExistsRef.current = true;
       } else {
         setContentHtml('');
         setDocExists(false);
+        docExistsRef.current = false;
       }
     } catch (err) {
       console.error('Error fetching project info doc:', err);
@@ -70,7 +78,7 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
       setSaved(false);
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (docExists) {
+        if (docExistsRef.current) {
           const { error } = await (supabase
             .from('project_info_docs' as any)
             .update({ content_html: html, last_edited_by: user?.id } as any)
@@ -82,6 +90,7 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
             .insert({ project_id: projectId, content_html: html, last_edited_by: user?.id } as any));
           if (error) throw error;
           setDocExists(true);
+          docExistsRef.current = true;
         }
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
@@ -93,7 +102,7 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
         isSavingRef.current = false;
       }
     },
-    [projectId, docExists]
+    [projectId]
   );
 
   const handleInput = useCallback(() => {
@@ -136,30 +145,6 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
   const { menuOpen, menuPosition, commands, handleKeyDown, closeMenu } = useSlashCommands(
     editorRef, exec, execBlock, handleInput
   );
-
-  const handleAddBlock = useCallback(() => {
-    if (!editorRef.current) return;
-    editorRef.current.focus();
-    // Move cursor to end
-    const sel = window.getSelection();
-    if (sel) {
-      const range = document.createRange();
-      range.selectNodeContents(editorRef.current);
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-    // Insert a slash to trigger menu
-    document.execCommand('insertText', false, '/');
-    // Trigger slash menu
-    setTimeout(() => {
-      const selAfter = window.getSelection();
-      if (!selAfter || selAfter.rangeCount === 0) return;
-      const rect = selAfter.getRangeAt(0).getBoundingClientRect();
-      // The keydown handler from useSlashCommands won't fire for programmatic insertText,
-      // so we simulate it by triggering the same effect
-    }, 0);
-  }, []);
 
   if (loading) {
     return (
@@ -209,7 +194,7 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
               '[&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600',
               '[&_pre]:bg-gray-100 [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:text-sm [&_pre]:font-mono [&_pre]:text-black',
               '[&_a]:text-primary [&_a]:underline',
-              '[&_hr]:my-4 [&_hr]:border-gray-300',
+              '[&_hr]:my-4 [&_hr]:border-black',
               '[&_.doc-checklist-item]:flex [&_.doc-checklist-item]:items-start [&_.doc-checklist-item]:gap-2 [&_.doc-checklist-item]:my-1',
               'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none',
             )}
