@@ -4,7 +4,7 @@ import { useAuth } from './useAuth';
 import { debugAuth } from '@/lib/debugAuth';
 import { logError, logInfo } from '@/lib/errorLogger';
 
-export type AppRole = 'engineer' | 'admin' | 'customer' | 'manager' | 'suprimentos' | 'financeiro' | 'gestor' | 'cs';
+export type AppRole = 'engineer' | 'admin' | 'customer' | 'manager' | 'suprimentos' | 'financeiro' | 'gestor' | 'cs' | 'arquitetura';
 
 interface UserRoleState {
   roles: AppRole[];
