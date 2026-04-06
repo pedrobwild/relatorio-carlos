@@ -351,6 +351,7 @@ function PurchaseRow({
   setCadastroModal: (v: { purchase: ProjectPurchase } | null) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [dateLogsOpen, setDateLogsOpen] = useState(false);
   const isPrestador = purchase.purchase_type === 'prestador';
 
   return (
