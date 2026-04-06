@@ -89,10 +89,12 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const updateStatus = useUpdateNcStatus();
   const updateNc = useUpdateNonConformity();
   const updateEvidence = useUpdateNcEvidence();
+  const deleteNc = useDeleteNonConformity();
   const { data: history = [] } = useNcHistory(nc.id);
   const { can } = useCan();
   const canApproveNc = can('ncs:approve');
   const canEdit = can('ncs:treat');
+  const canDelete = can('ncs:create');
   const { data: staffUsers = [] } = useStaffUsers();
 
   const isEditable = canEdit && nc.status !== 'closed';
