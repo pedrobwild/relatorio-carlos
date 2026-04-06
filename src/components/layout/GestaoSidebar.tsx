@@ -63,6 +63,11 @@ export function GestaoSidebar() {
       label: "Ferramentas",
       items: [
         {
+          label: "Orçamentos",
+          icon: Receipt,
+          path: "/gestao/orcamentos",
+        },
+        {
           label: "Fornecedores",
           icon: Truck,
           path: "/gestao/fornecedores",
