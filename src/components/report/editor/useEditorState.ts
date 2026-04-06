@@ -180,7 +180,13 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const removeGalleryPhoto = (index: number) => {
-    setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => {
+      const removed = prev.gallery[index];
+      if (removed?.url?.startsWith("blob:")) {
+        URL.revokeObjectURL(removed.url);
+      }
+      return { ...prev, gallery: prev.gallery.filter((_, i) => i !== index) };
+    });
   };
 
   const handleFileSelect = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
