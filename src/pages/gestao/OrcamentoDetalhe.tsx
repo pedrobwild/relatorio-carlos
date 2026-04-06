@@ -219,6 +219,9 @@ export default function OrcamentoDetalhe() {
       queryClient.invalidateQueries({ queryKey: ['orcamentos', 'eventos', orcamentoId] });
       toast.success('Nota adicionada');
     },
+    onError: (err: Error) => {
+      toast.error('Erro ao adicionar nota: ' + err.message);
+    },
   });
 
   if (isLoading) {
