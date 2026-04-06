@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInCalendarDays, startOfWeek, endOfWeek, isWithinInterval, addWeeks, isBefore, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
