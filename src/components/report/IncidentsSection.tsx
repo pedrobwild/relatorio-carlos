@@ -20,6 +20,15 @@ interface IncidentsSectionProps {
   incidents: Incident[];
 }
 
+function safeFormatDate(dateStr: string, fmt: string): string {
+  try {
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? dateStr || "—" : format(d, fmt, { locale: ptBR });
+  } catch {
+    return dateStr || "—";
+  }
+}
+
 const getStatusConfig = (status: Incident['status']) => {
   switch (status) {
     case 'resolvido':

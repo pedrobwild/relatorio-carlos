@@ -53,14 +53,16 @@ const RiskItem = ({
       </div>
     </div>
     
-    <div className="bg-secondary rounded-lg p-3 space-y-1.5">
-      <p className="text-xs font-bold text-foreground uppercase tracking-wide">Plano de Ação</p>
-      <div className="text-sm text-foreground/80 leading-[1.6] space-y-1">
-        {issue.actionPlan.split('\n').map((line, idx) => (
-          <p key={idx}>{idx + 1}) {line.trim()}</p>
-        ))}
+    {issue.actionPlan && issue.actionPlan.trim().length > 0 && (
+      <div className="bg-secondary rounded-lg p-3 space-y-1.5">
+        <p className="text-xs font-bold text-foreground uppercase tracking-wide">Plano de Ação</p>
+        <div className="text-sm text-foreground/80 leading-[1.6] space-y-1">
+          {issue.actionPlan.split('\n').filter(line => line.trim().length > 0).map((line, idx) => (
+            <p key={idx}>{idx + 1}) {line.trim()}</p>
+          ))}
+        </div>
       </div>
-    </div>
+    )}
 
     {/* Action buttons */}
     <div className="flex items-center gap-2 ml-5">

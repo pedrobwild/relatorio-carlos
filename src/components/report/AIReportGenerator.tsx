@@ -1,17 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { WeeklyReportData } from "@/types/weeklyReport";
@@ -43,6 +41,8 @@ export function AIReportGenerator({
 }: AIReportGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const cancelledRef = useRef(false);
 
   // Progress step animation
   useEffect(() => {
@@ -63,6 +63,7 @@ export function AIReportGenerator({
   }, [isGenerating]);
 
   const handleGenerate = async () => {
+    cancelledRef.current = false;
     setIsGenerating(true);
     setCurrentStep(0);
     try {
@@ -70,6 +71,7 @@ export function AIReportGenerator({
         body: { projectId, weekNumber, weekStart, weekEnd },
       });
 
+      if (cancelledRef.current) return;
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
@@ -90,18 +92,32 @@ export function AIReportGenerator({
       };
 
       onGenerated(merged);
+      setDialogOpen(false);
       toast.success("Relatório gerado com IA! Revise e edite antes de salvar.");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (cancelledRef.current) return;
+      const message = err instanceof Error ? err.message : "Erro ao gerar relatório com IA";
       console.error("AI generation error:", err);
-      toast.error(err.message || "Erro ao gerar relatório com IA");
+      toast.error(message);
     } finally {
-      setIsGenerating(false);
+      if (!cancelledRef.current) {
+        setIsGenerating(false);
+      }
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open && isGenerating) {
+      // User closed during generation — mark cancelled
+      cancelledRef.current = true;
+      setIsGenerating(false);
+    }
+    setDialogOpen(open);
+  };
+
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           size="sm"
@@ -115,13 +131,13 @@ export function AIReportGenerator({
           )}
           {isGenerating ? "Gerando..." : "Gerar com IA"}
         </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             Gerar relatório com IA
-          </AlertDialogTitle>
+          </DialogTitle>
           {isGenerating ? (
             <div className="space-y-4 py-4">
               {GENERATION_STEPS.map((step, idx) => (
@@ -153,25 +169,25 @@ export function AIReportGenerator({
               </div>
             </div>
           ) : (
-            <AlertDialogDescription>
+            <DialogDescription>
               A IA analisará as atividades, etapas, conversas e pendências do projeto
               para gerar automaticamente o resumo executivo, tarefas da próxima semana,
               riscos e decisões pendentes.
               <br /><br />
               <strong>O conteúdo atual será substituído.</strong> Você poderá revisar e
               editar antes de salvar.
-            </AlertDialogDescription>
+            </DialogDescription>
           )}
-        </AlertDialogHeader>
+        </DialogHeader>
         {!isGenerating && (
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleGenerate}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleGenerate}>
               Gerar relatório
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            </Button>
+          </DialogFooter>
         )}
-      </AlertDialogContent>
-    </AlertDialog>
+      </DialogContent>
+    </Dialog>
   );
 }
