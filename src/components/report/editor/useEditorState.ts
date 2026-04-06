@@ -123,7 +123,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const updateClientDecision = (index: number, field: keyof ClientDecision, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       clientDecisions: prev.clientDecisions.map((d, i) => i === index ? { ...d, [field]: value } : d),
     }));
