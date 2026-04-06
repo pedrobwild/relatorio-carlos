@@ -364,8 +364,10 @@ export default function DadosCliente() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* ── Obra (Imóvel) ── */}
+      {activeTab === 'imovel' && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
