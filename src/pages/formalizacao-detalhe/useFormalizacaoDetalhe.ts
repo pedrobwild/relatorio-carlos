@@ -152,7 +152,7 @@ export function useFormalizacaoDetalhe() {
     try {
       await deleteFormalizacao.mutateAsync(id);
       toast({ title: 'Formalização excluída', description: 'O documento foi removido permanentemente.' });
-      navigate('/formalizacoes');
+      goBackToList();
     } catch (error) {
       console.error('Error deleting formalization:', error);
       toast({ title: 'Erro ao excluir', description: 'Não foi possível excluir a formalização. Tente novamente.', variant: 'destructive' });

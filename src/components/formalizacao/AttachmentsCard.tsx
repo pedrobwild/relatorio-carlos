@@ -60,7 +60,7 @@ export function AttachmentsCard({ formalizationId, attachments }: AttachmentsCar
     try {
       await uploadFormalizationAttachment(formalizationId, file);
       toast({ title: 'Arquivo enviado', description: `${file.name} foi anexado com sucesso.` });
-      queryClient.invalidateQueries({ queryKey: ['formalizacao', formalizationId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(formalizationId) });
     } catch (error) {
       console.error('Upload error:', error);
       toast({ title: 'Erro no upload', description: 'Não foi possível enviar o arquivo. Tente novamente.', variant: 'destructive' });

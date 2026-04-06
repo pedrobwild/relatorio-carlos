@@ -51,7 +51,7 @@ export function EvidenceLinksCard({ formalizationId, evidenceLinks }: EvidenceLi
       toast({ title: 'Link adicionado', description: 'O link de evidência foi adicionado.' });
       setLinkDialogOpen(false);
       setNewLink({ kind: 'other', url: '', description: '' });
-      queryClient.invalidateQueries({ queryKey: ['formalizacao', formalizationId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(formalizationId) });
     } catch (error) {
       console.error('Error adding link:', error);
       toast({ title: 'Erro', description: 'Não foi possível adicionar o link.', variant: 'destructive' });

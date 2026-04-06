@@ -150,9 +150,9 @@ export function useUpdateFormalizacao() {
         .select()
         .maybeSingle();
 
-      if (!result) throw new Error('Formalização não encontrada ou sem permissão de acesso');
-
       if (error) throw error;
+
+      if (!result) throw new Error('Formalização não encontrada ou sem permissão de acesso');
 
       // Log domain event for update
       if (current) {
