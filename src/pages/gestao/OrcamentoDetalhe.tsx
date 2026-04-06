@@ -291,9 +291,11 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/gestao/orcamentos')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          {!isEmbedded && (
+            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao/orcamentos')}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               {budget.sequential_code && (
