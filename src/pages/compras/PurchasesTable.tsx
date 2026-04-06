@@ -468,11 +468,11 @@ function PurchaseRow({
                 )}
               </div>
 
-              {/* Delivery address for products */}
+              {/* Delivery location & address for products */}
               {!isPrestador && (
-                <div className="mt-2">
+                <div className="mt-2 space-y-2">
                   <label className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                    <MapPin className="h-3 w-3" /> Local de Entrega
+                    <MapPin className="h-3 w-3" /> Entrega
                   </label>
                   <InlineField
                     value={purchase.delivery_address}
@@ -480,6 +480,43 @@ function PurchaseRow({
                     className="w-full"
                     onSave={(v) => onUpdateField(purchase.id, 'delivery_address', v || null)}
                   />
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">Local:</label>
+                    <div className="flex gap-1">
+                      {[
+                        { value: 'obra', label: 'Obra', icon: Building2 },
+                        { value: 'estoque', label: 'Estoque', icon: Warehouse },
+                      ].map(opt => {
+                        const Icon = opt.icon;
+                        const isActive = purchase.delivery_location === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => onUpdateField(purchase.id, 'delivery_location', isActive ? null : opt.value)}
+                            className={cn(
+                              'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors',
+                              isActive
+                                ? 'bg-primary/10 text-primary border-primary/30'
+                                : 'bg-transparent text-muted-foreground border-border hover:bg-accent/50'
+                            )}
+                          >
+                            <Icon className="h-3 w-3" />
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {/* Delivery date */}
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Data de Entrega</label>
+                    <InlineField
+                      type="date"
+                      value={purchase.actual_delivery_date}
+                      className="w-full"
+                      onSave={(v) => onUpdateField(purchase.id, 'actual_delivery_date', v || null)}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -496,6 +533,13 @@ function PurchaseRow({
                   className="w-full"
                   onSave={(v) => onUpdateField(purchase.id, 'supplier_name', v || null)}
                 />
+                {/* Invoice upload for products */}
+                {!isPrestador && (
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Nota Fiscal</label>
+                    <InvoiceCell purchase={purchase} onUpdateField={onUpdateField} />
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <ContractCell purchase={purchase} onUpdateField={onUpdateField} />
                   <Button
