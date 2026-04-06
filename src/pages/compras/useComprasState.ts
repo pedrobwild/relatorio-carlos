@@ -25,6 +25,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   const [editingPurchase, setEditingPurchase] = useState<ProjectPurchase | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<PurchaseInput>>(emptyPurchase);
+  const [paymentInstallments, setPaymentInstallments] = useState<PaymentInstallment[]>([]);
 
   const handleCategoryFilterChange = (value: string) => {
     setFilterCategory(value);
