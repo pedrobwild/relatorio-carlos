@@ -294,6 +294,22 @@ const App = () => (
               }
             />
             <Route
+              path="/obra/:projectId/compras/produtos"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<ComprasProdutos />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/compras/prestadores"
+              element={
+                <StaffRoute>
+                  <ProjectPage>{withSuspense(<ComprasPrestadores />)}</ProjectPage>
+                </StaffRoute>
+              }
+            />
+            <Route
               path="/obra/:projectId/vistorias"
               element={
                 <StaffRoute>
