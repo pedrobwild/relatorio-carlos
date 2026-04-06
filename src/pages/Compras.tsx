@@ -63,6 +63,9 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
 
   return (
     <div className="space-y-5 py-4">
+      {/* Calendar view for prestadores */}
+      {purchaseType === 'prestador' && <PrestadorCalendar />}
+
       <PurchaseAlertsPanel
         alertThresholds={state.alertThresholds}
         getDaysUntilDeadline={state.getDaysUntilDeadline}
