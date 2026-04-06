@@ -211,13 +211,20 @@ function PurchaseRow({
           <div className="text-right hidden md:block">
             <p className="text-sm font-medium">{fmt(purchase.estimated_cost)}</p>
             {purchase.actual_cost != null && purchase.actual_cost > 0 && (
-              <p className={cn(
-                'text-xs',
-                purchase.actual_cost > (purchase.estimated_cost || 0)
-                  ? 'text-destructive' : 'text-[hsl(var(--success))]'
-              )}>
-                Real: {fmt(purchase.actual_cost)}
-              </p>
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Real: {fmt(purchase.actual_cost)}
+                </p>
+                {purchase.estimated_cost != null && purchase.estimated_cost > 0 && (
+                  <CostDiffBadge estimated={purchase.estimated_cost} actual={purchase.actual_cost} />
+                )}
+              </>
+            )}
+            {purchase.orcamento_item_id && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-primary/70 mt-0.5">
+                <FileText className="h-2.5 w-2.5" />
+                Orçamento
+              </span>
             )}
           </div>
 
