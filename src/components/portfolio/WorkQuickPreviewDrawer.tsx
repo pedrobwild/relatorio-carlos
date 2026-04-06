@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
-import { getHealthResult } from './lib/healthScore';
 import { computeHealthScore, type HealthLevel } from '@/lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -71,7 +70,12 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
   }
 
   const status = statusConfig[project.status] ?? statusConfig.active;
-  const health = summary ? getHealthResult(summary) : null;
+  // Use canonical health score for consistency with the breakdown
+  const health = detailedHealth ? {
+    score: detailedHealth.score,
+    tier: detailedHealth.level === 'excellent' ? 'Excelente' : detailedHealth.level === 'good' ? 'Bom' : detailedHealth.level === 'attention' ? 'Atenção' : 'Crítico',
+    color: breakdownLevelColors[detailedHealth.level].text,
+  } : null;
   
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
@@ -97,9 +101,14 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
     blockers.push({ icon: <AlertTriangle className="h-3.5 w-3.5" />, label: 'Obra pausada — aguardando desbloqueio', accent: 'text-destructive' });
   }
 
-  const lastActivity = summary?.last_activity_at
-    ? format(new Date(summary.last_activity_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-    : null;
+  let lastActivity: string | null = null;
+  if (summary?.last_activity_at) {
+    try {
+      lastActivity = format(new Date(summary.last_activity_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch {
+      lastActivity = null;
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

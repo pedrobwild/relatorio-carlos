@@ -38,6 +38,9 @@ export function MobileProjectList({ projects, onProjectClick }: MobileProjectLis
     return map;
   }, [summaries]);
 
+  // Stable "today" reference — avoid recreating per row
+  const today = useMemo(() => getTodayLocal(), []);
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -55,6 +58,7 @@ export function MobileProjectList({ projects, onProjectClick }: MobileProjectLis
           key={project.id}
           project={project}
           summary={summaryMap.get(project.id)}
+          today={today}
           onClick={() => onProjectClick?.(project)}
         />
       ))}
@@ -65,17 +69,18 @@ export function MobileProjectList({ projects, onProjectClick }: MobileProjectLis
 function MobileProjectRow({
   project,
   summary,
+  today,
   onClick,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
+  today: Date;
   onClick: () => void;
 }) {
   const progress = summary?.progress_percentage ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const status = statusConfig[project.status] ?? statusConfig.active;
 
-  const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
   const actualEnd = project.actual_end_date ? parseLocalDate(project.actual_end_date) : null;
   const isFinished = !!actualEnd;
