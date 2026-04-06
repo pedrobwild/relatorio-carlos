@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, User, Building2, Loader2, Search } from 'lucide-react';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
 import { formatCpf, formatRg, isValidCpf, isValidRg } from '@/lib/documentValidation';
