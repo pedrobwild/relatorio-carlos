@@ -2769,6 +2769,7 @@ export type Database = {
       orcamento_items: {
         Row: {
           bdi_percentage: number | null
+          catalog_item_id: string | null
           coverage_type: string | null
           created_at: string
           description: string | null
@@ -2777,16 +2778,20 @@ export type Database = {
           included_rooms: string[] | null
           internal_total: number | null
           internal_unit_price: number | null
+          item_category: string | null
           notes: string | null
           order_index: number
           qty: number | null
           reference_url: string | null
           section_id: string
+          supplier_id: string | null
+          supplier_name: string | null
           title: string
           unit: string | null
         }
         Insert: {
           bdi_percentage?: number | null
+          catalog_item_id?: string | null
           coverage_type?: string | null
           created_at?: string
           description?: string | null
@@ -2795,16 +2800,20 @@ export type Database = {
           included_rooms?: string[] | null
           internal_total?: number | null
           internal_unit_price?: number | null
+          item_category?: string | null
           notes?: string | null
           order_index?: number
           qty?: number | null
           reference_url?: string | null
           section_id: string
+          supplier_id?: string | null
+          supplier_name?: string | null
           title: string
           unit?: string | null
         }
         Update: {
           bdi_percentage?: number | null
+          catalog_item_id?: string | null
           coverage_type?: string | null
           created_at?: string
           description?: string | null
@@ -2813,11 +2822,14 @@ export type Database = {
           included_rooms?: string[] | null
           internal_total?: number | null
           internal_unit_price?: number | null
+          item_category?: string | null
           notes?: string | null
           order_index?: number
           qty?: number | null
           reference_url?: string | null
           section_id?: string
+          supplier_id?: string | null
+          supplier_name?: string | null
           title?: string
           unit?: string | null
         }

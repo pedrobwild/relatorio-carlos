@@ -231,6 +231,11 @@ async function processBudget(
           coverage_type: item.coverage_type ?? null,
           reference_url: item.reference_url ?? null,
           notes: item.notes ?? null,
+          // v1.1 fields:
+          item_category: item.item_category ?? null,
+          supplier_id: item.supplier_id ?? null,
+          supplier_name: item.supplier_name ?? null,
+          catalog_item_id: item.catalog_item_id ?? null,
         }));
 
         const { error: itemsError } = await db

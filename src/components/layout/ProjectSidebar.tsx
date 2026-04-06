@@ -19,6 +19,7 @@ import {
   Building2,
   UserCircle,
   ListChecks,
+  Receipt,
 } from "lucide-react";
 import {
   Sidebar,
@@ -203,6 +204,12 @@ export function ProjectSidebar() {
           label: L("dadosCliente"),
           icon: UserCircle,
           path: paths.dadosCliente,
+          staffOnly: true,
+        },
+        {
+          label: L("orcamento"),
+          icon: Receipt,
+          path: paths.orcamento,
           staffOnly: true,
         },
       ],

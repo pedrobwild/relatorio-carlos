@@ -25,6 +25,7 @@ export const navigationLabels: NavLabels = {
     formalizacoes:  { staff: "Formalizações",     client: "Aprovações" },
     dadosCliente:   { staff: "Dados do Cliente",   client: "Dados do Cliente" },
     atividades:     { staff: "Atividades",         client: "Atividades" },
+    orcamento:      { staff: "Orçamento",          client: "Orçamento" },
   },
   breadcrumb: {
     relatorio:      { staff: "Relatório",        client: "Diário da Obra" },
