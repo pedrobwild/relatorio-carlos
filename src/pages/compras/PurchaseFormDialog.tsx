@@ -31,6 +31,7 @@ interface PurchaseFormDialogProps {
   isSubmitting: boolean;
   paymentInstallments: PaymentInstallment[];
   onPaymentInstallmentsChange: (installments: PaymentInstallment[]) => void;
+  editingPurchaseId?: string;
 }
 
 export function PurchaseFormDialog({
