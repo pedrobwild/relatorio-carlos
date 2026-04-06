@@ -4,7 +4,6 @@ import { format, differenceInDays, parseISO, subDays } from 'date-fns';
 import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { useProjectActivities } from '@/hooks/useProjectActivities';
 import { emptyPurchase } from './types';
-import { isValidSupplierSubcategory } from '@/constants/supplierCategories';
 
 export function useComprasState() {
   const { projectId } = useParams<{ projectId: string }>();
