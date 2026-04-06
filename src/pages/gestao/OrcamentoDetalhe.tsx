@@ -153,12 +153,13 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
 
   // Fetch profiles for name resolution
   const { data: profiles } = useQuery({
-    queryKey: ['profiles', 'all'],
+    queryKey: queryKeys.staffProfiles.lookup(),
     queryFn: async () => {
-      const { data } = await supabase.from('users_profile').select('id, nome, email');
+      const { data } = await supabase.from('users_profile').select('id, nome, email').limit(500);
       return data || [];
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 min — rarely changes
+    gcTime: 30 * 60 * 1000,
   });
 
   const getProfileName = useCallback((id: string | null) => {
