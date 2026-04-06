@@ -283,6 +283,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
     editingPurchase,
     deleteId, setDeleteId,
     formData, setFormData,
+    paymentInstallments, setPaymentInstallments,
     handleOpenDialog,
     handleActivityChange,
     handleLeadTimeChange,
