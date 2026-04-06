@@ -100,7 +100,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const updateRiskIssue = (index: number, updates: Partial<RiskIssue>) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       risksAndIssues: prev.risksAndIssues.map((risk, i) => i === index ? { ...risk, ...updates } : risk),
     }));
