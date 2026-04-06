@@ -38,7 +38,30 @@ export function PaymentFlowModal({ open, onOpenChange, purchaseId, projectId, it
 
   useEffect(() => {
     if (!open) return;
-    loadFlows();
+    setLoading(true);
+    const load = async () => {
+      const { data, error } = await supabase
+        .from('purchase_payment_flows')
+        .select('*')
+        .eq('purchase_id', purchaseId)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error(error);
+        toast.error('Erro ao carregar fluxo de pagamento');
+      } else {
+        setFlows((data || []).map(d => ({
+          id: d.id,
+          installment_name: d.installment_name,
+          amount: Number(d.amount),
+          due_date: d.due_date,
+          status: d.status,
+          sort_order: d.sort_order,
+        })));
+      }
+      setLoading(false);
+    };
+    load();
   }, [open, purchaseId]);
 
   const loadFlows = async () => {

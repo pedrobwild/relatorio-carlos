@@ -94,8 +94,11 @@ export function PrestadorCalendar() {
     return map;
   }, [entries]);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   if (isLoading) {
     return (
