@@ -224,8 +224,13 @@ const Cronograma = () => {
 
   const handleSaveBaseline = async () => {
     setSavingBaseline(true);
-    await saveBaseline();
-    setSavingBaseline(false);
+    try {
+      await saveBaseline();
+    } catch (err) {
+      toast.error('Erro ao salvar baseline');
+    } finally {
+      setSavingBaseline(false);
+    }
   };
 
   const handleImportActivities = (importedActivities: ActivityFormData[]) => {
