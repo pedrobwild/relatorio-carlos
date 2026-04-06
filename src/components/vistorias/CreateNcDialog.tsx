@@ -161,8 +161,12 @@ export function CreateNcDialog({
     return paths;
   };
 
-  const handleSubmit = async () => {
+   const handleSubmit = async () => {
     if (!title.trim() || !category) return;
+    if (!deadline) {
+      toast.error('Informe o prazo para finalização da NC');
+      return;
+    }
     const estimatedCost = parseCurrencyInput(estimatedCostInput);
 
     setUploading(true);
@@ -322,14 +326,15 @@ export function CreateNcDialog({
           {/* Prazo + Custo side by side */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Prazo</Label>
+              <Label className="text-sm font-medium">Prazo <span className="text-destructive">*</span></Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       'w-full h-11 justify-start text-left font-normal',
-                      !deadline && 'text-muted-foreground'
+                      !deadline && 'text-muted-foreground',
+                      !deadline && 'border-destructive/50'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
@@ -449,7 +454,7 @@ export function CreateNcDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!title.trim() || !category || isSubmitting}
+            disabled={!title.trim() || !category || !deadline || isSubmitting}
             className="h-11 sm:h-10 w-full sm:w-auto"
           >
             {isSubmitting ? 'Criando...' : 'Registrar NC'}
