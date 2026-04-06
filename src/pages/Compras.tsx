@@ -1,10 +1,14 @@
-import { Plus, Search, Package, Wrench } from 'lucide-react';
+import { Plus, Search, Package, Wrench, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useState, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 
 import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
 import { PageContainer } from '@/components/layout/PageContainer';
