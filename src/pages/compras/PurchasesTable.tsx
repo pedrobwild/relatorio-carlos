@@ -444,10 +444,17 @@ function PurchaseRow({
               </div>
 
               {/* Delivery address for products */}
-              {!isPrestador && purchase.delivery_address && (
-                <div className="flex items-start gap-1.5 mt-2">
-                  <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                  <span className="text-xs text-muted-foreground">{purchase.delivery_address}</span>
+              {!isPrestador && (
+                <div className="mt-2">
+                  <label className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                    <MapPin className="h-3 w-3" /> Local de Entrega
+                  </label>
+                  <InlineField
+                    value={purchase.delivery_address}
+                    placeholder="Endereço de entrega"
+                    className="w-full"
+                    onSave={(v) => onUpdateField(purchase.id, 'delivery_address', v || null)}
+                  />
                 </div>
               )}
             </div>
