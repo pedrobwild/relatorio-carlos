@@ -411,17 +411,35 @@ export default function OrcamentoDetalhe() {
                 <CollapsibleContent>
                   <CardContent className="pt-0 space-y-4">
                     {/* Grand totals */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-lg bg-muted/50 border border-border">
-                      <MiniStat label="Total Venda" value={formatBRL(grandSale)} icon={<DollarSign className="h-3.5 w-3.5" />} accent />
-                      <MiniStat label="Total Custo" value={formatBRL(grandCost)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                      <MiniStat label="Total Venda" value={formatBRL(finalSale)} icon={<DollarSign className="h-3.5 w-3.5" />} accent />
+                      <MiniStat label="Total Custo" value={formatBRL(finalCost)} icon={<DollarSign className="h-3.5 w-3.5" />} />
                       <MiniStat label="BDI Médio" value={`${grandBdi.toFixed(1)}%`} icon={<TrendingUp className="h-3.5 w-3.5" />} />
                       <MiniStat label="Margem Líquida" value={formatBRL(margin)} icon={<TrendingUp className="h-3.5 w-3.5" />} accent={margin > 0} />
+                      {finalValue !== finalSale && (
+                        <MiniStat label="Valor Final" value={formatBRL(finalValue)} icon={<DollarSign className="h-3.5 w-3.5" />} accent />
+                      )}
                     </div>
 
                     {/* Sections */}
                     {sectionSummaries.map((sec: any) => (
                       <SectionBlock key={sec.id} section={sec} />
                     ))}
+
+                    {/* Adjustments */}
+                    {(adjustments || []).length > 0 && (
+                      <div className="p-3 rounded-lg border border-dashed border-border space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">Ajustes Financeiros</p>
+                        {adjustments!.map((adj: any) => (
+                          <div key={adj.id} className="flex justify-between text-sm">
+                            <span>{adj.label}</span>
+                            <span className={`font-medium tabular-nums ${Number(adj.sign) < 0 ? 'text-destructive' : 'text-[hsl(var(--success))]'}`}>
+                              {Number(adj.sign) < 0 ? '−' : '+'} {formatBRL(Math.abs(Number(adj.amount)))}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </CollapsibleContent>
               </Collapsible>
