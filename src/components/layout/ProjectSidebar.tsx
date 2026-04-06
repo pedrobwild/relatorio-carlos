@@ -206,6 +206,12 @@ export function ProjectSidebar() {
           path: paths.dadosCliente,
           staffOnly: true,
         },
+        {
+          label: L("orcamento"),
+          icon: Receipt,
+          path: paths.orcamento,
+          staffOnly: true,
+        },
       ],
     },
   ];
