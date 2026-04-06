@@ -4146,6 +4146,7 @@ export type Database = {
           item_name: string
           lead_time_days: number
           notes: string | null
+          orcamento_item_id: string | null
           order_date: string | null
           planned_purchase_date: string | null
           project_id: string
@@ -4178,6 +4179,7 @@ export type Database = {
           item_name: string
           lead_time_days?: number
           notes?: string | null
+          orcamento_item_id?: string | null
           order_date?: string | null
           planned_purchase_date?: string | null
           project_id: string
@@ -4210,6 +4212,7 @@ export type Database = {
           item_name?: string
           lead_time_days?: number
           notes?: string | null
+          orcamento_item_id?: string | null
           order_date?: string | null
           planned_purchase_date?: string | null
           project_id?: string
@@ -4236,6 +4239,13 @@ export type Database = {
             columns: ["fornecedor_id"]
             isOneToOne: false
             referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_purchases_orcamento_item_id_fkey"
+            columns: ["orcamento_item_id"]
+            isOneToOne: true
+            referencedRelation: "orcamento_items"
             referencedColumns: ["id"]
           },
           {
@@ -5695,6 +5705,10 @@ export type Database = {
         Returns: string
       }
       my_profile_role: { Args: never; Returns: string }
+      sync_budget_items_to_purchases: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
       transition_nc_status: {
         Args: {
           p_corrective_action?: string
