@@ -152,9 +152,15 @@ export function ProjectSidebar() {
           disabledInProjectPhase: true,
         },
         {
-          label: L("compras"),
+          label: "Produtos",
           icon: ShoppingCart,
-          path: paths.compras,
+          path: paths.comprasProdutos,
+          disabledInProjectPhase: true,
+        },
+        {
+          label: "Prestadores",
+          icon: ShoppingCart,
+          path: paths.comprasPrestadores,
           disabledInProjectPhase: true,
         },
         {
