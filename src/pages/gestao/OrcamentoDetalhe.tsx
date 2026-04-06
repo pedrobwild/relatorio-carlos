@@ -57,8 +57,10 @@ function calcSalePrice(cost: number, bdi: number): number {
   return cost * (1 + bdi / 100);
 }
 
-export default function OrcamentoDetalhe() {
-  const { orcamentoId } = useParams<{ orcamentoId: string }>();
+export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrcamentoId?: string } = {}) {
+  const params = useParams<{ orcamentoId: string }>();
+  const orcamentoId = embeddedOrcamentoId || params.orcamentoId;
+  const isEmbedded = !!embeddedOrcamentoId;
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
