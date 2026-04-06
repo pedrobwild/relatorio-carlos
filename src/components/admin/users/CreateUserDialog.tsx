@@ -181,6 +181,7 @@ export function CreateUserDialog({ onUserCreated }: { onUserCreated: () => void 
                   <SelectItem value="customer">Cliente</SelectItem>
                   <SelectItem value="engineer">Engenheiro</SelectItem>
                   <SelectItem value="manager">Gestor de Engenharia</SelectItem>
+                  <SelectItem value="cs">Customer Success</SelectItem>
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
