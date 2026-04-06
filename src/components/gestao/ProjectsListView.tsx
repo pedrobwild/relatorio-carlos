@@ -12,6 +12,7 @@ import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
+import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
 import { format, differenceInDays } from 'date-fns';
