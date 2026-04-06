@@ -13,6 +13,9 @@ import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './types';
 import { PaymentScheduleSection, type PaymentInstallment } from './PaymentScheduleSection';
 import { FornecedorSelector } from './FornecedorSelector';
 
+const fmt = (v: number) =>
+  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
 interface Activity {
   id: string;
   description: string;
