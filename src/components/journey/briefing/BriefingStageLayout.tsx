@@ -47,6 +47,10 @@ export function BriefingStageLayout({ stage, projectId, isAdmin, onStageComplete
           toast.success('Etapa de Briefing concluída! Projeto 3D liberado.');
           onStageCompleted?.();
         },
+        onError: (err) => {
+          toast.error('Erro ao concluir etapa. Tente novamente.');
+          console.error('BriefingStageLayout advance error:', err);
+        },
       },
     );
   };

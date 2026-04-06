@@ -15,10 +15,9 @@ export interface StageMessage {
 
 export function useStageChat(stageId: string, projectId: string) {
   const qc = useQueryClient();
-  const queryKey = ['stage-chat', stageId];
 
   const query = useQuery({
-    queryKey,
+    queryKey: ['stage-chat', stageId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('journey_stage_messages')
@@ -31,9 +30,10 @@ export function useStageChat(stageId: string, projectId: string) {
     enabled: !!stageId,
   });
 
-  // Realtime subscription
+  // Realtime subscription — use stable key reference via closure over stageId
   useEffect(() => {
     if (!stageId) return;
+    const key = ['stage-chat', stageId];
     const channel = supabase
       .channel(`stage-chat-${stageId}`)
       .on('postgres_changes', {
@@ -42,10 +42,12 @@ export function useStageChat(stageId: string, projectId: string) {
         table: 'journey_stage_messages',
         filter: `stage_id=eq.${stageId}`,
       }, (payload) => {
-        qc.setQueryData<StageMessage[]>(queryKey, (old) => [
-          ...(old || []),
-          payload.new as StageMessage,
-        ]);
+        qc.setQueryData<StageMessage[]>(key, (old) => {
+          const newMsg = payload.new as StageMessage;
+          // Deduplicate: realtime may fire after optimistic or refetch
+          if (old?.some(m => m.id === newMsg.id)) return old;
+          return [...(old || []), newMsg];
+        });
       })
       .subscribe();
 
