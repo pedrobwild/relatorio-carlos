@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Map, DollarSign, AlertCircle, Bell, GanttChartSquare, Ruler } from "lucide-react";
+import { Map, DollarSign, AlertCircle, Bell, GanttChartSquare, CheckSquare } from "lucide-react";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { usePendencias } from "@/hooks/usePendencias";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -13,8 +13,8 @@ import { MobileNotificationsSheet } from "./MobileNotificationsSheet";
 /**
  * MobileBottomNav — fixed bottom navigation for mobile users.
  * Shows role-appropriate tabs:
- * - Client: Jornada, Financeiro, Pendências, Avisos (opens notification sheet)
- * - Staff: Pendências, Cronograma, Executivo, Financeiro, + Mais (sheet)
+ * - Client: Jornada, Financeiro, Pendências, Avisos
+ * - Staff: Pendências, Cronograma, Atividades, Financeiro, + Mais (full tool sheet)
  * Only rendered on mobile viewports.
  */
 export function MobileBottomNav() {
@@ -31,7 +31,7 @@ export function MobileBottomNav() {
       return [
         { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
         { label: "Cronograma", icon: GanttChartSquare, to: paths.cronograma, badge: 0 },
-        { label: "Executivo", icon: Ruler, to: paths.executivo, badge: 0 },
+        { label: "Atividades", icon: CheckSquare, to: paths.atividades, badge: 0 },
         { label: "Financeiro", icon: DollarSign, to: paths.financeiro, badge: 0 },
       ];
     }
@@ -53,7 +53,7 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card/95 backdrop-blur-md pb-safe md:hidden"
+        className="fixed bottom-0 inset-x-0 z-50 border-t border-border/60 bg-card/95 backdrop-blur-xl backdrop-saturate-150 pb-safe md:hidden"
         aria-label="Navegação principal"
       >
         <div className="flex items-stretch justify-around h-14">
@@ -83,7 +83,7 @@ export function MobileBottomNav() {
             </NavLink>
           ))}
 
-          {/* Client: Notifications button (opens sheet) */}
+          {/* Client: Notifications button */}
           {!isStaff && (
             <button
               onClick={() => setNotificationsOpen(true)}
@@ -104,7 +104,7 @@ export function MobileBottomNav() {
             </button>
           )}
 
-          {/* Staff: More sheet */}
+          {/* Staff: More sheet with ALL tools */}
           {isStaff && <MobileMoreSheet />}
         </div>
       </nav>
