@@ -175,10 +175,30 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       end_date: formData.end_date || null,
     };
     try {
+      let purchaseId: string;
       if (editingPurchase) {
         await updatePurchase.mutateAsync({ id: editingPurchase.id, ...input });
+        purchaseId = editingPurchase.id;
       } else {
-        await addPurchase.mutateAsync(input);
+        const result = await addPurchase.mutateAsync(input);
+        purchaseId = result.id;
+      }
+      // Save payment installments for prestadores
+      if (input.purchase_type === 'prestador' && paymentInstallments.length > 0) {
+        // Delete existing installments
+        await supabase.from('purchase_payment_schedule').delete().eq('purchase_id', purchaseId);
+        // Insert new ones
+        const rows = paymentInstallments.map((inst, i) => ({
+          purchase_id: purchaseId,
+          installment_number: i + 1,
+          description: inst.description,
+          percentage: inst.percentage,
+          amount: inst.amount,
+          due_date: inst.due_date || null,
+        }));
+        await supabase.from('purchase_payment_schedule').insert(rows);
+      } else if (input.purchase_type === 'prestador' && paymentInstallments.length === 0 && editingPurchase) {
+        await supabase.from('purchase_payment_schedule').delete().eq('purchase_id', editingPurchase.id);
       }
       setIsDialogOpen(false);
     } catch {
