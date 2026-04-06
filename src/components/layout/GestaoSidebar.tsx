@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Truck,
   Receipt,
+  AlertTriangle,
   LucideIcon,
 } from "lucide-react";
 import {
