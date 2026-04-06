@@ -319,6 +319,26 @@ function PurchaseRow({
                   <ClipboardList className="h-4 w-4 mr-2" /> Cadastro
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {/* Product-specific statuses */}
+                {!isPrestador && (
+                  <>
+                    {purchase.status !== 'awaiting_approval' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'awaiting_approval')}>
+                        Solic. Aprovação
+                      </DropdownMenuItem>
+                    )}
+                    {purchase.status !== 'approved' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'approved')}>
+                        Aprovar
+                      </DropdownMenuItem>
+                    )}
+                    {purchase.status !== 'purchased' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'purchased')}>
+                        Compra Realizada
+                      </DropdownMenuItem>
+                    )}
+                  </>
+                )}
                 {purchase.status !== 'pending' && (
                   <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'pending')}>
                     <Clock className="h-4 w-4 mr-2" /> Marcar Pendente
@@ -331,7 +351,12 @@ function PurchaseRow({
                 )}
                 {purchase.status !== 'delivered' && (
                   <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'delivered')}>
-                    <CheckCircle2 className="h-4 w-4 mr-2" /> Marcar Concluído
+                    <CheckCircle2 className="h-4 w-4 mr-2" /> {isPrestador ? 'Marcar Concluído' : 'Marcar Entregue'}
+                  </DropdownMenuItem>
+                )}
+                {!isPrestador && purchase.status === 'delivered' && purchase.delivery_location === 'estoque' && purchase.status !== 'sent_to_site' && (
+                  <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'sent_to_site')}>
+                    <TruckIcon className="h-4 w-4 mr-2" /> Enviado p/ Obra
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
