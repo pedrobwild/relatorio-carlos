@@ -81,16 +81,26 @@ const getFridayOfWeek = (date: Date): Date => {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   const dayOfWeek = d.getDay();
-  const daysUntilFriday = dayOfWeek <= 5 ? 5 - dayOfWeek : -1;
-  const friday = new Date(d);
-  friday.setDate(friday.getDate() + daysUntilFriday);
-
-  while (isHoliday(friday)) {
-    friday.setDate(friday.getDate() - 1);
+  // If it's Saturday (6) or Sunday (0), there's no Friday "this week"
+  if (dayOfWeek === 0) {
+    // Sunday: advance to next Friday
+    d.setDate(d.getDate() + 5);
+  } else if (dayOfWeek === 6) {
+    // Saturday: advance to next Friday
+    d.setDate(d.getDate() + 6);
+  } else {
+    // Mon-Fri: go to Friday of this week
+    d.setDate(d.getDate() + (5 - dayOfWeek));
   }
 
-  if (friday < date) return new Date(date);
-  return friday;
+  // If Friday is a holiday, move to the previous non-holiday business day
+  while (isHoliday(d)) {
+    d.setDate(d.getDate() - 1);
+  }
+
+  // Ensure result is not before the input date
+  if (d < date) return new Date(date);
+  return d;
 };
 
 const getNextMonday = (date: Date): Date => {
@@ -446,8 +456,8 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               <input
                 type="checkbox"
                 id="contract_date_undefined"
-                checked={formData.contract_signing_date === ''}
-                onChange={(e) => onChange('contract_signing_date', e.target.checked ? '' : '')}
+                checked={!formData.contract_signing_date}
+                onChange={() => onChange('contract_signing_date', formData.contract_signing_date ? '' : new Date().toISOString().split('T')[0])}
                 className="h-4 w-4 rounded border-border"
               />
               <Label htmlFor="contract_date_undefined" className="text-caption cursor-pointer text-muted-foreground">

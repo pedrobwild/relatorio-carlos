@@ -92,10 +92,17 @@ export function isNonBusinessDay(date: Date): boolean {
   return isWeekend(date) || isHoliday(date);
 }
 
-/** Add N business days to a date (skips weekends and holidays). */
+/** Add N business days to a date (skips weekends and holidays).
+ *  If the starting date is a non-business day, it is first advanced
+ *  to the next business day before counting begins. */
 export function addBusinessDays(date: Date, n: number): Date {
   const result = new Date(date);
   result.setHours(0, 0, 0, 0);
+  // First, ensure we start on a business day
+  while (isNonBusinessDay(result)) {
+    result.setDate(result.getDate() + 1);
+  }
+  // Then advance N business days
   let added = 0;
   while (added < n) {
     result.setDate(result.getDate() + 1);
