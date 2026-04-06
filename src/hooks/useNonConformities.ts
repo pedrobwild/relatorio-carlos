@@ -133,6 +133,25 @@ export function useUpdateNonConformity() {
   });
 }
 
+export function useDeleteNonConformity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { id: string; project_id: string }) => {
+      await deleteNonConformity(params.id);
+      return params;
+    },
+    onSuccess: (params) => {
+      queryClient.invalidateQueries({ queryKey: ['non-conformities', params.project_id] });
+      queryClient.invalidateQueries({ queryKey: ['non-conformities', 'global'] });
+      toast.success('Não conformidade excluída');
+    },
+    onError: (err: Error) => {
+      toast.error('Erro ao excluir: ' + err.message);
+    },
+  });
+}
+
 export function useUpdateNcEvidence() {
   const queryClient = useQueryClient();
 
