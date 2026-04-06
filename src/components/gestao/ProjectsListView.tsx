@@ -12,6 +12,7 @@ import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
+import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
 import { format, differenceInDays } from 'date-fns';
@@ -44,19 +45,50 @@ interface ProjectsListViewProps {
 export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
-  const projectIds = useMemo(() => projects.map(p => p.id), [projects]);
-  const { data: stagesMapRaw } = useCurrentStages(projectIds);
-  // Query persistence may serialize Map as plain object — normalize
-  const stagesMap = useMemo(() => {
-    if (!stagesMapRaw) return undefined;
-    if (stagesMapRaw instanceof Map) return stagesMapRaw;
-    // Deserialized as plain object
-    const map = new Map<string, CurrentStageInfo>();
-    for (const [k, v] of Object.entries(stagesMapRaw as Record<string, CurrentStageInfo>)) {
-      map.set(k, v);
+
+  // Split IDs: obras use cronograma stages, projetos use journey stages
+  const { obraIds, projetoIds } = useMemo(() => {
+    const obraIds: string[] = [];
+    const projetoIds: string[] = [];
+    for (const p of projects) {
+      if (p.is_project_phase) projetoIds.push(p.id);
+      else obraIds.push(p.id);
     }
+    return { obraIds, projetoIds };
+  }, [projects]);
+
+  const { data: stagesMapRaw } = useCurrentStages(obraIds);
+  const { data: journeyStagesMap } = useJourneyStagesSummary(projetoIds);
+
+  // Merge both sources into a single CurrentStageInfo map
+  const stagesMap = useMemo(() => {
+    const map = new Map<string, CurrentStageInfo>();
+
+    // Normalize obra stages (may be deserialized as plain object)
+    if (stagesMapRaw) {
+      const entries = stagesMapRaw instanceof Map
+        ? stagesMapRaw.entries()
+        : Object.entries(stagesMapRaw as Record<string, CurrentStageInfo>);
+      for (const [k, v] of entries) {
+        map.set(k, v);
+      }
+    }
+
+    // Convert journey stages to CurrentStageInfo format
+    if (journeyStagesMap) {
+      const entries = journeyStagesMap instanceof Map
+        ? journeyStagesMap.entries()
+        : Object.entries(journeyStagesMap as Record<string, any>);
+      for (const [k, v] of entries) {
+        map.set(k, {
+          description: v.currentStageName,
+          isAwaitingStart: false,
+        });
+      }
+    }
+
     return map;
-  }, [stagesMapRaw]);
+  }, [stagesMapRaw, journeyStagesMap]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
