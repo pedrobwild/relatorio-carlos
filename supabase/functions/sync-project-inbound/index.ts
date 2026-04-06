@@ -147,8 +147,9 @@ Deno.serve(async (req) => {
       action: existing ? "updated" : "created",
     });
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? error.message : "Unknown error";
-    console.error("sync-project-inbound error:", errMsg);
+    const errMsg = error instanceof Error ? error.message : JSON.stringify(error);
+    const errStack = error instanceof Error ? error.stack : "";
+    console.error("[sync-project-inbound] error:", errMsg, errStack);
     return jsonResponse({ error: errMsg }, 500);
   }
 });
