@@ -2677,6 +2677,298 @@ export type Database = {
           },
         ]
       }
+      orcamento_eventos: {
+        Row: {
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          note: string | null
+          orcamento_id: string
+          to_status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          orcamento_id: string
+          to_status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          orcamento_id?: string
+          to_status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_eventos_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamento_eventos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamento_items: {
+        Row: {
+          bdi_percentage: number | null
+          created_at: string
+          id: string
+          internal_total: number | null
+          internal_unit_price: number | null
+          order_index: number
+          qty: number | null
+          section_id: string
+          title: string
+          unit: string | null
+        }
+        Insert: {
+          bdi_percentage?: number | null
+          created_at?: string
+          id?: string
+          internal_total?: number | null
+          internal_unit_price?: number | null
+          order_index?: number
+          qty?: number | null
+          section_id: string
+          title: string
+          unit?: string | null
+        }
+        Update: {
+          bdi_percentage?: number | null
+          created_at?: string
+          id?: string
+          internal_total?: number | null
+          internal_unit_price?: number | null
+          order_index?: number
+          qty?: number | null
+          section_id?: string
+          title?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "orcamento_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamento_notas: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          orcamento_id: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          orcamento_id: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          orcamento_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_notas_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamento_notas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamento_sections: {
+        Row: {
+          created_at: string
+          id: string
+          is_optional: boolean
+          orcamento_id: string
+          order_index: number
+          section_price: number | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_optional?: boolean
+          orcamento_id: string
+          order_index?: number
+          section_price?: number | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_optional?: boolean
+          orcamento_id?: string
+          order_index?: number
+          section_price?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_sections_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamentos: {
+        Row: {
+          bairro: string | null
+          briefing: string | null
+          city: string | null
+          client_name: string
+          commercial_owner_id: string | null
+          condominio: string | null
+          created_at: string
+          created_by: string | null
+          demand_context: string | null
+          due_at: string | null
+          estimator_owner_id: string | null
+          external_id: string | null
+          external_system: string | null
+          id: string
+          internal_notes: string | null
+          internal_status: Database["public"]["Enums"]["orcamento_status"]
+          metragem: string | null
+          priority: Database["public"]["Enums"]["orcamento_priority"]
+          project_id: string | null
+          project_name: string
+          property_type: string | null
+          reference_links: string[] | null
+          sequential_code: string | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          bairro?: string | null
+          briefing?: string | null
+          city?: string | null
+          client_name: string
+          commercial_owner_id?: string | null
+          condominio?: string | null
+          created_at?: string
+          created_by?: string | null
+          demand_context?: string | null
+          due_at?: string | null
+          estimator_owner_id?: string | null
+          external_id?: string | null
+          external_system?: string | null
+          id?: string
+          internal_notes?: string | null
+          internal_status?: Database["public"]["Enums"]["orcamento_status"]
+          metragem?: string | null
+          priority?: Database["public"]["Enums"]["orcamento_priority"]
+          project_id?: string | null
+          project_name: string
+          property_type?: string | null
+          reference_links?: string[] | null
+          sequential_code?: string | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bairro?: string | null
+          briefing?: string | null
+          city?: string | null
+          client_name?: string
+          commercial_owner_id?: string | null
+          condominio?: string | null
+          created_at?: string
+          created_by?: string | null
+          demand_context?: string | null
+          due_at?: string | null
+          estimator_owner_id?: string | null
+          external_id?: string | null
+          external_system?: string | null
+          id?: string
+          internal_notes?: string | null
+          internal_status?: Database["public"]["Enums"]["orcamento_status"]
+          metragem?: string | null
+          priority?: Database["public"]["Enums"]["orcamento_priority"]
+          project_id?: string | null
+          project_name?: string
+          property_type?: string | null
+          reference_links?: string[] | null
+          sequential_code?: string | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_commercial_owner_id_fkey"
+            columns: ["commercial_owner_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_estimator_owner_id_fkey"
+            columns: ["estimator_owner_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "orcamentos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orgs: {
         Row: {
           created_at: string
@@ -5344,6 +5636,18 @@ export type Database = {
         | "finalizada"
         | "cancelada"
       obra_task_status: "pendente" | "em_andamento" | "pausado" | "concluido"
+      orcamento_priority: "low" | "normal" | "high" | "urgent"
+      orcamento_status:
+        | "requested"
+        | "in_progress"
+        | "review"
+        | "waiting_info"
+        | "blocked"
+        | "ready"
+        | "sent_to_client"
+        | "approved"
+        | "rejected"
+        | "cancelled"
       party_type: "customer" | "company"
       pending_item_status: "pending" | "completed" | "cancelled"
       pending_item_type:
@@ -5581,6 +5885,19 @@ export const Constants = {
         "cancelada",
       ],
       obra_task_status: ["pendente", "em_andamento", "pausado", "concluido"],
+      orcamento_priority: ["low", "normal", "high", "urgent"],
+      orcamento_status: [
+        "requested",
+        "in_progress",
+        "review",
+        "waiting_info",
+        "blocked",
+        "ready",
+        "sent_to_client",
+        "approved",
+        "rejected",
+        "cancelled",
+      ],
       party_type: ["customer", "company"],
       pending_item_status: ["pending", "completed", "cancelled"],
       pending_item_type: [

@@ -7,6 +7,7 @@ import {
   Settings,
   LayoutDashboard,
   Truck,
+  Receipt,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -61,6 +62,11 @@ export function GestaoSidebar() {
     {
       label: "Ferramentas",
       items: [
+        {
+          label: "Orçamentos",
+          icon: Receipt,
+          path: "/gestao/orcamentos",
+        },
         {
           label: "Fornecedores",
           icon: Truck,

@@ -46,6 +46,8 @@ const CalendarioCompras = lazy(() => import("./pages/CalendarioCompras"));
 const Fornecedores = lazy(() => import("./pages/gestao/Fornecedores"));
 const FornecedorDetalhe = lazy(() => import("./pages/gestao/FornecedorDetalhe"));
 const FornecedoresAdmin = lazy(() => import("./pages/gestao/FornecedoresAdmin"));
+const Orcamentos = lazy(() => import("./pages/gestao/Orcamentos"));
+const OrcamentoDetalhe = lazy(() => import("./pages/gestao/OrcamentoDetalhe"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
@@ -160,6 +162,8 @@ const App = () => (
             <Route path="/gestao/fornecedores" element={<StaffRoute><GestaoShell>{withSuspense(<Fornecedores />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/:id" element={<StaffRoute><GestaoShell>{withSuspense(<FornecedorDetalhe />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/admin" element={<AdminRoute><GestaoShell>{withSuspense(<FornecedoresAdmin />)}</GestaoShell></AdminRoute>} />
+            <Route path="/gestao/orcamentos" element={<StaffRoute><GestaoShell>{withSuspense(<Orcamentos />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/orcamentos/:orcamentoId" element={<StaffRoute><GestaoShell>{withSuspense(<OrcamentoDetalhe />)}</GestaoShell></StaffRoute>} />
             <Route path="/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
             
             {/* Admin-only routes */}
