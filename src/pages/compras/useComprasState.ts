@@ -221,7 +221,11 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   };
 
   const handleStatusChange = async (id: string, newStatus: PurchaseStatus) => {
-    await updateStatus.mutateAsync({ id, status: newStatus });
+    try {
+      await updateStatus.mutateAsync({ id, status: newStatus });
+    } catch {
+      // Error toast already handled by mutation onError
+    }
   };
 
   const handleUpdateActualCost = async (id: string, cost: number | null) => {
