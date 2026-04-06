@@ -4136,12 +4136,14 @@ export type Database = {
           created_at: string
           created_by: string
           delivery_address: string | null
+          delivery_location: string | null
           description: string | null
           end_date: string | null
           estimated_cost: number | null
           expected_delivery_date: string | null
           fornecedor_id: string | null
           id: string
+          invoice_file_path: string | null
           invoice_number: string | null
           item_name: string
           lead_time_days: number
@@ -4153,8 +4155,11 @@ export type Database = {
           purchase_type: string | null
           quantity: number
           required_by_date: string
+          shipping_cost: number | null
           start_date: string | null
           status: string
+          stock_entry_date: string | null
+          stock_exit_date: string | null
           supplier_contact: string | null
           supplier_name: string | null
           unit: string
@@ -4169,12 +4174,14 @@ export type Database = {
           created_at?: string
           created_by: string
           delivery_address?: string | null
+          delivery_location?: string | null
           description?: string | null
           end_date?: string | null
           estimated_cost?: number | null
           expected_delivery_date?: string | null
           fornecedor_id?: string | null
           id?: string
+          invoice_file_path?: string | null
           invoice_number?: string | null
           item_name: string
           lead_time_days?: number
@@ -4186,8 +4193,11 @@ export type Database = {
           purchase_type?: string | null
           quantity?: number
           required_by_date: string
+          shipping_cost?: number | null
           start_date?: string | null
           status?: string
+          stock_entry_date?: string | null
+          stock_exit_date?: string | null
           supplier_contact?: string | null
           supplier_name?: string | null
           unit?: string
@@ -4202,12 +4212,14 @@ export type Database = {
           created_at?: string
           created_by?: string
           delivery_address?: string | null
+          delivery_location?: string | null
           description?: string | null
           end_date?: string | null
           estimated_cost?: number | null
           expected_delivery_date?: string | null
           fornecedor_id?: string | null
           id?: string
+          invoice_file_path?: string | null
           invoice_number?: string | null
           item_name?: string
           lead_time_days?: number
@@ -4219,8 +4231,11 @@ export type Database = {
           purchase_type?: string | null
           quantity?: number
           required_by_date?: string
+          shipping_cost?: number | null
           start_date?: string | null
           status?: string
+          stock_entry_date?: string | null
+          stock_exit_date?: string | null
           supplier_contact?: string | null
           supplier_name?: string | null
           unit?: string

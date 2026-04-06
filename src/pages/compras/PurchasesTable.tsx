@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useCallback } from 'react';
 import {
   MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign,
   ClipboardList, ChevronDown, ChevronRight, MoreHorizontal, Trash2,
-  Pencil, MapPin, Calendar,
+  Pencil, MapPin, Calendar, Warehouse, Building2, TruckIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -140,6 +140,151 @@ function ContractCell({ purchase, onUpdateField }: {
         </Button>
       )}
     </>
+  );
+}
+
+/* ─── Invoice Upload Cell ─── */
+function InvoiceCell({ purchase, onUpdateField }: {
+  purchase: ProjectPurchase;
+  onUpdateField: (id: string, field: string, value: string | null) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      toast.error('Apenas PDF ou imagens são permitidos');
+      return;
+    }
+    setUploading(true);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `purchases/${purchase.project_id}/${purchase.id}/nf_${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('project-documents').upload(path, file);
+      if (uploadError) throw uploadError;
+      onUpdateField(purchase.id, 'invoice_file_path', path);
+      toast.success('Nota fiscal anexada');
+    } catch (err: unknown) {
+      console.error('Invoice upload error:', err);
+      const msg = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : 'Erro desconhecido';
+      toast.error(`Erro ao enviar NF: ${msg}`);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleView = async () => {
+    if (!purchase.invoice_file_path) return;
+    const { data } = await supabase.storage.from('project-documents').createSignedUrl(purchase.invoice_file_path, 300);
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+  };
+
+  return (
+    <>
+      <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden" onChange={handleUpload} />
+      {purchase.invoice_file_path ? (
+        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 border-[hsl(var(--success))]/30 text-[hsl(var(--success))]" onClick={handleView}>
+          <FileText className="h-3 w-3" /> Ver NF
+        </Button>
+      ) : (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs gap-1.5 text-muted-foreground"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+        >
+          <Upload className="h-3 w-3" /> {uploading ? '...' : 'Anexar NF'}
+        </Button>
+      )}
+    </>
+  );
+}
+
+/* ─── Stock Tracking Section ─── */
+function StockTrackingSection({ purchase, onUpdateField }: {
+  purchase: ProjectPurchase;
+  onUpdateField: (id: string, field: string, value: string | null) => void;
+}) {
+  const stockDays = useMemo(() => {
+    if (purchase.purchase_type !== 'produto' || purchase.delivery_location !== 'estoque') return null;
+    if (!purchase.stock_entry_date) return null;
+    const entry = new Date(purchase.stock_entry_date + 'T00:00:00');
+    const exit = purchase.stock_exit_date
+      ? new Date(purchase.stock_exit_date + 'T00:00:00')
+      : new Date();
+    exit.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.ceil((exit.getTime() - entry.getTime()) / (1000 * 60 * 60 * 24)));
+  }, [purchase.stock_entry_date, purchase.stock_exit_date, purchase.purchase_type, purchase.delivery_location]);
+
+  if (purchase.purchase_type !== 'produto' || purchase.delivery_location !== 'estoque') return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/50">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
+        <Warehouse className="h-3 w-3" /> Controle de Estoque
+      </h4>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Entrada no Estoque</label>
+          <InlineField
+            type="date"
+            value={purchase.stock_entry_date}
+            className="w-full"
+            onSave={(v) => onUpdateField(purchase.id, 'stock_entry_date', v || null)}
+          />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Enviado p/ Obra</label>
+          <InlineField
+            type="date"
+            value={purchase.stock_exit_date}
+            className="w-full"
+            onSave={(v) => onUpdateField(purchase.id, 'stock_exit_date', v || null)}
+          />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Custo do Frete</label>
+          <InlineField
+            type="number"
+            value={purchase.shipping_cost}
+            placeholder="0,00"
+            prefix="R$"
+            className="w-full"
+            onSave={(v) => {
+              const val = v ? parseFloat(v) : null;
+              onUpdateField(purchase.id, 'shipping_cost', val != null && !isNaN(val) ? String(val) : null);
+            }}
+          />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground block mb-1">Dias no Estoque</label>
+          <div className={cn(
+            'h-8 flex items-center px-2.5 rounded-md text-sm font-medium',
+            stockDays != null && stockDays > 0
+              ? 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]'
+              : 'text-muted-foreground'
+          )}>
+            {stockDays != null ? `${stockDays} dia${stockDays !== 1 ? 's' : ''}` : '—'}
+          </div>
+        </div>
+      </div>
+      {purchase.stock_exit_date && (
+        <div className="mt-2 flex items-center gap-2 text-xs text-[hsl(var(--success))]">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Produto enviado para obra em {fmtDate(purchase.stock_exit_date)}
+          {purchase.shipping_cost != null && purchase.shipping_cost > 0 && (
+            <span className="text-muted-foreground ml-1">
+              — Frete: {fmt(purchase.shipping_cost)}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -319,6 +464,26 @@ function PurchaseRow({
                   <ClipboardList className="h-4 w-4 mr-2" /> Cadastro
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {/* Product-specific statuses */}
+                {!isPrestador && (
+                  <>
+                    {purchase.status !== 'awaiting_approval' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'awaiting_approval')}>
+                        Solic. Aprovação
+                      </DropdownMenuItem>
+                    )}
+                    {purchase.status !== 'approved' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'approved')}>
+                        Aprovar
+                      </DropdownMenuItem>
+                    )}
+                    {purchase.status !== 'purchased' && (
+                      <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'purchased')}>
+                        Compra Realizada
+                      </DropdownMenuItem>
+                    )}
+                  </>
+                )}
                 {purchase.status !== 'pending' && (
                   <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'pending')}>
                     <Clock className="h-4 w-4 mr-2" /> Marcar Pendente
@@ -331,7 +496,12 @@ function PurchaseRow({
                 )}
                 {purchase.status !== 'delivered' && (
                   <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'delivered')}>
-                    <CheckCircle2 className="h-4 w-4 mr-2" /> Marcar Concluído
+                    <CheckCircle2 className="h-4 w-4 mr-2" /> {isPrestador ? 'Marcar Concluído' : 'Marcar Entregue'}
+                  </DropdownMenuItem>
+                )}
+                {!isPrestador && purchase.delivery_location === 'estoque' && purchase.status !== 'sent_to_site' && (
+                  <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'sent_to_site')}>
+                    <TruckIcon className="h-4 w-4 mr-2" /> Enviado p/ Obra
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
@@ -443,11 +613,11 @@ function PurchaseRow({
                 )}
               </div>
 
-              {/* Delivery address for products */}
+              {/* Delivery location & address for products */}
               {!isPrestador && (
-                <div className="mt-2">
+                <div className="mt-2 space-y-2">
                   <label className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                    <MapPin className="h-3 w-3" /> Local de Entrega
+                    <MapPin className="h-3 w-3" /> Entrega
                   </label>
                   <InlineField
                     value={purchase.delivery_address}
@@ -455,6 +625,43 @@ function PurchaseRow({
                     className="w-full"
                     onSave={(v) => onUpdateField(purchase.id, 'delivery_address', v || null)}
                   />
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">Local:</label>
+                    <div className="flex gap-1">
+                      {[
+                        { value: 'obra', label: 'Obra', icon: Building2 },
+                        { value: 'estoque', label: 'Estoque', icon: Warehouse },
+                      ].map(opt => {
+                        const Icon = opt.icon;
+                        const isActive = purchase.delivery_location === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => onUpdateField(purchase.id, 'delivery_location', isActive ? null : opt.value)}
+                            className={cn(
+                              'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors',
+                              isActive
+                                ? 'bg-primary/10 text-primary border-primary/30'
+                                : 'bg-transparent text-muted-foreground border-border hover:bg-accent/50'
+                            )}
+                          >
+                            <Icon className="h-3 w-3" />
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {/* Delivery date */}
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Data de Entrega</label>
+                    <InlineField
+                      type="date"
+                      value={purchase.actual_delivery_date}
+                      className="w-full"
+                      onSave={(v) => onUpdateField(purchase.id, 'actual_delivery_date', v || null)}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -471,6 +678,13 @@ function PurchaseRow({
                   className="w-full"
                   onSave={(v) => onUpdateField(purchase.id, 'supplier_name', v || null)}
                 />
+                {/* Invoice upload for products */}
+                {!isPrestador && (
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Nota Fiscal</label>
+                    <InvoiceCell purchase={purchase} onUpdateField={onUpdateField} />
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <ContractCell purchase={purchase} onUpdateField={onUpdateField} />
                   <Button
@@ -493,6 +707,9 @@ function PurchaseRow({
               </div>
             </div>
           </div>
+
+          {/* Stock tracking for products delivered to estoque */}
+          <StockTrackingSection purchase={purchase} onUpdateField={onUpdateField} />
 
           {purchase.description && (
             <div className="mt-3 pt-3 border-t border-border/50">
