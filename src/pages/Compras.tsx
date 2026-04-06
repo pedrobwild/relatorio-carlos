@@ -142,15 +142,15 @@ export default function Compras() {
               </SelectContent>
             </Select>
             <Select value={state.filterCategory} onValueChange={state.handleCategoryFilterChange}>
-              <SelectTrigger className="w-44 h-9" aria-label="Filtrar por tipo de fornecedor">
+              <SelectTrigger className="w-44 h-9" aria-label="Filtrar por tipo">
                 <Filter className="h-3.5 w-3.5 mr-1" />
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os tipos</SelectItem>
-                {SUPPLIER_TYPES.map(type => (
+                {(['produto', 'prestador'] as PurchaseType[]).map(type => (
                   <SelectItem key={type} value={type}>
-                    {SUPPLIER_TYPE_LABELS[type]}
+                    {PURCHASE_TYPE_LABELS[type]}
                   </SelectItem>
                 ))}
               </SelectContent>
