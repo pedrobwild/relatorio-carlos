@@ -26,8 +26,7 @@ interface Props {
 type ActivityStatus = 'overdue' | 'in_progress' | 'upcoming' | 'completed' | 'pending';
 type FilterValue = 'all' | 'attention' | 'in_progress' | 'completed' | 'pending';
 
-function getActivityStatus(act: ProjectActivity): ActivityStatus {
-  const today = new Date().toISOString().slice(0, 10);
+function getActivityStatus(act: ProjectActivity, today: string): ActivityStatus {
   if (act.actual_end) return 'completed';
   if (act.actual_start && !act.actual_end) {
     if (act.planned_end < today) return 'overdue';
