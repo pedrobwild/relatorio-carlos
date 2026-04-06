@@ -13,6 +13,7 @@ export interface ProjectPurchase {
   id: string;
   project_id: string;
   activity_id: string | null;
+  fornecedor_id: string | null;
   item_name: string;
   description: string | null;
   quantity: number;
@@ -44,6 +45,7 @@ export interface ProjectPurchase {
 export interface PurchaseInput {
   project_id: string;
   activity_id?: string | null;
+  fornecedor_id?: string | null;
   item_name: string;
   description?: string | null;
   quantity: number;

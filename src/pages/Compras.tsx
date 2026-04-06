@@ -13,6 +13,7 @@ import { useComprasState } from './compras/useComprasState';
 import { ComprasKPICards } from './compras/ComprasKPICards';
 import { PurchasesTable } from './compras/PurchasesTable';
 import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
+import { PrestadorCalendar } from './compras/PrestadorCalendar';
 import { getSubcategoriesByType } from '@/constants/supplierCategories';
 import type { PurchaseType } from '@/hooks/useProjectPurchases';
 
@@ -62,6 +63,9 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
 
   return (
     <div className="space-y-5 py-4">
+      {/* Calendar view for prestadores */}
+      {purchaseType === 'prestador' && <PrestadorCalendar />}
+
       <PurchaseAlertsPanel
         alertThresholds={state.alertThresholds}
         getDaysUntilDeadline={state.getDaysUntilDeadline}
@@ -156,6 +160,7 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         isSubmitting={state.addPurchase.isPending || state.updatePurchase.isPending}
         paymentInstallments={state.paymentInstallments}
         onPaymentInstallmentsChange={state.setPaymentInstallments}
+        editingPurchaseId={state.editingPurchase?.id}
       />
 
       <DeletePurchaseDialog
