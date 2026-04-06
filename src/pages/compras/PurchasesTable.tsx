@@ -47,6 +47,40 @@ const fmtDate = (d: string | null) => {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 
+/* ─── Cost Difference Badge ─── */
+function CostDiffBadge({ estimated, actual, showDetails = false }: {
+  estimated: number;
+  actual: number;
+  showDetails?: boolean;
+}) {
+  const diff = actual - estimated;
+  const pct = estimated > 0 ? ((diff / estimated) * 100) : 0;
+  const isOver = diff > 0;
+
+  if (diff === 0) return null;
+
+  const color = isOver ? 'text-destructive' : 'text-[hsl(var(--success))]';
+  const sign = isOver ? '+' : '';
+  const arrow = isOver ? '↑' : '↓';
+
+  if (showDetails) {
+    return (
+      <div className={cn('flex items-center gap-2 text-xs font-medium rounded-md px-2 py-1',
+        isOver ? 'bg-destructive/10 text-destructive' : 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]'
+      )}>
+        <span>{arrow} {sign}{fmt(diff)}</span>
+        <span className="opacity-70">({sign}{pct.toFixed(1)}%)</span>
+      </div>
+    );
+  }
+
+  return (
+    <span className={cn('text-[10px] font-medium', color)}>
+      {arrow} {sign}{fmt(diff)}
+    </span>
+  );
+}
+
 /* ─── Contract Upload Cell ─── */
 function ContractCell({ purchase, onUpdateField }: {
   purchase: ProjectPurchase;
