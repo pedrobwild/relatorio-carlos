@@ -255,7 +255,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       updateValue = value && value.trim() ? value : null;
     }
     
-    await updatePurchase.mutateAsync({ id, [field]: updateValue });
+    try { await updatePurchase.mutateAsync({ id, [field]: updateValue }); } catch { /* handled */ }
   };
 
   const getActivityName = (activityId: string | null) => {

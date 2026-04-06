@@ -764,7 +764,29 @@ export function PurchasesTable({
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [flowModal, setFlowModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [cadastroModal, setCadastroModal] = useState<{ purchase: ProjectPurchase } | null>(null);
+  // Initialize with type sections AND all category keys expanded
   const [expandedSections, setExpandedSections] = useState<Set<string>>(() => new Set(['produto', 'prestador']));
+  
+  // Auto-expand new category sections when purchases change
+  const expandedRef = useRef(expandedSections);
+  expandedRef.current = expandedSections;
+  
+  useMemo(() => {
+    const newKeys = new Set(expandedRef.current);
+    let changed = false;
+    for (const p of purchases) {
+      const type = p.purchase_type || 'produto';
+      const cat = p.category || 'Outros';
+      const catKey = `${type}:${cat}`;
+      if (!newKeys.has(catKey)) {
+        newKeys.add(catKey);
+        changed = true;
+      }
+    }
+    if (changed) {
+      setExpandedSections(newKeys);
+    }
+  }, [purchases]);
 
   // Group by purchase_type, then by category
   const grouped = useMemo(() => {
