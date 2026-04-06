@@ -101,8 +101,8 @@ export function ProjectSidebar() {
         {
           label: L("dashboard"),
           icon: LayoutDashboard,
-          path: basePath,
-          matchPaths: [`${basePath}/relatorio`],
+          path: isStaff ? "/gestao" : basePath,
+          matchPaths: isStaff ? [] : [`${basePath}/relatorio`],
         },
         {
           label: L("jornada"),

@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
       budget_value: typeof project.budget_value === "number" ? project.budget_value : null,
       budget_code: project.budget_code ?? null,
       status: "draft",
+      is_project_phase: true,
       notes: project.notes ?? null,
       consultora_comercial: project.consultora_comercial ?? null,
       contract_value: typeof project.budget_value === "number" ? project.budget_value : null,
@@ -119,6 +120,14 @@ Deno.serve(async (req) => {
 
       // --- Auto-assign team members for new synced projects ---
       await assignDefaultTeamMembers(db, projectId);
+
+      // --- Initialize project journey (Boas-vindas, Briefing, etc.) ---
+      try {
+        await db.rpc("initialize_project_journey", { p_project_id: projectId });
+        console.log(`[sync-project-inbound] Journey initialized for project ${projectId}`);
+      } catch (journeyErr) {
+        console.error("[sync-project-inbound] Journey init error:", journeyErr instanceof Error ? journeyErr.message : journeyErr);
+      }
     }
 
     // --- Process budget if provided ---

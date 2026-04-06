@@ -42,7 +42,7 @@ export default function JornadaProjeto() {
   }, [searchParams, setSearchParams]);
 
   const welcomeKey = projectId ? `journey_welcome_${projectId}` : '';
-  const hasRealProgress = journey?.stages?.some(s => s.status !== 'pending') ?? false;
+  const hasRealProgress = journey?.stages?.some(s => s.status === 'completed' || s.status === 'waiting_action') ?? false;
   const [welcomeCompleted, setWelcomeCompleted] = useState(() => {
     if (welcomeKey && localStorage.getItem(welcomeKey)) return true;
     return false;
