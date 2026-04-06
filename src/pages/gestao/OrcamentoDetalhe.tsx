@@ -170,18 +170,20 @@ export default function OrcamentoDetalhe() {
       if (!budget || !user) throw new Error('Missing data');
       const oldStatus = budget.internal_status;
 
-      await supabase
+      const { error: updateErr } = await supabase
         .from('orcamentos')
         .update({ internal_status: newStatus as any, updated_at: new Date().toISOString() })
         .eq('id', budget.id);
+      if (updateErr) throw updateErr;
 
-      await supabase.from('orcamento_eventos').insert({
+      const { error: evtErr } = await supabase.from('orcamento_eventos').insert({
         orcamento_id: budget.id,
         user_id: user.id,
         event_type: 'status_change',
         from_status: oldStatus,
         to_status: newStatus,
       });
+      if (evtErr) throw evtErr;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
