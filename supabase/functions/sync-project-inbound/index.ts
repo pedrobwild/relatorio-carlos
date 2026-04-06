@@ -128,6 +128,20 @@ Deno.serve(async (req) => {
       } catch (journeyErr) {
         console.error("[sync-project-inbound] Journey init error:", journeyErr instanceof Error ? journeyErr.message : journeyErr);
       }
+
+      // --- Auto-create customer user account ---
+      const clientEmail = project.client_email?.trim()?.toLowerCase();
+      const clientName = project.client_name?.trim();
+      if (clientEmail) {
+        try {
+          const customerUserId = await createCustomerUser(db, projectId, clientEmail, clientName, adminUser.id);
+          if (customerUserId) {
+            console.log(`[sync-project-inbound] Customer user created/linked: ${customerUserId}`);
+          }
+        } catch (custErr) {
+          console.error("[sync-project-inbound] Customer user creation error:", custErr instanceof Error ? custErr.message : custErr);
+        }
+      }
     }
 
     // --- Process budget if provided ---
