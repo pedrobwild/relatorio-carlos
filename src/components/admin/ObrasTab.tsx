@@ -142,6 +142,7 @@ export function ObrasTab() {
         <div className="flex gap-2 flex-wrap">
           {[
             { value: null, label: 'Todas' },
+            { value: 'draft', label: 'Rascunho' },
             { value: 'active', label: 'Em andamento' },
             { value: 'completed', label: 'Concluídas' },
             { value: 'paused', label: 'Pausadas' },

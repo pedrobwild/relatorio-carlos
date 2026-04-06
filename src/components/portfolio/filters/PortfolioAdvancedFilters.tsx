@@ -27,6 +27,7 @@ interface PortfolioAdvancedFiltersProps {
 // ─── Option sets ─────────────────────────────────────────────────────────────
 
 const statusOptions = [
+  { value: 'draft', label: 'Rascunho' },
   { value: 'active', label: 'Em andamento' },
   { value: 'completed', label: 'Concluída' },
   { value: 'paused', label: 'Pausada' },

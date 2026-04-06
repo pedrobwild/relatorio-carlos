@@ -84,7 +84,7 @@ export type SignupInput = z.infer<typeof signupSchema>;
 // Project Schemas
 // ============================================================================
 
-export const projectStatusSchema = z.enum(['active', 'completed', 'paused', 'cancelled']);
+export const projectStatusSchema = z.enum(['draft', 'active', 'completed', 'paused', 'cancelled']);
 
 export const createProjectSchema = z.object({
   name: z
