@@ -14,11 +14,9 @@ import { useComprasState } from './compras/useComprasState';
 import { ComprasKPICards } from './compras/ComprasKPICards';
 import { PurchasesTable } from './compras/PurchasesTable';
 import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
-import {
-  SUPPLIER_TYPES,
-  SUPPLIER_TYPE_LABELS,
-  getSubcategoriesByType,
-} from '@/constants/supplierCategories';
+import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './compras/types';
+import { getSubcategoriesByType } from '@/constants/supplierCategories';
+import type { PurchaseType } from '@/hooks/useProjectPurchases';
 
 export default function Compras() {
   const state = useComprasState();
