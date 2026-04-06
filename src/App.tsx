@@ -166,6 +166,7 @@ const App = () => (
             <Route path="/gestao/fornecedores/admin" element={<AdminRoute><GestaoShell>{withSuspense(<FornecedoresAdmin />)}</GestaoShell></AdminRoute>} />
             <Route path="/gestao/orcamentos" element={<StaffRoute><GestaoShell>{withSuspense(<Orcamentos />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/orcamentos/:orcamentoId" element={<StaffRoute><GestaoShell>{withSuspense(<OrcamentoDetalhe />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/nao-conformidades" element={<StaffRoute><GestaoShell>{withSuspense(<NaoConformidadesGlobal />)}</GestaoShell></StaffRoute>} />
             <Route path="/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
             
             {/* Admin-only routes */}

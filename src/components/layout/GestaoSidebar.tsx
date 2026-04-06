@@ -64,6 +64,11 @@ export function GestaoSidebar() {
       label: "Ferramentas",
       items: [
         {
+          label: "Não Conformidades",
+          icon: AlertTriangle,
+          path: "/gestao/nao-conformidades",
+        },
+        {
           label: "Orçamentos",
           icon: Receipt,
           path: "/gestao/orcamentos",
