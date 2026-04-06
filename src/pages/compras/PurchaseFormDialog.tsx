@@ -9,6 +9,7 @@ import type { PurchaseInput, PurchaseType } from '@/hooks/useProjectPurchases';
 import { getSubcategoriesByType } from '@/constants/supplierCategories';
 import { useMemo } from 'react';
 import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './types';
+import { PaymentScheduleSection, type PaymentInstallment } from './PaymentScheduleSection';
 
 interface Activity {
   id: string;
@@ -27,11 +28,14 @@ interface PurchaseFormDialogProps {
   onLeadTimeChange: (leadTime: number) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  paymentInstallments: PaymentInstallment[];
+  onPaymentInstallmentsChange: (installments: PaymentInstallment[]) => void;
 }
 
 export function PurchaseFormDialog({
   open, onOpenChange, isEditing, formData, setFormData,
   activities, onActivityChange, onLeadTimeChange, onSubmit, isSubmitting,
+  paymentInstallments, onPaymentInstallmentsChange,
 }: PurchaseFormDialogProps) {
   const purchaseType = formData.purchase_type || 'produto';
   const isPrestador = purchaseType === 'prestador';
@@ -313,6 +317,17 @@ export function PurchaseFormDialog({
                   />
                 </div>
               </>
+            )}
+
+            {/* Payment Schedule for Prestadores */}
+            {isPrestador && (formData.estimated_cost || 0) > 0 && (
+              <PaymentScheduleSection
+                totalValue={formData.estimated_cost || 0}
+                startDate={formData.start_date || formData.required_by_date || ''}
+                endDate={formData.end_date || ''}
+                installments={paymentInstallments}
+                onChange={onPaymentInstallmentsChange}
+              />
             )}
 
             <div className="col-span-2">

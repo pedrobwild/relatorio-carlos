@@ -154,6 +154,8 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         onLeadTimeChange={state.handleLeadTimeChange}
         onSubmit={state.handleSubmit}
         isSubmitting={state.addPurchase.isPending || state.updatePurchase.isPending}
+        paymentInstallments={state.paymentInstallments}
+        onPaymentInstallmentsChange={state.setPaymentInstallments}
       />
 
       <DeletePurchaseDialog

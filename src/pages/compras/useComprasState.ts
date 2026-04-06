@@ -3,8 +3,10 @@ import { useParams } from 'react-router-dom';
 import { format, differenceInDays, parseISO, subDays } from 'date-fns';
 import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { useProjectActivities } from '@/hooks/useProjectActivities';
+import { supabase } from '@/integrations/supabase/client';
 import { emptyPurchase } from './types';
 import type { PurchaseType } from '@/hooks/useProjectPurchases';
+import type { PaymentInstallment } from './PaymentScheduleSection';
 
 export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   const { projectId } = useParams<{ projectId: string }>();
@@ -23,6 +25,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   const [editingPurchase, setEditingPurchase] = useState<ProjectPurchase | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<PurchaseInput>>(emptyPurchase);
+  const [paymentInstallments, setPaymentInstallments] = useState<PaymentInstallment[]>([]);
 
   const handleCategoryFilterChange = (value: string) => {
     setFilterCategory(value);
@@ -68,7 +71,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
 
   const hasActiveFilters = filterStatus !== 'all' || filterActivity !== 'all' || filterCategory !== 'all' || filterSubcategory !== 'all';
 
-  const handleOpenDialog = (purchase?: ProjectPurchase) => {
+  const handleOpenDialog = async (purchase?: ProjectPurchase) => {
     if (purchase) {
       setEditingPurchase(purchase);
       setFormData({
@@ -92,12 +95,31 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
         start_date: purchase.start_date || undefined,
         end_date: purchase.end_date || undefined,
       });
+      // Load existing payment installments
+      if (purchase.purchase_type === 'prestador') {
+        const { data } = await supabase
+          .from('purchase_payment_schedule')
+          .select('*')
+          .eq('purchase_id', purchase.id)
+          .order('installment_number');
+        setPaymentInstallments((data || []).map(d => ({
+          id: d.id,
+          installment_number: d.installment_number,
+          description: d.description,
+          percentage: Number(d.percentage) || 0,
+          amount: Number(d.amount) || 0,
+          due_date: d.due_date || '',
+        })));
+      } else {
+        setPaymentInstallments([]);
+      }
     } else {
       setEditingPurchase(null);
       setFormData({
         ...emptyPurchase,
         ...(purchaseTypeFilter ? { purchase_type: purchaseTypeFilter } : {}),
       });
+      setPaymentInstallments([]);
     }
     setIsDialogOpen(true);
   };
@@ -153,10 +175,30 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       end_date: formData.end_date || null,
     };
     try {
+      let purchaseId: string;
       if (editingPurchase) {
         await updatePurchase.mutateAsync({ id: editingPurchase.id, ...input });
+        purchaseId = editingPurchase.id;
       } else {
-        await addPurchase.mutateAsync(input);
+        const result = await addPurchase.mutateAsync(input);
+        purchaseId = result.id;
+      }
+      // Save payment installments for prestadores
+      if (input.purchase_type === 'prestador' && paymentInstallments.length > 0) {
+        // Delete existing installments
+        await supabase.from('purchase_payment_schedule').delete().eq('purchase_id', purchaseId);
+        // Insert new ones
+        const rows = paymentInstallments.map((inst, i) => ({
+          purchase_id: purchaseId,
+          installment_number: i + 1,
+          description: inst.description,
+          percentage: inst.percentage,
+          amount: inst.amount,
+          due_date: inst.due_date || null,
+        }));
+        await supabase.from('purchase_payment_schedule').insert(rows);
+      } else if (input.purchase_type === 'prestador' && paymentInstallments.length === 0 && editingPurchase) {
+        await supabase.from('purchase_payment_schedule').delete().eq('purchase_id', editingPurchase.id);
       }
       setIsDialogOpen(false);
     } catch {
@@ -241,6 +283,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
     editingPurchase,
     deleteId, setDeleteId,
     formData, setFormData,
+    paymentInstallments, setPaymentInstallments,
     handleOpenDialog,
     handleActivityChange,
     handleLeadTimeChange,
