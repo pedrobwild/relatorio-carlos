@@ -354,7 +354,7 @@ function PurchaseRow({
                     <CheckCircle2 className="h-4 w-4 mr-2" /> {isPrestador ? 'Marcar Concluído' : 'Marcar Entregue'}
                   </DropdownMenuItem>
                 )}
-                {!isPrestador && purchase.status === 'delivered' && purchase.delivery_location === 'estoque' && purchase.status !== 'sent_to_site' && (
+                {!isPrestador && purchase.delivery_location === 'estoque' && purchase.status !== 'sent_to_site' && (
                   <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'sent_to_site')}>
                     <TruckIcon className="h-4 w-4 mr-2" /> Enviado p/ Obra
                   </DropdownMenuItem>
