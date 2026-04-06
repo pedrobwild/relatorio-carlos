@@ -131,7 +131,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                       className="cursor-grab active:cursor-grabbing hover:shadow-md transition-all rounded-xl border-border/40 active:scale-[0.98]"
                       onClick={() => navigate(`/obra/${projectId}/atividades/${task.id}`)}
                     >
-                      <CardContent className="p-3 space-y-2">
+                      <CardContent className="p-2.5 space-y-1.5">
                         <div className="flex items-start justify-between gap-1">
                           <span className={cn(
                             'font-semibold text-sm leading-tight',
