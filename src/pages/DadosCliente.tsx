@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, User, Building2, Loader2, Search } from 'lucide-react';
+import { Save, User, Building2, Loader2, Search, FileText } from 'lucide-react';
+import { ProjectInfoDoc } from '@/components/project/ProjectInfoDoc';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
 import { formatCpf, formatRg, isValidCpf, isValidRg } from '@/lib/documentValidation';
 
@@ -50,7 +51,7 @@ export default function DadosCliente() {
   const { projectId } = useParams<{ projectId: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contratante' | 'imovel'>('contratante');
+  const [activeTab, setActiveTab] = useState<'contratante' | 'imovel' | 'info'>('contratante');
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [studio, setStudio] = useState<StudioData | null>(null);
   const [project, setProject] = useState<ProjectBasic | null>(null);
@@ -233,7 +234,7 @@ export default function DadosCliente() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel' | 'info')}>
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="contratante" className="gap-1.5">
             <User className="h-4 w-4" />
@@ -242,6 +243,10 @@ export default function DadosCliente() {
           <TabsTrigger value="imovel" className="gap-1.5">
             <Building2 className="h-4 w-4" />
             Imóvel
+          </TabsTrigger>
+          <TabsTrigger value="info" className="gap-1.5">
+            <FileText className="h-4 w-4" />
+            Informações do Projeto
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -497,6 +502,11 @@ export default function DadosCliente() {
           </div>
         </CardContent>
       </Card>
+      )}
+
+      {/* ── Informações do Projeto ── */}
+      {activeTab === 'info' && projectId && (
+        <ProjectInfoDoc projectId={projectId} />
       )}
     </div>
   );

@@ -3505,6 +3505,48 @@ export type Database = {
           },
         ]
       }
+      project_info_docs: {
+        Row: {
+          content_html: string
+          created_at: string
+          id: string
+          last_edited_by: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          content_html?: string
+          created_at?: string
+          id?: string
+          last_edited_by?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          content_html?: string
+          created_at?: string
+          id?: string
+          last_edited_by?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_info_docs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_info_docs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_member_permissions: {
         Row: {
           created_at: string
