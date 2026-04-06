@@ -92,7 +92,8 @@ export function NcKanbanView({ nonConformities, searchQuery, onSelect, showProje
             </div>
             <div className="p-1.5 space-y-1.5 flex-1 bg-muted/20 rounded-b-2xl overflow-y-auto">
               {colNcs.map(nc => (
-                <NcKanbanCard key={nc.id} nc={nc} today={today} onSelect={onSelect} />
+                <NcKanbanCard key={nc.id} nc={nc} today={today} onSelect={onSelect} showProjectBadge={showProjectBadge} />
+              ))}
               ))}
               {colNcs.length === 0 && (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground/50 border-2 border-dashed border-border/30 rounded-xl">

@@ -270,7 +270,7 @@ export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCr
       ) : (
         <div className="space-y-2" role="list" aria-label="Lista de não conformidades">
           {filteredNcs.map((nc) => (
-            <NcRow key={nc.id} nc={nc} today={today} onSelect={onSelect} />
+            <NcRow key={nc.id} nc={nc} today={today} onSelect={onSelect} showProjectBadge={showProjectBadge} />
           ))}
         </div>
       )}
