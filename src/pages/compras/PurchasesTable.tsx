@@ -740,6 +740,13 @@ function PurchaseRow({
         </div>
       </CollapsibleContent>
     </Collapsible>
+
+    <DateLogsModal
+      open={dateLogsOpen}
+      onOpenChange={setDateLogsOpen}
+      purchase={purchase}
+    />
+    </>
   );
 }
 
