@@ -143,6 +143,12 @@ function NcKanbanCard({ nc, today, onSelect, showProjectBadge }: { nc: NonConfor
       onClick={() => onSelect(nc)}
     >
       <CardContent className="p-2.5 space-y-1.5">
+        {showProjectBadge && nc.project_name && (
+          <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-md inline-flex items-center gap-1 w-fit">
+            <Building2 className="h-2.5 w-2.5" />
+            {nc.project_name}
+          </span>
+        )}
         <div className="flex items-start gap-2">
           <div className={cn(
             'mt-1.5 h-2.5 w-2.5 rounded-full shrink-0',
