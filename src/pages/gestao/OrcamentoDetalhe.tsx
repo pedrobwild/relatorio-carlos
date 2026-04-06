@@ -136,7 +136,7 @@ export default function OrcamentoDetalhe() {
   const { data: profiles } = useQuery({
     queryKey: ['profiles', 'all'],
     queryFn: async () => {
-      const { data } = await supabase.from('users_profile').select('id, full_name, email');
+      const { data } = await supabase.from('users_profile').select('id, nome, email');
       return data || [];
     },
     staleTime: 10 * 60 * 1000,
