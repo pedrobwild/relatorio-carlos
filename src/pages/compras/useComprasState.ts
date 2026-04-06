@@ -155,6 +155,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
     const input: PurchaseInput = {
       project_id: projectId,
       activity_id: formData.activity_id || null,
+      fornecedor_id: formData.fornecedor_id || null,
       item_name: formData.item_name,
       description: formData.description || null,
       quantity: formData.quantity || 1,
