@@ -64,6 +64,8 @@ const FormalizacaoNova = lazy(() => import("./pages/FormalizacaoNova"));
 const FormalizacaoDetalhe = lazy(() => import("./pages/FormalizacaoDetalhe"));
 const Cronograma = lazy(() => import("./pages/Cronograma"));
 const Compras = lazy(() => import("./pages/Compras"));
+const ComprasProdutos = lazy(() => import("./pages/ComprasProdutos"));
+const ComprasPrestadores = lazy(() => import("./pages/ComprasPrestadores"));
 const Vistorias = lazy(() => import("./pages/Vistorias"));
 const NaoConformidades = lazy(() => import("./pages/NaoConformidades"));
 const AtividadesObra = lazy(() => import("./pages/AtividadesObra"));
