@@ -861,7 +861,7 @@ export function PurchasesTable({
                 <div className="space-y-2 ml-2">
                   {Array.from(categoryMap.entries()).map(([category, items]) => {
                     const catKey = `${purchaseType}:${category}`;
-                    const isCatOpen = expandedSections.has(catKey) || !expandedSections.has(`_init_${purchaseType}`);
+                    const isCatOpen = expandedSections.has(catKey);
                     const categoryTotal = items.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
                     const completedCount = items.filter(p => p.status === 'delivered').length;
                     const completionPct = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
