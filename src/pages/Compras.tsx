@@ -13,6 +13,7 @@ import { useComprasState } from './compras/useComprasState';
 import { ComprasKPICards } from './compras/ComprasKPICards';
 import { PurchasesTable } from './compras/PurchasesTable';
 import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
+import { PrestadorCalendar } from './compras/PrestadorCalendar';
 import { getSubcategoriesByType } from '@/constants/supplierCategories';
 import type { PurchaseType } from '@/hooks/useProjectPurchases';
 
