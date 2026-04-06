@@ -497,6 +497,7 @@ export default function DadosCliente() {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
