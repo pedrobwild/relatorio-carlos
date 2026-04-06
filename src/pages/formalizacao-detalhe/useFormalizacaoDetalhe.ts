@@ -36,7 +36,9 @@ export function useFormalizacaoDetalhe() {
   const events = (formalizacao?.events as unknown as any[] | null) || [];
 
   const isDraft = formalizacao?.status === 'draft';
-  const hasParties = parties.length >= 2;
+  const hasCustomer = parties.some(p => p.party_type === 'customer');
+  const hasCompany = parties.some(p => p.party_type === 'company');
+  const hasParties = hasCustomer && hasCompany;
 
   const pendingParties = parties.filter(
     (p) => p.must_sign && !acknowledgements.some((a) => a.party_id === p.id)
