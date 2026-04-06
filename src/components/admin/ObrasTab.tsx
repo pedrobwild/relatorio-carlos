@@ -79,7 +79,8 @@ export function ObrasTab() {
     return matchesSearch && matchesStatus && matchesEngineer;
   }), [projects, searchTerm, statusFilter, engineerFilter]);
 
-  const { activeCount, completedCount, pausedCount } = useMemo(() => ({
+  const { draftCount, activeCount, completedCount, pausedCount } = useMemo(() => ({
+    draftCount: projects.filter((p: ProjectWithCustomer) => p.status === 'draft').length,
     activeCount: projects.filter((p: ProjectWithCustomer) => p.status === 'active').length,
     completedCount: projects.filter((p: ProjectWithCustomer) => p.status === 'completed').length,
     pausedCount: projects.filter((p: ProjectWithCustomer) => p.status === 'paused').length,
