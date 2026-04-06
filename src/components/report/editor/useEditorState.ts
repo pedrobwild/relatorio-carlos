@@ -96,7 +96,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       dueDate: new Date().toISOString().split('T')[0],
       status: "aberto",
     };
-    setFormData(prev => ({ ...prev, risksAndIssues: [...prev.risksAndIssues, newRisk] }));
+    setFormDataWithTracking(prev => ({ ...prev, risksAndIssues: [...prev.risksAndIssues, newRisk] }));
   };
 
   const updateRiskIssue = (index: number, updates: Partial<RiskIssue>) => {
