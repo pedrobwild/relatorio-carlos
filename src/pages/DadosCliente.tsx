@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, User, Building2, Loader2, Search } from 'lucide-react';
 import { useCepLookup, formatCep } from '@/hooks/useCepLookup';
 import { formatCpf, formatRg, isValidCpf, isValidRg } from '@/lib/documentValidation';
@@ -49,6 +50,7 @@ export default function DadosCliente() {
   const { projectId } = useParams<{ projectId: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'contratante' | 'imovel'>('contratante');
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [studio, setStudio] = useState<StudioData | null>(null);
   const [project, setProject] = useState<ProjectBasic | null>(null);
@@ -231,9 +233,21 @@ export default function DadosCliente() {
         </Button>
       </div>
 
-      <Separator />
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel')}>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="contratante" className="gap-1.5">
+            <User className="h-4 w-4" />
+            Contratante
+          </TabsTrigger>
+          <TabsTrigger value="imovel" className="gap-1.5">
+            <Building2 className="h-4 w-4" />
+            Imóvel
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* ── Cliente (Contratante) ── */}
+      {activeTab === 'contratante' && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -350,8 +364,10 @@ export default function DadosCliente() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* ── Obra (Imóvel) ── */}
+      {activeTab === 'imovel' && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -481,6 +497,7 @@ export default function DadosCliente() {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
