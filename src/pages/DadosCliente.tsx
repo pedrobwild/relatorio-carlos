@@ -234,7 +234,7 @@ export default function DadosCliente() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel' | 'info')}>
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="contratante" className="gap-1.5">
             <User className="h-4 w-4" />
@@ -243,6 +243,10 @@ export default function DadosCliente() {
           <TabsTrigger value="imovel" className="gap-1.5">
             <Building2 className="h-4 w-4" />
             Imóvel
+          </TabsTrigger>
+          <TabsTrigger value="info" className="gap-1.5">
+            <FileText className="h-4 w-4" />
+            Informações do Projeto
           </TabsTrigger>
         </TabsList>
       </Tabs>
