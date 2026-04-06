@@ -9,9 +9,16 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   try {
+    // Accept either integration key or service role key
     const integrationKey = req.headers.get("x-integration-key");
+    const authHeader = req.headers.get("authorization");
     const expectedKey = Deno.env.get("INTEGRATION_API_KEY");
-    if (!expectedKey || integrationKey !== expectedKey) {
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    const isIntegrationAuth = expectedKey && integrationKey === expectedKey;
+    const isServiceAuth = serviceKey && authHeader === `Bearer ${serviceKey}`;
+    
+    if (!isIntegrationAuth && !isServiceAuth) {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
