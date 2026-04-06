@@ -24,9 +24,34 @@ import type { PurchaseType } from '@/hooks/useProjectPurchases';
 function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const state = useComprasState(purchaseType);
   const [searchQuery, setSearchQuery] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const queryClient = useQueryClient();
 
   const isProduto = purchaseType === 'produto';
   const label = isProduto ? 'Produto' : 'Prestador';
+
+  const handleSyncBudget = async () => {
+    if (!state.projectId) return;
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.rpc('sync_budget_items_to_purchases', {
+        p_project_id: state.projectId,
+      });
+      if (error) throw error;
+      const count = data as number;
+      if (count > 0) {
+        toast.success(`${count} item(s) importado(s) do orçamento`);
+        queryClient.invalidateQueries({ queryKey: queryKeys.purchases.list(state.projectId) });
+      } else {
+        toast.info('Nenhum item novo encontrado no orçamento');
+      }
+    } catch (err: unknown) {
+      console.error('Sync error:', err);
+      toast.error('Erro ao sincronizar orçamento');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const searchFilteredPurchases = useMemo(() => {
     if (!searchQuery.trim()) return state.filteredPurchases;
