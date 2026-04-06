@@ -65,6 +65,8 @@ export interface PurchaseInput {
   start_date?: string | null;
   end_date?: string | null;
   contract_file_path?: string | null;
+  purchase_type?: PurchaseType;
+  delivery_address?: string | null;
 }
 
 
