@@ -156,6 +156,7 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         isSubmitting={state.addPurchase.isPending || state.updatePurchase.isPending}
         paymentInstallments={state.paymentInstallments}
         onPaymentInstallmentsChange={state.setPaymentInstallments}
+        editingPurchaseId={state.editingPurchase?.id}
       />
 
       <DeletePurchaseDialog
