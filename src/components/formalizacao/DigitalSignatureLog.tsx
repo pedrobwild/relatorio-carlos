@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { formalizationsRepo } from '@/infra/repositories';
+import { isSeedData as checkSeedData } from '@/pages/formalizacao-detalhe/types';
 
 interface SignatureData {
   id: string;
