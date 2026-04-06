@@ -145,7 +145,7 @@ export default function OrcamentoDetalhe() {
   const getProfileName = useCallback((id: string | null) => {
     if (!id) return '—';
     const p = profiles?.find((p: any) => p.id === id);
-    return p?.full_name || p?.email?.split('@')[0] || id.slice(0, 8);
+    return p?.nome || p?.email?.split('@')[0] || id.slice(0, 8);
   }, [profiles]);
 
   // Status change mutation
