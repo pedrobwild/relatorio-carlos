@@ -68,7 +68,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       responsible: "",
       risk: "baixo",
     };
-    setFormData(prev => ({ ...prev, lookaheadTasks: [...prev.lookaheadTasks, newTask] }));
+    setFormDataWithTracking(prev => ({ ...prev, lookaheadTasks: [...prev.lookaheadTasks, newTask] }));
   };
 
   const updateLookaheadTask = (index: number, field: keyof LookaheadTask, value: string) => {
