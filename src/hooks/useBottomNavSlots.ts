@@ -10,6 +10,11 @@ import {
   ClipboardSignature,
   Eye,
   FileText,
+  CheckSquare,
+  AlertTriangle,
+  Users,
+  ClipboardList,
+  Box,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,14 +31,19 @@ export interface NavSlot {
 export const ALL_NAV_OPTIONS: NavSlot[] = [
   { key: "pendencias", label: "Pendências", icon: AlertCircle, pathKey: "pendencias" },
   { key: "cronograma", label: "Cronograma", icon: GanttChartSquare, pathKey: "cronograma" },
+  { key: "atividades", label: "Atividades", icon: CheckSquare, pathKey: "atividades" },
   { key: "executivo", label: "Executivo", icon: Ruler, pathKey: "executivo" },
   { key: "financeiro", label: "Financeiro", icon: DollarSign, pathKey: "financeiro" },
   { key: "jornada", label: "Jornada", icon: Map, pathKey: "jornada" },
   { key: "compras", label: "Compras", icon: ShoppingCart, pathKey: "compras" },
   { key: "vistorias", label: "Vistorias", icon: Eye, pathKey: "vistorias" },
+  { key: "naoConformidades", label: "Não Conformidades", icon: AlertTriangle, pathKey: "naoConformidades" },
   { key: "documentos", label: "Documentos", icon: FolderOpen, pathKey: "documentos" },
   { key: "formalizacoes", label: "Formalizações", icon: ClipboardSignature, pathKey: "formalizacoes" },
   { key: "contrato", label: "Contrato", icon: FileText, pathKey: "contrato" },
+  { key: "projeto3D", label: "Projeto 3D", icon: Box, pathKey: "projeto3D" },
+  { key: "dadosCliente", label: "Dados do Cliente", icon: Users, pathKey: "dadosCliente" },
+  { key: "orcamento", label: "Orçamento", icon: ClipboardList, pathKey: "orcamento" },
 ];
 
 const DEFAULT_STAFF_KEYS = ["pendencias", "cronograma", "executivo", "financeiro"];
