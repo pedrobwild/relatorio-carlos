@@ -425,9 +425,19 @@ function PurchaseRow({
                 <p className="text-xs text-muted-foreground">
                   Compra: {fmtDate(purchase.planned_purchase_date)}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Entrega: {fmtDate(purchase.required_by_date)}
-                </p>
+                {purchase.stock_exit_date ? (
+                  <p className="text-xs font-medium text-emerald-600">
+                    Enviado p/ Obra: {fmtDate(purchase.stock_exit_date)}
+                  </p>
+                ) : purchase.actual_delivery_date ? (
+                  <p className="text-xs text-[hsl(var(--success))]">
+                    Entregue: {fmtDate(purchase.actual_delivery_date)}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Entrega: {fmtDate(purchase.required_by_date)}
+                  </p>
+                )}
               </>
             )}
           </div>
