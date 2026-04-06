@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, FileText, ImagePlus, X, Upload, Film } from 'lucide-react';
+import { CalendarIcon, FileText, ImagePlus, X, Upload, Film, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -61,6 +61,20 @@ interface MediaPreview {
   type: 'image' | 'video';
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip data URL prefix
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export function CreateNcDialog({
   open,
   onOpenChange,
@@ -73,8 +87,21 @@ export function CreateNcDialog({
   const createNc = useCreateNonConformity();
   const { members } = useProjectMembers(projectId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
   const [mediaFiles, setMediaFiles] = useState<MediaPreview[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiContextFiles, setAiContextFiles] = useState<MediaPreview[]>([]);
+  const [aiTextContext, setAiTextContext] = useState('');
+  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    title?: string;
+    description?: string;
+    severity?: NcSeverity;
+    category?: string;
+    corrective_action?: string;
+    root_cause?: string;
+  } | null>(null);
 
   const draftKey = `create-nc-${projectId}`;
   const defaultValues = {
@@ -103,6 +130,7 @@ export function CreateNcDialog({
   useEffect(() => {
     return () => {
       mediaFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+      aiContextFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
     };
   }, []);
 
@@ -133,7 +161,6 @@ export function CreateNcDialog({
       });
     }
     setMediaFiles(prev => [...prev, ...newPreviews]);
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -143,6 +170,113 @@ export function CreateNcDialog({
       URL.revokeObjectURL(removed.previewUrl);
       return prev.filter((_, i) => i !== index);
     });
+  };
+
+  const handleAddAiContext = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newPreviews: MediaPreview[] = [];
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} excede o limite de 20MB`);
+        continue;
+      }
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name}: apenas imagens são suportadas para análise com IA`);
+        continue;
+      }
+      newPreviews.push({
+        file,
+        previewUrl: URL.createObjectURL(file),
+        type: 'image',
+      });
+    }
+    setAiContextFiles(prev => [...prev, ...newPreviews]);
+    if (aiFileInputRef.current) aiFileInputRef.current.value = '';
+  };
+
+  const handleRemoveAiContext = (index: number) => {
+    setAiContextFiles(prev => {
+      const removed = prev[index];
+      URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleAiAnalyze = async () => {
+    if (aiContextFiles.length === 0 && !aiTextContext.trim()) {
+      toast.error('Anexe prints ou insira um texto para a IA analisar');
+      return;
+    }
+
+    setAiAnalyzing(true);
+    try {
+      // Convert images to base64
+      const images = await Promise.all(
+        aiContextFiles.map(async (media) => ({
+          base64: await fileToBase64(media.file),
+          mime_type: media.file.type,
+        }))
+      );
+
+      const { data, error } = await supabase.functions.invoke('analyze-nc-evidence', {
+        body: {
+          images,
+          text_context: aiTextContext.trim() || undefined,
+        },
+      });
+
+      if (error) throw new Error(error.message || 'Erro ao analisar evidências');
+      
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      const suggestion = data?.suggestion;
+      if (!suggestion) {
+        toast.error('IA não retornou sugestões');
+        return;
+      }
+
+      setAiSuggestion(suggestion);
+
+      // Pre-fill form fields
+      if (suggestion.title) updateField('title', suggestion.title);
+      if (suggestion.description) {
+        let desc = suggestion.description;
+        if (suggestion.corrective_action) {
+          desc += `\n\n🔧 Plano de Ação:\n${suggestion.corrective_action}`;
+        }
+        if (suggestion.root_cause) {
+          desc += `\n\n🔍 Causa Raiz:\n${suggestion.root_cause}`;
+        }
+        updateField('description', desc);
+      }
+      if (suggestion.severity) updateField('severity', suggestion.severity);
+      if (suggestion.category && NC_CATEGORIES.includes(suggestion.category as any)) {
+        updateField('category', suggestion.category);
+      }
+
+      // Also add AI context images as evidence
+      const newEvidence: MediaPreview[] = aiContextFiles.map(f => ({
+        file: f.file,
+        previewUrl: URL.createObjectURL(f.file),
+        type: f.type,
+      }));
+      if (newEvidence.length > 0) {
+        setMediaFiles(prev => [...prev, ...newEvidence]);
+      }
+
+      toast.success('Formulário preenchido com sugestões da IA');
+      setShowAiPanel(false);
+    } catch (err) {
+      console.error('AI analysis error:', err);
+      toast.error(err instanceof Error ? err.message : 'Erro ao analisar evidências');
+    } finally {
+      setAiAnalyzing(false);
+    }
   };
 
   const uploadMediaFiles = async (ncId: string): Promise<string[]> => {
@@ -162,7 +296,7 @@ export function CreateNcDialog({
     return paths;
   };
 
-   const handleSubmit = async () => {
+  const handleSubmit = async () => {
     if (!title.trim() || !category) return;
     if (!deadline) {
       toast.error('Informe o prazo para finalização da NC');
@@ -199,6 +333,11 @@ export function CreateNcDialog({
       // Cleanup
       mediaFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
       setMediaFiles([]);
+      aiContextFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+      setAiContextFiles([]);
+      setAiTextContext('');
+      setAiSuggestion(null);
+      setShowAiPanel(false);
       clearDraft();
       onOpenChange(false);
       onSuccess?.();
@@ -212,6 +351,11 @@ export function CreateNcDialog({
   const handleClose = () => {
     mediaFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
     setMediaFiles([]);
+    aiContextFiles.forEach(m => URL.revokeObjectURL(m.previewUrl));
+    setAiContextFiles([]);
+    setAiTextContext('');
+    setAiSuggestion(null);
+    setShowAiPanel(false);
     clearDraft();
     onOpenChange(false);
   };
@@ -219,7 +363,6 @@ export function CreateNcDialog({
   const staffFromProject = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
   const { data: allStaff = [] } = useStaffUsers();
   
-  // Merge: use project members first, add extra staff not already in project
   const extraStaff = allStaff.filter(s => !staffFromProject.some(m => m.user_id === s.id));
   const allResponsibleOptions = [
     ...staffFromProject.map(m => ({ id: m.user_id, name: m.user_name || m.user_email || m.user_id.slice(0, 8) })),
@@ -227,7 +370,6 @@ export function CreateNcDialog({
   ];
   const isSubmitting = createNc.isPending || uploading;
 
-  // Strip time from today for proper date comparison
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -247,6 +389,116 @@ export function CreateNcDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* AI Analysis Panel */}
+          {!showAiPanel ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-11 gap-2 border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary"
+              onClick={() => setShowAiPanel(true)}
+            >
+              <Sparkles className="h-4 w-4" />
+              Preencher com IA a partir de evidências
+            </Button>
+          ) : (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                  <Sparkles className="h-4 w-4" />
+                  Análise com IA
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setShowAiPanel(false)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Anexe prints de conversas, fotos do problema ou descreva a situação. A IA irá sugerir título, descrição, severidade, categoria e plano de ação.
+              </p>
+
+              {/* AI context images */}
+              <input
+                ref={aiFileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleAddAiContext}
+              />
+
+              {aiContextFiles.length > 0 && (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {aiContextFiles.map((media, idx) => (
+                    <div key={idx} className="relative group rounded-md overflow-hidden border bg-muted aspect-square">
+                      <img
+                        src={media.previewUrl}
+                        alt={`Evidência ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAiContext(idx)}
+                        className="absolute top-0.5 right-0.5 bg-destructive/80 text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full h-9 gap-2 border-dashed text-xs"
+                onClick={() => aiFileInputRef.current?.click()}
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Anexar prints ou fotos
+              </Button>
+
+              {/* Text context */}
+              <Textarea
+                value={aiTextContext}
+                onChange={(e) => setAiTextContext(e.target.value)}
+                placeholder="Cole aqui textos de conversas ou descreva a situação..."
+                rows={3}
+                className="text-xs min-h-[60px]"
+              />
+
+              <Button
+                type="button"
+                onClick={handleAiAnalyze}
+                disabled={aiAnalyzing || (aiContextFiles.length === 0 && !aiTextContext.trim())}
+                className="w-full h-10 gap-2"
+              >
+                {aiAnalyzing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analisando evidências...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Analisar e preencher
+                  </>
+                )}
+              </Button>
+
+              {aiSuggestion && (
+                <p className="text-[11px] text-green-600 dark:text-green-400 font-medium">
+                  ✓ Campos preenchidos com sugestões da IA. Revise antes de registrar.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Título */}
           <div className="space-y-1.5">
             <Label htmlFor="nc-title" className="text-sm font-medium">
@@ -271,7 +523,7 @@ export function CreateNcDialog({
               value={description}
               onChange={(e) => updateField('description', e.target.value)}
               placeholder="Detalhes adicionais..."
-              rows={3}
+              rows={description.length > 200 ? 8 : 3}
               className="min-h-[44px]"
             />
           </div>
