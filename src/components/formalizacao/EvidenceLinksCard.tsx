@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { formalizationsRepo } from '@/infra/repositories';
 import { EVIDENCE_LINK_KIND_LABELS, type EvidenceLinkKind } from '@/types/formalization';
+import { queryKeys } from '@/lib/queryKeys';
 
 interface EvidenceLink {
   id: string;
