@@ -716,9 +716,26 @@ function SectionBlock({ section }: { section: any }) {
               <div key={item.id} className="group">
                 <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-xs border-b border-border/50 last:border-b-0 hover:bg-muted/20">
                   <div className="min-w-0">
-                    <span className="truncate block">{item.title || '—'}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate">{item.title || '—'}</span>
+                      {item.item_category && (
+                        <Badge
+                          variant="secondary"
+                          className={item.item_category === 'prestador'
+                            ? 'bg-primary/10 text-primary text-[10px] px-1.5 py-0'
+                            : 'bg-muted text-muted-foreground text-[10px] px-1.5 py-0'}
+                        >
+                          {item.item_category === 'prestador' ? 'Prestador' : 'Produto'}
+                        </Badge>
+                      )}
+                    </div>
                     {item.description && (
                       <span className="text-[11px] text-muted-foreground truncate block">{item.description}</span>
+                    )}
+                    {item.supplier_name && (
+                      <span className="text-[10px] text-muted-foreground/70 truncate block">
+                        Fornecedor: {item.supplier_name}
+                      </span>
                     )}
                   </div>
                   <span className="text-right text-muted-foreground tabular-nums">{item.qty || '—'}</span>
