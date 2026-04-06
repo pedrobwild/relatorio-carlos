@@ -173,7 +173,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const updateGalleryPhoto = (index: number, field: keyof GalleryPhoto, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       gallery: prev.gallery.map((p, i) => i === index ? { ...p, [field]: value } : p),
     }));
