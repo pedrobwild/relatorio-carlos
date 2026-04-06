@@ -110,10 +110,14 @@ export function ObrasTab() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Card className="p-4">
           <p className="text-tiny text-muted-foreground uppercase tracking-wider">Total</p>
           <p className="text-h2 font-bold">{projects.length}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-tiny text-muted-foreground uppercase tracking-wider">Rascunho</p>
+          <p className="text-h2 font-bold text-slate-500">{draftCount}</p>
         </Card>
         <Card className="p-4">
           <p className="text-tiny text-muted-foreground uppercase tracking-wider">Em andamento</p>
