@@ -233,7 +233,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   };
 
   const handleUpdateNotes = async (id: string, notes: string) => {
-    await updatePurchase.mutateAsync({ id, notes: notes || null });
+    try { await updatePurchase.mutateAsync({ id, notes: notes || null }); } catch { /* handled */ }
   };
 
   const handleUpdateField = async (id: string, field: string, value: string | null) => {
