@@ -1,20 +1,20 @@
-import { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/queryKeys';
 import { Loader2, FileText } from 'lucide-react';
+import OrcamentoDetalhe from '@/pages/gestao/OrcamentoDetalhe';
 
 /**
  * Project-scoped budget page.
- * Finds the orcamento linked to this project and redirects to the gestão detail page.
- * If none exists, shows an empty state.
+ * Finds the orcamento linked to this project and renders the detail inline
+ * within the project shell (no redirect away from project context).
  */
 export default function OrcamentoProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
-  const navigate = useNavigate();
 
   const { data: orcamento, isLoading } = useQuery({
-    queryKey: ['orcamento-by-project', projectId],
+    queryKey: queryKeys.orcamentos.byProject(projectId),
     queryFn: async () => {
       if (!projectId) return null;
       const { data, error } = await supabase
@@ -29,12 +29,6 @@ export default function OrcamentoProjeto() {
     },
     enabled: !!projectId,
   });
-
-  useEffect(() => {
-    if (orcamento?.id) {
-      navigate(`/gestao/orcamentos/${orcamento.id}`, { replace: true });
-    }
-  }, [orcamento, navigate]);
 
   if (isLoading) {
     return (
@@ -60,9 +54,5 @@ export default function OrcamentoProjeto() {
     );
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-    </div>
-  );
+  return <OrcamentoDetalhe embeddedOrcamentoId={orcamento.id} />;
 }
