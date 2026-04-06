@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EvidenceUpload } from './EvidenceUpload';
 import { CorrectiveActionTemplateSelector } from './CorrectiveActionTemplateSelector';
@@ -40,6 +40,7 @@ import {
   type NcSeverity,
 } from '@/hooks/useNonConformities';
 import { useCan } from '@/hooks/useCan';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { cn } from '@/lib/utils';
 import { NC_CATEGORIES, ROOT_CAUSES, formatBRL, parseCurrencyInput } from './ncConstants';
 
@@ -80,8 +81,10 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const { can } = useCan();
   const canApproveNc = can('ncs:approve');
   const canEdit = can('ncs:treat');
+  const { data: staffUsers = [] } = useStaffUsers();
 
-  const isEditable = canEdit && (nc.status === 'open' || nc.status === 'reopened');
+  const isEditable = canEdit && nc.status !== 'closed';
+  const canEditDeadline = canEdit && nc.status !== 'closed';
 
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(nc.title);
@@ -92,6 +95,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const [editEstimatedCost, setEditEstimatedCost] = useState<string>(
     nc.estimated_cost != null ? String(nc.estimated_cost) : ''
   );
+  const [editResponsibleUserId, setEditResponsibleUserId] = useState<string>(nc.responsible_user_id || '');
 
   const [actionNotes, setActionNotes] = useState('');
   const [correctiveAction, setCorrectiveAction] = useState(nc.corrective_action || '');
@@ -110,6 +114,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
     setEditCategory(nc.category || '');
     setEditDeadline(nc.deadline ? parseISO(nc.deadline) : undefined);
     setEditEstimatedCost(nc.estimated_cost != null ? String(nc.estimated_cost) : '');
+    setEditResponsibleUserId(nc.responsible_user_id || '');
     setCorrectiveAction(nc.corrective_action || '');
     setPhotosBefore(nc.evidence_photos_before ?? nc.evidence_photo_paths ?? []);
     setPhotosAfter(nc.evidence_photos_after ?? []);
@@ -131,6 +136,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       category: editCategory || undefined,
       deadline: editDeadline ? format(editDeadline, 'yyyy-MM-dd') : null,
       estimated_cost: editEstimatedCost.trim() === '' ? null : parsedCost,
+      responsible_user_id: editResponsibleUserId || null,
     }, {
       onSuccess: () => setEditing(false),
     });
@@ -265,6 +271,20 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 />
               </div>
             </div>
+            {/* Responsável */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Responsável</Label>
+              <Select value={editResponsibleUserId} onValueChange={setEditResponsibleUserId}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Selecionar responsável..." />
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                  {staffUsers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.nome || u.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="h-9">Cancelar</Button>
               <Button size="sm" onClick={handleSaveEdit} disabled={!editTitle.trim() || updateNc.isPending} className="h-9">
@@ -299,8 +319,15 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 </Badge>
               )}
               {nc.deadline && (
-                <span className="text-xs text-muted-foreground flex items-center">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3" />
                   Prazo: {format(parseISO(nc.deadline), "dd/MM/yyyy", { locale: ptBR })}
+                </span>
+              )}
+              {nc.responsible_user_name && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  {nc.responsible_user_name}
                 </span>
               )}
             </div>

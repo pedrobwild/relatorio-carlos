@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/popover';
 import { useCreateNonConformity, type NcSeverity } from '@/hooks/useNonConformities';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { cn } from '@/lib/utils';
 import { NC_CATEGORIES, parseCurrencyInput } from './ncConstants';
 import { useFormDraft } from '@/hooks/useFormDraft';
@@ -215,7 +216,15 @@ export function CreateNcDialog({
     onOpenChange(false);
   };
 
-  const staffMembers = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
+  const staffFromProject = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
+  const { data: allStaff = [] } = useStaffUsers();
+  
+  // Merge: use project members first, add extra staff not already in project
+  const extraStaff = allStaff.filter(s => !staffFromProject.some(m => m.user_id === s.id));
+  const allResponsibleOptions = [
+    ...staffFromProject.map(m => ({ id: m.user_id, name: m.user_name || m.user_email || m.user_id.slice(0, 8) })),
+    ...extraStaff.map(s => ({ id: s.id, name: s.nome || s.email })),
+  ];
   const isSubmitting = createNc.isPending || uploading;
 
   // Strip time from today for proper date comparison
@@ -314,9 +323,9 @@ export function CreateNcDialog({
                 <SelectValue placeholder="Selecionar responsável..." />
               </SelectTrigger>
               <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
-                {staffMembers.map((m) => (
-                  <SelectItem key={m.user_id} value={m.user_id} className="min-h-[44px]">
-                    {m.user_name || m.user_email || m.user_id.slice(0, 8)}
+                {allResponsibleOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id} className="min-h-[44px]">
+                    {opt.name}
                   </SelectItem>
                 ))}
               </SelectContent>
