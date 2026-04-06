@@ -67,8 +67,8 @@ const IncidentItem = ({ incident, animationDelay = 0 }: { incident: Incident; an
         </div>
 
         <div className="space-y-1 text-sm text-foreground/75">
-          <p className="leading-[1.6]"><span className="font-semibold text-foreground/90">Data:</span> {format(new Date(incident.occurrenceDate), "dd/MM", { locale: ptBR })}</p>
-          <p className="leading-[1.6]"><span className="font-semibold text-foreground/90">Previsão:</span> {format(new Date(incident.expectedResolutionDate), "dd/MM", { locale: ptBR })}</p>
+          <p className="leading-[1.6]"><span className="font-semibold text-foreground/90">Data:</span> {safeFormatDate(incident.occurrenceDate, "dd/MM")}</p>
+          <p className="leading-[1.6]"><span className="font-semibold text-foreground/90">Previsão:</span> {safeFormatDate(incident.expectedResolutionDate, "dd/MM")}</p>
         </div>
 
         <div className="space-y-1">
