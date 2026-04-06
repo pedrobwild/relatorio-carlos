@@ -219,8 +219,8 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
     },
     onSuccess: () => {
       setNewComment('');
-      queryClient.invalidateQueries({ queryKey: ['orcamentos', 'notas', orcamentoId] });
-      queryClient.invalidateQueries({ queryKey: ['orcamentos', 'eventos', orcamentoId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orcamentos.notes(orcamentoId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orcamentos.events(orcamentoId) });
       toast.success('Nota adicionada');
     },
     onError: (err: Error) => {
