@@ -170,22 +170,27 @@ export default function OrcamentoDetalhe() {
       if (!budget || !user) throw new Error('Missing data');
       const oldStatus = budget.internal_status;
 
-      await supabase
+      const { error: updateErr } = await supabase
         .from('orcamentos')
         .update({ internal_status: newStatus as any, updated_at: new Date().toISOString() })
         .eq('id', budget.id);
+      if (updateErr) throw updateErr;
 
-      await supabase.from('orcamento_eventos').insert({
+      const { error: evtErr } = await supabase.from('orcamento_eventos').insert({
         orcamento_id: budget.id,
         user_id: user.id,
         event_type: 'status_change',
         from_status: oldStatus,
         to_status: newStatus,
       });
+      if (evtErr) throw evtErr;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
       toast.success('Status atualizado');
+    },
+    onError: (err: Error) => {
+      toast.error('Erro ao atualizar status: ' + err.message);
     },
   });
 
@@ -193,23 +198,29 @@ export default function OrcamentoDetalhe() {
   const commentMutation = useMutation({
     mutationFn: async (body: string) => {
       if (!orcamentoId || !user) throw new Error('Missing data');
-      await supabase.from('orcamento_notas').insert({
+      const { error: noteErr } = await supabase.from('orcamento_notas').insert({
         orcamento_id: orcamentoId,
         user_id: user.id,
         body,
       });
-      await supabase.from('orcamento_eventos').insert({
+      if (noteErr) throw noteErr;
+
+      const { error: evtErr } = await supabase.from('orcamento_eventos').insert({
         orcamento_id: orcamentoId,
         user_id: user.id,
         event_type: 'comment',
         note: body.slice(0, 200),
       });
+      if (evtErr) throw evtErr;
     },
     onSuccess: () => {
       setNewComment('');
       queryClient.invalidateQueries({ queryKey: ['orcamentos', 'notas', orcamentoId] });
       queryClient.invalidateQueries({ queryKey: ['orcamentos', 'eventos', orcamentoId] });
       toast.success('Nota adicionada');
+    },
+    onError: (err: Error) => {
+      toast.error('Erro ao adicionar nota: ' + err.message);
     },
   });
 
