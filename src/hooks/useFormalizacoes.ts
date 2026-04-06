@@ -22,7 +22,7 @@ async function logDomainEvent(params: {
   try {
     await supabase.rpc('log_domain_event', {
       _org_id: params.orgId,
-      _project_id: params.projectId ?? null,
+      _project_id: params.projectId || '',
       _entity_type: params.entityType,
       _entity_id: params.entityId,
       _event_type: params.eventType,
