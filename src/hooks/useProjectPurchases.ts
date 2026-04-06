@@ -34,6 +34,8 @@ export interface ProjectPurchase {
   start_date: string | null;
   end_date: string | null;
   contract_file_path: string | null;
+  purchase_type: PurchaseType;
+  delivery_address: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
