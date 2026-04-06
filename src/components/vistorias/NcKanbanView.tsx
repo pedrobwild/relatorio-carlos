@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  AlertTriangle, Clock, ChevronRight, User, Tag, RotateCcw,
+  AlertTriangle, Clock, ChevronRight, User, Tag, RotateCcw, Building2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,9 +36,10 @@ interface Props {
   nonConformities: NonConformity[];
   searchQuery: string;
   onSelect: (nc: NonConformity) => void;
+  showProjectBadge?: boolean;
 }
 
-export function NcKanbanView({ nonConformities, searchQuery, onSelect }: Props) {
+export function NcKanbanView({ nonConformities, searchQuery, onSelect, showProjectBadge }: Props) {
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const filtered = useMemo(() => {
@@ -91,7 +92,7 @@ export function NcKanbanView({ nonConformities, searchQuery, onSelect }: Props) 
             </div>
             <div className="p-1.5 space-y-1.5 flex-1 bg-muted/20 rounded-b-2xl overflow-y-auto">
               {colNcs.map(nc => (
-                <NcKanbanCard key={nc.id} nc={nc} today={today} onSelect={onSelect} />
+                <NcKanbanCard key={nc.id} nc={nc} today={today} onSelect={onSelect} showProjectBadge={showProjectBadge} />
               ))}
               {colNcs.length === 0 && (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground/50 border-2 border-dashed border-border/30 rounded-xl">
@@ -106,7 +107,7 @@ export function NcKanbanView({ nonConformities, searchQuery, onSelect }: Props) 
   );
 }
 
-function NcKanbanCard({ nc, today, onSelect }: { nc: NonConformity; today: string; onSelect: (nc: NonConformity) => void }) {
+function NcKanbanCard({ nc, today, onSelect, showProjectBadge }: { nc: NonConformity & { project_name?: string | null }; today: string; onSelect: (nc: NonConformity) => void; showProjectBadge?: boolean }) {
   const sev = severityConfig[nc.severity];
   const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
   const reopenCount = nc.reopen_count ?? 0;
@@ -142,6 +143,12 @@ function NcKanbanCard({ nc, today, onSelect }: { nc: NonConformity; today: strin
       onClick={() => onSelect(nc)}
     >
       <CardContent className="p-2.5 space-y-1.5">
+        {showProjectBadge && nc.project_name && (
+          <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-md inline-flex items-center gap-1 w-fit">
+            <Building2 className="h-2.5 w-2.5" />
+            {nc.project_name}
+          </span>
+        )}
         <div className="flex items-start gap-2">
           <div className={cn(
             'mt-1.5 h-2.5 w-2.5 rounded-full shrink-0',

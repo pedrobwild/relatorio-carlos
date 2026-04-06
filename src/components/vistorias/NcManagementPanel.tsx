@@ -12,7 +12,7 @@ import { useState, useMemo } from 'react';
 import { format, parseISO, differenceInDays, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  AlertTriangle, Clock, Plus, ChevronRight, User, Tag,
+  AlertTriangle, Clock, Plus, ChevronRight, User, Tag, Building2,
   RotateCcw, BarChart3, ChevronDown, Filter, Search, X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,9 +53,10 @@ interface Props {
   onSelect: (nc: NonConformity) => void;
   onCreateNc: () => void;
   canCreate: boolean;
+  showProjectBadge?: boolean;
 }
 
-export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCreateNc, canCreate }: Props) {
+export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCreateNc, canCreate, showProjectBadge }: Props) {
   const [viewTab, setViewTab] = useState<ViewTab>('action_needed');
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
@@ -269,7 +270,7 @@ export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCr
       ) : (
         <div className="space-y-2" role="list" aria-label="Lista de não conformidades">
           {filteredNcs.map((nc) => (
-            <NcRow key={nc.id} nc={nc} today={today} onSelect={onSelect} />
+            <NcRow key={nc.id} nc={nc} today={today} onSelect={onSelect} showProjectBadge={showProjectBadge} />
           ))}
         </div>
       )}
@@ -339,7 +340,7 @@ function TabButton({ active, onClick, children, count, danger }: {
   );
 }
 
-function NcRow({ nc, today, onSelect }: { nc: NonConformity; today: string; onSelect: (nc: NonConformity) => void }) {
+function NcRow({ nc, today, onSelect, showProjectBadge }: { nc: NonConformity & { project_name?: string | null }; today: string; onSelect: (nc: NonConformity) => void; showProjectBadge?: boolean }) {
   const sev = severityConfig[nc.severity];
   const st = statusConfig[nc.status];
   const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
@@ -406,6 +407,13 @@ function NcRow({ nc, today, onSelect }: { nc: NonConformity; today: string; onSe
           }`} aria-label={`Severidade: ${sev.label}`} />
           
           <div className="flex-1 min-w-0">
+            {/* Project badge */}
+            {showProjectBadge && (nc as any).project_name && (
+              <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-md mb-1 inline-flex items-center gap-1 w-fit">
+                <Building2 className="h-2.5 w-2.5" />
+                {(nc as any).project_name}
+              </span>
+            )}
             {/* Title + arrow */}
             <div className="flex items-start justify-between gap-2">
               <p className="font-medium text-sm leading-snug line-clamp-2">{nc.title}</p>
