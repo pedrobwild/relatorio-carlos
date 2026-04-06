@@ -8,6 +8,7 @@ import {
   updateNonConformity,
   updateNcEvidencePhotos,
   transitionNcStatus,
+  deleteNonConformity,
 } from '@/infra/repositories/ncsRepository';
 
 // eslint-disable-next-line no-duplicate-imports

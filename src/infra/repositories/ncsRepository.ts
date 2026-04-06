@@ -140,6 +140,13 @@ export async function updateNcEvidencePhotos(params: {
   if (error) throw error;
 }
 
+export async function deleteNonConformity(id: string): Promise<void> {
+  // Delete history first (child rows)
+  await supabase.from('nc_history').delete().eq('nc_id', id);
+  const { error } = await supabase.from('non_conformities').delete().eq('id', id);
+  if (error) throw error;
+}
+
 export async function transitionNcStatus(params: {
   nc_id: string;
   new_status: NcStatus;
