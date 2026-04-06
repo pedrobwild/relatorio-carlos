@@ -72,7 +72,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const updateLookaheadTask = (index: number, field: keyof LookaheadTask, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       lookaheadTasks: prev.lookaheadTasks.map((task, i) => i === index ? { ...task, [field]: value } : task),
     }));
