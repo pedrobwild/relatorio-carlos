@@ -76,6 +76,17 @@ const MODULE_PERMISSIONS: Record<AppRole, ModulePermission[]> = {
     'templates:delete',
     'system:admin',
   ],
+  arquitetura: [
+    'users:read',
+    'users:write',
+    'works:read',
+    'works:write',
+    'works:delete',
+    'templates:read',
+    'templates:write',
+    'templates:delete',
+    'system:admin',
+  ],
 };
 
 /**

@@ -5683,6 +5683,7 @@ export type Database = {
         | "financeiro"
         | "gestor"
         | "cs"
+        | "arquitetura"
       atividade_prioridade: "baixa" | "media" | "alta"
       atividade_status:
         | "nao_iniciada"
@@ -5922,6 +5923,7 @@ export const Constants = {
         "financeiro",
         "gestor",
         "cs",
+        "arquitetura",
       ],
       atividade_prioridade: ["baixa", "media", "alta"],
       atividade_status: [

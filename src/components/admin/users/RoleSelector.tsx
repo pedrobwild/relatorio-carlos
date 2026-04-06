@@ -11,7 +11,7 @@ import type { UserWithRole } from '@/hooks/useUsers';
 import type { AppRole } from '@/hooks/useUserRole';
 import { roleLabels, roleColors } from './types';
 
-const roles: AppRole[] = ['admin', 'manager', 'engineer', 'cs', 'customer'];
+const roles: AppRole[] = ['admin', 'manager', 'engineer', 'arquitetura', 'cs', 'customer'];
 
 export function RoleSelector({
   user,
