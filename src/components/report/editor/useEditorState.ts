@@ -28,6 +28,20 @@ function validateFile(file: File): boolean {
 export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSaving }: UseEditorStateOptions) {
   const [formData, setFormData] = useState<WeeklyReportData>(data);
   const [richTextOpen, setRichTextOpen] = useState(false);
+  const hasUserEdited = useRef(false);
+
+  // Sync formData when external data changes (e.g. refetch), but only if user hasn't edited
+  useEffect(() => {
+    if (!hasUserEdited.current) {
+      setFormData(data);
+    }
+  }, [data]);
+
+  // Wrap setFormData to track user edits
+  const setFormDataWithTracking = useCallback((updater: WeeklyReportData | ((prev: WeeklyReportData) => WeeklyReportData)) => {
+    hasUserEdited.current = true;
+    setFormData(updater);
+  }, []);
 
   const { isSaving: autoSaving, lastSaved } = useAutoSave({
     data: formData,
