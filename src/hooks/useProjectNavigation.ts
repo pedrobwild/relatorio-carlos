@@ -28,6 +28,7 @@ export function useProjectNavigation() {
       dadosCliente: getProjectPath('/dados-cliente'),
       atividades: getProjectPath('/atividades'),
       naoConformidades: getProjectPath('/nao-conformidades'),
+      orcamento: getProjectPath('/orcamento'),
     }
   };
 }

@@ -19,6 +19,7 @@ import {
   Building2,
   UserCircle,
   ListChecks,
+  Receipt,
 } from "lucide-react";
 import {
   Sidebar,
