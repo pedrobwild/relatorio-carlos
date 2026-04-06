@@ -47,8 +47,9 @@ export default function Compras() {
     [state.filteredPurchases]
   );
 
-  const availableSubcategories = state.filterCategory !== 'all'
-    ? getSubcategoriesByType(state.filterCategory)
+  const supplierType = purchaseTypeToSupplierType(state.filterCategory);
+  const availableSubcategories = supplierType
+    ? getSubcategoriesByType(supplierType)
     : [];
 
   const hasAnyFilter = searchQuery || state.hasActiveFilters;
