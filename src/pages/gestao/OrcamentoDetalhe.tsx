@@ -70,7 +70,7 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
 
   // Fetch budget
   const { data: budget, isLoading } = useQuery({
-    queryKey: ['orcamentos', 'detail', orcamentoId],
+    queryKey: queryKeys.orcamentos.detail(orcamentoId),
     queryFn: async () => {
       if (!orcamentoId) return null;
       const { data, error } = await supabase
