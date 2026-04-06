@@ -190,7 +190,7 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
       if (evtErr) throw evtErr;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orcamentos.all });
       toast.success('Status atualizado');
     },
     onError: (err: Error) => {
