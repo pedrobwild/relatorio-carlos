@@ -75,13 +75,8 @@ const parseUserAgent = (ua: string | null) => {
   return { browser, os, device };
 };
 
-// Check if this is seed/demo data (not a valid UUID format from the database)
-const isSeedData = (id: string) => {
-  // Valid UUIDs have format: 8-4-4-4-12 hex chars
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  // Seed data IDs contain non-hex characters like 'g' at the start
-  return !uuidRegex.test(id) || id.startsWith('g') || id.startsWith('party-');
-};
+// Use canonical isSeedData check from types module
+const isSeedDataById = (id: string) => checkSeedData({ id });
 
 export function DigitalSignatureLog({ formalizationId, signatures, parties, documentHash, lockedAt }: DigitalSignatureLogProps) {
   const { toast } = useToast();
