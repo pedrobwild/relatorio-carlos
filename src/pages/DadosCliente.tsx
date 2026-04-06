@@ -51,7 +51,7 @@ export default function DadosCliente() {
   const { projectId } = useParams<{ projectId: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'contratante' | 'imovel'>('contratante');
+  const [activeTab, setActiveTab] = useState<'contratante' | 'imovel' | 'info'>('contratante');
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [studio, setStudio] = useState<StudioData | null>(null);
   const [project, setProject] = useState<ProjectBasic | null>(null);
