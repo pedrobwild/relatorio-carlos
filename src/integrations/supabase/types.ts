@@ -4653,6 +4653,56 @@ export type Database = {
           },
         ]
       }
+      purchase_payment_schedule: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          installment_number: number
+          paid_at: string | null
+          payment_method: string | null
+          percentage: number | null
+          purchase_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          installment_number?: number
+          paid_at?: string | null
+          payment_method?: string | null
+          percentage?: number | null
+          purchase_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          installment_number?: number
+          paid_at?: string | null
+          payment_method?: string | null
+          percentage?: number | null
+          purchase_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_payment_schedule_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedule_jobs: {
         Row: {
           created_at: string
