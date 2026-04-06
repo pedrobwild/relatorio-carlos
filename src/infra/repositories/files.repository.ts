@@ -377,7 +377,7 @@ export async function softDeleteFile(fileId: string): Promise<RepositoryResult<F
   return executeQuery(async () => {
     const { data, error } = await supabase
       .from('files')
-      .update({ status: 'deleted' })
+      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
       .eq('id', fileId)
       .select()
       .single();
