@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useObraTasks, ObraTaskInput } from '@/hooks/useObraTasks';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
-import { Plus, LayoutList, Columns3 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, LayoutList, Columns3, User } from 'lucide-react';
 import { AtividadesListView } from '@/components/atividades-obra/AtividadesListView';
 import { AtividadesKanbanView } from '@/components/atividades-obra/AtividadesKanbanView';
 import { AtividadesMobileListView } from '@/components/atividades-obra/AtividadesMobileListView';
@@ -14,23 +16,55 @@ import { cn } from '@/lib/utils';
 export default function AtividadesObra() {
   const { projectId } = useProjectNavigation();
   const { tasks, isLoading, createTask, updateTask, deleteTask } = useObraTasks(projectId);
+  const { data: staffUsers = [] } = useStaffUsers();
   const isMobile = useIsMobile();
   const [view, setView] = useState<'list' | 'kanban'>('kanban');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filterResponsible, setFilterResponsible] = useState<string>('all');
 
   const handleCreate = (input: ObraTaskInput) => {
     createTask.mutate(input);
     setDialogOpen(false);
   };
 
+  // Get unique responsible users from current tasks
+  const responsibleOptions = useMemo(() => {
+    const ids = new Set(tasks.map(t => t.responsible_user_id).filter(Boolean) as string[]);
+    return staffUsers.filter(u => ids.has(u.id));
+  }, [tasks, staffUsers]);
+
+  const filteredTasks = useMemo(() => {
+    if (filterResponsible === 'all') return tasks;
+    if (filterResponsible === 'unassigned') return tasks.filter(t => !t.responsible_user_id);
+    return tasks.filter(t => t.responsible_user_id === filterResponsible);
+  }, [tasks, filterResponsible]);
+
   const statusCounts = {
-    total: tasks.length,
-    pendente: tasks.filter(t => t.status === 'pendente').length,
-    em_andamento: tasks.filter(t => t.status === 'em_andamento').length,
-    concluido: tasks.filter(t => t.status === 'concluido').length,
+    total: filteredTasks.length,
+    pendente: filteredTasks.filter(t => t.status === 'pendente').length,
+    em_andamento: filteredTasks.filter(t => t.status === 'em_andamento').length,
+    concluido: filteredTasks.filter(t => t.status === 'concluido').length,
   };
 
-  // Mobile: dedicated optimized view
+  const ResponsibleFilter = () => (
+    <Select value={filterResponsible} onValueChange={setFilterResponsible}>
+      <SelectTrigger className="h-8 w-[180px] text-xs">
+        <User className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+        <SelectValue placeholder="Responsável" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">Todos</SelectItem>
+        <SelectItem value="unassigned">Sem responsável</SelectItem>
+        {responsibleOptions.map(u => (
+          <SelectItem key={u.id} value={u.id}>
+            {u.nome || u.email}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  // Mobile
   if (isMobile) {
     return (
       <PageContainer>
@@ -45,8 +79,12 @@ export default function AtividadesObra() {
           </Button>
         </div>
 
+        <div className="mb-3">
+          <ResponsibleFilter />
+        </div>
+
         <AtividadesMobileListView
-          tasks={tasks}
+          tasks={filteredTasks}
           isLoading={isLoading}
           onUpdateStatus={(id, status) => updateTask.mutate({ id, updates: { status } })}
           onDelete={(id) => deleteTask.mutate(id)}
@@ -62,7 +100,7 @@ export default function AtividadesObra() {
     );
   }
 
-  // Desktop: original view with toggle
+  // Desktop
   return (
     <PageContainer>
       <div className="flex flex-col gap-3 mb-4 sm:mb-6">
@@ -78,7 +116,7 @@ export default function AtividadesObra() {
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
               <span className="font-bold text-foreground tabular-nums">{statusCounts.total}</span> total
             </div>
@@ -95,6 +133,8 @@ export default function AtividadesObra() {
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="tabular-nums font-medium">{statusCounts.concluido}</span>
             </div>
+            <div className="w-px h-3 bg-border" />
+            <ResponsibleFilter />
           </div>
 
           <div className="flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5 shrink-0" role="radiogroup">
@@ -124,7 +164,7 @@ export default function AtividadesObra() {
 
       {view === 'list' ? (
         <AtividadesListView
-          tasks={tasks}
+          tasks={filteredTasks}
           isLoading={isLoading}
           onUpdateStatus={(id, status) => updateTask.mutate({ id, updates: { status } })}
           onDelete={(id) => deleteTask.mutate(id)}
@@ -132,7 +172,7 @@ export default function AtividadesObra() {
         />
       ) : (
         <AtividadesKanbanView
-          tasks={tasks}
+          tasks={filteredTasks}
           isLoading={isLoading}
           onUpdateStatus={(id, status) => updateTask.mutate({ id, updates: { status } })}
           onDelete={(id) => deleteTask.mutate(id)}

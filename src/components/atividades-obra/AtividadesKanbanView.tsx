@@ -60,7 +60,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
 
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4">
+      <div className="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4">
         {[1, 2, 3, 4].map(i => (
           <div key={i} className="min-w-[260px] md:min-w-0 space-y-3">
             <Skeleton className="h-10 w-full rounded-xl" />
@@ -95,14 +95,14 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
   return (
     <>
       {/* Horizontal scroll on mobile, grid on desktop */}
-      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 min-h-[400px] scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 min-h-[400px] scrollbar-hide">
         {TASK_STATUSES.map(col => {
           const colTasks = tasks.filter(t => t.status === col.value);
           return (
             <div
               key={col.value}
               className={cn(
-                'min-w-[280px] md:min-w-0 rounded-2xl border-t-[3px] transition-all flex flex-col',
+                'min-w-[260px] md:min-w-0 rounded-2xl border-t-[3px] transition-all flex flex-col',
                 columnColors[col.value],
                 dragOverColumn === col.value && 'ring-2 ring-primary/40 shadow-lg',
               )}
@@ -110,7 +110,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, col.value)}
             >
-              <div className={cn('p-3 rounded-t-xl', columnBg[col.value])}>
+              <div className={cn('px-2.5 py-2 rounded-t-xl', columnBg[col.value])}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className={cn('w-2.5 h-2.5 rounded-full', dotColors[col.value])} />
@@ -119,7 +119,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                   <Badge variant="secondary" className="text-[10px] font-bold h-5 min-w-[20px] justify-center">{colTasks.length}</Badge>
                 </div>
               </div>
-              <div className="p-2 space-y-2 flex-1 bg-muted/20 rounded-b-2xl">
+              <div className="p-1.5 space-y-1.5 flex-1 bg-muted/20 rounded-b-2xl">
                 {colTasks.map(task => {
                   const responsible = getMemberName(task.responsible_user_id);
                   const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
@@ -131,7 +131,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                       className="cursor-grab active:cursor-grabbing hover:shadow-md transition-all rounded-xl border-border/40 active:scale-[0.98]"
                       onClick={() => navigate(`/obra/${projectId}/atividades/${task.id}`)}
                     >
-                      <CardContent className="p-3 space-y-2">
+                      <CardContent className="p-2.5 space-y-1.5">
                         <div className="flex items-start justify-between gap-1">
                           <span className={cn(
                             'font-semibold text-sm leading-tight',
@@ -156,7 +156,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                           </DropdownMenu>
                         </div>
                         {task.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{task.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{task.description}</p>
                         )}
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                           {responsible && (
