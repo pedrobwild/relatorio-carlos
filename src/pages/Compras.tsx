@@ -77,6 +77,35 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
     [state.filteredPurchases]
   );
 
+  // Compute type-filtered KPI counts (the hook returns unfiltered counts)
+  const pendingCount = useMemo(() =>
+    state.filteredPurchases.filter(p => p.status === 'pending').length,
+    [state.filteredPurchases]
+  );
+  const orderedCount = useMemo(() =>
+    state.filteredPurchases.filter(p => p.status === 'ordered' || p.status === 'in_transit').length,
+    [state.filteredPurchases]
+  );
+  const deliveredCount = useMemo(() =>
+    state.filteredPurchases.filter(p => p.status === 'delivered').length,
+    [state.filteredPurchases]
+  );
+  const overdueCount = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return state.filteredPurchases.filter(p => {
+      if (p.status === 'delivered' || p.status === 'cancelled') return false;
+      const requiredDate = new Date(p.required_by_date + 'T00:00:00');
+      return requiredDate < today;
+    }).length;
+  }, [state.filteredPurchases]);
+  const totalEstimatedCostFiltered = useMemo(() =>
+    state.filteredPurchases
+      .filter(p => p.status !== 'cancelled')
+      .reduce((sum, p) => sum + (p.estimated_cost || 0), 0),
+    [state.filteredPurchases]
+  );
+
   const availableSubcategories = getSubcategoriesByType(isProduto ? 'produtos' : 'prestadores');
   const hasAnyFilter = !!searchQuery || state.hasActiveFilters;
 
