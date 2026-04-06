@@ -53,9 +53,10 @@ interface Props {
   onSelect: (nc: NonConformity) => void;
   onCreateNc: () => void;
   canCreate: boolean;
+  showProjectBadge?: boolean;
 }
 
-export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCreateNc, canCreate }: Props) {
+export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCreateNc, canCreate, showProjectBadge }: Props) {
   const [viewTab, setViewTab] = useState<ViewTab>('action_needed');
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
