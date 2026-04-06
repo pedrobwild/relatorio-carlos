@@ -161,8 +161,12 @@ export function CreateNcDialog({
     return paths;
   };
 
-  const handleSubmit = async () => {
+   const handleSubmit = async () => {
     if (!title.trim() || !category) return;
+    if (!deadline) {
+      toast.error('Informe o prazo para finalização da NC');
+      return;
+    }
     const estimatedCost = parseCurrencyInput(estimatedCostInput);
 
     setUploading(true);
