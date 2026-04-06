@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
       budget_value: typeof project.budget_value === "number" ? project.budget_value : null,
       budget_code: project.budget_code ?? null,
       status: "draft",
+      is_project_phase: true,
       notes: project.notes ?? null,
       consultora_comercial: project.consultora_comercial ?? null,
       contract_value: typeof project.budget_value === "number" ? project.budget_value : null,
