@@ -177,9 +177,20 @@ export function PurchaseFormDialog({
               />
             </div>
 
-            {/* Prestador-specific: service period */}
+            {/* Prestador-specific: fornecedor selector + service period */}
             {isPrestador && (
               <>
+                <FornecedorSelector
+                  fornecedorId={formData.fornecedor_id || undefined}
+                  onFornecedorChange={(id, nome) => setFormData(prev => ({
+                    ...prev,
+                    fornecedor_id: id,
+                    supplier_name: nome,
+                  }))}
+                  startDate={formData.start_date || formData.required_by_date || ''}
+                  endDate={formData.end_date || ''}
+                  currentPurchaseId={editingPurchaseId}
+                />
                 <div>
                   <Label htmlFor="start_date">Início execução na obra *</Label>
                   <Input
