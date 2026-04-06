@@ -24,6 +24,11 @@ function TodoItem({ todo, projectId, isAdmin, canCheck }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(todo.text);
 
+  // Sync text when todo changes externally (e.g. after mutation invalidation)
+  useEffect(() => {
+    if (!isEditing) setText(todo.text);
+  }, [todo.text, isEditing]);
+
   const toggleTodo = useToggleTodo();
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();
