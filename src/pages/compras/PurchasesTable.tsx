@@ -771,7 +771,7 @@ export function PurchasesTable({
   const expandedRef = useRef(expandedSections);
   expandedRef.current = expandedSections;
   
-  useMemo(() => {
+  useEffect(() => {
     const newKeys = new Set(expandedRef.current);
     let changed = false;
     for (const p of purchases) {
