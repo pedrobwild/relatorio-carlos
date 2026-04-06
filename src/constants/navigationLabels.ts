@@ -10,7 +10,7 @@ interface NavLabels {
 
 export const navigationLabels: NavLabels = {
   sidebar: {
-    dashboard:      { staff: "Painel da Obra",  client: "Início" },
+    dashboard:      { staff: "Painel de Obras",  client: "Início" },
     jornada:        { staff: "Jornada",         client: "Minha Jornada" },
     obra:           { staff: "Obra",             client: "Obra" },
     contrato:       { staff: "Contrato",        client: "Contrato" },

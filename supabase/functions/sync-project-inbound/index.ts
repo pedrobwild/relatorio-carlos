@@ -120,6 +120,14 @@ Deno.serve(async (req) => {
 
       // --- Auto-assign team members for new synced projects ---
       await assignDefaultTeamMembers(db, projectId);
+
+      // --- Initialize project journey (Boas-vindas, Briefing, etc.) ---
+      try {
+        await db.rpc("initialize_project_journey", { p_project_id: projectId });
+        console.log(`[sync-project-inbound] Journey initialized for project ${projectId}`);
+      } catch (journeyErr) {
+        console.error("[sync-project-inbound] Journey init error:", journeyErr instanceof Error ? journeyErr.message : journeyErr);
+      }
     }
 
     // --- Process budget if provided ---
