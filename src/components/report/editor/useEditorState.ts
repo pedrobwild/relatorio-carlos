@@ -169,7 +169,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       date: new Date().toISOString().split('T')[0],
       category: "progresso",
     };
-    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, newPhoto] }));
+    setFormDataWithTracking(prev => ({ ...prev, gallery: [...prev.gallery, newPhoto] }));
   };
 
   const updateGalleryPhoto = (index: number, field: keyof GalleryPhoto, value: string) => {
