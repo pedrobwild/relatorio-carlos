@@ -17,6 +17,7 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const statusConfig: Record<string, { label: string; dot: string }> = {
+  draft: { label: 'Rascunho', dot: 'bg-violet-500' },
   active: { label: 'Ativa', dot: 'bg-emerald-500' },
   completed: { label: 'Concluída', dot: 'bg-blue-500' },
   paused: { label: 'Pausada', dot: 'bg-amber-500' },
