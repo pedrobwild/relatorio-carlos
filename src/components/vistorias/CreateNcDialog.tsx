@@ -222,7 +222,7 @@ export function CreateNcDialog({
   // Merge: use project members first, fallback to all staff
   const staffMembers = staffFromProject.length > 0 ? staffFromProject : [];
   const extraStaff = allStaff.filter(s => !staffMembers.some(m => m.user_id === s.id));
-  const allResponsibleOptions = [
+  const isSubmitting = createNc.isPending || uploading;
     ...staffMembers.map(m => ({ id: m.user_id, name: m.user_name || m.user_email || m.user_id.slice(0, 8) })),
     ...extraStaff.map(s => ({ id: s.id, name: s.nome || s.email })),
   ];
