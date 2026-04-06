@@ -119,7 +119,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                   <Badge variant="secondary" className="text-[10px] font-bold h-5 min-w-[20px] justify-center">{colTasks.length}</Badge>
                 </div>
               </div>
-              <div className="p-2 space-y-2 flex-1 bg-muted/20 rounded-b-2xl">
+              <div className="p-1.5 space-y-1.5 flex-1 bg-muted/20 rounded-b-2xl">
                 {colTasks.map(task => {
                   const responsible = getMemberName(task.responsible_user_id);
                   const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
