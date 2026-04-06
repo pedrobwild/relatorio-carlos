@@ -200,18 +200,18 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
             className={cn(
               'px-8 py-4 outline-none min-h-[460px]',
               'prose prose-sm sm:prose max-w-none',
-              'text-foreground leading-relaxed',
-              '[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-3 [&_h1]:mt-6 [&_h1]:text-foreground',
-              '[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-foreground',
-              '[&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-foreground',
-              '[&_p]:mb-2 [&_p]:text-foreground',
-              '[&_ul]:pl-6 [&_ol]:pl-6 [&_li]:mb-1',
-              '[&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground',
-              '[&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:text-sm [&_pre]:font-mono',
+              'text-black leading-relaxed',
+              '[&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-3 [&_h1]:mt-6 [&_h1]:text-black',
+              '[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-black',
+              '[&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-black',
+              '[&_p]:mb-2 [&_p]:text-black',
+              '[&_ul]:pl-6 [&_ol]:pl-6 [&_li]:mb-1 [&_li]:text-black',
+              '[&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600',
+              '[&_pre]:bg-gray-100 [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:text-sm [&_pre]:font-mono [&_pre]:text-black',
               '[&_a]:text-primary [&_a]:underline',
-              '[&_hr]:my-4 [&_hr]:border-border',
+              '[&_hr]:my-4 [&_hr]:border-gray-300',
               '[&_.doc-checklist-item]:flex [&_.doc-checklist-item]:items-start [&_.doc-checklist-item]:gap-2 [&_.doc-checklist-item]:my-1',
-              'empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none',
+              'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none',
             )}
           />
         </div>
