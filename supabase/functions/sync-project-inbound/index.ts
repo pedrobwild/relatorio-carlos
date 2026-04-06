@@ -700,44 +700,17 @@ async function processBudget(
 // ─── Team Assignment ────────────────────────────────────────────────────────
 
 /**
- * Auto-assign default team members when a project is created via sync:
- * 1. lucas.serra@bwild.com.br (as engineer)
- * 2. All active admin users (as owner)
+ * Auto-assign default team members when a project is created via sync.
+ * NOTE: The DB trigger `trg_auto_assign_default_members` already handles
+ * admins + lucas.serra + guilherme on INSERT. This function adds any
+ * sync-specific members that the trigger doesn't cover.
+ * Kept as a no-op safety net; the trigger does the real work.
  */
 async function assignDefaultTeamMembers(
-  db: ReturnType<typeof createClient>,
-  projectId: string,
+  _db: ReturnType<typeof createClient>,
+  _projectId: string,
 ) {
-  try {
-    const LUCAS_EMAIL = "lucas.serra@bwild.com.br";
-
-    const [{ data: lucas }, { data: admins }] = await Promise.all([
-      db.from("users_profile").select("id").eq("email", LUCAS_EMAIL).eq("status", "ativo").maybeSingle(),
-      db.from("users_profile").select("id").eq("perfil", "admin").eq("status", "ativo"),
-    ]);
-
-    const members: Array<{ project_id: string; user_id: string; role: string }> = [];
-
-    for (const admin of admins ?? []) {
-      members.push({ project_id: projectId, user_id: admin.id, role: "owner" });
-    }
-
-    if (lucas && !members.some((m) => m.user_id === lucas.id)) {
-      members.push({ project_id: projectId, user_id: lucas.id, role: "engineer" });
-    }
-
-    if (members.length > 0) {
-      const { error } = await db.from("project_members").upsert(members, {
-        onConflict: "project_id,user_id",
-        ignoreDuplicates: true,
-      });
-      if (error) {
-        console.error("[sync-project-inbound] Failed to assign team members:", error.message);
-      } else {
-        console.log(`[sync-project-inbound] Assigned ${members.length} team members to project ${projectId}`);
-      }
-    }
-  } catch (err) {
-    console.error("[sync-project-inbound] Team assignment error:", err instanceof Error ? err.message : err);
-  }
+  // The DB trigger auto_assign_default_project_members handles this now.
+  // Nothing extra needed for sync-created projects.
+  console.log(`[sync-project-inbound] Team assignment handled by DB trigger for project ${_projectId}`);
 }
