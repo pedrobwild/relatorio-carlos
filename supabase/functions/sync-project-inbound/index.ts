@@ -117,6 +117,9 @@ Deno.serve(async (req) => {
         throw insertErr;
       }
       projectId = inserted.id;
+
+      // --- Auto-assign team members for new synced projects ---
+      await assignDefaultTeamMembers(db, projectId);
     }
 
     // --- Process budget if provided ---
