@@ -271,6 +271,20 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 />
               </div>
             </div>
+            {/* Responsável */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Responsável</Label>
+              <Select value={editResponsibleUserId} onValueChange={setEditResponsibleUserId}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Selecionar responsável..." />
+                </SelectTrigger>
+                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                  {staffUsers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.nome || u.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="h-9">Cancelar</Button>
               <Button size="sm" onClick={handleSaveEdit} disabled={!editTitle.trim() || updateNc.isPending} className="h-9">
