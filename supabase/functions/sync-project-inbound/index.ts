@@ -307,3 +307,50 @@ async function processBudget(
 
   return orcamentoId;
 }
+
+/**
+ * Auto-assign default team members when a project is created via sync:
+ * 1. lucas.serra@bwild.com.br (as engineer)
+ * 2. All active admin users (as owner)
+ */
+async function assignDefaultTeamMembers(
+  db: ReturnType<typeof createClient>,
+  projectId: string,
+) {
+  try {
+    // Fetch lucas.serra + all active admins
+    const LUCAS_EMAIL = "lucas.serra@bwild.com.br";
+
+    const [{ data: lucas }, { data: admins }] = await Promise.all([
+      db.from("users_profile").select("id").eq("email", LUCAS_EMAIL).eq("status", "ativo").maybeSingle(),
+      db.from("users_profile").select("id").eq("perfil", "admin").eq("status", "ativo"),
+    ]);
+
+    const members: Array<{ project_id: string; user_id: string; role: string }> = [];
+
+    // Add admins as owner
+    for (const admin of admins ?? []) {
+      members.push({ project_id: projectId, user_id: admin.id, role: "owner" });
+    }
+
+    // Add Lucas as engineer (if not already added as admin)
+    if (lucas && !members.some((m) => m.user_id === lucas.id)) {
+      members.push({ project_id: projectId, user_id: lucas.id, role: "engineer" });
+    }
+
+    if (members.length > 0) {
+      const { error } = await db.from("project_members").upsert(members, {
+        onConflict: "project_id,user_id",
+        ignoreDuplicates: true,
+      });
+      if (error) {
+        console.error("[sync-project-inbound] Failed to assign team members:", error.message);
+      } else {
+        console.log(`[sync-project-inbound] Assigned ${members.length} team members to project ${projectId}`);
+      }
+    }
+  } catch (err) {
+    // Non-critical: don't fail the sync if team assignment fails
+    console.error("[sync-project-inbound] Team assignment error:", err instanceof Error ? err.message : err);
+  }
+}
