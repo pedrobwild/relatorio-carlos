@@ -114,6 +114,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
     setEditCategory(nc.category || '');
     setEditDeadline(nc.deadline ? parseISO(nc.deadline) : undefined);
     setEditEstimatedCost(nc.estimated_cost != null ? String(nc.estimated_cost) : '');
+    setEditResponsibleUserId(nc.responsible_user_id || '');
     setCorrectiveAction(nc.corrective_action || '');
     setPhotosBefore(nc.evidence_photos_before ?? nc.evidence_photo_paths ?? []);
     setPhotosAfter(nc.evidence_photos_after ?? []);
