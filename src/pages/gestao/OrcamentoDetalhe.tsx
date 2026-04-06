@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,8 +57,10 @@ function calcSalePrice(cost: number, bdi: number): number {
   return cost * (1 + bdi / 100);
 }
 
-export default function OrcamentoDetalhe() {
-  const { orcamentoId } = useParams<{ orcamentoId: string }>();
+export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrcamentoId?: string } = {}) {
+  const params = useParams<{ orcamentoId: string }>();
+  const orcamentoId = embeddedOrcamentoId || params.orcamentoId;
+  const isEmbedded = !!embeddedOrcamentoId;
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -67,7 +70,7 @@ export default function OrcamentoDetalhe() {
 
   // Fetch budget
   const { data: budget, isLoading } = useQuery({
-    queryKey: ['orcamentos', 'detail', orcamentoId],
+    queryKey: queryKeys.orcamentos.detail(orcamentoId),
     queryFn: async () => {
       if (!orcamentoId) return null;
       const { data, error } = await supabase
@@ -83,7 +86,7 @@ export default function OrcamentoDetalhe() {
 
   // Fetch sections with items
   const { data: sections } = useQuery({
-    queryKey: ['orcamentos', 'sections', orcamentoId],
+    queryKey: queryKeys.orcamentos.sections(orcamentoId),
     queryFn: async () => {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
@@ -102,7 +105,7 @@ export default function OrcamentoDetalhe() {
 
   // Fetch adjustments
   const { data: adjustments } = useQuery({
-    queryKey: ['orcamentos', 'adjustments', orcamentoId],
+    queryKey: queryKeys.orcamentos.adjustments(orcamentoId),
     queryFn: async () => {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
@@ -118,7 +121,7 @@ export default function OrcamentoDetalhe() {
 
   // Fetch notes
   const { data: notes } = useQuery({
-    queryKey: ['orcamentos', 'notas', orcamentoId],
+    queryKey: queryKeys.orcamentos.notes(orcamentoId),
     queryFn: async () => {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
@@ -134,7 +137,7 @@ export default function OrcamentoDetalhe() {
 
   // Fetch events
   const { data: events } = useQuery({
-    queryKey: ['orcamentos', 'eventos', orcamentoId],
+    queryKey: queryKeys.orcamentos.events(orcamentoId),
     queryFn: async () => {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
@@ -150,12 +153,13 @@ export default function OrcamentoDetalhe() {
 
   // Fetch profiles for name resolution
   const { data: profiles } = useQuery({
-    queryKey: ['profiles', 'all'],
+    queryKey: queryKeys.staffProfiles.lookup(),
     queryFn: async () => {
-      const { data } = await supabase.from('users_profile').select('id, nome, email');
+      const { data } = await supabase.from('users_profile').select('id, nome, email').limit(500);
       return data || [];
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 15 * 60 * 1000, // 15 min — rarely changes
+    gcTime: 30 * 60 * 1000,
   });
 
   const getProfileName = useCallback((id: string | null) => {
@@ -186,7 +190,7 @@ export default function OrcamentoDetalhe() {
       if (evtErr) throw evtErr;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orcamentos.all });
       toast.success('Status atualizado');
     },
     onError: (err: Error) => {
@@ -215,8 +219,8 @@ export default function OrcamentoDetalhe() {
     },
     onSuccess: () => {
       setNewComment('');
-      queryClient.invalidateQueries({ queryKey: ['orcamentos', 'notas', orcamentoId] });
-      queryClient.invalidateQueries({ queryKey: ['orcamentos', 'eventos', orcamentoId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orcamentos.notes(orcamentoId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orcamentos.events(orcamentoId) });
       toast.success('Nota adicionada');
     },
     onError: (err: Error) => {
@@ -287,9 +291,11 @@ export default function OrcamentoDetalhe() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/gestao/orcamentos')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          {!isEmbedded && (
+            <Button variant="ghost" size="icon" onClick={() => navigate('/gestao/orcamentos')}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               {budget.sequential_code && (
