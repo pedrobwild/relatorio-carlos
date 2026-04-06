@@ -88,7 +88,7 @@ export default function OrcamentoDetalhe() {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
         .from('orcamento_sections')
-        .select('id, title, subtitle, notes, order_index, section_price, is_optional, cover_image_url, included_bullets, excluded_bullets, tags, cost, bdi_percentage, item_count, orcamento_items(id, title, description, qty, unit, internal_unit_price, internal_total, bdi_percentage, order_index, included_rooms, excluded_rooms, coverage_type, reference_url, notes)')
+        .select('id, title, subtitle, notes, order_index, section_price, is_optional, cover_image_url, included_bullets, excluded_bullets, tags, cost, bdi_percentage, item_count, orcamento_items(id, title, description, qty, unit, internal_unit_price, internal_total, bdi_percentage, order_index, included_rooms, excluded_rooms, coverage_type, reference_url, notes, item_category, supplier_id, supplier_name, catalog_item_id)')
         .eq('orcamento_id', orcamentoId)
         .order('order_index', { ascending: true });
       if (error) throw error;
