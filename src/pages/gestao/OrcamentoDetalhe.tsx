@@ -644,6 +644,9 @@ function MiniStat({ label, value, icon, accent }: { label: string; value: string
 
 function SectionBlock({ section }: { section: any }) {
   const [open, setOpen] = useState(false);
+  const includedBullets = section.included_bullets?.filter((b: string) => b?.trim()) || [];
+  const excludedBullets = section.excluded_bullets?.filter((b: string) => b?.trim()) || [];
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger className="w-full">
@@ -664,25 +667,69 @@ function SectionBlock({ section }: { section: any }) {
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="ml-5 mt-1 border-l-2 border-border pl-3 space-y-0">
-          <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-[11px] text-muted-foreground font-medium border-b border-border">
-            <span>Item</span>
-            <span className="text-right">Qtd</span>
-            <span className="text-right">$ Custo</span>
-            <span className="text-right">% BDI</span>
-            <span className="text-right">$ Venda</span>
-            <span className="text-right">Total Venda</span>
-          </div>
-          {section.itemRows.map((item: any) => (
-            <div key={item.id} className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-xs border-b border-border/50 last:border-b-0 hover:bg-muted/20">
-              <span className="truncate">{item.title || '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.qty || '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.cost > 0 ? formatBRL(item.cost) : '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.bdi > 0 ? `${item.bdi}%` : '—'}</span>
-              <span className="text-right text-muted-foreground tabular-nums">{item.sale > 0 ? formatBRL(item.sale) : '—'}</span>
-              <span className="text-right font-medium tabular-nums">{item.totalSale > 0 ? formatBRL(item.totalSale) : '—'}</span>
+        <div className="ml-5 mt-1 border-l-2 border-border pl-3 space-y-3">
+          {/* Section subtitle/notes */}
+          {(section.subtitle || section.notes) && (
+            <div className="px-2 py-1.5 space-y-1">
+              {section.subtitle && <p className="text-xs text-muted-foreground italic">{section.subtitle}</p>}
+              {section.notes && <p className="text-xs text-muted-foreground">{section.notes}</p>}
             </div>
-          ))}
+          )}
+
+          {/* Included / Excluded bullets */}
+          {(includedBullets.length > 0 || excludedBullets.length > 0) && (
+            <div className="px-2 py-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {includedBullets.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-medium text-[hsl(var(--success))] mb-1">✓ Incluso</p>
+                  <ul className="space-y-0.5">
+                    {includedBullets.map((b: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground">• {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {excludedBullets.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-medium text-destructive mb-1">✗ Não incluso</p>
+                  <ul className="space-y-0.5">
+                    {excludedBullets.map((b: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground">• {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Items table */}
+          <div className="space-y-0">
+            <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-[11px] text-muted-foreground font-medium border-b border-border">
+              <span>Item</span>
+              <span className="text-right">Qtd</span>
+              <span className="text-right">$ Custo</span>
+              <span className="text-right">% BDI</span>
+              <span className="text-right">$ Venda</span>
+              <span className="text-right">Total Venda</span>
+            </div>
+            {section.itemRows.map((item: any) => (
+              <div key={item.id} className="group">
+                <div className="grid grid-cols-[1fr_60px_80px_60px_80px_80px] gap-2 px-2 py-1.5 text-xs border-b border-border/50 last:border-b-0 hover:bg-muted/20">
+                  <div className="min-w-0">
+                    <span className="truncate block">{item.title || '—'}</span>
+                    {item.description && (
+                      <span className="text-[11px] text-muted-foreground truncate block">{item.description}</span>
+                    )}
+                  </div>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.qty || '—'}</span>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.cost > 0 ? formatBRL(item.cost) : '—'}</span>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.bdi > 0 ? `${item.bdi}%` : '—'}</span>
+                  <span className="text-right text-muted-foreground tabular-nums">{item.sale > 0 ? formatBRL(item.sale) : '—'}</span>
+                  <span className="text-right font-medium tabular-nums">{item.totalSale > 0 ? formatBRL(item.totalSale) : '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>
