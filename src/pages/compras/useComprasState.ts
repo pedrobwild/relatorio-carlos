@@ -87,6 +87,10 @@ export function useComprasState() {
         expected_delivery_date: purchase.expected_delivery_date || undefined,
         invoice_number: purchase.invoice_number || '',
         notes: purchase.notes || '',
+        purchase_type: purchase.purchase_type || 'produto',
+        delivery_address: purchase.delivery_address || '',
+        start_date: purchase.start_date || undefined,
+        end_date: purchase.end_date || undefined,
       });
     } else {
       setEditingPurchase(null);
