@@ -71,7 +71,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
 
   const hasActiveFilters = filterStatus !== 'all' || filterActivity !== 'all' || filterCategory !== 'all' || filterSubcategory !== 'all';
 
-  const handleOpenDialog = (purchase?: ProjectPurchase) => {
+  const handleOpenDialog = async (purchase?: ProjectPurchase) => {
     if (purchase) {
       setEditingPurchase(purchase);
       setFormData({
@@ -95,12 +95,31 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
         start_date: purchase.start_date || undefined,
         end_date: purchase.end_date || undefined,
       });
+      // Load existing payment installments
+      if (purchase.purchase_type === 'prestador') {
+        const { data } = await supabase
+          .from('purchase_payment_schedule')
+          .select('*')
+          .eq('purchase_id', purchase.id)
+          .order('installment_number');
+        setPaymentInstallments((data || []).map(d => ({
+          id: d.id,
+          installment_number: d.installment_number,
+          description: d.description,
+          percentage: Number(d.percentage) || 0,
+          amount: Number(d.amount) || 0,
+          due_date: d.due_date || '',
+        })));
+      } else {
+        setPaymentInstallments([]);
+      }
     } else {
       setEditingPurchase(null);
       setFormData({
         ...emptyPurchase,
         ...(purchaseTypeFilter ? { purchase_type: purchaseTypeFilter } : {}),
       });
+      setPaymentInstallments([]);
     }
     setIsDialogOpen(true);
   };
