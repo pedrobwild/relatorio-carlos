@@ -60,7 +60,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
 
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4">
+      <div className="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4">
         {[1, 2, 3, 4].map(i => (
           <div key={i} className="min-w-[260px] md:min-w-0 space-y-3">
             <Skeleton className="h-10 w-full rounded-xl" />
