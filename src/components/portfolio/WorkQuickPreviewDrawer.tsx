@@ -12,8 +12,8 @@ import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
-import type { HealthLevel } from './lib/healthScore';
 import { computeHealthScore, type HealthLevel } from '@/lib/healthScore';
+import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
