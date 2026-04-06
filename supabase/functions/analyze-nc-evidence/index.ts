@@ -12,17 +12,17 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY is not configured" }),
+        JSON.stringify({ error: "ANTHROPIC_API_KEY is not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const { images, text_context } = await req.json();
 
-    // Build content array for multimodal analysis
+    // Build content array for Claude multimodal analysis
     const userContent: Array<Record<string, unknown>> = [];
 
     // Add text context if provided
@@ -30,14 +30,16 @@ serve(async (req) => {
       userContent.push({ type: "text", text: `Contexto adicional fornecido pelo usuário:\n${text_context}` });
     }
 
-    // Add images as base64
+    // Add images as base64 (Claude format)
     if (images && Array.isArray(images)) {
       for (const img of images) {
         if (img.base64 && img.mime_type) {
           userContent.push({
-            type: "image_url",
-            image_url: {
-              url: `data:${img.mime_type};base64,${img.base64}`,
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: img.mime_type,
+              data: img.base64,
             },
           });
         }
@@ -60,7 +62,7 @@ serve(async (req) => {
     const systemPrompt = `Você é um especialista em gestão de qualidade de obras civis. 
 Analise as evidências fornecidas (prints de conversas do WhatsApp, fotos de problemas na obra, textos descritivos) e sugira os campos para registrar uma Não Conformidade (NC).
 
-Você DEVE retornar um JSON usando a função fornecida com os seguintes campos preenchidos:
+Você DEVE retornar os campos usando a ferramenta fornecida:
 - title: Título claro e conciso da NC (max 100 caracteres)
 - description: Descrição detalhada do problema identificado
 - severity: Uma das opções: "low", "medium", "high", "critical" — baseie-se no impacto real
@@ -70,54 +72,52 @@ Você DEVE retornar um JSON usando a função fornecida com os seguintes campos 
 
 Seja preciso e técnico. Use linguagem de engenharia civil. Se não conseguir determinar algum campo com confiança, use um valor razoável baseado no contexto.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4096,
+        system: systemPrompt,
         messages: [
-          { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
         ],
         tools: [
           {
-            type: "function",
-            function: {
-              name: "suggest_nc_fields",
-              description: "Return suggested non-conformity fields based on the evidence analysis.",
-              parameters: {
-                type: "object",
-                properties: {
-                  title: { type: "string", description: "Título da NC" },
-                  description: { type: "string", description: "Descrição detalhada" },
-                  severity: { type: "string", enum: ["low", "medium", "high", "critical"] },
-                  category: {
-                    type: "string",
-                    enum: [
-                      "Hidráulica", "Elétrica", "Revestimento", "Estrutural",
-                      "Impermeabilização", "Carpintaria", "Pintura",
-                      "Segurança do Trabalho", "Planejamento", "Outros",
-                    ],
-                  },
-                  corrective_action: { type: "string", description: "Plano de ação corretiva sugerido" },
-                  root_cause: { type: "string", description: "Causa raiz provável" },
+            name: "suggest_nc_fields",
+            description: "Return suggested non-conformity fields based on the evidence analysis.",
+            input_schema: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Título da NC" },
+                description: { type: "string", description: "Descrição detalhada" },
+                severity: { type: "string", enum: ["low", "medium", "high", "critical"] },
+                category: {
+                  type: "string",
+                  enum: [
+                    "Hidráulica", "Elétrica", "Revestimento", "Estrutural",
+                    "Impermeabilização", "Carpintaria", "Pintura",
+                    "Segurança do Trabalho", "Planejamento", "Outros",
+                  ],
                 },
-                required: ["title", "description", "severity", "category", "corrective_action"],
-                additionalProperties: false,
+                corrective_action: { type: "string", description: "Plano de ação corretiva sugerido" },
+                root_cause: { type: "string", description: "Causa raiz provável" },
               },
+              required: ["title", "description", "severity", "category", "corrective_action"],
             },
           },
         ],
-        tool_choice: { type: "function", function: { name: "suggest_nc_fields" } },
+        tool_choice: { type: "tool", name: "suggest_nc_fields" },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("Anthropic API error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(
@@ -127,7 +127,7 @@ Seja preciso e técnico. Use linguagem de engenharia civil. Se não conseguir de
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos nas configurações." }),
+          JSON.stringify({ error: "Créditos de IA esgotados." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -140,26 +140,17 @@ Seja preciso e técnico. Use linguagem de engenharia civil. Se não conseguir de
 
     const data = await response.json();
 
-    // Extract tool call result
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      console.error("No tool call in response:", JSON.stringify(data));
+    // Extract tool use result from Claude response
+    const toolUseBlock = data.content?.find((block: any) => block.type === "tool_use" && block.name === "suggest_nc_fields");
+    if (!toolUseBlock?.input) {
+      console.error("No tool_use block in response:", JSON.stringify(data));
       return new Response(
         JSON.stringify({ error: "IA não retornou sugestões estruturadas" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    let suggestion: Record<string, unknown>;
-    try {
-      suggestion = JSON.parse(toolCall.function.arguments);
-    } catch {
-      console.error("Failed to parse tool call args:", toolCall.function.arguments);
-      return new Response(
-        JSON.stringify({ error: "Resposta da IA em formato inválido" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const suggestion = toolUseBlock.input;
 
     return new Response(JSON.stringify({ suggestion }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
