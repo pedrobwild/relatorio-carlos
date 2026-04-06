@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,9 @@ import { useMemo } from 'react';
 import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './types';
 import { PaymentScheduleSection, type PaymentInstallment } from './PaymentScheduleSection';
 import { FornecedorSelector } from './FornecedorSelector';
+
+const fmt = (v: number) =>
+  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 interface Activity {
   id: string;
@@ -259,9 +263,10 @@ export function PurchaseFormDialog({
               </>
             )}
 
+            {/* Cost fields */}
             <div>
               <Label htmlFor="estimated_cost">
-                {isPrestador ? 'Valor do Serviço (R$)' : 'Custo Estimado (R$)'}
+                {isPrestador ? 'Custo Orçamento (R$)' : 'Custo Estimado (R$)'}
               </Label>
               <Input
                 id="estimated_cost"
@@ -273,6 +278,45 @@ export function PurchaseFormDialog({
                 placeholder="0,00"
               />
             </div>
+
+            <div>
+              <Label htmlFor="actual_cost">Custo Real (R$)</Label>
+              <Input
+                id="actual_cost"
+                type="number"
+                min={0}
+                step={0.01}
+                value={formData.actual_cost || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, actual_cost: parseFloat(e.target.value) || undefined }))}
+                placeholder="0,00"
+              />
+            </div>
+
+            {/* Cost difference indicator */}
+            {(formData.estimated_cost || 0) > 0 && (formData.actual_cost || 0) > 0 && (() => {
+              const est = formData.estimated_cost || 0;
+              const act = formData.actual_cost || 0;
+              const diff = act - est;
+              if (diff === 0) return null;
+              const pct = est > 0 ? ((diff / est) * 100) : 0;
+              const isOver = diff > 0;
+              const sign = isOver ? '+' : '';
+              const arrow = isOver ? '↑' : '↓';
+              return (
+                <div className="col-span-2">
+                  <div className={cn(
+                    'flex items-center gap-2 text-xs font-medium rounded-md px-3 py-2',
+                    isOver ? 'bg-destructive/10 text-destructive' : 'bg-emerald-500/10 text-emerald-600'
+                  )}>
+                    <span>{arrow} Diferença: {sign}{est > 0 ? fmt(diff) : '—'}</span>
+                    <span className="opacity-70">({sign}{pct.toFixed(1)}%)</span>
+                    <span className="ml-auto text-xs opacity-60">
+                      {isOver ? 'Acima do orçamento' : 'Economia'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {!isPrestador && (
               <>
