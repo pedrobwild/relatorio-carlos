@@ -2,16 +2,15 @@ import { useMemo, useState, useRef, useCallback } from 'react';
 import {
   MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign,
   ClipboardList, ChevronDown, ChevronRight, MoreHorizontal, Trash2,
-  Pencil, Search,
+  Pencil, MapPin, Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
-import { statusConfig, isServiceCategory } from './types';
-import { getAllSupplierSubcategories } from '@/constants/supplierCategories';
+import { statusConfig, PURCHASE_TYPE_LABELS, PURCHASE_TYPE_ICONS } from './types';
 import { ObservationsModal } from './ObservationsModal';
 import { PaymentFlowModal } from './PaymentFlowModal';
 import { CadastroModal } from './CadastroModal';
@@ -169,6 +168,7 @@ function PurchaseRow({
   setCadastroModal: (v: { purchase: ProjectPurchase } | null) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const isPrestador = purchase.purchase_type === 'prestador';
 
   return (
     <Collapsible open={expanded} onOpenChange={setExpanded}>
@@ -188,12 +188,20 @@ function PurchaseRow({
         </CollapsibleTrigger>
 
         <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto_auto] md:grid-cols-[1fr_120px_120px_120px_auto] items-center gap-3">
-          {/* Name + description */}
+          {/* Name + supplier */}
           <div className="min-w-0">
             <p className="font-medium text-sm truncate">{purchase.item_name}</p>
-            {purchase.supplier_name && (
-              <p className="text-xs text-muted-foreground truncate">{purchase.supplier_name}</p>
-            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {purchase.supplier_name && (
+                <span className="truncate">{purchase.supplier_name}</span>
+              )}
+              {isPrestador && purchase.start_date && purchase.end_date && (
+                <span className="flex items-center gap-0.5 shrink-0">
+                  <Calendar className="h-3 w-3" />
+                  {fmtDate(purchase.start_date)} → {fmtDate(purchase.end_date)}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Cost */}
@@ -212,12 +220,25 @@ function PurchaseRow({
 
           {/* Dates summary */}
           <div className="text-right hidden md:block">
-            <p className="text-xs text-muted-foreground">
-              {purchase.start_date ? fmtDate(purchase.start_date) : '—'}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              → {purchase.end_date ? fmtDate(purchase.end_date) : '—'}
-            </p>
+            {isPrestador ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Início: {fmtDate(purchase.start_date)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Fim: {fmtDate(purchase.end_date)}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Compra: {fmtDate(purchase.planned_purchase_date)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Entrega: {fmtDate(purchase.required_by_date)}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Status */}
@@ -227,7 +248,6 @@ function PurchaseRow({
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            {/* Quick action buttons */}
             <Button
               variant="ghost"
               size="icon"
@@ -246,7 +266,7 @@ function PurchaseRow({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => onEdit(purchase)}>
-                  <Pencil className="h-4 w-4 mr-2" /> Editar Item
+                  <Pencil className="h-4 w-4 mr-2" /> Editar
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFlowModal({ purchase })}>
                   <DollarSign className="h-4 w-4 mr-2" /> Fluxo Financeiro
@@ -262,7 +282,7 @@ function PurchaseRow({
                 )}
                 {purchase.status !== 'ordered' && purchase.status !== 'delivered' && (
                   <DropdownMenuItem onClick={() => onStatusChange(purchase.id, 'ordered')}>
-                    Marcar como Pedido
+                    {isPrestador ? 'Marcar Contratado' : 'Marcar como Pedido'}
                   </DropdownMenuItem>
                 )}
                 {purchase.status !== 'delivered' && (
@@ -321,10 +341,14 @@ function PurchaseRow({
 
             {/* Dates */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Datas</h4>
-              <div className="grid grid-cols-3 gap-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {isPrestador ? 'Período do Serviço' : 'Datas'}
+              </h4>
+              <div className={cn('grid gap-2', isPrestador ? 'grid-cols-3' : 'grid-cols-2')}>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Contratação</label>
+                  <label className="text-xs text-muted-foreground block mb-1">
+                    {isPrestador ? 'Contratação' : 'Data de Compra'}
+                  </label>
                   <InlineField
                     type="date"
                     value={purchase.planned_purchase_date}
@@ -332,34 +356,58 @@ function PurchaseRow({
                     onSave={(v) => onUpdateField(purchase.id, 'planned_purchase_date', v || null)}
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Início</label>
-                  <InlineField
-                    type="date"
-                    value={purchase.start_date}
-                    className="w-full"
-                    onSave={(v) => onUpdateField(purchase.id, 'start_date', v || null)}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Conclusão</label>
-                  <InlineField
-                    type="date"
-                    value={purchase.end_date}
-                    className="w-full"
-                    onSave={(v) => onUpdateField(purchase.id, 'end_date', v || null)}
-                  />
-                </div>
+                {isPrestador ? (
+                  <>
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">Início obra</label>
+                      <InlineField
+                        type="date"
+                        value={purchase.start_date}
+                        className="w-full"
+                        onSave={(v) => onUpdateField(purchase.id, 'start_date', v || null)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">Fim obra</label>
+                      <InlineField
+                        type="date"
+                        value={purchase.end_date}
+                        className="w-full"
+                        onSave={(v) => onUpdateField(purchase.id, 'end_date', v || null)}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Entrega na obra</label>
+                    <InlineField
+                      type="date"
+                      value={purchase.required_by_date}
+                      className="w-full"
+                      onSave={(v) => onUpdateField(purchase.id, 'required_by_date', v || null)}
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Delivery address for products */}
+              {!isPrestador && purchase.delivery_address && (
+                <div className="flex items-start gap-1.5 mt-2">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                  <span className="text-xs text-muted-foreground">{purchase.delivery_address}</span>
+                </div>
+              )}
             </div>
 
             {/* Supplier & Docs */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fornecedor & Docs</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {isPrestador ? 'Prestador & Docs' : 'Fornecedor & Docs'}
+              </h4>
               <div className="space-y-2">
                 <InlineField
                   value={purchase.supplier_name}
-                  placeholder="Nome do fornecedor"
+                  placeholder={isPrestador ? 'Nome do prestador' : 'Nome do fornecedor'}
                   className="w-full"
                   onSave={(v) => onUpdateField(purchase.id, 'supplier_name', v || null)}
                 />
@@ -386,7 +434,6 @@ function PurchaseRow({
             </div>
           </div>
 
-          {/* Description */}
           {purchase.description && (
             <div className="mt-3 pt-3 border-t border-border/50">
               <p className="text-sm text-muted-foreground">{purchase.description}</p>
@@ -407,34 +454,37 @@ export function PurchasesTable({
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [flowModal, setFlowModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [cadastroModal, setCadastroModal] = useState<{ purchase: ProjectPurchase } | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(() => new Set(['produto', 'prestador']));
 
+  // Group by purchase_type, then by category
   const grouped = useMemo(() => {
-    const map = new Map<string, ProjectPurchase[]>();
+    const byType = new Map<string, Map<string, ProjectPurchase[]>>();
+    
+    for (const type of ['produto', 'prestador']) {
+      byType.set(type, new Map());
+    }
+
     for (const p of purchases) {
+      const type = p.purchase_type || 'produto';
       const cat = p.category || 'Outros';
-      if (!map.has(cat)) map.set(cat, []);
-      map.get(cat)!.push(p);
+      if (!byType.has(type)) byType.set(type, new Map());
+      const catMap = byType.get(type)!;
+      if (!catMap.has(cat)) catMap.set(cat, []);
+      catMap.get(cat)!.push(p);
     }
-    const order = [...getAllSupplierSubcategories(), 'Outros'];
-    const sorted = new Map<string, ProjectPurchase[]>();
-    for (const cat of order) {
-      if (map.has(cat)) sorted.set(cat, map.get(cat)!);
+
+    // Remove empty types
+    for (const [type, catMap] of byType) {
+      if (catMap.size === 0) byType.delete(type);
     }
-    for (const [cat, items] of map) {
-      if (!sorted.has(cat)) sorted.set(cat, items);
-    }
-    return sorted;
+
+    return byType;
   }, [purchases]);
 
-  // Auto-expand all categories
-  const allCategoryKeys = useMemo(() => new Set(grouped.keys()), [grouped]);
-  const effectiveExpanded = expandedCategories.size === 0 ? allCategoryKeys : expandedCategories;
-
-  const toggleCategory = useCallback((cat: string) => {
-    setExpandedCategories(prev => {
+  const toggleSection = useCallback((key: string) => {
+    setExpandedSections(prev => {
       const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
   }, []);
@@ -446,9 +496,9 @@ export function PurchasesTable({
           <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
             <Clock className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="font-medium mb-1">Nenhum item de compra</h3>
+          <h3 className="font-medium mb-1">Nenhum item cadastrado</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Comece adicionando o primeiro item para esta obra.
+            Adicione produtos ou prestadores para esta obra.
           </p>
           <Button onClick={onAddFirst}>Adicionar primeiro item</Button>
         </CardContent>
@@ -458,72 +508,104 @@ export function PurchasesTable({
 
   return (
     <>
-      <div className="space-y-3">
-        {Array.from(grouped.entries()).map(([category, items]) => {
-          const isService = isServiceCategory(category);
-          const isOpen = effectiveExpanded.has(category);
-          const categoryTotal = items.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
-          const categoryActual = items.reduce((sum, p) => sum + (p.actual_cost || 0), 0);
-          const completedCount = items.filter(p => p.status === 'delivered').length;
-          const completionPct = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
+      <div className="space-y-4">
+        {Array.from(grouped.entries()).map(([purchaseType, categoryMap]) => {
+          const typeLabel = PURCHASE_TYPE_LABELS[purchaseType as keyof typeof PURCHASE_TYPE_LABELS] || purchaseType;
+          const typeIcon = PURCHASE_TYPE_ICONS[purchaseType as keyof typeof PURCHASE_TYPE_ICONS] || '📋';
+          const isTypeOpen = expandedSections.has(purchaseType);
+          const allItems = Array.from(categoryMap.values()).flat();
+          const typeTotal = allItems.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+          const typeCompleted = allItems.filter(p => p.status === 'delivered').length;
+          const typePct = allItems.length > 0 ? Math.round((typeCompleted / allItems.length) * 100) : 0;
 
           return (
-            <Card key={category} className="overflow-hidden">
-              {/* Category Header */}
+            <div key={purchaseType} className="space-y-2">
+              {/* Type Header */}
               <button
-                onClick={() => toggleCategory(category)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent/30 transition-colors text-left"
+                onClick={() => toggleSection(purchaseType)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-card border border-border hover:bg-accent/30 transition-colors text-left"
               >
                 <div className="shrink-0">
-                  {isOpen
-                    ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  {isTypeOpen
+                    ? <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    : <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   }
                 </div>
-                <span className="text-sm">{isService ? '🔧' : '📦'}</span>
-                <span className="font-semibold text-sm">{category}</span>
-                <Badge variant="secondary" className="text-xs">{items.length}</Badge>
+                <span className="text-lg">{typeIcon}</span>
+                <span className="font-bold text-base">{typeLabel}</span>
+                <Badge variant="secondary" className="text-xs">{allItems.length}</Badge>
 
                 <div className="flex-1" />
 
-                {/* Mini progress */}
-                <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2 w-24">
-                    <Progress value={completionPct} className="h-1.5 flex-1" />
-                    <span>{completionPct}%</span>
+                <div className="hidden sm:flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 w-28">
+                    <Progress value={typePct} className="h-2 flex-1" />
+                    <span className="text-xs">{typePct}%</span>
                   </div>
-                  <span className="font-medium text-foreground">{fmt(categoryTotal)}</span>
-                  {categoryActual > 0 && (
-                    <span className={cn(
-                      'font-medium',
-                      categoryActual > categoryTotal ? 'text-destructive' : 'text-[hsl(var(--success))]',
-                    )}>
-                      {fmt(categoryActual)}
-                    </span>
-                  )}
+                  <span className="font-semibold text-foreground">{fmt(typeTotal)}</span>
                 </div>
               </button>
 
-              {/* Items */}
-              {isOpen && (
-                <div className="border-t border-border/50">
-                  {items.map(purchase => (
-                    <PurchaseRow
-                      key={purchase.id}
-                      purchase={purchase}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onStatusChange={onStatusChange}
-                      onUpdateActualCost={onUpdateActualCost}
-                      onUpdateField={onUpdateField}
-                      setObsModal={setObsModal}
-                      setFlowModal={setFlowModal}
-                      setCadastroModal={setCadastroModal}
-                    />
-                  ))}
+              {/* Category groups within type */}
+              {isTypeOpen && (
+                <div className="space-y-2 ml-2">
+                  {Array.from(categoryMap.entries()).map(([category, items]) => {
+                    const catKey = `${purchaseType}:${category}`;
+                    const isCatOpen = expandedSections.has(catKey) || !expandedSections.has(`_init_${purchaseType}`);
+                    const categoryTotal = items.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
+                    const completedCount = items.filter(p => p.status === 'delivered').length;
+                    const completionPct = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
+
+                    return (
+                      <Card key={catKey} className="overflow-hidden">
+                        <button
+                          onClick={() => toggleSection(catKey)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent/30 transition-colors text-left"
+                        >
+                          <div className="shrink-0">
+                            {isCatOpen
+                              ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            }
+                          </div>
+                          <span className="font-semibold text-sm">{category}</span>
+                          <Badge variant="secondary" className="text-xs">{items.length}</Badge>
+
+                          <div className="flex-1" />
+
+                          <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-2 w-24">
+                              <Progress value={completionPct} className="h-1.5 flex-1" />
+                              <span>{completionPct}%</span>
+                            </div>
+                            <span className="font-medium text-foreground">{fmt(categoryTotal)}</span>
+                          </div>
+                        </button>
+
+                        {isCatOpen && (
+                          <div className="border-t border-border/50">
+                            {items.map(purchase => (
+                              <PurchaseRow
+                                key={purchase.id}
+                                purchase={purchase}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                onStatusChange={onStatusChange}
+                                onUpdateActualCost={onUpdateActualCost}
+                                onUpdateField={onUpdateField}
+                                setObsModal={setObsModal}
+                                setFlowModal={setFlowModal}
+                                setCadastroModal={setCadastroModal}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
-            </Card>
+            </div>
           );
         })}
       </div>
