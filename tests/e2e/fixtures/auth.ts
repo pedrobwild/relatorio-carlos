@@ -36,8 +36,9 @@ async function loginAs(page: Page, email: string, password: string) {
 /**
  * Extended test fixture with authenticated pages
  */
+// eslint-disable-next-line react-hooks/rules-of-hooks
 export const test = base.extend<TestFixtures>({
-  customerPage: async ({ browser }, use) => {
+  customerPage: async ({ browser }, use) => { // eslint-disable-line react-hooks/rules-of-hooks
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAs(page, TEST_CUSTOMER_EMAIL, TEST_CUSTOMER_PASSWORD);
@@ -45,7 +46,7 @@ export const test = base.extend<TestFixtures>({
     await context.close();
   },
   
-  staffPage: async ({ browser }, use) => {
+  staffPage: async ({ browser }, use) => { // eslint-disable-line react-hooks/rules-of-hooks
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAs(page, TEST_STAFF_EMAIL, TEST_STAFF_PASSWORD);
@@ -53,7 +54,7 @@ export const test = base.extend<TestFixtures>({
     await context.close();
   },
   
-  testProjectId: async ({}, use) => {
+  testProjectId: async (_params, use) => { // eslint-disable-line react-hooks/rules-of-hooks
     await use(TEST_PROJECT_ID);
   },
 });
