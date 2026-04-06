@@ -132,11 +132,11 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
       />
 
       <ComprasKPICards
-        pendingCount={state.pendingPurchases.length}
-        orderedCount={state.orderedPurchases.length}
-        deliveredCount={state.deliveredPurchases.length}
-        overdueCount={state.overduePurchases.length}
-        totalEstimatedCost={state.totalEstimatedCost}
+        pendingCount={pendingCount}
+        orderedCount={orderedCount}
+        deliveredCount={deliveredCount}
+        overdueCount={overdueCount}
+        totalEstimatedCost={totalEstimatedCostFiltered}
         totalActualCost={totalActualCost}
         totalItems={totalItems}
       />
