@@ -155,7 +155,13 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
             Limpar filtros
           </Button>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {isProduto && (
+            <Button variant="outline" size="sm" onClick={handleSyncBudget} disabled={syncing}>
+              <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
+              Importar do Orçamento
+            </Button>
+          )}
           <Button onClick={() => state.handleOpenDialog()}>
             <Plus className="h-4 w-4 mr-2" />
             Novo {label}
