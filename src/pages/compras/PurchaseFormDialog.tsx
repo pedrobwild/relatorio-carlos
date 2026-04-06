@@ -10,6 +10,7 @@ import { getSubcategoriesByType } from '@/constants/supplierCategories';
 import { useMemo } from 'react';
 import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './types';
 import { PaymentScheduleSection, type PaymentInstallment } from './PaymentScheduleSection';
+import { FornecedorSelector } from './FornecedorSelector';
 
 interface Activity {
   id: string;
