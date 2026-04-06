@@ -155,13 +155,13 @@ export function ProjectSidebar() {
         },
         {
           label: "Produtos",
-          icon: ShoppingCart,
+          icon: Package,
           path: paths.comprasProdutos,
           disabledInProjectPhase: true,
         },
         {
           label: "Prestadores",
-          icon: ShoppingCart,
+          icon: Wrench,
           path: paths.comprasPrestadores,
           disabledInProjectPhase: true,
         },
