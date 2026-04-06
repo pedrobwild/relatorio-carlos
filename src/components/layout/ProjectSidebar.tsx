@@ -154,15 +154,9 @@ export function ProjectSidebar() {
           disabledInProjectPhase: true,
         },
         {
-          label: "Produtos",
+          label: "Compras",
           icon: Package,
-          path: paths.comprasProdutos,
-          disabledInProjectPhase: true,
-        },
-        {
-          label: "Prestadores",
-          icon: Wrench,
-          path: paths.comprasPrestadores,
+          path: paths.compras,
           disabledInProjectPhase: true,
         },
         {
