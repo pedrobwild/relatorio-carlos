@@ -88,7 +88,7 @@ export default function OrcamentoDetalhe() {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
         .from('orcamento_sections')
-        .select('id, title, order_index, section_price, is_optional, orcamento_items(id, title, qty, unit, internal_unit_price, internal_total, bdi_percentage, order_index)')
+        .select('id, title, subtitle, notes, order_index, section_price, is_optional, cover_image_url, included_bullets, excluded_bullets, tags, cost, bdi_percentage, item_count, orcamento_items(id, title, description, qty, unit, internal_unit_price, internal_total, bdi_percentage, order_index, included_rooms, excluded_rooms, coverage_type, reference_url, notes)')
         .eq('orcamento_id', orcamentoId)
         .order('order_index', { ascending: true });
       if (error) throw error;
@@ -96,6 +96,22 @@ export default function OrcamentoDetalhe() {
         ...s,
         orcamento_items: (s.orcamento_items || []).sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0)),
       }));
+    },
+    enabled: !!orcamentoId,
+  });
+
+  // Fetch adjustments
+  const { data: adjustments } = useQuery({
+    queryKey: ['orcamentos', 'adjustments', orcamentoId],
+    queryFn: async () => {
+      if (!orcamentoId) return [];
+      const { data, error } = await supabase
+        .from('orcamento_adjustments')
+        .select('id, label, amount, sign, order_index')
+        .eq('orcamento_id', orcamentoId)
+        .order('order_index', { ascending: true });
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!orcamentoId,
   });
