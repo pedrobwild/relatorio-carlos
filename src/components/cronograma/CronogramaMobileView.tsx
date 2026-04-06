@@ -247,7 +247,6 @@ export function CronogramaMobileView({
 
 function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { computedStatus: ActivityStatus }; index: number }) {
   const config = statusConfig[act.computedStatus];
-  const today = new Date().toISOString().slice(0, 10);
   const isOverdue = act.computedStatus === 'overdue';
   const daysInfo = useMemo(() => {
     if (act.actual_end) return null;

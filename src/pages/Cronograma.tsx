@@ -266,7 +266,7 @@ const Cronograma = () => {
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
         const cappedEnd = weekEnd > end ? end : weekEnd;
-        const fmt = (d: Date) => d.toISOString().split('T')[0];
+        const fmt = (d: Date) => toISO(d);
         weeks.push({
           id: crypto.randomUUID(),
           description: '',

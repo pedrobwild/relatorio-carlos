@@ -91,17 +91,27 @@ export function EditableDateCellMobile({ value, baseYear, activityId, field, lab
 
   const handleSelect = async (date: Date | undefined) => {
     setSaving(true);
-    await onSave(activityId, { [field]: date ? toISODate(date) : null });
-    setSaving(false);
-    setOpen(false);
+    try {
+      await onSave(activityId, { [field]: date ? toISODate(date) : null });
+    } catch {
+      // error handled by caller
+    } finally {
+      setSaving(false);
+      setOpen(false);
+    }
   };
 
   const handleClear = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setSaving(true);
-    await onSave(activityId, { [field]: null });
-    setSaving(false);
-    setOpen(false);
+    try {
+      await onSave(activityId, { [field]: null });
+    } catch {
+      // error handled by caller
+    } finally {
+      setSaving(false);
+      setOpen(false);
+    }
   };
 
   return (
