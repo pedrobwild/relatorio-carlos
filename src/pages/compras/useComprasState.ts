@@ -49,12 +49,9 @@ export function useComprasState() {
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterActivity !== 'all' && p.activity_id !== filterActivity) return false;
       
-      // Category filter: match purchase category against supplier type taxonomy
-      if (filterCategory !== 'all' && p.category) {
-        const isInType = isValidSupplierSubcategory(filterCategory, p.category);
-        if (!isInType) return false;
-      } else if (filterCategory !== 'all' && !p.category) {
-        return false; // No category → doesn't match any specific filter
+      // Category filter: now matches purchase_type ('produto' | 'prestador')
+      if (filterCategory !== 'all') {
+        if ((p.purchase_type || 'produto') !== filterCategory) return false;
       }
       
       // Subcategory filter: exact match on purchase category
