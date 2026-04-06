@@ -189,6 +189,9 @@ export default function OrcamentoDetalhe() {
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
       toast.success('Status atualizado');
     },
+    onError: (err: Error) => {
+      toast.error('Erro ao atualizar status: ' + err.message);
+    },
   });
 
   // Add comment mutation
