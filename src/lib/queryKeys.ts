@@ -196,6 +196,36 @@ export const queryKeys = {
     detail: (id: string | undefined) =>
       [...queryKeys.projectTemplates.all, 'detail', id] as const,
   },
+
+  // ============================================================================
+  // Orcamentos (Budget)
+  // ============================================================================
+  orcamentos: {
+    all: ['orcamentos'] as const,
+    lists: () => [...queryKeys.orcamentos.all, 'list'] as const,
+    list: (filters?: { status?: string }) =>
+      [...queryKeys.orcamentos.lists(), filters] as const,
+    detail: (id: string | undefined) =>
+      [...queryKeys.orcamentos.all, 'detail', id] as const,
+    sections: (id: string | undefined) =>
+      [...queryKeys.orcamentos.all, 'sections', id] as const,
+    adjustments: (id: string | undefined) =>
+      [...queryKeys.orcamentos.all, 'adjustments', id] as const,
+    notes: (id: string | undefined) =>
+      [...queryKeys.orcamentos.all, 'notas', id] as const,
+    events: (id: string | undefined) =>
+      [...queryKeys.orcamentos.all, 'eventos', id] as const,
+    byProject: (projectId: string | undefined) =>
+      [...queryKeys.orcamentos.all, 'by-project', projectId] as const,
+  },
+
+  // ============================================================================
+  // Staff Profiles (lightweight lookup cache)
+  // ============================================================================
+  staffProfiles: {
+    all: ['staff-profiles'] as const,
+    lookup: () => [...queryKeys.staffProfiles.all, 'lookup'] as const,
+  },
 } as const;
 
 // ============================================================================
