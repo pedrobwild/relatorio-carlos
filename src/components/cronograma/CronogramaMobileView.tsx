@@ -62,10 +62,14 @@ export function CronogramaMobileView({
   const [filter, setFilter] = useState<FilterValue>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['overdue', 'in_progress', 'upcoming']));
 
+  // Stable "today" reference — avoids re-creating Date on every render
+  const todayRef = useRef(new Date().toISOString().slice(0, 10));
+  const today = todayRef.current;
+
   // Enrich activities with computed status
   const enriched = useMemo(() =>
-    activities.map(act => ({ ...act, computedStatus: getActivityStatus(act) })),
-    [activities]
+    activities.map(act => ({ ...act, computedStatus: getActivityStatus(act, today) })),
+    [activities, today]
   );
 
   // Stats
