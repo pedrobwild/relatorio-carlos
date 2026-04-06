@@ -144,7 +144,7 @@ export default function DadosCliente() {
             tamanho_imovel_m2: studio.tamanho_imovel_m2,
             tipo_de_locacao: studio.tipo_de_locacao,
             data_recebimento_chaves: studio.data_recebimento_chaves,
-          });
+          }, { onConflict: 'project_id' });
         if (studioErr) throw studioErr;
       }
 
