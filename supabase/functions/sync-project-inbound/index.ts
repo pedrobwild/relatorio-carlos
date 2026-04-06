@@ -186,6 +186,96 @@ Deno.serve(async (req) => {
   }
 });
 
+// ─── Contract PDF Storage ───────────────────────────────────────────────────
+
+/**
+ * Download the contract PDF from the Envision URL and store it in
+ * the project-documents bucket + project_documents table.
+ */
+async function downloadAndStoreContract(
+  db: ReturnType<typeof createClient>,
+  projectId: string,
+  contractFileUrl: string,
+  projectName: string,
+): Promise<Uint8Array> {
+  console.log(`[contract-store] Downloading from: ${contractFileUrl.substring(0, 80)}...`);
+  const pdfResponse = await fetch(contractFileUrl);
+  if (!pdfResponse.ok) {
+    throw new Error(`Failed to download contract PDF: ${pdfResponse.status}`);
+  }
+
+  const pdfBuffer = await pdfResponse.arrayBuffer();
+  const pdfBytes = new Uint8Array(pdfBuffer);
+
+  if (pdfBytes.length > 50 * 1024 * 1024) {
+    throw new Error("Contract PDF too large (>50MB)");
+  }
+
+  // Check if a contract document already exists for this project
+  const { data: existingDoc } = await db
+    .from("project_documents")
+    .select("id")
+    .eq("project_id", projectId)
+    .eq("document_type", "contrato")
+    .maybeSingle();
+
+  if (existingDoc) {
+    console.log(`[contract-store] Contract document already exists for project ${projectId}, skipping`);
+    return pdfBytes;
+  }
+
+  // Build a clean file name
+  const sanitizedName = `Contrato_${projectName.replace(/[^a-zA-Z0-9._-]/g, "_")}.pdf`;
+  const storagePath = `${projectId}/contratos/${Date.now()}_${sanitizedName}`;
+  const bucket = "project-documents";
+
+  // Upload to storage
+  const { error: uploadErr } = await db.storage
+    .from(bucket)
+    .upload(storagePath, pdfBytes, {
+      contentType: "application/pdf",
+      upsert: false,
+    });
+
+  if (uploadErr) {
+    throw new Error(`Storage upload failed: ${uploadErr.message}`);
+  }
+
+  // Find an admin user for uploaded_by
+  const { data: adminUser } = await db
+    .from("users_profile")
+    .select("id")
+    .eq("perfil", "admin")
+    .eq("status", "ativo")
+    .limit(1)
+    .single();
+
+  // Create project_documents record
+  const { error: docErr } = await db
+    .from("project_documents")
+    .insert({
+      project_id: projectId,
+      document_type: "contrato",
+      name: sanitizedName,
+      description: "Contrato do cliente recebido automaticamente via integração Envision",
+      storage_path: storagePath,
+      storage_bucket: bucket,
+      mime_type: "application/pdf",
+      size_bytes: pdfBytes.length,
+      status: "approved",
+      uploaded_by: adminUser?.id ?? "00000000-0000-0000-0000-000000000000",
+    });
+
+  if (docErr) {
+    // Cleanup uploaded file on failure
+    await db.storage.from(bucket).remove([storagePath]);
+    throw new Error(`Document record failed: ${docErr.message}`);
+  }
+
+  console.log(`[contract-store] Stored contract: ${storagePath} (${pdfBytes.length} bytes)`);
+  return pdfBytes;
+}
+
 // ─── AI Enrichment ──────────────────────────────────────────────────────────
 
 const AI_SYSTEM_PROMPT = `Você é um extrator de dados de projetos de reforma/construção civil da BWild Arquitetura e Reformas.
