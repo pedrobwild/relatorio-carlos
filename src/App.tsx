@@ -34,6 +34,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const GestaoObras = lazy(() => import("./pages/GestaoObras"));
 const NovaObra = lazy(() => import("./pages/NovaObra"));
 const EditarObra = lazy(() => import("./pages/EditarObra"));
+const EditarObraWizard = lazy(() => import("./pages/EditarObraWizard"));
 const Arquivos = lazy(() => import("./pages/Arquivos"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminAuditoria = lazy(() => import("./pages/AdminAuditoria"));
