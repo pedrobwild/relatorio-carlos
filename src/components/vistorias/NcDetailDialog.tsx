@@ -136,6 +136,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
       category: editCategory || undefined,
       deadline: editDeadline ? format(editDeadline, 'yyyy-MM-dd') : null,
       estimated_cost: editEstimatedCost.trim() === '' ? null : parsedCost,
+      responsible_user_id: editResponsibleUserId || null,
     }, {
       onSuccess: () => setEditing(false),
     });
