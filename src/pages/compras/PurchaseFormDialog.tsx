@@ -35,6 +35,7 @@ interface PurchaseFormDialogProps {
 export function PurchaseFormDialog({
   open, onOpenChange, isEditing, formData, setFormData,
   activities, onActivityChange, onLeadTimeChange, onSubmit, isSubmitting,
+  paymentInstallments, onPaymentInstallmentsChange,
 }: PurchaseFormDialogProps) {
   const purchaseType = formData.purchase_type || 'produto';
   const isPrestador = purchaseType === 'prestador';
