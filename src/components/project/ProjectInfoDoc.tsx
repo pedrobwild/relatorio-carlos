@@ -116,8 +116,8 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
 
   const exec = useCallback(
     (command: string, value?: string) => {
-      document.execCommand(command, false, value);
       editorRef.current?.focus();
+      document.execCommand(command, false, value);
       handleInput();
     },
     [handleInput]
@@ -125,9 +125,9 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
 
   const execBlock = useCallback(
     (tag: string) => {
+      editorRef.current?.focus();
       const formattedTag = tag.startsWith('<') ? tag : `<${tag}>`;
       document.execCommand('formatBlock', false, formattedTag);
-      editorRef.current?.focus();
       handleInput();
     },
     [handleInput]
