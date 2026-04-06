@@ -8,6 +8,7 @@ import {
   updateNonConformity,
   updateNcEvidencePhotos,
   transitionNcStatus,
+  deleteNonConformity,
 } from '@/infra/repositories/ncsRepository';
 
 // eslint-disable-next-line no-duplicate-imports
@@ -128,6 +129,25 @@ export function useUpdateNonConformity() {
     },
     onError: (err: Error) => {
       toast.error('Erro: ' + err.message);
+    },
+  });
+}
+
+export function useDeleteNonConformity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { id: string; project_id: string }) => {
+      await deleteNonConformity(params.id);
+      return params;
+    },
+    onSuccess: (params) => {
+      queryClient.invalidateQueries({ queryKey: ['non-conformities', params.project_id] });
+      queryClient.invalidateQueries({ queryKey: ['non-conformities', 'global'] });
+      toast.success('Não conformidade excluída');
+    },
+    onError: (err: Error) => {
+      toast.error('Erro ao excluir: ' + err.message);
     },
   });
 }

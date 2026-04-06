@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign, User } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle, History, Pencil, CalendarIcon, DollarSign, User, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EvidenceUpload } from './EvidenceUpload';
 import { CorrectiveActionTemplateSelector } from './CorrectiveActionTemplateSelector';
@@ -35,10 +35,22 @@ import {
   useUpdateNonConformity,
   useUpdateNcEvidence,
   useNcHistory,
+  useDeleteNonConformity,
   type NonConformity,
   type NcStatus,
   type NcSeverity,
 } from '@/hooks/useNonConformities';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useCan } from '@/hooks/useCan';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { cn } from '@/lib/utils';
@@ -77,10 +89,12 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
   const updateStatus = useUpdateNcStatus();
   const updateNc = useUpdateNonConformity();
   const updateEvidence = useUpdateNcEvidence();
+  const deleteNc = useDeleteNonConformity();
   const { data: history = [] } = useNcHistory(nc.id);
   const { can } = useCan();
   const canApproveNc = can('ncs:approve');
   const canEdit = can('ncs:treat');
+  const canDelete = can('ncs:create');
   const { data: staffUsers = [] } = useStaffUsers();
 
   const isEditable = canEdit && nc.status !== 'closed';
@@ -202,6 +216,36 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditing(true)}>
                 <Pencil className="h-4 w-4" />
               </Button>
+            )}
+            {canDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir não conformidade?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. A NC "{nc.title}" e todo o seu histórico serão removidos permanentemente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => {
+                        deleteNc.mutate({ id: nc.id, project_id: nc.project_id }, {
+                          onSuccess: () => onOpenChange(false),
+                        });
+                      }}
+                    >
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </DialogTitle>
         </DialogHeader>
