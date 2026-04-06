@@ -28,6 +28,8 @@ interface PurchaseFormDialogProps {
   onLeadTimeChange: (leadTime: number) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  paymentInstallments: PaymentInstallment[];
+  onPaymentInstallmentsChange: (installments: PaymentInstallment[]) => void;
 }
 
 export function PurchaseFormDialog({
