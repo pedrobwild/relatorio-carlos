@@ -40,6 +40,7 @@ import {
   type NcSeverity,
 } from '@/hooks/useNonConformities';
 import { useCan } from '@/hooks/useCan';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { cn } from '@/lib/utils';
 import { NC_CATEGORIES, ROOT_CAUSES, formatBRL, parseCurrencyInput } from './ncConstants';
 
