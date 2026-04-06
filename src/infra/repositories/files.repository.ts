@@ -398,7 +398,7 @@ export async function archiveFile(fileId: string): Promise<RepositoryResult<File
   return executeQuery(async () => {
     const { data, error } = await supabase
       .from('files')
-      .update({ status: 'archived' })
+      .update({ status: 'archived', archived_at: new Date().toISOString() })
       .eq('id', fileId)
       .select()
       .single();

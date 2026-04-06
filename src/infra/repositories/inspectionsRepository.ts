@@ -80,19 +80,37 @@ export async function createInspectionWithItems(params: {
   client_present?: boolean;
   client_name?: string;
 }): Promise<string> {
+  // The RPC only accepts: p_project_id, p_activity_id, p_inspector_id, p_inspection_date, p_notes, p_items
+  // Extra fields (inspection_type, client_present, client_name) must be set via a follow-up UPDATE
   const { data, error } = await supabase.rpc('create_inspection_with_items', {
     p_project_id: params.project_id,
     p_activity_id: params.activity_id || undefined,
     p_inspection_date: params.inspection_date || new Date().toISOString().split('T')[0],
     p_notes: params.notes || undefined,
     p_items: JSON.parse(JSON.stringify(params.items)),
-    p_inspection_type: params.inspection_type || 'rotina',
-    p_client_present: params.client_present ?? false,
-    p_client_name: params.client_name || undefined,
     p_inspector_id: params.inspector_user_id || undefined,
   });
   if (error) throw error;
-  return data as string;
+
+  const inspectionId = data as string;
+
+  // Set additional fields not supported by the RPC signature
+  const extraFields: Record<string, unknown> = {};
+  if (params.inspection_type) extraFields.inspection_type = params.inspection_type;
+  if (params.client_present !== undefined) extraFields.client_present = params.client_present;
+  if (params.client_name) extraFields.client_name = params.client_name;
+
+  if (Object.keys(extraFields).length > 0) {
+    const { error: updateError } = await supabase
+      .from('inspections')
+      .update(extraFields)
+      .eq('id', inspectionId);
+    if (updateError) {
+      console.warn('[createInspectionWithItems] Extra fields update failed:', updateError.message);
+    }
+  }
+
+  return inspectionId;
 }
 
 export async function updateInspectionItem(params: {

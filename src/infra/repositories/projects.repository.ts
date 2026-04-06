@@ -418,10 +418,23 @@ export async function cloneProjectForConstruction(
       })));
     }
 
-    // 7. Copy formalizations (update project_id)
-    const { data: formalizations } = await supabase.from('formalizations').select('id').eq('project_id', sourceProjectId);
+    // 7. Copy formalizations (clone, NOT move — moving would corrupt the source project)
+    const { data: formalizations } = await supabase.from('formalizations').select('*').eq('project_id', sourceProjectId);
     if (formalizations?.length) {
-      await supabase.from('formalizations').update({ project_id: newProject.id }).eq('project_id', sourceProjectId);
+      for (const f of formalizations) {
+        await supabase.from('formalizations').insert({
+          customer_org_id: f.customer_org_id,
+          created_by: f.created_by,
+          type: f.type,
+          status: f.status,
+          title: f.title,
+          summary: f.summary,
+          body_md: f.body_md,
+          data: f.data,
+          project_id: newProject.id,
+          unit_id: f.unit_id,
+        });
+      }
     }
 
     // 8. Copy pending items

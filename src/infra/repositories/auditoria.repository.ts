@@ -138,10 +138,13 @@ export async function getEntityAuditTrail(
  * Get distinct entity types for filter dropdown
  */
 export async function getDistinctEntityTypes(): Promise<string[]> {
+  // Use a distinct-like approach: fetch all unique entity types
+  // Note: Supabase doesn't support DISTINCT directly, so we use a larger limit
+  // and deduplicate client-side. This covers all realistic entity type counts.
   const { data, error } = await supabase
     .from('auditoria')
     .select('entidade')
-    .limit(1000);
+    .limit(5000);
 
   if (error || !data) return [];
 
