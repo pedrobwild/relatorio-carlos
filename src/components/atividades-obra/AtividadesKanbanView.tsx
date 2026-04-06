@@ -95,7 +95,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
   return (
     <>
       {/* Horizontal scroll on mobile, grid on desktop */}
-      <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 min-h-[400px] scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 min-h-[400px] scrollbar-hide">
         {TASK_STATUSES.map(col => {
           const colTasks = tasks.filter(t => t.status === col.value);
           return (
