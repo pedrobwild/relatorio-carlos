@@ -307,12 +307,15 @@ export async function createProjectWithCustomer(input: {
 
     if (projectError) return { data: null, error: projectError };
 
-    // Add creator as engineer
-    await supabase.from('project_engineers').insert({
+    // Add creator as engineer (non-critical, log but don't fail)
+    const { error: engineerErr } = await supabase.from('project_engineers').insert({
       project_id: project.id,
       engineer_user_id: input.created_by,
       is_primary: true,
     });
+    if (engineerErr) {
+      console.warn('[createProjectWithCustomer] Engineer insert warning:', engineerErr.message);
+    }
 
     // Add customer
     const { data: customerInsert } = await supabase.from('project_customers').insert({

@@ -149,11 +149,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // --- AI Enrichment: use already-downloaded PDF to enrich project data ---
+    // --- AI Enrichment: reuse already-downloaded PDF bytes to avoid double download ---
     let aiEnrichment: Record<string, unknown> | null = null;
     if (contractFileUrl && isNewProject) {
       try {
-        aiEnrichment = await enrichProjectWithAI(db, projectId, project, contractFileUrl);
+        aiEnrichment = await enrichProjectWithAI(db, projectId, project, contractFileUrl, contractPdfBytes);
         console.log(`[sync-project-inbound] AI enrichment completed for project ${projectId}`);
       } catch (aiErr) {
         // Non-critical: don't fail the sync if AI enrichment fails
@@ -348,6 +348,7 @@ async function enrichProjectWithAI(
   projectId: string,
   existingData: Record<string, unknown>,
   contractFileUrl: string,
+  cachedPdfBytes?: Uint8Array | null,
 ): Promise<Record<string, unknown>> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
@@ -355,15 +356,20 @@ async function enrichProjectWithAI(
     throw new Error("LOVABLE_API_KEY not configured");
   }
 
-  // 1. Download contract PDF
-  console.log(`[AI-enrich] Downloading contract from: ${contractFileUrl.substring(0, 80)}...`);
-  const pdfResponse = await fetch(contractFileUrl);
-  if (!pdfResponse.ok) {
-    throw new Error(`Failed to download contract PDF: ${pdfResponse.status}`);
+  // 1. Use cached PDF bytes or download if not available
+  let pdfBytes: Uint8Array;
+  if (cachedPdfBytes && cachedPdfBytes.length > 0) {
+    console.log(`[AI-enrich] Using cached PDF bytes (${cachedPdfBytes.length} bytes)`);
+    pdfBytes = cachedPdfBytes;
+  } else {
+    console.log(`[AI-enrich] Downloading contract from: ${contractFileUrl.substring(0, 80)}...`);
+    const pdfResponse = await fetch(contractFileUrl);
+    if (!pdfResponse.ok) {
+      throw new Error(`Failed to download contract PDF: ${pdfResponse.status}`);
+    }
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+    pdfBytes = new Uint8Array(pdfBuffer);
   }
-
-  const pdfBuffer = await pdfResponse.arrayBuffer();
-  const pdfBytes = new Uint8Array(pdfBuffer);
 
   // Validate size (max 20MB for AI processing)
   if (pdfBytes.length > 20 * 1024 * 1024) {

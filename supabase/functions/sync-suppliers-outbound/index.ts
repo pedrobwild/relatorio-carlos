@@ -28,6 +28,9 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
+    // --- Parse body once to avoid double-consume ---
+    const body = await req.json();
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return jsonResponse({ error: "Authorization required" }, 401);
 
@@ -49,7 +52,6 @@ Deno.serve(async (req) => {
       
       if (authErr || !user) {
         // pg_net sends anon key; allow if supplier_data is present (only trigger sends this)
-        const body = await req.clone().json().catch(() => ({}));
         if (body.supplier_data) {
           isInternalCall = true;
         } else {
@@ -66,7 +68,6 @@ Deno.serve(async (req) => {
     }
 
     // --- Input ---
-    const body = await req.json();
     const { supplier_id, supplier_data } = body;
     if (!supplier_id) return jsonResponse({ error: "supplier_id is required" }, 400);
 

@@ -64,8 +64,11 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return jsonResponse({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }, 500);
+    }
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json();
@@ -174,13 +177,23 @@ Deno.serve(async (req: Request) => {
     // If sections provided, replace all existing sections & items
     if (Array.isArray(sections) && sections.length > 0) {
       // Delete existing sections (cascade deletes items)
-      await supabaseAdmin
+      const { error: deleteErr } = await supabaseAdmin
         .from("orcamento_sections")
         .delete()
         .eq("orcamento_id", orcamentoId);
 
+      if (deleteErr) {
+        console.error("Delete existing sections error:", deleteErr);
+        // Continue anyway - new sections will still be inserted
+      }
+
       // Insert sections and items
       for (const sec of sections) {
+        if (!sec.title?.trim()) {
+          console.warn("Skipping section with empty title");
+          continue;
+        }
+
         const { data: secData, error: secError } = await supabaseAdmin
           .from("orcamento_sections")
           .insert({
@@ -199,23 +212,27 @@ Deno.serve(async (req: Request) => {
         }
 
         if (Array.isArray(sec.items) && sec.items.length > 0) {
-          const itemRows = sec.items.map((item: any, idx: number) => ({
-            section_id: secData.id,
-            title: item.title,
-            qty: item.qty ?? null,
-            unit: item.unit ?? null,
-            internal_unit_price: item.internal_unit_price ?? null,
-            internal_total: item.internal_total ?? null,
-            bdi_percentage: item.bdi_percentage ?? 0,
-            order_index: item.order_index ?? idx,
-          }));
+          const itemRows = sec.items
+            .filter((item: any) => item.title?.trim())
+            .map((item: any, idx: number) => ({
+              section_id: secData.id,
+              title: item.title,
+              qty: item.qty ?? null,
+              unit: item.unit ?? null,
+              internal_unit_price: item.internal_unit_price ?? null,
+              internal_total: item.internal_total ?? null,
+              bdi_percentage: item.bdi_percentage ?? 0,
+              order_index: item.order_index ?? idx,
+            }));
 
-          const { error: itemsError } = await supabaseAdmin
-            .from("orcamento_items")
-            .insert(itemRows);
+          if (itemRows.length > 0) {
+            const { error: itemsError } = await supabaseAdmin
+              .from("orcamento_items")
+              .insert(itemRows);
 
-          if (itemsError) {
-            console.error("Insert items error:", itemsError);
+            if (itemsError) {
+              console.error("Insert items error:", itemsError);
+            }
           }
         }
       }
