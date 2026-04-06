@@ -233,9 +233,21 @@ export default function DadosCliente() {
         </Button>
       </div>
 
-      <Separator />
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'contratante' | 'imovel')}>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="contratante" className="gap-1.5">
+            <User className="h-4 w-4" />
+            Contratante
+          </TabsTrigger>
+          <TabsTrigger value="imovel" className="gap-1.5">
+            <Building2 className="h-4 w-4" />
+            Imóvel
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* ── Cliente (Contratante) ── */}
+      {activeTab === 'contratante' && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
