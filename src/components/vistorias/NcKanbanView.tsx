@@ -36,6 +36,7 @@ interface Props {
   nonConformities: NonConformity[];
   searchQuery: string;
   onSelect: (nc: NonConformity) => void;
+  showProjectBadge?: boolean;
 }
 
 export function NcKanbanView({ nonConformities, searchQuery, onSelect }: Props) {
