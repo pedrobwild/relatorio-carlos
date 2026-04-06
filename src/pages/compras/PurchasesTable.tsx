@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useCallback } from 'react';
 import {
   MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign,
   ClipboardList, ChevronDown, ChevronRight, MoreHorizontal, Trash2,
-  Pencil, MapPin, Calendar, Warehouse, Building2, TruckIcon,
+  Pencil, MapPin, Calendar, Warehouse, Building2, TruckIcon, History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import { statusConfig, PURCHASE_TYPE_LABELS, PURCHASE_TYPE_ICONS } from './types
 import { ObservationsModal } from './ObservationsModal';
 import { PaymentFlowModal } from './PaymentFlowModal';
 import { CadastroModal } from './CadastroModal';
+import { DateLogsModal } from './DateLogsModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -350,9 +351,11 @@ function PurchaseRow({
   setCadastroModal: (v: { purchase: ProjectPurchase } | null) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [dateLogsOpen, setDateLogsOpen] = useState(false);
   const isPrestador = purchase.purchase_type === 'prestador';
 
   return (
+    <>
     <Collapsible open={expanded} onOpenChange={setExpanded}>
       {/* Main row */}
       <div className={cn(
@@ -423,9 +426,19 @@ function PurchaseRow({
                 <p className="text-xs text-muted-foreground">
                   Compra: {fmtDate(purchase.planned_purchase_date)}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Entrega: {fmtDate(purchase.required_by_date)}
-                </p>
+                {purchase.stock_exit_date ? (
+                  <p className="text-xs font-medium text-emerald-600">
+                    Enviado p/ Obra: {fmtDate(purchase.stock_exit_date)}
+                  </p>
+                ) : purchase.actual_delivery_date ? (
+                  <p className="text-xs text-[hsl(var(--success))]">
+                    Entregue: {fmtDate(purchase.actual_delivery_date)}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Entrega: {fmtDate(purchase.required_by_date)}
+                  </p>
+                )}
               </>
             )}
           </div>
@@ -445,6 +458,15 @@ function PurchaseRow({
               title="Observações"
             >
               <MessageSquare className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => { e.stopPropagation(); setDateLogsOpen(true); }}
+              title="Histórico de Datas"
+            >
+              <History className="h-3.5 w-3.5" />
             </Button>
 
             <DropdownMenu>
@@ -719,6 +741,13 @@ function PurchaseRow({
         </div>
       </CollapsibleContent>
     </Collapsible>
+
+    <DateLogsModal
+      open={dateLogsOpen}
+      onOpenChange={setDateLogsOpen}
+      purchase={purchase}
+    />
+    </>
   );
 }
 
