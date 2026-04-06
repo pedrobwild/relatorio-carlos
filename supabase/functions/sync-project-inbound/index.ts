@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       estimated_duration_weeks: project.estimated_duration_weeks ?? null,
       budget_value: typeof project.budget_value === "number" ? project.budget_value : null,
       budget_code: project.budget_code ?? null,
-      status: project.status ?? "planning",
+      status: "draft",
       notes: project.notes ?? null,
       consultora_comercial: project.consultora_comercial ?? null,
     };

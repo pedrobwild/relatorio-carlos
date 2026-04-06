@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat } from 'lucide-react';
+import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
@@ -24,6 +24,7 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const statusColors: Record<string, string> = {
+  draft: 'bg-violet-500/10 text-violet-700 border-violet-300/50 dark:text-violet-400 dark:border-violet-500/20',
   active: 'bg-emerald-500/10 text-emerald-700 border-emerald-300/50 dark:text-emerald-400 dark:border-emerald-500/20',
   completed: 'bg-blue-500/10 text-blue-700 border-blue-300/50 dark:text-blue-400 dark:border-blue-500/20',
   paused: 'bg-amber-500/10 text-amber-700 border-amber-300/50 dark:text-amber-400 dark:border-amber-500/20',
@@ -31,6 +32,7 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
+  draft: 'Rascunho',
   active: 'Ativa',
   completed: 'Concluída',
   paused: 'Pausada',
@@ -224,6 +226,7 @@ function ProjectRow({
   onToggle: () => void;
   onNavigate: () => void;
 }) {
+  const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const progress = summary?.progress_percentage ?? 0;
@@ -393,15 +396,28 @@ function ProjectRow({
 
         {/* Action */}
         <TableCell className="py-2 px-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 opacity-0 group-hover/row:opacity-100 transition-opacity"
-            title="Ver portal"
-            onClick={(e) => { e.stopPropagation(); onNavigate(); }}
-          >
-            <ExternalLink className="h-3 w-3" />
-          </Button>
+          {project.status === 'draft' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 text-[10px] font-semibold gap-1 px-2 border-violet-300 text-violet-700 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-500/30 dark:hover:bg-violet-500/10"
+              title="Revisar e publicar rascunho"
+              onClick={(e) => { e.stopPropagation(); navigate(`/gestao/obra/${project.id}/wizard`); }}
+            >
+              <Pencil className="h-3 w-3" />
+              Revisar
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover/row:opacity-100 transition-opacity"
+              title="Ver portal"
+              onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+            >
+              <ExternalLink className="h-3 w-3" />
+            </Button>
+          )}
         </TableCell>
       </TableRow>
     </CollapsibleTrigger>
