@@ -217,6 +217,36 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 <Pencil className="h-4 w-4" />
               </Button>
             )}
+            {canDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir não conformidade?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. A NC "{nc.title}" e todo o seu histórico serão removidos permanentemente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => {
+                        deleteNc.mutate({ id: nc.id, project_id: nc.project_id }, {
+                          onSuccess: () => onOpenChange(false),
+                        });
+                      }}
+                    >
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </DialogTitle>
         </DialogHeader>
 
