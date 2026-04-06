@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { WeeklyReportData, LookaheadTask, RiskIssue, ClientDecision, Incident, GalleryPhoto } from "@/types/weeklyReport";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { toast } from "sonner";
@@ -28,6 +28,20 @@ function validateFile(file: File): boolean {
 export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSaving }: UseEditorStateOptions) {
   const [formData, setFormData] = useState<WeeklyReportData>(data);
   const [richTextOpen, setRichTextOpen] = useState(false);
+  const hasUserEdited = useRef(false);
+
+  // Sync formData when external data changes (e.g. refetch), but only if user hasn't edited
+  useEffect(() => {
+    if (!hasUserEdited.current) {
+      setFormData(data);
+    }
+  }, [data]);
+
+  // Wrap setFormData to track user edits
+  const setFormDataWithTracking = useCallback((updater: WeeklyReportData | ((prev: WeeklyReportData) => WeeklyReportData)) => {
+    hasUserEdited.current = true;
+    setFormData(updater);
+  }, []);
 
   const { isSaving: autoSaving, lastSaved } = useAutoSave({
     data: formData,
@@ -41,7 +55,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   const handleSave = () => onSaveAndClose?.(formData);
 
   const updateExecutiveSummary = (value: string) => {
-    setFormData(prev => ({ ...prev, executiveSummary: value }));
+    setFormDataWithTracking(prev => ({ ...prev, executiveSummary: value }));
   };
 
   // --- Lookahead Tasks ---
@@ -54,18 +68,18 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       responsible: "",
       risk: "baixo",
     };
-    setFormData(prev => ({ ...prev, lookaheadTasks: [...prev.lookaheadTasks, newTask] }));
+    setFormDataWithTracking(prev => ({ ...prev, lookaheadTasks: [...prev.lookaheadTasks, newTask] }));
   };
 
   const updateLookaheadTask = (index: number, field: keyof LookaheadTask, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       lookaheadTasks: prev.lookaheadTasks.map((task, i) => i === index ? { ...task, [field]: value } : task),
     }));
   };
 
   const removeLookaheadTask = (index: number) => {
-    setFormData(prev => ({ ...prev, lookaheadTasks: prev.lookaheadTasks.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, lookaheadTasks: prev.lookaheadTasks.filter((_, i) => i !== index) }));
   };
 
   // --- Risks and Issues ---
@@ -82,18 +96,18 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       dueDate: new Date().toISOString().split('T')[0],
       status: "aberto",
     };
-    setFormData(prev => ({ ...prev, risksAndIssues: [...prev.risksAndIssues, newRisk] }));
+    setFormDataWithTracking(prev => ({ ...prev, risksAndIssues: [...prev.risksAndIssues, newRisk] }));
   };
 
   const updateRiskIssue = (index: number, updates: Partial<RiskIssue>) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       risksAndIssues: prev.risksAndIssues.map((risk, i) => i === index ? { ...risk, ...updates } : risk),
     }));
   };
 
   const removeRiskIssue = (index: number) => {
-    setFormData(prev => ({ ...prev, risksAndIssues: prev.risksAndIssues.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, risksAndIssues: prev.risksAndIssues.filter((_, i) => i !== index) }));
   };
 
   // --- Client Decisions ---
@@ -105,18 +119,18 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       dueDate: new Date().toISOString().split('T')[0],
       status: "pending",
     };
-    setFormData(prev => ({ ...prev, clientDecisions: [...prev.clientDecisions, newDecision] }));
+    setFormDataWithTracking(prev => ({ ...prev, clientDecisions: [...prev.clientDecisions, newDecision] }));
   };
 
   const updateClientDecision = (index: number, field: keyof ClientDecision, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       clientDecisions: prev.clientDecisions.map((d, i) => i === index ? { ...d, [field]: value } : d),
     }));
   };
 
   const removeClientDecision = (index: number) => {
-    setFormData(prev => ({ ...prev, clientDecisions: prev.clientDecisions.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, clientDecisions: prev.clientDecisions.filter((_, i) => i !== index) }));
   };
 
   // --- Incidents ---
@@ -131,18 +145,18 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       status: "aberto",
       expectedResolutionDate: new Date().toISOString().split('T')[0],
     };
-    setFormData(prev => ({ ...prev, incidents: [...prev.incidents, newIncident] }));
+    setFormDataWithTracking(prev => ({ ...prev, incidents: [...prev.incidents, newIncident] }));
   };
 
   const updateIncident = (index: number, field: keyof Incident, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       incidents: prev.incidents.map((inc, i) => i === index ? { ...inc, [field]: value } : inc),
     }));
   };
 
   const removeIncident = (index: number) => {
-    setFormData(prev => ({ ...prev, incidents: prev.incidents.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, incidents: prev.incidents.filter((_, i) => i !== index) }));
   };
 
   // --- Gallery ---
@@ -155,18 +169,24 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       date: new Date().toISOString().split('T')[0],
       category: "progresso",
     };
-    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, newPhoto] }));
+    setFormDataWithTracking(prev => ({ ...prev, gallery: [...prev.gallery, newPhoto] }));
   };
 
   const updateGalleryPhoto = (index: number, field: keyof GalleryPhoto, value: string) => {
-    setFormData(prev => ({
+    setFormDataWithTracking(prev => ({
       ...prev,
       gallery: prev.gallery.map((p, i) => i === index ? { ...p, [field]: value } : p),
     }));
   };
 
   const removeGalleryPhoto = (index: number) => {
-    setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => {
+      const removed = prev.gallery[index];
+      if (removed?.url?.startsWith("blob:")) {
+        URL.revokeObjectURL(removed.url);
+      }
+      return { ...prev, gallery: prev.gallery.filter((_, i) => i !== index) };
+    });
   };
 
   const handleFileSelect = async (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +214,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       date: new Date().toISOString().split('T')[0],
       category: "progresso",
     }));
-    setFormData(prev => ({ ...prev, gallery: [...prev.gallery, ...newPhotos] }));
+    setFormDataWithTracking(prev => ({ ...prev, gallery: [...prev.gallery, ...newPhotos] }));
     toast.success(`${validFiles.length} arquivo(s) adicionado(s)! O upload será feito ao salvar.`);
     event.target.value = "";
   };

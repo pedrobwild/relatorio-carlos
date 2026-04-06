@@ -212,7 +212,11 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
               <div className="p-4 bg-gradient-to-t from-black to-transparent">
                 <p className="text-white text-caption font-medium">{photos[selectedIndex].caption}</p>
                 <p className="text-white/70 text-tiny">
-                  {photos[selectedIndex].area} • {photos[selectedIndex].category} • {format(new Date(photos[selectedIndex].date), "dd/MM/yyyy", { locale: ptBR })}
+                  {[
+                    photos[selectedIndex].area,
+                    photos[selectedIndex].category,
+                    (() => { try { const d = new Date(photos[selectedIndex].date); return isNaN(d.getTime()) ? null : format(d, "dd/MM/yyyy", { locale: ptBR }); } catch { return null; } })()
+                  ].filter(Boolean).join(" • ")}
                 </p>
               </div>
 
