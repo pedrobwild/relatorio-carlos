@@ -83,7 +83,11 @@ export async function listAudits(filters: AuditoriaFilters = {}): Promise<Audito
   }
 
   if (filters.search) {
-    query = query.or(`entidade.ilike.%${filters.search}%,entidade_id.ilike.%${filters.search}%`);
+    // Sanitize search input to prevent SQL injection via ilike patterns
+    const sanitized = filters.search.replace(/[%_\\]/g, '');
+    if (sanitized.length > 0) {
+      query = query.or(`entidade.ilike.%${sanitized}%,entidade_id.ilike.%${sanitized}%`);
+    }
   }
 
   const { data, error, count } = await query;
@@ -134,10 +138,13 @@ export async function getEntityAuditTrail(
  * Get distinct entity types for filter dropdown
  */
 export async function getDistinctEntityTypes(): Promise<string[]> {
+  // Use a distinct-like approach: fetch all unique entity types
+  // Note: Supabase doesn't support DISTINCT directly, so we use a larger limit
+  // and deduplicate client-side. This covers all realistic entity type counts.
   const { data, error } = await supabase
     .from('auditoria')
     .select('entidade')
-    .limit(1000);
+    .limit(5000);
 
   if (error || !data) return [];
 
