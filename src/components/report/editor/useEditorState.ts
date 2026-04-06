@@ -119,7 +119,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       dueDate: new Date().toISOString().split('T')[0],
       status: "pending",
     };
-    setFormData(prev => ({ ...prev, clientDecisions: [...prev.clientDecisions, newDecision] }));
+    setFormDataWithTracking(prev => ({ ...prev, clientDecisions: [...prev.clientDecisions, newDecision] }));
   };
 
   const updateClientDecision = (index: number, field: keyof ClientDecision, value: string) => {
