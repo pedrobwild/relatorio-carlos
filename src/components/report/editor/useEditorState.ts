@@ -107,7 +107,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const removeRiskIssue = (index: number) => {
-    setFormData(prev => ({ ...prev, risksAndIssues: prev.risksAndIssues.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, risksAndIssues: prev.risksAndIssues.filter((_, i) => i !== index) }));
   };
 
   // --- Client Decisions ---
