@@ -79,7 +79,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const removeLookaheadTask = (index: number) => {
-    setFormData(prev => ({ ...prev, lookaheadTasks: prev.lookaheadTasks.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, lookaheadTasks: prev.lookaheadTasks.filter((_, i) => i !== index) }));
   };
 
   // --- Risks and Issues ---
