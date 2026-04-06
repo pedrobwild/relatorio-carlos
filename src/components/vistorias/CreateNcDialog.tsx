@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/popover';
 import { useCreateNonConformity, type NcSeverity } from '@/hooks/useNonConformities';
 import { useProjectMembers } from '@/hooks/useProjectMembers';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { cn } from '@/lib/utils';
 import { NC_CATEGORIES, parseCurrencyInput } from './ncConstants';
 import { useFormDraft } from '@/hooks/useFormDraft';
