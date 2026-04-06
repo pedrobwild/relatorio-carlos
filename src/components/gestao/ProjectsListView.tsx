@@ -24,6 +24,7 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const statusColors: Record<string, string> = {
+  draft: 'bg-violet-500/10 text-violet-700 border-violet-300/50 dark:text-violet-400 dark:border-violet-500/20',
   active: 'bg-emerald-500/10 text-emerald-700 border-emerald-300/50 dark:text-emerald-400 dark:border-emerald-500/20',
   completed: 'bg-blue-500/10 text-blue-700 border-blue-300/50 dark:text-blue-400 dark:border-blue-500/20',
   paused: 'bg-amber-500/10 text-amber-700 border-amber-300/50 dark:text-amber-400 dark:border-amber-500/20',
@@ -31,6 +32,7 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
+  draft: 'Rascunho',
   active: 'Ativa',
   completed: 'Concluída',
   paused: 'Pausada',
