@@ -219,13 +219,13 @@ export function CreateNcDialog({
   const staffFromProject = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
   const { data: allStaff = [] } = useStaffUsers();
   
-  // Merge: use project members first, fallback to all staff
-  const staffMembers = staffFromProject.length > 0 ? staffFromProject : [];
-  const extraStaff = allStaff.filter(s => !staffMembers.some(m => m.user_id === s.id));
-  const isSubmitting = createNc.isPending || uploading;
-    ...staffMembers.map(m => ({ id: m.user_id, name: m.user_name || m.user_email || m.user_id.slice(0, 8) })),
+  // Merge: use project members first, add extra staff not already in project
+  const extraStaff = allStaff.filter(s => !staffFromProject.some(m => m.user_id === s.id));
+  const allResponsibleOptions = [
+    ...staffFromProject.map(m => ({ id: m.user_id, name: m.user_name || m.user_email || m.user_id.slice(0, 8) })),
     ...extraStaff.map(s => ({ id: s.id, name: s.nome || s.email })),
   ];
+  const isSubmitting = createNc.isPending || uploading;
 
   // Strip time from today for proper date comparison
   const today = new Date();
