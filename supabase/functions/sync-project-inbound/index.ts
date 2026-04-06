@@ -5,10 +5,8 @@ import { corsResponse, jsonResponse } from "../_shared/cors.ts";
  * sync-project-inbound (Portal BWild)
  *
  * Receives project + budget data FROM Envision when a budget reaches contrato_fechado.
- * Validates fields, upserts into the local projects table, creates budget records, and logs the sync.
- *
- * POST body:
- *   { source_id: string, project: { ...fields }, budget?: { ...fields } }
+ * Validates fields, upserts into the local projects table, creates budget records,
+ * and enriches project data via AI from the contract PDF.
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
@@ -49,7 +47,6 @@ Deno.serve(async (req) => {
     }
 
     // --- Map to local projects schema ---
-    // Find a system/admin user to set as created_by (required NOT NULL field)
     const { data: adminUser } = await db
       .from("users_profile")
       .select("id")
@@ -93,6 +90,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     let projectId: string;
+    let isNewProject = false;
 
     if (existing) {
       const { error: updateErr } = await db.from("projects").update(projectPayload).eq("id", existing.id);
@@ -117,6 +115,7 @@ Deno.serve(async (req) => {
         throw insertErr;
       }
       projectId = inserted.id;
+      isNewProject = true;
 
       // --- Auto-assign team members for new synced projects ---
       await assignDefaultTeamMembers(db, projectId);
@@ -128,6 +127,19 @@ Deno.serve(async (req) => {
       orcamentoId = await processBudget(db, source_id, projectId, project, budget);
     }
 
+    // --- AI Enrichment: download contract PDF and extract data ---
+    let aiEnrichment: Record<string, unknown> | null = null;
+    const contractFileUrl = project.contract_file_url;
+    if (contractFileUrl && isNewProject) {
+      try {
+        aiEnrichment = await enrichProjectWithAI(db, projectId, project, contractFileUrl);
+        console.log(`[sync-project-inbound] AI enrichment completed for project ${projectId}`);
+      } catch (aiErr) {
+        // Non-critical: don't fail the sync if AI enrichment fails
+        console.error("[sync-project-inbound] AI enrichment error:", aiErr instanceof Error ? aiErr.message : aiErr);
+      }
+    }
+
     // --- Log sync ---
     await db.from("integration_sync_log").upsert({
       source_system: "envision",
@@ -136,7 +148,11 @@ Deno.serve(async (req) => {
       source_id: source_id,
       target_id: projectId,
       sync_status: "success",
-      payload: { project, budget: budget ? { total_value: budget.total_value, sections_count: budget.sections?.length } : null },
+      payload: {
+        project,
+        budget: budget ? { total_value: budget.total_value, sections_count: budget.sections?.length } : null,
+        ai_enrichment: aiEnrichment ? "completed" : contractFileUrl ? "failed_or_skipped" : "no_contract",
+      },
       attempts: 1,
       synced_at: new Date().toISOString(),
     }, {
@@ -148,6 +164,7 @@ Deno.serve(async (req) => {
       project_id: projectId,
       orcamento_id: orcamentoId,
       action: existing ? "updated" : "created",
+      ai_enrichment: aiEnrichment ? "completed" : null,
     });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : JSON.stringify(error);
@@ -156,6 +173,276 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: errMsg }, 500);
   }
 });
+
+// ─── AI Enrichment ──────────────────────────────────────────────────────────
+
+const AI_SYSTEM_PROMPT = `Você é um extrator de dados de projetos de reforma/construção civil da BWild Arquitetura e Reformas.
+
+Você receberá:
+1. Dados já coletados do sistema de orçamentos (payload JSON)
+2. O contrato PDF do cliente (quando disponível)
+
+Seu objetivo: Extrair e COMPLETAR todos os campos faltantes do cadastro do projeto, cruzando informações do contrato com os dados já existentes.
+
+REGRAS:
+- Retorne APENAS JSON válido, sem markdown ou texto adicional.
+- Use null para qualquer campo que não tenha informação confiável — NUNCA invente dados.
+- Datas no formato YYYY-MM-DD.
+- Valores monetários numéricos (sem R$ ou pontos de milhar).
+- CPF/RG: manter formato original.
+- Metragem: apenas número.
+- NÃO sobrescreva campos já preenchidos no payload com valores vazios.
+- NÃO confunda endereço residencial do contratante com endereço do imóvel da obra.
+
+CAMPOS DO PROJETO A EXTRAIR/COMPLETAR:
+
+project_fields (campos do projeto):
+- name: nome do projeto (ex: "Erik Zip Brooklin 20m")
+- client_name: nome completo do contratante
+- client_email: e-mail do contratante
+- client_phone: telefone/celular do contratante  
+- address: endereço completo do imóvel da obra
+- condominium: nome do condomínio/empreendimento
+- neighborhood: bairro do imóvel
+- bairro: bairro (redundante, preencher igual neighborhood)
+- city: cidade do imóvel
+- cep: CEP do imóvel
+- unit_name: identificação da unidade (ex: "Apto 502", "1014")
+- property_type: Apartamento, Casa, Studio, Cobertura, Sala Comercial, Residencial
+- total_area: metragem m² (apenas número)
+- estimated_duration_weeks: duração estimada em semanas
+- contract_value: valor do contrato (numérico)
+- contract_signing_date: data de assinatura YYYY-MM-DD
+- consultora_comercial: nome da consultora comercial
+- notes: observações relevantes do contrato
+
+customer_details (dados extras do contratante para referência):
+- cpf: CPF do contratante
+- rg: RG do contratante
+- nacionalidade: nacionalidade
+- estado_civil: estado civil
+- profissao: profissão
+- endereco_residencial: endereço residencial (pode diferir do imóvel)
+
+payment_schedule (parcelas de pagamento):
+- array de { description: string, value: number, due_date: string | null }
+
+Retorne o JSON com estas 3 chaves: project_fields, customer_details, payment_schedule.`;
+
+/**
+ * Download the contract PDF, send to AI for extraction, and update the project.
+ */
+async function enrichProjectWithAI(
+  db: ReturnType<typeof createClient>,
+  projectId: string,
+  existingData: Record<string, unknown>,
+  contractFileUrl: string,
+): Promise<Record<string, unknown>> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    console.warn("[AI-enrich] LOVABLE_API_KEY not configured, skipping");
+    throw new Error("LOVABLE_API_KEY not configured");
+  }
+
+  // 1. Download contract PDF
+  console.log(`[AI-enrich] Downloading contract from: ${contractFileUrl.substring(0, 80)}...`);
+  const pdfResponse = await fetch(contractFileUrl);
+  if (!pdfResponse.ok) {
+    throw new Error(`Failed to download contract PDF: ${pdfResponse.status}`);
+  }
+
+  const pdfBuffer = await pdfResponse.arrayBuffer();
+  const pdfBytes = new Uint8Array(pdfBuffer);
+
+  // Validate size (max 20MB for AI processing)
+  if (pdfBytes.length > 20 * 1024 * 1024) {
+    throw new Error("Contract PDF too large for AI processing (>20MB)");
+  }
+
+  // Convert to base64
+  let binary = "";
+  for (let i = 0; i < pdfBytes.length; i++) {
+    binary += String.fromCharCode(pdfBytes[i]);
+  }
+  const pdfBase64 = btoa(binary);
+
+  // 2. Build the prompt with existing data context
+  const existingContext = JSON.stringify({
+    name: existingData.name,
+    client_name: existingData.client_name,
+    client_email: existingData.client_email,
+    client_phone: existingData.client_phone,
+    address: existingData.address,
+    condominium: existingData.condominium,
+    neighborhood: existingData.neighborhood,
+    city: existingData.city,
+    unit: existingData.unit,
+    unit_name: existingData.unit_name,
+    property_type: existingData.property_type,
+    total_area: existingData.total_area,
+    budget_value: existingData.budget_value,
+    budget_code: existingData.budget_code,
+    estimated_duration_weeks: existingData.estimated_duration_weeks,
+    consultora_comercial: existingData.consultora_comercial,
+    notes: existingData.notes,
+  }, null, 2);
+
+  // 3. Call Lovable AI (Gemini) with PDF + context
+  const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: AI_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Dados já coletados do sistema de orçamentos:\n\n${existingContext}\n\nAnalise o contrato PDF anexado e complete/enriqueça os dados faltantes. Retorne APENAS o JSON.`,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:application/pdf;base64,${pdfBase64}`,
+              },
+            },
+          ],
+        },
+      ],
+      temperature: 0.05,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const errText = await aiResponse.text();
+    console.error("[AI-enrich] AI gateway error:", aiResponse.status, errText.substring(0, 300));
+    throw new Error(`AI gateway error: ${aiResponse.status}`);
+  }
+
+  const aiResult = await aiResponse.json();
+  const content = aiResult.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("Empty response from AI");
+  }
+
+  // 4. Parse AI response
+  let parsed: {
+    project_fields?: Record<string, unknown>;
+    customer_details?: Record<string, unknown>;
+    payment_schedule?: Array<{ description: string; value: number; due_date: string | null }>;
+  };
+
+  try {
+    const cleanContent = content.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+    parsed = JSON.parse(cleanContent);
+  } catch {
+    console.error("[AI-enrich] Failed to parse AI response:", content.substring(0, 500));
+    throw new Error("Invalid AI response format");
+  }
+
+  const projectFields = parsed.project_fields ?? {};
+
+  // 5. Build update payload — only fill in empty/null fields from the existing project
+  const updatePayload: Record<string, unknown> = {};
+
+  const fieldMap: Record<string, string> = {
+    client_name: "client_name",
+    client_email: "client_email",
+    client_phone: "client_phone",
+    address: "address",
+    condominium: "condominium",
+    neighborhood: "neighborhood",
+    bairro: "bairro",
+    city: "city",
+    cep: "cep",
+    unit_name: "unit_name",
+    property_type: "property_type",
+    total_area: "total_area",
+    estimated_duration_weeks: "estimated_duration_weeks",
+    contract_value: "contract_value",
+    contract_signing_date: "contract_signing_date",
+    consultora_comercial: "consultora_comercial",
+    notes: "notes",
+  };
+
+  for (const [aiField, dbField] of Object.entries(fieldMap)) {
+    const aiValue = projectFields[aiField];
+    const existingValue = existingData[aiField];
+    // Only fill if AI has a value and existing is empty/null
+    if (aiValue != null && aiValue !== "" && (existingValue == null || existingValue === "" || existingValue === "null")) {
+      updatePayload[dbField] = aiValue;
+    }
+  }
+
+  // 6. Update project if we have new data
+  if (Object.keys(updatePayload).length > 0) {
+    console.log(`[AI-enrich] Updating project ${projectId} with ${Object.keys(updatePayload).length} fields:`, Object.keys(updatePayload));
+    const { error: updateErr } = await db
+      .from("projects")
+      .update(updatePayload)
+      .eq("id", projectId);
+
+    if (updateErr) {
+      console.error("[AI-enrich] Update error:", updateErr.message);
+    }
+  } else {
+    console.log("[AI-enrich] No new fields to update");
+  }
+
+  // 7. Store customer details and payment schedule as project notes/metadata
+  const enrichmentNotes: string[] = [];
+
+  if (parsed.customer_details) {
+    const cd = parsed.customer_details;
+    const parts: string[] = [];
+    if (cd.cpf) parts.push(`CPF: ${cd.cpf}`);
+    if (cd.rg) parts.push(`RG: ${cd.rg}`);
+    if (cd.nacionalidade) parts.push(`Nacionalidade: ${cd.nacionalidade}`);
+    if (cd.estado_civil) parts.push(`Estado Civil: ${cd.estado_civil}`);
+    if (cd.profissao) parts.push(`Profissão: ${cd.profissao}`);
+    if (cd.endereco_residencial) parts.push(`Endereço Residencial: ${cd.endereco_residencial}`);
+    if (parts.length > 0) {
+      enrichmentNotes.push("DADOS DO CONTRATANTE:\n" + parts.join("\n"));
+    }
+  }
+
+  if (parsed.payment_schedule && parsed.payment_schedule.length > 0) {
+    const scheduleLines = parsed.payment_schedule.map((p, i) =>
+      `${i + 1}. ${p.description}: R$ ${typeof p.value === "number" ? p.value.toLocaleString("pt-BR") : p.value}${p.due_date ? ` (venc: ${p.due_date})` : ""}`
+    );
+    enrichmentNotes.push("CRONOGRAMA DE PAGAMENTO:\n" + scheduleLines.join("\n"));
+  }
+
+  // Append enrichment notes to project notes if we have new info
+  if (enrichmentNotes.length > 0) {
+    const { data: currentProject } = await db
+      .from("projects")
+      .select("notes")
+      .eq("id", projectId)
+      .single();
+
+    const existingNotes = currentProject?.notes || "";
+    const separator = existingNotes ? "\n\n---\n[Dados extraídos automaticamente do contrato via IA]\n" : "[Dados extraídos automaticamente do contrato via IA]\n";
+    const newNotes = existingNotes + separator + enrichmentNotes.join("\n\n");
+
+    await db.from("projects").update({ notes: newNotes }).eq("id", projectId);
+  }
+
+  return {
+    fields_updated: Object.keys(updatePayload),
+    customer_details_extracted: !!parsed.customer_details,
+    payment_schedule_items: parsed.payment_schedule?.length ?? 0,
+  };
+}
+
+// ─── Budget Processing ──────────────────────────────────────────────────────
 
 /**
  * Process the budget object from the Envision payload.
@@ -168,7 +455,6 @@ async function processBudget(
   project: any,
   budget: any,
 ): Promise<string> {
-  // Upsert main budget record
   const { data: orcamento, error: orcError } = await db
     .from("orcamentos")
     .upsert(
@@ -208,7 +494,6 @@ async function processBudget(
 
   // Replace sections & items
   if (Array.isArray(budget.sections) && budget.sections.length > 0) {
-    // Delete existing (cascade deletes items)
     await db.from("orcamento_sections").delete().eq("orcamento_id", orcamentoId);
 
     for (const sec of budget.sections) {
@@ -254,17 +539,13 @@ async function processBudget(
           coverage_type: item.coverage_type ?? null,
           reference_url: item.reference_url ?? null,
           notes: item.notes ?? null,
-          // v1.1 fields:
           item_category: item.item_category ?? null,
           supplier_id: item.supplier_id ?? null,
           supplier_name: item.supplier_name ?? null,
           catalog_item_id: item.catalog_item_id ?? null,
         }));
 
-        const { error: itemsError } = await db
-          .from("orcamento_items")
-          .insert(itemRows);
-
+        const { error: itemsError } = await db.from("orcamento_items").insert(itemRows);
         if (itemsError) {
           console.error("[sync-project-inbound] Items insert error:", itemsError.message);
         }
@@ -285,16 +566,13 @@ async function processBudget(
       order_index: idx,
     }));
 
-    const { error: adjError } = await db
-      .from("orcamento_adjustments")
-      .insert(adjustmentRows);
-
+    const { error: adjError } = await db.from("orcamento_adjustments").insert(adjustmentRows);
     if (adjError) {
       console.error("[sync-project-inbound] Adjustments insert error:", adjError.message);
     }
   }
 
-  // Also log budget sync
+  // Log budget sync
   await db.from("integration_sync_log").insert({
     source_system: "envision",
     target_system: "bwild",
@@ -308,6 +586,8 @@ async function processBudget(
   return orcamentoId;
 }
 
+// ─── Team Assignment ────────────────────────────────────────────────────────
+
 /**
  * Auto-assign default team members when a project is created via sync:
  * 1. lucas.serra@bwild.com.br (as engineer)
@@ -318,7 +598,6 @@ async function assignDefaultTeamMembers(
   projectId: string,
 ) {
   try {
-    // Fetch lucas.serra + all active admins
     const LUCAS_EMAIL = "lucas.serra@bwild.com.br";
 
     const [{ data: lucas }, { data: admins }] = await Promise.all([
@@ -328,12 +607,10 @@ async function assignDefaultTeamMembers(
 
     const members: Array<{ project_id: string; user_id: string; role: string }> = [];
 
-    // Add admins as owner
     for (const admin of admins ?? []) {
       members.push({ project_id: projectId, user_id: admin.id, role: "owner" });
     }
 
-    // Add Lucas as engineer (if not already added as admin)
     if (lucas && !members.some((m) => m.user_id === lucas.id)) {
       members.push({ project_id: projectId, user_id: lucas.id, role: "engineer" });
     }
@@ -350,7 +627,6 @@ async function assignDefaultTeamMembers(
       }
     }
   } catch (err) {
-    // Non-critical: don't fail the sync if team assignment fails
     console.error("[sync-project-inbound] Team assignment error:", err instanceof Error ? err.message : err);
   }
 }
