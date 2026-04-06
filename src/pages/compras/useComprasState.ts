@@ -46,6 +46,9 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
    */
   const filteredPurchases = useMemo(() => {
     return purchases.filter(p => {
+      // Filter by purchase type if specified
+      if (purchaseTypeFilter && (p.purchase_type || 'produto') !== purchaseTypeFilter) return false;
+      
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterActivity !== 'all' && p.activity_id !== filterActivity) return false;
       
@@ -61,7 +64,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       
       return true;
     });
-  }, [purchases, filterStatus, filterActivity, filterCategory, filterSubcategory]);
+  }, [purchases, purchaseTypeFilter, filterStatus, filterActivity, filterCategory, filterSubcategory]);
 
   const hasActiveFilters = filterStatus !== 'all' || filterActivity !== 'all' || filterCategory !== 'all' || filterSubcategory !== 'all';
 
