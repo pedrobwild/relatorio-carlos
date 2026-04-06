@@ -14,6 +14,7 @@ import { statusConfig, PURCHASE_TYPE_LABELS, PURCHASE_TYPE_ICONS } from './types
 import { ObservationsModal } from './ObservationsModal';
 import { PaymentFlowModal } from './PaymentFlowModal';
 import { CadastroModal } from './CadastroModal';
+import { DateLogsModal } from './DateLogsModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
