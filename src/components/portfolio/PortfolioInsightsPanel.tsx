@@ -13,11 +13,13 @@ interface PortfolioInsightsPanelProps {
 export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsightsPanelProps) {
   const activeProjects = useMemo(() => projects.filter(p => p.status === 'active'), [projects]);
 
-  // ── Health distribution ────────────────────────────────────────────────
+  // ── Health distribution (cross-reference with active projects) ───────
+  const activeProjectIds = useMemo(() => new Set(activeProjects.map(p => p.id)), [activeProjects]);
+
   const healthDistribution = useMemo(() => {
     const buckets = [0, 0, 0, 0]; // excellent, good, attention, critical
     for (const s of summaries) {
-      if (s.status !== 'active') continue;
+      if (!activeProjectIds.has(s.id)) continue;
       const h = estimateHealthScore(s);
       if (h >= 80) buckets[0]++;
       else if (h >= 60) buckets[1]++;
@@ -25,7 +27,7 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
       else buckets[3]++;
     }
     return buckets;
-  }, [summaries]);
+  }, [summaries, activeProjectIds]);
 
   const totalHealth = healthDistribution.reduce((a, b) => a + b, 0);
 

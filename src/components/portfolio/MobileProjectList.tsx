@@ -69,17 +69,18 @@ export function MobileProjectList({ projects, onProjectClick }: MobileProjectLis
 function MobileProjectRow({
   project,
   summary,
+  today,
   onClick,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
+  today: Date;
   onClick: () => void;
 }) {
   const progress = summary?.progress_percentage ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const status = statusConfig[project.status] ?? statusConfig.active;
 
-  const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
   const actualEnd = project.actual_end_date ? parseLocalDate(project.actual_end_date) : null;
   const isFinished = !!actualEnd;

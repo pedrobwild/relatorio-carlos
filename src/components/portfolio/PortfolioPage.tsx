@@ -58,7 +58,7 @@ export default function PortfolioPage() {
     } else {
       filters.setKpiFilter(key);
     }
-  }, [filters]);
+  }, [filters.setKpiFilter]);
 
   const handleStaleAction = useCallback((projectId: string) => {
     if (projectId.startsWith('stale-')) {

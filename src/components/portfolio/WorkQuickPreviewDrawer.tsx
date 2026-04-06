@@ -102,9 +102,14 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
     blockers.push({ icon: <AlertTriangle className="h-3.5 w-3.5" />, label: 'Obra pausada — aguardando desbloqueio', accent: 'text-destructive' });
   }
 
-  const lastActivity = summary?.last_activity_at
-    ? format(new Date(summary.last_activity_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-    : null;
+  let lastActivity: string | null = null;
+  if (summary?.last_activity_at) {
+    try {
+      lastActivity = format(new Date(summary.last_activity_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch {
+      lastActivity = null;
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
