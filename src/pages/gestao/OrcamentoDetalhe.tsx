@@ -121,7 +121,7 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
 
   // Fetch notes
   const { data: notes } = useQuery({
-    queryKey: ['orcamentos', 'notas', orcamentoId],
+    queryKey: queryKeys.orcamentos.notes(orcamentoId),
     queryFn: async () => {
       if (!orcamentoId) return [];
       const { data, error } = await supabase
