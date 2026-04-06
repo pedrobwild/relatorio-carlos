@@ -145,7 +145,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
       status: "aberto",
       expectedResolutionDate: new Date().toISOString().split('T')[0],
     };
-    setFormData(prev => ({ ...prev, incidents: [...prev.incidents, newIncident] }));
+    setFormDataWithTracking(prev => ({ ...prev, incidents: [...prev.incidents, newIncident] }));
   };
 
   const updateIncident = (index: number, field: keyof Incident, value: string) => {
