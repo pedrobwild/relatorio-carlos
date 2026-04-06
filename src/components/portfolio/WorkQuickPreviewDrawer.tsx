@@ -71,7 +71,12 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
   }
 
   const status = statusConfig[project.status] ?? statusConfig.active;
-  const health = summary ? getHealthResult(summary) : null;
+  // Use canonical health score for consistency with the breakdown
+  const health = detailedHealth ? {
+    score: detailedHealth.score,
+    tier: detailedHealth.level === 'excellent' ? 'Excelente' : detailedHealth.level === 'good' ? 'Bom' : detailedHealth.level === 'attention' ? 'Atenção' : 'Crítico',
+    color: breakdownLevelColors[detailedHealth.level].text,
+  } : null;
   
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
