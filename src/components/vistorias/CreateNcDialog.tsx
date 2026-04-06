@@ -216,8 +216,16 @@ export function CreateNcDialog({
     onOpenChange(false);
   };
 
-  const staffMembers = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
-  const isSubmitting = createNc.isPending || uploading;
+  const staffFromProject = members.filter(m => m.role !== 'viewer' && m.role !== 'customer');
+  const { data: allStaff = [] } = useStaffUsers();
+  
+  // Merge: use project members first, fallback to all staff
+  const staffMembers = staffFromProject.length > 0 ? staffFromProject : [];
+  const extraStaff = allStaff.filter(s => !staffMembers.some(m => m.user_id === s.id));
+  const allResponsibleOptions = [
+    ...staffMembers.map(m => ({ id: m.user_id, name: m.user_name || m.user_email || m.user_id.slice(0, 8) })),
+    ...extraStaff.map(s => ({ id: s.id, name: s.nome || s.email })),
+  ];
 
   // Strip time from today for proper date comparison
   const today = new Date();
