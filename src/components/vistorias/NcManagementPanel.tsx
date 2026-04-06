@@ -340,7 +340,7 @@ function TabButton({ active, onClick, children, count, danger }: {
   );
 }
 
-function NcRow({ nc, today, onSelect }: { nc: NonConformity; today: string; onSelect: (nc: NonConformity) => void }) {
+function NcRow({ nc, today, onSelect, showProjectBadge }: { nc: NonConformity & { project_name?: string | null }; today: string; onSelect: (nc: NonConformity) => void; showProjectBadge?: boolean }) {
   const sev = severityConfig[nc.severity];
   const st = statusConfig[nc.status];
   const isOverdue = nc.deadline && nc.deadline < today && nc.status !== 'closed';
