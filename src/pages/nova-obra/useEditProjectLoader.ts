@@ -32,10 +32,11 @@ export function useEditProjectLoader(projectId: string | undefined): EditProject
 
       try {
         // Fetch project, customer, and studio info in parallel
+        const pid = projectId!;
         const [projectRes, customerRes, studioRes] = await Promise.all([
-          supabase.from('projects').select('*').eq('id', projectId).single(),
-          supabase.from('project_customers').select('*').eq('project_id', projectId).maybeSingle(),
-          supabase.from('project_studio_info' as any).select('*').eq('project_id', projectId).maybeSingle(),
+          supabase.from('projects').select('*').eq('id', pid).single(),
+          supabase.from('project_customers').select('*').eq('project_id', pid).maybeSingle(),
+          supabase.from('project_studio_info' as any).select('*').eq('project_id', pid).maybeSingle(),
         ]);
 
         if (projectRes.error) throw new Error(projectRes.error.message);
