@@ -326,14 +326,15 @@ export function CreateNcDialog({
           {/* Prazo + Custo side by side */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Prazo</Label>
+              <Label className="text-sm font-medium">Prazo <span className="text-destructive">*</span></Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       'w-full h-11 justify-start text-left font-normal',
-                      !deadline && 'text-muted-foreground'
+                      !deadline && 'text-muted-foreground',
+                      !deadline && 'border-destructive/50'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
