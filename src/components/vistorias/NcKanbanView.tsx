@@ -39,7 +39,7 @@ interface Props {
   showProjectBadge?: boolean;
 }
 
-export function NcKanbanView({ nonConformities, searchQuery, onSelect }: Props) {
+export function NcKanbanView({ nonConformities, searchQuery, onSelect, showProjectBadge }: Props) {
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const filtered = useMemo(() => {

@@ -407,6 +407,13 @@ function NcRow({ nc, today, onSelect, showProjectBadge }: { nc: NonConformity & 
           }`} aria-label={`Severidade: ${sev.label}`} />
           
           <div className="flex-1 min-w-0">
+            {/* Project badge */}
+            {showProjectBadge && (nc as any).project_name && (
+              <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-md mb-1 inline-flex items-center gap-1 w-fit">
+                <Building2 className="h-2.5 w-2.5" />
+                {(nc as any).project_name}
+              </span>
+            )}
             {/* Title + arrow */}
             <div className="flex items-start justify-between gap-2">
               <p className="font-medium text-sm leading-snug line-clamp-2">{nc.title}</p>
