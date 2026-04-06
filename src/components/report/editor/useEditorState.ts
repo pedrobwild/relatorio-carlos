@@ -130,7 +130,7 @@ export function useEditorState({ data, onAutoSave, onSaveAndClose, externalIsSav
   };
 
   const removeClientDecision = (index: number) => {
-    setFormData(prev => ({ ...prev, clientDecisions: prev.clientDecisions.filter((_, i) => i !== index) }));
+    setFormDataWithTracking(prev => ({ ...prev, clientDecisions: prev.clientDecisions.filter((_, i) => i !== index) }));
   };
 
   // --- Incidents ---
