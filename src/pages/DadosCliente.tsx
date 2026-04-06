@@ -503,6 +503,11 @@ export default function DadosCliente() {
         </CardContent>
       </Card>
       )}
+
+      {/* ── Informações do Projeto ── */}
+      {activeTab === 'info' && projectId && (
+        <ProjectInfoDoc projectId={projectId} />
+      )}
     </div>
   );
 }
