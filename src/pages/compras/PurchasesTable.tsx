@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useCallback } from 'react';
 import {
   MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign,
   ClipboardList, ChevronDown, ChevronRight, MoreHorizontal, Trash2,
-  Pencil, MapPin, Calendar,
+  Pencil, MapPin, Calendar, Warehouse, Building2, TruckIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

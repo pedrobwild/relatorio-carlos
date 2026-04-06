@@ -127,9 +127,13 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="pending">Pendente</SelectItem>
+            {isProduto && <SelectItem value="awaiting_approval">Solic. Aprovação</SelectItem>}
+            {isProduto && <SelectItem value="approved">Aprovado</SelectItem>}
+            {isProduto && <SelectItem value="purchased">Compra Realizada</SelectItem>}
             <SelectItem value="ordered">{isProduto ? 'Pedido' : 'Contratado'}</SelectItem>
             <SelectItem value="in_transit">{isProduto ? 'Em Trânsito' : 'Em Execução'}</SelectItem>
-            <SelectItem value="delivered">Concluído</SelectItem>
+            <SelectItem value="delivered">{isProduto ? 'Entregue' : 'Concluído'}</SelectItem>
+            {isProduto && <SelectItem value="sent_to_site">Enviado p/ Obra</SelectItem>}
             <SelectItem value="cancelled">Cancelado</SelectItem>
           </SelectContent>
         </Select>
