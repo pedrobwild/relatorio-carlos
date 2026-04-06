@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useCallback } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import {
   MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign,
   ClipboardList, ChevronDown, ChevronRight, MoreHorizontal, Trash2,
@@ -312,6 +312,9 @@ function InlineField({
   className?: string;
   prefix?: string;
 }) {
+  // Use key to force re-mount when value changes externally,
+  // ensuring defaultValue stays in sync after saves.
+  const stableKey = `${value ?? ''}`;
   return (
     <div className="relative">
       {prefix && (
@@ -320,6 +323,7 @@ function InlineField({
         </span>
       )}
       <Input
+        key={stableKey}
         type={type}
         className={cn(
           'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
@@ -760,7 +764,29 @@ export function PurchasesTable({
   const [obsModal, setObsModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [flowModal, setFlowModal] = useState<{ purchase: ProjectPurchase } | null>(null);
   const [cadastroModal, setCadastroModal] = useState<{ purchase: ProjectPurchase } | null>(null);
+  // Initialize with type sections AND all category keys expanded
   const [expandedSections, setExpandedSections] = useState<Set<string>>(() => new Set(['produto', 'prestador']));
+  
+  // Auto-expand new category sections when purchases change
+  const expandedRef = useRef(expandedSections);
+  expandedRef.current = expandedSections;
+  
+  useEffect(() => {
+    const newKeys = new Set(expandedRef.current);
+    let changed = false;
+    for (const p of purchases) {
+      const type = p.purchase_type || 'produto';
+      const cat = p.category || 'Outros';
+      const catKey = `${type}:${cat}`;
+      if (!newKeys.has(catKey)) {
+        newKeys.add(catKey);
+        changed = true;
+      }
+    }
+    if (changed) {
+      setExpandedSections(newKeys);
+    }
+  }, [purchases]);
 
   // Group by purchase_type, then by category
   const grouped = useMemo(() => {
@@ -857,7 +883,7 @@ export function PurchasesTable({
                 <div className="space-y-2 ml-2">
                   {Array.from(categoryMap.entries()).map(([category, items]) => {
                     const catKey = `${purchaseType}:${category}`;
-                    const isCatOpen = expandedSections.has(catKey) || !expandedSections.has(`_init_${purchaseType}`);
+                    const isCatOpen = expandedSections.has(catKey);
                     const categoryTotal = items.reduce((sum, p) => sum + (p.estimated_cost || 0), 0);
                     const completedCount = items.filter(p => p.status === 'delivered').length;
                     const completionPct = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;

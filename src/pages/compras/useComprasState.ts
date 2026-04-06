@@ -221,15 +221,19 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   };
 
   const handleStatusChange = async (id: string, newStatus: PurchaseStatus) => {
-    await updateStatus.mutateAsync({ id, status: newStatus });
+    try {
+      await updateStatus.mutateAsync({ id, status: newStatus });
+    } catch {
+      // Error toast already handled by mutation onError
+    }
   };
 
   const handleUpdateActualCost = async (id: string, cost: number | null) => {
-    await updatePurchase.mutateAsync({ id, actual_cost: cost });
+    try { await updatePurchase.mutateAsync({ id, actual_cost: cost }); } catch { /* handled */ }
   };
 
   const handleUpdateNotes = async (id: string, notes: string) => {
-    await updatePurchase.mutateAsync({ id, notes: notes || null });
+    try { await updatePurchase.mutateAsync({ id, notes: notes || null }); } catch { /* handled */ }
   };
 
   const handleUpdateField = async (id: string, field: string, value: string | null) => {
@@ -251,7 +255,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       updateValue = value && value.trim() ? value : null;
     }
     
-    await updatePurchase.mutateAsync({ id, [field]: updateValue });
+    try { await updatePurchase.mutateAsync({ id, [field]: updateValue }); } catch { /* handled */ }
   };
 
   const getActivityName = (activityId: string | null) => {

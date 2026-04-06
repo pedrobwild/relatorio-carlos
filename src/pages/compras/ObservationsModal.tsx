@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +14,11 @@ interface ObservationsModalProps {
 
 export function ObservationsModal({ open, onOpenChange, itemName, notes, onSave }: ObservationsModalProps) {
   const [value, setValue] = useState(notes);
+
+  // Sync internal state when modal opens with new notes
+  useEffect(() => {
+    if (open) setValue(notes);
+  }, [open, notes]);
 
   const handleSave = () => {
     onSave(value);
