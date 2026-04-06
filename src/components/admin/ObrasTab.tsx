@@ -79,7 +79,8 @@ export function ObrasTab() {
     return matchesSearch && matchesStatus && matchesEngineer;
   }), [projects, searchTerm, statusFilter, engineerFilter]);
 
-  const { activeCount, completedCount, pausedCount } = useMemo(() => ({
+  const { draftCount, activeCount, completedCount, pausedCount } = useMemo(() => ({
+    draftCount: projects.filter((p: ProjectWithCustomer) => p.status === 'draft').length,
     activeCount: projects.filter((p: ProjectWithCustomer) => p.status === 'active').length,
     completedCount: projects.filter((p: ProjectWithCustomer) => p.status === 'completed').length,
     pausedCount: projects.filter((p: ProjectWithCustomer) => p.status === 'paused').length,
@@ -109,10 +110,14 @@ export function ObrasTab() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Card className="p-4">
           <p className="text-tiny text-muted-foreground uppercase tracking-wider">Total</p>
           <p className="text-h2 font-bold">{projects.length}</p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-tiny text-muted-foreground uppercase tracking-wider">Rascunho</p>
+          <p className="text-h2 font-bold text-slate-500">{draftCount}</p>
         </Card>
         <Card className="p-4">
           <p className="text-tiny text-muted-foreground uppercase tracking-wider">Em andamento</p>
@@ -137,6 +142,7 @@ export function ObrasTab() {
         <div className="flex gap-2 flex-wrap">
           {[
             { value: null, label: 'Todas' },
+            { value: 'draft', label: 'Rascunho' },
             { value: 'active', label: 'Em andamento' },
             { value: 'completed', label: 'Concluídas' },
             { value: 'paused', label: 'Pausadas' },

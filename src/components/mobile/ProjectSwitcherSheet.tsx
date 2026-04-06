@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { ProjectWithCustomer } from "@/infra/repositories";
 
 const STATUS_LABELS: Record<string, string> = {
+  draft: "Rascunhos",
   active: "Ativas",
   paused: "Pausadas",
   completed: "Concluídas",
@@ -20,6 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
+  draft: "bg-slate-500/15 text-slate-600 border-slate-400/25",
   active: "bg-primary/15 text-primary border-primary/25",
   paused: "bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/25",
   completed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/25",
