@@ -274,27 +274,41 @@ export function PurchaseFormDialog({
               />
             </div>
 
-            <div>
-              <Label htmlFor="supplier_name">
-                {isPrestador ? 'Nome do Prestador' : 'Fornecedor'}
-              </Label>
-              <Input
-                id="supplier_name"
-                value={formData.supplier_name || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
-                placeholder={isPrestador ? 'Nome do prestador' : 'Nome do fornecedor'}
-              />
-            </div>
+            {!isPrestador && (
+              <>
+                <div>
+                  <Label htmlFor="supplier_name">Fornecedor</Label>
+                  <Input
+                    id="supplier_name"
+                    value={formData.supplier_name || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
+                    placeholder="Nome do fornecedor"
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="supplier_contact">Contato</Label>
-              <Input
-                id="supplier_contact"
-                value={formData.supplier_contact || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, supplier_contact: e.target.value }))}
-                placeholder="Telefone ou email"
-              />
-            </div>
+                <div>
+                  <Label htmlFor="supplier_contact">Contato</Label>
+                  <Input
+                    id="supplier_contact"
+                    value={formData.supplier_contact || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, supplier_contact: e.target.value }))}
+                    placeholder="Telefone ou email"
+                  />
+                </div>
+              </>
+            )}
+
+            {isPrestador && (
+              <div className="col-span-2">
+                <Label htmlFor="supplier_contact">Contato do Prestador</Label>
+                <Input
+                  id="supplier_contact"
+                  value={formData.supplier_contact || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, supplier_contact: e.target.value }))}
+                  placeholder="Telefone ou email"
+                />
+              </div>
+            )}
 
             {isEditing && (
               <>
