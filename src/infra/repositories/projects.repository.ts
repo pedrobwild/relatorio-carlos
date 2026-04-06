@@ -18,7 +18,7 @@ import type { Database } from '@/integrations/supabase/types';
 // Types
 // ============================================================================
 
-export type ProjectStatus = 'active' | 'completed' | 'paused' | 'cancelled';
+export type ProjectStatus = 'draft' | 'active' | 'completed' | 'paused' | 'cancelled';
 
 export interface Project {
   id: string;
