@@ -5724,19 +5724,33 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: number
       }
-      transition_nc_status: {
-        Args: {
-          p_corrective_action?: string
-          p_evidence_photos_after?: string[]
-          p_evidence_photos_before?: string[]
-          p_nc_id: string
-          p_new_status: Database["public"]["Enums"]["nc_status"]
-          p_notes?: string
-          p_rejection_reason?: string
-          p_resolution_notes?: string
-        }
-        Returns: undefined
-      }
+      transition_nc_status:
+        | {
+            Args: {
+              p_corrective_action?: string
+              p_evidence_photos_after?: string[]
+              p_evidence_photos_before?: string[]
+              p_nc_id: string
+              p_new_status: Database["public"]["Enums"]["nc_status"]
+              p_notes?: string
+              p_rejection_reason?: string
+              p_resolution_notes?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_corrective_action?: string
+              p_evidence_photos_after?: string[]
+              p_evidence_photos_before?: string[]
+              p_nc_id: string
+              p_new_status: string
+              p_notes?: string
+              p_rejection_reason?: string
+              p_resolution_notes?: string
+            }
+            Returns: undefined
+          }
       user_belongs_to_org: {
         Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
