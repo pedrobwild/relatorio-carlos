@@ -82,7 +82,7 @@ export function DigitalSignatureLog({ formalizationId, signatures, parties, docu
   const { toast } = useToast();
   const [downloadingPartyId, setDownloadingPartyId] = useState<string | null>(null);
   
-  const isDemo = isSeedData(formalizationId);
+  const isDemo = isSeedDataById(formalizationId);
   
   const sortedSignatures = [...signatures].sort(
     (a, b) => new Date(a.acknowledged_at).getTime() - new Date(b.acknowledged_at).getTime()
