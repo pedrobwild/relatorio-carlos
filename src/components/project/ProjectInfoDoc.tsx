@@ -182,7 +182,7 @@ export function ProjectInfoDoc({ projectId }: ProjectInfoDocProps) {
         />
 
         {/* Editor area */}
-        <div className="border border-t-0 border-border rounded-b-lg bg-background min-h-[500px] relative">
+        <div className="border border-t-0 border-border rounded-b-lg bg-white min-h-[500px] relative">
           {/* Hint text */}
           <div className="px-8 pt-4 pb-0">
             <p className="text-xs text-muted-foreground">
