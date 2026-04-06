@@ -1,7 +1,207 @@
-import { Navigate } from 'react-router-dom';
-import { useParams } from 'react-router-dom';
+import { Plus, Search, Package, Wrench } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useState, useMemo } from 'react';
+
+import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
+import { PageContainer } from '@/components/layout/PageContainer';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { useComprasState } from './compras/useComprasState';
+import { ComprasKPICards } from './compras/ComprasKPICards';
+import { PurchasesTable } from './compras/PurchasesTable';
+import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
+import { getSubcategoriesByType } from '@/constants/supplierCategories';
+import type { PurchaseType } from '@/hooks/useProjectPurchases';
+
+function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
+  const state = useComprasState(purchaseType);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const isProduto = purchaseType === 'produto';
+  const label = isProduto ? 'Produto' : 'Prestador';
+
+  const searchFilteredPurchases = useMemo(() => {
+    if (!searchQuery.trim()) return state.filteredPurchases;
+    const q = searchQuery.toLowerCase();
+    return state.filteredPurchases.filter(p =>
+      p.item_name.toLowerCase().includes(q) ||
+      (p.supplier_name && p.supplier_name.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q))
+    );
+  }, [state.filteredPurchases, searchQuery]);
+
+  const totalActualCost = useMemo(() =>
+    state.filteredPurchases
+      .filter(p => p.status !== 'cancelled')
+      .reduce((sum, p) => sum + (p.actual_cost || 0), 0),
+    [state.filteredPurchases]
+  );
+
+  const totalItems = useMemo(() =>
+    state.filteredPurchases.filter(p => p.status !== 'cancelled').length,
+    [state.filteredPurchases]
+  );
+
+  const availableSubcategories = getSubcategoriesByType(isProduto ? 'produtos' : 'prestadores');
+  const hasAnyFilter = !!searchQuery || state.hasActiveFilters;
+
+  if (state.isLoading) {
+    return (
+      <div className="space-y-6 py-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5 py-4">
+      <PurchaseAlertsPanel
+        alertThresholds={state.alertThresholds}
+        getDaysUntilDeadline={state.getDaysUntilDeadline}
+        onItemClick={(purchase) => state.handleOpenDialog(purchase)}
+      />
+
+      <ComprasKPICards
+        pendingCount={state.pendingPurchases.length}
+        orderedCount={state.orderedPurchases.length}
+        deliveredCount={state.deliveredPurchases.length}
+        overdueCount={state.overduePurchases.length}
+        totalEstimatedCost={state.totalEstimatedCost}
+        totalActualCost={totalActualCost}
+        totalItems={totalItems}
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={`Buscar ${label.toLowerCase()}, fornecedor, categoria...`}
+            className="pl-9 h-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Select value={state.filterStatus} onValueChange={state.setFilterStatus}>
+          <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="pending">Pendente</SelectItem>
+            <SelectItem value="ordered">{isProduto ? 'Pedido' : 'Contratado'}</SelectItem>
+            <SelectItem value="in_transit">{isProduto ? 'Em Trânsito' : 'Em Execução'}</SelectItem>
+            <SelectItem value="delivered">Concluído</SelectItem>
+            <SelectItem value="cancelled">Cancelado</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={state.filterActivity} onValueChange={state.setFilterActivity}>
+          <SelectTrigger className="w-56 h-9"><SelectValue placeholder="Atividade" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as atividades</SelectItem>
+            {state.activities.map(a => <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {availableSubcategories.length > 0 && (
+          <Select value={state.filterSubcategory} onValueChange={state.setFilterSubcategory}>
+            <SelectTrigger className="w-48 h-9"><SelectValue placeholder="Subcategoria" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas subcategorias</SelectItem>
+              {availableSubcategories.map(sub => (
+                <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {hasAnyFilter && (
+          <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={() => { setSearchQuery(''); state.clearAllFilters(); }}>
+            Limpar filtros
+          </Button>
+        )}
+        <div className="ml-auto">
+          <Button onClick={() => state.handleOpenDialog()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo {label}
+          </Button>
+        </div>
+      </div>
+
+      <PurchasesTable
+        purchases={searchFilteredPurchases}
+        getActivityName={state.getActivityName}
+        getDaysUntilRequired={state.getDaysUntilRequired}
+        onEdit={(p) => state.handleOpenDialog(p)}
+        onDelete={(id) => state.setDeleteId(id)}
+        onStatusChange={state.handleStatusChange}
+        onAddFirst={() => state.handleOpenDialog()}
+        onUpdateActualCost={state.handleUpdateActualCost}
+        onUpdateNotes={state.handleUpdateNotes}
+        onUpdateField={state.handleUpdateField}
+      />
+
+      <PurchaseFormDialog
+        open={state.isDialogOpen}
+        onOpenChange={state.setIsDialogOpen}
+        isEditing={!!state.editingPurchase}
+        formData={state.formData}
+        setFormData={state.setFormData}
+        activities={state.activities}
+        onActivityChange={state.handleActivityChange}
+        onLeadTimeChange={state.handleLeadTimeChange}
+        onSubmit={state.handleSubmit}
+        isSubmitting={state.addPurchase.isPending || state.updatePurchase.isPending}
+      />
+
+      <DeletePurchaseDialog
+        open={!!state.deleteId}
+        onOpenChange={() => state.setDeleteId(null)}
+        onDelete={state.handleDelete}
+      />
+    </div>
+  );
+}
 
 export default function Compras() {
-  const { projectId } = useParams<{ projectId: string }>();
-  return <Navigate to={`/obra/${projectId}/compras/produtos`} replace />;
+  const [activeTab, setActiveTab] = useState<string>('produtos');
+
+  return (
+    <div className="min-h-screen bg-background">
+      <PageHeader
+        title="Compras"
+        backTo="/gestao"
+        maxWidth="full"
+        showLogo={false}
+        breadcrumbs={[
+          { label: "Gestão", href: "/gestao" },
+          { label: "Compras" },
+        ]}
+      />
+      <div className="py-6">
+        <PageContainer maxWidth="full">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="produtos" className="gap-1.5">
+                <Package className="h-4 w-4" />
+                Produtos
+              </TabsTrigger>
+              <TabsTrigger value="prestadores" className="gap-1.5">
+                <Wrench className="h-4 w-4" />
+                Prestadores
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="produtos">
+              <ComprasTabContent purchaseType="produto" />
+            </TabsContent>
+            <TabsContent value="prestadores">
+              <ComprasTabContent purchaseType="prestador" />
+            </TabsContent>
+          </Tabs>
+        </PageContainer>
+      </div>
+    </div>
+  );
 }
