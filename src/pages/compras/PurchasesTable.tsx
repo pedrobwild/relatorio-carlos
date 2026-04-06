@@ -210,9 +210,9 @@ function StockTrackingSection({ purchase, onUpdateField }: {
   purchase: ProjectPurchase;
   onUpdateField: (id: string, field: string, value: string | null) => void;
 }) {
-  if (purchase.purchase_type !== 'produto' || purchase.delivery_location !== 'estoque') return null;
-
+) {
   const stockDays = useMemo(() => {
+    if (purchase.purchase_type !== 'produto' || purchase.delivery_location !== 'estoque') return null;
     if (!purchase.stock_entry_date) return null;
     const entry = new Date(purchase.stock_entry_date + 'T00:00:00');
     const exit = purchase.stock_exit_date
@@ -220,7 +220,13 @@ function StockTrackingSection({ purchase, onUpdateField }: {
       : new Date();
     exit.setHours(0, 0, 0, 0);
     return Math.max(0, Math.ceil((exit.getTime() - entry.getTime()) / (1000 * 60 * 60 * 24)));
-  }, [purchase.stock_entry_date, purchase.stock_exit_date]);
+  }, [purchase.stock_entry_date, purchase.stock_exit_date, purchase.purchase_type, purchase.delivery_location]);
+
+  if (purchase.purchase_type !== 'produto' || purchase.delivery_location !== 'estoque') return null;
+
+  return (
+
+
 
   return (
     <div className="mt-3 pt-3 border-t border-border/50">
