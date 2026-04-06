@@ -142,7 +142,7 @@ export function useUserRole(): UserRoleState {
   // Compute derived states based on all roles
   const isAdmin = roles.includes('admin');
   const isManager = roles.includes('manager');
-  const isStaff = roles.includes('engineer') || isAdmin || isManager || roles.includes('gestor') || roles.includes('suprimentos') || roles.includes('financeiro') || roles.includes('cs');
+  const isStaff = roles.includes('engineer') || isAdmin || isManager || roles.includes('gestor') || roles.includes('suprimentos') || roles.includes('financeiro') || roles.includes('cs') || roles.includes('arquitetura');
   const isCustomer = roles.includes('customer');
 
   return {

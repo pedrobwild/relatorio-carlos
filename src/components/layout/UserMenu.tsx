@@ -28,6 +28,7 @@ export function UserMenu() {
     admin: 'Admin',
     manager: 'Gestor',
     engineer: 'Engenheiro',
+    arquitetura: 'Arquitetura',
     gestor: 'Supervisor',
     suprimentos: 'Suprimentos',
     financeiro: 'Financeiro',
