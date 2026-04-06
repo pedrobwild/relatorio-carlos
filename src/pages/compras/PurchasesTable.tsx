@@ -312,6 +312,9 @@ function InlineField({
   className?: string;
   prefix?: string;
 }) {
+  // Use key to force re-mount when value changes externally,
+  // ensuring defaultValue stays in sync after saves.
+  const stableKey = `${value ?? ''}`;
   return (
     <div className="relative">
       {prefix && (
@@ -320,6 +323,7 @@ function InlineField({
         </span>
       )}
       <Input
+        key={stableKey}
         type={type}
         className={cn(
           'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
