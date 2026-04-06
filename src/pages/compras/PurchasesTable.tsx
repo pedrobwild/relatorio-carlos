@@ -64,14 +64,25 @@ function ContractCell({ purchase, onUpdateField }: {
     }
     setUploading(true);
     try {
-      const path = `purchases/${purchase.project_id}/${purchase.id}/${Date.now()}_${file.name}`;
-      const { error } = await supabase.storage.from('project-documents').upload(path, file);
-      if (error) throw error;
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `purchases/${purchase.project_id}/${purchase.id}/${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('project-documents').upload(path, file);
+      if (uploadError) throw uploadError;
+      
+      // Update the database record with the file path
+      const { error: dbError } = await supabase
+        .from('project_purchases')
+        .update({ contract_file_path: path })
+        .eq('id', purchase.id);
+      
+      if (dbError) throw dbError;
+      
       onUpdateField(purchase.id, 'contract_file_path', path);
       toast.success('Contrato anexado');
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro ao enviar contrato');
+    } catch (err: unknown) {
+      console.error('Contract upload error:', err);
+      const msg = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : 'Erro desconhecido';
+      toast.error(`Erro ao enviar contrato: ${msg}`);
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
