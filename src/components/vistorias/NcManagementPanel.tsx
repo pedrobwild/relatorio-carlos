@@ -353,26 +353,35 @@ function NcRow({ nc, today, onSelect }: { nc: NonConformity; today: string; onSe
 
   // Deadline display
   let deadlineDisplay: React.ReactNode = null;
-  if (nc.deadline && nc.status !== 'closed') {
-    if (isOverdue) {
+  if (nc.deadline) {
+    const formattedDate = format(deadlineDate!, 'dd/MM/yyyy', { locale: ptBR });
+    if (nc.status === 'closed') {
+      deadlineDisplay = (
+        <span className="text-muted-foreground text-xs flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          Prazo: {formattedDate}
+        </span>
+      );
+    } else if (isOverdue) {
       const daysOverdue = Math.abs(differenceInDays(new Date(), deadlineDate!));
       deadlineDisplay = (
         <span className="text-destructive font-medium text-xs flex items-center gap-1">
           <Clock className="h-3 w-3" />
-          {daysOverdue}d atrasada
+          {daysOverdue}d atrasada · {formattedDate}
         </span>
       );
     } else if (isExpiringSoon) {
       deadlineDisplay = (
         <span className="text-orange-600 dark:text-orange-400 font-medium text-xs flex items-center gap-1">
           <Clock className="h-3 w-3" />
-          {daysLeft === 0 ? 'Vence hoje' : `${daysLeft}d restante${daysLeft! > 1 ? 's' : ''}`}
+          {daysLeft === 0 ? 'Vence hoje' : `${daysLeft}d`} · {formattedDate}
         </span>
       );
     } else {
       deadlineDisplay = (
-        <span className="text-muted-foreground text-xs">
-          {format(deadlineDate!, 'dd/MM', { locale: ptBR })}
+        <span className="text-muted-foreground text-xs flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {formattedDate}
         </span>
       );
     }
