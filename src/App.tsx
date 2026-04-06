@@ -48,6 +48,7 @@ const FornecedorDetalhe = lazy(() => import("./pages/gestao/FornecedorDetalhe"))
 const FornecedoresAdmin = lazy(() => import("./pages/gestao/FornecedoresAdmin"));
 const Orcamentos = lazy(() => import("./pages/gestao/Orcamentos"));
 const OrcamentoDetalhe = lazy(() => import("./pages/gestao/OrcamentoDetalhe"));
+const NaoConformidadesGlobal = lazy(() => import("./pages/gestao/NaoConformidadesGlobal"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
