@@ -163,6 +163,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       quantity: formData.quantity || 1,
       unit: formData.unit || 'un',
       estimated_cost: formData.estimated_cost || null,
+      actual_cost: formData.actual_cost || null,
       category: formData.category || null,
       supplier_name: formData.supplier_name || null,
       supplier_contact: formData.supplier_contact || null,
