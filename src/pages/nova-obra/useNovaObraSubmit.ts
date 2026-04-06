@@ -178,21 +178,26 @@ export function useNovaObraSubmit() {
       const activities = selectedTemplate.default_activities as { description: string; durationDays: number; weight: number }[];
       const startDate = formData.planned_start_date ? new Date(formData.planned_start_date + 'T00:00:00') : new Date();
 
-      let currentDate = new Date(startDate);
-      if (isWeekend(currentDate)) {
-        currentDate = addBusinessDays(currentDate, 0);
-        currentDate.setDate(currentDate.getDate() + 1);
-        while (isWeekend(currentDate)) currentDate.setDate(currentDate.getDate() + 1);
-      }
+      // Ensure we start on a business day
+      let currentDate = addBusinessDays(startDate, 0); // normalizes to next business day if needed
 
       const activityIds: string[] = [];
       const rows = activities.map((act, idx) => {
         const actId = crypto.randomUUID();
         activityIds.push(actId);
         const actStart = new Date(currentDate);
-        const actEnd = addBusinessDays(actStart, act.durationDays - 1);
+        // durationDays=1 means start==end, so add (duration - 1) business days
+        const actEnd = act.durationDays > 1
+          ? addBusinessDays(actStart, act.durationDays - 1)
+          : new Date(actStart);
+        // Next activity starts the next business day after this one ends
         currentDate = addBusinessDays(actEnd, 1);
-        const fmt = (d: Date) => d.toISOString().split('T')[0];
+        const fmt = (d: Date) => {
+          const y = d.getFullYear();
+          const m = (d.getMonth() + 1).toString().padStart(2, '0');
+          const day = d.getDate().toString().padStart(2, '0');
+          return `${y}-${m}-${day}`;
+        };
         return {
           id: actId, project_id: projectId, description: act.description,
           planned_start: fmt(actStart), planned_end: fmt(actEnd),

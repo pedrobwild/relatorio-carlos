@@ -73,7 +73,10 @@ export function TemplateSelectorCard({
                 if (total > 0) {
                   const start = new Date(formData.planned_start_date + 'T00:00:00');
                   const end = addBusinessDays(start, total - 1);
-                  onFormChange('planned_end_date', end.toISOString().split('T')[0]);
+                  const y = end.getFullYear();
+                  const m = (end.getMonth() + 1).toString().padStart(2, '0');
+                  const d = end.getDate().toString().padStart(2, '0');
+                  onFormChange('planned_end_date', `${y}-${m}-${d}`);
                 }
               }
               toast({ title: `Template "${tpl.name}" aplicado` });

@@ -456,8 +456,8 @@ export function ScheduleCard({ formData, onChange, activities, onActivitiesChang
               <input
                 type="checkbox"
                 id="contract_date_undefined"
-                checked={formData.contract_signing_date === ''}
-                onChange={(e) => onChange('contract_signing_date', e.target.checked ? '' : '')}
+                checked={!formData.contract_signing_date}
+                onChange={() => onChange('contract_signing_date', formData.contract_signing_date ? '' : new Date().toISOString().split('T')[0])}
                 className="h-4 w-4 rounded border-border"
               />
               <Label htmlFor="contract_date_undefined" className="text-caption cursor-pointer text-muted-foreground">
