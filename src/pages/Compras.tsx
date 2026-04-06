@@ -1,10 +1,15 @@
-import { Plus, Search, Package, Wrench } from 'lucide-react';
+import { Plus, Search, Package, Wrench, RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useState, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 
 import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -20,9 +25,34 @@ import type { PurchaseType } from '@/hooks/useProjectPurchases';
 function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const state = useComprasState(purchaseType);
   const [searchQuery, setSearchQuery] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const queryClient = useQueryClient();
 
   const isProduto = purchaseType === 'produto';
   const label = isProduto ? 'Produto' : 'Prestador';
+
+  const handleSyncBudget = async () => {
+    if (!state.projectId) return;
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.rpc('sync_budget_items_to_purchases', {
+        p_project_id: state.projectId,
+      });
+      if (error) throw error;
+      const count = data as number;
+      if (count > 0) {
+        toast.success(`${count} item(s) importado(s) do orçamento`);
+        queryClient.invalidateQueries({ queryKey: queryKeys.purchases.list(state.projectId) });
+      } else {
+        toast.info('Nenhum item novo encontrado no orçamento');
+      }
+    } catch (err: unknown) {
+      console.error('Sync error:', err);
+      toast.error('Erro ao sincronizar orçamento');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const searchFilteredPurchases = useMemo(() => {
     if (!searchQuery.trim()) return state.filteredPurchases;
@@ -126,7 +156,13 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
             Limpar filtros
           </Button>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {isProduto && (
+            <Button variant="outline" size="sm" onClick={handleSyncBudget} disabled={syncing}>
+              <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
+              Importar do Orçamento
+            </Button>
+          )}
           <Button onClick={() => state.handleOpenDialog()}>
             <Plus className="h-4 w-4 mr-2" />
             Novo {label}

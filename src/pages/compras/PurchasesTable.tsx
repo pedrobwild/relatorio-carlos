@@ -47,6 +47,40 @@ const fmtDate = (d: string | null) => {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 
+/* ─── Cost Difference Badge ─── */
+function CostDiffBadge({ estimated, actual, showDetails = false }: {
+  estimated: number;
+  actual: number;
+  showDetails?: boolean;
+}) {
+  const diff = actual - estimated;
+  const pct = estimated > 0 ? ((diff / estimated) * 100) : 0;
+  const isOver = diff > 0;
+
+  if (diff === 0) return null;
+
+  const color = isOver ? 'text-destructive' : 'text-[hsl(var(--success))]';
+  const sign = isOver ? '+' : '';
+  const arrow = isOver ? '↑' : '↓';
+
+  if (showDetails) {
+    return (
+      <div className={cn('flex items-center gap-2 text-xs font-medium rounded-md px-2 py-1',
+        isOver ? 'bg-destructive/10 text-destructive' : 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]'
+      )}>
+        <span>{arrow} {sign}{fmt(diff)}</span>
+        <span className="opacity-70">({sign}{pct.toFixed(1)}%)</span>
+      </div>
+    );
+  }
+
+  return (
+    <span className={cn('text-[10px] font-medium', color)}>
+      {arrow} {sign}{fmt(diff)}
+    </span>
+  );
+}
+
 /* ─── Contract Upload Cell ─── */
 function ContractCell({ purchase, onUpdateField }: {
   purchase: ProjectPurchase;
@@ -211,13 +245,20 @@ function PurchaseRow({
           <div className="text-right hidden md:block">
             <p className="text-sm font-medium">{fmt(purchase.estimated_cost)}</p>
             {purchase.actual_cost != null && purchase.actual_cost > 0 && (
-              <p className={cn(
-                'text-xs',
-                purchase.actual_cost > (purchase.estimated_cost || 0)
-                  ? 'text-destructive' : 'text-[hsl(var(--success))]'
-              )}>
-                Real: {fmt(purchase.actual_cost)}
-              </p>
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Real: {fmt(purchase.actual_cost)}
+                </p>
+                {purchase.estimated_cost != null && purchase.estimated_cost > 0 && (
+                  <CostDiffBadge estimated={purchase.estimated_cost} actual={purchase.actual_cost} />
+                )}
+              </>
+            )}
+            {purchase.orcamento_item_id && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-primary/70 mt-0.5">
+                <FileText className="h-2.5 w-2.5" />
+                Orçamento
+              </span>
             )}
           </div>
 
@@ -315,18 +356,20 @@ function PurchaseRow({
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Custos</h4>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Previsto</label>
+                  <label className="text-xs text-muted-foreground block mb-1">
+                    {purchase.orcamento_item_id ? 'Custo Orçamento' : 'Previsto'}
+                  </label>
                   <InlineField
                     type="number"
                     value={purchase.estimated_cost}
                     placeholder="0,00"
                     prefix="R$"
-                    className="w-full"
+                    className={cn('w-full', purchase.orcamento_item_id && 'opacity-60')}
                     onSave={(v) => onUpdateField(purchase.id, 'estimated_cost', v || null)}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Real</label>
+                  <label className="text-xs text-muted-foreground block mb-1">Custo Real</label>
                   <InlineField
                     type="number"
                     value={purchase.actual_cost}
@@ -340,6 +383,13 @@ function PurchaseRow({
                   />
                 </div>
               </div>
+              {/* Cost difference indicator */}
+              {purchase.estimated_cost != null && purchase.estimated_cost > 0 &&
+               purchase.actual_cost != null && purchase.actual_cost > 0 && (
+                <div className="pt-1">
+                  <CostDiffBadge estimated={purchase.estimated_cost} actual={purchase.actual_cost} showDetails />
+                </div>
+              )}
             </div>
 
             {/* Dates */}

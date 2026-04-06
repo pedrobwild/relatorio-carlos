@@ -14,6 +14,7 @@ export interface ProjectPurchase {
   project_id: string;
   activity_id: string | null;
   fornecedor_id: string | null;
+  orcamento_item_id: string | null;
   item_name: string;
   description: string | null;
   quantity: number;
