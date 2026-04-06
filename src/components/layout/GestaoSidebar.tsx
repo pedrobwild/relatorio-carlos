@@ -7,6 +7,7 @@ import {
   Settings,
   LayoutDashboard,
   Truck,
+  Receipt,
   LucideIcon,
 } from "lucide-react";
 import {
