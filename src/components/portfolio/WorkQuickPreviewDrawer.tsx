@@ -14,7 +14,6 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import { computeHealthScore, type HealthLevel } from '@/lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
-import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 const breakdownLevelColors: Record<HealthLevel, { text: string; fill: string }> = {
