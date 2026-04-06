@@ -224,8 +224,13 @@ const Cronograma = () => {
 
   const handleSaveBaseline = async () => {
     setSavingBaseline(true);
-    await saveBaseline();
-    setSavingBaseline(false);
+    try {
+      await saveBaseline();
+    } catch (err) {
+      toast.error('Erro ao salvar baseline');
+    } finally {
+      setSavingBaseline(false);
+    }
   };
 
   const handleImportActivities = (importedActivities: ActivityFormData[]) => {
@@ -261,7 +266,7 @@ const Cronograma = () => {
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
         const cappedEnd = weekEnd > end ? end : weekEnd;
-        const fmt = (d: Date) => d.toISOString().split('T')[0];
+        const fmt = (d: Date) => toISO(d);
         weeks.push({
           id: crypto.randomUUID(),
           description: '',

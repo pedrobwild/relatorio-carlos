@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInCalendarDays, startOfWeek, endOfWeek, isWithinInterval, addWeeks, isBefore, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -26,8 +26,7 @@ interface Props {
 type ActivityStatus = 'overdue' | 'in_progress' | 'upcoming' | 'completed' | 'pending';
 type FilterValue = 'all' | 'attention' | 'in_progress' | 'completed' | 'pending';
 
-function getActivityStatus(act: ProjectActivity): ActivityStatus {
-  const today = new Date().toISOString().slice(0, 10);
+function getActivityStatus(act: ProjectActivity, today: string): ActivityStatus {
   if (act.actual_end) return 'completed';
   if (act.actual_start && !act.actual_end) {
     if (act.planned_end < today) return 'overdue';
@@ -63,10 +62,14 @@ export function CronogramaMobileView({
   const [filter, setFilter] = useState<FilterValue>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['overdue', 'in_progress', 'upcoming']));
 
+  // Stable "today" reference — avoids re-creating Date on every render
+  const todayRef = useRef(new Date().toISOString().slice(0, 10));
+  const today = todayRef.current;
+
   // Enrich activities with computed status
   const enriched = useMemo(() =>
-    activities.map(act => ({ ...act, computedStatus: getActivityStatus(act) })),
-    [activities]
+    activities.map(act => ({ ...act, computedStatus: getActivityStatus(act, today) })),
+    [activities, today]
   );
 
   // Stats
@@ -244,7 +247,6 @@ export function CronogramaMobileView({
 
 function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { computedStatus: ActivityStatus }; index: number }) {
   const config = statusConfig[act.computedStatus];
-  const today = new Date().toISOString().slice(0, 10);
   const isOverdue = act.computedStatus === 'overdue';
   const daysInfo = useMemo(() => {
     if (act.actual_end) return null;
