@@ -546,7 +546,7 @@ export default function Fornecedores() {
                   onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" className="z-[200]">
                     <SelectItem value="ativo">Ativo</SelectItem>
                     <SelectItem value="inativo">Inativo</SelectItem>
                   </SelectContent>
