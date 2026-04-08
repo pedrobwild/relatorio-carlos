@@ -15,8 +15,6 @@ import {
 } from "@/constants/supplierCategories";
 import { normalizeSupplierTaxonomy } from "@/components/fornecedores/supplierTaxonomy";
 
-const EMPTY_SELECT_VALUE = "__empty__";
-
 interface SupplierTaxonomyFieldsProps {
   supplierType: string | null | undefined;
   supplierSubcategory: string | null | undefined;
@@ -48,14 +46,11 @@ export function SupplierTaxonomyFields({
     <>
       <div className="space-y-1.5">
         <Label>Categoria *</Label>
-        <Select value={resolvedType ?? EMPTY_SELECT_VALUE} onValueChange={handleTypeChange}>
+        <Select value={resolvedType ?? ""} onValueChange={handleTypeChange}>
           <SelectTrigger aria-label="Categoria do fornecedor">
-            <SelectValue />
+            <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
           <SelectContent position="popper" className="z-[200]">
-            <SelectItem value={EMPTY_SELECT_VALUE} disabled>
-              Selecione...
-            </SelectItem>
             {SUPPLIER_TYPES.map((type) => (
               <SelectItem key={type} value={type}>
                 {SUPPLIER_TYPE_LABELS[type]}
@@ -69,17 +64,14 @@ export function SupplierTaxonomyFields({
         <Label>Subcategoria *</Label>
         <Select
           key={resolvedType ?? "no-type"}
-          value={resolvedSubcategory ?? EMPTY_SELECT_VALUE}
-          onValueChange={(value) => onSupplierSubcategoryChange(value === EMPTY_SELECT_VALUE ? null : value)}
+          value={resolvedSubcategory ?? ""}
+          onValueChange={(value) => onSupplierSubcategoryChange(value || null)}
           disabled={!resolvedType}
         >
           <SelectTrigger aria-label="Subcategoria do fornecedor">
-            <SelectValue />
+            <SelectValue placeholder={resolvedType ? "Selecione..." : "Escolha a categoria primeiro"} />
           </SelectTrigger>
           <SelectContent position="popper" className="z-[200]">
-            <SelectItem value={EMPTY_SELECT_VALUE} disabled>
-              {resolvedType ? "Selecione..." : "Escolha a categoria primeiro"}
-            </SelectItem>
             {availableSubcategories.map((sub) => (
               <SelectItem key={sub} value={sub}>
                 {sub}
