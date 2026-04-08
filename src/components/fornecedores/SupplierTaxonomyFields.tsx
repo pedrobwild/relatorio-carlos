@@ -52,7 +52,7 @@ export function SupplierTaxonomyFields({
           <SelectTrigger aria-label="Categoria do fornecedor">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" className="z-[200]">
             <SelectItem value={EMPTY_SELECT_VALUE} disabled>
               Selecione...
             </SelectItem>
