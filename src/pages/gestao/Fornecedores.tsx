@@ -177,11 +177,24 @@ export default function Fornecedores() {
     setForm(emptyForm());
   };
 
+  const LEGACY_CATEGORIA_TO_TYPE: Record<string, string> = {
+    mao_de_obra: 'prestadores',
+    servicos: 'prestadores',
+    materiais: 'produtos',
+    equipamentos: 'produtos',
+    outros: 'produtos',
+  };
+
   const openEdit = (s: Supplier) => {
+    const normalized = normalizeSupplierTaxonomy(s.supplier_type, s.supplier_subcategory);
+    const inferredType = normalized.supplier_type
+      ?? LEGACY_CATEGORIA_TO_TYPE[s.categoria ?? '']
+      ?? null;
     setEditing(s);
     setForm({
       ...s,
-      ...normalizeSupplierTaxonomy(s.supplier_type, s.supplier_subcategory),
+      ...normalized,
+      supplier_type: inferredType,
     });
     setDialogOpen(true);
   };
