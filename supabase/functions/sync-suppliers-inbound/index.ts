@@ -39,6 +39,8 @@ Deno.serve(async (req) => {
       email, telefone, site, condicoes_pagamento, prazo_entrega_dias,
       produtos_servicos, nota, is_active,
       _source_system, _source_id,
+      // New taxonomy fields from Envision
+      tipo, supplier_type, subcategoria, supplier_subcategory,
     } = payload;
 
     if (!name || !_source_system || !_source_id) {
@@ -55,11 +57,23 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     // --- Map to Portal BWild schema ---
+    const legacyCategoria = mapCategoria(categoria);
+    const rawSubcategory = subcategoria ?? supplier_subcategory ?? null;
+    const rawType = tipo ?? supplier_type ?? null;
+
+    // Determine supplier_type: explicit > inferred from subcategory > inferred from legacy
+    const resolvedType = rawType
+      ?? (rawSubcategory ? inferTypeFromSubcategory(rawSubcategory) : null)
+      ?? LEGACY_TO_TYPE[legacyCategoria]
+      ?? null;
+
     const supplierData: Record<string, unknown> = {
       nome: name,
       razao_social: razao_social || null,
       cnpj_cpf: cnpj_cpf || null,
-      categoria: mapCategoria(categoria),
+      categoria: legacyCategoria,
+      supplier_type: resolvedType,
+      supplier_subcategory: rawSubcategory,
       endereco: endereco || null,
       cidade: cidade || null,
       estado: estado || null,
@@ -94,7 +108,11 @@ Deno.serve(async (req) => {
       // Insert new supplier
       const { data: newSupplier, error: insertErr } = await supabaseAdmin
         .from("fornecedores")
-        .insert(supplierData)
+        .insert({
+          ...supplierData,
+          external_id: _source_id,
+          external_system: _source_system,
+        })
         .select("id")
         .single();
 
@@ -142,9 +160,37 @@ Deno.serve(async (req) => {
   }
 });
 
+// ── Subcategory → supplier_type inference ────────────────────
+const PRESTADORES_SUBCATEGORIES = [
+  'Marcenaria', 'Empreita', 'Vidraçaria Box', 'Vidraçaria Sacada',
+  'Eletricista', 'Pintor', 'Instalador de Piso', 'Técnico Ar-Condicionado',
+  'Gesseiro', 'Serviços Gerais', 'Limpeza', 'Pedreiro',
+  'Instalador Fechadura Digital', 'Cortinas', 'Marmoraria', 'Jardim Vertical',
+];
+
+const PRODUTOS_SUBCATEGORIES = [
+  'Eletrodomésticos', 'Enxoval', 'Espelhos', 'Decoração', 'Revestimentos',
+  'Luminárias', 'Cadeiras e Mesas', 'Camas', 'Sofás e Poltronas',
+  'Tapeçaria', 'Torneiras e Cubas', 'Materiais Elétricos',
+  'Materiais de Construção', 'Acessórios Banheiro', 'Fechadura Digital', 'Tintas',
+];
+
+function inferTypeFromSubcategory(sub: string): string | null {
+  if (PRESTADORES_SUBCATEGORIES.includes(sub)) return 'prestadores';
+  if (PRODUTOS_SUBCATEGORIES.includes(sub)) return 'produtos';
+  return null;
+}
+
+const LEGACY_TO_TYPE: Record<string, string> = {
+  mao_de_obra: 'prestadores',
+  servicos: 'prestadores',
+  materiais: 'produtos',
+  equipamentos: 'produtos',
+  outros: 'produtos',
+};
+
 /**
  * Map Envision categoria to Portal BWild supplier_category enum.
- * Valid values: materiais, mao_de_obra, servicos, equipamentos, outros
  */
 function mapCategoria(cat: string | null | undefined): string {
   if (!cat) return "outros";
@@ -153,7 +199,6 @@ function mapCategoria(cat: string | null | undefined): string {
   const validCategories = ["materiais", "mao_de_obra", "servicos", "equipamentos", "outros"];
   if (validCategories.includes(lower)) return lower;
   
-  // Fuzzy matching from Envision naming conventions
   if (lower.includes("material") || lower.includes("construcao") || lower.includes("construção")) return "materiais";
   if (lower.includes("mao") || lower.includes("mão") || lower.includes("obra") || lower.includes("trabalh")) return "mao_de_obra";
   if (lower.includes("servic") || lower.includes("serviç")) return "servicos";

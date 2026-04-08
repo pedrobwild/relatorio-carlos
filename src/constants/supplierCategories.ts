@@ -48,7 +48,6 @@ const PRODUTOS_SUBCATEGORIES = [
   'Decoração',
   'Revestimentos',
   'Luminárias',
-  'Torneiras',
   'Cadeiras e Mesas',
   'Camas',
   'Sofás e Poltronas',

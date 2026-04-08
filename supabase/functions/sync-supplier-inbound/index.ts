@@ -142,18 +142,59 @@ Deno.serve(async (req) => {
   }
 });
 
+// ── Subcategory → supplier_type inference ────────────────────
+// Mirrors src/constants/supplierCategories.ts
+const PRESTADORES_SUBCATEGORIES = [
+  'Marcenaria', 'Empreita', 'Vidraçaria Box', 'Vidraçaria Sacada',
+  'Eletricista', 'Pintor', 'Instalador de Piso', 'Técnico Ar-Condicionado',
+  'Gesseiro', 'Serviços Gerais', 'Limpeza', 'Pedreiro',
+  'Instalador Fechadura Digital', 'Cortinas', 'Marmoraria', 'Jardim Vertical',
+];
+
+const PRODUTOS_SUBCATEGORIES = [
+  'Eletrodomésticos', 'Enxoval', 'Espelhos', 'Decoração', 'Revestimentos',
+  'Luminárias', 'Cadeiras e Mesas', 'Camas', 'Sofás e Poltronas',
+  'Tapeçaria', 'Torneiras e Cubas', 'Materiais Elétricos',
+  'Materiais de Construção', 'Acessórios Banheiro', 'Fechadura Digital', 'Tintas',
+];
+
+function inferTypeFromSubcategory(sub: string): string | null {
+  if (PRESTADORES_SUBCATEGORIES.includes(sub)) return 'prestadores';
+  if (PRODUTOS_SUBCATEGORIES.includes(sub)) return 'produtos';
+  return null;
+}
+
+// ── Legacy categoria → supplier_type ─────────────────────────
+const LEGACY_TO_TYPE: Record<string, string> = {
+  mao_de_obra: 'prestadores',
+  servicos: 'prestadores',
+  materiais: 'produtos',
+  equipamentos: 'produtos',
+  outros: 'produtos',
+};
+
 /**
  * Maps Envision supplier payload → Portal BWild fornecedores row.
- * Uses correct supplier_category enum values: materiais, mao_de_obra, servicos, equipamentos, outros
+ * Populates supplier_type and supplier_subcategory in addition to legacy categoria.
  */
 function mapToFornecedor(f: Record<string, unknown>) {
+  const legacyCategoria = mapCategoria(f.categoria as string | null | undefined);
+  const rawSubcategory = (f.subcategoria ?? f.supplier_subcategory ?? null) as string | null;
+  const rawType = (f.tipo ?? f.supplier_type ?? null) as string | null;
+
+  // Determine supplier_type: explicit > inferred from subcategory > inferred from legacy categoria
+  const supplierType = rawType
+    ?? (rawSubcategory ? inferTypeFromSubcategory(rawSubcategory) : null)
+    ?? LEGACY_TO_TYPE[legacyCategoria]
+    ?? null;
+
   return {
     nome: ((f.nome ?? f.name ?? "") as string).trim(),
     razao_social: f.razao_social ?? null,
     cnpj_cpf: f.cnpj_cpf ?? null,
-    categoria: mapCategoria(f.categoria as string | null | undefined),
-    supplier_type: f.tipo ?? f.supplier_type ?? null,
-    supplier_subcategory: f.subcategoria ?? f.supplier_subcategory ?? null,
+    categoria: legacyCategoria,
+    supplier_type: supplierType,
+    supplier_subcategory: rawSubcategory,
     endereco: f.endereco ?? null,
     cidade: f.cidade ?? null,
     estado: f.estado ?? null,
@@ -172,7 +213,6 @@ function mapToFornecedor(f: Record<string, unknown>) {
 
 /**
  * Map Envision categoria to Portal BWild supplier_category enum.
- * Valid values: materiais, mao_de_obra, servicos, equipamentos, outros
  */
 function mapCategoria(cat: string | null | undefined): string {
   if (!cat) return "outros";

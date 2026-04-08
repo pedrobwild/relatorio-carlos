@@ -100,6 +100,8 @@ Deno.serve(async (req) => {
       razao_social: supplier.razao_social,
       cnpj_cpf: supplier.cnpj_cpf,
       categoria: supplier.categoria,
+      supplier_type: supplier.supplier_type,
+      supplier_subcategory: supplier.supplier_subcategory,
       endereco: supplier.endereco,
       cidade: supplier.cidade,
       estado: supplier.estado,
