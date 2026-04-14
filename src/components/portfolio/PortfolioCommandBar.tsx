@@ -190,5 +190,6 @@ export function PortfolioCommandBar({
         ))}
       </div>
     </div>
+    </TooltipProvider>
   );
 }
