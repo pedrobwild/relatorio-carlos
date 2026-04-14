@@ -87,8 +87,17 @@ serve(async (req) => {
       return jsonResponse({ error: 'No access to this project', requestId }, 403);
     }
 
-    // Read file and compute checksum
+    // Read file and validate magic bytes
     const fileBuffer = await file.arrayBuffer();
+
+    if (!validateMagicBytes(fileBuffer, file.type)) {
+      console.warn(`[${requestId}] Magic byte validation failed for ${file.name} (claimed: ${file.type})`);
+      return jsonResponse({ 
+        error: 'Tipo de arquivo não reconhecido. O conteúdo não corresponde a um formato permitido.', 
+        requestId 
+      }, 400);
+    }
+
     const checksum = await computeSHA256(fileBuffer);
 
     console.log(`[${requestId}] File: ${file.name}, Size: ${file.size}, Checksum: ${checksum}`);
