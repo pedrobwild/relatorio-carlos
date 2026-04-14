@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2, GripVertical, ChevronDown, FileText } from 'lucide-react';
 import { isHoliday } from '@/lib/businessDays';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DatePickerField } from '@/components/DatePickerField';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectActivities, ActivityInput } from '@/hooks/useProjectActivities';
@@ -28,6 +29,8 @@ interface ActivityFormData {
   actualEnd: string;
   weight: string;
   predecessorIds: string[];
+  etapa: string;
+  detailed_description: string;
 }
 
 const toISO = (d: Date) => {
@@ -74,6 +77,8 @@ const createEmptyActivity = (): ActivityFormData => ({
   actualEnd: '',
   weight: '0',
   predecessorIds: [],
+  etapa: '',
+  detailed_description: '',
 });
 
 /* ── Auto-resize textarea ── */
@@ -180,6 +185,7 @@ const Cronograma = () => {
   const [savingBaseline, setSavingBaseline] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
 
   const clearDragState = useCallback(() => {
     setDraggedIndex(null);
@@ -233,18 +239,19 @@ const Cronograma = () => {
     }
   };
 
-  const handleImportActivities = (importedActivities: ActivityFormData[]) => {
+  const handleImportActivities = (importedActivities: import('@/components/import-schedule/types').ActivityFormData[]) => {
+    const mapped: ActivityFormData[] = importedActivities.map(a => ({ ...a, etapa: '', detailed_description: '' }));
     if (activities.length === 1 && !activities[0].description.trim()) {
-      setActivities(importedActivities);
+      setActivities(mapped);
     } else {
-      setActivities([...activities, ...importedActivities]);
+      setActivities([...activities, ...mapped]);
     }
   };
 
   // Load existing activities or auto-generate weekly slots
   useEffect(() => {
     if (existingActivities.length > 0) {
-      const formActivities = existingActivities.map((act) => ({
+      const formActivities: ActivityFormData[] = existingActivities.map((act) => ({
         id: act.id,
         description: act.description,
         plannedStart: act.planned_start,
@@ -253,6 +260,8 @@ const Cronograma = () => {
         actualEnd: act.actual_end || '',
         weight: act.weight.toString(),
         predecessorIds: act.predecessor_ids || [],
+        etapa: act.etapa || '',
+        detailed_description: act.detailed_description || '',
       }));
       setActivities(formActivities);
     } else if (!activitiesLoading && project?.planned_start_date && project?.planned_end_date) {
@@ -276,6 +285,8 @@ const Cronograma = () => {
           actualEnd: '',
           weight: '0',
           predecessorIds: [],
+          etapa: '',
+          detailed_description: '',
         });
         weekStart = new Date(cappedEnd);
         weekStart.setDate(weekStart.getDate() + 1);
@@ -319,6 +330,10 @@ const Cronograma = () => {
   const handleRemoveActivity = (id: string) => {
     if (activities.length === 1) return;
     setActivities(activities.filter((act) => act.id !== id));
+    setOpenDetails(prev => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handleActivityChange = (
@@ -429,6 +444,8 @@ const Cronograma = () => {
       weight: parseFloat(act.weight) || 0,
       sort_order: index,
       predecessor_ids: act.predecessorIds,
+      etapa: act.etapa?.trim() || null,
+      detailed_description: act.detailed_description?.trim() || null,
     }));
     const success = await saveActivities(activityInputs);
     setSaving(false);
@@ -579,90 +596,129 @@ const Cronograma = () => {
               <div>
                 {activities.map((activity, index) => {
                   const rowError = dateValidationErrors[activity.id];
+                  const hasDetail = !!activity.detailed_description?.trim();
+                  const isDetailOpen = openDetails[activity.id] || false;
                   return (
-                    <div
-                      key={activity.id}
-                      className={cn(
-                        'grid grid-cols-[44px_56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 last:border-b-0 transition-colors hover:bg-accent/30 group/row',
-                        index % 2 === 1 && 'bg-muted/15',
-                        rowError && 'bg-destructive/5 hover:bg-destructive/10',
-                        draggedIndex === index && 'opacity-55',
-                        dragOverIndex === index && draggedIndex !== index && 'bg-primary/10 ring-1 ring-inset ring-primary/30',
-                      )}
-                      onDragOver={(e) => handleRowDragOver(e, index)}
-                      onDrop={(e) => handleRowDrop(e, index)}
-                    >
-                      <div className="pl-2 py-2.5 flex items-center justify-center">
-                        <button
-                          type="button"
-                          draggable
-                          aria-label={`Reordenar atividade ${index + 1}`}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/30 opacity-0 transition-all cursor-grab active:cursor-grabbing group-hover/row:opacity-100 hover:bg-accent hover:text-foreground"
-                          onDragStart={(e) => handleDragStart(e, index)}
-                          onDragEnd={clearDragState}
-                        >
-                          <GripVertical className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="pr-2 py-2.5 text-sm font-bold text-muted-foreground tabular-nums">
-                        {index + 1}
-                      </div>
-
-                      <div className="px-2 py-2">
-                        <AutoTextarea
-                          value={activity.description}
-                          onChange={(v) => handleActivityChange(activity.id, 'description', v)}
-                          placeholder="Ex: Mobilização e alinhamentos iniciais..."
-                        />
-                        {rowError?.plannedDates && (
-                          <p className="text-[10px] text-destructive mt-1 flex items-center gap-1 px-1">
-                            <AlertCircle className="h-3 w-3 shrink-0" />
-                            {rowError.plannedDates}
-                          </p>
+                    <div key={activity.id}>
+                      <div
+                        className={cn(
+                          'grid grid-cols-[44px_56px_minmax(320px,1fr)_170px_170px_88px_52px] items-start border-b border-border/30 transition-colors hover:bg-accent/30 group/row',
+                          index % 2 === 1 && 'bg-muted/15',
+                          rowError && 'bg-destructive/5 hover:bg-destructive/10',
+                          draggedIndex === index && 'opacity-55',
+                          dragOverIndex === index && draggedIndex !== index && 'bg-primary/10 ring-1 ring-inset ring-primary/30',
                         )}
-                      </div>
+                        onDragOver={(e) => handleRowDragOver(e, index)}
+                        onDrop={(e) => handleRowDrop(e, index)}
+                      >
+                        <div className="pl-2 py-2.5 flex items-center justify-center">
+                          <button
+                            type="button"
+                            draggable
+                            aria-label={`Reordenar atividade ${index + 1}`}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/30 opacity-0 transition-all cursor-grab active:cursor-grabbing group-hover/row:opacity-100 hover:bg-accent hover:text-foreground"
+                            onDragStart={(e) => handleDragStart(e, index)}
+                            onDragEnd={clearDragState}
+                          >
+                            <GripVertical className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="pr-2 py-2.5 text-sm font-bold text-muted-foreground tabular-nums">
+                          {index + 1}
+                        </div>
 
-                      <div className="px-2 py-2">
-                        <DatePickerField
-                          value={activity.plannedStart}
-                          onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
-                          placeholder="dd/mm/aaaa"
-                          hasError={!!rowError?.plannedDates}
-                        />
-                      </div>
+                        <div className="px-2 py-2">
+                          <AutoTextarea
+                            value={activity.description}
+                            onChange={(v) => handleActivityChange(activity.id, 'description', v)}
+                            placeholder="Ex: Mobilização e alinhamentos iniciais..."
+                          />
+                          <div className="flex items-center gap-1 mt-1 px-1">
+                            {rowError?.plannedDates && (
+                              <p className="text-[10px] text-destructive flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3 shrink-0" />
+                                {rowError.plannedDates}
+                              </p>
+                            )}
+                            {!isDetailOpen && !hasDetail && (
+                              <button
+                                type="button"
+                                className="text-[10px] text-muted-foreground/60 hover:text-primary flex items-center gap-0.5 transition-colors"
+                                onClick={() => setOpenDetails(prev => ({ ...prev, [activity.id]: true }))}
+                              >
+                                <FileText className="h-3 w-3" />
+                                Adicionar descrição detalhada
+                              </button>
+                            )}
+                            {(hasDetail || isDetailOpen) && (
+                              <button
+                                type="button"
+                                className={cn(
+                                  'text-[10px] flex items-center gap-0.5 transition-colors',
+                                  hasDetail ? 'text-primary/70 hover:text-primary' : 'text-muted-foreground/60 hover:text-primary',
+                                )}
+                                onClick={() => setOpenDetails(prev => ({ ...prev, [activity.id]: !prev[activity.id] }))}
+                              >
+                                <ChevronDown className={cn('h-3 w-3 transition-transform', isDetailOpen && 'rotate-180')} />
+                                {hasDetail ? 'Descrição detalhada' : 'Fechar'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
 
-                      <div className="px-2 py-2">
-                        <DatePickerField
-                          value={activity.plannedEnd}
-                          onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
-                          placeholder="dd/mm/aaaa"
-                          hasError={!!rowError?.plannedDates}
-                        />
-                      </div>
+                        <div className="px-2 py-2">
+                          <DatePickerField
+                            value={activity.plannedStart}
+                            onChange={(val) => handleActivityChange(activity.id, 'plannedStart', val)}
+                            placeholder="dd/mm/aaaa"
+                            hasError={!!rowError?.plannedDates}
+                          />
+                        </div>
 
-                      <div className="px-2 py-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          value={activity.weight}
-                          onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
-                          className="h-10 w-full text-sm text-center font-semibold tabular-nums"
-                        />
-                      </div>
+                        <div className="px-2 py-2">
+                          <DatePickerField
+                            value={activity.plannedEnd}
+                            onChange={(val) => handleActivityChange(activity.id, 'plannedEnd', val)}
+                            placeholder="dd/mm/aaaa"
+                            hasError={!!rowError?.plannedDates}
+                          />
+                        </div>
 
-                      <div className="pr-3 py-2 flex justify-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRemoveActivity(activity.id)}
-                          disabled={activities.length === 1}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="px-2 py-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            value={activity.weight}
+                            onChange={(e) => handleActivityChange(activity.id, 'weight', e.target.value)}
+                            className="h-10 w-full text-sm text-center font-semibold tabular-nums"
+                          />
+                        </div>
+
+                        <div className="pr-3 py-2 flex justify-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemoveActivity(activity.id)}
+                            disabled={activities.length === 1}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
+                      {isDetailOpen && (
+                        <div className="border-b border-border/30 bg-muted/10 px-4 py-2" style={{ paddingLeft: 'calc(44px + 56px + 8px)' }}>
+                          <Textarea
+                            value={activity.detailed_description}
+                            onChange={(e) => handleActivityChange(activity.id, 'detailed_description', e.target.value)}
+                            placeholder="Descreva os detalhes desta atividade..."
+                            rows={2}
+                            className="text-sm resize-none"
+                          />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
