@@ -330,6 +330,10 @@ const Cronograma = () => {
   const handleRemoveActivity = (id: string) => {
     if (activities.length === 1) return;
     setActivities(activities.filter((act) => act.id !== id));
+    setOpenDetails(prev => {
+      const { [id]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handleActivityChange = (
