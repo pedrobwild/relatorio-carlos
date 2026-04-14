@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInCalendarDays, startOfWeek, endOfWeek, isWithinInterval, addWeeks, isBefore, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -62,8 +62,21 @@ export function CronogramaMobileView({
   const [filter, setFilter] = useState<FilterValue>('all');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['overdue', 'in_progress', 'upcoming']));
 
-  // Stable "today" reference — avoids re-creating Date on every render
+  // "Today" reference — refreshed every 60s to handle day rollover
+  const [tick, setTick] = useState(0);
   const todayRef = useRef(new Date().toISOString().slice(0, 10));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date().toISOString().slice(0, 10);
+      if (now !== todayRef.current) {
+        todayRef.current = now;
+        setTick(t => t + 1);
+      }
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   const today = todayRef.current;
 
   // Enrich activities with computed status
@@ -72,7 +85,7 @@ export function CronogramaMobileView({
     [activities, today]
   );
 
-  // Stats
+  // Stats — computed from filtered list when filter is active, enriched for totals
   const stats = useMemo(() => {
     const totalWeight = enriched.reduce((s, a) => s + a.weight, 0);
     const completedWeight = enriched.filter(a => a.actual_end).reduce((s, a) => s + a.weight, 0);
@@ -156,9 +169,10 @@ export function CronogramaMobileView({
           )}
         />
         <p className="text-[11px] text-muted-foreground">
-          {stats.completed} de {stats.total} atividades · {enriched.filter(a => a.computedStatus === 'overdue').length > 0
-            ? `${enriched.filter(a => a.computedStatus === 'overdue').length} em atraso`
-            : 'No prazo'}
+          {stats.completed} de {stats.total} atividades
+          {filter !== 'all' && ` · ${filtered.length} visíveis`}
+          {' · '}
+          {stats.overdue > 0 ? `${stats.overdue} em atraso` : 'No prazo'}
         </p>
       </div>
 

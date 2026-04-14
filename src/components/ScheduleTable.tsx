@@ -116,7 +116,7 @@ const ScheduleTable = ({
           const status = getActivityStatus(activity);
           return (
             <div
-              key={activity.id || index}
+              key={activity.id || `temp-${index}`}
               className={cn(
                 "bg-card border rounded-lg p-2.5 shadow-sm opacity-0 animate-fade-in transition-all",
                 !canEditDates && onActivitySelect && "cursor-pointer active:scale-[0.98]",
@@ -176,7 +176,7 @@ const ScheduleTable = ({
                 const status = getActivityStatus(activity);
                 return (
                   <TableRow
-                    key={activity.id || index}
+                    key={activity.id || `temp-${index}`}
                     className={cn(
                       "transition-colors border-b border-border/50 last:border-b-0",
                       !canEditDates && onActivitySelect && "cursor-pointer",

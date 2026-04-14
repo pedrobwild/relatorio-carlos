@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -21,7 +22,7 @@ interface GanttActivityBarProps {
   onDragStart: (e: React.MouseEvent, index: number, dragType: DragState['dragType']) => void;
 }
 
-export function GanttActivityBar({
+function GanttActivityBarInner({
   task,
   activity,
   index,
@@ -39,34 +40,41 @@ export function GanttActivityBar({
   const { status, progress, delayDays, hasActualStart, hasActualEnd } = computed;
   const isSelected = selectedActivityId === activity?.id;
 
-  const plannedStyle = getBarStyle(task.plannedStart, task.plannedEnd);
+  const plannedStyle = useMemo(() => getBarStyle(task.plannedStart, task.plannedEnd), [getBarStyle, task.plannedStart, task.plannedEnd]);
   const plannedEndDate = safeParseLocalDate(task.plannedEnd) ?? referenceDate;
   const plannedStartDate = safeParseLocalDate(task.plannedStart) ?? referenceDate;
 
-  let actualBarStyle: BarStyle | null = null;
-  let delayBarStyle: BarStyle | null = null;
-  let remainingPlannedStyle: BarStyle | null = null;
+  const { actualBarStyle, delayBarStyle, remainingPlannedStyle } = useMemo(() => {
+    let actual: BarStyle | null = null;
+    let delay: BarStyle | null = null;
+    let remaining: BarStyle | null = null;
 
-  if (hasActualEnd) {
-    actualBarStyle = getBarStyle(task.start, task.end);
-    const actualEndDate = parseLocalDate(task.end);
-    if (actualEndDate > plannedEndDate) {
-      delayBarStyle = getBarStyle(task.plannedEnd, task.end);
+    if (hasActualEnd) {
+      actual = getBarStyle(task.start, task.end);
+      const actualEndDate = parseLocalDate(task.end);
+      if (actualEndDate > plannedEndDate) {
+        delay = getBarStyle(task.plannedEnd, task.end);
+      }
+    } else if (hasActualStart) {
+      actual = getBarStyle(task.start, task.end);
+      if (referenceDate > plannedEndDate) {
+        const todayStr = format(referenceDate, 'yyyy-MM-dd');
+        delay = getBarStyle(task.plannedEnd, todayStr);
+      }
+      if (referenceDate < plannedEndDate) {
+        const todayStr = format(referenceDate, 'yyyy-MM-dd');
+        remaining = getBarStyle(todayStr, task.plannedEnd);
+      }
     }
-  } else if (hasActualStart) {
-    actualBarStyle = getBarStyle(task.start, task.end);
-    if (referenceDate > plannedEndDate) {
-      const todayStr = format(referenceDate, 'yyyy-MM-dd');
-      delayBarStyle = getBarStyle(task.plannedEnd, todayStr);
-    }
-    if (referenceDate < plannedEndDate) {
-      const todayStr = format(referenceDate, 'yyyy-MM-dd');
-      remainingPlannedStyle = getBarStyle(todayStr, task.plannedEnd);
-    }
-  }
+
+    return { actualBarStyle: actual, delayBarStyle: delay, remainingPlannedStyle: remaining };
+  }, [getBarStyle, task.start, task.end, task.plannedEnd, hasActualEnd, hasActualStart, referenceDate, plannedEndDate]);
 
   const hasBaseline = task.baselineStart && task.baselineEnd;
-  const baselineStyle = hasBaseline ? getBarStyle(task.baselineStart!, task.baselineEnd!) : null;
+  const baselineStyle = useMemo(
+    () => hasBaseline ? getBarStyle(task.baselineStart!, task.baselineEnd!) : null,
+    [getBarStyle, hasBaseline, task.baselineStart, task.baselineEnd]
+  );
   const showProgressLabel = parseFloat(plannedStyle.width) > 3;
 
   return (
@@ -232,3 +240,22 @@ export function GanttActivityBar({
     </div>
   );
 }
+
+export const GanttActivityBar = React.memo(GanttActivityBarInner, (prev, next) => {
+  return (
+    prev.task.id === next.task.id &&
+    prev.task.plannedStart === next.task.plannedStart &&
+    prev.task.plannedEnd === next.task.plannedEnd &&
+    prev.task.start === next.task.start &&
+    prev.task.end === next.task.end &&
+    prev.task.progress === next.task.progress &&
+    prev.task.baselineStart === next.task.baselineStart &&
+    prev.task.baselineEnd === next.task.baselineEnd &&
+    prev.isDragging === next.isDragging &&
+    prev.dragType === next.dragType &&
+    prev.editable === next.editable &&
+    prev.baselineVisible === next.baselineVisible &&
+    prev.selectedActivityId === next.selectedActivityId &&
+    prev.index === next.index
+  );
+});

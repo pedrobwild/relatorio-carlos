@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGanttData } from './gantt/useGanttData';
 import { useDragHandlers } from './gantt/useDragHandlers';
@@ -63,6 +63,19 @@ const GanttChart = ({
   const currentZoomIndex = ZOOM_LEVELS.indexOf(zoomLevel);
   const hasAnyBaseline = activities.some(a => a.baselineStart && a.baselineEnd);
 
+  const handleZoomIn = useCallback(() => {
+    const idx = ZOOM_LEVELS.indexOf(zoomLevel);
+    if (idx > 0) setZoomLevel(ZOOM_LEVELS[idx - 1]);
+  }, [zoomLevel]);
+
+  const handleZoomOut = useCallback(() => {
+    const idx = ZOOM_LEVELS.indexOf(zoomLevel);
+    if (idx < ZOOM_LEVELS.length - 1) setZoomLevel(ZOOM_LEVELS[idx + 1]);
+  }, [zoomLevel]);
+
+  const handleToggleBaseline = useCallback(() => setBaselineVisible(v => !v), []);
+  const handleToggleDebug = useCallback(() => setDebugMode(v => !v), []);
+
   if (activities.length === 0) {
     return (
       <div className="bg-card rounded-lg border border-border p-8 text-center">
@@ -86,8 +99,8 @@ const GanttChart = ({
           showFullChart={showFullChart}
           onToggleFullChart={handleToggleFullChart}
           zoomLevel={zoomLevel}
-          onZoomIn={() => currentZoomIndex > 0 && setZoomLevel(ZOOM_LEVELS[currentZoomIndex - 1])}
-          onZoomOut={() => currentZoomIndex < ZOOM_LEVELS.length - 1 && setZoomLevel(ZOOM_LEVELS[currentZoomIndex + 1])}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
           canZoomIn={currentZoomIndex > 0}
           canZoomOut={currentZoomIndex < ZOOM_LEVELS.length - 1}
         />
@@ -95,10 +108,10 @@ const GanttChart = ({
         <GanttLegend
           hasAnyBaseline={hasAnyBaseline}
           baselineVisible={baselineVisible}
-          onToggleBaseline={() => setBaselineVisible(!baselineVisible)}
+          onToggleBaseline={handleToggleBaseline}
           hasDependencies={dependencyLines.length > 0}
           debugMode={debugMode}
-          onToggleDebug={() => setDebugMode(!debugMode)}
+          onToggleDebug={handleToggleDebug}
         />
 
         <div key={showFullChart ? 'full' : 'windowed'} className="flex animate-fade-in">
