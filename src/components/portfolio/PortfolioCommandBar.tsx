@@ -46,6 +46,7 @@ export function PortfolioCommandBar({
   const showingSubset = filteredCount < totalCount;
 
   return (
+    <TooltipProvider delayDuration={300}>
     <div className="space-y-2">
       {/* Row 1: Title + Actions */}
       <div className="flex items-center justify-between gap-2">
