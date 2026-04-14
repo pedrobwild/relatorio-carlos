@@ -22,16 +22,17 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
   const [dragOver, setDragOver] = useState(false);
   const [changeNotes, setChangeNotes] = useState("");
 
-  const resetForm = () => {
+  const MAX_FILE_SIZE_MB = 50;
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
     setFile(null);
     setChangeNotes("");
   };
 
   const handleFileSelect = (selectedFile: File) => {
-    if (selectedFile.size > 500 * 1024 * 1024) {
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
       toast({
         title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 500MB",
+        description: `O tamanho máximo permitido é ${MAX_FILE_SIZE_MB}MB`,
         variant: "destructive",
       });
       return;
@@ -180,7 +181,7 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
                   />
                 </label>
                 <p className="text-caption text-muted-foreground mt-2">
-                  PDF, Word, Excel, ZIP ou imagens (máx. 50MB)
+                  PDF, Word, Excel, ZIP ou imagens (máx. {MAX_FILE_SIZE_MB}MB)
                 </p>
               </div>
             )}

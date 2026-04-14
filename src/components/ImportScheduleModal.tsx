@@ -65,7 +65,9 @@ export const ImportScheduleModal = ({ open, onOpenChange, onImport }: ImportSche
 
       if (data.length === 0) { toast.error('Arquivo vazio ou sem dados válidos'); return; }
 
-      const detectedHeaders = Object.keys(data[0]);
+      const detectedHeaders = Object.keys(data[0]).map(
+        h => h.trim().slice(0, 120).replace(/[\u0000-\u001F\u007F]/g, '')
+      );
       setHeaders(detectedHeaders);
       setRawData(data);
       setColumnMapping(autoMapColumns(detectedHeaders));

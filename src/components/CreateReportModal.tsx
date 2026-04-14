@@ -72,7 +72,8 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
     }
   };
 
-  const isFormValid = projectName && clientName && startDate && endDate &&
+  const dateRangeValid = !startDate || !endDate || startDate <= endDate;
+  const isFormValid = projectName && clientName && startDate && endDate && dateRangeValid &&
     activities.some(a => a.description.trim() !== '');
 
   return (

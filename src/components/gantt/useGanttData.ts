@@ -153,12 +153,13 @@ export function useGanttData(
   }, [startDate, totalDays]);
 
   const dependencyLines: DependencyLine[] = useMemo(() => {
+    const idToIndex = new Map(activities.map((a, i) => [a.id, i]));
     const lines: DependencyLine[] = [];
     activities.forEach((activity, toIndex) => {
       if (activity.predecessorIds && activity.predecessorIds.length > 0) {
         activity.predecessorIds.forEach(predId => {
-          const fromIndex = activities.findIndex(a => a.id === predId);
-          if (fromIndex >= 0) {
+          const fromIndex = idToIndex.get(predId);
+          if (fromIndex !== undefined) {
             lines.push({
               fromIndex,
               toIndex,
