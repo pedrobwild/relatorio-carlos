@@ -85,9 +85,7 @@ export function useProjectActivities(projectId: string | undefined) {
         throw new Error('Projeto ou usuário não encontrado');
       }
 
-      // Insert new activities first, then delete old ones (safer order)
-      const activitiesToInsert = newActivities.map((activity, index) => ({
-        project_id: projectId,
+      const rows = newActivities.map((activity, index) => ({
         description: activity.description,
         planned_start: activity.planned_start,
         planned_end: activity.planned_end,
@@ -97,35 +95,43 @@ export function useProjectActivities(projectId: string | undefined) {
         sort_order: index,
         created_by: user.id,
         predecessor_ids: activity.predecessor_ids || [],
-        etapa: activity.etapa ?? null,
+        etapa: activity.etapa?.trim() || null,
         detailed_description: activity.detailed_description?.trim() || null,
       }));
 
-      // Fetch existing IDs to delete after insert
-      const { data: existingRows } = await supabase
-        .from('project_activities')
-        .select('id')
-        .eq('project_id', projectId);
+      // Atomic RPC: delete + insert in a single transaction (no race condition)
+      const { error: rpcError } = await supabase.rpc('replace_project_activities' as any, {
+        p_project_id: projectId,
+        p_rows: rows,
+      });
 
-      const oldIds = (existingRows ?? []).map(r => r.id);
+      // Fallback: if RPC doesn't exist, use legacy insert-then-delete
+      if (rpcError) {
+        console.warn('[saveActivities] RPC fallback:', rpcError.message);
 
-      // Insert new activities
-      if (activitiesToInsert.length > 0) {
-        const { error: insertError } = await supabase
+        const activitiesToInsert = rows.map(r => ({ ...r, project_id: projectId }));
+
+        const { data: existingRows } = await supabase
           .from('project_activities')
-          .insert(activitiesToInsert);
+          .select('id')
+          .eq('project_id', projectId);
 
-        if (insertError) throw insertError;
-      }
+        const oldIds = (existingRows ?? []).map(r => r.id);
 
-      // Delete old activities only after successful insert
-      if (oldIds.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('project_activities')
-          .delete()
-          .in('id', oldIds);
+        if (activitiesToInsert.length > 0) {
+          const { error: insertError } = await supabase
+            .from('project_activities')
+            .insert(activitiesToInsert);
+          if (insertError) throw insertError;
+        }
 
-        if (deleteError) throw deleteError;
+        if (oldIds.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('project_activities')
+            .delete()
+            .in('id', oldIds);
+          if (deleteError) throw deleteError;
+        }
       }
 
       return newActivities;
