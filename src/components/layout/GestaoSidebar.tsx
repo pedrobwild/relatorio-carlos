@@ -9,6 +9,7 @@ import {
   Truck,
   Receipt,
   AlertTriangle,
+  ClipboardList,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -63,6 +64,11 @@ export function GestaoSidebar() {
     {
       label: "Ferramentas",
       items: [
+        {
+          label: "Atividades",
+          icon: ClipboardList,
+          path: "/gestao/atividades",
+        },
         {
           label: "Não Conformidades",
           icon: AlertTriangle,
