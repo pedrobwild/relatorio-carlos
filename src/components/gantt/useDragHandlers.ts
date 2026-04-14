@@ -71,7 +71,7 @@ export function useDragHandlers(
     const newStartStr = format(newStart, 'yyyy-MM-dd');
     const newEndStr = format(newEnd, 'yyyy-MM-dd');
 
-    onActivityDateChange(activity.id, newStartStr, newEndStr);
+    onActivityDateChange(activity.id!, newStartStr, newEndStr);
   }, [dragState, activities, totalDays, onActivityDateChange, chartRef]);
 
   const handleDragEnd = useCallback(() => {

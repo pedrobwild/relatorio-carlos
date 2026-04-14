@@ -129,7 +129,7 @@ export function GanttTimeline({
               getBarStyle={getBarStyle}
               editable={editable}
                isDragging={dragState?.activityId === activities[index]?.id}
-               dragType={dragState?.activityId === activities[index]?.id ? dragState.dragType : undefined}
+               dragType={dragState?.activityId === activities[index]?.id ? dragState?.dragType : undefined}
               baselineVisible={baselineVisible}
               selectedActivityId={selectedActivityId}
               onActivitySelect={onActivitySelect}
