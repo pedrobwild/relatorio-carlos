@@ -85,17 +85,6 @@ export function CronogramaMobileView({
     [activities, today]
   );
 
-  // Stats — computed from filtered list when filter is active, enriched for totals
-  const stats = useMemo(() => {
-    const totalWeight = enriched.reduce((s, a) => s + a.weight, 0);
-    const completedWeight = enriched.filter(a => a.actual_end).reduce((s, a) => s + a.weight, 0);
-    const progress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
-    const overdue = enriched.filter(a => a.computedStatus === 'overdue').length;
-    const inProgress = enriched.filter(a => a.computedStatus === 'in_progress').length;
-    const completed = enriched.filter(a => a.computedStatus === 'completed').length;
-    return { progress, overdue, inProgress, completed, total: enriched.length };
-  }, [enriched]);
-
   // Filter
   const filtered = useMemo(() => {
     if (filter === 'all') return enriched;
@@ -105,6 +94,17 @@ export function CronogramaMobileView({
     if (filter === 'pending') return enriched.filter(a => a.computedStatus === 'pending' || a.computedStatus === 'upcoming');
     return enriched;
   }, [enriched, filter]);
+
+  // Stats — always follow the visible (filtered) list for consistency
+  const stats = useMemo(() => {
+    const totalWeight = filtered.reduce((s, a) => s + a.weight, 0);
+    const completedWeight = filtered.filter(a => a.actual_end).reduce((s, a) => s + a.weight, 0);
+    const progress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
+    const overdue = filtered.filter(a => a.computedStatus === 'overdue').length;
+    const inProgress = filtered.filter(a => a.computedStatus === 'in_progress').length;
+    const completed = filtered.filter(a => a.computedStatus === 'completed').length;
+    return { progress, overdue, inProgress, completed, total: filtered.length };
+  }, [filtered]);
 
   // Group by status
   const grouped = useMemo(() => {
