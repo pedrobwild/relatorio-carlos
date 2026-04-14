@@ -3445,6 +3445,8 @@ export type Database = {
           created_at: string
           created_by: string
           description: string
+          detailed_description: string | null
+          etapa: string | null
           id: string
           planned_end: string
           planned_start: string
@@ -3463,6 +3465,8 @@ export type Database = {
           created_at?: string
           created_by: string
           description: string
+          detailed_description?: string | null
+          etapa?: string | null
           id?: string
           planned_end: string
           planned_start: string
@@ -3481,6 +3485,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string
+          detailed_description?: string | null
+          etapa?: string | null
           id?: string
           planned_end?: string
           planned_start?: string
