@@ -140,7 +140,7 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
                     className="ml-1 px-1.5 py-0.5 rounded bg-muted hover:bg-accent text-[10px] font-sans text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => {
                       navigator.clipboard.writeText(document.checksum!);
-                      toast.success('Checksum copiado');
+                      toast({ title: 'Checksum copiado' });
                     }}
                   >
                     Copiar
