@@ -5730,6 +5730,10 @@ export type Database = {
         Args: { p_ordered_ids: string[]; p_project_id: string }
         Returns: undefined
       }
+      replace_project_activities: {
+        Args: { p_project_id: string; p_rows: Json }
+        Returns: undefined
+      }
       sync_budget_items_to_purchases: {
         Args: { p_project_id: string }
         Returns: number
