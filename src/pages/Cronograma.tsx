@@ -29,6 +29,8 @@ interface ActivityFormData {
   actualEnd: string;
   weight: string;
   predecessorIds: string[];
+  etapa: string;
+  detailed_description: string;
 }
 
 const toISO = (d: Date) => {
