@@ -5,6 +5,38 @@ import { logSystemError } from "../_shared/errorLogger.ts";
 
 const FUNCTION_NAME = 'document-upload';
 
+// Magic byte signatures for server-side MIME validation
+const MAGIC_BYTES: Record<string, number[][]> = {
+  'application/pdf': [[0x25, 0x50, 0x44, 0x46]],                // %PDF
+  'image/png': [[0x89, 0x50, 0x4E, 0x47]],                       // .PNG
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],                             // JFIF/EXIF
+  'image/gif': [[0x47, 0x49, 0x46, 0x38]],                       // GIF8
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]],                      // RIFF (WebP)
+  'application/zip': [[0x50, 0x4B, 0x03, 0x04]],                 // PK zip
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [[0x50, 0x4B, 0x03, 0x04]], // docx (zip)
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [[0x50, 0x4B, 0x03, 0x04]],       // xlsx (zip)
+  'application/msword': [[0xD0, 0xCF, 0x11, 0xE0]],              // OLE2
+  'application/vnd.ms-excel': [[0xD0, 0xCF, 0x11, 0xE0]],        // OLE2
+};
+
+function validateMagicBytes(buffer: ArrayBuffer, claimedMime: string): boolean {
+  const bytes = new Uint8Array(buffer).slice(0, 8);
+  if (bytes.length < 3) return false;
+
+  // Check if any known signature matches the actual bytes
+  for (const [_mime, signatures] of Object.entries(MAGIC_BYTES)) {
+    for (const sig of signatures) {
+      if (sig.every((b, i) => bytes[i] === b)) {
+        // Bytes match a known safe format → allow
+        return true;
+      }
+    }
+  }
+
+  // No known signature matched → reject
+  return false;
+}
+
 async function computeSHA256(data: ArrayBuffer): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
