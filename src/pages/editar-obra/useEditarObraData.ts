@@ -361,17 +361,23 @@ export function useEditarObraData(projectId: string | undefined) {
     setActivities(normalized);
 
     try {
-      const updates = normalized.map((activity) =>
-        supabase
-          .from('project_activities')
-          .update({ sort_order: activity.sort_order })
-          .eq('id', activity.id)
-      );
+      const orderedIds = normalized.map(a => a.id);
+      const { error: rpcError } = await supabase.rpc('reorder_project_activities', {
+        p_project_id: projectId!,
+        p_ordered_ids: orderedIds,
+      });
 
-      const results = await Promise.all(updates);
-      const failed = results.find((result) => result.error);
-      if (failed?.error) {
-        throw failed.error;
+      if (rpcError) {
+        // Fallback: caminho antigo, um update por atividade
+        const updates = normalized.map((activity) =>
+          supabase
+            .from('project_activities')
+            .update({ sort_order: activity.sort_order })
+            .eq('id', activity.id)
+        );
+        const results = await Promise.all(updates);
+        const failed = results.find((r) => r.error);
+        if (failed?.error) throw failed.error;
       }
 
       toast({ title: 'Ordem das atividades atualizada' });
