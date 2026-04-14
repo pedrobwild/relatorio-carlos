@@ -95,6 +95,8 @@ export function useProjectActivities(projectId: string | undefined) {
         sort_order: index,
         created_by: user.id,
         predecessor_ids: activity.predecessor_ids || [],
+        etapa: (activity as any).etapa || null,
+        detailed_description: (activity as any).detailed_description?.trim() || null,
       }));
 
       // Fetch existing IDs to delete after insert

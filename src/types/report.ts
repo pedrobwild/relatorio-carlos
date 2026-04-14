@@ -9,6 +9,8 @@ export interface Activity {
   predecessorIds?: string[]; // IDs das atividades predecessoras (dependências)
   baselineStart?: string | null; // Data de início original (baseline)
   baselineEnd?: string | null; // Data de término original (baseline)
+  etapa?: string | null;
+  detailed_description?: string | null;
 }
 
 export interface SCurveDataPoint {
