@@ -41,6 +41,8 @@ export interface Activity {
   actual_end: string | null;
   weight: number;
   sort_order: number;
+  etapa: string | null;
+  detailed_description: string | null;
 }
 
 export interface Payment {

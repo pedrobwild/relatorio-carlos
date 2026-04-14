@@ -41,20 +41,35 @@ export function GanttActivityLabels({
               <TooltipTrigger asChild>
                 <span className="text-xs font-medium truncate cursor-default flex items-center gap-1.5">
                   <span className="font-mono text-[10px] text-primary/60">{index + 1}</span>
-                  {activity.description}
+                  <span className="truncate">
+                    {activity.description}
+                    {(activity as any).etapa && (
+                      <span className="ml-1 text-[10px] text-muted-foreground font-normal">
+                        [{(activity as any).etapa}]
+                      </span>
+                    )}
+                  </span>
                   {activity.predecessorIds && activity.predecessorIds.length > 0 && (
                     <span className="text-[10px] text-muted-foreground">←{activity.predecessorIds.length}</span>
                   )}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="max-w-xs">
                 <p className="font-medium">{activity.description}</p>
+                {(activity as any).etapa && (
+                  <p className="text-xs text-muted-foreground">Etapa: {(activity as any).etapa}</p>
+                )}
                 <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
                 <p className="text-xs text-muted-foreground">
                   Status: {getStatusLabel(computed.status)}
                   {computed.isDelayed && computed.delayDays > 0 && ` (${computed.delayDays} dias)`}
                 </p>
                 <p className="text-xs text-muted-foreground">Progresso: {computed.progress}%</p>
+                {(activity as any).detailed_description && (
+                  <p className="text-xs text-muted-foreground mt-1 border-t border-border/40 pt-1">
+                    {(activity as any).detailed_description}
+                  </p>
+                )}
                 {activity.predecessorIds && activity.predecessorIds.length > 0 && (
                   <p className="text-xs text-muted-foreground">
                     Depende de: {activity.predecessorIds.length} atividade(s)

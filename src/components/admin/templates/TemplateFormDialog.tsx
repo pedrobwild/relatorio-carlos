@@ -133,6 +133,7 @@ export function TemplateFormDialog({
                       <TableRow>
                         <TableHead className="text-xs w-8" />
                         <TableHead className="text-xs">Atividade</TableHead>
+                        <TableHead className="text-xs w-24">Etapa</TableHead>
                         <TableHead className="text-xs w-20">Dias</TableHead>
                         <TableHead className="text-xs w-20">Peso %</TableHead>
                         <TableHead className="text-xs w-10" />
@@ -157,6 +158,14 @@ export function TemplateFormDialog({
                               onChange={(e) => onUpdateActivity(i, 'description', e.target.value)}
                               placeholder="Descrição..."
                               className="h-8 text-sm"
+                            />
+                          </TableCell>
+                          <TableCell className="p-1">
+                            <Input
+                              value={act.etapa || ''}
+                              onChange={(e) => onUpdateActivity(i, 'etapa', e.target.value)}
+                              placeholder="Etapa"
+                              className="h-8 text-sm w-24"
                             />
                           </TableCell>
                           <TableCell className="p-1">

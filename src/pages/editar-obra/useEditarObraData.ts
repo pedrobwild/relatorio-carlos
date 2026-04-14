@@ -231,7 +231,7 @@ export function useEditarObraData(projectId: string | undefined) {
   };
 
   // Activities
-  const addActivity = async (newActivity: { description: string; planned_start: string; planned_end: string; weight: string }) => {
+  const addActivity = async (newActivity: { description: string; planned_start: string; planned_end: string; weight: string; etapa?: string; detailed_description?: string }) => {
     if (!newActivity.description || !newActivity.planned_start || !newActivity.planned_end) {
       toast({ title: 'Preencha todos os campos', variant: 'destructive' });
       return false;
@@ -248,6 +248,8 @@ export function useEditarObraData(projectId: string | undefined) {
           weight: parseFloat(newActivity.weight) || 5,
           sort_order: nextOrder,
           created_by: user?.id ?? '',
+          etapa: newActivity.etapa || null,
+          detailed_description: newActivity.detailed_description?.trim() || null,
         }])
         .select()
         .single();

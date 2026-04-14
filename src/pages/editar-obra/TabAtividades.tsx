@@ -1,18 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Calendar, Weight, ListChecks, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Calendar, Weight, ListChecks, GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import type { Activity } from './types';
 
 interface TabAtividadesProps {
   activities: Activity[];
-  onAdd: (a: { description: string; planned_start: string; planned_end: string; weight: string }) => Promise<boolean>;
+  onAdd: (a: { description: string; planned_start: string; planned_end: string; weight: string; etapa?: string; detailed_description?: string }) => Promise<boolean>;
   onUpdate: (id: string, field: string, value: string | number | null) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onReorder: (fromIndex: number, toIndex: number) => Promise<void>;
@@ -80,17 +81,23 @@ function AutoResizeTextarea({
 }
 
 function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
-  const [form, setForm] = useState({ description: '', planned_start: '', planned_end: '', weight: '5' });
+  const [form, setForm] = useState({ description: '', planned_start: '', planned_end: '', weight: '5', etapa: '', detailed_description: '' });
   const [adding, setAdding] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const canSubmit = form.description && form.planned_start && form.planned_end;
 
   const handleAdd = async () => {
     if (!canSubmit) return;
     setAdding(true);
-    const ok = await onAdd(form);
+    const ok = await onAdd({
+      ...form,
+      etapa: form.etapa || undefined,
+      detailed_description: form.detailed_description || undefined,
+    });
     if (ok) {
-      setForm({ description: '', planned_start: '', planned_end: '', weight: '5' });
+      setForm({ description: '', planned_start: '', planned_end: '', weight: '5', etapa: '', detailed_description: '' });
+      setShowDetails(false);
     }
     setAdding(false);
   };
@@ -105,7 +112,7 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
   return (
     <div className="border-t-2 border-dashed border-primary/20 bg-accent/20" onKeyDown={handleKeyDown}>
       {/* Desktop inline row */}
-      <div className="hidden md:grid md:grid-cols-[1fr_130px_130px_130px_130px_70px_44px] gap-0 items-start">
+      <div className="hidden md:grid md:grid-cols-[1fr_100px_130px_130px_130px_130px_70px_44px] gap-0 items-start">
         <div className="p-2 pl-3 flex items-start gap-2">
           <span className="inline-flex items-center justify-center w-6 h-[38px] text-xs font-bold text-primary/40">+</span>
           <AutoResizeTextarea
@@ -116,17 +123,21 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
           />
         </div>
         <div className="p-2">
+          <Input
+            value={form.etapa}
+            onChange={(e) => setForm({ ...form, etapa: e.target.value })}
+            placeholder="Etapa"
+            className="h-[38px] text-xs"
+          />
+        </div>
+        <div className="p-2">
           <Input type="date" value={form.planned_start} onChange={(e) => setForm({ ...form, planned_start: e.target.value })} className="h-[38px] text-xs" />
         </div>
         <div className="p-2">
           <Input type="date" value={form.planned_end} onChange={(e) => setForm({ ...form, planned_end: e.target.value })} className="h-[38px] text-xs" />
         </div>
-        <div className="p-2">
-          {/* empty: no actual start for new */}
-        </div>
-        <div className="p-2">
-          {/* empty: no actual end for new */}
-        </div>
+        <div className="p-2" />
+        <div className="p-2" />
         <div className="p-2">
           <Input type="number" min={1} max={100} value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="h-[38px] text-xs text-center" />
         </div>
@@ -136,6 +147,28 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
           </Button>
         </div>
       </div>
+      {/* Desktop: optional detailed description row */}
+      <div className="hidden md:block px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => setShowDetails(!showDetails)}
+          className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 mb-1"
+        >
+          {showDetails ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          Descrição detalhada
+        </button>
+        {showDetails && (
+          <div className="pl-[calc(1.5rem+20px+0.5rem)]">
+            <Textarea
+              value={form.detailed_description}
+              onChange={(e) => setForm({ ...form, detailed_description: e.target.value })}
+              placeholder="Descreva detalhes da atividade..."
+              rows={2}
+              className="text-xs resize-none"
+            />
+          </div>
+        )}
+      </div>
 
       {/* Mobile add form */}
       <div className="md:hidden p-3 space-y-3">
@@ -143,6 +176,12 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
           value={form.description}
           onChange={(v) => setForm({ ...form, description: v })}
           placeholder="Descrição da nova atividade..."
+        />
+        <Input
+          value={form.etapa}
+          onChange={(e) => setForm({ ...form, etapa: e.target.value })}
+          placeholder="Etapa (opcional)"
+          className="h-9 text-xs"
         />
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
@@ -154,6 +193,23 @@ function InlineAddRow({ onAdd }: { onAdd: TabAtividadesProps['onAdd'] }) {
             <Input type="date" value={form.planned_end} onChange={(e) => setForm({ ...form, planned_end: e.target.value })} className="h-9 text-xs" />
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowDetails(!showDetails)}
+          className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+        >
+          {showDetails ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          Descrição detalhada
+        </button>
+        {showDetails && (
+          <Textarea
+            value={form.detailed_description}
+            onChange={(e) => setForm({ ...form, detailed_description: e.target.value })}
+            placeholder="Descreva detalhes da atividade..."
+            rows={2}
+            className="text-xs resize-none"
+          />
+        )}
         <div className="flex items-end gap-2">
           <div className="w-20 space-y-1">
             <Label className="text-[10px] text-muted-foreground">Peso (%)</Label>
@@ -192,71 +248,123 @@ function ActivityRow({
   onDrop: (event: React.DragEvent<HTMLDivElement>, index: number) => void;
   onDragEnd: () => void;
 }) {
+  const [detailOpen, setDetailOpen] = useState(false);
+  const hasDetail = !!activity.detailed_description;
+
   return (
     <>
       {/* Desktop row */}
-      <div className={cn(
-        'hidden md:grid md:grid-cols-[1fr_130px_130px_130px_130px_70px_44px] gap-0 items-start group/row border-b border-border/40 last:border-b-0 transition-colors hover:bg-accent/30',
-        index % 2 === 1 && 'bg-muted/20',
-        isDragging && 'opacity-55',
-        isDragOver && 'bg-primary/10 ring-1 ring-inset ring-primary/30'
-      )}
-      onDragOver={(event) => onDragOver(event, index)}
-      onDrop={(event) => onDrop(event, index)}>
-        <div className="p-2 pl-3 flex items-start gap-2">
-          <div className="flex items-center gap-1 shrink-0 pt-2">
+      <div
+        className={cn(
+          'hidden md:block group/row border-b border-border/40 last:border-b-0 transition-colors hover:bg-accent/30',
+          index % 2 === 1 && 'bg-muted/20',
+          isDragging && 'opacity-55',
+          isDragOver && 'bg-primary/10 ring-1 ring-inset ring-primary/30'
+        )}
+        onDragOver={(event) => onDragOver(event, index)}
+        onDrop={(event) => onDrop(event, index)}
+      >
+        <div className="grid grid-cols-[1fr_100px_130px_130px_130px_130px_70px_44px] gap-0 items-start">
+          <div className="p-2 pl-3 flex items-start gap-2">
+            <div className="flex items-center gap-1 shrink-0 pt-2">
+              {hasDetail ? (
+                <button
+                  type="button"
+                  onClick={() => setDetailOpen(!detailOpen)}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
+                >
+                  {detailOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  draggable
+                  aria-label={`Reordenar atividade ${index + 1}`}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/40 opacity-0 transition-all cursor-grab active:cursor-grabbing group-hover/row:opacity-100 hover:bg-accent hover:text-foreground"
+                  onDragStart={(event) => onDragStart(event, index)}
+                  onDragEnd={onDragEnd}
+                >
+                  <GripVertical className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <span className="text-xs font-bold text-muted-foreground tabular-nums w-5 text-right">{index + 1}</span>
+            </div>
+            <AutoResizeTextarea
+              value={activity.description}
+              onChange={(v) => onUpdate(activity.id, 'description', v)}
+              placeholder="Descrição da atividade..."
+            />
+          </div>
+          <div className="p-2">
+            <Input
+              value={activity.etapa || ''}
+              onChange={(e) => onUpdate(activity.id, 'etapa', e.target.value || null)}
+              placeholder="Etapa"
+              className="h-[38px] text-xs"
+            />
+          </div>
+          <div className="p-2">
+            <Input type="date" value={activity.planned_start} onChange={(e) => onUpdate(activity.id, 'planned_start', e.target.value)} className="h-[38px] text-xs" />
+          </div>
+          <div className="p-2">
+            <Input type="date" value={activity.planned_end} onChange={(e) => onUpdate(activity.id, 'planned_end', e.target.value)} className="h-[38px] text-xs" />
+          </div>
+          <div className="p-2">
+            <Input type="date" value={activity.actual_start || ''} onChange={(e) => onUpdate(activity.id, 'actual_start', e.target.value || null)} className="h-[38px] text-xs" />
+          </div>
+          <div className="p-2">
+            <Input type="date" value={activity.actual_end || ''} onChange={(e) => onUpdate(activity.id, 'actual_end', e.target.value || null)} className="h-[38px] text-xs" />
+          </div>
+          <div className="p-2">
+            <Input type="number" min={0} max={100} value={activity.weight} onChange={(e) => onUpdate(activity.id, 'weight', parseFloat(e.target.value) || 0)} className="h-[38px] text-xs text-center font-semibold" />
+          </div>
+          <div className="p-2 flex items-center justify-center">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-[38px] w-[38px] text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remover atividade?</AlertDialogTitle>
+                  <AlertDialogDescription>"{activity.description}" será removida permanentemente.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(activity.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+        {/* Collapsible detailed description */}
+        {hasDetail && detailOpen && (
+          <div className="px-3 pb-2 pl-[calc(1.5rem+20px+2rem)]">
+            <Textarea
+              value={activity.detailed_description || ''}
+              onChange={(e) => onUpdate(activity.id, 'detailed_description', e.target.value || null)}
+              placeholder="Descrição detalhada..."
+              rows={2}
+              className="text-xs resize-none bg-muted/30"
+            />
+          </div>
+        )}
+        {/* Add detail button when none exists */}
+        {!hasDetail && (
+          <div className="px-3 pb-1 pl-[calc(1.5rem+20px+2rem)] opacity-0 group-hover/row:opacity-100 transition-opacity">
             <button
               type="button"
-              draggable
-              aria-label={`Reordenar atividade ${index + 1}`}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/40 opacity-0 transition-all cursor-grab active:cursor-grabbing group-hover/row:opacity-100 hover:bg-accent hover:text-foreground"
-              onDragStart={(event) => onDragStart(event, index)}
-              onDragEnd={onDragEnd}
+              onClick={() => {
+                onUpdate(activity.id, 'detailed_description', ' ');
+                setDetailOpen(true);
+              }}
+              className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground flex items-center gap-1"
             >
-              <GripVertical className="h-3.5 w-3.5" />
+              <Plus className="h-2.5 w-2.5" /> Adicionar descrição detalhada
             </button>
-            <span className="text-xs font-bold text-muted-foreground tabular-nums w-5 text-right">{index + 1}</span>
           </div>
-          <AutoResizeTextarea
-            value={activity.description}
-            onChange={(v) => onUpdate(activity.id, 'description', v)}
-            placeholder="Descrição da atividade..."
-          />
-        </div>
-        <div className="p-2">
-          <Input type="date" value={activity.planned_start} onChange={(e) => onUpdate(activity.id, 'planned_start', e.target.value)} className="h-[38px] text-xs" />
-        </div>
-        <div className="p-2">
-          <Input type="date" value={activity.planned_end} onChange={(e) => onUpdate(activity.id, 'planned_end', e.target.value)} className="h-[38px] text-xs" />
-        </div>
-        <div className="p-2">
-          <Input type="date" value={activity.actual_start || ''} onChange={(e) => onUpdate(activity.id, 'actual_start', e.target.value || null)} className="h-[38px] text-xs" />
-        </div>
-        <div className="p-2">
-          <Input type="date" value={activity.actual_end || ''} onChange={(e) => onUpdate(activity.id, 'actual_end', e.target.value || null)} className="h-[38px] text-xs" />
-        </div>
-        <div className="p-2">
-          <Input type="number" min={0} max={100} value={activity.weight} onChange={(e) => onUpdate(activity.id, 'weight', parseFloat(e.target.value) || 0)} className="h-[38px] text-xs text-center font-semibold" />
-        </div>
-        <div className="p-2 flex items-center justify-center">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-[38px] w-[38px] text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remover atividade?</AlertDialogTitle>
-                <AlertDialogDescription>"{activity.description}" será removida permanentemente.</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(activity.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+        )}
       </div>
 
       {/* Mobile card */}
@@ -296,6 +404,14 @@ function ActivityRow({
             </AlertDialogContent>
           </AlertDialog>
         </div>
+        <div className="pl-8">
+          <Input
+            value={activity.etapa || ''}
+            onChange={(e) => onUpdate(activity.id, 'etapa', e.target.value || null)}
+            placeholder="Etapa (opcional)"
+            className="h-8 text-xs"
+          />
+        </div>
         <div className="grid grid-cols-2 gap-2 pl-8">
           <div className="space-y-1">
             <Label className="text-[10px] text-muted-foreground">Início Prev.</Label>
@@ -319,6 +435,36 @@ function ActivityRow({
           <Input type="number" min={0} max={100} value={activity.weight} onChange={(e) => onUpdate(activity.id, 'weight', parseFloat(e.target.value) || 0)} className="h-8 w-16 text-xs text-center font-semibold" />
           <span className="text-[10px] text-muted-foreground">%</span>
         </div>
+        {/* Mobile collapsible detail */}
+        {hasDetail && (
+          <Collapsible open={detailOpen} onOpenChange={setDetailOpen}>
+            <CollapsibleTrigger className="pl-8 text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1">
+              {detailOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              Descrição detalhada
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 pt-1">
+              <Textarea
+                value={activity.detailed_description || ''}
+                onChange={(e) => onUpdate(activity.id, 'detailed_description', e.target.value || null)}
+                placeholder="Descrição detalhada..."
+                rows={2}
+                className="text-xs resize-none bg-muted/30"
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {!hasDetail && (
+          <button
+            type="button"
+            onClick={() => {
+              onUpdate(activity.id, 'detailed_description', ' ');
+              setDetailOpen(true);
+            }}
+            className="pl-8 text-[10px] text-muted-foreground/50 hover:text-muted-foreground flex items-center gap-1"
+          >
+            <Plus className="h-2.5 w-2.5" /> Descrição detalhada
+          </button>
+        )}
       </div>
     </>
   );
@@ -401,11 +547,12 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete, onReorder
 
         <CardContent className="p-0 mt-3">
           {/* Desktop column headers */}
-          <div className="hidden md:grid md:grid-cols-[1fr_130px_130px_130px_130px_70px_44px] gap-0 bg-muted/60 border-y border-border/60 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <div className="hidden md:grid md:grid-cols-[1fr_100px_130px_130px_130px_130px_70px_44px] gap-0 bg-muted/60 border-y border-border/60 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             <div className="py-2.5 pl-3 pr-2 flex items-center gap-2">
-              <span className="w-[calc(1rem+20px+0.5rem)]" /> {/* spacer for grip + number */}
+              <span className="w-[calc(1rem+20px+0.5rem)]" />
               Descrição
             </div>
+            <div className="py-2.5 px-2 text-center">Etapa</div>
             <div className="py-2.5 px-2 text-center">Início Prev.</div>
             <div className="py-2.5 px-2 text-center">Término Prev.</div>
             <div className="py-2.5 px-2 text-center">Início Real</div>
