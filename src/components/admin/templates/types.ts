@@ -2,6 +2,8 @@ export interface ActivityItem {
   description: string;
   durationDays: number;
   weight: number;
+  etapa?: string;
+  detailed_description?: string;
 }
 
 export interface FormState {

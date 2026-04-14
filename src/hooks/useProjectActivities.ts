@@ -30,6 +30,8 @@ export interface ProjectActivity {
   baseline_start: string | null;
   baseline_end: string | null;
   baseline_saved_at: string | null;
+  etapa: string | null;
+  detailed_description: string | null;
 }
 
 export interface ActivityInput {
