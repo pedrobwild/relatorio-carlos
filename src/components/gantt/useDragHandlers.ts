@@ -21,8 +21,10 @@ export function useDragHandlers(
     e.stopPropagation();
 
     const activity = activities[activityIndex];
+    if (!activity?.id) return;
+
     setDragState({
-      activityIndex,
+      activityId: activity.id,
       dragType,
       startX: e.clientX,
       originalStart: activity.plannedStart,
@@ -33,6 +35,13 @@ export function useDragHandlers(
   const handleDragMove = useCallback((e: React.MouseEvent) => {
     if (!dragState || !chartRef.current || !onActivityDateChange) return;
 
+    const activity = activities.find(a => a.id === dragState.activityId);
+    if (!activity) {
+      // Activity was deleted/reordered during drag — abort silently
+      setDragState(null);
+      return;
+    }
+
     const chartRect = chartRef.current.getBoundingClientRect();
     const chartWidthPx = chartRect.width;
     const deltaX = e.clientX - dragState.startX;
@@ -40,7 +49,6 @@ export function useDragHandlers(
 
     if (deltaDays === 0) return;
 
-    const activity = activities[dragState.activityIndex];
     const originalStartDate = new Date(dragState.originalStart + 'T00:00:00');
     const originalEndDate = new Date(dragState.originalEnd + 'T00:00:00');
 
@@ -63,22 +71,20 @@ export function useDragHandlers(
     const newStartStr = format(newStart, 'yyyy-MM-dd');
     const newEndStr = format(newEnd, 'yyyy-MM-dd');
 
-    if (activity.id) {
-      onActivityDateChange(activity.id, newStartStr, newEndStr);
-    }
+    onActivityDateChange(activity.id, newStartStr, newEndStr);
   }, [dragState, activities, totalDays, onActivityDateChange, chartRef]);
 
   const handleDragEnd = useCallback(() => {
     if (dragState) {
-      const activity = activities[dragState.activityIndex];
+      const activity = activities.find(a => a.id === dragState.activityId);
       const currentStart = activity?.plannedStart;
       const currentEnd = activity?.plannedEnd;
-      const hasChanged = currentStart !== dragState.originalStart || currentEnd !== dragState.originalEnd;
+      const hasChanged = activity && (currentStart !== dragState.originalStart || currentEnd !== dragState.originalEnd);
 
       ganttLogger.log('Date change completed', {
-        activityId: activity?.id,
+        activityId: dragState.activityId,
         from: { start: dragState.originalStart, end: dragState.originalEnd },
-        changed: hasChanged,
+        changed: !!hasChanged,
       });
 
       if (hasChanged) {
