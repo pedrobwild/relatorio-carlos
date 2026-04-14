@@ -5726,6 +5726,10 @@ export type Database = {
         Returns: string
       }
       my_profile_role: { Args: never; Returns: string }
+      reorder_project_activities: {
+        Args: { p_ordered_ids: string[]; p_project_id: string }
+        Returns: undefined
+      }
       sync_budget_items_to_purchases: {
         Args: { p_project_id: string }
         Returns: number
