@@ -507,6 +507,14 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete, onReorder
     setDragOverIndex(null);
   }, []);
 
+  const handleDelete = useCallback(async (id: string) => {
+    await onDelete(id);
+    setOpenDetails(prev => {
+      const { [id]: _removed, ...rest } = prev;
+      return rest;
+    });
+  }, [onDelete]);
+
   const handleDragStart = useCallback((event: React.DragEvent<HTMLButtonElement>, index: number) => {
     setDraggedIndex(index);
     setDragOverIndex(index);
@@ -582,7 +590,7 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete, onReorder
                   activity={a}
                   index={i}
                   onUpdate={onUpdate}
-                  onDelete={onDelete}
+                  onDelete={handleDelete}
                   isDragging={draggedIndex === i}
                   isDragOver={dragOverIndex === i && draggedIndex !== i}
                   onDragStart={handleDragStart}
