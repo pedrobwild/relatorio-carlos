@@ -5734,6 +5734,10 @@ export type Database = {
         Args: { p_project_id: string; p_rows: Json }
         Returns: undefined
       }
+      save_project_baseline: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
       sync_budget_items_to_purchases: {
         Args: { p_project_id: string }
         Returns: number
