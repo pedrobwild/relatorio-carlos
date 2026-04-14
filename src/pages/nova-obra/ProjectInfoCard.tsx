@@ -34,6 +34,8 @@ export function ProjectInfoCard({ formData, errors, onChange, aiPrefilledFields 
           if (result.bairro) onChange('bairro', result.bairro);
           if (result.cidade) onChange('cidade_imovel', result.cidade);
           toast.success('Endereço preenchido automaticamente');
+        } else {
+          toast.error('CEP não encontrado. Preencha o endereço manualmente.');
         }
       });
     }
@@ -132,15 +134,20 @@ export function ProjectInfoCard({ formData, errors, onChange, aiPrefilledFields 
                 CEP
                 {ai('cep')}
               </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="cep"
-                  value={formData.cep}
-                  onChange={(e) => handleCepChange(e.target.value)}
-                  placeholder="00000-000"
-                  maxLength={9}
-                  className="flex-1"
-                />
+              <div className="relative flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    id="cep"
+                    value={formData.cep}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    placeholder="00000-000"
+                    maxLength={9}
+                    className={cn('flex-1', cepLoading && 'pr-8')}
+                  />
+                  {cepLoading && (
+                    <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
                 <Button
                   type="button"
                   variant="outline"
@@ -152,7 +159,9 @@ export function ProjectInfoCard({ formData, errors, onChange, aiPrefilledFields 
                   {cepLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">Digite o CEP para preencher automaticamente</p>
+              <p className="text-xs text-muted-foreground">
+                {cepLoading ? 'Buscando endereço…' : 'Digite o CEP para preencher automaticamente'}
+              </p>
             </div>
 
             <div className="space-y-1">
