@@ -103,8 +103,12 @@ export function StickySummary({ formData, currentStep, completedSteps }: StickyS
   };
 
   return (
-    <div className="hidden lg:block w-72 shrink-0">
-      <div className="sticky top-20 space-y-2.5">
+    <div className="hidden md:block w-72 shrink-0">
+      <div className={cn(
+        'space-y-2.5',
+        'lg:sticky lg:top-20',
+        'md:max-lg:rounded-xl md:max-lg:border md:max-lg:border-border/50 md:max-lg:bg-card md:max-lg:p-4',
+      )}>
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
           Resumo
         </p>
