@@ -139,12 +139,25 @@ const ScheduleTable = ({
               <div className="flex items-start gap-2 mb-2">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary mt-0.5">{originalIndex + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold leading-snug text-foreground">{activity.description}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold leading-snug text-foreground">{activity.description}</p>
+                    {activity.detailed_description?.trim() && (
+                      <button
+                        onClick={(e) => toggleExpand(activity.id, e)}
+                        className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
+                        aria-label="Ver descrição"
+                      >
+                        <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", expandedIds.has(activity.id) && "rotate-180")} />
+                      </button>
+                    )}
+                  </div>
                   {activity.etapa && (
                     <span className="inline-block mt-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground">{activity.etapa}</span>
                   )}
-                  {activity.detailed_description?.trim() && (
-                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{activity.detailed_description}</p>
+                  {activity.detailed_description?.trim() && expandedIds.has(activity.id) && (
+                    <p className="mt-1.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2 animate-fade-in">
+                      {activity.detailed_description}
+                    </p>
                   )}
                 </div>
                 <StatusBadge status={status} />
