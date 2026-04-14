@@ -93,10 +93,15 @@ export const ImportScheduleModal = ({ open, onOpenChange, onImport }: ImportSche
       return;
     }
 
-    const activities = mapRawToActivities(rawData, columnMapping);
-    if (activities.length === 0) { toast.error('Nenhuma atividade válida encontrada após o processamento'); return; }
+    const { valid, errors } = mapRawToActivities(rawData, columnMapping);
+    if (valid.length === 0) { toast.error('Nenhuma atividade válida encontrada após o processamento'); return; }
 
-    setMappedData(activities);
+    if (errors.length > 0) {
+      const detail = errors.slice(0, 3).map(e => `linha ${e.row} (${e.reason})`).join('; ');
+      toast.warning(`${valid.length}/${rawData.length} atividades válidas. ${errors.length} ignoradas: ${detail}${errors.length > 3 ? '…' : ''}`);
+    }
+
+    setMappedData(valid);
     setStep('preview');
   };
 
