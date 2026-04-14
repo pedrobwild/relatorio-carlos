@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil } from 'lucide-react';
+import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
@@ -229,6 +229,8 @@ function ProjectRow({
   const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
+  const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
+  const pendingDocuments = summary?.pending_documents ?? 0;
   const progress = summary?.progress_percentage ?? 0;
 
   const today = getTodayLocal();
@@ -371,24 +373,38 @@ function ProjectRow({
           </div>
         </TableCell>
 
-        {/* Pending */}
+        {/* Pending — color-coded by urgency */}
         <TableCell className="text-center py-2">
-          {pendingCount === 0 ? (
-            <CheckCircle className="h-3 w-3 text-emerald-500/60 mx-auto" />
+          {pendingCount === 0 && unsignedFormalizations === 0 && pendingDocuments === 0 ? (
+            <CheckCircle className="h-3 w-3 text-[hsl(var(--success))]/60 mx-auto" />
           ) : (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center justify-center gap-0.5">
-                  {overdueCount > 0 && <AlertTriangle className="h-3 w-3 text-destructive" />}
-                  <span className={cn('text-[11px] font-bold tabular-nums', overdueCount > 0 ? 'text-destructive' : 'text-amber-600 dark:text-amber-400')}>
-                    {pendingCount}
-                  </span>
+                <div className="flex items-center justify-center gap-1">
+                  {overdueCount > 0 && (
+                    <span className="flex items-center gap-0.5 text-destructive">
+                      <AlertTriangle className="h-3 w-3" />
+                      <span className="text-[11px] font-bold tabular-nums">{overdueCount}</span>
+                    </span>
+                  )}
+                  {(pendingCount - overdueCount) > 0 && (
+                    <span className="text-[11px] font-bold tabular-nums text-[hsl(var(--warning))]">
+                      {pendingCount - overdueCount}
+                    </span>
+                  )}
+                  {unsignedFormalizations > 0 && (
+                    <FileSignature className="h-3 w-3 text-[hsl(var(--warning))]" />
+                  )}
+                  {pendingDocuments > 0 && (
+                    <FileText className="h-3 w-3 text-primary" />
+                  )}
                 </div>
               </TooltipTrigger>
-              <TooltipContent>
-                {overdueCount > 0
-                  ? `${overdueCount} em atraso de ${pendingCount} total`
-                  : `${pendingCount} pendência(s) dentro do prazo`}
+              <TooltipContent className="text-xs space-y-0.5">
+                {overdueCount > 0 && <p className="text-destructive font-medium">{overdueCount} em atraso</p>}
+                {(pendingCount - overdueCount) > 0 && <p>{pendingCount - overdueCount} pendente(s) no prazo</p>}
+                {unsignedFormalizations > 0 && <p>{unsignedFormalizations} formalização(ões) p/ assinar</p>}
+                {pendingDocuments > 0 && <p>{pendingDocuments} documento(s) pendente(s)</p>}
               </TooltipContent>
             </Tooltip>
           )}
