@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { X, Calendar, Clock, AlertTriangle, CheckCircle2, ArrowRight, GitBranch, Percent } from "lucide-react";
+import { X, Calendar, Clock, AlertTriangle, CheckCircle2, ArrowRight, GitBranch, Percent, FileText, Layers } from "lucide-react";
 import { Activity } from "@/types/report";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -155,6 +155,12 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
             <h3 className="font-semibold text-foreground leading-snug">
               {activity.description}
             </h3>
+            {activity.etapa && (
+              <span className="inline-flex mt-1 px-2 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground">
+                <Layers className="w-3 h-3 mr-1" />
+                {activity.etapa}
+              </span>
+            )}
           </div>
           <Button
             variant="ghost"
@@ -170,6 +176,19 @@ const ActivityDetailsPanel = ({ activity, activities, onClose }: ActivityDetails
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        {/* Detailed Description */}
+        {activity.detailed_description?.trim() && (
+          <div>
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+              <FileText className="w-4 h-4 text-primary" />
+              Descrição
+            </div>
+            <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-lg p-3">
+              {activity.detailed_description}
+            </p>
+          </div>
+        )}
+
         {/* Progress */}
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">

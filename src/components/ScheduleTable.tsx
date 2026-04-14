@@ -127,7 +127,15 @@ const ScheduleTable = ({
             >
               <div className="flex items-start gap-2 mb-2">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary mt-0.5">{originalIndex + 1}</span>
-                <p className="flex-1 min-w-0 text-sm font-semibold leading-snug text-foreground">{activity.description}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold leading-snug text-foreground">{activity.description}</p>
+                  {activity.etapa && (
+                    <span className="inline-block mt-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground">{activity.etapa}</span>
+                  )}
+                  {activity.detailed_description?.trim() && (
+                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{activity.detailed_description}</p>
+                  )}
+                </div>
                 <StatusBadge status={status} />
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -191,7 +199,17 @@ const ScheduleTable = ({
                     <TableCell className="py-3.5 pl-4 pr-3">
                       <div className="flex items-center gap-2.5">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary">{originalIndex + 1}</span>
-                        <span className="text-sm font-medium leading-snug text-foreground">{activity.description}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium leading-snug text-foreground">{activity.description}</span>
+                            {activity.etapa && (
+                              <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground shrink-0">{activity.etapa}</span>
+                            )}
+                          </div>
+                          {activity.detailed_description?.trim() && (
+                            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{activity.detailed_description}</p>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-3.5 text-center text-sm text-muted-foreground tabular-nums">{formatDate(activity.plannedStart, baseYear)}</TableCell>
