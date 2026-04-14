@@ -29,6 +29,7 @@ export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { isAdmin, isManager, hasAnyRole } = useUserRole();
+  const { user } = useAuth();
   const canEdit = isAdmin || isManager || hasAnyRole(['engineer']);
   const deleteProjectMutation = useDeleteProject();
   const [activeTab, setActiveTab] = useState('geral');
@@ -197,7 +198,7 @@ export default function EditarObra() {
                   members={data.members}
                   isAddingMember={data.isAddingMember}
                   isRemovingMember={data.isRemovingMember}
-                  canManageMembers={isAdmin || isManager || data.members.some(m => m.user_id === data.project?.created_by)}
+                  canManageMembers={isAdmin || isManager || data.members.some(m => m.user_id === user?.id && (m.role === 'owner' || m.role === 'engineer'))}
                   onAddMember={data.handleAddMember}
                   onRemoveMember={data.handleRemoveMember}
                   onUpdateRole={data.handleUpdateRole}
