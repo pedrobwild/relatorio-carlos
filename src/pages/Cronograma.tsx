@@ -77,6 +77,8 @@ const createEmptyActivity = (): ActivityFormData => ({
   actualEnd: '',
   weight: '0',
   predecessorIds: [],
+  etapa: '',
+  detailed_description: '',
 });
 
 /* ── Auto-resize textarea ── */
