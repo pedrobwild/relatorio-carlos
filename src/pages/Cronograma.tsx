@@ -184,7 +184,7 @@ const Cronograma = () => {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [savingBaseline, setSavingBaseline] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
 
   const clearDragState = useCallback(() => {
     setDraggedIndex(null);
