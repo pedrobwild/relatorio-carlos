@@ -238,18 +238,19 @@ const Cronograma = () => {
     }
   };
 
-  const handleImportActivities = (importedActivities: ActivityFormData[]) => {
+  const handleImportActivities = (importedActivities: import('@/components/import-schedule/types').ActivityFormData[]) => {
+    const mapped: ActivityFormData[] = importedActivities.map(a => ({ ...a, etapa: '', detailed_description: '' }));
     if (activities.length === 1 && !activities[0].description.trim()) {
-      setActivities(importedActivities);
+      setActivities(mapped);
     } else {
-      setActivities([...activities, ...importedActivities]);
+      setActivities([...activities, ...mapped]);
     }
   };
 
   // Load existing activities or auto-generate weekly slots
   useEffect(() => {
     if (existingActivities.length > 0) {
-      const formActivities = existingActivities.map((act) => ({
+      const formActivities: ActivityFormData[] = existingActivities.map((act) => ({
         id: act.id,
         description: act.description,
         plannedStart: act.planned_start,
@@ -258,6 +259,8 @@ const Cronograma = () => {
         actualEnd: act.actual_end || '',
         weight: act.weight.toString(),
         predecessorIds: act.predecessor_ids || [],
+        etapa: act.etapa || '',
+        detailed_description: act.detailed_description || '',
       }));
       setActivities(formActivities);
     } else if (!activitiesLoading && project?.planned_start_date && project?.planned_end_date) {
@@ -281,6 +284,8 @@ const Cronograma = () => {
           actualEnd: '',
           weight: '0',
           predecessorIds: [],
+          etapa: '',
+          detailed_description: '',
         });
         weekStart = new Date(cappedEnd);
         weekStart.setDate(weekStart.getDate() + 1);
