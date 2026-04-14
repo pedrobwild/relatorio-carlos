@@ -203,25 +203,11 @@ export function useProjectActivities(projectId: string | undefined) {
     mutationFn: async () => {
       if (!projectId) throw new Error('Projeto não encontrado');
 
-      // Single batch update instead of N individual queries
       const { error } = await supabase.rpc('save_project_baseline' as any, {
         p_project_id: projectId,
       });
 
-      // Fallback: if RPC doesn't exist, use single update per project
-      if (error) {
-        const updates = activities.map(activity =>
-          supabase
-            .from('project_activities')
-            .update({
-              baseline_start: activity.planned_start,
-              baseline_end: activity.planned_end,
-              baseline_saved_at: new Date().toISOString(),
-            })
-            .eq('id', activity.id)
-        );
-        await Promise.all(updates);
-      }
+      if (error) throw error;
 
       return true;
     },
