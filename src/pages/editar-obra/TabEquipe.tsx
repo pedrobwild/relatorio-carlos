@@ -36,6 +36,7 @@ interface TabEquipeProps {
   members: ProjectMember[];
   isAddingMember: boolean;
   isRemovingMember: boolean;
+  canManageMembers: boolean;
   onAddMember: (userId: string, role?: ProjectRole) => Promise<void>;
   onRemoveMember: (memberId: string) => Promise<void>;
   onUpdateRole: (memberId: string, role: ProjectRole) => Promise<void>;
@@ -45,7 +46,7 @@ interface TabEquipeProps {
 
 export function TabEquipe({
   projectId, customer, engineers, availableEngineers, members,
-  isAddingMember, isRemovingMember,
+  isAddingMember, isRemovingMember, canManageMembers,
   onAddMember, onRemoveMember, onUpdateRole, onCustomerLinked, onCustomerAdded,
 }: TabEquipeProps) {
   const [selectedEngineer, setSelectedEngineer] = useState('');
@@ -90,7 +91,7 @@ export function TabEquipe({
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAdd} disabled={!selectedEngineer || addingEngineer || isAddingMember}>
+            <Button onClick={handleAdd} disabled={!canManageMembers || !selectedEngineer || addingEngineer || isAddingMember}>
               {(addingEngineer || isAddingMember) ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
               Adicionar
             </Button>
@@ -117,7 +118,7 @@ export function TabEquipe({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Select value={member.role} onValueChange={(v) => onUpdateRole(member.id, v as ProjectRole)}>
+                    <Select value={member.role} onValueChange={(v) => onUpdateRole(member.id, v as ProjectRole)} disabled={!canManageMembers}>
                       <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(roleDescriptions).map(([value, { label, description }]) => (
@@ -132,7 +133,7 @@ export function TabEquipe({
                     </Select>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" disabled={isRemovingMember}><X className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" disabled={!canManageMembers || isRemovingMember}><X className="h-4 w-4" /></Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
