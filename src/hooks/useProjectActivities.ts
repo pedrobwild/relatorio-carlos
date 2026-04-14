@@ -43,6 +43,8 @@ export interface ActivityInput {
   weight: number;
   sort_order: number;
   predecessor_ids?: string[];
+  etapa?: string | null;
+  detailed_description?: string | null;
 }
 
 // Fetch activities for a project
@@ -95,6 +97,8 @@ export function useProjectActivities(projectId: string | undefined) {
         sort_order: index,
         created_by: user.id,
         predecessor_ids: activity.predecessor_ids || [],
+        etapa: (activity as any).etapa || null,
+        detailed_description: (activity as any).detailed_description?.trim() || null,
       }));
 
       // Fetch existing IDs to delete after insert

@@ -1,10 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
+
+const ALLOWED_ACTIVITY_FIELDS = [
+  'description', 'etapa', 'detailed_description',
+  'planned_start', 'planned_end', 'actual_start', 'actual_end',
+  'weight', 'status', 'progress', 'sort_order',
+] as const;
+
+const DEBOUNCE_FIELDS = new Set(['description', 'etapa', 'detailed_description']);
+const DEBOUNCE_MS = 600;
 
 export function useEditarObraData(projectId: string | undefined) {
   const { toast } = useToast();
@@ -32,6 +41,15 @@ export function useEditarObraData(projectId: string | undefined) {
     tipo_de_locacao: null,
     data_recebimento_chaves: null,
   });
+
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimers.current).forEach(clearTimeout);
+    };
+  }, []);
 
   useEffect(() => {
     if (projectId) fetchAllData();
@@ -264,16 +282,48 @@ export function useEditarObraData(projectId: string | undefined) {
     }
   };
 
-  const updateActivity = async (id: string, field: string, value: string | number | null) => {
+  // BUG-G: Field allowlist validation
+  const updateActivity = useCallback(async (id: string, field: string, value: string | number | null) => {
+    if (!(ALLOWED_ACTIVITY_FIELDS as readonly string[]).includes(field)) {
+      console.error(`[updateActivity] Campo inválido: "${field}"`);
+      return;
+    }
     try {
       const { error } = await supabase.from('project_activities').update({ [field]: value }).eq('id', id);
       if (error) throw error;
-      setActivities(activities.map(a => a.id === id ? { ...a, [field]: value } : a));
+      setActivities(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro';
       toast({ title: 'Erro ao atualizar', description: message, variant: 'destructive' });
     }
-  };
+  }, [toast]);
+
+  // BUG-B: Debounced version for text fields
+  const debouncedUpdateActivity = useCallback(
+    (id: string, field: string, value: string | number | null) => {
+      // Optimistic local update immediately
+      setActivities(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+      
+      const key = `${id}_${field}`;
+      clearTimeout(debounceTimers.current[key]);
+      debounceTimers.current[key] = setTimeout(() => {
+        updateActivity(id, field, value);
+      }, DEBOUNCE_MS);
+    },
+    [updateActivity]
+  );
+
+  // Smart update: auto-debounce text fields, immediate for others
+  const smartUpdateActivity = useCallback(
+    async (id: string, field: string, value: string | number | null) => {
+      if (DEBOUNCE_FIELDS.has(field)) {
+        debouncedUpdateActivity(id, field, value);
+      } else {
+        await updateActivity(id, field, value);
+      }
+    },
+    [updateActivity, debouncedUpdateActivity]
+  );
 
   const deleteActivity = async (id: string) => {
     try {
@@ -448,7 +498,7 @@ export function useEditarObraData(projectId: string | undefined) {
     handleStudioInfoChange,
     saveProject,
     addActivity,
-    updateActivity,
+    updateActivity: smartUpdateActivity,
     deleteActivity,
     reorderActivities,
     addPayment,

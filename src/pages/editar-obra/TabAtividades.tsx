@@ -236,6 +236,8 @@ function ActivityRow({
   onDragOver,
   onDrop,
   onDragEnd,
+  detailOpen,
+  onToggleDetail,
 }: {
   activity: Activity;
   index: number;
@@ -247,9 +249,11 @@ function ActivityRow({
   onDragOver: (event: React.DragEvent<HTMLDivElement>, index: number) => void;
   onDrop: (event: React.DragEvent<HTMLDivElement>, index: number) => void;
   onDragEnd: () => void;
+  detailOpen: boolean;
+  onToggleDetail: () => void;
 }) {
-  const [detailOpen, setDetailOpen] = useState(false);
-  const hasDetail = !!activity.detailed_description;
+  // BUG-C: trim check for hasDetail
+  const hasDetail = !!activity.detailed_description?.trim();
 
   return (
     <>
@@ -267,10 +271,10 @@ function ActivityRow({
         <div className="grid grid-cols-[1fr_100px_130px_130px_130px_130px_70px_44px] gap-0 items-start">
           <div className="p-2 pl-3 flex items-start gap-2">
             <div className="flex items-center gap-1 shrink-0 pt-2">
-              {hasDetail ? (
+              {hasDetail || detailOpen ? (
                 <button
                   type="button"
-                  onClick={() => setDetailOpen(!detailOpen)}
+                  onClick={onToggleDetail}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
                 >
                   {detailOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
@@ -338,27 +342,28 @@ function ActivityRow({
             </AlertDialog>
           </div>
         </div>
-        {/* Collapsible detailed description */}
-        {hasDetail && detailOpen && (
+        {/* Collapsible detailed description — BUG-A: only persist on actual typing */}
+        {detailOpen && (
           <div className="px-3 pb-2 pl-[calc(1.5rem+20px+2rem)]">
             <Textarea
               value={activity.detailed_description || ''}
-              onChange={(e) => onUpdate(activity.id, 'detailed_description', e.target.value || null)}
+              onChange={(e) => {
+                const val = e.target.value.trim() ? e.target.value : null;
+                onUpdate(activity.id, 'detailed_description', val);
+              }}
               placeholder="Descrição detalhada..."
               rows={2}
               className="text-xs resize-none bg-muted/30"
+              autoFocus={!hasDetail}
             />
           </div>
         )}
-        {/* Add detail button when none exists */}
-        {!hasDetail && (
+        {/* Add detail button — BUG-A: only opens panel, no DB write */}
+        {!hasDetail && !detailOpen && (
           <div className="px-3 pb-1 pl-[calc(1.5rem+20px+2rem)] opacity-0 group-hover/row:opacity-100 transition-opacity">
             <button
               type="button"
-              onClick={() => {
-                onUpdate(activity.id, 'detailed_description', ' ');
-                setDetailOpen(true);
-              }}
+              onClick={onToggleDetail}
               className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground flex items-center gap-1"
             >
               <Plus className="h-2.5 w-2.5" /> Adicionar descrição detalhada
@@ -436,8 +441,8 @@ function ActivityRow({
           <span className="text-[10px] text-muted-foreground">%</span>
         </div>
         {/* Mobile collapsible detail */}
-        {hasDetail && (
-          <Collapsible open={detailOpen} onOpenChange={setDetailOpen}>
+        {(hasDetail || detailOpen) && (
+          <Collapsible open={detailOpen} onOpenChange={onToggleDetail}>
             <CollapsibleTrigger className="pl-8 text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1">
               {detailOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
               Descrição detalhada
@@ -445,7 +450,10 @@ function ActivityRow({
             <CollapsibleContent className="pl-8 pt-1">
               <Textarea
                 value={activity.detailed_description || ''}
-                onChange={(e) => onUpdate(activity.id, 'detailed_description', e.target.value || null)}
+                onChange={(e) => {
+                  const val = e.target.value.trim() ? e.target.value : null;
+                  onUpdate(activity.id, 'detailed_description', val);
+                }}
                 placeholder="Descrição detalhada..."
                 rows={2}
                 className="text-xs resize-none bg-muted/30"
@@ -453,13 +461,10 @@ function ActivityRow({
             </CollapsibleContent>
           </Collapsible>
         )}
-        {!hasDetail && (
+        {!hasDetail && !detailOpen && (
           <button
             type="button"
-            onClick={() => {
-              onUpdate(activity.id, 'detailed_description', ' ');
-              setDetailOpen(true);
-            }}
+            onClick={onToggleDetail}
             className="pl-8 text-[10px] text-muted-foreground/50 hover:text-muted-foreground flex items-center gap-1"
           >
             <Plus className="h-2.5 w-2.5" /> Descrição detalhada
@@ -490,6 +495,12 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete, onReorder
   const totalWeight = activities.reduce((sum, a) => sum + (a.weight || 0), 0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // BUG-F: Lift detail open state to parent, indexed by activity.id
+  const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
+  const toggleDetail = useCallback((id: string) => {
+    setOpenDetails(prev => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
   const clearDragState = useCallback(() => {
     setDraggedIndex(null);
@@ -578,6 +589,8 @@ export function TabAtividades({ activities, onAdd, onUpdate, onDelete, onReorder
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                   onDragEnd={clearDragState}
+                  detailOpen={!!openDetails[a.id]}
+                  onToggleDetail={() => toggleDetail(a.id)}
                 />
               ))}
             </div>

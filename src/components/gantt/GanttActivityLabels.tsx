@@ -43,9 +43,9 @@ export function GanttActivityLabels({
                   <span className="font-mono text-[10px] text-primary/60">{index + 1}</span>
                   <span className="truncate">
                     {activity.description}
-                    {(activity as any).etapa && (
+                    {activity.etapa && (
                       <span className="ml-1 text-[10px] text-muted-foreground font-normal">
-                        [{(activity as any).etapa}]
+                        [{activity.etapa}]
                       </span>
                     )}
                   </span>
@@ -56,8 +56,8 @@ export function GanttActivityLabels({
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
                 <p className="font-medium">{activity.description}</p>
-                {(activity as any).etapa && (
-                  <p className="text-xs text-muted-foreground">Etapa: {(activity as any).etapa}</p>
+                {activity.etapa && (
+                  <p className="text-xs text-muted-foreground">Etapa: {activity.etapa}</p>
                 )}
                 <p className="text-xs text-muted-foreground">Peso: {activity.weight}%</p>
                 <p className="text-xs text-muted-foreground">
@@ -65,9 +65,9 @@ export function GanttActivityLabels({
                   {computed.isDelayed && computed.delayDays > 0 && ` (${computed.delayDays} dias)`}
                 </p>
                 <p className="text-xs text-muted-foreground">Progresso: {computed.progress}%</p>
-                {(activity as any).detailed_description && (
-                  <p className="text-xs text-muted-foreground mt-1 border-t border-border/40 pt-1">
-                    {(activity as any).detailed_description}
+                {activity.detailed_description?.trim() && (
+                  <p className="text-xs text-muted-foreground mt-1 border-t border-border/40 pt-1 line-clamp-3">
+                    {activity.detailed_description}
                   </p>
                 )}
                 {activity.predecessorIds && activity.predecessorIds.length > 0 && (
