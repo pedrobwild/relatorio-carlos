@@ -197,6 +197,7 @@ export default function EditarObra() {
                   members={data.members}
                   isAddingMember={data.isAddingMember}
                   isRemovingMember={data.isRemovingMember}
+                  canManageMembers={isAdmin || isManager || data.members.some(m => m.user_id === data.project?.created_by)}
                   onAddMember={data.handleAddMember}
                   onRemoveMember={data.handleRemoveMember}
                   onUpdateRole={data.handleUpdateRole}
