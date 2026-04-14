@@ -133,8 +133,18 @@ export function DocumentVersionUpload({ document, onSuccess }: DocumentVersionUp
             <div className="flex items-center gap-3 mt-1 text-caption text-muted-foreground">
               <span>Versão {document.version}</span>
               {document.checksum && (
-                <span className="font-mono text-xs">
-                  SHA256: {document.checksum.substring(0, 12)}...
+                <span className="font-mono text-xs break-all inline-flex items-center gap-1">
+                  SHA256: {document.checksum}
+                  <button
+                    type="button"
+                    className="ml-1 px-1.5 py-0.5 rounded bg-muted hover:bg-accent text-[10px] font-sans text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(document.checksum!);
+                      toast({ title: 'Checksum copiado' });
+                    }}
+                  >
+                    Copiar
+                  </button>
                 </span>
               )}
             </div>
