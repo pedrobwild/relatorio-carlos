@@ -93,7 +93,8 @@ export default function EditarObra() {
                 </TooltipTrigger>
                 {!canEdit && (
                   <TooltipContent>
-                    <p className="text-xs">Sua permissão é apenas de visualização</p>
+                    <p className="text-xs">Você tem permissão apenas para visualizar.</p>
+                    <p className="text-xs text-muted-foreground">Para editar, solicite acesso de Editor ao administrador do projeto.</p>
                   </TooltipContent>
                 )}
               </Tooltip>

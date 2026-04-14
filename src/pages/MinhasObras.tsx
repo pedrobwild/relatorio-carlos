@@ -83,7 +83,7 @@ export default function MinhasObras() {
             <EmptyState
               icon={Building2}
               title={displayName ? `Olá, ${displayName}! Sua jornada começa aqui.` : 'Sua jornada começa aqui'}
-              description="Assim que sua obra for configurada pela nossa equipe, você poderá acompanhar cronograma, fotos e documentos por este painel."
+              description="Sua primeira obra será exibida aqui assim que nosso time iniciar o projeto. Você receberá um e-mail de confirmação com os próximos passos."
               hint="Se você já recebeu um convite por e-mail, verifique se está logado com o mesmo endereço de e-mail."
               action={{
                 label: 'Falar com a equipe',

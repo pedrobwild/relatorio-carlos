@@ -5,6 +5,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -45,6 +46,7 @@ export function PortfolioCommandBar({
   const showingSubset = filteredCount < totalCount;
 
   return (
+    <TooltipProvider delayDuration={300}>
     <div className="space-y-2">
       {/* Row 1: Title + Actions */}
       <div className="flex items-center justify-between gap-2">
@@ -63,27 +65,34 @@ export function PortfolioCommandBar({
           {/* View toggle — desktop only */}
           <div className="hidden md:flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5" role="radiogroup" aria-label="Modo de visualização">
             {([
-              { mode: 'cards' as ViewMode, icon: LayoutGrid, label: 'Cards' },
-              { mode: 'list' as ViewMode, icon: List, label: 'Lista' },
-              { mode: 'table' as ViewMode, icon: Table2, label: 'Tabela' },
-            ]).map(({ mode, icon: Icon, label }) => (
-              <button
-                key={mode}
-                role="radio"
-                aria-checked={viewMode === mode}
-                aria-label={`Visualização: ${label}`}
-                className={cn(
-                  'inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs font-medium transition-all',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-                  viewMode === mode
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                onClick={() => onViewModeChange(mode)}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{label}</span>
-              </button>
+              { mode: 'cards' as ViewMode, icon: LayoutGrid, label: 'Cards', description: 'Visão geral' },
+              { mode: 'list' as ViewMode, icon: List, label: 'Lista', description: 'Resumo rápido' },
+              { mode: 'table' as ViewMode, icon: Table2, label: 'Tabela', description: 'Comparação detalhada' },
+            ]).map(({ mode, icon: Icon, label, description }) => (
+              <Tooltip key={mode}>
+                <TooltipTrigger asChild>
+                  <button
+                    role="radio"
+                    aria-checked={viewMode === mode}
+                    aria-label={`Visualização: ${label} — ${description}`}
+                    className={cn(
+                      'inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs font-medium transition-all',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                      viewMode === mode
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                    onClick={() => onViewModeChange(mode)}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">{label}</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  <p className="font-medium">{label}</p>
+                  <p className="text-muted-foreground">{description}</p>
+                </TooltipContent>
+              </Tooltip>
             ))}
           </div>
 
@@ -181,5 +190,6 @@ export function PortfolioCommandBar({
         ))}
       </div>
     </div>
+    </TooltipProvider>
   );
 }

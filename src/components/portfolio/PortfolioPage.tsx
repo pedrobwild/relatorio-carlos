@@ -127,6 +127,23 @@ export default function PortfolioPage() {
           onFiltersChange={filters.setAdvancedFilters}
         />
 
+        {/* Filter results indicator */}
+        {filters.hasAnyFilter && filters.filtered.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-medium tabular-nums">
+              {filters.filtered.length} obra{filters.filtered.length !== 1 ? 's' : ''} encontrada{filters.filtered.length !== 1 ? 's' : ''}
+            </span>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={filters.handleClearAll}
+              className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded px-1"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        )}
+
         {/* KPI Strip */}
         {summariesLoading && summaries.length === 0 ? (
           <KpiStripSkeleton />
