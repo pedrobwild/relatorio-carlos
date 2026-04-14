@@ -20,7 +20,7 @@ export const ActivitiesSection = ({ activities, setActivities }: ActivitiesSecti
   const addActivity = () => {
     setActivities([
       ...activities,
-      { description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 },
+      { id: crypto.randomUUID(), description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 },
     ]);
   };
 
