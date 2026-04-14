@@ -20,6 +20,16 @@ const ScheduleTable = ({
 }: ScheduleTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
 
   const baseYear = activities.length > 0 && activities[0].plannedStart
     ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
