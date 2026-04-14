@@ -266,7 +266,7 @@ export function useEditarObraData(projectId: string | undefined) {
           weight: parseFloat(newActivity.weight) || 5,
           sort_order: nextOrder,
           created_by: user?.id ?? '',
-          etapa: newActivity.etapa || null,
+          etapa: newActivity.etapa?.trim() || null,
           detailed_description: newActivity.detailed_description?.trim() || null,
         }])
         .select()
