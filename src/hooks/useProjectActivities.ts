@@ -43,6 +43,8 @@ export interface ActivityInput {
   weight: number;
   sort_order: number;
   predecessor_ids?: string[];
+  etapa?: string | null;
+  detailed_description?: string | null;
 }
 
 // Fetch activities for a project
