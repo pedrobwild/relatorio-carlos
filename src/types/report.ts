@@ -1,5 +1,5 @@
 export interface Activity {
-  id?: string;
+  id: string;
   description: string;
   plannedStart: string;
   plannedEnd: string;

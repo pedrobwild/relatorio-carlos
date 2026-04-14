@@ -79,22 +79,26 @@ export function useProjectMembers(projectId: string | undefined) {
     enabled: !!projectId,
   });
 
+  // Pre-flight helper: fail fast for UX before hitting RLS
+  const assertCanManage = async (targetProjectId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Não autenticado');
+    const { data: canManage } = await supabase.rpc('can_manage_project', {
+      _user_id: user.id,
+      _project_id: targetProjectId,
+    });
+    if (!canManage) throw new Error('Sem permissão para gerenciar membros');
+    return user;
+  };
+
   // Add a member to the project
   const addMemberMutation = useMutation({
-    mutationFn: async ({ projectId, userId, role }: AddMemberParams) => {
-      // Pre-flight: RLS enforces this server-side, but fail fast for UX
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
-      const { data: canManage } = await supabase.rpc('can_manage_project', { _user_id: user.id, _project_id: projectId });
-      if (!canManage) throw new Error('Sem permissão para gerenciar membros');
+    mutationFn: async ({ projectId: pid, userId, role }: AddMemberParams) => {
+      await assertCanManage(pid);
 
       const { data, error } = await supabase
         .from('project_members')
-        .insert({
-          project_id: projectId,
-          user_id: userId,
-          role,
-        })
+        .insert({ project_id: pid, user_id: userId, role })
         .select()
         .single();
 
@@ -118,6 +122,15 @@ export function useProjectMembers(projectId: string | undefined) {
   // Update member role
   const updateRoleMutation = useMutation({
     mutationFn: async ({ memberId, role }: UpdateRoleParams) => {
+      // Resolve project_id from member row, then pre-flight
+      const { data: member, error: lookupErr } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('id', memberId)
+        .single();
+      if (lookupErr || !member) throw new Error('Membro não encontrado');
+      await assertCanManage(member.project_id);
+
       const { data, error } = await supabase
         .from('project_members')
         .update({ role })
@@ -125,10 +138,7 @@ export function useProjectMembers(projectId: string | undefined) {
         .select()
         .single();
 
-      if (error) {
-        if (error.message?.includes('row-level security')) throw new Error('Sem permissão para alterar funções');
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -144,15 +154,21 @@ export function useProjectMembers(projectId: string | undefined) {
   // Remove member from project
   const removeMemberMutation = useMutation({
     mutationFn: async ({ memberId }: RemoveMemberParams) => {
+      // Resolve project_id from member row, then pre-flight
+      const { data: member, error: lookupErr } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('id', memberId)
+        .single();
+      if (lookupErr || !member) throw new Error('Membro não encontrado');
+      await assertCanManage(member.project_id);
+
       const { error } = await supabase
         .from('project_members')
         .delete()
         .eq('id', memberId);
 
-      if (error) {
-        if (error.message?.includes('row-level security')) throw new Error('Sem permissão para remover membros');
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });

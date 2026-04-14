@@ -30,7 +30,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
   const [endDate, setEndDate] = useState<Date>();
   const [reportDate, setReportDate] = useState<Date>(new Date());
   const [activities, setActivities] = useState<Activity[]>([
-    { description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 },
+    { id: crypto.randomUUID(), description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 },
   ]);
   const [incidents, setIncidents] = useState<ReportIncident[]>([]);
 
@@ -61,7 +61,7 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
       setStartDate(undefined);
       setEndDate(undefined);
       setReportDate(new Date());
-      setActivities([{ description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 }]);
+      setActivities([{ id: crypto.randomUUID(), description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 }]);
       setIncidents([]);
       onOpenChange(false);
     } catch (err: unknown) {

@@ -175,7 +175,18 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
         throw new Error(result.error || 'Falha no upload');
       }
 
-      toast.success(`Documento enviado e verificado (checksum: ${result.document?.checksum?.substring(0, 8)}...)`);
+      toast.success('Documento enviado e verificado', {
+        description: result.document?.checksum
+          ? `SHA256: ${result.document.checksum}`
+          : undefined,
+        duration: 10000,
+        action: result.document?.checksum
+          ? {
+              label: 'Copiar',
+              onClick: () => navigator.clipboard.writeText(result.document!.checksum!),
+            }
+          : undefined,
+      });
 
       resetForm();
       setOpen(false);
