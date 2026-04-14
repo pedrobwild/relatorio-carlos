@@ -85,6 +85,16 @@ export function CronogramaMobileView({
     [activities, today]
   );
 
+  // Filter
+  const filtered = useMemo(() => {
+    if (filter === 'all') return enriched;
+    if (filter === 'attention') return enriched.filter(a => a.computedStatus === 'overdue' || a.computedStatus === 'upcoming');
+    if (filter === 'in_progress') return enriched.filter(a => a.computedStatus === 'in_progress');
+    if (filter === 'completed') return enriched.filter(a => a.computedStatus === 'completed');
+    if (filter === 'pending') return enriched.filter(a => a.computedStatus === 'pending' || a.computedStatus === 'upcoming');
+    return enriched;
+  }, [enriched, filter]);
+
   // Stats — always follow the visible (filtered) list for consistency
   const stats = useMemo(() => {
     const totalWeight = filtered.reduce((s, a) => s + a.weight, 0);
@@ -95,16 +105,6 @@ export function CronogramaMobileView({
     const completed = filtered.filter(a => a.computedStatus === 'completed').length;
     return { progress, overdue, inProgress, completed, total: filtered.length };
   }, [filtered]);
-
-  // Filter
-  const filtered = useMemo(() => {
-    if (filter === 'all') return enriched;
-    if (filter === 'attention') return enriched.filter(a => a.computedStatus === 'overdue' || a.computedStatus === 'upcoming');
-    if (filter === 'in_progress') return enriched.filter(a => a.computedStatus === 'in_progress');
-    if (filter === 'completed') return enriched.filter(a => a.computedStatus === 'completed');
-    if (filter === 'pending') return enriched.filter(a => a.computedStatus === 'pending' || a.computedStatus === 'upcoming');
-    return enriched;
-  }, [enriched, filter]);
 
   // Group by status
   const grouped = useMemo(() => {
