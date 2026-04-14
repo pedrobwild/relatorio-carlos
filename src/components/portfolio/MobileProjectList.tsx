@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
-  AlertTriangle, CalendarX, CheckCircle, Clock, ChevronRight,
+  AlertTriangle, CalendarX, CheckCircle, Clock, ChevronRight, FileSignature, FileText,
 } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
@@ -79,6 +78,8 @@ function MobileProjectRow({
 }) {
   const progress = summary?.progress_percentage ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
+  const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
+  const pendingDocuments = summary?.pending_documents ?? 0;
   const status = statusConfig[project.status] ?? statusConfig.active;
 
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
@@ -147,7 +148,7 @@ function MobileProjectRow({
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
-                  progress >= 80 ? 'bg-emerald-500' : progress >= 40 ? 'bg-primary' : 'bg-amber-500',
+                  progress >= 80 ? 'bg-[hsl(var(--success))]' : progress >= 40 ? 'bg-primary' : 'bg-[hsl(var(--warning))]',
                 )}
                 style={{ width: `${Math.min(progress, 100)}%` }}
               />
@@ -161,7 +162,7 @@ function MobileProjectRow({
           {plannedEnd && (
             <div className="flex items-center gap-1 shrink-0">
               {isFinished ? (
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
+                <span className="text-[10px] text-[hsl(var(--success))] font-medium flex items-center gap-0.5">
                   <CheckCircle className="h-3 w-3" />
                 </span>
               ) : isOverdue ? (
@@ -170,7 +171,7 @@ function MobileProjectRow({
                   {Math.abs(daysRemaining!)}d
                 </span>
               ) : isApproaching ? (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5">
+                <span className="text-[10px] text-[hsl(var(--warning))] font-medium flex items-center gap-0.5">
                   <Clock className="h-3 w-3" />
                   {daysRemaining}d
                 </span>
@@ -182,11 +183,23 @@ function MobileProjectRow({
             </div>
           )}
 
-          {/* Overdue badge */}
+          {/* Color-coded alert badges */}
           {overdueCount > 0 && (
             <Badge variant="outline" className="h-4 px-1 text-[9px] gap-0.5 bg-destructive/10 text-destructive border-destructive/20 shrink-0">
               <AlertTriangle className="h-2.5 w-2.5" />
               {overdueCount}
+            </Badge>
+          )}
+          {unsignedFormalizations > 0 && (
+            <Badge variant="outline" className="h-4 px-1 text-[9px] gap-0.5 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20 shrink-0">
+              <FileSignature className="h-2.5 w-2.5" />
+              {unsignedFormalizations}
+            </Badge>
+          )}
+          {pendingDocuments > 0 && (
+            <Badge variant="outline" className="h-4 px-1 text-[9px] gap-0.5 bg-primary/10 text-primary border-primary/20 shrink-0">
+              <FileText className="h-2.5 w-2.5" />
+              {pendingDocuments}
             </Badge>
           )}
         </div>

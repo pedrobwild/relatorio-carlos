@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, Clock, CalendarX, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Clock, CalendarX, CheckCircle, FileText, FileSignature } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
@@ -79,6 +79,9 @@ function ProjectCard({
   onClick: () => void;
 }) {
   const overdueCount = summary?.overdue_count ?? 0;
+  const pendingCount = summary?.pending_count ?? 0;
+  const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
+  const pendingDocuments = summary?.pending_documents ?? 0;
   const progress = summary?.progress_percentage ?? 0;
 
   const today = getTodayLocal();
@@ -88,6 +91,8 @@ function ProjectCard({
   const daysRemaining = plannedEnd && !isFinished ? differenceInDays(plannedEnd, today) : null;
   const isOverdue = daysRemaining !== null && daysRemaining < 0;
   const isApproaching = daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 14;
+
+  const hasAlerts = overdueCount > 0 || unsignedFormalizations > 0 || pendingDocuments > 0;
 
   return (
     <button
@@ -104,10 +109,13 @@ function ProjectCard({
           : 'border-border/50 hover:border-primary/30',
       )}
     >
-      {/* Row 1: Health + Status */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          {summary && <HealthScoreBadge project={summary} size="md" showLabel />}
+      {/* Row 1: Name + Status — most prominent */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm truncate text-foreground leading-tight">{project.name}</p>
+          {project.unit_name && (
+            <p className="text-[11px] text-primary/70 font-medium truncate mt-0.5">{project.unit_name}</p>
+          )}
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -121,18 +129,43 @@ function ProjectCard({
         </Tooltip>
       </div>
 
-      {/* Health breakdown mini-bars */}
-      {summary && (
-        <HealthScoreBreakdown project={summary} className="px-1" />
-      )}
+      {/* Row 2: Health Score + Progress — second tier */}
+      <div className="flex items-center gap-3">
+        <div className="shrink-0">
+          {summary ? (
+            <HealthScoreBadge project={summary} size="md" showLabel />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-muted/50 animate-pulse" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+            <span>Progresso</span>
+            <span className="font-medium tabular-nums">{progress}%</span>
+          </div>
+          <div className="h-2 md:h-1.5 rounded-full bg-muted overflow-hidden group-hover:h-2 transition-all">
+            <div
+              className={cn(
+                'h-full rounded-full transition-all',
+                progress >= 80 ? 'bg-[hsl(var(--success))]' : progress >= 40 ? 'bg-primary' : 'bg-[hsl(var(--warning))]',
+              )}
+              style={{ width: `${Math.min(progress, 100)}%` }}
+            />
+          </div>
+          {/* Health breakdown mini-bars */}
+          {summary && (
+            <HealthScoreBreakdown project={summary} className="mt-1.5" />
+          )}
+        </div>
+      </div>
 
-      {/* Row 2: Delivery date — prominent */}
+      {/* Row 3: Delivery date */}
       {plannedEnd && (
         <div className={cn(
           'flex items-center gap-2 rounded-lg px-3 py-2 -mx-1',
           isFinished ? 'bg-[hsl(var(--success-light))]' :
           isOverdue ? 'bg-destructive/10' :
-          isApproaching ? 'bg-amber-500/10' :
+          isApproaching ? 'bg-[hsl(var(--warning-light))]' :
           'bg-muted/40',
         )}>
           <div className="flex-1 min-w-0">
@@ -141,7 +174,7 @@ function ProjectCard({
               'text-base font-bold tabular-nums',
               isFinished ? 'text-[hsl(var(--success))]' :
               isOverdue ? 'text-destructive' :
-              isApproaching ? 'text-amber-600 dark:text-amber-400' :
+              isApproaching ? 'text-[hsl(var(--warning))]' :
               'text-foreground',
             )}>
               {format(plannedEnd, "dd/MM/yy", { locale: ptBR })}
@@ -156,7 +189,7 @@ function ProjectCard({
               <CalendarX className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
             </Badge>
           ) : isApproaching ? (
-            <Badge variant="outline" className="text-[10px] gap-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shrink-0">
+            <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20 shrink-0">
               <Clock className="h-3 w-3" /> {daysRemaining}d
             </Badge>
           ) : (
@@ -165,44 +198,46 @@ function ProjectCard({
         </div>
       )}
 
-      {/* Row 3: Critical alerts */}
-      {overdueCount > 0 && (
+      {/* Row 4: Critical alerts — color-coded by type */}
+      {hasAlerts && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
-                <AlertTriangle className="h-3 w-3" />
-                {overdueCount} atraso{overdueCount > 1 ? 's' : ''}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">{overdueCount} item(ns) em atraso</TooltipContent>
-          </Tooltip>
+          {overdueCount > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
+                  <AlertTriangle className="h-3 w-3" />
+                  {overdueCount} atraso{overdueCount > 1 ? 's' : ''}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{overdueCount} atividade(s) em atraso</TooltipContent>
+            </Tooltip>
+          )}
+          {unsignedFormalizations > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
+                  <FileSignature className="h-3 w-3" />
+                  {unsignedFormalizations} assinatura{unsignedFormalizations > 1 ? 's' : ''}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{unsignedFormalizations} formalização(ões) aguardando assinatura</TooltipContent>
+            </Tooltip>
+          )}
+          {pendingDocuments > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
+                  <FileText className="h-3 w-3" />
+                  {pendingDocuments} doc{pendingDocuments > 1 ? 's' : ''}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">{pendingDocuments} documento(s) pendente(s)</TooltipContent>
+            </Tooltip>
+          )}
         </div>
       )}
 
-      {/* Row 4: Project name + unit */}
-      <div className="min-w-0">
-        <p className="font-semibold text-sm truncate text-foreground">{project.name}</p>
-        {project.unit_name && (
-          <p className="text-[11px] text-primary/70 font-medium truncate mt-0.5">{project.unit_name}</p>
-        )}
-      </div>
-
-      {/* Row 5: Progress bar */}
-      <div>
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
-          <span>Progresso</span>
-          <span className="font-medium tabular-nums">{progress}%</span>
-        </div>
-        <div className="h-2 md:h-1.5 rounded-full bg-muted overflow-hidden group-hover:h-2 transition-all">
-          <div
-            className="h-full rounded-full bg-primary transition-all"
-            style={{ width: `${Math.min(progress, 100)}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Row 6: Secondary metadata */}
+      {/* Row 5: Secondary metadata — footer */}
       {(project.customer_name || project.engineer_name) && (
         <div className="text-[10px] text-muted-foreground/60 truncate border-t border-border/30 pt-2 -mb-1 flex items-center gap-1.5 flex-wrap">
           {project.customer_name && <span>{project.customer_name}</span>}
