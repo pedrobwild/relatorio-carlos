@@ -17,7 +17,7 @@ export interface GanttChartProps {
 }
 
 export interface DragState {
-  activityIndex: number;
+  activityId: string;
   dragType: 'move' | 'resize-start' | 'resize-end';
   startX: number;
   originalStart: string;
