@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { Building2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Building2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
