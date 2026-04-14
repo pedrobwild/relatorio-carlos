@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
-import { CalendarDays, AlertTriangle } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { CalendarDays, AlertTriangle, ChevronDown } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   Table, TableBody, TableCell, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -19,6 +20,16 @@ const ScheduleTable = ({
 }: ScheduleTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
 
   const baseYear = activities.length > 0 && activities[0].plannedStart
     ? new Date(activities[0].plannedStart + "T00:00:00").getFullYear()
@@ -128,12 +139,25 @@ const ScheduleTable = ({
               <div className="flex items-start gap-2 mb-2">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary mt-0.5">{originalIndex + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold leading-snug text-foreground">{activity.description}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold leading-snug text-foreground">{activity.description}</p>
+                    {activity.detailed_description?.trim() && (
+                      <button
+                        onClick={(e) => toggleExpand(activity.id, e)}
+                        className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
+                        aria-label="Ver descrição"
+                      >
+                        <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", expandedIds.has(activity.id) && "rotate-180")} />
+                      </button>
+                    )}
+                  </div>
                   {activity.etapa && (
                     <span className="inline-block mt-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground">{activity.etapa}</span>
                   )}
-                  {activity.detailed_description?.trim() && (
-                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{activity.detailed_description}</p>
+                  {activity.detailed_description?.trim() && expandedIds.has(activity.id) && (
+                    <p className="mt-1.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2 animate-fade-in">
+                      {activity.detailed_description}
+                    </p>
                   )}
                 </div>
                 <StatusBadge status={status} />
@@ -199,15 +223,26 @@ const ScheduleTable = ({
                     <TableCell className="py-3.5 pl-4 pr-3">
                       <div className="flex items-center gap-2.5">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold shrink-0 bg-primary/10 text-primary">{originalIndex + 1}</span>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium leading-snug text-foreground">{activity.description}</span>
                             {activity.etapa && (
                               <span className="inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground shrink-0">{activity.etapa}</span>
                             )}
+                            {activity.detailed_description?.trim() && (
+                              <button
+                                onClick={(e) => toggleExpand(activity.id, e)}
+                                className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
+                                aria-label="Ver descrição"
+                              >
+                                <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", expandedIds.has(activity.id) && "rotate-180")} />
+                              </button>
+                            )}
                           </div>
-                          {activity.detailed_description?.trim() && (
-                            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{activity.detailed_description}</p>
+                          {activity.detailed_description?.trim() && expandedIds.has(activity.id) && (
+                            <p className="mt-1.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2.5 animate-fade-in">
+                              {activity.detailed_description}
+                            </p>
                           )}
                         </div>
                       </div>
