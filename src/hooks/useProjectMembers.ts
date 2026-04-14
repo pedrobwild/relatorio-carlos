@@ -82,6 +82,12 @@ export function useProjectMembers(projectId: string | undefined) {
   // Add a member to the project
   const addMemberMutation = useMutation({
     mutationFn: async ({ projectId, userId, role }: AddMemberParams) => {
+      // Pre-flight: RLS enforces this server-side, but fail fast for UX
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Não autenticado');
+      const { data: canManage } = await supabase.rpc('can_manage_project', { _user_id: user.id, _project_id: projectId });
+      if (!canManage) throw new Error('Sem permissão para gerenciar membros');
+
       const { data, error } = await supabase
         .from('project_members')
         .insert({
@@ -119,7 +125,10 @@ export function useProjectMembers(projectId: string | undefined) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('row-level security')) throw new Error('Sem permissão para alterar funções');
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -140,7 +149,10 @@ export function useProjectMembers(projectId: string | undefined) {
         .delete()
         .eq('id', memberId);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('row-level security')) throw new Error('Sem permissão para remover membros');
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
