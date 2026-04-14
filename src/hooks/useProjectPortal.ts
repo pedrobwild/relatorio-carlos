@@ -122,6 +122,8 @@ export function useProjectPortal() {
       predecessorIds: act.predecessor_ids || [],
       baselineStart: act.baseline_start,
       baselineEnd: act.baseline_end,
+      etapa: act.etapa ?? null,
+      detailed_description: act.detailed_description ?? null,
     }));
   }, [dbActivities]);
 
