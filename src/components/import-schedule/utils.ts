@@ -61,22 +61,55 @@ export function parseDate(value: string | number | undefined): string {
   return '';
 }
 
+export interface ImportError {
+  row: number;
+  reason: string;
+}
+
+export interface MapResult {
+  valid: ActivityFormData[];
+  errors: ImportError[];
+}
+
 export function mapRawToActivities(
   rawData: Record<string, string>[],
   columnMapping: ColumnMapping
-): ActivityFormData[] {
-  return rawData
-    .map(row => ({
+): MapResult {
+  const valid: ActivityFormData[] = [];
+  const errors: ImportError[] = [];
+
+  rawData.forEach((row, index) => {
+    const description = columnMapping.description ? String(row[columnMapping.description] || '').trim() : '';
+    if (!description) {
+      errors.push({ row: index + 2, reason: 'Descrição vazia' });
+      return;
+    }
+
+    const plannedStart = parseDate(columnMapping.plannedStart ? row[columnMapping.plannedStart] : '');
+    const plannedEnd = parseDate(columnMapping.plannedEnd ? row[columnMapping.plannedEnd] : '');
+
+    if (!plannedStart) {
+      errors.push({ row: index + 2, reason: 'Data início inválida' });
+      return;
+    }
+    if (!plannedEnd) {
+      errors.push({ row: index + 2, reason: 'Data término inválida' });
+      return;
+    }
+
+    valid.push({
       id: crypto.randomUUID(),
-      description: columnMapping.description ? String(row[columnMapping.description] || '').trim() : '',
-      plannedStart: parseDate(columnMapping.plannedStart ? row[columnMapping.plannedStart] : ''),
-      plannedEnd: parseDate(columnMapping.plannedEnd ? row[columnMapping.plannedEnd] : ''),
+      description,
+      plannedStart,
+      plannedEnd,
       actualStart: parseDate(columnMapping.actualStart ? row[columnMapping.actualStart] : ''),
       actualEnd: parseDate(columnMapping.actualEnd ? row[columnMapping.actualEnd] : ''),
       weight: columnMapping.weight && row[columnMapping.weight]
         ? String(parseFloat(String(row[columnMapping.weight]).replace(',', '.').replace('%', '')) || 0)
         : '0',
       predecessorIds: [],
-    }))
-    .filter(act => act.description.trim() !== '');
+    });
+  });
+
+  return { valid, errors };
 }

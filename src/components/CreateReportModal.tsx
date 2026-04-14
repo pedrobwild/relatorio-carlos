@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { Building2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import { IncidentsSection } from './report/create-modal/IncidentsSection';
 interface CreateReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateReport: (data: ReportData) => void;
+  onCreateReport: (data: ReportData) => void | Promise<void>;
 }
 
 const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportModalProps) => {
@@ -33,8 +34,11 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
   ]);
   const [incidents, setIncidents] = useState<ReportIncident[]>([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     const reportData: ReportData = {
       projectName,
@@ -47,17 +51,25 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
       incidents: incidents.filter(i => i.occurrence.trim() !== ''),
     };
 
-    onCreateReport(reportData);
-
-    // Reset form
-    setProjectName('');
-    setUnitName('');
-    setClientName('');
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setReportDate(new Date());
-    setActivities([{ description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 }]);
-    setIncidents([]);
+    setIsSubmitting(true);
+    try {
+      await onCreateReport(reportData);
+      // Only reset form on success
+      setProjectName('');
+      setUnitName('');
+      setClientName('');
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setReportDate(new Date());
+      setActivities([{ description: '', plannedStart: '', plannedEnd: '', actualStart: '', actualEnd: '', weight: 10 }]);
+      setIncidents([]);
+      onOpenChange(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao criar relatório';
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid = projectName && clientName && startDate && endDate &&
@@ -99,10 +111,10 @@ const CreateReportModal = ({ open, onOpenChange, onCreateReport }: CreateReportM
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             className="gradient-primary min-h-[44px]"
           >
-            Criar Relatório
+            {isSubmitting ? 'Criando...' : 'Criar Relatório'}
           </Button>
         </div>
       </DialogContent>
