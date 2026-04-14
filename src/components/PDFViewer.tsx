@@ -272,36 +272,38 @@ const PDFViewer = ({ url, title }: PDFViewerProps) => {
               </Button>
             </div>
           ) : (
-          <Document
-            file={url}
-            onLoadSuccess={onDocumentLoadSuccess}
-            loading={
-              <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-              </div>
-            }
-            error={
-              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                <p>Erro ao carregar PDF</p>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline mt-2"
-                >
-                  Abrir em nova aba
-                </a>
-              </div>
-            }
-          >
-            <Page
-              pageNumber={pageNumber}
-              width={pageWidth}
-              renderTextLayer={true}
-              renderAnnotationLayer={true}
-              className="shadow-lg"
-            />
-          </Document>
+            <Document
+              key={retryKey}
+              file={url}
+              onLoadSuccess={onDocumentLoadSuccess}
+              loading={
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                </div>
+              }
+              error={
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  <p>Erro ao carregar PDF</p>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline mt-2"
+                  >
+                    Abrir em nova aba
+                  </a>
+                </div>
+              }
+            >
+              <Page
+                pageNumber={pageNumber}
+                width={pageWidth}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                className="shadow-lg"
+              />
+            </Document>
+          )}
         </div>
       </div>
     </div>
