@@ -439,6 +439,8 @@ const Cronograma = () => {
       weight: parseFloat(act.weight) || 0,
       sort_order: index,
       predecessor_ids: act.predecessorIds,
+      etapa: act.etapa?.trim() || null,
+      detailed_description: act.detailed_description?.trim() || null,
     }));
     const success = await saveActivities(activityInputs);
     setSaving(false);
