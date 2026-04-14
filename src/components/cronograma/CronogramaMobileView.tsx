@@ -174,7 +174,6 @@ export function CronogramaMobileView({
           {' · '}
           {stats.overdue > 0 ? `${stats.overdue} em atraso` : 'No prazo'}
         </p>
-        </p>
       </div>
 
       {/* Filter chips */}
