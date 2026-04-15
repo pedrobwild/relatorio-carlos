@@ -171,6 +171,9 @@ export default function PortfolioPage() {
           />
         )}
 
+        {/* Priority Bar */}
+        <PortfolioPriorityBar activeKey={priorityFilter} onSelect={handlePrioritySelect} />
+
         {/* Content: Full-width Grid */}
         <div>
           {/* Main grid */}
