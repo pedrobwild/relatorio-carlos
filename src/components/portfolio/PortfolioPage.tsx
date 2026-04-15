@@ -151,7 +151,7 @@ export default function PortfolioPage() {
 
         {/* Live region for filter count announcements */}
         <div className="sr-only" aria-live="polite" aria-atomic="true">
-          {filters.filtered.length} de {projects.length} obras exibidas
+          {displayedProjects.length} de {projects.length} obras exibidas
         </div>
 
         {/* Command Bar */}
@@ -165,7 +165,7 @@ export default function PortfolioPage() {
           scopeFilter={filters.scopeFilter}
           onScopeChange={filters.setScopeFilter}
           totalCount={projects.length}
-          filteredCount={filters.filtered.length}
+          filteredCount={displayedProjects.length}
           activeFilterCount={filters.advancedFilterCount}
           onOpenFilters={() => filters.setFiltersOpen(true)}
         />
@@ -177,10 +177,10 @@ export default function PortfolioPage() {
         />
 
         {/* Filter results indicator */}
-        {filters.hasAnyFilter && filters.filtered.length > 0 && (
+        {filters.hasAnyFilter && displayedProjects.length > 0 && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="font-medium tabular-nums">
-              {filters.filtered.length} obra{filters.filtered.length !== 1 ? 's' : ''} encontrada{filters.filtered.length !== 1 ? 's' : ''}
+              {displayedProjects.length} obra{displayedProjects.length !== 1 ? 's' : ''} encontrada{displayedProjects.length !== 1 ? 's' : ''}
             </span>
             <span>·</span>
             <button
@@ -219,7 +219,7 @@ export default function PortfolioPage() {
               <PortfolioErrorState error={error} onRetry={() => refetch()} />
             ) : projects.length === 0 ? (
               <EmptyPortfolio onCreateProject={() => navigate('/gestao/nova-obra')} />
-            ) : filters.filtered.length === 0 ? (
+            ) : displayedProjects.length === 0 ? (
               <NoFilterResults
                 onClearFilters={filters.handleClearAll}
                 activeFilterCount={filters.totalFilterCount}
@@ -229,7 +229,7 @@ export default function PortfolioPage() {
                 {/* Mobile: compact list view (default) */}
                 <div className="block md:hidden">
                   <MobileProjectList
-                    projects={filters.filtered}
+                    projects={displayedProjects}
                     onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
                   />
                 </div>
@@ -237,12 +237,12 @@ export default function PortfolioPage() {
                 <div className="hidden md:block">
                   {filters.viewMode === 'cards' ? (
                     <ProjectsCardView
-                      projects={filters.filtered}
+                      projects={displayedProjects}
                       onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
                     />
                   ) : (
                     <ProjectsListView
-                      projects={filters.filtered}
+                      projects={displayedProjects}
                       onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
                     />
                   )}
