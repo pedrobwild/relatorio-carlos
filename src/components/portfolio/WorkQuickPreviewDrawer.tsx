@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  HeartPulse, Clock, FileText, FileSignature,
+  Clock, FileText, FileSignature,
   AlertTriangle, CheckCircle, Calendar, User, Building2,
-  MapPin, Ruler, TrendingDown, ArrowRight,
+  MapPin, Ruler, ArrowRight,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -12,35 +12,8 @@ import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
-import { computeHealthScore, type HealthLevel } from '@/lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
-
-const breakdownLevelColors: Record<HealthLevel, { text: string; fill: string }> = {
-  excellent: { text: 'text-[hsl(var(--success))]', fill: 'hsl(var(--success))' },
-  good: { text: 'text-primary', fill: 'hsl(var(--primary))' },
-  attention: { text: 'text-[hsl(var(--warning))]', fill: 'hsl(var(--warning))' },
-  critical: { text: 'text-destructive', fill: 'hsl(var(--destructive))' },
-};
-
-function getScoreLevel(score: number): HealthLevel {
-  if (score >= 80) return 'excellent';
-  if (score >= 60) return 'good';
-  if (score >= 40) return 'attention';
-  return 'critical';
-}
-
-// ─── Status config ───────────────────────────────────────────────────────────
-
-const statusConfig: Record<string, { label: string; icon: string; color: string }> = {
-  draft:     { label: 'Rascunho',      icon: '✎', color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20' },
-  active:    { label: 'Em andamento', icon: '●', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-  completed: { label: 'Concluída',    icon: '✓', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
-  paused:    { label: 'Pausada',      icon: '‖', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
-  cancelled: { label: 'Cancelada',    icon: '✕', color: 'bg-destructive/10 text-destructive border-destructive/20' },
-};
-
-// Health estimation uses shared utility from lib/healthScore.ts
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
