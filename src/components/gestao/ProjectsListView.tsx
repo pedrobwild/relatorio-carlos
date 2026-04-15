@@ -131,6 +131,9 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Obra
               </TableHead>
+              <TableHead className="w-[100px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
+                Responsável
+              </TableHead>
               <TableHead className="w-[140px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Etapa Atual
               </TableHead>
@@ -171,7 +174,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={9} className="p-0">
+                        <TableCell colSpan={10} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -184,7 +187,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -308,9 +311,30 @@ function ProjectRow({
               <p className="text-[11px] text-muted-foreground/70 truncate mt-0.5 leading-tight">{project.customer_name}</p>
             )}
           </div>
-        </TableCell>
+         </TableCell>
 
-        {/* Etapa Atual */}
+         {/* Responsável */}
+         <TableCell className="py-2">
+           {project.engineer_name ? (() => {
+             const parts = project.engineer_name!.trim().split(/\s+/);
+             const initials = (parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '');
+             const shortName = parts.length > 1
+               ? `${parts[0]} ${parts[parts.length - 1][0]}.`
+               : parts[0];
+             return (
+               <div className="flex items-center gap-1.5 min-w-0">
+                 <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                   <span className="text-[10px] font-bold text-primary uppercase">{initials}</span>
+                 </div>
+                 <span className="text-[11px] font-medium text-foreground/80 truncate max-w-[80px]">{shortName}</span>
+               </div>
+             );
+           })() : (
+             <span className="text-[10px] text-muted-foreground/40">—</span>
+           )}
+         </TableCell>
+
+         {/* Etapa Atual */}
         <TableCell className="py-2">
           {currentStage ? (
             <div className="flex items-center gap-1.5 min-w-0">
