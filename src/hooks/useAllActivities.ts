@@ -14,13 +14,16 @@ export interface UnifiedActivity {
   actual_end: string | null;
   weight: number;
   sort_order: number;
+  status: string;
+  prioridade: string;
 }
 
 export type KanbanStatus = 'not_started' | 'in_progress' | 'completed' | 'overdue';
 
 export function deriveStatus(a: UnifiedActivity): KanbanStatus {
-  if (a.actual_end) return 'completed';
-  if (a.actual_start) {
+  // Use the native status field from atividades table
+  if (a.status === 'concluido') return 'completed';
+  if (a.status === 'em_andamento') {
     if (a.planned_end && new Date(a.planned_end) < new Date()) return 'overdue';
     return 'in_progress';
   }
@@ -33,25 +36,27 @@ export function useAllActivities() {
     queryKey: ['all-activities-kanban'],
     queryFn: async (): Promise<UnifiedActivity[]> => {
       const { data, error } = await supabase
-        .from('project_activities')
-        .select('id, project_id, description, etapa, detailed_description, planned_start, planned_end, actual_start, actual_end, weight, sort_order, projects!inner(name)')
-        .order('sort_order', { ascending: true });
+        .from('atividades')
+        .select('id, obra_id, titulo, descricao, etapa, data_prevista_inicio, data_prevista_fim, data_real_inicio, data_real_fim, status, prioridade, created_at, obras!inner(nome_da_obra)')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       return (data ?? []).map((row: any) => ({
         id: row.id,
-        project_id: row.project_id,
-        project_name: (row.projects as any)?.name ?? 'Sem nome',
-        description: row.description,
+        project_id: row.obra_id,
+        project_name: (row.obras as any)?.nome_da_obra ?? 'Sem nome',
+        description: row.titulo,
         etapa: row.etapa,
-        detailed_description: row.detailed_description,
-        planned_start: row.planned_start,
-        planned_end: row.planned_end,
-        actual_start: row.actual_start,
-        actual_end: row.actual_end,
-        weight: row.weight ?? 0,
-        sort_order: row.sort_order ?? 0,
+        detailed_description: row.descricao,
+        planned_start: row.data_prevista_inicio,
+        planned_end: row.data_prevista_fim,
+        actual_start: row.data_real_inicio,
+        actual_end: row.data_real_fim,
+        weight: 0,
+        sort_order: 0,
+        status: row.status,
+        prioridade: row.prioridade,
       }));
     },
     staleTime: 1000 * 60 * 2,

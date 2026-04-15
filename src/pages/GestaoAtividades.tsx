@@ -118,8 +118,15 @@ export default function GestaoAtividades() {
   );
 }
 
+const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
+  alta: { label: 'Alta', className: 'bg-destructive/10 text-destructive' },
+  media: { label: 'Média', className: 'bg-amber-500/10 text-amber-600' },
+  baixa: { label: 'Baixa', className: 'bg-muted text-muted-foreground' },
+};
+
 function ActivityCard({ activity: a, expanded, onToggle }: { activity: UnifiedActivity; expanded: boolean; onToggle: () => void }) {
   const hasDesc = !!a.detailed_description?.trim();
+  const priority = PRIORITY_LABELS[a.prioridade] ?? null;
 
   return (
     <div className="bg-card rounded-lg border border-border/60 p-3 shadow-sm hover:shadow-md transition-shadow space-y-2">
@@ -127,6 +134,11 @@ function ActivityCard({ activity: a, expanded, onToggle }: { activity: UnifiedAc
       <div className="flex items-center gap-1.5">
         <Building2 className="h-3 w-3 text-primary shrink-0" />
         <span className="text-[11px] font-medium text-primary truncate">{a.project_name}</span>
+        {priority && (
+          <Badge variant="secondary" className={cn('ml-auto text-[10px] px-1.5 py-0', priority.className)}>
+            {priority.label}
+          </Badge>
+        )}
       </div>
 
       {/* Title + expand */}
@@ -155,10 +167,12 @@ function ActivityCard({ activity: a, expanded, onToggle }: { activity: UnifiedAc
       )}
 
       {/* Dates */}
-      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-        <CalendarDays className="h-3 w-3" />
-        <span>{formatDate(a.planned_start)} — {formatDate(a.planned_end)}</span>
-      </div>
+      {(a.planned_start || a.planned_end) && (
+        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+          <CalendarDays className="h-3 w-3" />
+          <span>{formatDate(a.planned_start)} — {formatDate(a.planned_end)}</span>
+        </div>
+      )}
     </div>
   );
 }
