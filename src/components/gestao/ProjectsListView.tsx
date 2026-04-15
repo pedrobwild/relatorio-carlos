@@ -480,8 +480,8 @@ function ProjectRow({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex flex-col items-center gap-0.5">
-                <div className="relative w-14 h-1.5 bg-muted/80 rounded-full overflow-hidden" style={{ width: `${Math.min(100, plannedProgress)}%` ? undefined : undefined }}>
-                  <div className="absolute inset-0 bg-muted/80 rounded-full" style={{ width: '100%' }} />
+                <div className="relative w-14 h-1.5 rounded-full overflow-hidden bg-muted/40">
+                  <div className="absolute inset-y-0 left-0 bg-muted-foreground/20 rounded-full" style={{ width: `${Math.min(100, plannedProgress)}%` }} />
                   <div
                     className={cn(
                       'absolute inset-y-0 left-0 rounded-full transition-all',
