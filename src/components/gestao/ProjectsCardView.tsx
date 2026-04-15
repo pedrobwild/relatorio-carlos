@@ -311,6 +311,7 @@ function ProjectCard({
           {project.engineer_name && <span>{project.engineer_name}</span>}
         </div>
       )}
-    </button>
+      </button>
+    </div>
   );
 }
