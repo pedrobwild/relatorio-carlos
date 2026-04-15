@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import { Users, Milestone, HeartPulse } from 'lucide-react';
+import { Users, Milestone } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { estimateHealthScore, HEALTH_TIER_CONFIG } from './lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -12,24 +11,6 @@ interface PortfolioInsightsPanelProps {
 
 export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsightsPanelProps) {
   const activeProjects = useMemo(() => projects.filter(p => p.status === 'active'), [projects]);
-
-  // ── Health distribution (cross-reference with active projects) ───────
-  const activeProjectIds = useMemo(() => new Set(activeProjects.map(p => p.id)), [activeProjects]);
-
-  const healthDistribution = useMemo(() => {
-    const buckets = [0, 0, 0, 0]; // excellent, good, attention, critical
-    for (const s of summaries) {
-      if (!activeProjectIds.has(s.id)) continue;
-      const h = estimateHealthScore(s);
-      if (h >= 80) buckets[0]++;
-      else if (h >= 60) buckets[1]++;
-      else if (h >= 40) buckets[2]++;
-      else buckets[3]++;
-    }
-    return buckets;
-  }, [summaries, activeProjectIds]);
-
-  const totalHealth = healthDistribution.reduce((a, b) => a + b, 0);
 
   // ── Engineer load ──────────────────────────────────────────────────────
   const engineerLoad = useMemo(() => {
@@ -69,42 +50,6 @@ export function PortfolioInsightsPanel({ projects, summaries }: PortfolioInsight
 
   return (
     <div className="space-y-3" role="region" aria-label="Insights do portfólio">
-      {/* Health Distribution */}
-      <InsightCard icon={<HeartPulse className="h-3.5 w-3.5" />} title="Saúde do Portfólio">
-        {totalHealth === 0 ? (
-          <p className="text-xs text-muted-foreground py-2">Sem dados de saúde disponíveis</p>
-        ) : (
-          <div className="space-y-2.5">
-            <div className="flex h-2 rounded-full overflow-hidden bg-muted/40" role="img" aria-label="Distribuição de saúde">
-              {healthDistribution.map((count, i) => {
-                const pct = (count / totalHealth) * 100;
-                if (pct === 0) return null;
-                return (
-                  <div
-                    key={i}
-                    className={cn('h-full transition-all', HEALTH_TIER_CONFIG[i].barColor)}
-                    style={{ width: `${pct}%` }}
-                    title={`${HEALTH_TIER_CONFIG[i].label}: ${count}`}
-                  />
-                );
-              })}
-            </div>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-              {HEALTH_TIER_CONFIG.map((tier, i) => (
-                <div key={tier.tier} className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <div className={cn('h-2 w-2 rounded-full', tier.barColor)} aria-hidden="true" />
-                    <span className="text-[11px] text-muted-foreground">{tier.label}</span>
-                  </div>
-                  <span className={cn('text-[11px] font-bold tabular-nums', tier.textColor)}>
-                    {healthDistribution[i]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </InsightCard>
 
       {/* Engineer Load */}
       {engineerLoad.length > 0 && (

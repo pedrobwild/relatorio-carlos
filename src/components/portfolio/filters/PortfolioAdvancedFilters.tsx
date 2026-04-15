@@ -39,13 +39,6 @@ const phaseOptions = [
   { value: 'project', label: 'Fase Projeto' },
 ];
 
-const healthOptions = [
-  { value: 'excellent', label: 'Excelente', dot: 'bg-emerald-500' },
-  { value: 'good', label: 'Bom', dot: 'bg-blue-500' },
-  { value: 'attention', label: 'Atenção', dot: 'bg-amber-500' },
-  { value: 'critical', label: 'Crítico', dot: 'bg-red-500' },
-];
-
 const criticalityOptions = [
   { value: 'overdue', label: 'Com itens em atraso' },
   { value: 'blocked', label: 'Bloqueada / Pausada' },
@@ -82,7 +75,7 @@ export function PortfolioAdvancedFilters({
 
   const activeCount = [
     draft.status.length, draft.phase.length, draft.engineers.length,
-    draft.health.length, draft.criticality.length,
+    draft.criticality.length,
     draft.hasPendingDocs !== null ? 1 : 0,
     draft.hasPendingSign !== null ? 1 : 0,
     (draft.dateRange.from || draft.dateRange.to) ? 1 : 0,
@@ -164,24 +157,6 @@ export function PortfolioAdvancedFilters({
                 </div>
               </FilterSection>
             )}
-
-
-            <Separator />
-
-            {/* Health */}
-            <FilterSection title="Saúde">
-              <div className="flex flex-wrap gap-1.5">
-                {healthOptions.map(o => (
-                  <ToggleChip
-                    key={o.value}
-                    label={o.label}
-                    selected={draft.health.includes(o.value)}
-                    onClick={() => setDraft(d => ({ ...d, health: toggleArray(d.health, o.value) }))}
-                    dot={o.dot}
-                  />
-                ))}
-              </div>
-            </FilterSection>
 
             {/* Docs / Signatures */}
             <FilterSection title="Documentação">

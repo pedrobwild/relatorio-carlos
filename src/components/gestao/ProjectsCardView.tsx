@@ -9,8 +9,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AlertTriangle, Clock, CalendarX, CheckCircle, FileText, FileSignature, MoreHorizontal, Eye, Settings, Trash2 } from 'lucide-react';
-import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
-import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useDeleteProject } from '@/hooks/useDeleteProject';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -195,15 +193,8 @@ function ProjectCard({
         </Tooltip>
       </div>
 
-      {/* Row 2: Health Score + Progress — second tier */}
+      {/* Row 2: Progress */}
       <div className="flex items-center gap-3">
-        <div className="shrink-0">
-          {summary ? (
-            <HealthScoreBadge project={summary} size="md" showLabel />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-muted/50 animate-pulse" />
-          )}
-        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
             <span>Progresso</span>
@@ -218,10 +209,6 @@ function ProjectCard({
               style={{ width: `${Math.min(progress, 100)}%` }}
             />
           </div>
-          {/* Health breakdown mini-bars */}
-          {summary && (
-            <HealthScoreBreakdown project={summary} className="mt-1.5" />
-          )}
         </div>
       </div>
 

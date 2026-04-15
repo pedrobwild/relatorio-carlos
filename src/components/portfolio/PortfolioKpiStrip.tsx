@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import {
   HardHat, AlertTriangle, Ban, Ghost,
-  CalendarX, CalendarClock, HeartPulse,
+  CalendarX, CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { ProjectWithCustomer } from '@/infra/repositories';
-import { computeHealthScore } from '@/lib/healthScore';
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -16,9 +16,7 @@ export type KpiFilterKey =
   | 'blocked'
   | 'overdue'
   | 'approaching-deadline'
-  | 'stale-7d'
-  | 'health-critical'
-  | 'health-attention';
+  | 'stale-7d';
 
 export interface KpiDefinition {
   key: KpiFilterKey;
@@ -39,8 +37,6 @@ interface PortfolioKpiStripProps {
 
 const kpiDefinitions: KpiDefinition[] = [
   { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
-  { key: 'health-critical', label: 'Saúde crítica', description: 'Health Score abaixo de 40', icon: <HeartPulse className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'health-attention', label: 'Atenção', description: 'Health Score entre 40-59', icon: <HeartPulse className="h-4 w-4" />, accent: 'warning' },
   { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
   { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
   { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
@@ -102,20 +98,12 @@ function computeKpiValues(
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
   let stale7d = 0, overdueCount = 0, approachingCount = 0;
-  let healthCritical = 0, healthAttention = 0;
 
   for (const p of projects) {
     const s = summaryMap.get(p.id);
     if (p.status === 'active') activeCount++;
     if (p.status === 'paused') blockedCount++;
     if (s && p.status === 'active' && s.overdue_count > 0) criticalCount++;
-
-    // Health score filtering
-    if (s && p.status === 'active') {
-      const hs = computeHealthScore(s);
-      if (hs.score < 40) healthCritical++;
-      else if (hs.score < 60) healthAttention++;
-    }
 
     if (p.planned_end_date && p.status === 'active') {
       const daysLeft = new Date(p.planned_end_date).getTime() - now;
@@ -137,8 +125,6 @@ function computeKpiValues(
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
   map.set('stale-7d', stale7d);
-  map.set('health-critical', healthCritical);
-  map.set('health-attention', healthAttention);
   return map;
 }
 
@@ -151,7 +137,7 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-7"
+      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-5"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
@@ -238,21 +224,6 @@ export function applyKpiFilter(
       });
     case 'blocked':
       return projects.filter(p => p.status === 'paused');
-    case 'health-critical':
-      return projects.filter(p => {
-        if (p.status !== 'active') return false;
-        const s = summaryMap.get(p.id);
-        if (!s) return false;
-        return computeHealthScore(s).score < 40;
-      });
-    case 'health-attention':
-      return projects.filter(p => {
-        if (p.status !== 'active') return false;
-        const s = summaryMap.get(p.id);
-        if (!s) return false;
-        const score = computeHealthScore(s).score;
-        return score >= 40 && score < 60;
-      });
     case 'stale-7d':
       return projects.filter(p => {
         if (p.status !== 'active') return false;

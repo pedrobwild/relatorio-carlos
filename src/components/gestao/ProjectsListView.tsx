@@ -13,8 +13,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye } from 'lucide-react';
-import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
-import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
@@ -143,9 +141,6 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="w-[80px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Atualizado
               </TableHead>
-              <TableHead className="w-[44px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
-                Saúde
-              </TableHead>
               <TableHead className="w-[96px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Entrega
               </TableHead>
@@ -177,7 +172,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={11} className="p-0">
+                        <TableCell colSpan={10} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -190,7 +185,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -423,23 +418,6 @@ function ProjectRow({
           })()}
         </TableCell>
 
-        {/* Health */}
-        <TableCell className="text-center py-2">
-          {summary ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex justify-center">
-                  <HealthScoreBadge project={summary} size="sm" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="p-2 w-48">
-                <HealthScoreBreakdown project={summary} />
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/40">—</span>
-          )}
-        </TableCell>
 
         {/* Entrega */}
         <TableCell className="text-center py-2">
