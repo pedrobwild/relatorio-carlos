@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import {
   HardHat, AlertTriangle, Ban, Ghost,
-  CalendarX, CalendarClock, HeartPulse,
+  CalendarX, CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { ProjectWithCustomer } from '@/infra/repositories';
-import { computeHealthScore } from '@/lib/healthScore';
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -16,9 +16,7 @@ export type KpiFilterKey =
   | 'blocked'
   | 'overdue'
   | 'approaching-deadline'
-  | 'stale-7d'
-  | 'health-critical'
-  | 'health-attention';
+  | 'stale-7d';
 
 export interface KpiDefinition {
   key: KpiFilterKey;
@@ -39,8 +37,6 @@ interface PortfolioKpiStripProps {
 
 const kpiDefinitions: KpiDefinition[] = [
   { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
-  { key: 'health-critical', label: 'Saúde crítica', description: 'Health Score abaixo de 40', icon: <HeartPulse className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'health-attention', label: 'Atenção', description: 'Health Score entre 40-59', icon: <HeartPulse className="h-4 w-4" />, accent: 'warning' },
   { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
   { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
   { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
