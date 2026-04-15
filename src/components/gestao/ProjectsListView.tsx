@@ -55,6 +55,8 @@ interface ProjectsListViewProps {
 export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
+  const deleteProject = useDeleteProject();
+  const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   // Split IDs: obras use cronograma stages, projetos use journey stages
   const { obraIds, projetoIds } = useMemo(() => {
