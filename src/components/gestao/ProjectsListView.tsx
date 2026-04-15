@@ -7,12 +7,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
+import { useDeleteProject } from '@/hooks/useDeleteProject';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
 import { format, differenceInDays } from 'date-fns';
@@ -22,6 +28,8 @@ import { getTemporalStatusLabel } from '@/lib/temporalStatus';
 import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
+
+
 
 const statusColors: Record<string, string> = {
   draft: 'bg-slate-500/10 text-slate-600 border-slate-300/50 dark:text-slate-400 dark:border-slate-500/20',
@@ -47,6 +55,8 @@ interface ProjectsListViewProps {
 export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
+  const deleteProject = useDeleteProject();
+  const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   // Split IDs: obras use cronograma stages, projetos use journey stages
   const { obraIds, projetoIds } = useMemo(() => {
@@ -156,6 +166,8 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                       isExpanded={isExpanded}
                       onToggle={() => toggleExpanded(project.id)}
                       onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
+                      onEdit={() => navigate(`/gestao/obra/${project.id}/editar`)}
+                      onDelete={() => setDeleteTarget(project)}
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
@@ -180,6 +192,32 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Obra</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a obra "{deleteTarget?.name}"? Esta ação é irreversível e excluirá todos os dados relacionados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProject.isPending}
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteProject.mutate(deleteTarget.id);
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              {deleteProject.isPending ? 'Excluindo...' : 'Excluir Definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
@@ -217,7 +255,7 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, currentStage, isExpanded, onToggle, onNavigate,
+  project, summary, currentStage, isExpanded, onToggle, onNavigate, onEdit, onDelete,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
@@ -225,6 +263,8 @@ function ProjectRow({
   isExpanded: boolean;
   onToggle: () => void;
   onNavigate: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
@@ -412,28 +452,35 @@ function ProjectRow({
 
         {/* Action */}
         <TableCell className="py-2 px-1">
-          {project.status === 'draft' ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-6 text-[10px] font-semibold gap-1 px-2 border-violet-300 text-violet-700 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-500/30 dark:hover:bg-violet-500/10"
-              title="Revisar e publicar rascunho"
-              onClick={(e) => { e.stopPropagation(); navigate(`/gestao/obra/${project.id}/wizard`); }}
-            >
-              <Pencil className="h-3 w-3" />
-              Revisar
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover/row:opacity-100 transition-opacity"
-              title="Ver portal"
-              onClick={(e) => { e.stopPropagation(); onNavigate(); }}
-            >
-              <ExternalLink className="h-3 w-3" />
-            </Button>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover/row:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={() => onNavigate()}>
+                <Eye className="h-4 w-4 mr-2" /> Ver obra
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit()}>
+                <Settings className="h-4 w-4 mr-2" /> Editar
+              </DropdownMenuItem>
+              {project.status === 'draft' && (
+                <DropdownMenuItem onClick={() => navigate(`/gestao/obra/${project.id}/wizard`)}>
+                  <Pencil className="h-4 w-4 mr-2" /> Revisar rascunho
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete()}>
+                <Trash2 className="h-4 w-4 mr-2" /> Excluir obra
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     </CollapsibleTrigger>

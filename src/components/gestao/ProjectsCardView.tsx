@@ -1,11 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle, Clock, CalendarX, CheckCircle, FileText, FileSignature } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { AlertTriangle, Clock, CalendarX, CheckCircle, FileText, FileSignature, MoreHorizontal, Eye, Settings, Trash2 } from 'lucide-react';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { useDeleteProject } from '@/hooks/useDeleteProject';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -39,6 +46,8 @@ interface ProjectsCardViewProps {
 export function ProjectsCardView({ projects, onProjectClick }: ProjectsCardViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading } = useProjectSummaryQuery();
+  const deleteProject = useDeleteProject();
+  const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   const summaryMap = useMemo(() => {
     const map = new Map<string, ProjectSummary>();
@@ -61,10 +70,38 @@ export function ProjectsCardView({ projects, onProjectClick }: ProjectsCardViewP
               project={project}
               summary={summary}
               onClick={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
+              onEdit={() => navigate(`/gestao/obra/${project.id}/editar`)}
+              onDelete={() => setDeleteTarget(project)}
             />
           );
         })}
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Obra</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a obra "{deleteTarget?.name}"? Esta ação é irreversível e excluirá todos os dados relacionados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProject.isPending}
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteProject.mutate(deleteTarget.id);
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              {deleteProject.isPending ? 'Excluindo...' : 'Excluir Definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
@@ -73,10 +110,14 @@ function ProjectCard({
   project,
   summary,
   onClick,
+  onEdit,
+  onDelete,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
   onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const overdueCount = summary?.overdue_count ?? 0;
   const pendingCount = summary?.pending_count ?? 0;
@@ -95,13 +136,10 @@ function ProjectCard({
   const hasAlerts = overdueCount > 0 || unsignedFormalizations > 0 || pendingDocuments > 0;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={cn(
-        'group flex flex-col text-left rounded-xl border bg-card p-4 gap-3',
+        'group relative flex flex-col text-left rounded-xl border bg-card p-4 gap-3',
         'hover:shadow-md transition-all',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isOverdue
           ? 'border-destructive/30 bg-destructive/[0.02] hover:border-destructive/50'
           : isApproaching
@@ -109,6 +147,34 @@ function ProjectCard({
           : 'border-border/50 hover:border-primary/30',
       )}
     >
+      {/* Quick actions menu */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm border border-border/50">
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onClick}>
+              <Eye className="h-4 w-4 mr-2" /> Ver obra
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>
+              <Settings className="h-4 w-4 mr-2" /> Editar
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onDelete}>
+              <Trash2 className="h-4 w-4 mr-2" /> Excluir obra
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex flex-col text-left gap-3 focus-visible:outline-none"
+      >
       {/* Row 1: Name + Status — most prominent */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -245,6 +311,7 @@ function ProjectCard({
           {project.engineer_name && <span>{project.engineer_name}</span>}
         </div>
       )}
-    </button>
+      </button>
+    </div>
   );
 }
