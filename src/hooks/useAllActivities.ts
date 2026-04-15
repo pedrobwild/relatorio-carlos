@@ -16,6 +16,7 @@ export interface UnifiedActivity {
   sort_order: number;
   status: string;
   prioridade: string;
+  responsible_user_id: string | null;
 }
 
 export type KanbanStatus = 'not_started' | 'in_progress' | 'completed' | 'overdue';
