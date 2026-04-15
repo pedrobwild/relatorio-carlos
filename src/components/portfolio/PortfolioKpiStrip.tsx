@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
   HardHat, AlertTriangle, Ban, Ghost,
-  CalendarX, CalendarClock,
+  CalendarX, CalendarClock, DollarSign, Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -16,7 +16,15 @@ export type KpiFilterKey =
   | 'blocked'
   | 'overdue'
   | 'approaching-deadline'
-  | 'stale-7d';
+  | 'stale-7d'
+  | 'cost-at-risk'
+  | 'critical-purchase';
+
+export interface ProjectFinancial {
+  budget_approved: number;
+  cost_committed: number;
+  cost_realized: number;
+}
 
 export interface KpiDefinition {
   key: KpiFilterKey;
@@ -29,6 +37,7 @@ export interface KpiDefinition {
 interface PortfolioKpiStripProps {
   projects: ProjectWithCustomer[];
   summaries: ProjectSummary[];
+  financials?: Map<string, ProjectFinancial>;
   activeFilter: KpiFilterKey | null;
   onFilterChange: (key: KpiFilterKey | null) => void;
 }
@@ -41,6 +50,8 @@ const kpiDefinitions: KpiDefinition[] = [
   { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
   { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
   { key: 'stale-7d', label: 'Sem update', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
+  { key: 'cost-at-risk', label: 'Custo em risco', description: 'Obras com desvio de custo acima de 15%', icon: <DollarSign className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'critical-purchase', label: 'Compra crítica', description: 'Obras com compra crítica pendente', icon: <Package className="h-4 w-4" />, accent: 'warning' },
 ];
 
 // ─── Accent styles ───────────────────────────────────────────────────────────
@@ -88,6 +99,7 @@ const accentConfig = {
 function computeKpiValues(
   projects: ProjectWithCustomer[],
   summaries: ProjectSummary[],
+  financials?: Map<string, ProjectFinancial>,
 ): Map<KpiFilterKey, number> {
   const summaryMap = new Map<string, ProjectSummary>();
   for (const s of summaries) summaryMap.set(s.id, s);
@@ -98,6 +110,7 @@ function computeKpiValues(
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
   let stale7d = 0, overdueCount = 0, approachingCount = 0;
+  let costAtRisk = 0;
 
   for (const p of projects) {
     const s = summaryMap.get(p.id);
@@ -116,6 +129,16 @@ function computeKpiValues(
       const refTime = ref ? new Date(ref).getTime() : 0;
       if (refTime > 0 && now - refTime > MS_STALE) stale7d++;
     }
+
+    // Cost at risk: deviation > 15%
+    if (p.status === 'active' && financials) {
+      const fin = financials.get(p.id);
+      if (fin && fin.budget_approved > 0) {
+        if ((fin.cost_committed + fin.cost_realized) / fin.budget_approved - 1 > 0.15) {
+          costAtRisk++;
+        }
+      }
+    }
   }
 
   const map = new Map<KpiFilterKey, number>();
@@ -125,19 +148,21 @@ function computeKpiValues(
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
   map.set('stale-7d', stale7d);
+  map.set('cost-at-risk', costAtRisk);
+  map.set('critical-purchase', 0); // TODO: integrate with project_purchases table
   return map;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function PortfolioKpiStrip({
-  projects, summaries, activeFilter, onFilterChange,
+  projects, summaries, financials, activeFilter, onFilterChange,
 }: PortfolioKpiStripProps) {
-  const values = useMemo(() => computeKpiValues(projects, summaries), [projects, summaries]);
+  const values = useMemo(() => computeKpiValues(projects, summaries, financials), [projects, summaries, financials]);
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-5"
+      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-7"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
@@ -195,6 +220,7 @@ export function applyKpiFilter(
   projects: ProjectWithCustomer[],
   summaries: ProjectSummary[],
   filter: KpiFilterKey,
+  financials?: Map<string, ProjectFinancial>,
 ): ProjectWithCustomer[] {
   const summaryMap = new Map<string, ProjectSummary>();
   for (const s of summaries) summaryMap.set(s.id, s);
@@ -232,6 +258,14 @@ export function applyKpiFilter(
         const refTime = ref ? new Date(ref).getTime() : 0;
         return refTime > 0 && now - refTime > MS_STALE;
       });
+    case 'cost-at-risk':
+      return projects.filter(p => {
+        const fin = financials?.get(p.id);
+        if (!fin || fin.budget_approved <= 0) return false;
+        return (fin.cost_committed + fin.cost_realized) / fin.budget_approved - 1 > 0.15;
+      });
+    case 'critical-purchase':
+      return projects; // TODO: filter when purchases table exists
     default:
       return projects;
   }
