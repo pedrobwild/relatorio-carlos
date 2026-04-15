@@ -1,5 +1,4 @@
 import type { AdvancedFilters } from './types';
-import { estimateHealthScore, healthTierFromScore } from '../lib/healthScore';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -42,11 +41,6 @@ export function applyAdvancedFilters(
 
     if (filters.units.length > 0) {
       if (!p.unit_name || !filters.units.includes(p.unit_name)) return false;
-    }
-
-    if (filters.health.length > 0 && s) {
-      const tier = healthTierFromScore(estimateHealthScore(s));
-      if (!filters.health.includes(tier)) return false;
     }
 
     if (filters.hasPendingDocs === true && s && s.pending_documents === 0) return false;
