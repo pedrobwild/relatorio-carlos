@@ -37,7 +37,7 @@ export function useAllActivities() {
     queryFn: async (): Promise<UnifiedActivity[]> => {
       const { data, error } = await supabase
         .from('obra_tasks')
-        .select('id, project_id, title, description, due_date, start_date, status, priority, sort_order, created_at, projects!inner(name)')
+        .select('id, project_id, title, description, due_date, start_date, status, priority, sort_order, created_at, responsible_user_id, projects!inner(name)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
