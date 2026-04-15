@@ -156,34 +156,10 @@ export default function PortfolioPage() {
           />
         )}
 
-        {/* Content: Sidebar + Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[190px_1fr] xl:grid-cols-[200px_1fr] gap-2.5">
-          {/* Sidebar — desktop only */}
-          <aside className="hidden lg:block order-2 lg:order-1 space-y-4">
-            {summariesLoading && summaries.length === 0 ? (
-              <SidebarSkeleton />
-            ) : summariesError && summaries.length === 0 ? (
-              <PartialErrorBanner section="painel de ações" onRetry={() => refetchSummaries()} />
-            ) : (
-              <>
-                <PortfolioActionInbox
-                  projects={projects}
-                  summaries={summaries}
-                  onNavigate={(id) => {
-                    if (id.startsWith('stale-')) {
-                      setStaleDialogOpen(true);
-                    } else {
-                      navigate(`/obra/${id}`);
-                    }
-                  }}
-                />
-                <PortfolioInsightsPanel projects={projects} summaries={summaries} />
-              </>
-            )}
-          </aside>
-
+        {/* Content: Full-width Grid */}
+        <div>
           {/* Main grid */}
-          <section className="order-1 lg:order-2 min-h-[400px]" aria-label="Lista de obras">
+          <section className="min-h-[400px]" aria-label="Lista de obras">
             {isLoading ? (
               <GridSkeleton rows={6} />
             ) : error ? (
