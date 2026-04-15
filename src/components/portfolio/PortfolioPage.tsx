@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
+import type { ProjectFinancial } from './PortfolioKpiStrip';
 import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar } from './PortfolioCommandBar';
@@ -39,7 +40,10 @@ export default function PortfolioPage() {
   } = useProjectSummaryQuery();
 
   // ── Filters (all filtering logic extracted) ─────────────────────────────
-  const filters = usePortfolioFilters(projects, summaries);
+  // TODO: replace with useProjectFinancials() hook when financial data is available
+  const financials = useMemo(() => new Map<string, ProjectFinancial>(), []);
+
+  const filters = usePortfolioFilters(projects, summaries, financials);
 
   // ── Preview drawer ──────────────────────────────────────────────────────
   const [previewProject, setPreviewProject] = useState<ProjectWithCustomer | null>(null);
@@ -151,6 +155,7 @@ export default function PortfolioPage() {
           <PortfolioKpiStrip
             projects={projects}
             summaries={summaries}
+            financials={financials}
             activeFilter={filters.kpiFilter}
             onFilterChange={handleKpiFilterChange}
           />
