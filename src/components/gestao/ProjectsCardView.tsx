@@ -136,13 +136,10 @@ function ProjectCard({
   const hasAlerts = overdueCount > 0 || unsignedFormalizations > 0 || pendingDocuments > 0;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
       className={cn(
-        'group flex flex-col text-left rounded-xl border bg-card p-4 gap-3',
+        'group relative flex flex-col text-left rounded-xl border bg-card p-4 gap-3',
         'hover:shadow-md transition-all',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isOverdue
           ? 'border-destructive/30 bg-destructive/[0.02] hover:border-destructive/50'
           : isApproaching
@@ -150,6 +147,34 @@ function ProjectCard({
           : 'border-border/50 hover:border-primary/30',
       )}
     >
+      {/* Quick actions menu */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm border border-border/50">
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onClick}>
+              <Eye className="h-4 w-4 mr-2" /> Ver obra
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>
+              <Settings className="h-4 w-4 mr-2" /> Editar
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onDelete}>
+              <Trash2 className="h-4 w-4 mr-2" /> Excluir obra
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex flex-col text-left gap-3 focus-visible:outline-none"
+      >
       {/* Row 1: Name + Status — most prominent */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
