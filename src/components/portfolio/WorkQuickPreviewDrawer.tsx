@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Clock, FileText, FileSignature,
   AlertTriangle, CheckCircle, Calendar, User, Building2,
-  MapPin, Ruler, ArrowRight,
+  MapPin, Ruler, ArrowRight, DollarSign,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -131,65 +131,18 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
         {/* ── Body ───────────────────────────────────────────────────── */}
         <div className="flex-1 px-5 py-4 space-y-5 overflow-y-auto">
 
-          {/* Health + Progress */}
-          <Section title="Saúde & Progresso" icon={<HeartPulse className="h-3.5 w-3.5" />}>
-            <div className="flex items-center gap-4">
-              {health && (
-                <div className="relative shrink-0" aria-label={`Saúde: ${health.score}%`}>
-                  <svg className="h-14 w-14 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
-                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted/20" />
-                    <circle cx="18" cy="18" r="15.5" fill="none" strokeWidth="2.5"
-                      strokeDasharray={`${health.score} ${100 - health.score}`}
-                      strokeLinecap="round" className={health.color} />
-                  </svg>
-                  <span className={cn('absolute inset-0 flex items-center justify-center text-sm font-bold tabular-nums', health.color)}>
-                    {health.score}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 space-y-2">
-                {health && (
-                  <p className={cn('text-sm font-semibold', health.color)}>
-                    {health.tier}
-                  </p>
-                )}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Progresso</span>
-                    <span className="text-xs font-bold tabular-nums">{Math.round(progress)}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted/30 overflow-hidden">
-                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, progress)}%` }} />
-                  </div>
-                </div>
+          {/* Progress */}
+          <Section title="Progresso" icon={<Clock className="h-3.5 w-3.5" />}>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Progresso</span>
+                <span className="text-xs font-bold tabular-nums">{Math.round(progress)}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted/30 overflow-hidden">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, progress)}%` }} />
               </div>
             </div>
           </Section>
-
-          {/* Health Score Breakdown */}
-          {detailedHealth && (
-            <Section title="Detalhamento do Score" icon={<TrendingDown className="h-3.5 w-3.5" />}>
-              <div className="space-y-2.5">
-                {detailedHealth.breakdowns.map((b) => {
-                  const bColors = breakdownLevelColors[getScoreLevel(b.score)];
-                  return (
-                    <div key={b.label} className="space-y-0.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          {b.label} <span className="text-[10px]">({Math.round(b.weight * 100)}%)</span>
-                        </span>
-                        <span className={cn('font-bold tabular-nums', bColors.text)}>{b.score}</span>
-                      </div>
-                      <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${b.score}%`, backgroundColor: bColors.fill }} />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/70">{b.detail}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </Section>
-          )}
 
           <Section title="Prazo" icon={<Calendar className="h-3.5 w-3.5" />}>
             <div className="space-y-1.5 text-sm">
@@ -255,7 +208,7 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
 
           {/* Financial */}
           {contractValue > 0 && (
-            <Section title="Financeiro" icon={<TrendingDown className="h-3.5 w-3.5" />}>
+            <Section title="Financeiro" icon={<DollarSign className="h-3.5 w-3.5" />}>
               <Row
                 label="Valor do contrato"
                 value={`R$ ${contractValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
