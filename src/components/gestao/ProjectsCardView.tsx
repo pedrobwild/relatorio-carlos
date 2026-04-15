@@ -46,6 +46,8 @@ interface ProjectsCardViewProps {
 export function ProjectsCardView({ projects, onProjectClick }: ProjectsCardViewProps) {
   const navigate = useNavigate();
   const { data: summaries = [], isLoading } = useProjectSummaryQuery();
+  const deleteProject = useDeleteProject();
+  const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   const summaryMap = useMemo(() => {
     const map = new Map<string, ProjectSummary>();
@@ -68,10 +70,38 @@ export function ProjectsCardView({ projects, onProjectClick }: ProjectsCardViewP
               project={project}
               summary={summary}
               onClick={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
+              onEdit={() => navigate(`/gestao/obra/${project.id}/editar`)}
+              onDelete={() => setDeleteTarget(project)}
             />
           );
         })}
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Obra</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a obra "{deleteTarget?.name}"? Esta ação é irreversível e excluirá todos os dados relacionados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProject.isPending}
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteProject.mutate(deleteTarget.id);
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              {deleteProject.isPending ? 'Excluindo...' : 'Excluir Definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
@@ -80,10 +110,14 @@ function ProjectCard({
   project,
   summary,
   onClick,
+  onEdit,
+  onDelete,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
   onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const overdueCount = summary?.overdue_count ?? 0;
   const pendingCount = summary?.pending_count ?? 0;
