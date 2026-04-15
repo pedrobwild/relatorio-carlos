@@ -426,28 +426,35 @@ function ProjectRow({
 
         {/* Action */}
         <TableCell className="py-2 px-1">
-          {project.status === 'draft' ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-6 text-[10px] font-semibold gap-1 px-2 border-violet-300 text-violet-700 hover:bg-violet-50 dark:text-violet-400 dark:border-violet-500/30 dark:hover:bg-violet-500/10"
-              title="Revisar e publicar rascunho"
-              onClick={(e) => { e.stopPropagation(); navigate(`/gestao/obra/${project.id}/wizard`); }}
-            >
-              <Pencil className="h-3 w-3" />
-              Revisar
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover/row:opacity-100 transition-opacity"
-              title="Ver portal"
-              onClick={(e) => { e.stopPropagation(); onNavigate(); }}
-            >
-              <ExternalLink className="h-3 w-3" />
-            </Button>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover/row:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={() => onNavigate()}>
+                <Eye className="h-4 w-4 mr-2" /> Ver obra
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit()}>
+                <Settings className="h-4 w-4 mr-2" /> Editar
+              </DropdownMenuItem>
+              {project.status === 'draft' && (
+                <DropdownMenuItem onClick={() => navigate(`/gestao/obra/${project.id}/wizard`)}>
+                  <Pencil className="h-4 w-4 mr-2" /> Revisar rascunho
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete()}>
+                <Trash2 className="h-4 w-4 mr-2" /> Excluir obra
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TableCell>
       </TableRow>
     </CollapsibleTrigger>
