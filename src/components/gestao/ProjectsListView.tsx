@@ -229,7 +229,7 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, currentStage, isExpanded, onToggle, onNavigate,
+  project, summary, currentStage, isExpanded, onToggle, onNavigate, onEdit, onDelete,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
@@ -237,6 +237,8 @@ function ProjectRow({
   isExpanded: boolean;
   onToggle: () => void;
   onNavigate: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
