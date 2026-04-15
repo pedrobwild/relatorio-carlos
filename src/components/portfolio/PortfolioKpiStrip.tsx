@@ -98,20 +98,12 @@ function computeKpiValues(
 
   let activeCount = 0, criticalCount = 0, blockedCount = 0;
   let stale7d = 0, overdueCount = 0, approachingCount = 0;
-  let healthCritical = 0, healthAttention = 0;
 
   for (const p of projects) {
     const s = summaryMap.get(p.id);
     if (p.status === 'active') activeCount++;
     if (p.status === 'paused') blockedCount++;
     if (s && p.status === 'active' && s.overdue_count > 0) criticalCount++;
-
-    // Health score filtering
-    if (s && p.status === 'active') {
-      const hs = computeHealthScore(s);
-      if (hs.score < 40) healthCritical++;
-      else if (hs.score < 60) healthAttention++;
-    }
 
     if (p.planned_end_date && p.status === 'active') {
       const daysLeft = new Date(p.planned_end_date).getTime() - now;
@@ -133,8 +125,6 @@ function computeKpiValues(
   map.set('critical', criticalCount);
   map.set('blocked', blockedCount);
   map.set('stale-7d', stale7d);
-  map.set('health-critical', healthCritical);
-  map.set('health-attention', healthAttention);
   return map;
 }
 
@@ -234,21 +224,6 @@ export function applyKpiFilter(
       });
     case 'blocked':
       return projects.filter(p => p.status === 'paused');
-    case 'health-critical':
-      return projects.filter(p => {
-        if (p.status !== 'active') return false;
-        const s = summaryMap.get(p.id);
-        if (!s) return false;
-        return computeHealthScore(s).score < 40;
-      });
-    case 'health-attention':
-      return projects.filter(p => {
-        if (p.status !== 'active') return false;
-        const s = summaryMap.get(p.id);
-        if (!s) return false;
-        const score = computeHealthScore(s).score;
-        return score >= 40 && score < 60;
-      });
     case 'stale-7d':
       return projects.filter(p => {
         if (p.status !== 'active') return false;
