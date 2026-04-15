@@ -140,6 +140,9 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="w-[56px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Status
               </TableHead>
+              <TableHead className="w-[80px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
+                Atualizado
+              </TableHead>
               <TableHead className="w-[44px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Saúde
               </TableHead>
@@ -174,7 +177,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
-                        <TableCell colSpan={10} className="p-0">
+                        <TableCell colSpan={11} className="p-0">
                           <CollapsibleContent forceMount>
                             <ExpandedContent project={project} contractValue={project.contract_value} />
                           </CollapsibleContent>
@@ -187,7 +190,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             })}
             {projects.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
                 </TableCell>
               </TableRow>
@@ -365,6 +368,45 @@ function ProjectRow({
               {getTemporalStatusLabel(project.status, null, project.created_at)}
             </TooltipContent>
           </Tooltip>
+        </TableCell>
+
+        {/* Atualizado */}
+        <TableCell className="text-center py-2">
+          {(() => {
+            const lastActivityDate = summary?.last_activity_at ? new Date(summary.last_activity_at) : null;
+            const daysSinceUpdate = lastActivityDate ? differenceInDays(getTodayLocal(), lastActivityDate) : null;
+            if (daysSinceUpdate === null || !lastActivityDate) {
+              return <span className="text-[10px] text-muted-foreground/40">—</span>;
+            }
+            let label: string;
+            let cls: string;
+            if (daysSinceUpdate === 0) {
+              label = 'hoje';
+              cls = 'text-emerald-600 dark:text-emerald-400';
+            } else if (daysSinceUpdate === 1) {
+              label = 'ontem';
+              cls = 'text-foreground/70';
+            } else if (daysSinceUpdate <= 6) {
+              label = `há ${daysSinceUpdate}d`;
+              cls = 'text-foreground/70';
+            } else if (daysSinceUpdate <= 13) {
+              label = `há ${daysSinceUpdate}d`;
+              cls = 'text-amber-600 dark:text-amber-400 font-semibold';
+            } else {
+              label = `há ${daysSinceUpdate}d`;
+              cls = 'text-destructive font-bold';
+            }
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={cn('text-[11px] tabular-nums', cls)}>{label}</span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {format(lastActivityDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })()}
         </TableCell>
 
         {/* Health */}
