@@ -7,7 +7,27 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye } from 'lucide-react';
+import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
+import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
+import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
+import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
+import { useDeleteProject } from '@/hooks/useDeleteProject';
+import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
+import { format, differenceInDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { getTemporalStatusLabel } from '@/lib/temporalStatus';
+import { cn } from '@/lib/utils';
+import type { ProjectWithCustomer } from '@/infra/repositories';
+import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
