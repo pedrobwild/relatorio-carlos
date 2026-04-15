@@ -6,6 +6,7 @@ import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQue
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar } from './PortfolioCommandBar';
 import { PortfolioKpiStrip } from './PortfolioKpiStrip';
+import { PortfolioPriorityBar } from './PortfolioPriorityBar';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
@@ -56,12 +57,21 @@ export default function PortfolioPage() {
   // ── Stale projects dialog ──────────────────────────────────────────────
   const [staleDialogOpen, setStaleDialogOpen] = useState(false);
 
+  // ── Priority bar ───────────────────────────────────────────────────────
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
+
   const handleKpiFilterChange = useCallback((key: typeof filters.kpiFilter) => {
+    setPriorityFilter(null);
     if (key === 'stale-7d') {
       setStaleDialogOpen(true);
     } else {
       filters.setKpiFilter(key);
     }
+  }, [filters.setKpiFilter]);
+
+  const handlePrioritySelect = useCallback((key: string | null) => {
+    setPriorityFilter(key);
+    filters.setKpiFilter(null);
   }, [filters.setKpiFilter]);
 
   const handleStaleAction = useCallback((projectId: string) => {
