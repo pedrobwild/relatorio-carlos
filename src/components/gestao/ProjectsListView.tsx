@@ -149,7 +149,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
               <TableHead className="w-[96px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Entrega
               </TableHead>
-              <TableHead className="w-[68px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
+              <TableHead className="w-[110px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Avanço
               </TableHead>
               <TableHead className="w-[40px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
@@ -278,6 +278,20 @@ function ProjectRow({
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocuments = summary?.pending_documents ?? 0;
   const progress = summary?.progress_percentage ?? 0;
+
+  const plannedProgress = useMemo(() => {
+    const startStr = project.actual_start_date ?? project.planned_start_date;
+    if (!startStr || !project.planned_end_date) return 0;
+    const start = new Date(startStr).getTime();
+    const end = new Date(project.planned_end_date).getTime();
+    const now = Date.now();
+    if (now >= end) return 100;
+    if (now <= start) return 0;
+    const total = end - start;
+    if (total <= 0) return 0;
+    return Math.round(((now - start) / total) * 100);
+  }, [project.actual_start_date, project.planned_start_date, project.planned_end_date]);
+  const progressDeviation = progress - plannedProgress;
 
   const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
@@ -461,22 +475,31 @@ function ProjectRow({
           )}
         </TableCell>
 
-        {/* Progress */}
+        {/* Progress — real vs planned */}
         <TableCell className="text-center py-2">
-          <div className="flex items-center gap-1.5 justify-center">
-            <div className="w-10 h-1 bg-muted/80 rounded-full overflow-hidden">
-              <div
-                className={cn(
-                  'h-full rounded-full transition-all',
-                  progress >= 80 ? 'bg-emerald-500' : progress >= 40 ? 'bg-primary' : 'bg-amber-500',
-                )}
-                style={{ width: `${Math.min(100, progress)}%` }}
-              />
-            </div>
-            <span className="text-[10px] font-semibold tabular-nums text-muted-foreground w-6 text-right">
-              {Math.round(progress)}%
-            </span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="relative w-14 h-1.5 rounded-full overflow-hidden bg-muted/40">
+                  <div className="absolute inset-y-0 left-0 bg-muted-foreground/20 rounded-full" style={{ width: `${Math.min(100, plannedProgress)}%` }} />
+                  <div
+                    className={cn(
+                      'absolute inset-y-0 left-0 rounded-full transition-all',
+                      progressDeviation >= 0 ? 'bg-emerald-500' : progressDeviation >= -10 ? 'bg-amber-500' : 'bg-destructive',
+                    )}
+                    style={{ width: `${Math.min(100, progress)}%` }}
+                  />
+                </div>
+                <span className="text-[9px] tabular-nums text-muted-foreground/70 leading-none whitespace-nowrap">
+                  {Math.round(progress)}% vs {plannedProgress}%
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              <p>Real: {Math.round(progress)}% | Planejado: {plannedProgress}%</p>
+              <p>Desvio: {progressDeviation >= 0 ? '+' : ''}{progressDeviation} p.p.</p>
+            </TooltipContent>
+          </Tooltip>
         </TableCell>
 
         {/* Pending — color-coded by urgency */}
