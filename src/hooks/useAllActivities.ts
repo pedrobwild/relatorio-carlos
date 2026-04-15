@@ -16,6 +16,7 @@ export interface UnifiedActivity {
   sort_order: number;
   status: string;
   prioridade: string;
+  responsible_user_id: string | null;
 }
 
 export type KanbanStatus = 'not_started' | 'in_progress' | 'completed' | 'overdue';
@@ -36,7 +37,7 @@ export function useAllActivities() {
     queryFn: async (): Promise<UnifiedActivity[]> => {
       const { data, error } = await supabase
         .from('obra_tasks')
-        .select('id, project_id, title, description, due_date, start_date, status, priority, sort_order, created_at, projects!inner(name)')
+        .select('id, project_id, title, description, due_date, start_date, status, priority, sort_order, created_at, responsible_user_id, projects!inner(name)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -56,6 +57,7 @@ export function useAllActivities() {
         sort_order: row.sort_order ?? 0,
         status: row.status,
         prioridade: row.priority ?? 'media',
+        responsible_user_id: row.responsible_user_id ?? null,
       }));
     },
     staleTime: 1000 * 60 * 2,
