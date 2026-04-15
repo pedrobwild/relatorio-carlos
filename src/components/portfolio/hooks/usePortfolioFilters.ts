@@ -8,7 +8,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { applyKpiFilter, type KpiFilterKey } from '../PortfolioKpiStrip';
+import { applyKpiFilter, type KpiFilterKey, type ProjectFinancial } from '../PortfolioKpiStrip';
 import { type AdvancedFilters, emptyFilters, isFiltersEmpty } from '../filters/types';
 import { applyAdvancedFilters } from '../filters/applyFilters';
 import type { ProjectWithCustomer } from '@/infra/repositories';
@@ -21,6 +21,7 @@ export type ScopeFilter = 'all' | 'obras' | 'projetos';
 export function usePortfolioFilters(
   projects: ProjectWithCustomer[],
   summaries: ProjectSummary[],
+  financials?: Map<string, ProjectFinancial>,
 ) {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -118,7 +119,7 @@ export function usePortfolioFilters(
     }
 
     // KPI
-    if (kpiFilter) result = applyKpiFilter(result, summaries, kpiFilter);
+    if (kpiFilter) result = applyKpiFilter(result, summaries, kpiFilter, financials);
 
     // Advanced
     if (!isFiltersEmpty(advancedFilters)) {
@@ -126,7 +127,7 @@ export function usePortfolioFilters(
     }
 
     return result;
-  }, [projects, scopeFilter, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters]);
+  }, [projects, scopeFilter, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters, financials]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
   const handlePresetChange = useCallback((p: PortfolioPreset) => {
