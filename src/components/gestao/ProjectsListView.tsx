@@ -28,20 +28,8 @@ import { getTemporalStatusLabel } from '@/lib/temporalStatus';
 import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
-import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
-import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
-import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
-import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
-import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
-import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
-import { format, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
-import { getTemporalStatusLabel } from '@/lib/temporalStatus';
-import { cn } from '@/lib/utils';
-import type { ProjectWithCustomer } from '@/infra/repositories';
-import type { ProjectSummary } from '@/infra/repositories/projects.repository';
+
+
 
 const statusColors: Record<string, string> = {
   draft: 'bg-slate-500/10 text-slate-600 border-slate-300/50 dark:text-slate-400 dark:border-slate-500/20',
