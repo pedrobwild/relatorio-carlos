@@ -74,6 +74,41 @@ export default function PortfolioPage() {
     filters.setKpiFilter(null);
   }, [filters.setKpiFilter]);
 
+  // ── Priority-filtered list ─────────────────────────────────────────────
+  const displayedProjects = useMemo(() => {
+    if (!priorityFilter) return filters.filtered;
+    const now = Date.now();
+    const MS_7D = 7 * 24 * 60 * 60 * 1000;
+    const MS_14D = 14 * 24 * 60 * 60 * 1000;
+    const summaryMap = new Map(summaries.map(s => [s.id, s]));
+
+    return filters.filtered.filter(p => {
+      const s = summaryMap.get(p.id);
+      switch (priorityFilter) {
+        case 'critical':
+          return p.status === 'active' && s && s.overdue_count > 0;
+        case 'no-update': {
+          if (p.status !== 'active') return false;
+          const ref = s?.last_activity_at ?? p.created_at;
+          const refTime = ref ? new Date(ref).getTime() : 0;
+          return refTime > 0 && now - refTime > MS_7D;
+        }
+        case 'cost-risk': {
+          const fin = financials.get(p.id);
+          if (!fin || fin.budget_approved <= 0) return false;
+          return (fin.cost_committed + fin.cost_realized) / fin.budget_approved - 1 > 0.15;
+        }
+        case 'delivery-14d': {
+          if (!p.planned_end_date || p.status !== 'active') return false;
+          const diff = new Date(p.planned_end_date).getTime() - now;
+          return diff >= 0 && diff <= MS_14D;
+        }
+        default:
+          return true;
+      }
+    });
+  }, [filters.filtered, priorityFilter, summaries, financials]);
+
   const handleStaleAction = useCallback((projectId: string) => {
     if (projectId.startsWith('stale-')) {
       setStaleDialogOpen(true);
