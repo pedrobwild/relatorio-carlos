@@ -192,6 +192,32 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Obra</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a obra "{deleteTarget?.name}"? Esta ação é irreversível e excluirá todos os dados relacionados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProject.isPending}
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteProject.mutate(deleteTarget.id);
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              {deleteProject.isPending ? 'Excluindo...' : 'Excluir Definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
