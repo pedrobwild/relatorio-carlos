@@ -57,6 +57,7 @@ export function useAllActivities() {
         sort_order: row.sort_order ?? 0,
         status: row.status,
         prioridade: row.priority ?? 'media',
+        responsible_user_id: row.responsible_user_id ?? null,
       }));
     },
     staleTime: 1000 * 60 * 2,
