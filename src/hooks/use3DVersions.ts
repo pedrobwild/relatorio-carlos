@@ -198,12 +198,23 @@ export function use3DImages(versionId: string | undefined) {
         .order('sort_order');
       if (error) throw error;
 
-      const images: Image3D[] = (data || []).map((img: any) => {
-        const { data: urlData } = supabase.storage
-          .from(BUCKET)
-          .getPublicUrl(img.storage_path);
-        return { ...img, url: urlData?.publicUrl };
-      });
+      // Bucket is private — use signed URLs
+      const paths = (data || []).map((img: any) => img.storage_path as string);
+      const { data: signedUrls, error: signError } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrls(paths, 3600); // 1 hour
+
+      const urlMap = new Map<string, string>();
+      if (!signError && signedUrls) {
+        signedUrls.forEach((item) => {
+          if (item.signedUrl) urlMap.set(item.path ?? '', item.signedUrl);
+        });
+      }
+
+      const images: Image3D[] = (data || []).map((img: any) => ({
+        ...img,
+        url: urlMap.get(img.storage_path) ?? '',
+      }));
 
       return images;
     },
