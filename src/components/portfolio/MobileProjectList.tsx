@@ -3,8 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   AlertTriangle, CalendarX, CheckCircle, Clock, ChevronRight, FileSignature, FileText,
 } from 'lucide-react';
-import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
-import { HealthScoreBreakdown } from '@/components/health/HealthScoreBreakdown';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
@@ -107,38 +105,8 @@ function MobileProjectRow({
           : 'border-border/40',
       )}
     >
-      {/* Left: Health score circle */}
-      <div className="shrink-0">
-        {summary ? (
-          <HealthScoreBadge project={summary} size="md" />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
-            <span className="text-[10px] text-muted-foreground">—</span>
-          </div>
-        )}
-      </div>
-
       {/* Center: Project info */}
       <div className="flex-1 min-w-0 space-y-1.5">
-        {/* Row 1: Name + status */}
-        <div className="flex items-center gap-2">
-          <p className="font-semibold text-[13px] text-foreground truncate leading-tight flex-1 min-w-0">
-            {project.name}
-          </p>
-          <div className={cn('w-2 h-2 rounded-full shrink-0', status.dot)} title={getTemporalStatusLabel(project.status, null, project.created_at)} aria-label={`Status: ${status.label}`} role="img" />
-        </div>
-
-        {/* Row 2: Customer + unit */}
-        {(project.customer_name || project.unit_name) && (
-          <p className="text-[11px] text-muted-foreground truncate leading-tight">
-            {[project.customer_name, project.unit_name].filter(Boolean).join(' · ')}
-          </p>
-        )}
-
-        {/* Row 2.5: Health breakdown mini-bars */}
-        {summary && (
-          <HealthScoreBreakdown project={summary} />
-        )}
 
         {/* Row 3: Progress bar + delivery + alerts */}
         <div className="flex items-center gap-2">

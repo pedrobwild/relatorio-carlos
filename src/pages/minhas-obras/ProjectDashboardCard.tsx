@@ -3,7 +3,6 @@ import { ChevronRight, AlertCircle, ClipboardSignature, FileText } from 'lucide-
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { HealthScoreBadge } from '@/components/health/HealthScoreBadge';
 import { SCurveSparkline } from '@/components/scurve/SCurveSparkline';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { Activity } from '@/types/report';
