@@ -105,10 +105,23 @@ function MobileProjectRow({
           : 'border-border/40',
       )}
     >
-      {/* Center: Project info */}
+      {/* Project info */}
       <div className="flex-1 min-w-0 space-y-1.5">
+        {/* Row 1: Name + status */}
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-[13px] text-foreground truncate leading-tight flex-1 min-w-0">
+            {project.name}
+          </p>
+          <div className={cn('w-2 h-2 rounded-full shrink-0', status.dot)} title={getTemporalStatusLabel(project.status, null, project.created_at)} aria-label={`Status: ${status.label}`} role="img" />
+        </div>
 
-        {/* Row 3: Progress bar + delivery + alerts */}
+        {/* Row 2: Customer + unit */}
+        {(project.customer_name || project.unit_name) && (
+          <p className="text-[11px] text-muted-foreground truncate leading-tight">
+            {[project.customer_name, project.unit_name].filter(Boolean).join(' · ')}
+          </p>
+        )}
+
         <div className="flex items-center gap-2">
           {/* Progress */}
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
