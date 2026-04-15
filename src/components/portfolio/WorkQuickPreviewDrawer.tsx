@@ -15,6 +15,16 @@ import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
+// ─── Status config ───────────────────────────────────────────────────────────
+
+const statusConfig: Record<string, { label: string; icon: string; color: string }> = {
+  draft:     { label: 'Rascunho',      icon: '✎', color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20' },
+  active:    { label: 'Em andamento', icon: '●', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+  completed: { label: 'Concluída',    icon: '✓', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
+  paused:    { label: 'Pausada',      icon: '‖', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+  cancelled: { label: 'Cancelada',    icon: '✕', color: 'bg-destructive/10 text-destructive border-destructive/20' },
+};
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface WorkQuickPreviewDrawerProps {
@@ -28,7 +38,6 @@ interface WorkQuickPreviewDrawerProps {
 
 export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }: WorkQuickPreviewDrawerProps) {
   const navigate = useNavigate();
-  const detailedHealth = useMemo(() => summary ? computeHealthScore(summary) : null, [summary]);
 
   if (!project) {
     return (
@@ -43,12 +52,6 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
   }
 
   const status = statusConfig[project.status] ?? statusConfig.active;
-  // Use canonical health score for consistency with the breakdown
-  const health = detailedHealth ? {
-    score: detailedHealth.score,
-    tier: detailedHealth.level === 'excellent' ? 'Excelente' : detailedHealth.level === 'good' ? 'Bom' : detailedHealth.level === 'attention' ? 'Atenção' : 'Crítico',
-    color: breakdownLevelColors[detailedHealth.level].text,
-  } : null;
   
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
