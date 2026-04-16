@@ -17,11 +17,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { AtividadeFormDialog } from '@/components/atividades-obra/AtividadeFormDialog';
 import {
   ChevronLeft, ChevronUp, ChevronDown,
-  Calendar, DollarSign, User, Clock, MessageSquare,
+  Calendar, User, Clock, MessageSquare,
   Send, Trash2, ArrowRight, Pencil, MoreHorizontal,
   Plus, X, Flag, CalendarClock,
   CheckSquare,
@@ -32,33 +32,13 @@ import { cn } from '@/lib/utils';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getMemberName as getMemberNameUtil, getInitials as getInitialsUtil, priorityConfig, statusVariant as statusColors, statusDots } from '@/lib/taskUtils';
 
 const statusLabels: Record<string, string> = {
   pendente: 'Pendente',
   em_andamento: 'Em andamento',
   pausado: 'Pausado',
   concluido: 'Concluído',
-};
-
-const statusColors: Record<string, string> = {
-  pendente: 'bg-yellow-500/15 text-yellow-700 border-yellow-400/30',
-  em_andamento: 'bg-blue-500/15 text-blue-700 border-blue-400/30',
-  pausado: 'bg-orange-500/15 text-orange-700 border-orange-400/30',
-  concluido: 'bg-green-500/15 text-green-700 border-green-400/30',
-};
-
-const statusDots: Record<string, string> = {
-  pendente: 'bg-yellow-500',
-  em_andamento: 'bg-blue-500',
-  pausado: 'bg-orange-500',
-  concluido: 'bg-green-500',
-};
-
-const priorityConfig: Record<string, { label: string; color: string; icon: string }> = {
-  baixa: { label: 'Baixa', color: 'text-muted-foreground', icon: '▽' },
-  media: { label: 'Média', color: 'text-amber-600', icon: '═' },
-  alta: { label: 'Alta', color: 'text-orange-600', icon: '△' },
-  critica: { label: 'Crítica', color: 'text-destructive', icon: '⬆' },
 };
 
 const QUICK_COMMENTS = [
@@ -90,18 +70,15 @@ export default function AtividadeDetalhe() {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [showSubtaskInput, setShowSubtaskInput] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
   const subtaskInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const goBack = () => navigate(`/obra/${projectId}/atividades`);
 
-  const getMemberName = (userId: string | null) => {
-    if (!userId) return null;
-    const u = staffUsers.find(u => u.id === userId);
-    return u?.nome || u?.email || null;
-  };
-
-  const getInitials = (name: string) =>
-    name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  const getMemberName = (userId: string | null) => getMemberNameUtil(staffUsers, userId);
+  const getInitials = (name: string) => getInitialsUtil(name);
 
   const handleAddComment = (text?: string) => {
     const content = text || newComment.trim();
@@ -134,6 +111,13 @@ export default function AtividadeDetalhe() {
       updateTask.mutate({ id: task.id, updates: { description: descriptionDraft || null } });
       setEditingDescription(false);
     }
+  };
+
+  const handleSaveTitle = () => {
+    if (task && titleDraft.trim()) {
+      updateTask.mutate({ id: task.id, updates: { title: titleDraft.trim() } });
+    }
+    setEditingTitle(false);
   };
 
   const handleAddSubtask = () => {
@@ -300,7 +284,7 @@ export default function AtividadeDetalhe() {
         {/* Custo */}
         {task.cost != null && (
           <InfoRow
-            icon={<DollarSign className="h-4 w-4" />}
+            icon={<span className="text-xs font-bold text-muted-foreground">R$</span>}
             label="Custo"
             value={`R$ ${task.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           />
@@ -655,14 +639,38 @@ export default function AtividadeDetalhe() {
         </DropdownMenu>
       </div>
 
-      {/* Title */}
-      <h1 className={cn(
-        'font-bold tracking-tight mb-5',
-        isMobile ? 'text-xl' : 'text-2xl',
-        task.status === 'concluido' && 'line-through opacity-60'
-      )}>
-        {task.title}
-      </h1>
+      {/* Title — inline editable */}
+      {editingTitle ? (
+        <div className="mb-5">
+          <Input
+            ref={titleInputRef}
+            value={titleDraft}
+            onChange={e => setTitleDraft(e.target.value)}
+            className={cn('font-bold tracking-tight border-0 border-b-2 border-primary/40 rounded-none px-0 focus-visible:ring-0 bg-transparent', isMobile ? 'text-xl h-auto' : 'text-2xl h-auto')}
+            onKeyDown={e => {
+              if (e.key === 'Enter') handleSaveTitle();
+              if (e.key === 'Escape') setEditingTitle(false);
+            }}
+            onBlur={handleSaveTitle}
+            autoFocus
+          />
+        </div>
+      ) : (
+        <h1
+          className={cn(
+            'font-bold tracking-tight mb-5 cursor-text rounded-lg px-1 -mx-1 transition-colors hover:bg-muted/40',
+            isMobile ? 'text-xl' : 'text-2xl',
+            task.status === 'concluido' && 'line-through opacity-60'
+          )}
+          onClick={() => {
+            setTitleDraft(task.title);
+            setEditingTitle(true);
+          }}
+          title="Clique para editar"
+        >
+          {task.title}
+        </h1>
+      )}
 
       {/* Two-column (desktop) / stacked (mobile) */}
       {isMobile ? (

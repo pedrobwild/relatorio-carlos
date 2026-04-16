@@ -23,6 +23,8 @@ export interface ObraTask {
   updated_at: string;
   completed_at: string | null;
   days_overdue: number | null;
+  /** Total subtask count (from aggregate) */
+  subtask_total?: number;
 }
 
 export interface ObraTaskInput {
@@ -55,12 +57,16 @@ export function useObraTasks(projectId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('obra_tasks')
-        .select('*')
+        .select('*, obra_task_subtasks(count)')
         .eq('project_id', projectId!)
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as ObraTask[];
+      return (data ?? []).map((row: any) => {
+        const { obra_task_subtasks, ...rest } = row;
+        const subtask_total = obra_task_subtasks?.[0]?.count ?? 0;
+        return { ...rest, subtask_total } as ObraTask;
+      });
     },
     enabled: !!projectId,
   });

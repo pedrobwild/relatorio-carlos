@@ -80,7 +80,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData 
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Ação *</Label>
+            <Label htmlFor="title">Título da atividade *</Label>
             <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Comprar material elétrico" required />
           </div>
 

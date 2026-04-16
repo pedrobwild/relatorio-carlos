@@ -5,13 +5,15 @@ import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LayoutList, Columns3, User } from 'lucide-react';
+import { Plus, LayoutList, Columns3, User, Search } from 'lucide-react';
 import { AtividadesListView } from '@/components/atividades-obra/AtividadesListView';
 import { AtividadesKanbanView } from '@/components/atividades-obra/AtividadesKanbanView';
 import { AtividadesMobileListView } from '@/components/atividades-obra/AtividadesMobileListView';
 import { AtividadeFormDialog } from '@/components/atividades-obra/AtividadeFormDialog';
 import { cn } from '@/lib/utils';
+import { isTaskOverdue } from '@/lib/taskUtils';
 
 export default function AtividadesObra() {
   const { projectId } = useProjectNavigation();
@@ -21,6 +23,7 @@ export default function AtividadesObra() {
   const [view, setView] = useState<'list' | 'kanban'>('kanban');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterResponsible, setFilterResponsible] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleCreate = (input: ObraTaskInput) => {
     createTask.mutate(input);
@@ -34,17 +37,30 @@ export default function AtividadesObra() {
   }, [tasks, staffUsers]);
 
   const filteredTasks = useMemo(() => {
-    if (filterResponsible === 'all') return tasks;
-    if (filterResponsible === 'unassigned') return tasks.filter(t => !t.responsible_user_id);
-    return tasks.filter(t => t.responsible_user_id === filterResponsible);
-  }, [tasks, filterResponsible]);
+    let result = tasks;
+    if (filterResponsible === 'all') { /* no-op */ }
+    else if (filterResponsible === 'unassigned') result = result.filter(t => !t.responsible_user_id);
+    else result = result.filter(t => t.responsible_user_id === filterResponsible);
 
-  const statusCounts = {
-    total: filteredTasks.length,
-    pendente: filteredTasks.filter(t => t.status === 'pendente').length,
-    em_andamento: filteredTasks.filter(t => t.status === 'em_andamento').length,
-    concluido: filteredTasks.filter(t => t.status === 'concluido').length,
-  };
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        (t.description && t.description.toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [tasks, filterResponsible, searchQuery]);
+
+  // Complete status counts (all 4 statuses + overdue)
+  const statusCounts = useMemo(() => {
+    const pendente = filteredTasks.filter(t => t.status === 'pendente').length;
+    const em_andamento = filteredTasks.filter(t => t.status === 'em_andamento').length;
+    const pausado = filteredTasks.filter(t => t.status === 'pausado').length;
+    const concluido = filteredTasks.filter(t => t.status === 'concluido').length;
+    const atrasado = filteredTasks.filter(t => isTaskOverdue(t)).length;
+    return { total: filteredTasks.length, pendente, em_andamento, pausado, concluido, atrasado };
+  }, [filteredTasks]);
 
   const ResponsibleFilter = () => (
     <Select value={filterResponsible} onValueChange={setFilterResponsible}>
@@ -79,8 +95,17 @@ export default function AtividadesObra() {
           </Button>
         </div>
 
-        <div className="mb-3">
+        <div className="flex gap-2 mb-3">
           <ResponsibleFilter />
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <Input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Buscar..."
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
         </div>
 
         <AtividadesMobileListView
@@ -129,12 +154,35 @@ export default function AtividadesObra() {
               <div className="w-2 h-2 rounded-full bg-blue-500" />
               <span className="tabular-nums font-medium">{statusCounts.em_andamento}</span>
             </div>
+            {statusCounts.pausado > 0 && (
+              <div className="flex items-center gap-1 text-xs shrink-0">
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <span className="tabular-nums font-medium">{statusCounts.pausado}</span>
+              </div>
+            )}
+            {statusCounts.atrasado > 0 && (
+              <div className="flex items-center gap-1 text-xs shrink-0">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="tabular-nums font-medium">{statusCounts.atrasado}</span>
+              </div>
+            )}
             <div className="flex items-center gap-1 text-xs shrink-0">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="tabular-nums font-medium">{statusCounts.concluido}</span>
             </div>
             <div className="w-px h-3 bg-border" />
             <ResponsibleFilter />
+
+            {/* Search */}
+            <div className="relative shrink-0">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Buscar..."
+                className="h-8 w-[160px] pl-8 text-xs"
+              />
+            </div>
           </div>
 
           <div className="flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5 shrink-0" role="radiogroup">

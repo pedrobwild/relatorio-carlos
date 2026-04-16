@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Pencil, Trash2, Calendar, DollarSign, User } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Calendar, User, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
@@ -14,6 +14,7 @@ import { DeleteTaskDialog } from './DeleteTaskDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { cn } from '@/lib/utils';
+import { getMemberName, isTaskOverdue, priorityConfig } from '@/lib/taskUtils';
 
 interface Props {
   tasks: ObraTask[];
@@ -51,12 +52,6 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
   const { projectId } = useProjectNavigation();
   const [dragOverColumn, setDragOverColumn] = useState<ObraTaskStatus | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
-
-  const getMemberName = (userId: string | null) => {
-    if (!userId) return null;
-    const u = staffUsers.find(u => u.id === userId);
-    return u?.nome || u?.email || null;
-  };
 
   if (isLoading) {
     return (
@@ -121,8 +116,9 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
               </div>
               <div className="p-1.5 space-y-1.5 flex-1 bg-muted/20 rounded-b-2xl">
                 {colTasks.map(task => {
-                  const responsible = getMemberName(task.responsible_user_id);
-                  const isOverdue = task.due_date && task.status !== 'concluido' && task.due_date < new Date().toISOString().slice(0, 10);
+                  const responsible = getMemberName(staffUsers, task.responsible_user_id);
+                  const overdue = isTaskOverdue(task);
+                  const prio = priorityConfig[task.priority];
                   return (
                     <Card
                       key={task.id}
@@ -159,6 +155,10 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                           <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{task.description}</p>
                         )}
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                          {/* Priority indicator */}
+                          <span className={cn('flex items-center gap-0.5 font-medium', prio.color)}>
+                            <span className="text-xs">{prio.icon}</span> {prio.label}
+                          </span>
                           {responsible && (
                             <span className="flex items-center gap-1 bg-muted/50 rounded-md px-1.5 py-0.5">
                               <User className="h-3 w-3" /> {responsible}
@@ -167,7 +167,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                           {task.due_date && (
                             <span className={cn(
                               'flex items-center gap-1 rounded-md px-1.5 py-0.5',
-                              isOverdue ? 'bg-destructive/10 text-destructive font-semibold' : 'bg-muted/50'
+                              overdue ? 'bg-destructive/10 text-destructive font-semibold' : 'bg-muted/50'
                             )}>
                               <Calendar className="h-3 w-3" />
                               {format(new Date(task.due_date + 'T00:00:00'), 'dd/MM', { locale: ptBR })}
@@ -175,8 +175,12 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
                           )}
                           {task.cost != null && (
                             <span className="flex items-center gap-1 bg-muted/50 rounded-md px-1.5 py-0.5">
-                              <DollarSign className="h-3 w-3" />
-                              {task.cost.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                              R$ {task.cost.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                            </span>
+                          )}
+                          {(task.subtask_total ?? 0) > 0 && (
+                            <span className="flex items-center gap-1 bg-muted/50 rounded-md px-1.5 py-0.5">
+                              <CheckSquare className="h-3 w-3" /> {task.subtask_total}
                             </span>
                           )}
                         </div>

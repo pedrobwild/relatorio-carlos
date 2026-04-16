@@ -10,6 +10,7 @@ import { DeleteTaskDialog } from './DeleteTaskDialog';
 import { EmptyState, PageSkeleton } from '@/components/ui/states';
 import { ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getMemberName } from '@/lib/taskUtils';
 
 interface Props {
   tasks: ObraTask[];
@@ -37,11 +38,7 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
   const [deleteTarget, setDeleteTarget] = useState<ObraTask | null>(null);
   const { data: staffUsers = [] } = useStaffUsers();
 
-  const getMemberName = (userId: string | null) => {
-    if (!userId) return null;
-    const u = staffUsers.find(u => u.id === userId);
-    return u?.nome || u?.email || null;
-  };
+  const resolveName = (userId: string | null) => getMemberName(staffUsers, userId);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return tasks;
@@ -95,7 +92,7 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
               <AtividadeMobileCard
                 key={task.id}
                 task={task}
-                responsibleName={getMemberName(task.responsible_user_id)}
+                responsibleName={resolveName(task.responsible_user_id)}
                 onUpdateStatus={onUpdateStatus}
                 onDelete={(id) => {
                   const t = tasks.find(x => x.id === id);
