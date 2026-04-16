@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -18,7 +17,6 @@ import {
   useCreateStageDate,
   useProposeStageDate,
   useConfirmStageDate,
-  type StageDate,
 } from '@/hooks/useStageDates';
 
 function TimePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -49,7 +47,7 @@ interface MeetingCTAProps {
 }
 
 export function MeetingCTA({ stageName, projectId, isAdmin, ctaText }: MeetingCTAProps) {
-  const stageKey = stageName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const stageKey = stageName.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_]/g, '');
   const { data: dates, isLoading } = useStageDates(projectId, stageKey);
   const createDate = useCreateStageDate(projectId);
   const propose = useProposeStageDate(projectId);

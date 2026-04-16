@@ -9,30 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { JourneyStage } from '@/hooks/useProjectJourney';
 import { journeyCopy } from '@/constants/journeyCopy';
-
-/* ─── Visual state (reuses same logic as timeline) ─── */
-
-type VisualState = 'completed' | 'current' | 'next' | 'blocked' | 'validating' | 'future';
-
-function deriveVisualState(
-  stage: JourneyStage,
-  index: number,
-  stages: JourneyStage[],
-): VisualState {
-  if (stage.status === 'completed') return 'completed';
-  if (stage.status === 'in_progress') return 'current';
-  if (stage.status === 'waiting_action') return 'validating';
-  if (stage.status === 'pending') {
-    if (stage.dependencies_text) return 'blocked';
-    const lastNonPendingIdx = stages.reduce(
-      (acc, s, i) => (s.status !== 'pending' ? i : acc),
-      -1,
-    );
-    if (index === lastNonPendingIdx + 1) return 'next';
-    return 'future';
-  }
-  return 'future';
-}
+import { deriveVisualState, type VisualState } from './deriveVisualState';
 
 const vsConfig: Record<VisualState, {
   label: string;

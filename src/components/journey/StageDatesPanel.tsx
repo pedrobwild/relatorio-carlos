@@ -57,10 +57,10 @@ interface StageDatesPanelProps {
   stageName: string;
 }
 
-export function StageDatesPanel({ stageId, projectId, isAdmin, stageName }: StageDatesPanelProps) {
+export function StageDatesPanel({ stageId: _stageId, projectId, isAdmin, stageName }: StageDatesPanelProps) {
   const [showCreate, setShowCreate] = useState(false);
 
-  const stageKey = stageName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  const stageKey = stageName.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_]/g, '');
   const { data: granularDates, isLoading } = useStageDates(projectId, stageKey);
 
   const hasGranularDates = (granularDates?.length ?? 0) > 0;

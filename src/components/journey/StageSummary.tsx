@@ -8,20 +8,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
+import { JourneyStage } from '@/hooks/useProjectJourney';
 import { journeyCopy } from '@/constants/journeyCopy';
-
-/* ─── Visual state derivation ─── */
-
-type VisualState = 'completed' | 'current' | 'next' | 'blocked' | 'validating' | 'future';
-
-function deriveVisualStateStandalone(stage: JourneyStage): VisualState {
-  if (stage.status === 'completed') return 'completed';
-  if (stage.status === 'in_progress') return 'current';
-  if (stage.status === 'waiting_action') return 'validating';
-  if (stage.dependencies_text) return 'blocked';
-  return 'future';
-}
+import { deriveVisualStateStandalone, type VisualState } from './deriveVisualState';
 
 const vsConfig: Record<VisualState, {
   label: string;
@@ -208,7 +197,7 @@ export function StageSummary({ stage, isExpanded, hideChevron }: StageSummaryPro
           <div className="mt-1.5 max-w-[180px]">
             <Progress
               value={progressPct}
-              className={cn("h-1", allDone && "animate-pulse")}
+              className="h-1"
             />
           </div>
         )}

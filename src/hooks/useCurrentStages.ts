@@ -13,7 +13,7 @@ export interface CurrentStageInfo {
  */
 export function useCurrentStages(projectIds: string[]) {
   return useQuery({
-    queryKey: ['current-stages', projectIds.sort().join(',')],
+    queryKey: ['current-stages', [...projectIds].sort().join(',')],
     queryFn: async (): Promise<Map<string, CurrentStageInfo>> => {
       if (projectIds.length === 0) return new Map();
 

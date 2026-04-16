@@ -1,9 +1,9 @@
-import { Check, Clock, Circle, Lock, Eye, ChevronRight } from 'lucide-react';
+import { Check, Circle, Lock, Eye, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { JourneyStage, JourneyStageStatus } from '@/hooks/useProjectJourney';
+import { JourneyStage } from '@/hooks/useProjectJourney';
 import {
   Tooltip,
   TooltipContent,
@@ -11,43 +11,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { journeyCopy } from '@/constants/journeyCopy';
+import { deriveVisualState, type VisualState } from './deriveVisualState';
 
 interface JourneyTimelineProps {
   stages: JourneyStage[];
   activeStageId: string | null;
   onStageClick: (stageId: string) => void;
-}
-
-type VisualState = 'completed' | 'current' | 'next' | 'blocked' | 'validating' | 'future';
-
-function deriveVisualState(
-  stage: JourneyStage,
-  index: number,
-  stages: JourneyStage[],
-): VisualState {
-  if (stage.status === 'completed') return 'completed';
-
-  // Find the index of the first non-completed stage in the list
-  const firstNonCompletedIdx = stages.findIndex(s => s.status !== 'completed');
-
-  if (stage.status === 'in_progress' || stage.status === 'waiting_action') {
-    // Only the first non-completed stage is visually "current"
-    if (index === firstNonCompletedIdx) return 'current';
-    // Subsequent in_progress/waiting_action stages: show as "next" if right after current, else "future"
-    const prevCompleted = index > 0 && stages[index - 1].status === 'completed';
-    if (prevCompleted) return 'next';
-    return 'future';
-  }
-
-  if (stage.status === 'pending') {
-    // The first pending stage right after a completed/in_progress/waiting_action is "next"
-    if (index > 0 && stages[index - 1].status === 'completed') return 'next';
-    if (stage.dependencies_text) return 'blocked';
-    if (index > 0 && (stages[index - 1].status === 'pending' || stages[index - 1].status === 'in_progress' || stages[index - 1].status === 'waiting_action')) return 'blocked';
-    return 'future';
-  }
-
-  return 'future';
 }
 
 const statusLabels: Record<VisualState, string> = {

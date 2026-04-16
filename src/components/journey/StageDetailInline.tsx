@@ -38,7 +38,7 @@ interface StageDetailInlineProps {
 }
 
 export function StageDetailInline({
-  stage, projectId, isAdmin, nextStageName, onStageCompleted, allStages = [],
+  stage, projectId, isAdmin, nextStageName, onStageCompleted, allStages: _allStages = [],
 }: StageDetailInlineProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [instrEditorOpen, setInstrEditorOpen] = useState(false);
@@ -222,9 +222,9 @@ export function StageDetailInline({
       {!isEditing && stage.description && !isMedicaoTecnicaStage && (
         <Collapsible>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between h-10 text-xs text-muted-foreground hover:text-foreground gap-2 px-3">
+            <Button variant="ghost" className="group w-full justify-between h-10 text-xs text-muted-foreground hover:text-foreground gap-2 px-3">
               <span className="font-medium">Sobre esta etapa</span>
-              <ChevronDown className="h-3.5 w-3.5 transition-transform [[data-state=open]>&]:rotate-180" />
+              <ChevronDown className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-180" />
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-2">

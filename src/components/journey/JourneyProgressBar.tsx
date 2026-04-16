@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { JourneyStage } from '@/hooks/useProjectJourney';
@@ -75,7 +75,7 @@ export function JourneyProgressBar({ stages, activeStageId, onNextClick }: Journ
               <p className="text-xs font-medium text-primary">Próxima etapa</p>
               <p className="text-sm font-semibold text-foreground truncate">{nextStage.name}</p>
             </div>
-            <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))] shrink-0" />
+            <ArrowRight className="h-4 w-4 text-primary shrink-0" />
           </motion.button>
         )}
       </AnimatePresence>
