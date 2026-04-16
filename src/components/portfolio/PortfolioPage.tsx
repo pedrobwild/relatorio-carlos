@@ -1,11 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
-import type { ProjectFinancial } from './PortfolioKpiStrip';
 import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar } from './PortfolioCommandBar';
-import { PortfolioKpiStrip } from './PortfolioKpiStrip';
+import { PortfolioKpiStrip, type ProjectFinancial } from './PortfolioKpiStrip';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
@@ -18,9 +17,9 @@ import { usePortfolioFilters } from './hooks/usePortfolioFilters';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { StaleProjectsDialog } from './StaleProjectsDialog';
 import {
-  PortfolioPageSkeleton, KpiStripSkeleton, SidebarSkeleton,
+  PortfolioPageSkeleton, KpiStripSkeleton,
   GridSkeleton, EmptyPortfolio, NoFilterResults,
-  PortfolioErrorState, StaleDataBanner, PartialErrorBanner,
+  PortfolioErrorState, StaleDataBanner,
 } from './PortfolioStates';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
@@ -36,22 +35,21 @@ export default function PortfolioPage() {
   const {
     data: summaries = [],
     isLoading: summariesLoading,
-    error: summariesError,
-    refetch: refetchSummaries,
   } = useProjectSummaryQuery();
 
   // ── Document title with alert count ─────────────────────────────────────
+  // Count unique projects that need attention (not individual issues)
   const alertCount = useMemo(() => {
     const now = Date.now();
     let count = 0;
     const summaryMap = new Map(summaries.map(s => [s.id, s]));
     for (const p of projects) {
       if (p.status !== 'active') continue;
-      // Overdue delivery
-      if (p.planned_end_date && new Date(p.planned_end_date).getTime() < now && !p.actual_end_date) count++;
-      // Overdue activities
+      const isOverdueDelivery = p.planned_end_date && new Date(p.planned_end_date).getTime() < now && !p.actual_end_date;
       const s = summaryMap.get(p.id);
-      if (s && s.overdue_count > 0) count++;
+      const hasOverdueActivities = s && s.overdue_count > 0;
+      // Count each project only once even if it has multiple issues
+      if (isOverdueDelivery || hasOverdueActivities) count++;
     }
     return count;
   }, [projects, summaries]);
@@ -78,10 +76,11 @@ export default function PortfolioPage() {
   const handleKpiFilterChange = useCallback((key: typeof filters.kpiFilter) => {
     if (key === 'stale-7d') {
       setStaleDialogOpen(true);
+      filters.setKpiFilter(key);
     } else {
       filters.setKpiFilter(key);
     }
-  }, [filters.setKpiFilter]);
+  }, [filters]);
 
   const displayedProjects = filters.filtered;
 

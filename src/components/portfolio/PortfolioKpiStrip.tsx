@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  HardHat, AlertTriangle, Ban, Ghost,
+  HardHat, Ban, Ghost,
   CalendarX, CalendarClock, DollarSign, Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

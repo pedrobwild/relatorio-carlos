@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
@@ -122,34 +122,39 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
     sorted.sort((a, b) => {
       const { key, direction } = sortConfig;
       const mul = direction === 'asc' ? 1 : -1;
+      let cmp = 0;
       if (key === 'obra') {
-        return mul * (a.name ?? '').localeCompare(b.name ?? '', 'pt-BR');
-      }
-      if (key === 'responsavel') {
-        return mul * (a.engineer_name ?? '').localeCompare(b.engineer_name ?? '', 'pt-BR');
-      }
-      if (key === 'status') {
-        return mul * (a.status ?? '').localeCompare(b.status ?? '', 'pt-BR');
-      }
-      if (key === 'entrega') {
+        cmp = (a.name ?? '').localeCompare(b.name ?? '', 'pt-BR');
+      } else if (key === 'responsavel') {
+        const aName = a.engineer_name ?? '';
+        const bName = b.engineer_name ?? '';
+        // Push empty values to the end regardless of direction
+        if (!aName && bName) return 1;
+        if (aName && !bName) return -1;
+        cmp = aName.localeCompare(bName, 'pt-BR');
+      } else if (key === 'status') {
+        cmp = (a.status ?? '').localeCompare(b.status ?? '', 'pt-BR');
+      } else if (key === 'entrega') {
         const aDate = a.planned_end_date ? new Date(a.planned_end_date).getTime() : null;
         const bDate = b.planned_end_date ? new Date(b.planned_end_date).getTime() : null;
+        // Push nulls to end regardless of direction
         if (aDate === null && bDate === null) return 0;
         if (aDate === null) return 1;
         if (bDate === null) return -1;
-        return mul * (aDate - bDate);
-      }
-      if (key === 'avanco') {
+        cmp = aDate - bDate;
+      } else if (key === 'avanco') {
         const aVal = summaryMap.get(a.id)?.progress_percentage ?? 0;
         const bVal = summaryMap.get(b.id)?.progress_percentage ?? 0;
-        return mul * (aVal - bVal);
-      }
-      if (key === 'pendencias') {
+        cmp = aVal - bVal;
+      } else if (key === 'pendencias') {
         const aVal = summaryMap.get(a.id)?.overdue_count ?? 0;
         const bVal = summaryMap.get(b.id)?.overdue_count ?? 0;
-        return mul * (aVal - bVal);
+        cmp = aVal - bVal;
       }
-      return 0;
+      // Primary sort with direction, then stable tie-break by name
+      const result = mul * cmp;
+      if (result !== 0) return result;
+      return (a.name ?? '').localeCompare(b.name ?? '', 'pt-BR');
     });
     return sorted;
   }, [projects, sortConfig, summaryMap]);
@@ -162,8 +167,8 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
     );
   };
 
-  const SortIcon = ({ colKey }: { colKey: string }) => {
-    if (sortConfig.key !== colKey) return <ArrowUpDown className="h-3 w-3 ml-1 inline-block" />;
+  const sortIcon = (colKey: string) => {
+    if (sortConfig.key !== colKey) return <ArrowUpDown className="h-3 w-3 ml-1 inline-block opacity-40" />;
     return sortConfig.direction === 'asc'
       ? <ArrowUp className="h-3 w-3 ml-1 inline-block" />
       : <ArrowDown className="h-3 w-3 ml-1 inline-block" />;
@@ -181,28 +186,28 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
             <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
               <TableHead className="w-7 px-1" />
               <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('obra')}>
-                Obra<SortIcon colKey="obra" />
+                Obra{sortIcon('obra')}
               </TableHead>
               <TableHead className="w-[100px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('responsavel')}>
-                Responsável<SortIcon colKey="responsavel" />
+                Responsável{sortIcon('responsavel')}
               </TableHead>
               <TableHead className="w-[180px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Etapa Atual
               </TableHead>
               <TableHead className="w-[56px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('status')}>
-                Status<SortIcon colKey="status" />
+                Status{sortIcon('status')}
               </TableHead>
               <TableHead className="w-[80px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Atualizado
               </TableHead>
               <TableHead className="w-[96px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('entrega')}>
-                Entrega<SortIcon colKey="entrega" />
+                Entrega{sortIcon('entrega')}
               </TableHead>
               <TableHead className="w-[110px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('avanco')}>
-                Avanço<SortIcon colKey="avanco" />
+                Avanço{sortIcon('avanco')}
               </TableHead>
               <TableHead className="w-[40px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('pendencias', 'desc')}>
-                Pend.<SortIcon colKey="pendencias" />
+                Pend.{sortIcon('pendencias')}
               </TableHead>
               <TableHead className="w-7" />
             </TableRow>
@@ -310,7 +315,7 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, currentStage, isExpanded, onToggle, onNavigate, onEdit, onDelete,
+  project, summary, currentStage, isExpanded, onToggle: _onToggle, onNavigate, onEdit, onDelete,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
