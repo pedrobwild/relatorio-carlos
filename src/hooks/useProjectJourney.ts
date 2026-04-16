@@ -1,5 +1,6 @@
  import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
  import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import type { JourneyCSM } from '@/components/journey/JourneyCSMSection';
  
  export type JourneyStageStatus = 'pending' | 'waiting_action' | 'in_progress' | 'completed';
@@ -301,8 +302,7 @@ export function useCompleteStage() {
 
       if (fetchError) {
         console.error('Failed to fetch completed stage sort_order:', fetchError);
-        // Stage was completed but we failed to unlock next — still return success
-        return { projectId };
+        return { projectId, partialFailure: true };
       }
 
       if (currentStage) {
@@ -317,7 +317,7 @@ export function useCompleteStage() {
 
         if (nextError) {
           console.error('Failed to fetch next stage:', nextError);
-          return { projectId };
+          return { projectId, partialFailure: true };
         }
 
         if (nextStages && nextStages.length > 0 && nextStages[0].status === 'pending') {
@@ -327,17 +327,22 @@ export function useCompleteStage() {
             .eq('id', nextStages[0].id);
           if (unlockError) {
             console.error('Failed to unlock next stage:', unlockError);
+            return { projectId, partialFailure: true };
           }
         }
       }
 
-      return { projectId };
+      return { projectId, partialFailure: false };
     },
-    onSuccess: ({ projectId }) => {
+    onSuccess: ({ projectId, partialFailure }) => {
       queryClient.invalidateQueries({ queryKey: ['project-journey', projectId] });
+      if (partialFailure) {
+        toast.warning('Etapa concluída, mas houve um erro ao desbloquear a próxima etapa. Tente recarregar a página.');
+      }
     },
     onError: (error) => {
       console.error('Failed to complete stage:', error);
+      toast.error('Erro ao concluir a etapa. Tente novamente.');
     },
   });
 }
