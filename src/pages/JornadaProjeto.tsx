@@ -68,12 +68,20 @@ export default function JornadaProjeto() {
     enabled: isMobile && activeTab === 'jornada',
   });
 
+  const initRef = useRef(false);
+
   useEffect(() => {
+    if (initRef.current) return;
     if (!journeyLoading && journey && !journey.hero && projectId && !initializeJourney.isPending) {
+      initRef.current = true;
       initializeJourney.mutate(projectId, { onSuccess: () => refetch() });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [journeyLoading, journey?.hero, projectId]);
+  }, [journeyLoading, journey, projectId, initializeJourney, refetch]);
+
+  // Reset guard when projectId changes
+  useEffect(() => {
+    initRef.current = false;
+  }, [projectId]);
 
   // Welcome toast
   useEffect(() => {
