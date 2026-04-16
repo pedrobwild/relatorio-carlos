@@ -6,7 +6,6 @@ import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQue
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar } from './PortfolioCommandBar';
 import { PortfolioKpiStrip } from './PortfolioKpiStrip';
-import { PortfolioPriorityBar } from './PortfolioPriorityBar';
 import { PortfolioActionInbox } from './PortfolioActionInbox';
 import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
@@ -16,6 +15,7 @@ import { ProjectsCardView } from '@/components/gestao/ProjectsCardView';
 import { PortfolioAdvancedFilters } from './filters/PortfolioAdvancedFilters';
 import { ActiveFilterChips } from './filters/ActiveFilterChips';
 import { usePortfolioFilters } from './hooks/usePortfolioFilters';
+import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { StaleProjectsDialog } from './StaleProjectsDialog';
 import {
   PortfolioPageSkeleton, KpiStripSkeleton, SidebarSkeleton,
@@ -40,6 +40,24 @@ export default function PortfolioPage() {
     refetch: refetchSummaries,
   } = useProjectSummaryQuery();
 
+  // ── Document title with alert count ─────────────────────────────────────
+  const alertCount = useMemo(() => {
+    const now = Date.now();
+    let count = 0;
+    const summaryMap = new Map(summaries.map(s => [s.id, s]));
+    for (const p of projects) {
+      if (p.status !== 'active') continue;
+      // Overdue delivery
+      if (p.planned_end_date && new Date(p.planned_end_date).getTime() < now && !p.actual_end_date) count++;
+      // Overdue activities
+      const s = summaryMap.get(p.id);
+      if (s && s.overdue_count > 0) count++;
+    }
+    return count;
+  }, [projects, summaries]);
+
+  useDocumentTitle(alertCount);
+
   // ── Filters (all filtering logic extracted) ─────────────────────────────
   // TODO: replace with useProjectFinancials() hook when financial data is available
   const financials = useMemo(() => new Map<string, ProjectFinancial>(), []);
@@ -57,11 +75,7 @@ export default function PortfolioPage() {
   // ── Stale projects dialog ──────────────────────────────────────────────
   const [staleDialogOpen, setStaleDialogOpen] = useState(false);
 
-  // ── Priority bar ───────────────────────────────────────────────────────
-  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
-
   const handleKpiFilterChange = useCallback((key: typeof filters.kpiFilter) => {
-    setPriorityFilter(null);
     if (key === 'stale-7d') {
       setStaleDialogOpen(true);
     } else {
@@ -69,45 +83,7 @@ export default function PortfolioPage() {
     }
   }, [filters.setKpiFilter]);
 
-  const handlePrioritySelect = useCallback((key: string | null) => {
-    setPriorityFilter(key);
-    filters.setKpiFilter(null);
-  }, [filters.setKpiFilter]);
-
-  // ── Priority-filtered list ─────────────────────────────────────────────
-  const displayedProjects = useMemo(() => {
-    if (!priorityFilter) return filters.filtered;
-    const now = Date.now();
-    const MS_7D = 7 * 24 * 60 * 60 * 1000;
-    const MS_14D = 14 * 24 * 60 * 60 * 1000;
-    const summaryMap = new Map(summaries.map(s => [s.id, s]));
-
-    return filters.filtered.filter(p => {
-      const s = summaryMap.get(p.id);
-      switch (priorityFilter) {
-        case 'critical':
-          return p.status === 'active' && s && s.overdue_count > 0;
-        case 'no-update': {
-          if (p.status !== 'active') return false;
-          const ref = s?.last_activity_at ?? p.created_at;
-          const refTime = ref ? new Date(ref).getTime() : 0;
-          return refTime > 0 && now - refTime > MS_7D;
-        }
-        case 'cost-risk': {
-          const fin = financials.get(p.id);
-          if (!fin || fin.budget_approved <= 0) return false;
-          return (fin.cost_committed + fin.cost_realized) / fin.budget_approved - 1 > 0.15;
-        }
-        case 'delivery-14d': {
-          if (!p.planned_end_date || p.status !== 'active') return false;
-          const diff = new Date(p.planned_end_date).getTime() - now;
-          return diff >= 0 && diff <= MS_14D;
-        }
-        default:
-          return true;
-      }
-    });
-  }, [filters.filtered, priorityFilter, summaries, financials]);
+  const displayedProjects = filters.filtered;
 
   const handleStaleAction = useCallback((projectId: string) => {
     if (projectId.startsWith('stale-')) {
@@ -164,6 +140,9 @@ export default function PortfolioPage() {
           onViewModeChange={filters.handleViewModeChange}
           scopeFilter={filters.scopeFilter}
           onScopeChange={filters.setScopeFilter}
+          engineers={filters.uniqueEngineers}
+          selectedEngineer={filters.selectedEngineer}
+          onEngineerChange={filters.setSelectedEngineer}
           totalCount={projects.length}
           filteredCount={displayedProjects.length}
           activeFilterCount={filters.advancedFilterCount}
@@ -206,13 +185,10 @@ export default function PortfolioPage() {
           />
         )}
 
-        {/* Priority Bar */}
-        <PortfolioPriorityBar activeKey={priorityFilter} onSelect={handlePrioritySelect} />
-
-        {/* Content: Full-width Grid */}
-        <div>
-          {/* Main grid */}
-          <section className="min-h-[400px]" aria-label="Lista de obras">
+        {/* Content: Main + Sidebar */}
+        <div className="flex gap-4 items-start">
+          {/* Main content */}
+          <section className="min-h-[400px] flex-1 min-w-0" aria-label="Lista de obras">
             {isLoading ? (
               <GridSkeleton rows={6} />
             ) : error ? (
@@ -250,6 +226,19 @@ export default function PortfolioPage() {
               </>
             )}
           </section>
+
+          {/* Sidebar — desktop only */}
+          <aside className="hidden lg:block w-[280px] shrink-0 space-y-3 sticky top-20">
+            <PortfolioActionInbox
+              projects={projects}
+              summaries={summaries}
+              onNavigate={handleStaleAction}
+            />
+            <PortfolioInsightsPanel
+              projects={projects}
+              summaries={summaries}
+            />
+          </aside>
         </div>
       </main>
 

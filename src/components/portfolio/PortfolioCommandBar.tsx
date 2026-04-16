@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, SlidersHorizontal, Download, Plus, LayoutGrid, List, Table2,
+  Search, SlidersHorizontal, Download, Plus, LayoutGrid, List, Table2, User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,9 @@ interface PortfolioCommandBarProps {
   onViewModeChange: (mode: ViewMode) => void;
   scopeFilter: ScopeFilter;
   onScopeChange: (scope: ScopeFilter) => void;
+  engineers: { id: string; name: string }[];
+  selectedEngineer: string | null;
+  onEngineerChange: (engineerId: string | null) => void;
   totalCount: number;
   filteredCount: number;
   activeFilterCount: number;
@@ -40,6 +43,7 @@ interface PortfolioCommandBarProps {
 export function PortfolioCommandBar({
   search, onSearchChange, activePreset, onPresetChange,
   viewMode, onViewModeChange, scopeFilter, onScopeChange,
+  engineers, selectedEngineer, onEngineerChange,
   totalCount, filteredCount, activeFilterCount, onOpenFilters,
 }: PortfolioCommandBarProps) {
   const navigate = useNavigate();
@@ -52,7 +56,7 @@ export function PortfolioCommandBar({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-lg font-bold tracking-tight text-foreground whitespace-nowrap sm:text-xl">
-            Command Center
+            Portfólio de Obras
           </h1>
           {showingSubset && (
             <Badge variant="secondary" className="text-[10px] px-1.5 h-5 shrink-0 tabular-nums">
@@ -141,6 +145,45 @@ export function PortfolioCommandBar({
             className="pl-9 h-10 md:h-9 bg-card border-border/50 text-sm rounded-xl md:rounded-lg placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:border-primary/40"
           />
         </div>
+
+        {/* Engineer filter */}
+        {engineers.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant={selectedEngineer ? 'default' : 'outline'}
+                size="sm"
+                className={cn(
+                  'h-9 md:h-9 gap-1.5 text-xs px-2.5 rounded-lg shrink-0 whitespace-nowrap',
+                  selectedEngineer && 'shadow-sm'
+                )}
+              >
+                <User className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {selectedEngineer
+                    ? engineers.find(e => e.id === selectedEngineer)?.name?.split(' ')[0] ?? 'Responsável'
+                    : 'Responsável'}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto">
+              {selectedEngineer && (
+                <DropdownMenuItem onClick={() => onEngineerChange(null)}>
+                  Todos os responsáveis
+                </DropdownMenuItem>
+              )}
+              {engineers.map((eng) => (
+                <DropdownMenuItem
+                  key={eng.id}
+                  onClick={() => onEngineerChange(eng.id === selectedEngineer ? null : eng.id)}
+                  className={cn(selectedEngineer === eng.id && 'bg-primary/10 font-semibold')}
+                >
+                  {eng.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Scope toggle — desktop only */}
         <div className="hidden md:flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5 shrink-0" role="radiogroup" aria-label="Escopo">

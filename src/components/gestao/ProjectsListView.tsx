@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye } from 'lucide-react';
+import { ExternalLink, AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
@@ -115,6 +115,60 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
     return map;
   }, [summaries]);
 
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'entrega', direction: 'asc' });
+
+  const sortedProjects = useMemo(() => {
+    const sorted = [...projects];
+    sorted.sort((a, b) => {
+      const { key, direction } = sortConfig;
+      const mul = direction === 'asc' ? 1 : -1;
+      if (key === 'obra') {
+        return mul * (a.name ?? '').localeCompare(b.name ?? '', 'pt-BR');
+      }
+      if (key === 'responsavel') {
+        return mul * (a.engineer_name ?? '').localeCompare(b.engineer_name ?? '', 'pt-BR');
+      }
+      if (key === 'status') {
+        return mul * (a.status ?? '').localeCompare(b.status ?? '', 'pt-BR');
+      }
+      if (key === 'entrega') {
+        const aDate = a.planned_end_date ? new Date(a.planned_end_date).getTime() : null;
+        const bDate = b.planned_end_date ? new Date(b.planned_end_date).getTime() : null;
+        if (aDate === null && bDate === null) return 0;
+        if (aDate === null) return 1;
+        if (bDate === null) return -1;
+        return mul * (aDate - bDate);
+      }
+      if (key === 'avanco') {
+        const aVal = summaryMap.get(a.id)?.progress_percentage ?? 0;
+        const bVal = summaryMap.get(b.id)?.progress_percentage ?? 0;
+        return mul * (aVal - bVal);
+      }
+      if (key === 'pendencias') {
+        const aVal = summaryMap.get(a.id)?.overdue_count ?? 0;
+        const bVal = summaryMap.get(b.id)?.overdue_count ?? 0;
+        return mul * (aVal - bVal);
+      }
+      return 0;
+    });
+    return sorted;
+  }, [projects, sortConfig, summaryMap]);
+
+  const handleSort = (key: string, defaultDirection: 'asc' | 'desc' = 'asc') => {
+    setSortConfig(prev =>
+      prev.key === key
+        ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+        : { key, direction: defaultDirection }
+    );
+  };
+
+  const SortIcon = ({ colKey }: { colKey: string }) => {
+    if (sortConfig.key !== colKey) return <ArrowUpDown className="h-3 w-3 ml-1 inline-block" />;
+    return sortConfig.direction === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1 inline-block" />
+      : <ArrowDown className="h-3 w-3 ml-1 inline-block" />;
+  };
+
   if (summariesLoading) {
     return <ContentSkeleton variant="table" rows={5} />;
   }
@@ -126,35 +180,35 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
               <TableHead className="w-7 px-1" />
-              <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                Obra
+              <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('obra')}>
+                Obra<SortIcon colKey="obra" />
               </TableHead>
-              <TableHead className="w-[100px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
-                Responsável
+              <TableHead className="w-[100px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('responsavel')}>
+                Responsável<SortIcon colKey="responsavel" />
               </TableHead>
-              <TableHead className="w-[140px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
+              <TableHead className="w-[180px] py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Etapa Atual
               </TableHead>
-              <TableHead className="w-[56px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
-                Status
+              <TableHead className="w-[56px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('status')}>
+                Status<SortIcon colKey="status" />
               </TableHead>
               <TableHead className="w-[80px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
                 Atualizado
               </TableHead>
-              <TableHead className="w-[96px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
-                Entrega
+              <TableHead className="w-[96px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('entrega')}>
+                Entrega<SortIcon colKey="entrega" />
               </TableHead>
-              <TableHead className="w-[110px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
-                Avanço
+              <TableHead className="w-[110px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('avanco')}>
+                Avanço<SortIcon colKey="avanco" />
               </TableHead>
-              <TableHead className="w-[40px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
-                Pend.
+              <TableHead className="w-[40px] text-center py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('pendencias', 'desc')}>
+                Pend.<SortIcon colKey="pendencias" />
               </TableHead>
               <TableHead className="w-7" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => {
+            {sortedProjects.map((project) => {
               const summary = summaryMap.get(project.id);
               const isExpanded = expandedIds.has(project.id);
               return (
@@ -183,7 +237,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                 </Collapsible>
               );
             })}
-            {projects.length === 0 && (
+            {sortedProjects.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                   Nenhuma obra encontrada
@@ -356,7 +410,7 @@ function ProjectRow({
                 <HardHat className="h-3 w-3 shrink-0 text-primary" />
               )}
               <span className={cn(
-                'text-[11px] font-medium truncate max-w-[120px]',
+                'text-[11px] font-medium truncate max-w-[160px]',
                 currentStage.isAwaitingStart ? 'text-amber-600 dark:text-amber-400' : 'text-foreground/80',
               )}>
                 {currentStage.description}
@@ -469,7 +523,7 @@ function ProjectRow({
                   />
                 </div>
                 <span className="text-[9px] tabular-nums text-muted-foreground/70 leading-none whitespace-nowrap">
-                  {Math.round(progress)}% vs {plannedProgress}%
+                  {Math.round(progress)}%
                 </span>
               </div>
             </TooltipTrigger>

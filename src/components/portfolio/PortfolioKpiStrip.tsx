@@ -162,11 +162,14 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:grid md:grid-cols-7"
+      className="grid grid-cols-3 gap-2 px-0 pb-1 md:flex md:flex-wrap"
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
-      {kpiDefinitions.map((kpi) => {
+      {kpiDefinitions.filter((kpi) => {
+        const val = values.get(kpi.key) ?? 0;
+        return val > 0 || kpi.key === 'active' || activeFilter === kpi.key;
+      }).map((kpi) => {
         const val = values.get(kpi.key) ?? 0;
         const isSelected = activeFilter === kpi.key;
         const isZero = val === 0;
@@ -182,7 +185,7 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'relative flex flex-col items-center gap-1 rounded-xl border px-3 py-2.5 min-w-[72px] shrink-0',
+              'relative flex flex-col items-center gap-1 rounded-xl border px-3 py-2.5 min-w-[72px]',
               'md:flex-row md:gap-2 md:px-3 md:py-2 md:min-w-0',
               'transition-all duration-150 cursor-pointer select-none active:scale-[0.96]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',

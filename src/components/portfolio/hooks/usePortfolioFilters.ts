@@ -38,6 +38,9 @@ export function usePortfolioFilters(
   // ── Scope (obras vs projetos) ──────────────────────────────────────────
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('all');
 
+  // ── Engineer filter ──────────────────────────────────────────────────────
+  const [selectedEngineer, setSelectedEngineer] = useState<string | null>(null);
+
   // ── KPI filter ──────────────────────────────────────────────────────────
   const [kpiFilter, setKpiFilter] = useState<KpiFilterKey | null>(null);
 
@@ -71,9 +74,22 @@ export function usePortfolioFilters(
   const totalFilterCount = advancedFilterCount
     + (search ? 1 : 0)
     + (activePreset !== 'all' ? 1 : 0)
-    + (kpiFilter ? 1 : 0);
+    + (kpiFilter ? 1 : 0)
+    + (selectedEngineer ? 1 : 0);
 
   const hasAnyFilter = totalFilterCount > 0;
+
+  // ── Unique engineers ────────────────────────────────────────────────────
+  const uniqueEngineers = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of projects) {
+      const id = p.engineer_user_id ?? p.engineer_name;
+      if (id && p.engineer_name) map.set(id, p.engineer_name);
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [projects]);
 
   // ── Filtering pipeline ──────────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -84,6 +100,11 @@ export function usePortfolioFilters(
       result = result.filter(p => !p.is_project_phase);
     } else if (scopeFilter === 'projetos') {
       result = result.filter(p => !!p.is_project_phase);
+    }
+
+    // Engineer filter
+    if (selectedEngineer) {
+      result = result.filter(p => (p.engineer_user_id ?? p.engineer_name) === selectedEngineer);
     }
 
     // Text search
@@ -127,7 +148,7 @@ export function usePortfolioFilters(
     }
 
     return result;
-  }, [projects, scopeFilter, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters, financials]);
+  }, [projects, scopeFilter, selectedEngineer, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters, financials]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
   const handlePresetChange = useCallback((p: PortfolioPreset) => {
@@ -141,17 +162,19 @@ export function usePortfolioFilters(
     setScopeFilter('all');
     setKpiFilter(null);
     setAdvancedFilters(emptyFilters);
+    setSelectedEngineer(null);
   }, [setSearch]);
 
   return {
     // State
     search, activePreset, kpiFilter, advancedFilters,
     viewMode, filtersOpen, scopeFilter,
+    selectedEngineer, uniqueEngineers,
     // Derived
     filtered, advancedFilterCount, totalFilterCount, hasAnyFilter,
     // Setters
     setSearch, setKpiFilter, setAdvancedFilters,
     setFiltersOpen, handlePresetChange, handleViewModeChange,
-    handleClearAll, setScopeFilter,
+    handleClearAll, setScopeFilter, setSelectedEngineer,
   };
 }
