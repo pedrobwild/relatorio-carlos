@@ -56,7 +56,7 @@ export default function NaoConformidades() {
                 aria-checked={viewMode === mode}
                 onClick={() => setViewMode(mode)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-medium transition-all',
+                  'inline-flex items-center gap-1.5 h-10 sm:h-8 px-3 sm:px-2.5 rounded-md text-xs font-medium transition-all',
                   viewMode === mode
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'

@@ -385,7 +385,7 @@ const Index = () => {
                     </div>
 
                     {selectedActivityId && activeTab === 'cronograma' && (
-                      <div className="hidden lg:block w-80 shrink-0">
+                      <div className="hidden md:block w-64 lg:w-80 shrink-0">
                         <ActivityDetailsPanel
                           activity={reportData.activities.find(a => a.id === selectedActivityId) || null}
                           activities={reportData.activities}

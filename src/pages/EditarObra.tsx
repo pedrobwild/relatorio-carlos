@@ -69,21 +69,21 @@ export default function EditarObra() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-5xl mx-auto px-4 py-3">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate('/gestao')}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-h3 font-bold">{data.project.name}</h1>
+                <h1 className="text-h3 font-bold truncate">{data.project.name}</h1>
                 <p className="text-tiny text-muted-foreground">
                   {canEdit ? 'Editar dados da obra' : 'Visualizando dados da obra'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => navigate(`/obra/${projectId}`)}>Ver Portal</Button>
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <Button variant="outline" onClick={() => navigate(`/obra/${projectId}`)} className="hidden sm:inline-flex">Ver Portal</Button>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span tabIndex={canEdit ? -1 : 0}>
@@ -140,12 +140,12 @@ export default function EditarObra() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="flex gap-6">
           {/* Main content */}
           <div className="flex-1 min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5 mb-6">
+              <TabsList className="flex w-full overflow-x-auto scrollbar-hide mb-6 sm:grid sm:grid-cols-5">
                 <TabsTrigger value="geral" className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
                   <span className="hidden sm:inline">Dados Gerais</span>

@@ -120,7 +120,7 @@ export function ProjectSlimHeader() {
     : "Carregando…";
 
   return (
-    <header className="h-14 border-b border-border bg-card/95 backdrop-blur-sm flex items-center px-3 gap-2 shrink-0 z-40">
+    <header className="h-14 border-b border-border bg-card/95 backdrop-blur-sm items-center px-3 gap-2 shrink-0 z-40 hidden md:flex">
       {/* Sidebar trigger */}
       <SidebarTrigger className="shrink-0" />
 

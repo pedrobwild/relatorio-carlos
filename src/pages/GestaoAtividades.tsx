@@ -225,7 +225,7 @@ export default function GestaoAtividades() {
                 aria-checked={view === mode}
                 onClick={() => setView(mode)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-all',
+                  'inline-flex items-center gap-1.5 h-9 sm:h-7 px-2.5 rounded-md text-xs font-medium transition-all',
                   view === mode
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -239,7 +239,7 @@ export default function GestaoAtividades() {
         </div>
 
         {/* ── Filters row ── */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible">
           {/* Status counts */}
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide shrink-0">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
@@ -268,13 +268,13 @@ export default function GestaoAtividades() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Buscar..."
-              className="h-8 w-[180px] pl-8 text-xs"
+              className="h-9 sm:h-8 w-full sm:w-[180px] pl-8 text-xs"
             />
           </div>
 
           {/* Project filter */}
           <Select value={filterProject} onValueChange={setFilterProject}>
-            <SelectTrigger className="h-8 w-[200px] text-xs shrink-0">
+            <SelectTrigger className="h-9 sm:h-8 w-[140px] sm:w-[200px] text-xs shrink-0">
               <Building2 className="h-3.5 w-3.5 mr-1.5 shrink-0" />
               <SelectValue placeholder="Filtrar por obra" />
             </SelectTrigger>
@@ -288,7 +288,7 @@ export default function GestaoAtividades() {
 
           {/* Responsible filter */}
           <Select value={filterResponsible} onValueChange={setFilterResponsible}>
-            <SelectTrigger className="h-8 w-[180px] text-xs shrink-0">
+            <SelectTrigger className="h-9 sm:h-8 w-[130px] sm:w-[180px] text-xs shrink-0">
               <User className="h-3.5 w-3.5 mr-1.5 shrink-0" />
               <SelectValue placeholder="Responsável" />
             </SelectTrigger>
@@ -303,7 +303,7 @@ export default function GestaoAtividades() {
 
           {/* Priority filter */}
           <Select value={filterPriority} onValueChange={setFilterPriority}>
-            <SelectTrigger className="h-8 w-[150px] text-xs shrink-0">
+            <SelectTrigger className="h-9 sm:h-8 w-[120px] sm:w-[150px] text-xs shrink-0">
               <Flag className="h-3.5 w-3.5 mr-1.5 shrink-0" />
               <SelectValue placeholder="Prioridade" />
             </SelectTrigger>
@@ -434,98 +434,177 @@ export default function GestaoAtividades() {
         </div>
       ) : (
         /* ── LIST VIEW ── */
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[22%] cursor-pointer select-none" onClick={() => handleSort('title')}>
-                  <span className="inline-flex items-center gap-1">Atividade <SortIcon field="title" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('project_name')}>
-                  <span className="inline-flex items-center gap-1">Obra <SortIcon field="project_name" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('responsible')}>
-                  <span className="inline-flex items-center gap-1">Responsável <SortIcon field="responsible" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('priority')}>
-                  <span className="inline-flex items-center gap-1">Prioridade <SortIcon field="priority" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('due_date')}>
-                  <span className="inline-flex items-center gap-1">Prazo <SortIcon field="due_date" /></span>
-                </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('status')}>
-                  <span className="inline-flex items-center gap-1">Status <SortIcon field="status" /></span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedForList.length === 0 ? (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-16 text-muted-foreground">
-                    Nenhuma atividade encontrada
-                  </TableCell>
+                  <TableHead className="w-[22%] cursor-pointer select-none" onClick={() => handleSort('title')}>
+                    <span className="inline-flex items-center gap-1">Atividade <SortIcon field="title" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => handleSort('project_name')}>
+                    <span className="inline-flex items-center gap-1">Obra <SortIcon field="project_name" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => handleSort('responsible')}>
+                    <span className="inline-flex items-center gap-1">Responsável <SortIcon field="responsible" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => handleSort('priority')}>
+                    <span className="inline-flex items-center gap-1">Prioridade <SortIcon field="priority" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => handleSort('due_date')}>
+                    <span className="inline-flex items-center gap-1">Prazo <SortIcon field="due_date" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => handleSort('status')}>
+                    <span className="inline-flex items-center gap-1">Status <SortIcon field="status" /></span>
+                  </TableHead>
                 </TableRow>
-              ) : sortedForList.map(task => {
-                const responsible = getMemberName(staffUsers, task.responsible_user_id);
-                const overdue = isTaskOverdue(task);
-                const prio = priorityConfig[task.priority];
-                const projColor = getProjectColor(task.project_id);
-                return (
-                  <TableRow
-                    key={task.id}
-                    className={cn(
-                      'cursor-pointer hover:bg-muted/40',
-                      task.status === 'concluido' && 'opacity-60'
-                    )}
-                    onClick={() => handleCardClick(task)}
-                  >
-                    <TableCell>
-                      <div>
-                        <span className={cn('font-medium text-sm', task.status === 'concluido' && 'line-through')}>
-                          {task.title}
-                        </span>
-                        {task.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-                        )}
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {sortedForList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-16 text-muted-foreground">
+                      Nenhuma atividade encontrada
                     </TableCell>
-                    <TableCell>
+                  </TableRow>
+                ) : sortedForList.map(task => {
+                  const responsible = getMemberName(staffUsers, task.responsible_user_id);
+                  const overdue = isTaskOverdue(task);
+                  const prio = priorityConfig[task.priority];
+                  const projColor = getProjectColor(task.project_id);
+                  return (
+                    <TableRow
+                      key={task.id}
+                      className={cn(
+                        'cursor-pointer hover:bg-muted/40',
+                        task.status === 'concluido' && 'opacity-60'
+                      )}
+                      onClick={() => handleCardClick(task)}
+                    >
+                      <TableCell>
+                        <div>
+                          <span className={cn('font-medium text-sm', task.status === 'concluido' && 'line-through')}>
+                            {task.title}
+                          </span>
+                          {task.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className={cn(
+                          'inline-flex items-center gap-1 text-[11px] font-medium rounded-md px-1.5 py-0.5 border',
+                          projColor.bg, projColor.border
+                        )}>
+                          <Building2 className="h-3 w-3 shrink-0" />
+                          <span className="truncate max-w-[120px]">{task.project_name}</span>
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm">{responsible ?? '—'}</TableCell>
+                      <TableCell>
+                        <span className={cn('flex items-center gap-1 text-xs font-medium', prio.color)}>
+                          <span>{prio.icon}</span> {prio.label}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {task.due_date ? (
+                          <span className={cn('text-sm flex items-center gap-1', overdue && 'text-destructive font-medium')}>
+                            <Calendar className="h-3.5 w-3.5" />
+                            {format(new Date(task.due_date + 'T00:00:00'), 'dd/MM/yy', { locale: ptBR })}
+                          </span>
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn('text-xs', statusVariant[task.status])}>
+                          {task.status === 'pendente' && 'Pendente'}
+                          {task.status === 'em_andamento' && 'Em andamento'}
+                          {task.status === 'pausado' && 'Pausado'}
+                          {task.status === 'concluido' && 'Concluído'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden space-y-2">
+            {sortedForList.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                Nenhuma atividade encontrada
+              </div>
+            ) : sortedForList.map(task => {
+              const responsible = getMemberName(staffUsers, task.responsible_user_id);
+              const overdue = isTaskOverdue(task);
+              const prio = priorityConfig[task.priority];
+              const projColor = getProjectColor(task.project_id);
+              return (
+                <Card
+                  key={task.id}
+                  className={cn(
+                    'cursor-pointer hover:shadow-md transition-all active:scale-[0.98] rounded-xl',
+                    task.status === 'concluido' && 'opacity-60'
+                  )}
+                  onClick={() => handleCardClick(task)}
+                >
+                  <CardContent className="p-3 space-y-2">
+                    {/* Project + Status */}
+                    <div className="flex items-center justify-between gap-2">
                       <span className={cn(
-                        'inline-flex items-center gap-1 text-[11px] font-medium rounded-md px-1.5 py-0.5 border',
+                        'inline-flex items-center gap-1 text-[11px] font-medium truncate rounded-md px-1.5 py-0.5 border max-w-[60%]',
                         projColor.bg, projColor.border
                       )}>
                         <Building2 className="h-3 w-3 shrink-0" />
-                        <span className="truncate max-w-[120px]">{task.project_name}</span>
+                        <span className="truncate">{task.project_name}</span>
                       </span>
-                    </TableCell>
-                    <TableCell className="text-sm">{responsible ?? '—'}</TableCell>
-                    <TableCell>
-                      <span className={cn('flex items-center gap-1 text-xs font-medium', prio.color)}>
-                        <span>{prio.icon}</span> {prio.label}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {task.due_date ? (
-                        <span className={cn('text-sm flex items-center gap-1', overdue && 'text-destructive font-medium')}>
-                          <Calendar className="h-3.5 w-3.5" />
-                          {format(new Date(task.due_date + 'T00:00:00'), 'dd/MM/yy', { locale: ptBR })}
-                        </span>
-                      ) : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn('text-xs', statusVariant[task.status])}>
+                      <Badge variant="outline" className={cn('text-[10px] shrink-0', statusVariant[task.status])}>
                         {task.status === 'pendente' && 'Pendente'}
                         {task.status === 'em_andamento' && 'Em andamento'}
                         {task.status === 'pausado' && 'Pausado'}
                         {task.status === 'concluido' && 'Concluído'}
                       </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                    </div>
+
+                    {/* Title */}
+                    <span className={cn(
+                      'font-semibold text-sm leading-tight block',
+                      task.status === 'concluido' && 'line-through'
+                    )}>
+                      {task.title}
+                    </span>
+
+                    {task.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
+                    )}
+
+                    {/* Meta row */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <span className={cn('flex items-center gap-0.5 font-medium', prio.color)}>
+                        <span className="text-xs">{prio.icon}</span> {prio.label}
+                      </span>
+                      {responsible && (
+                        <span className="flex items-center gap-1 bg-muted/50 rounded-md px-1.5 py-0.5">
+                          <User className="h-3 w-3" /> {responsible}
+                        </span>
+                      )}
+                      {task.due_date && (
+                        <span className={cn(
+                          'flex items-center gap-1 rounded-md px-1.5 py-0.5',
+                          overdue ? 'bg-destructive/10 text-destructive font-semibold' : 'bg-muted/50'
+                        )}>
+                          <Calendar className="h-3 w-3" />
+                          {format(new Date(task.due_date + 'T00:00:00'), 'dd/MM', { locale: ptBR })}
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </>
       )}
     </PageContainer>
   );

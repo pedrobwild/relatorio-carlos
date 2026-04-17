@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Plus, CalendarDays, FolderOpen, Settings, MoreHorizontal, Truck } from "lucide-react";
+import { LayoutDashboard, Plus, CalendarDays, FolderOpen, Settings, MoreHorizontal, Truck, CheckSquare, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useState } from "react";
@@ -46,16 +46,12 @@ export function GestaoBottomNav() {
           <NavLink
             to="/gestao"
             end
-            className={({ isActive }) =>
-              cn(
-                "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-[0.92]",
-              )
-            }
+            className="relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-[0.92]"
           >
             {({ isActive }) => (
               <>
                 <div className={cn(
-                  "flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200",
+                  "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
                   isActive
                     ? "bg-primary/15 text-primary"
                     : "text-muted-foreground"
@@ -67,6 +63,34 @@ export function GestaoBottomNav() {
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}>
                   Painel
+                </span>
+                {isActive && (
+                  <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+                )}
+              </>
+            )}
+          </NavLink>
+
+          {/* Atividades */}
+          <NavLink
+            to="/gestao/atividades"
+            className="relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-[0.92]"
+          >
+            {({ isActive }) => (
+              <>
+                <div className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
+                  isActive
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground"
+                )}>
+                  <CheckSquare className="h-5 w-5" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-semibold leading-none transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}>
+                  Atividades
                 </span>
                 {isActive && (
                   <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
@@ -96,17 +120,45 @@ export function GestaoBottomNav() {
             <span className="text-[10px] font-bold text-primary mt-1 leading-none">Nova</span>
           </div>
 
+          {/* NCs */}
+          <NavLink
+            to="/gestao/nao-conformidades"
+            className="relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-[0.92]"
+          >
+            {({ isActive }) => (
+              <>
+                <div className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
+                  isActive
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground"
+                )}>
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-semibold leading-none transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}>
+                  NCs
+                </span>
+                {isActive && (
+                  <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+                )}
+              </>
+            )}
+          </NavLink>
+
           {/* Mais */}
           <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
             <SheetTrigger asChild>
               <button
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 transition-all active:scale-[0.92]",
+                  "relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 min-h-[44px] transition-all active:scale-[0.92]",
                 )}
                 aria-label="Mais opções"
               >
                 <div className={cn(
-                  "relative flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200",
+                  "relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
                   isSecondaryActive
                     ? "bg-primary/15 text-primary"
                     : "text-muted-foreground"

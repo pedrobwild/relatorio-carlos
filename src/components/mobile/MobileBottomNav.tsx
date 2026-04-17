@@ -56,7 +56,7 @@ export function MobileBottomNav() {
         className="fixed bottom-0 inset-x-0 z-50 border-t border-border/60 bg-card/95 backdrop-blur-xl backdrop-saturate-150 pb-safe md:hidden"
         aria-label="Navegação principal"
       >
-        <div className="flex items-stretch justify-around h-14">
+        <div className="flex items-stretch justify-around h-16">
           {navItems.map((item) => (
             <NavLink
               key={item.label}

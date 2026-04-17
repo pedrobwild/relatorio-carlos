@@ -126,14 +126,14 @@ function ContractCell({ purchase, onUpdateField }: {
     <>
       <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleUpload} />
       {purchase.contract_file_path ? (
-        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 border-primary/30 text-primary" onClick={handleView}>
+        <Button variant="outline" size="sm" className="h-9 sm:h-7 text-xs gap-1.5 border-primary/30 text-primary" onClick={handleView}>
           <FileText className="h-3 w-3" /> Ver
         </Button>
       ) : (
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1.5 text-muted-foreground"
+          className="h-9 sm:h-7 text-xs gap-1.5 text-muted-foreground"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
         >
@@ -188,14 +188,14 @@ function InvoiceCell({ purchase, onUpdateField }: {
     <>
       <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden" onChange={handleUpload} />
       {purchase.invoice_file_path ? (
-        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 border-[hsl(var(--success))]/30 text-[hsl(var(--success))]" onClick={handleView}>
+        <Button variant="outline" size="sm" className="h-9 sm:h-7 text-xs gap-1.5 border-[hsl(var(--success))]/30 text-[hsl(var(--success))]" onClick={handleView}>
           <FileText className="h-3 w-3" /> Ver NF
         </Button>
       ) : (
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1.5 text-muted-foreground"
+          className="h-9 sm:h-7 text-xs gap-1.5 text-muted-foreground"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
         >
@@ -457,7 +457,7 @@ function PurchaseRow({
             <Button
               variant="ghost"
               size="icon"
-              className={cn('h-7 w-7', purchase.notes && 'text-primary')}
+              className={cn('h-9 w-9 sm:h-7 sm:w-7', purchase.notes && 'text-primary')}
               onClick={(e) => { e.stopPropagation(); setObsModal({ purchase }); }}
               title="Observações"
             >
@@ -466,7 +466,7 @@ function PurchaseRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-9 w-9 sm:h-7 sm:w-7"
               onClick={(e) => { e.stopPropagation(); setDateLogsOpen(true); }}
               title="Histórico de Datas"
             >
@@ -475,7 +475,7 @@ function PurchaseRow({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-7 sm:w-7" onClick={(e) => e.stopPropagation()}>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -716,7 +716,7 @@ function PurchaseRow({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs gap-1.5"
+                    className="h-9 sm:h-7 text-xs gap-1.5"
                     onClick={() => setCadastroModal({ purchase })}
                   >
                     <ClipboardList className="h-3 w-3" /> Cadastro
@@ -724,7 +724,7 @@ function PurchaseRow({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs gap-1.5"
+                    className="h-9 sm:h-7 text-xs gap-1.5"
                     onClick={() => setFlowModal({ purchase })}
                   >
                     <DollarSign className="h-3 w-3" /> Fluxo
