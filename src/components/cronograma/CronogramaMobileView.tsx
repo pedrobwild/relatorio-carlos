@@ -262,8 +262,9 @@ export function CronogramaMobileView({
 function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { computedStatus: ActivityStatus }; index: number }) {
   const config = statusConfig[act.computedStatus];
   const isOverdue = act.computedStatus === 'overdue';
-  const [showDetails, setShowDetails] = useState(false);
   const hasDetails = !!act.detailed_description?.trim();
+  // Visível por padrão para TODOS os roles; o usuário pode ocultar.
+  const [showDetails, setShowDetails] = useState(hasDetails);
   const daysInfo = useMemo(() => {
     if (act.actual_end) return null;
     if (isOverdue) {

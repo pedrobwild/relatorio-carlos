@@ -597,7 +597,9 @@ const Cronograma = () => {
                 {activities.map((activity, index) => {
                   const rowError = dateValidationErrors[activity.id];
                   const hasDetail = !!activity.detailed_description?.trim();
-                  const isDetailOpen = openDetails[activity.id] || false;
+                  // Sempre aberto quando há conteúdo (visível para todos os roles);
+                  // quando vazio, respeita o toggle do usuário.
+                  const isDetailOpen = hasDetail || (openDetails[activity.id] || false);
                   return (
                     <div key={activity.id}>
                       <div
