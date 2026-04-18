@@ -184,7 +184,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
       <div className="rounded-xl border border-border/50 bg-white dark:bg-card overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
+            <TableRow className="bg-white dark:bg-card hover:bg-white dark:hover:bg-card border-b border-border/50">
               <TableHead className="w-7 px-1" />
               <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('obra')}>
                 Obra{sortIcon('obra')}
@@ -362,11 +362,11 @@ function ProjectRow({
     <CollapsibleTrigger asChild>
       <TableRow
         className={cn(
-          'cursor-pointer transition-colors group/row border-b border-border/30',
+          'cursor-pointer transition-colors group/row border-b border-border/30 bg-white dark:bg-card',
           isOverdue
-            ? 'bg-red-50/50 hover:bg-red-50/80 dark:bg-destructive/[0.03] dark:hover:bg-destructive/[0.06]'
+            ? 'hover:bg-red-50/60 dark:hover:bg-destructive/[0.06]'
             : isApproaching
-              ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-500/[0.02] dark:hover:bg-amber-500/[0.05]'
+              ? 'hover:bg-amber-50/40 dark:hover:bg-amber-500/[0.05]'
               : 'hover:bg-muted/30',
         )}
       >
