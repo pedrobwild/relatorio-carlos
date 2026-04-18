@@ -95,6 +95,15 @@ export function usePortfolioFilters(
   const filtered = useMemo(() => {
     let result = projects;
 
+    // Hide completed projects by default — only show when explicitly filtered for
+    const wantsCompleted =
+      activePreset === 'completed' ||
+      kpiFilter === 'completed' ||
+      advancedFilters.status.includes('completed');
+    if (!wantsCompleted) {
+      result = result.filter(p => p.status !== 'completed');
+    }
+
     // Scope filter (obras vs projetos)
     if (scopeFilter === 'obras') {
       result = result.filter(p => !p.is_project_phase);
