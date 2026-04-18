@@ -362,11 +362,11 @@ function ProjectRow({
     <CollapsibleTrigger asChild>
       <TableRow
         className={cn(
-          'cursor-pointer transition-colors group/row border-b border-border/30',
+          'cursor-pointer transition-colors group/row border-b border-border/30 bg-white dark:bg-card',
           isOverdue
-            ? 'bg-red-50/50 hover:bg-red-50/80 dark:bg-destructive/[0.03] dark:hover:bg-destructive/[0.06]'
+            ? 'hover:bg-red-50/60 dark:hover:bg-destructive/[0.06]'
             : isApproaching
-              ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-500/[0.02] dark:hover:bg-amber-500/[0.05]'
+              ? 'hover:bg-amber-50/40 dark:hover:bg-amber-500/[0.05]'
               : 'hover:bg-muted/30',
         )}
       >
