@@ -317,7 +317,7 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, currentStage, isExpanded, onToggle: _onToggle, onNavigate, onEdit, onDelete,
+  project, summary, currentStage, isExpanded, onToggle: _onToggle, onNavigate, onEdit, onDelete, onChangeStatus,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
@@ -327,6 +327,7 @@ function ProjectRow({
   onNavigate: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onChangeStatus: (status: 'active' | 'completed' | 'paused' | 'draft' | 'cancelled') => void;
 }) {
   const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
@@ -601,6 +602,27 @@ function ProjectRow({
               {project.status === 'draft' && (
                 <DropdownMenuItem onClick={() => navigate(`/gestao/obra/${project.id}/wizard`)}>
                   <Pencil className="h-4 w-4 mr-2" /> Revisar rascunho
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              {project.status !== 'completed' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('completed')}>
+                  <CheckCircle2 className="h-4 w-4 mr-2 text-[hsl(var(--success))]" /> Marcar como concluída
+                </DropdownMenuItem>
+              )}
+              {project.status === 'completed' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                  <PlayCircle className="h-4 w-4 mr-2" /> Reabrir obra
+                </DropdownMenuItem>
+              )}
+              {project.status === 'active' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('paused')}>
+                  <PauseCircle className="h-4 w-4 mr-2" /> Pausar obra
+                </DropdownMenuItem>
+              )}
+              {project.status === 'paused' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                  <PlayCircle className="h-4 w-4 mr-2" /> Retomar obra
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
