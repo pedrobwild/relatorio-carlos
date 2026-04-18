@@ -5,8 +5,6 @@ import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQue
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar } from './PortfolioCommandBar';
 import { PortfolioKpiStrip, type ProjectFinancial } from './PortfolioKpiStrip';
-import { PortfolioActionInbox } from './PortfolioActionInbox';
-import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
 import { MobileProjectList } from './MobileProjectList';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
@@ -184,61 +182,45 @@ export default function PortfolioPage() {
           />
         )}
 
-        {/* Content: Main + Sidebar */}
-        <div className="flex gap-4 items-start">
-          {/* Main content */}
-          <section className="min-h-[400px] flex-1 min-w-0" aria-label="Lista de obras">
-            {isLoading ? (
-              <GridSkeleton rows={6} />
-            ) : error ? (
-              <PortfolioErrorState error={error} onRetry={() => refetch()} />
-            ) : projects.length === 0 ? (
-              <EmptyPortfolio onCreateProject={() => navigate('/gestao/nova-obra')} />
-            ) : displayedProjects.length === 0 ? (
-              <NoFilterResults
-                onClearFilters={filters.handleClearAll}
-                activeFilterCount={filters.totalFilterCount}
-              />
-            ) : (
-              <>
-                {/* Mobile: compact list view (default) */}
-                <div className="block md:hidden">
-                  <MobileProjectList
+        {/* Content: Main only — sidebar widgets removed per request */}
+        <section className="min-h-[400px]" aria-label="Lista de obras">
+          {isLoading ? (
+            <GridSkeleton rows={6} />
+          ) : error ? (
+            <PortfolioErrorState error={error} onRetry={() => refetch()} />
+          ) : projects.length === 0 ? (
+            <EmptyPortfolio onCreateProject={() => navigate('/gestao/nova-obra')} />
+          ) : displayedProjects.length === 0 ? (
+            <NoFilterResults
+              onClearFilters={filters.handleClearAll}
+              activeFilterCount={filters.totalFilterCount}
+            />
+          ) : (
+            <>
+              {/* Mobile: compact list view (default) */}
+              <div className="block md:hidden">
+                <MobileProjectList
+                  projects={displayedProjects}
+                  onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                />
+              </div>
+              {/* Desktop: respects view mode */}
+              <div className="hidden md:block">
+                {filters.viewMode === 'cards' ? (
+                  <ProjectsCardView
                     projects={displayedProjects}
                     onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
                   />
-                </div>
-                {/* Desktop: respects view mode */}
-                <div className="hidden md:block">
-                  {filters.viewMode === 'cards' ? (
-                    <ProjectsCardView
-                      projects={displayedProjects}
-                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-                    />
-                  ) : (
-                    <ProjectsListView
-                      projects={displayedProjects}
-                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-                    />
-                  )}
-                </div>
-              </>
-            )}
-          </section>
-
-          {/* Sidebar — desktop only */}
-          <aside className="hidden lg:block w-[280px] shrink-0 space-y-3 sticky top-20">
-            <PortfolioActionInbox
-              projects={projects}
-              summaries={summaries}
-              onNavigate={handleStaleAction}
-            />
-            <PortfolioInsightsPanel
-              projects={projects}
-              summaries={summaries}
-            />
-          </aside>
-        </div>
+                ) : (
+                  <ProjectsListView
+                    projects={displayedProjects}
+                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                  />
+                )}
+              </div>
+            </>
+          )}
+        </section>
       </main>
 
       {/* Sheets & Modals */}

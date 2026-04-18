@@ -12,8 +12,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, PlayCircle, PauseCircle } from 'lucide-react';
+import { useProjectSummaryQuery, useUpdateProjectStatusMutation } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
 import { useDeleteProject } from '@/hooks/useDeleteProject';
@@ -54,6 +54,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
   const deleteProject = useDeleteProject();
+  const updateStatus = useUpdateProjectStatusMutation();
   const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   // Split IDs: obras use cronograma stages, projetos use journey stages
@@ -228,6 +229,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                       onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
                       onEdit={() => navigate(`/gestao/obra/${project.id}/editar`)}
                       onDelete={() => setDeleteTarget(project)}
+                      onChangeStatus={(status) => updateStatus.mutate({ projectId: project.id, status })}
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
