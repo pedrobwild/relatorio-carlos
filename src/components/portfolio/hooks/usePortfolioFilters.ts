@@ -14,7 +14,7 @@ import { applyAdvancedFilters } from '../filters/applyFilters';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
-export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon';
+export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon' | 'completed';
 export type ViewMode = 'cards' | 'list' | 'table';
 export type ScopeFilter = 'all' | 'obras' | 'projetos';
 
@@ -136,6 +136,9 @@ export function usePortfolioFilters(
           );
           return daysLeft >= 0 && daysLeft <= 7;
         });
+        break;
+      case 'completed':
+        result = result.filter(p => p.status === 'completed');
         break;
     }
 
