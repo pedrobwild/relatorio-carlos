@@ -8,8 +8,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { AlertTriangle, Clock, CalendarX, CheckCircle, FileText, FileSignature, MoreHorizontal, Eye, Settings, Trash2 } from 'lucide-react';
-import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { AlertTriangle, Clock, CalendarX, CheckCircle, FileText, FileSignature, MoreHorizontal, Eye, Settings, Trash2, CheckCircle2, PlayCircle, PauseCircle } from 'lucide-react';
+import { useProjectSummaryQuery, useUpdateProjectStatusMutation } from '@/hooks/useProjectsQuery';
 import { useDeleteProject } from '@/hooks/useDeleteProject';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
 import { differenceInDays, format } from 'date-fns';
@@ -45,6 +45,7 @@ export function ProjectsCardView({ projects, onProjectClick }: ProjectsCardViewP
   const navigate = useNavigate();
   const { data: summaries = [], isLoading } = useProjectSummaryQuery();
   const deleteProject = useDeleteProject();
+  const updateStatus = useUpdateProjectStatusMutation();
   const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   const summaryMap = useMemo(() => {
@@ -70,6 +71,7 @@ export function ProjectsCardView({ projects, onProjectClick }: ProjectsCardViewP
               onClick={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
               onEdit={() => navigate(`/gestao/obra/${project.id}/editar`)}
               onDelete={() => setDeleteTarget(project)}
+              onChangeStatus={(status) => updateStatus.mutate({ projectId: project.id, status })}
             />
           );
         })}
@@ -110,12 +112,14 @@ function ProjectCard({
   onClick,
   onEdit,
   onDelete,
+  onChangeStatus,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onChangeStatus: (status: 'active' | 'completed' | 'paused' | 'draft' | 'cancelled') => void;
 }) {
   const overdueCount = summary?.overdue_count ?? 0;
   const pendingCount = summary?.pending_count ?? 0;
@@ -160,6 +164,27 @@ function ProjectCard({
             <DropdownMenuItem onClick={onEdit}>
               <Settings className="h-4 w-4 mr-2" /> Editar
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {project.status !== 'completed' && (
+              <DropdownMenuItem onClick={() => onChangeStatus('completed')}>
+                <CheckCircle2 className="h-4 w-4 mr-2 text-[hsl(var(--success))]" /> Marcar como concluída
+              </DropdownMenuItem>
+            )}
+            {project.status === 'completed' && (
+              <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                <PlayCircle className="h-4 w-4 mr-2" /> Reabrir obra
+              </DropdownMenuItem>
+            )}
+            {project.status === 'active' && (
+              <DropdownMenuItem onClick={() => onChangeStatus('paused')}>
+                <PauseCircle className="h-4 w-4 mr-2" /> Pausar obra
+              </DropdownMenuItem>
+            )}
+            {project.status === 'paused' && (
+              <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                <PlayCircle className="h-4 w-4 mr-2" /> Retomar obra
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={onDelete}>
               <Trash2 className="h-4 w-4 mr-2" /> Excluir obra

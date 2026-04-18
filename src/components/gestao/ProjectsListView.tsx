@@ -12,8 +12,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, PlayCircle, PauseCircle } from 'lucide-react';
+import { useProjectSummaryQuery, useUpdateProjectStatusMutation } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
 import { useDeleteProject } from '@/hooks/useDeleteProject';
@@ -54,6 +54,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
   const deleteProject = useDeleteProject();
+  const updateStatus = useUpdateProjectStatusMutation();
   const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   // Split IDs: obras use cronograma stages, projetos use journey stages
@@ -228,6 +229,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                       onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
                       onEdit={() => navigate(`/gestao/obra/${project.id}/editar`)}
                       onDelete={() => setDeleteTarget(project)}
+                      onChangeStatus={(status) => updateStatus.mutate({ projectId: project.id, status })}
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
@@ -315,7 +317,7 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, currentStage, isExpanded, onToggle: _onToggle, onNavigate, onEdit, onDelete,
+  project, summary, currentStage, isExpanded, onToggle: _onToggle, onNavigate, onEdit, onDelete, onChangeStatus,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
@@ -325,6 +327,7 @@ function ProjectRow({
   onNavigate: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onChangeStatus: (status: 'active' | 'completed' | 'paused' | 'draft' | 'cancelled') => void;
 }) {
   const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
@@ -599,6 +602,27 @@ function ProjectRow({
               {project.status === 'draft' && (
                 <DropdownMenuItem onClick={() => navigate(`/gestao/obra/${project.id}/wizard`)}>
                   <Pencil className="h-4 w-4 mr-2" /> Revisar rascunho
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              {project.status !== 'completed' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('completed')}>
+                  <CheckCircle2 className="h-4 w-4 mr-2 text-[hsl(var(--success))]" /> Marcar como concluída
+                </DropdownMenuItem>
+              )}
+              {project.status === 'completed' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                  <PlayCircle className="h-4 w-4 mr-2" /> Reabrir obra
+                </DropdownMenuItem>
+              )}
+              {project.status === 'active' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('paused')}>
+                  <PauseCircle className="h-4 w-4 mr-2" /> Pausar obra
+                </DropdownMenuItem>
+              )}
+              {project.status === 'paused' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                  <PlayCircle className="h-4 w-4 mr-2" /> Retomar obra
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
