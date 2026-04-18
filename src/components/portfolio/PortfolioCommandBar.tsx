@@ -20,6 +20,7 @@ const presets: { key: PortfolioPreset; label: string }[] = [
   { key: 'critical', label: 'Críticas' },
   { key: 'stale', label: 'Sem update' },
   { key: 'due-soon', label: 'Vencendo' },
+  { key: 'completed', label: 'Concluídas' },
 ];
 
 interface PortfolioCommandBarProps {
