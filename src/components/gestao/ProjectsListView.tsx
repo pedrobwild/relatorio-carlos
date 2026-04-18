@@ -181,7 +181,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-border/50 bg-white dark:bg-card overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
