@@ -82,13 +82,7 @@ export default function PortfolioPage() {
 
   const displayedProjects = filters.filtered;
 
-  const handleStaleAction = useCallback((projectId: string) => {
-    if (projectId.startsWith('stale-')) {
-      setStaleDialogOpen(true);
-    } else {
-      navigate(`/obra/${projectId}`);
-    }
-  }, [navigate]);
+
 
   // ── Full-page loading ───────────────────────────────────────────────────
   if (isLoading && projects.length === 0) {
