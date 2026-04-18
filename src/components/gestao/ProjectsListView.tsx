@@ -184,7 +184,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
       <div className="rounded-xl border border-border/50 bg-white dark:bg-card overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
+            <TableRow className="bg-white dark:bg-card hover:bg-white dark:hover:bg-card border-b border-border/50">
               <TableHead className="w-7 px-1" />
               <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('obra')}>
                 Obra{sortIcon('obra')}
