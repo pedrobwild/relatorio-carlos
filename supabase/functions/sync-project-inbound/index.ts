@@ -542,23 +542,54 @@ async function enrichProjectWithAI(
     console.log("[AI-enrich] No new fields to update");
   }
 
-  // 7. Store customer details and payment schedule as project notes/metadata
-  const enrichmentNotes: string[] = [];
+  // 7. Persist customer details into project_customers (CPF, RG, profissão, endereço, etc)
+  if (parsed.customer_details && Object.keys(parsed.customer_details).length > 0) {
+    const cd = parsed.customer_details as Record<string, unknown>;
+    const customerUpdate: Record<string, unknown> = {};
+    if (cd.cpf) customerUpdate.cpf = String(cd.cpf);
+    if (cd.rg) customerUpdate.rg = String(cd.rg);
+    if (cd.nacionalidade) customerUpdate.nacionalidade = String(cd.nacionalidade);
+    if (cd.estado_civil) customerUpdate.estado_civil = String(cd.estado_civil);
+    if (cd.profissao) customerUpdate.profissao = String(cd.profissao);
+    if (cd.endereco_residencial) customerUpdate.endereco_residencial = String(cd.endereco_residencial);
 
-  if (parsed.customer_details) {
-    const cd = parsed.customer_details;
-    const parts: string[] = [];
-    if (cd.cpf) parts.push(`CPF: ${cd.cpf}`);
-    if (cd.rg) parts.push(`RG: ${cd.rg}`);
-    if (cd.nacionalidade) parts.push(`Nacionalidade: ${cd.nacionalidade}`);
-    if (cd.estado_civil) parts.push(`Estado Civil: ${cd.estado_civil}`);
-    if (cd.profissao) parts.push(`Profissão: ${cd.profissao}`);
-    if (cd.endereco_residencial) parts.push(`Endereço Residencial: ${cd.endereco_residencial}`);
-    if (parts.length > 0) {
-      enrichmentNotes.push("DADOS DO CONTRATANTE:\n" + parts.join("\n"));
+    if (Object.keys(customerUpdate).length > 0) {
+      const { error: custErr } = await db
+        .from("project_customers")
+        .update(customerUpdate)
+        .eq("project_id", projectId);
+      if (custErr) {
+        console.error("[AI-enrich] project_customers update error:", custErr.message);
+      } else {
+        console.log(`[AI-enrich] Updated project_customers with ${Object.keys(customerUpdate).join(", ")}`);
+      }
     }
   }
 
+  // 8. Persist property details into project_studio_info
+  const studioUpdate: Record<string, unknown> = { project_id: projectId };
+  const pf = projectFields as Record<string, unknown>;
+  if (pf.condominium) studioUpdate.nome_do_empreendimento = pf.condominium;
+  if (pf.address) studioUpdate.endereco_completo = pf.address;
+  if (pf.bairro || pf.neighborhood) studioUpdate.bairro = pf.bairro ?? pf.neighborhood;
+  if (pf.city) studioUpdate.cidade = pf.city;
+  if (pf.cep) studioUpdate.cep = pf.cep;
+  if (pf.total_area != null) studioUpdate.tamanho_imovel_m2 = pf.total_area;
+  if (pf.property_type) studioUpdate.tipo_de_locacao = pf.property_type;
+
+  if (Object.keys(studioUpdate).length > 1) {
+    const { error: studioErr } = await db
+      .from("project_studio_info")
+      .upsert(studioUpdate, { onConflict: "project_id" });
+    if (studioErr) {
+      console.error("[AI-enrich] project_studio_info upsert error:", studioErr.message);
+    } else {
+      console.log(`[AI-enrich] Upserted project_studio_info with ${Object.keys(studioUpdate).filter(k => k !== "project_id").join(", ")}`);
+    }
+  }
+
+  // 9. Append a compact audit trail to project notes (payment schedule + IA marker)
+  const enrichmentNotes: string[] = [];
   if (parsed.payment_schedule && parsed.payment_schedule.length > 0) {
     const scheduleLines = parsed.payment_schedule.map((p, i) =>
       `${i + 1}. ${p.description}: R$ ${typeof p.value === "number" ? p.value.toLocaleString("pt-BR") : p.value}${p.due_date ? ` (venc: ${p.due_date})` : ""}`
@@ -566,7 +597,6 @@ async function enrichProjectWithAI(
     enrichmentNotes.push("CRONOGRAMA DE PAGAMENTO:\n" + scheduleLines.join("\n"));
   }
 
-  // Append enrichment notes to project notes if we have new info
   if (enrichmentNotes.length > 0) {
     const { data: currentProject } = await db
       .from("projects")
