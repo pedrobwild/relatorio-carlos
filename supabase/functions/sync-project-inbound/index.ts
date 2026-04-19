@@ -129,18 +129,33 @@ Deno.serve(async (req) => {
         console.error("[sync-project-inbound] Journey init error:", journeyErr instanceof Error ? journeyErr.message : journeyErr);
       }
 
-      // --- Auto-create customer user account ---
+      // --- Auto-create customer user account (resilient: always upserts project_customers) ---
       const clientEmail = project.client_email?.trim()?.toLowerCase();
       const clientName = project.client_name?.trim();
-      if (clientEmail) {
+      const clientPhone = project.client_phone ?? null;
+      if (clientEmail && clientName) {
         try {
-          const customerUserId = await createCustomerUser(db, projectId, clientEmail, clientName, adminUser.id);
-          if (customerUserId) {
-            console.log(`[sync-project-inbound] Customer user created/linked: ${customerUserId}`);
-          }
+          const customerUserId = await createCustomerUser(db, projectId, clientEmail, clientName, clientPhone, adminUser.id);
+          console.log(`[sync-project-inbound] Customer linked to project: ${customerUserId ?? "no auth user (record-only)"}`);
         } catch (custErr) {
-          console.error("[sync-project-inbound] Customer user creation error:", custErr instanceof Error ? custErr.message : custErr);
+          console.error("[sync-project-inbound] Customer creation error:", custErr instanceof Error ? custErr.message : custErr);
         }
+      }
+
+      // --- Seed project_studio_info from initial payload (will be enriched later by AI) ---
+      try {
+        await db.from("project_studio_info").upsert({
+          project_id: projectId,
+          nome_do_empreendimento: project.condominium ?? null,
+          endereco_completo: project.address ?? null,
+          bairro: project.neighborhood ?? null,
+          cidade: project.city ?? null,
+          cep: project.cep ?? null,
+          tamanho_imovel_m2: project.total_area ?? null,
+          tipo_de_locacao: project.property_type ?? null,
+        }, { onConflict: "project_id" });
+      } catch (studioErr) {
+        console.error("[sync-project-inbound] Studio info seed error:", studioErr instanceof Error ? studioErr.message : studioErr);
       }
     }
 
