@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import {
   HardHat, Ban, Ghost, CheckCircle2,
-  CalendarX, CalendarClock, DollarSign, Package,
+  CalendarX, CalendarClock, DollarSign, Package, FileEdit,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -12,6 +12,7 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 
 export type KpiFilterKey =
   | 'active'
+  | 'draft'
   | 'critical'
   | 'blocked'
   | 'overdue'
@@ -47,6 +48,7 @@ interface PortfolioKpiStripProps {
 
 const kpiDefinitions: KpiDefinition[] = [
   { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
+  { key: 'draft', label: 'Rascunhos', description: 'Obras em rascunho aguardando finalização do cadastro', icon: <FileEdit className="h-4 w-4" />, accent: 'muted' },
   { key: 'completed', label: 'Concluídas', description: 'Obras finalizadas', icon: <CheckCircle2 className="h-4 w-4" />, accent: 'default' },
   { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
   { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
@@ -110,13 +112,14 @@ function computeKpiValues(
   const MS_STALE = 7 * 24 * 60 * 60 * 1000;
   const MS_14D = 14 * 24 * 60 * 60 * 1000;
 
-  let activeCount = 0, criticalCount = 0, blockedCount = 0;
+  let activeCount = 0, draftCount = 0, criticalCount = 0, blockedCount = 0;
   let stale7d = 0, overdueCount = 0, approachingCount = 0;
   let costAtRisk = 0, completedCount = 0;
 
   for (const p of projects) {
     const s = summaryMap.get(p.id);
     if (p.status === 'active') activeCount++;
+    if (p.status === 'draft') draftCount++;
     if (p.status === 'completed') completedCount++;
     if (p.status === 'paused') blockedCount++;
     if (s && p.status === 'active' && s.overdue_count > 0) criticalCount++;
@@ -146,6 +149,7 @@ function computeKpiValues(
 
   const map = new Map<KpiFilterKey, number>();
   map.set('active', activeCount);
+  map.set('draft', draftCount);
   map.set('completed', completedCount);
   map.set('overdue', overdueCount);
   map.set('approaching-deadline', approachingCount);
@@ -239,6 +243,8 @@ export function applyKpiFilter(
   switch (filter) {
     case 'active':
       return projects.filter(p => p.status === 'active');
+    case 'draft':
+      return projects.filter(p => p.status === 'draft');
     case 'completed':
       return projects.filter(p => p.status === 'completed');
     case 'overdue':
