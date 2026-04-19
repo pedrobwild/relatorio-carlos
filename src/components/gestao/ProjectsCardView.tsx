@@ -125,7 +125,7 @@ function ProjectCard({
   const pendingCount = summary?.pending_count ?? 0;
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocuments = summary?.pending_documents ?? 0;
-  const progress = summary?.progress_percentage ?? 0;
+  const progress = Math.max(0, Math.min(100, Math.round(Number(summary?.progress_percentage ?? 0))));
 
   const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;

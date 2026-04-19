@@ -334,7 +334,7 @@ function ProjectRow({
   const overdueCount = summary?.overdue_count ?? 0;
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocuments = summary?.pending_documents ?? 0;
-  const progress = summary?.progress_percentage ?? 0;
+  const progress = Math.max(0, Math.min(100, Math.round(Number(summary?.progress_percentage ?? 0))));
 
   const plannedProgress = useMemo(() => {
     const startStr = project.actual_start_date ?? project.planned_start_date;

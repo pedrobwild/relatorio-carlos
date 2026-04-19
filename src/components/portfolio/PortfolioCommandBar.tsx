@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, SlidersHorizontal, Download, Plus, LayoutGrid, List, Table2, User,
+  Search, SlidersHorizontal, Download, Plus, LayoutGrid, List, User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ interface PortfolioCommandBarProps {
   filteredCount: number;
   activeFilterCount: number;
   onOpenFilters: () => void;
+  onExport?: () => void;
 }
 
 export function PortfolioCommandBar({
@@ -46,6 +47,7 @@ export function PortfolioCommandBar({
   viewMode, onViewModeChange, scopeFilter, onScopeChange,
   engineers, selectedEngineer, onEngineerChange,
   totalCount, filteredCount, activeFilterCount, onOpenFilters,
+  onExport,
 }: PortfolioCommandBarProps) {
   const navigate = useNavigate();
   const showingSubset = filteredCount < totalCount;
@@ -72,7 +74,6 @@ export function PortfolioCommandBar({
             {([
               { mode: 'cards' as ViewMode, icon: LayoutGrid, label: 'Cards', description: 'Visão geral' },
               { mode: 'list' as ViewMode, icon: List, label: 'Lista', description: 'Resumo rápido' },
-              { mode: 'table' as ViewMode, icon: Table2, label: 'Tabela', description: 'Comparação detalhada' },
             ]).map(({ mode, icon: Icon, label, description }) => (
               <Tooltip key={mode}>
                 <TooltipTrigger asChild>
@@ -119,7 +120,13 @@ export function PortfolioCommandBar({
             )}
           </Button>
 
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs px-2.5 rounded-lg hidden sm:flex">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs px-2.5 rounded-lg hidden sm:flex"
+            onClick={onExport}
+            disabled={!onExport}
+          >
             <Download className="h-3.5 w-3.5" />
             <span className="hidden md:inline">Exportar</span>
           </Button>
