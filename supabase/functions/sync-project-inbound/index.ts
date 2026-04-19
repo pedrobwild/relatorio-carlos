@@ -907,3 +907,142 @@ async function createCustomerUser(
 
   return userId;
 }
+
+// ─── Rich client data from Envision CRM ─────────────────────────────────────
+
+/**
+ * Seed project_customers with rich CRM fields from the Envision `client` block.
+ * This runs BEFORE AI enrichment, so AI only fills in what is missing.
+ */
+async function seedClientDetails(
+  db: ReturnType<typeof createClient>,
+  projectId: string,
+  customerEmail: string,
+  client: Record<string, unknown>,
+): Promise<void> {
+  if (!customerEmail) return;
+
+  const residencialParts = [
+    client.address,
+    client.address_complement,
+    client.zip_code ? `CEP ${client.zip_code}` : null,
+  ].filter(Boolean) as string[];
+  const enderecoResidencial = residencialParts.length > 0 ? residencialParts.join(" — ") : null;
+
+  const updatePayload: Record<string, unknown> = {};
+  if (client.cpf) updatePayload.cpf = String(client.cpf);
+  if (client.rg) updatePayload.rg = String(client.rg);
+  if (client.nationality) updatePayload.nacionalidade = String(client.nationality);
+  if (client.marital_status) updatePayload.estado_civil = String(client.marital_status);
+  if (client.profession) updatePayload.profissao = String(client.profession);
+  if (enderecoResidencial) updatePayload.endereco_residencial = enderecoResidencial;
+  if (client.city) updatePayload.cidade = String(client.city);
+  if (client.state) updatePayload.estado = String(client.state);
+
+  if (Object.keys(updatePayload).length === 0) return;
+
+  const { error } = await db
+    .from("project_customers")
+    .update(updatePayload)
+    .eq("project_id", projectId)
+    .eq("customer_email", customerEmail);
+
+  if (error) {
+    console.error("[client-seed] Update error:", error.message);
+  } else {
+    console.log(`[client-seed] Seeded project_customers with ${Object.keys(updatePayload).join(", ")}`);
+  }
+}
+
+/** Convert "120 m²", "85,5", "1.250,50 m2" etc to a numeric value, or null. */
+function parseMetragemNumber(value: unknown): number | null {
+  if (value == null) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const str = String(value).trim();
+  if (!str) return null;
+  const match = str.replace(/\./g, "").replace(",", ".").match(/-?\d+(\.\d+)?/);
+  if (!match) return null;
+  const num = parseFloat(match[0]);
+  return Number.isFinite(num) ? num : null;
+}
+
+/**
+ * Download the property floor plan from the Envision URL and store it in
+ * project_documents (category: plano_reforma) so it shows in the Documents tab.
+ */
+async function downloadAndStoreFloorPlan(
+  db: ReturnType<typeof createClient>,
+  projectId: string,
+  floorPlanUrl: string,
+  projectName: string,
+): Promise<void> {
+  console.log(`[floor-plan-store] Downloading from: ${floorPlanUrl.substring(0, 80)}...`);
+  const response = await fetch(floorPlanUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to download floor plan: ${response.status}`);
+  }
+  const buf = new Uint8Array(await response.arrayBuffer());
+  if (buf.length > 50 * 1024 * 1024) {
+    throw new Error("Floor plan too large (>50MB)");
+  }
+
+  const contentType = response.headers.get("content-type") ?? "application/octet-stream";
+  const urlExt = (floorPlanUrl.split("?")[0].split(".").pop() ?? "").toLowerCase();
+  const ext = ["pdf", "png", "jpg", "jpeg", "dwg", "dxf"].includes(urlExt) ? urlExt : "pdf";
+  const mimeType = contentType.startsWith("application/") || contentType.startsWith("image/")
+    ? contentType
+    : (ext === "pdf" ? "application/pdf" : ext === "png" ? "image/png" : "image/jpeg");
+
+  const { data: existingDoc } = await db
+    .from("project_documents")
+    .select("id")
+    .eq("project_id", projectId)
+    .eq("document_type", "plano_reforma")
+    .ilike("name", "Planta_%")
+    .maybeSingle();
+
+  if (existingDoc) {
+    console.log(`[floor-plan-store] Floor plan already exists, skipping`);
+    return;
+  }
+
+  const sanitizedName = `Planta_${projectName.replace(/[^a-zA-Z0-9._-]/g, "_")}.${ext}`;
+  const storagePath = `${projectId}/plantas/${Date.now()}_${sanitizedName}`;
+  const bucket = "project-documents";
+
+  const { error: uploadErr } = await db.storage
+    .from(bucket)
+    .upload(storagePath, buf, { contentType: mimeType, upsert: false });
+  if (uploadErr) {
+    throw new Error(`Storage upload failed: ${uploadErr.message}`);
+  }
+
+  const { data: adminUser } = await db
+    .from("users_profile")
+    .select("id")
+    .eq("perfil", "admin")
+    .eq("status", "ativo")
+    .limit(1)
+    .single();
+
+  const { error: docErr } = await db
+    .from("project_documents")
+    .insert({
+      project_id: projectId,
+      document_type: "plano_reforma",
+      name: sanitizedName,
+      description: "Planta do imóvel recebida automaticamente via integração Envision",
+      storage_path: storagePath,
+      storage_bucket: bucket,
+      mime_type: mimeType,
+      size_bytes: buf.length,
+      status: "approved",
+      uploaded_by: adminUser?.id ?? "00000000-0000-0000-0000-000000000000",
+    });
+
+  if (docErr) {
+    await db.storage.from(bucket).remove([storagePath]);
+    throw new Error(`Document record failed: ${docErr.message}`);
+  }
+  console.log(`[floor-plan-store] Stored floor plan: ${storagePath} (${buf.length} bytes)`);
+}
