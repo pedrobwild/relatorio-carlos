@@ -39,6 +39,7 @@ interface PortfolioCommandBarProps {
   filteredCount: number;
   activeFilterCount: number;
   onOpenFilters: () => void;
+  onExport?: () => void;
 }
 
 export function PortfolioCommandBar({

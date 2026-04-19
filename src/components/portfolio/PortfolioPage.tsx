@@ -103,7 +103,7 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="flex-1 bg-background">
+    <div className="flex-1 bg-background" data-testid="gestao-obras-list">
       <AppHeader>
         <div className="ml-2">
           <h1 className="text-h3 font-bold sr-only">Gestão de Obras</h1>
