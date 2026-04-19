@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = await req.json();
-    const { project, source_id, budget } = body;
+    const { project, source_id, budget, client } = body;
 
     // --- Validate required fields ---
     const errors: string[] = [];
