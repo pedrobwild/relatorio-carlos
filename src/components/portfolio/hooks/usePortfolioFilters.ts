@@ -15,7 +15,7 @@ import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon' | 'completed';
-export type ViewMode = 'cards' | 'list' | 'table';
+export type ViewMode = 'cards' | 'list';
 export type ScopeFilter = 'all' | 'obras' | 'projetos';
 
 export function usePortfolioFilters(
@@ -49,9 +49,10 @@ export function usePortfolioFilters(
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── View mode ───────────────────────────────────────────────────────────
-  const [viewMode, setViewMode] = useState<ViewMode>(() =>
-    (localStorage.getItem('portfolio-view-mode') as ViewMode) || 'list'
-  );
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const stored = localStorage.getItem('portfolio-view-mode') as ViewMode | null;
+    return stored === 'cards' || stored === 'list' ? stored : 'list';
+  });
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     localStorage.setItem('portfolio-view-mode', mode);
