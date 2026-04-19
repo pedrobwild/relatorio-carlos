@@ -129,18 +129,33 @@ Deno.serve(async (req) => {
         console.error("[sync-project-inbound] Journey init error:", journeyErr instanceof Error ? journeyErr.message : journeyErr);
       }
 
-      // --- Auto-create customer user account ---
+      // --- Auto-create customer user account (resilient: always upserts project_customers) ---
       const clientEmail = project.client_email?.trim()?.toLowerCase();
       const clientName = project.client_name?.trim();
-      if (clientEmail) {
+      const clientPhone = project.client_phone ?? null;
+      if (clientEmail && clientName) {
         try {
-          const customerUserId = await createCustomerUser(db, projectId, clientEmail, clientName, adminUser.id);
-          if (customerUserId) {
-            console.log(`[sync-project-inbound] Customer user created/linked: ${customerUserId}`);
-          }
+          const customerUserId = await createCustomerUser(db, projectId, clientEmail, clientName, clientPhone, adminUser.id);
+          console.log(`[sync-project-inbound] Customer linked to project: ${customerUserId ?? "no auth user (record-only)"}`);
         } catch (custErr) {
-          console.error("[sync-project-inbound] Customer user creation error:", custErr instanceof Error ? custErr.message : custErr);
+          console.error("[sync-project-inbound] Customer creation error:", custErr instanceof Error ? custErr.message : custErr);
         }
+      }
+
+      // --- Seed project_studio_info from initial payload (will be enriched later by AI) ---
+      try {
+        await db.from("project_studio_info").upsert({
+          project_id: projectId,
+          nome_do_empreendimento: project.condominium ?? null,
+          endereco_completo: project.address ?? null,
+          bairro: project.neighborhood ?? null,
+          cidade: project.city ?? null,
+          cep: project.cep ?? null,
+          tamanho_imovel_m2: project.total_area ?? null,
+          tipo_de_locacao: project.property_type ?? null,
+        }, { onConflict: "project_id" });
+      } catch (studioErr) {
+        console.error("[sync-project-inbound] Studio info seed error:", studioErr instanceof Error ? studioErr.message : studioErr);
       }
     }
 
@@ -527,23 +542,54 @@ async function enrichProjectWithAI(
     console.log("[AI-enrich] No new fields to update");
   }
 
-  // 7. Store customer details and payment schedule as project notes/metadata
-  const enrichmentNotes: string[] = [];
+  // 7. Persist customer details into project_customers (CPF, RG, profissão, endereço, etc)
+  if (parsed.customer_details && Object.keys(parsed.customer_details).length > 0) {
+    const cd = parsed.customer_details as Record<string, unknown>;
+    const customerUpdate: Record<string, unknown> = {};
+    if (cd.cpf) customerUpdate.cpf = String(cd.cpf);
+    if (cd.rg) customerUpdate.rg = String(cd.rg);
+    if (cd.nacionalidade) customerUpdate.nacionalidade = String(cd.nacionalidade);
+    if (cd.estado_civil) customerUpdate.estado_civil = String(cd.estado_civil);
+    if (cd.profissao) customerUpdate.profissao = String(cd.profissao);
+    if (cd.endereco_residencial) customerUpdate.endereco_residencial = String(cd.endereco_residencial);
 
-  if (parsed.customer_details) {
-    const cd = parsed.customer_details;
-    const parts: string[] = [];
-    if (cd.cpf) parts.push(`CPF: ${cd.cpf}`);
-    if (cd.rg) parts.push(`RG: ${cd.rg}`);
-    if (cd.nacionalidade) parts.push(`Nacionalidade: ${cd.nacionalidade}`);
-    if (cd.estado_civil) parts.push(`Estado Civil: ${cd.estado_civil}`);
-    if (cd.profissao) parts.push(`Profissão: ${cd.profissao}`);
-    if (cd.endereco_residencial) parts.push(`Endereço Residencial: ${cd.endereco_residencial}`);
-    if (parts.length > 0) {
-      enrichmentNotes.push("DADOS DO CONTRATANTE:\n" + parts.join("\n"));
+    if (Object.keys(customerUpdate).length > 0) {
+      const { error: custErr } = await db
+        .from("project_customers")
+        .update(customerUpdate)
+        .eq("project_id", projectId);
+      if (custErr) {
+        console.error("[AI-enrich] project_customers update error:", custErr.message);
+      } else {
+        console.log(`[AI-enrich] Updated project_customers with ${Object.keys(customerUpdate).join(", ")}`);
+      }
     }
   }
 
+  // 8. Persist property details into project_studio_info
+  const studioUpdate: Record<string, unknown> = { project_id: projectId };
+  const pf = projectFields as Record<string, unknown>;
+  if (pf.condominium) studioUpdate.nome_do_empreendimento = pf.condominium;
+  if (pf.address) studioUpdate.endereco_completo = pf.address;
+  if (pf.bairro || pf.neighborhood) studioUpdate.bairro = pf.bairro ?? pf.neighborhood;
+  if (pf.city) studioUpdate.cidade = pf.city;
+  if (pf.cep) studioUpdate.cep = pf.cep;
+  if (pf.total_area != null) studioUpdate.tamanho_imovel_m2 = pf.total_area;
+  if (pf.property_type) studioUpdate.tipo_de_locacao = pf.property_type;
+
+  if (Object.keys(studioUpdate).length > 1) {
+    const { error: studioErr } = await db
+      .from("project_studio_info")
+      .upsert(studioUpdate, { onConflict: "project_id" });
+    if (studioErr) {
+      console.error("[AI-enrich] project_studio_info upsert error:", studioErr.message);
+    } else {
+      console.log(`[AI-enrich] Upserted project_studio_info with ${Object.keys(studioUpdate).filter(k => k !== "project_id").join(", ")}`);
+    }
+  }
+
+  // 9. Append a compact audit trail to project notes (payment schedule + IA marker)
+  const enrichmentNotes: string[] = [];
   if (parsed.payment_schedule && parsed.payment_schedule.length > 0) {
     const scheduleLines = parsed.payment_schedule.map((p, i) =>
       `${i + 1}. ${p.description}: R$ ${typeof p.value === "number" ? p.value.toLocaleString("pt-BR") : p.value}${p.due_date ? ` (venc: ${p.due_date})` : ""}`
@@ -551,7 +597,6 @@ async function enrichProjectWithAI(
     enrichmentNotes.push("CRONOGRAMA DE PAGAMENTO:\n" + scheduleLines.join("\n"));
   }
 
-  // Append enrichment notes to project notes if we have new info
   if (enrichmentNotes.length > 0) {
     const { data: currentProject } = await db
       .from("projects")
@@ -740,93 +785,103 @@ const DEFAULT_CUSTOMER_PASSWORD = "512451";
 
 /**
  * Auto-create a customer user account when a project is synced from Envision.
- * If the user already exists (by email), just link them to the project.
- * Returns the customer user ID or null if creation failed.
+ *
+ * RESILIENT: Always upserts the project_customers record (so the data appears
+ * in the "Dados do Cliente" tab) even if the auth user creation fails. The
+ * customer_user_id will be linked later, when the cliente is invited / signs up.
+ *
+ * Returns the customer user ID, or null if no auth user could be linked yet
+ * (in which case the project_customers record exists but is unlinked).
  */
 async function createCustomerUser(
   db: ReturnType<typeof createClient>,
   projectId: string,
   email: string,
   displayName: string,
-  adminUserId: string,
+  phone: string | null,
+  _adminUserId: string,
 ): Promise<string | null> {
-  // 1. Check if user already exists
-  const { data: existingProfile } = await db
-    .from("users_profile")
-    .select("id")
-    .eq("email", email)
-    .limit(1)
-    .maybeSingle();
+  let userId: string | null = null;
 
-  let userId: string;
+  // 1. Check if user already exists by email
+  try {
+    const { data: existingProfile } = await db
+      .from("users_profile")
+      .select("id")
+      .eq("email", email)
+      .limit(1)
+      .maybeSingle();
 
-  if (existingProfile) {
-    userId = existingProfile.id;
-    console.log(`[customer-create] User already exists for ${email.substring(0, 3)}***: ${userId}`);
-  } else {
-    // 2. Create auth user with default password
-    const { data: newUser, error: createErr } = await db.auth.admin.createUser({
-      email,
-      password: DEFAULT_CUSTOMER_PASSWORD,
-      email_confirm: true,
-      user_metadata: {
-        display_name: displayName || email.split("@")[0],
-        role: "customer",
-      },
-    });
+    if (existingProfile) {
+      userId = existingProfile.id;
+      console.log(`[customer-create] User already exists for ${email.substring(0, 3)}***: ${userId}`);
+    }
+  } catch (lookupErr) {
+    console.error("[customer-create] Profile lookup failed:", lookupErr instanceof Error ? lookupErr.message : lookupErr);
+  }
 
-    if (createErr) {
-      console.error("[customer-create] Auth createUser error:", createErr.message);
-      // If "already registered" edge case not caught by profile check
-      if (createErr.message?.includes("already been registered")) {
-        const { data: fallback } = await db
-          .from("users_profile")
-          .select("id")
-          .eq("email", email)
-          .limit(1)
-          .maybeSingle();
-        if (fallback) {
-          userId = fallback.id;
-        } else {
-          return null;
+  // 2. If no existing user, try to create one (non-fatal on failure)
+  if (!userId) {
+    try {
+      const { data: newUser, error: createErr } = await db.auth.admin.createUser({
+        email,
+        password: DEFAULT_CUSTOMER_PASSWORD,
+        email_confirm: true,
+        user_metadata: {
+          display_name: displayName || email.split("@")[0],
+          role: "customer",
+        },
+      });
+
+      if (createErr) {
+        console.error("[customer-create] Auth createUser error:", createErr.message);
+        if (createErr.message?.includes("already been registered")) {
+          const { data: fallback } = await db
+            .from("users_profile")
+            .select("id")
+            .eq("email", email)
+            .limit(1)
+            .maybeSingle();
+          if (fallback) userId = fallback.id;
         }
-      } else {
-        return null;
+      } else if (newUser?.user) {
+        userId = newUser.user.id;
+        console.log(`[customer-create] Created new user for ${email.substring(0, 3)}***: ${userId}`);
       }
-    } else if (!newUser?.user) {
-      console.error("[customer-create] No user returned from createUser");
-      return null;
-    } else {
-      userId = newUser.user.id;
-      console.log(`[customer-create] Created new user for ${email.substring(0, 3)}***: ${userId}`);
+    } catch (authErr) {
+      console.error("[customer-create] Auth createUser threw:", authErr instanceof Error ? authErr.message : authErr);
     }
   }
 
-  // 3. Upsert project_customers record
+  // 3. ALWAYS upsert project_customers (with or without userId)
+  const customerRecord: Record<string, unknown> = {
+    project_id: projectId,
+    customer_name: displayName || email.split("@")[0],
+    customer_email: email,
+    customer_phone: phone,
+  };
+  if (userId) customerRecord.customer_user_id = userId;
+
   const { error: custErr } = await db
     .from("project_customers")
-    .upsert(
-      {
-        project_id: projectId,
-        customer_name: displayName || email.split("@")[0],
-        customer_email: email,
-        customer_user_id: userId,
-      },
-      { onConflict: "project_id,customer_email" }
-    );
+    .upsert(customerRecord, { onConflict: "project_id,customer_email" });
   if (custErr) {
     console.error("[customer-create] project_customers upsert error:", custErr.message);
+  } else {
+    console.log(`[customer-create] project_customers upserted (linked=${!!userId})`);
   }
 
-  // 4. Add as project member (viewer)
-  const { error: memberErr } = await db
-    .from("project_members")
-    .upsert(
-      { project_id: projectId, user_id: userId, role: "viewer" },
-      { onConflict: "project_id,user_id" }
-    );
-  if (memberErr) {
-    console.error("[customer-create] project_members upsert error:", memberErr.message);
+  // 4. Add as project member (viewer) only if we have a userId
+  if (userId) {
+    const { error: memberErr } = await db
+      .from("project_members")
+      .upsert(
+        { project_id: projectId, user_id: userId, role: "viewer" },
+        { onConflict: "project_id,user_id" }
+      );
+    if (memberErr) {
+      console.error("[customer-create] project_members upsert error:", memberErr.message);
+    }
   }
 
   return userId;
