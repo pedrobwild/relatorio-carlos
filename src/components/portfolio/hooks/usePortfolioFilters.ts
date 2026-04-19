@@ -104,6 +104,14 @@ export function usePortfolioFilters(
       result = result.filter(p => p.status !== 'completed');
     }
 
+    // Hide draft projects by default — only show when explicitly filtered for
+    const wantsDraft =
+      kpiFilter === 'draft' ||
+      advancedFilters.status.includes('draft');
+    if (!wantsDraft) {
+      result = result.filter(p => p.status !== 'draft');
+    }
+
     // Scope filter (obras vs projetos)
     if (scopeFilter === 'obras') {
       result = result.filter(p => !p.is_project_phase);
