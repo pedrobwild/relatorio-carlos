@@ -82,6 +82,39 @@ export default function PortfolioPage() {
 
   const displayedProjects = filters.filtered;
 
+  // ── Export to CSV ───────────────────────────────────────────────────────
+  const handleExportCSV = useCallback(() => {
+    if (displayedProjects.length === 0) return;
+    const summaryMap = new Map(summaries.map(s => [s.id, s]));
+    const headers = [
+      'Nome', 'Status', 'Cliente', 'Responsável', 'Cidade',
+      'Início', 'Entrega Prevista', 'Entrega Real',
+      'Valor Contrato', 'Progresso (%)', 'Pendências', 'Atrasadas',
+    ];
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = displayedProjects.map(p => {
+      const s = summaryMap.get(p.id);
+      return [
+        p.name, p.status, p.customer_name ?? '', p.engineer_name ?? '', p.cidade ?? '',
+        p.planned_start_date ?? '', p.planned_end_date ?? '', p.actual_end_date ?? '',
+        p.contract_value ?? '',
+        s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : '',
+        s?.pending_count ?? 0, s?.overdue_count ?? 0,
+      ].map(escape).join(';');
+    });
+    const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `obras_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [displayedProjects, summaries]);
+
 
 
   // ── Full-page loading ───────────────────────────────────────────────────
@@ -138,6 +171,7 @@ export default function PortfolioPage() {
           filteredCount={displayedProjects.length}
           activeFilterCount={filters.advancedFilterCount}
           onOpenFilters={() => filters.setFiltersOpen(true)}
+          onExport={handleExportCSV}
         />
 
         {/* Active filter chips */}
