@@ -785,93 +785,103 @@ const DEFAULT_CUSTOMER_PASSWORD = "512451";
 
 /**
  * Auto-create a customer user account when a project is synced from Envision.
- * If the user already exists (by email), just link them to the project.
- * Returns the customer user ID or null if creation failed.
+ *
+ * RESILIENT: Always upserts the project_customers record (so the data appears
+ * in the "Dados do Cliente" tab) even if the auth user creation fails. The
+ * customer_user_id will be linked later, when the cliente is invited / signs up.
+ *
+ * Returns the customer user ID, or null if no auth user could be linked yet
+ * (in which case the project_customers record exists but is unlinked).
  */
 async function createCustomerUser(
   db: ReturnType<typeof createClient>,
   projectId: string,
   email: string,
   displayName: string,
-  adminUserId: string,
+  phone: string | null,
+  _adminUserId: string,
 ): Promise<string | null> {
-  // 1. Check if user already exists
-  const { data: existingProfile } = await db
-    .from("users_profile")
-    .select("id")
-    .eq("email", email)
-    .limit(1)
-    .maybeSingle();
+  let userId: string | null = null;
 
-  let userId: string;
+  // 1. Check if user already exists by email
+  try {
+    const { data: existingProfile } = await db
+      .from("users_profile")
+      .select("id")
+      .eq("email", email)
+      .limit(1)
+      .maybeSingle();
 
-  if (existingProfile) {
-    userId = existingProfile.id;
-    console.log(`[customer-create] User already exists for ${email.substring(0, 3)}***: ${userId}`);
-  } else {
-    // 2. Create auth user with default password
-    const { data: newUser, error: createErr } = await db.auth.admin.createUser({
-      email,
-      password: DEFAULT_CUSTOMER_PASSWORD,
-      email_confirm: true,
-      user_metadata: {
-        display_name: displayName || email.split("@")[0],
-        role: "customer",
-      },
-    });
+    if (existingProfile) {
+      userId = existingProfile.id;
+      console.log(`[customer-create] User already exists for ${email.substring(0, 3)}***: ${userId}`);
+    }
+  } catch (lookupErr) {
+    console.error("[customer-create] Profile lookup failed:", lookupErr instanceof Error ? lookupErr.message : lookupErr);
+  }
 
-    if (createErr) {
-      console.error("[customer-create] Auth createUser error:", createErr.message);
-      // If "already registered" edge case not caught by profile check
-      if (createErr.message?.includes("already been registered")) {
-        const { data: fallback } = await db
-          .from("users_profile")
-          .select("id")
-          .eq("email", email)
-          .limit(1)
-          .maybeSingle();
-        if (fallback) {
-          userId = fallback.id;
-        } else {
-          return null;
+  // 2. If no existing user, try to create one (non-fatal on failure)
+  if (!userId) {
+    try {
+      const { data: newUser, error: createErr } = await db.auth.admin.createUser({
+        email,
+        password: DEFAULT_CUSTOMER_PASSWORD,
+        email_confirm: true,
+        user_metadata: {
+          display_name: displayName || email.split("@")[0],
+          role: "customer",
+        },
+      });
+
+      if (createErr) {
+        console.error("[customer-create] Auth createUser error:", createErr.message);
+        if (createErr.message?.includes("already been registered")) {
+          const { data: fallback } = await db
+            .from("users_profile")
+            .select("id")
+            .eq("email", email)
+            .limit(1)
+            .maybeSingle();
+          if (fallback) userId = fallback.id;
         }
-      } else {
-        return null;
+      } else if (newUser?.user) {
+        userId = newUser.user.id;
+        console.log(`[customer-create] Created new user for ${email.substring(0, 3)}***: ${userId}`);
       }
-    } else if (!newUser?.user) {
-      console.error("[customer-create] No user returned from createUser");
-      return null;
-    } else {
-      userId = newUser.user.id;
-      console.log(`[customer-create] Created new user for ${email.substring(0, 3)}***: ${userId}`);
+    } catch (authErr) {
+      console.error("[customer-create] Auth createUser threw:", authErr instanceof Error ? authErr.message : authErr);
     }
   }
 
-  // 3. Upsert project_customers record
+  // 3. ALWAYS upsert project_customers (with or without userId)
+  const customerRecord: Record<string, unknown> = {
+    project_id: projectId,
+    customer_name: displayName || email.split("@")[0],
+    customer_email: email,
+    customer_phone: phone,
+  };
+  if (userId) customerRecord.customer_user_id = userId;
+
   const { error: custErr } = await db
     .from("project_customers")
-    .upsert(
-      {
-        project_id: projectId,
-        customer_name: displayName || email.split("@")[0],
-        customer_email: email,
-        customer_user_id: userId,
-      },
-      { onConflict: "project_id,customer_email" }
-    );
+    .upsert(customerRecord, { onConflict: "project_id,customer_email" });
   if (custErr) {
     console.error("[customer-create] project_customers upsert error:", custErr.message);
+  } else {
+    console.log(`[customer-create] project_customers upserted (linked=${!!userId})`);
   }
 
-  // 4. Add as project member (viewer)
-  const { error: memberErr } = await db
-    .from("project_members")
-    .upsert(
-      { project_id: projectId, user_id: userId, role: "viewer" },
-      { onConflict: "project_id,user_id" }
-    );
-  if (memberErr) {
-    console.error("[customer-create] project_members upsert error:", memberErr.message);
+  // 4. Add as project member (viewer) only if we have a userId
+  if (userId) {
+    const { error: memberErr } = await db
+      .from("project_members")
+      .upsert(
+        { project_id: projectId, user_id: userId, role: "viewer" },
+        { onConflict: "project_id,user_id" }
+      );
+    if (memberErr) {
+      console.error("[customer-create] project_members upsert error:", memberErr.message);
+    }
   }
 
   return userId;
