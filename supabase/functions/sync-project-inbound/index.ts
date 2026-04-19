@@ -130,9 +130,9 @@ Deno.serve(async (req) => {
       }
 
       // --- Auto-create customer user account (resilient: always upserts project_customers) ---
-      const clientEmail = project.client_email?.trim()?.toLowerCase();
-      const clientName = project.client_name?.trim();
-      const clientPhone = project.client_phone ?? null;
+      const clientEmail = (client?.email ?? project.client_email)?.trim()?.toLowerCase();
+      const clientName = (client?.name ?? project.client_name)?.trim();
+      const clientPhone = client?.phone ?? project.client_phone ?? null;
       if (clientEmail && clientName) {
         try {
           const customerUserId = await createCustomerUser(db, projectId, clientEmail, clientName, clientPhone, adminUser.id);
@@ -142,20 +142,41 @@ Deno.serve(async (req) => {
         }
       }
 
+      // --- Seed project_customers with rich client data from CRM (RG, profession, etc.) ---
+      if (client && typeof client === "object") {
+        try {
+          await seedClientDetails(db, projectId, clientEmail ?? "", client);
+        } catch (clientErr) {
+          console.error("[sync-project-inbound] Client details seed error:", clientErr instanceof Error ? clientErr.message : clientErr);
+        }
+      }
+
       // --- Seed project_studio_info from initial payload (will be enriched later by AI) ---
+      // Prefer property_* fields from `client` block (richer CRM data) over project payload
       try {
         await db.from("project_studio_info").upsert({
           project_id: projectId,
-          nome_do_empreendimento: project.condominium ?? null,
-          endereco_completo: project.address ?? null,
-          bairro: project.neighborhood ?? null,
-          cidade: project.city ?? null,
-          cep: project.cep ?? null,
-          tamanho_imovel_m2: project.total_area ?? null,
+          nome_do_empreendimento: client?.property_empreendimento ?? project.condominium ?? null,
+          endereco_completo: client?.property_address ?? project.address ?? null,
+          complemento: client?.property_address_complement ?? null,
+          bairro: client?.property_bairro ?? project.neighborhood ?? null,
+          cidade: client?.property_city ?? project.city ?? null,
+          cep: client?.property_zip_code ?? project.cep ?? null,
+          tamanho_imovel_m2: parseMetragemNumber(client?.property_metragem) ?? project.total_area ?? null,
           tipo_de_locacao: project.property_type ?? null,
         }, { onConflict: "project_id" });
       } catch (studioErr) {
         console.error("[sync-project-inbound] Studio info seed error:", studioErr instanceof Error ? studioErr.message : studioErr);
+      }
+
+      // --- Download and store property floor plan if provided ---
+      if (client?.property_floor_plan_url) {
+        try {
+          await downloadAndStoreFloorPlan(db, projectId, client.property_floor_plan_url, project.name?.trim() ?? "Projeto");
+          console.log(`[sync-project-inbound] Floor plan stored for project ${projectId}`);
+        } catch (planErr) {
+          console.error("[sync-project-inbound] Floor plan storage error:", planErr instanceof Error ? planErr.message : planErr);
+        }
       }
     }
 
