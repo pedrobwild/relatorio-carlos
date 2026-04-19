@@ -12,11 +12,41 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   try {
-    const { user, supabaseAdmin } = await authenticateRequest(req);
+    const integrationKey = req.headers.get("x-integration-key");
+    const expectedKey = Deno.env.get("INTEGRATION_API_KEY");
 
-    // Staff guard
-    const { data: isStaff } = await supabaseAdmin.rpc("is_staff", { _user_id: user.id });
-    if (!isStaff) return jsonResponse({ error: "Staff access required" }, 403);
+    let actorUserId: string;
+    let supabaseAdmin: ReturnType<typeof createClient>;
+
+    if (integrationKey && expectedKey && integrationKey === expectedKey) {
+      // Internal/admin invocation path
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      supabaseAdmin = createClient(supabaseUrl, serviceKey);
+      const body = await req.clone().json().catch(() => ({}));
+      actorUserId = body.actor_user_id;
+      if (!actorUserId) {
+        // Fallback: pick any active admin
+        const { data: admin } = await supabaseAdmin
+          .from("users_profile")
+          .select("id")
+          .eq("perfil", "admin")
+          .eq("status", "ativo")
+          .limit(1)
+          .single();
+        actorUserId = admin?.id;
+      }
+      if (!actorUserId) return jsonResponse({ error: "No admin available" }, 500);
+    } else {
+      const auth = await authenticateRequest(req);
+      supabaseAdmin = auth.supabaseAdmin;
+      actorUserId = auth.user.id;
+      const { data: isStaff } = await supabaseAdmin.rpc("is_staff", { _user_id: actorUserId });
+      if (!isStaff) return jsonResponse({ error: "Staff access required" }, 403);
+    }
+
+    // For brevity below we keep the variable name `user.id` semantics:
+    const user = { id: actorUserId };
 
     // ─── 1. Provision demo customer user ──────────────────────────────
     let demoUserId: string | null = null;
