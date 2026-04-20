@@ -246,8 +246,9 @@ const WeeklyReportsHistory = ({
   activities,
   onReportClick,
   isStaff = false,
+  projectEndDate,
 }: WeeklyReportsHistoryProps) => {
-  const weeklyReportsAsc = generateWeeklyReports(projectStartDate, reportDate, activities);
+  const weeklyReportsAsc = generateWeeklyReports(projectStartDate, reportDate, activities, projectEndDate);
   // Display in descending order (most recent first)
   const weeklyReports = [...weeklyReportsAsc].reverse();
   const latestReport = weeklyReportsAsc[weeklyReportsAsc.length - 1]; // Latest is the last one in ascending order
