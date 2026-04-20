@@ -643,24 +643,24 @@ const Cronograma = () => {
                             {!isDetailOpen && !hasDetail && (
                               <button
                                 type="button"
-                                className="text-[10px] text-muted-foreground/60 hover:text-primary flex items-center gap-0.5 transition-colors"
+                                className="text-[11px] text-primary/80 hover:text-primary flex items-center gap-1 transition-colors font-medium"
                                 onClick={() => setOpenDetails(prev => ({ ...prev, [activity.id]: true }))}
                               >
                                 <FileText className="h-3 w-3" />
-                                Adicionar descrição detalhada
+                                Adicionar descrição da etapa
                               </button>
                             )}
                             {(hasDetail || isDetailOpen) && (
                               <button
                                 type="button"
                                 className={cn(
-                                  'text-[10px] flex items-center gap-0.5 transition-colors',
-                                  hasDetail ? 'text-primary/70 hover:text-primary' : 'text-muted-foreground/60 hover:text-primary',
+                                  'text-[11px] flex items-center gap-1 transition-colors font-medium',
+                                  hasDetail ? 'text-primary hover:text-primary/80' : 'text-muted-foreground/60 hover:text-primary',
                                 )}
                                 onClick={() => setOpenDetails(prev => ({ ...prev, [activity.id]: !prev[activity.id] }))}
                               >
                                 <ChevronDown className={cn('h-3 w-3 transition-transform', isDetailOpen && 'rotate-180')} />
-                                {hasDetail ? 'Descrição detalhada' : 'Fechar'}
+                                {hasDetail ? 'Descrição da etapa' : 'Fechar descrição'}
                               </button>
                             )}
                           </div>
@@ -709,12 +709,16 @@ const Cronograma = () => {
                         </div>
                       </div>
                       {isDetailOpen && (
-                        <div className="border-b border-border/30 bg-muted/10 px-4 py-2" style={{ paddingLeft: 'calc(44px + 56px + 8px)' }}>
+                        <div className="border-b border-border/30 bg-muted/10 px-4 py-3 space-y-1.5" style={{ paddingLeft: 'calc(44px + 56px + 8px)' }}>
+                          <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            Descrição da etapa
+                          </label>
                           <Textarea
                             value={activity.detailed_description}
                             onChange={(e) => handleActivityChange(activity.id, 'detailed_description', e.target.value)}
-                            placeholder="Descreva os detalhes desta atividade..."
-                            rows={2}
+                            placeholder="Descreva o escopo, objetivos e entregas desta etapa do cronograma..."
+                            rows={3}
                             className="text-sm resize-none"
                           />
                         </div>
@@ -794,6 +798,19 @@ const Cronograma = () => {
                       className="h-8 w-16 text-xs text-center font-semibold"
                     />
                     <span className="text-[10px] text-muted-foreground">%</span>
+                  </div>
+                  <div className="pl-8 space-y-1">
+                    <label className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Descrição da etapa
+                    </label>
+                    <Textarea
+                      value={activity.detailed_description}
+                      onChange={(e) => handleActivityChange(activity.id, 'detailed_description', e.target.value)}
+                      placeholder="Escopo, objetivos e entregas desta etapa..."
+                      rows={2}
+                      className="text-xs resize-none"
+                    />
                   </div>
                 </div>
               );
