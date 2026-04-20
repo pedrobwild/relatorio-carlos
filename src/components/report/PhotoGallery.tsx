@@ -93,10 +93,11 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
       {isVideoUrl(photo.url) ? (
         <>
           <video
-            src={photo.url}
+            src={`${photo.url}#t=0.5`}
             preload="metadata"
             muted
             playsInline
+            disablePictureInPicture
             className="w-full h-full object-cover transition-transform group-hover:scale-105"
           />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -132,7 +133,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
           >
             {isVideoUrl(photo.url) ? (
               <>
-                <video src={photo.url} preload="metadata" muted playsInline className="w-full h-full object-cover" />
+                <video src={`${photo.url}#t=0.5`} preload="metadata" muted playsInline className="w-full h-full object-cover" />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="bg-black/60 rounded-full p-1">
                     <Play className="w-3.5 h-3.5 text-white fill-white" />
@@ -277,7 +278,7 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                       )}
                     >
                       {isVideoUrl(photo.url) ? (
-                        <video src={photo.url} preload="metadata" muted playsInline className="w-full h-full object-cover" />
+                        <video src={`${photo.url}#t=0.5`} preload="metadata" muted playsInline className="w-full h-full object-cover" />
                       ) : (
                         <img src={photo.url} alt="" className="w-full h-full object-cover" />
                       )}
