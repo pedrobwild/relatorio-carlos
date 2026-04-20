@@ -112,9 +112,14 @@ export function generateChartData(
   }, { min: null, max: null });
 
   // Project dates anchor the chart axis (with activity dates as fallback)
-  const resolvedMin = projectStartParsed ?? dateRange.min;
-  const resolvedMax = projectEndParsed ?? dateRange.max;
+  let resolvedMin = projectStartParsed ?? dateRange.min;
+  let resolvedMax = projectEndParsed ?? dateRange.max;
   if (!resolvedMin || !resolvedMax) return EMPTY_RESULT;
+
+  // Safety: never let max be before min, and extend max to cover all activity data
+  if (dateRange.min && dateRange.min < resolvedMin) resolvedMin = dateRange.min;
+  if (dateRange.max && dateRange.max > resolvedMax) resolvedMax = dateRange.max;
+  if (resolvedMax < resolvedMin) resolvedMax = resolvedMin;
 
   // Generate dates at regular intervals (every 3 days)
   const INTERVAL_DAYS = 3;
