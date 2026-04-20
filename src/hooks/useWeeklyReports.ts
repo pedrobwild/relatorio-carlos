@@ -134,7 +134,7 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       if (data.gallery && data.gallery.length > 0) {
         const hasBlobUrls = data.gallery.some((p) => p.url?.startsWith("blob:"));
         if (hasBlobUrls) {
-          toast.loading("Enviando fotos...", { id: "uploading-photos" });
+          toast.loading("Enviando fotos e vídeos...", { id: "uploading-photos" });
           const { success, photos } = await uploadGalleryPhotos(
             projectId,
             weekNumber,

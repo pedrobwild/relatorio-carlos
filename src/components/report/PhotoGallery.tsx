@@ -2,7 +2,13 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { GalleryPhoto } from "@/types/weeklyReport";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { X, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ChevronDown, Play } from "lucide-react";
+
+const isVideoUrl = (url: string) => {
+  if (!url) return false;
+  const lower = url.toLowerCase().split("?")[0];
+  return lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".webm") || lower.endsWith(".quicktime") || lower.includes("video/");
+};
 import {
   Dialog,
   DialogContent,
@@ -84,12 +90,29 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
         opacity: animationDelay > 0 ? 0 : 1
       }}
     >
-      <img
-        src={photo.url}
-        alt={photo.caption}
-        loading="lazy"
-        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-      />
+      {isVideoUrl(photo.url) ? (
+        <>
+          <video
+            src={photo.url}
+            preload="metadata"
+            muted
+            playsInline
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-black/60 rounded-full p-2">
+              <Play className="w-5 h-5 text-white fill-white" />
+            </div>
+          </div>
+        </>
+      ) : (
+        <img
+          src={photo.url}
+          alt={photo.caption}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-1.5">
         <p className="text-tiny font-medium text-white line-clamp-2">{photo.caption}</p>
@@ -107,12 +130,23 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
             onClick={() => setSelectedIndex(index)}
             className="relative w-28 h-20 rounded-lg overflow-hidden bg-muted shrink-0"
           >
-            <img
-              src={photo.url}
-              alt={photo.caption}
-              loading="lazy"
-              className="w-full h-full object-cover"
-            />
+            {isVideoUrl(photo.url) ? (
+              <>
+                <video src={photo.url} preload="metadata" muted playsInline className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-black/60 rounded-full p-1">
+                    <Play className="w-3.5 h-3.5 text-white fill-white" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <img
+                src={photo.url}
+                alt={photo.caption}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <p className="absolute bottom-1 left-1.5 right-1.5 text-[10px] font-medium text-white line-clamp-1">{photo.caption}</p>
           </button>
@@ -199,13 +233,23 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                 </Button>
               )}
 
-              {/* Image */}
+              {/* Image / Video */}
               <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-                <img
-                  src={photos[selectedIndex].url}
-                  alt={photos[selectedIndex].caption}
-                  className="max-w-full max-h-[70dvh] sm:max-h-[70vh] object-contain rounded"
-                />
+                {isVideoUrl(photos[selectedIndex].url) ? (
+                  <video
+                    src={photos[selectedIndex].url}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="max-w-full max-h-[70dvh] sm:max-h-[70vh] rounded"
+                  />
+                ) : (
+                  <img
+                    src={photos[selectedIndex].url}
+                    alt={photos[selectedIndex].caption}
+                    className="max-w-full max-h-[70dvh] sm:max-h-[70vh] object-contain rounded"
+                  />
+                )}
               </div>
 
               {/* Caption bar */}
@@ -232,7 +276,11 @@ const PhotoGallery = ({ photos }: PhotoGalleryProps) => {
                         i === selectedIndex ? "border-primary opacity-100" : "border-transparent opacity-50"
                       )}
                     >
-                      <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      {isVideoUrl(photo.url) ? (
+                        <video src={photo.url} preload="metadata" muted playsInline className="w-full h-full object-cover" />
+                      ) : (
+                        <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      )}
                     </button>
                   ))}
                 </div>
