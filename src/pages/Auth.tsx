@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,8 +22,12 @@ const loginSchema = z.object({
 });
 
 export default function Auth() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [searchParams] = useSearchParams();
+  const prefillEmail = searchParams.get('email') ?? '';
+  const prefillPassword = searchParams.get('password') ?? '';
+  const isDemoPrefill = !!prefillEmail && !!prefillPassword;
+  const [email, setEmail] = useState(prefillEmail);
+  const [password, setPassword] = useState(prefillPassword);
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -231,6 +235,21 @@ export default function Auth() {
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-10 sm:mb-12 text-center md:text-left w-full">
           Portal Bwild<span className="text-[#366478]">.</span>
         </h1>
+
+        {isDemoPrefill && (
+          <div
+            role="status"
+            className="flex items-start gap-2.5 rounded-lg border border-emerald-400/30 bg-emerald-500/10 p-3.5 mb-6 w-full"
+          >
+            <ShieldCheck className="h-4 w-4 text-emerald-300 shrink-0 mt-0.5" />
+            <div className="text-sm text-emerald-100">
+              <p className="font-medium">Acesso à obra demo pré-preenchido</p>
+              <p className="text-xs text-emerald-200/80 mt-0.5">
+                Basta clicar em <strong>Entrar</strong> para visualizar o orçamento na obra demo.
+              </p>
+            </div>
+          </div>
+        )}
 
         {formError && (
           <div
