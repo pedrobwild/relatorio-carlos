@@ -799,6 +799,19 @@ const Cronograma = () => {
                     />
                     <span className="text-[10px] text-muted-foreground">%</span>
                   </div>
+                  <div className="pl-8 space-y-1">
+                    <label className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Descrição da etapa
+                    </label>
+                    <Textarea
+                      value={activity.detailed_description}
+                      onChange={(e) => handleActivityChange(activity.id, 'detailed_description', e.target.value)}
+                      placeholder="Escopo, objetivos e entregas desta etapa..."
+                      rows={2}
+                      className="text-xs resize-none"
+                    />
+                  </div>
                 </div>
               );
             })}
