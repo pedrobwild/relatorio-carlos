@@ -58,8 +58,10 @@ const ReportHeader = ({
   };
 
   const showMetrics = !(isProjectPhase && !isStaff);
-  const displayStartDate = milestoneDates?.dateOfficialStart || startDate;
-  const displayEndDate = milestoneDates?.dateOfficialDelivery || effectiveEndDate;
+  // Use planned dates from the schedule as source of truth so header matches the cronograma.
+  // Official milestone dates are shown separately in the MilestonesBar.
+  const displayStartDate = startDate;
+  const displayEndDate = effectiveEndDate;
 
   return (
     <header className="animate-fade-in mb-3 md:mb-4">
