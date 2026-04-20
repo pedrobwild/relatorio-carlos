@@ -1,6 +1,7 @@
 import { WeeklyReportActivitySnapshot } from "@/types/weeklyReport";
 import { startOfWeek, addWeeks } from "date-fns";
 import { parseLocalDate } from "@/lib/activityStatus";
+import { plannedProgressAt, actualProgressAt } from "@/lib/linearProgress";
 import {
   XAxis,
   YAxis,
@@ -20,40 +21,18 @@ interface ProgressEvolutionChartProps {
   projectStartDate?: string;
 }
 
-// Calculate progress at a given date based on completed activities with weighted progress
+// Linear progress (interpolado entre start e end de cada atividade) — assim
+// atrasos de início aparecem na curva, mesmo quando o término coincide.
 const calculateProgressAtDate = (
   activities: WeeklyReportActivitySnapshot[],
   targetDate: Date,
-  useActual: boolean
+  useActual: boolean,
 ): number => {
   if (activities.length === 0) return 0;
-
-  // Check if any activity has weight defined
-  const hasWeights = activities.some(a => a.weight !== undefined);
-  
-  // Calculate total weight (should be 100, but normalize if not)
-  const totalWeight = hasWeights 
-    ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
-    : activities.length;
-
-  const completedWeight = activities.reduce((sum, activity) => {
-    if (useActual) {
-      // Calculate actual progress - sum weights of completed activities
-      const actualEnd = activity.actualEnd ? parseLocalDate(activity.actualEnd) : null;
-      if (actualEnd && actualEnd <= targetDate) {
-        return sum + (hasWeights ? (activity.weight || 0) : 1);
-      }
-    } else {
-      // Calculate planned progress - sum weights of activities that should be done by this date
-      const plannedEnd = parseLocalDate(activity.plannedEnd);
-      if (plannedEnd <= targetDate) {
-        return sum + (hasWeights ? (activity.weight || 0) : 1);
-      }
-    }
-    return sum;
-  }, 0);
-
-  return Math.round((completedWeight / totalWeight) * 100);
+  const pct = useActual
+    ? actualProgressAt(activities, targetDate)
+    : plannedProgressAt(activities, targetDate);
+  return Math.round(pct);
 };
 
 // Generate weekly progress data based on activities

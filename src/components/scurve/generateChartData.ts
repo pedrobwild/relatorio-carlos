@@ -1,5 +1,6 @@
 import { Activity } from "@/types/report";
 import { ChartDataPoint, ChartResult } from "./types";
+import { plannedProgressAt, actualProgressAt } from "@/lib/linearProgress";
 
 // Parse ISO date string to Date object
 export const parseDate = (dateStr: string): Date | null => {
@@ -200,27 +201,17 @@ export function generateChartData(
     const daysSinceStart = Math.floor((cur.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
     const activityAtDate = findActivityAtDate(activities, date);
 
-    const plannedProgress = activities.reduce((sum, a) => {
-      const plannedEnd = parseDate(a.plannedEnd);
-      if (plannedEnd && plannedEnd <= cur) return sum + (hasWeights ? toNumericWeight(a.weight) : 1);
-      return sum;
-    }, 0);
-
+    // Linear (per-activity) progress so atrasos de início/fim aparecem dia a dia,
+    // não apenas quando uma atividade fecha por completo.
+    const previstoPct = plannedProgressAt(activities, cur);
     const isFutureDate = reportDateParsed && cur > reportDateParsed;
-    let actualProgress: number | null = null;
-    if (!isFutureDate && hasAnyActualData) {
-      actualProgress = activities.reduce((sum, a) => {
-        const actualEnd = parseDate(a.actualEnd);
-        if (actualEnd && actualEnd <= cur) return sum + (hasWeights ? toNumericWeight(a.weight) : 1);
-        return sum;
-      }, 0);
-    }
+    const realizadoPct = !isFutureDate && hasAnyActualData ? actualProgressAt(activities, cur) : null;
 
     return {
       date: formatDisplayDate(date, baseYear),
       timestamp: daysSinceStart,
-      previsto: Math.round((plannedProgress / safeTotalWeight) * 100),
-      realizado: actualProgress !== null ? Math.round((actualProgress / safeTotalWeight) * 100) : null,
+      previsto: Math.round(previstoPct),
+      realizado: realizadoPct !== null ? Math.round(realizadoPct) : null,
       activity: activityAtDate,
     };
   });
