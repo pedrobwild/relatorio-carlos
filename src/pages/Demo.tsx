@@ -56,7 +56,7 @@ export default function Demo() {
     demoReportData.startDate ?? '', 
     demoReportData.reportDate, 
     demoReportData.activities,
-    demoReportData.endDate,
+    demoReportData.endDate ?? undefined,
   );
   const reportsChronological = [...allWeeklyReports].reverse();
 
