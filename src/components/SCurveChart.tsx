@@ -14,10 +14,12 @@ import { ReferenceLabel } from "./scurve/ReferenceLabel";
 const SCurveChart = ({
   activities,
   reportDate,
+  projectStartDate,
+  projectEndDate,
   showFullChart: controlledShowFull,
   onShowFullChartChange,
 }: SCurveChartProps) => {
-  const { data: chartData, milestones } = generateChartData(activities, reportDate);
+  const { data: chartData, milestones } = generateChartData(activities, reportDate, projectStartDate, projectEndDate);
 
   const currentActivity = activities.find(a => a.actualStart && !a.actualEnd);
 
