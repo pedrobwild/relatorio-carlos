@@ -3387,6 +3387,51 @@ export type Database = {
           },
         ]
       }
+      project_3d_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          project_id: string
+          sort_order: number
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          project_id: string
+          sort_order?: number
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          sort_order?: number
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_3d_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_3d_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_3d_versions: {
         Row: {
           created_at: string
