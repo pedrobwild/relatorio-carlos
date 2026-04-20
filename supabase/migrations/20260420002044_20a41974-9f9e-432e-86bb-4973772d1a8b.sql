@@ -1,0 +1,2 @@
+ALTER TABLE public.weekly_reports DISABLE TRIGGER trg_weekly_reports_set_fields;
+ALTER TABLE public.weekly_reports DISABLE TRIGGER trg_notify_weekly_report_published;
