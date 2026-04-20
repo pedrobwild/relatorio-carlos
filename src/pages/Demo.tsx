@@ -55,7 +55,8 @@ export default function Demo() {
   const allWeeklyReports = generateWeeklyReports(
     demoReportData.startDate ?? '', 
     demoReportData.reportDate, 
-    demoReportData.activities
+    demoReportData.activities,
+    demoReportData.endDate ?? undefined,
   );
   const reportsChronological = [...allWeeklyReports].reverse();
 
@@ -246,6 +247,7 @@ export default function Demo() {
                           <WeeklyReportsHistory
                             projectStartDate={demoReportData.startDate ?? ''}
                             reportDate={demoReportData.reportDate}
+                            projectEndDate={demoReportData.endDate ?? undefined}
                             activities={demoReportData.activities}
                             onReportClick={handleReportClick}
                             isStaff={true}
