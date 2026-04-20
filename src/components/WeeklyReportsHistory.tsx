@@ -105,10 +105,15 @@ const isReportAvailableForCustomer = (weekEndDate: Date): { isAvailable: boolean
 export const generateWeeklyReports = (
   projectStartDate: string,
   reportDate: string,
-  activities: Activity[]
+  activities: Activity[],
+  projectEndDate?: string,
 ): ExtendedWeeklyReport[] => {
   const startDate = parseLocalDate(projectStartDate);
-  const currentReportDate = parseLocalDate(reportDate);
+  // Cap report generation at the project end date so the timeline does not
+  // keep producing empty weeks after the project's planned/actual conclusion.
+  const rawReportDate = parseLocalDate(reportDate);
+  const endCap = projectEndDate ? parseLocalDate(projectEndDate) : null;
+  const currentReportDate = endCap && isBefore(endCap, rawReportDate) ? endCap : rawReportDate;
   const reports: ExtendedWeeklyReport[] = [];
   
   let weekNumber = 1;
