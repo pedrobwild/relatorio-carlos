@@ -346,6 +346,8 @@ const Index = () => {
                             <SCurveChart
                               activities={reportData.activities}
                               reportDate={reportData.reportDate}
+                              projectStartDate={reportData.startDate}
+                              projectEndDate={reportData.endDate}
                               showFullChart={showFullChart}
                               onShowFullChartChange={setShowFullChart}
                             />

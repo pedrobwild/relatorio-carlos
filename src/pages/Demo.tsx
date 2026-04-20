@@ -185,6 +185,8 @@ export default function Demo() {
                         <SCurveChart 
                           activities={demoReportData.activities} 
                           reportDate={demoReportData.reportDate}
+                          projectStartDate={demoReportData.startDate}
+                          projectEndDate={demoReportData.endDate}
                           showFullChart={showFullChart}
                           onShowFullChartChange={setShowFullChart}
                         />
