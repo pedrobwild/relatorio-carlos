@@ -46,6 +46,7 @@ export function useProjectMetrics(
     const isOnTrack = progressDiff >= 0;
     const variancePercentage = Math.abs(progressDiff).toFixed(0);
 
+    const allCompleted = activities.length > 0 && activities.every(a => !!a.actualEnd);
     const currentActivity = activities.find(a => {
       const plannedStart = new Date(a.plannedStart + "T00:00:00");
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
@@ -61,7 +62,7 @@ export function useProjectMetrics(
       isOnTrack,
       variancePercentage,
       progressDiff: Math.round(progressDiff),
-      currentActivity: currentActivity?.description || "Sem atividade em andamento",
+      currentActivity: allCompleted ? "Obra concluída" : (currentActivity?.description || "Sem atividade em andamento"),
       completedActivities,
       totalActivities,
     };
