@@ -145,14 +145,18 @@ export function useProjectPortal() {
 
   const reportData: ReportData | null = useMemo(() => {
     if (project) {
+      // Prefer actual project dates over planned dates (with planned as fallback)
+      const effectiveStartDate = project.actual_start_date || project.planned_start_date;
+      const effectiveEndDate = project.actual_end_date || project.planned_end_date;
+
       if (formattedActivities.length > 0) {
         const activitiesEndDate = calculateEndDateFromActivities(formattedActivities);
         return {
           projectName: project.name,
           unitName: project.unit_name || '',
           clientName: project.customer_name || '',
-          startDate: project.planned_start_date,
-          endDate: activitiesEndDate || project.planned_end_date,
+          startDate: effectiveStartDate,
+          endDate: project.actual_end_date || activitiesEndDate || project.planned_end_date,
           reportDate: new Date().toISOString().split('T')[0],
           activities: formattedActivities,
         };
@@ -163,8 +167,8 @@ export function useProjectPortal() {
           projectName: project.name,
           unitName: project.unit_name || '',
           clientName: project.customer_name || '',
-          startDate: project.planned_start_date,
-          endDate: demoEndDate || project.planned_end_date,
+          startDate: effectiveStartDate,
+          endDate: project.actual_end_date || demoEndDate || project.planned_end_date,
           reportDate: new Date().toISOString().split('T')[0],
           activities: demoReportData.activities,
         };
@@ -173,15 +177,15 @@ export function useProjectPortal() {
         projectName: project.name,
         unitName: project.unit_name || '',
         clientName: project.customer_name || '',
-        startDate: project.planned_start_date,
-        endDate: project.planned_end_date,
+        startDate: effectiveStartDate,
+        endDate: effectiveEndDate,
         reportDate: new Date().toISOString().split('T')[0],
         activities: [],
       };
     }
     if (isDemoMode) return demoReportData;
     return null;
-  }, [project, formattedActivities]);
+  }, [project, formattedActivities, isDemoMode]);
 
   const allWeeklyReports = useMemo(() => {
     if (!reportData || reportData.activities.length === 0) return [];
