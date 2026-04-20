@@ -161,13 +161,14 @@ export function useExecutivoFile(versionId: string | undefined) {
       if (!data || data.length === 0) return null;
 
       const file = data[0];
-      const { data: urlData } = supabase.storage
+      const { data: signed, error: signErr } = await supabase.storage
         .from(BUCKET)
-        .getPublicUrl(file.storage_path);
-      return { ...file, url: urlData?.publicUrl } as ExecutivoFile;
+        .createSignedUrl(file.storage_path, 3600);
+      if (signErr) throw signErr;
+      return { ...file, url: signed?.signedUrl } as ExecutivoFile;
     },
     enabled: !!versionId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 50 * 60 * 1000,
   });
 }
 
