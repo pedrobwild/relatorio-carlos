@@ -72,7 +72,7 @@ const WeeklyReportTemplate = ({
   if (isEditing) {
     return (
       <WeeklyReportEditor
-        data={data}
+        data={safeData}
         projectId={projectId}
         onAutoSave={handleAutoSave}
         onSaveAndClose={handleSaveAndClose}
@@ -89,7 +89,7 @@ const WeeklyReportTemplate = ({
         <div className="max-w-[840px] mx-auto">
           <div className="bg-card rounded-lg border border-border overflow-hidden">
             <div className="px-4 py-2.5 bg-primary-dark">
-              <h3 className="text-base font-semibold text-white">Relatório da Semana {data.weekNumber}</h3>
+              <h3 className="text-base font-semibold text-white">Relatório da Semana {safeData.weekNumber}</h3>
             </div>
             <div className="p-6 sm:p-8 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
@@ -97,7 +97,7 @@ const WeeklyReportTemplate = ({
               </div>
               <h4 className="text-lg font-semibold mb-2">Relatório em preparação</h4>
               <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
-                {isStaff 
+                {isStaff
                   ? "Este relatório ainda não foi preenchido. Clique no botão abaixo para começar a editar."
                   : "O engenheiro responsável está preparando o relatório desta semana. O conteúdo será disponibilizado em breve."}
               </p>
@@ -116,9 +116,7 @@ const WeeklyReportTemplate = ({
 
   return (
     <div className="animate-fade-in">
-      {/* Reading container for optimal readability */}
       <div className="max-w-[840px] mx-auto space-y-6">
-        {/* Staff Edit Button */}
         {isStaff && (
           <div className="flex justify-end">
             <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
@@ -128,42 +126,34 @@ const WeeklyReportTemplate = ({
           </div>
         )}
 
-        {/* Executive Summary */}
-        <ExecutiveSummary data={data} />
+        <ExecutiveSummary data={safeData} />
 
-        {/* Progress Timeline by Room */}
-        {data.roomsProgress && data.roomsProgress.length > 0 && (
-          <ProgressTimeline rooms={data.roomsProgress} />
+        {safeData.roomsProgress && safeData.roomsProgress.length > 0 && (
+          <ProgressTimeline rooms={safeData.roomsProgress} />
         )}
 
-        {/* Lookahead (Next 7 Days) */}
-        {data.lookaheadTasks.length > 0 && (
-          <LookaheadSection tasks={data.lookaheadTasks} />
+        {safeData.lookaheadTasks.length > 0 && (
+          <LookaheadSection tasks={safeData.lookaheadTasks} />
         )}
 
-        {/* Risks, Issues, Action Plans */}
-        {data.risksAndIssues.length > 0 && (
-          <RisksIssuesSection issues={data.risksAndIssues} isStaff={isStaff} />
+        {safeData.risksAndIssues.length > 0 && (
+          <RisksIssuesSection issues={safeData.risksAndIssues} isStaff={isStaff} />
         )}
 
-        {/* Incidents */}
-        {data.incidents.length > 0 && (
-          <IncidentsSection incidents={data.incidents} />
+        {safeData.incidents.length > 0 && (
+          <IncidentsSection incidents={safeData.incidents} />
         )}
 
-        {/* Client Decisions */}
-        {data.clientDecisions.length > 0 && (
-          <ClientDecisionsSection decisions={data.clientDecisions} />
+        {safeData.clientDecisions.length > 0 && (
+          <ClientDecisionsSection decisions={safeData.clientDecisions} />
         )}
 
-        {/* Photo Gallery */}
-        {data.gallery.length > 0 && (
-          <PhotoGallery photos={data.gallery} />
+        {safeData.gallery.length > 0 && (
+          <PhotoGallery photos={safeData.gallery} />
         )}
 
-        {/* Footer */}
         <div className="pt-2 border-t border-border/50">
-          <ReportFooter data={data} />
+          <ReportFooter data={safeData} />
         </div>
       </div>
     </div>
