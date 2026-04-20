@@ -355,6 +355,7 @@ const Index = () => {
                               <WeeklyReportsHistory
                                 projectStartDate={reportData.startDate ?? ''}
                                 reportDate={reportData.reportDate}
+                                projectEndDate={reportData.endDate ?? undefined}
                                 activities={reportData.activities}
                                 onReportClick={handleReportClick}
                                 isStaff={isStaff}

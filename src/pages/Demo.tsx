@@ -247,6 +247,7 @@ export default function Demo() {
                           <WeeklyReportsHistory
                             projectStartDate={demoReportData.startDate ?? ''}
                             reportDate={demoReportData.reportDate}
+                            projectEndDate={demoReportData.endDate ?? undefined}
                             activities={demoReportData.activities}
                             onReportClick={handleReportClick}
                             isStaff={true}
