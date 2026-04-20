@@ -152,8 +152,10 @@ export function generateChartData(
     return latest;
   }, null as Date | null);
 
-  const endTimestamp = lastPlannedDate
-    ? Math.floor((lastPlannedDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
+  // "Entrega" milestone: prefer project end date when provided, fallback to last activity plannedEnd
+  const endMilestoneDate = projectEndParsed ?? lastPlannedDate;
+  const endTimestamp = endMilestoneDate
+    ? Math.floor((endMilestoneDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
   const todayTimestamp = reportDateParsed
     ? Math.floor((reportDateParsed.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
