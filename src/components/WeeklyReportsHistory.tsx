@@ -13,6 +13,7 @@ interface WeeklyReportsHistoryProps {
   activities: Activity[];
   onReportClick?: (report: WeeklyReport, index: number) => void;
   isStaff?: boolean; // Staff can see all reports immediately
+  projectEndDate?: string; // Caps weekly report generation at the project end
 }
 
 const BRASILIA_TZ = "America/Sao_Paulo";
