@@ -5,7 +5,7 @@ import { authenticateRequest } from "../_shared/auth.ts";
 
 const SOURCE_PROJECT_ID = "dabca3ea-341a-45d8-94a0-204b1230f6e3"; // Lucia Eid
 const DEMO_EMAIL = "demo@bwild.com.br";
-const DEMO_PASSWORD = "Demo@2026!Bwild";
+const DEMO_PASSWORD = "123456";
 const DEMO_NAME = "Cliente Demonstração";
 
 serve(async (req) => {
