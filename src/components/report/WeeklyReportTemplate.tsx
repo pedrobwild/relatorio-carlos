@@ -29,16 +29,29 @@ const WeeklyReportTemplate = ({
 }: WeeklyReportTemplateProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
+  // Defensive normalization: backend rows may omit some array fields
+  const safeData: WeeklyReportData = {
+    ...data,
+    executiveSummary: data.executiveSummary ?? "",
+    lookaheadTasks: data.lookaheadTasks ?? [],
+    risksAndIssues: data.risksAndIssues ?? [],
+    clientDecisions: data.clientDecisions ?? [],
+    incidents: data.incidents ?? [],
+    gallery: data.gallery ?? [],
+    deliverablesCompleted: data.deliverablesCompleted ?? [],
+    roomsProgress: data.roomsProgress ?? [],
+  };
+
   // Check if the report has any content filled in
-  const hasContent = 
-    data.executiveSummary.length > 0 ||
-    data.lookaheadTasks.length > 0 ||
-    data.risksAndIssues.length > 0 ||
-    data.clientDecisions.length > 0 ||
-    data.incidents.length > 0 ||
-    data.gallery.length > 0 ||
-    (data.roomsProgress && data.roomsProgress.length > 0) ||
-    data.deliverablesCompleted.length > 0;
+  const hasContent =
+    (safeData.executiveSummary?.length ?? 0) > 0 ||
+    safeData.lookaheadTasks.length > 0 ||
+    safeData.risksAndIssues.length > 0 ||
+    safeData.clientDecisions.length > 0 ||
+    safeData.incidents.length > 0 ||
+    safeData.gallery.length > 0 ||
+    (safeData.roomsProgress?.length ?? 0) > 0 ||
+    safeData.deliverablesCompleted.length > 0;
 
   const handleAutoSave = useCallback(
     (updatedData: WeeklyReportData) => {
