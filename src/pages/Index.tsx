@@ -1,7 +1,7 @@
 import { useRef, useCallback, lazy, Suspense, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, GanttChartSquare, Calendar, DollarSign, FolderOpen, ClipboardSignature, TrendingUp } from "lucide-react";
+import { AlertCircle, GanttChartSquare, Calendar, DollarSign, FolderOpen, ClipboardSignature, TrendingUp, FileText } from "lucide-react";
 import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
@@ -248,17 +248,23 @@ const Index = () => {
                           <TabsTrigger value="evolucao" className="portal-tab-trigger">
                             <TrendingUp className="w-3.5 h-3.5 mr-1.5" />Evolução
                           </TabsTrigger>
+                          <TabsTrigger value="relatorios" className="portal-tab-trigger">
+                            <FileText className="w-3.5 h-3.5 mr-1.5" />Relatórios
+                          </TabsTrigger>
                         </>
                       ) : (
                         <>
                           <TabsTrigger value="cronograma" className="portal-tab-trigger">
                             <GanttChartSquare className="w-3.5 h-3.5 mr-1.5" />Cronograma
                           </TabsTrigger>
-                          <TabsTrigger value="evolucao" className="portal-tab-trigger"
+                          <TabsTrigger value="evolucao" className="portal-tab-trigger">
+                            <TrendingUp className="w-3.5 h-3.5 mr-1.5" />Evolução de Obra
+                          </TabsTrigger>
+                          <TabsTrigger value="relatorios" className="portal-tab-trigger"
                             onMouseEnter={() => prefetchForTab('relatorio', projectId)}
                             onFocus={() => prefetchForTab('relatorio', projectId)}
                           >
-                            <TrendingUp className="w-3.5 h-3.5 mr-1.5" />Evolução de Obra
+                            <FileText className="w-3.5 h-3.5 mr-1.5" />Relatórios
                           </TabsTrigger>
                           <TabsTrigger value="financeiro" className="portal-tab-trigger"
                             onMouseEnter={() => prefetchForTab('financeiro', projectId)}
@@ -305,6 +311,17 @@ const Index = () => {
                       </TabsContent>
 
                       <TabsContent value="evolucao" className="mt-0 focus-visible:outline-none">
+                        <SCurveChart
+                          activities={reportData.activities}
+                          reportDate={reportData.reportDate}
+                          projectStartDate={reportData.startDate}
+                          projectEndDate={reportData.endDate}
+                          showFullChart={showFullChart}
+                          onShowFullChartChange={setShowFullChart}
+                        />
+                      </TabsContent>
+
+                      <TabsContent value="relatorios" className="mt-0 focus-visible:outline-none">
                         {selectedWeeklyReport ? (
                           <>
                             <WeeklyReportHeader
@@ -342,26 +359,14 @@ const Index = () => {
                             })()}
                           </>
                         ) : (
-                          <>
-                            <SCurveChart
-                              activities={reportData.activities}
-                              reportDate={reportData.reportDate}
-                              projectStartDate={reportData.startDate}
-                              projectEndDate={reportData.endDate}
-                              showFullChart={showFullChart}
-                              onShowFullChartChange={setShowFullChart}
-                            />
-                            <div className="mt-6">
-                              <WeeklyReportsHistory
-                                projectStartDate={reportData.startDate ?? ''}
-                                reportDate={reportData.reportDate}
-                                projectEndDate={reportData.endDate ?? undefined}
-                                activities={reportData.activities}
-                                onReportClick={handleReportClick}
-                                isStaff={isStaff}
-                              />
-                            </div>
-                          </>
+                          <WeeklyReportsHistory
+                            projectStartDate={reportData.startDate ?? ''}
+                            reportDate={reportData.reportDate}
+                            projectEndDate={reportData.endDate ?? undefined}
+                            activities={reportData.activities}
+                            onReportClick={handleReportClick}
+                            isStaff={isStaff}
+                          />
                         )}
                       </TabsContent>
 
