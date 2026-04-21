@@ -6,6 +6,7 @@ import ReportHeader from "@/components/ReportHeader";
 import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import WeeklyReportsHistory, { ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
@@ -401,6 +402,23 @@ const Index = () => {
                         />
                       </div>
                     )}
+
+                    {/* Mobile (<md): detalhes da atividade em bottom sheet */}
+                    <Sheet
+                      open={!!selectedActivityId && activeTab === 'cronograma'}
+                      onOpenChange={(open) => { if (!open) setSelectedActivityId(null); }}
+                    >
+                      <SheetContent side="bottom" className="md:hidden max-h-[85vh] overflow-y-auto rounded-t-2xl pb-safe">
+                        <SheetHeader className="pb-2">
+                          <SheetTitle className="text-base">Detalhes da atividade</SheetTitle>
+                        </SheetHeader>
+                        <ActivityDetailsPanel
+                          activity={reportData.activities.find(a => a.id === selectedActivityId) || null}
+                          activities={reportData.activities}
+                          onClose={() => setSelectedActivityId(null)}
+                        />
+                      </SheetContent>
+                    </Sheet>
                   </div>
                 </div>
               </Tabs>

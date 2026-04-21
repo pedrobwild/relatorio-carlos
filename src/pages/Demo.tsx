@@ -10,6 +10,7 @@ import SCurveChart from "@/components/SCurveChart";
 import ScheduleTable from "@/components/ScheduleTable";
 import GanttChart from "@/components/GanttChart";
 import ActivityDetailsPanel from "@/components/ActivityDetailsPanel";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import WeeklyReportTemplate from "@/components/report/WeeklyReportTemplate";
 import WeeklyReportsHistory, { generateWeeklyReports, ExtendedWeeklyReport } from "@/components/WeeklyReportsHistory";
 import WeeklyReportHeader from "@/components/WeeklyReportHeader";
@@ -260,7 +261,7 @@ export default function Demo() {
                       </TabsContent>
                     </div>
 
-                    {/* Activity Details Panel - visible on desktop when activity selected */}
+                    {/* Activity Details Panel - visible on desktop (≥lg) when activity selected */}
                     {selectedActivityId && (activeTab === 'curvaS' || activeTab === 'gantt') && (
                       <div className="hidden lg:block w-80 shrink-0">
                         <ActivityDetailsPanel
@@ -270,6 +271,23 @@ export default function Demo() {
                         />
                       </div>
                     )}
+
+                    {/* Activity Details Sheet - tablet/mobile (<lg) when activity selected */}
+                    <Sheet
+                      open={!!selectedActivityId && (activeTab === 'curvaS' || activeTab === 'gantt')}
+                      onOpenChange={(open) => { if (!open) setSelectedActivityId(null); }}
+                    >
+                      <SheetContent side="bottom" className="lg:hidden max-h-[85vh] overflow-y-auto rounded-t-2xl pb-safe">
+                        <SheetHeader className="pb-2">
+                          <SheetTitle className="text-base">Detalhes da atividade</SheetTitle>
+                        </SheetHeader>
+                        <ActivityDetailsPanel
+                          activity={demoReportData.activities.find((a, i) => (a.id || `demo-${i}`) === selectedActivityId) || null}
+                          activities={demoReportData.activities}
+                          onClose={() => setSelectedActivityId(null)}
+                        />
+                      </SheetContent>
+                    </Sheet>
                   </div>
                 </div>
               </Tabs>

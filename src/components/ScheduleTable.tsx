@@ -20,11 +20,14 @@ const ScheduleTable = ({
 }: ScheduleTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  // Descrições detalhadas começam expandidas para TODOS os roles
+  // (desktop, tablet e mobile); o usuário pode colapsar no chevron.
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const isExpanded = useCallback((id: string) => !collapsedIds.has(id), [collapsedIds]);
 
   const toggleExpand = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedIds(prev => {
+    setCollapsedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
@@ -148,14 +151,14 @@ const ScheduleTable = ({
                       <button
                         onClick={(e) => toggleExpand(activity.id, e)}
                         className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                        aria-label={expandedIds.has(activity.id) ? "Ocultar descrição" : "Ver descrição"}
+                        aria-label={isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
                       >
-                        {expandedIds.has(activity.id) ? "Ocultar descrição" : "Ver descrição"}
-                        <ChevronDown className={cn("w-3 h-3 transition-transform", expandedIds.has(activity.id) && "rotate-180")} />
+                        {isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
+                        <ChevronDown className={cn("w-3 h-3 transition-transform", isExpanded(activity.id) && "rotate-180")} />
                       </button>
                     )}
                   </div>
-                  {activity.detailed_description?.trim() && expandedIds.has(activity.id) && (
+                  {activity.detailed_description?.trim() && isExpanded(activity.id) && (
                     <p className="mt-1.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2 animate-fade-in">
                       {activity.detailed_description}
                     </p>
@@ -234,14 +237,14 @@ const ScheduleTable = ({
                               <button
                                 onClick={(e) => toggleExpand(activity.id, e)}
                                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0"
-                                aria-label={expandedIds.has(activity.id) ? "Ocultar descrição" : "Ver descrição"}
+                                aria-label={isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
                               >
-                                {expandedIds.has(activity.id) ? "Ocultar descrição" : "Ver descrição"}
-                                <ChevronDown className={cn("w-3 h-3 transition-transform", expandedIds.has(activity.id) && "rotate-180")} />
+                                {isExpanded(activity.id) ? "Ocultar descrição" : "Ver descrição"}
+                                <ChevronDown className={cn("w-3 h-3 transition-transform", isExpanded(activity.id) && "rotate-180")} />
                               </button>
                             )}
                           </div>
-                          {activity.detailed_description?.trim() && expandedIds.has(activity.id) && (
+                          {activity.detailed_description?.trim() && isExpanded(activity.id) && (
                             <p className="mt-1.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2.5 animate-fade-in">
                               {activity.detailed_description}
                             </p>

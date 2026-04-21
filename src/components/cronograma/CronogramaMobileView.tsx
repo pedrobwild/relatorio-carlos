@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInCalendarDays, startOfWeek, endOfWeek, isWithinInterval, addWeeks, isBefore, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { AlertTriangle, Calendar, ChevronDown, ChevronRight, Clock, CheckCircle2, Circle, Play, MoreHorizontal, Pencil, Upload, Wand2, Bookmark } from 'lucide-react';
+import { AlertTriangle, Calendar, ChevronDown, ChevronRight, Clock, CheckCircle2, Circle, Play, MoreHorizontal, Pencil, Upload, Wand2, Bookmark, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -262,6 +262,9 @@ export function CronogramaMobileView({
 function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { computedStatus: ActivityStatus }; index: number }) {
   const config = statusConfig[act.computedStatus];
   const isOverdue = act.computedStatus === 'overdue';
+  const hasDetails = !!act.detailed_description?.trim();
+  // Visível por padrão para TODOS os roles; o usuário pode ocultar.
+  const [showDetails, setShowDetails] = useState(hasDetails);
   const daysInfo = useMemo(() => {
     if (act.actual_end) return null;
     if (isOverdue) {
@@ -315,6 +318,15 @@ function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { 
             )}
           </div>
 
+          {/* Etapa badge — visible to all roles */}
+          {act.etapa && (
+            <div className="mt-1">
+              <span className="inline-block px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-accent-foreground">
+                {act.etapa}
+              </span>
+            </div>
+          )}
+
           {/* Meta row */}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
@@ -348,6 +360,35 @@ function ActivityCard({ activity: act, index }: { activity: ProjectActivity & { 
                 ))}
                 className="h-1.5 rounded-full [&>div]:bg-primary"
               />
+            </div>
+          )}
+
+          {/* Detailed description — visible to all roles */}
+          {hasDetails && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setShowDetails(v => !v)}
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors touch-target"
+                aria-expanded={showDetails}
+              >
+                <FileText className="h-3 w-3" />
+                {showDetails ? 'Ocultar descrição' : 'Ver descrição da etapa'}
+                <ChevronDown className={cn('h-3 w-3 transition-transform', showDetails && 'rotate-180')} />
+              </button>
+              <AnimatePresence initial={false}>
+                {showDetails && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="mt-1.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed bg-secondary/30 rounded-md p-2 overflow-hidden"
+                  >
+                    {act.detailed_description}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
