@@ -3,6 +3,8 @@ import { Activity } from "@/types/report";
 export interface SCurveChartProps {
   activities: Activity[];
   reportDate?: string;
+  projectStartDate?: string | null;
+  projectEndDate?: string | null;
   showFullChart?: boolean;
   onShowFullChartChange?: (showFull: boolean) => void;
 }

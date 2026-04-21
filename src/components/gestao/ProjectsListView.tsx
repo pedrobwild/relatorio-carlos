@@ -12,8 +12,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
+import { AlertTriangle, CheckCircle, Clock, ChevronDown, MapPin, Ruler, Key, CalendarX, Hourglass, HardHat, Pencil, FileSignature, FileText, MoreHorizontal, Trash2, Settings, Eye, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, PlayCircle, PauseCircle } from 'lucide-react';
+import { useProjectSummaryQuery, useUpdateProjectStatusMutation } from '@/hooks/useProjectsQuery';
 import { useCurrentStages, type CurrentStageInfo } from '@/hooks/useCurrentStages';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
 import { useDeleteProject } from '@/hooks/useDeleteProject';
@@ -54,6 +54,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
   const navigate = useNavigate();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
   const deleteProject = useDeleteProject();
+  const updateStatus = useUpdateProjectStatusMutation();
   const [deleteTarget, setDeleteTarget] = useState<ProjectWithCustomer | null>(null);
 
   // Split IDs: obras use cronograma stages, projetos use journey stages
@@ -180,10 +181,10 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-border/50 bg-white dark:bg-card overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
+            <TableRow className="bg-white dark:bg-card hover:bg-white dark:hover:bg-card border-b border-border/50">
               <TableHead className="w-7 px-1" />
               <TableHead className="py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 cursor-pointer hover:text-foreground transition-colors select-none" onClick={() => handleSort('obra')}>
                 Obra{sortIcon('obra')}
@@ -228,6 +229,7 @@ export function ProjectsListView({ projects, onProjectClick }: ProjectsListViewP
                       onNavigate={() => onProjectClick ? onProjectClick(project) : navigate(`/obra/${project.id}`)}
                       onEdit={() => navigate(`/gestao/obra/${project.id}/editar`)}
                       onDelete={() => setDeleteTarget(project)}
+                      onChangeStatus={(status) => updateStatus.mutate({ projectId: project.id, status })}
                     />
                     {isExpanded && (
                       <TableRow className="bg-muted/20 hover:bg-muted/30">
@@ -315,7 +317,7 @@ function ExpandedContent({ project, contractValue }: { project: ProjectWithCusto
 }
 
 function ProjectRow({
-  project, summary, currentStage, isExpanded, onToggle: _onToggle, onNavigate, onEdit, onDelete,
+  project, summary, currentStage, isExpanded, onToggle: _onToggle, onNavigate, onEdit, onDelete, onChangeStatus,
 }: {
   project: ProjectWithCustomer;
   summary?: ProjectSummary;
@@ -325,13 +327,14 @@ function ProjectRow({
   onNavigate: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onChangeStatus: (status: 'active' | 'completed' | 'paused' | 'draft' | 'cancelled') => void;
 }) {
   const navigate = useNavigate();
   const pendingCount = summary?.pending_count ?? 0;
   const overdueCount = summary?.overdue_count ?? 0;
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocuments = summary?.pending_documents ?? 0;
-  const progress = summary?.progress_percentage ?? 0;
+  const progress = Math.max(0, Math.min(100, Math.round(Number(summary?.progress_percentage ?? 0))));
 
   const plannedProgress = useMemo(() => {
     const startStr = project.actual_start_date ?? project.planned_start_date;
@@ -359,11 +362,11 @@ function ProjectRow({
     <CollapsibleTrigger asChild>
       <TableRow
         className={cn(
-          'cursor-pointer transition-colors group/row border-b border-border/30',
+          'cursor-pointer transition-colors group/row border-b border-border/30 bg-white dark:bg-card',
           isOverdue
-            ? 'bg-red-50/50 hover:bg-red-50/80 dark:bg-destructive/[0.03] dark:hover:bg-destructive/[0.06]'
+            ? 'hover:bg-red-50/60 dark:hover:bg-destructive/[0.06]'
             : isApproaching
-              ? 'bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-500/[0.02] dark:hover:bg-amber-500/[0.05]'
+              ? 'hover:bg-amber-50/40 dark:hover:bg-amber-500/[0.05]'
               : 'hover:bg-muted/30',
         )}
       >
@@ -599,6 +602,27 @@ function ProjectRow({
               {project.status === 'draft' && (
                 <DropdownMenuItem onClick={() => navigate(`/gestao/obra/${project.id}/wizard`)}>
                   <Pencil className="h-4 w-4 mr-2" /> Revisar rascunho
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              {project.status !== 'completed' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('completed')}>
+                  <CheckCircle2 className="h-4 w-4 mr-2 text-[hsl(var(--success))]" /> Marcar como concluída
+                </DropdownMenuItem>
+              )}
+              {project.status === 'completed' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                  <PlayCircle className="h-4 w-4 mr-2" /> Reabrir obra
+                </DropdownMenuItem>
+              )}
+              {project.status === 'active' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('paused')}>
+                  <PauseCircle className="h-4 w-4 mr-2" /> Pausar obra
+                </DropdownMenuItem>
+              )}
+              {project.status === 'paused' && (
+                <DropdownMenuItem onClick={() => onChangeStatus('active')}>
+                  <PlayCircle className="h-4 w-4 mr-2" /> Retomar obra
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

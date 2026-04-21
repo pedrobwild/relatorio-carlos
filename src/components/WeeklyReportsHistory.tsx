@@ -13,6 +13,7 @@ interface WeeklyReportsHistoryProps {
   activities: Activity[];
   onReportClick?: (report: WeeklyReport, index: number) => void;
   isStaff?: boolean; // Staff can see all reports immediately
+  projectEndDate?: string; // Caps weekly report generation at the project end
 }
 
 const BRASILIA_TZ = "America/Sao_Paulo";
@@ -105,10 +106,15 @@ const isReportAvailableForCustomer = (weekEndDate: Date): { isAvailable: boolean
 export const generateWeeklyReports = (
   projectStartDate: string,
   reportDate: string,
-  activities: Activity[]
+  activities: Activity[],
+  projectEndDate?: string,
 ): ExtendedWeeklyReport[] => {
   const startDate = parseLocalDate(projectStartDate);
-  const currentReportDate = parseLocalDate(reportDate);
+  // Cap report generation at the project end date so the timeline does not
+  // keep producing empty weeks after the project's planned/actual conclusion.
+  const rawReportDate = parseLocalDate(reportDate);
+  const endCap = projectEndDate ? parseLocalDate(projectEndDate) : null;
+  const currentReportDate = endCap && isBefore(endCap, rawReportDate) ? endCap : rawReportDate;
   const reports: ExtendedWeeklyReport[] = [];
   
   let weekNumber = 1;
@@ -240,8 +246,9 @@ const WeeklyReportsHistory = ({
   activities,
   onReportClick,
   isStaff = false,
+  projectEndDate,
 }: WeeklyReportsHistoryProps) => {
-  const weeklyReportsAsc = generateWeeklyReports(projectStartDate, reportDate, activities);
+  const weeklyReportsAsc = generateWeeklyReports(projectStartDate, reportDate, activities, projectEndDate);
   // Display in descending order (most recent first)
   const weeklyReports = [...weeklyReportsAsc].reverse();
   const latestReport = weeklyReportsAsc[weeklyReportsAsc.length - 1]; // Latest is the last one in ascending order

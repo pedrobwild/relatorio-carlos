@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Activity } from "@/types/report";
+import { calcWeightedProgress } from "@/lib/progressCalc";
 import { calculateWorkingDays, type ProjectMetrics, type MilestoneItem, type MilestoneDates, type MilestoneKey } from "./types";
 
 export function useProjectMetrics(
@@ -22,30 +23,30 @@ export function useProjectMetrics(
       ? totalWorkingDays
       : (today < end ? calculateWorkingDays(today, end) : 0);
 
-    const hasWeights = activities.some(a => a.weight !== undefined);
-    const totalWeight = hasWeights
-      ? activities.reduce((sum, a) => sum + (a.weight || 0), 0)
-      : activities.length;
+    // ===== UNIFIED PROGRESS CALCULATION =====
+    // Both planned and actual use the SAME weighted-completion logic from calcWeightedProgress.
+    // - REALIZADO: peso × 100% para cada atividade com `actualEnd` preenchido.
+    // - PREVISTO: peso × 100% para cada atividade cujo `plannedEnd` <= reportDate
+    //   (ou seja, deveria estar concluída até esta data).
+    const actualProgress = calcWeightedProgress(activities);
 
-    const completedWeight = activities.reduce((sum, a) => {
-      if (a.actualEnd) return sum + (hasWeights ? (a.weight || 0) : 1);
-      return sum;
-    }, 0);
+    // Para o "Previsto", simulamos que toda atividade que deveria ter terminado
+    // (plannedEnd <= reportDate) está concluída — usando a MESMA função.
+    const plannedProgress = calcWeightedProgress(
+      activities.map(a => ({
+        weight: a.weight,
+        actualEnd: new Date(a.plannedEnd + "T00:00:00") <= report ? a.plannedEnd : null,
+      }))
+    );
+
     const completedActivities = activities.filter(a => a.actualEnd).length;
     const totalActivities = activities.length;
-    const actualProgress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
-
-    const plannedWeight = activities.reduce((sum, a) => {
-      const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
-      if (plannedEnd <= report) return sum + (hasWeights ? (a.weight || 0) : 1);
-      return sum;
-    }, 0);
-    const plannedProgress = totalWeight > 0 ? (plannedWeight / totalWeight) * 100 : 0;
 
     const progressDiff = actualProgress - plannedProgress;
     const isOnTrack = progressDiff >= 0;
     const variancePercentage = Math.abs(progressDiff).toFixed(0);
 
+    const allCompleted = activities.length > 0 && activities.every(a => !!a.actualEnd);
     const currentActivity = activities.find(a => {
       const plannedStart = new Date(a.plannedStart + "T00:00:00");
       const plannedEnd = new Date(a.plannedEnd + "T00:00:00");
@@ -61,7 +62,7 @@ export function useProjectMetrics(
       isOnTrack,
       variancePercentage,
       progressDiff: Math.round(progressDiff),
-      currentActivity: currentActivity?.description || "Sem atividade em andamento",
+      currentActivity: allCompleted ? "Obra concluída" : (currentActivity?.description || "Sem atividade em andamento"),
       completedActivities,
       totalActivities,
     };

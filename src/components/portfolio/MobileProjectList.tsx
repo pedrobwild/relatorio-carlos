@@ -74,7 +74,7 @@ function MobileProjectRow({
   today: Date;
   onClick: () => void;
 }) {
-  const progress = summary?.progress_percentage ?? 0;
+  const progress = Math.max(0, Math.min(100, Math.round(Number(summary?.progress_percentage ?? 0))));
   const overdueCount = summary?.overdue_count ?? 0;
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocuments = summary?.pending_documents ?? 0;

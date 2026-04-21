@@ -56,7 +56,8 @@ export default function Demo() {
   const allWeeklyReports = generateWeeklyReports(
     demoReportData.startDate ?? '', 
     demoReportData.reportDate, 
-    demoReportData.activities
+    demoReportData.activities,
+    demoReportData.endDate ?? undefined,
   );
   const reportsChronological = [...allWeeklyReports].reverse();
 
@@ -186,6 +187,8 @@ export default function Demo() {
                         <SCurveChart 
                           activities={demoReportData.activities} 
                           reportDate={demoReportData.reportDate}
+                          projectStartDate={demoReportData.startDate}
+                          projectEndDate={demoReportData.endDate}
                           showFullChart={showFullChart}
                           onShowFullChartChange={setShowFullChart}
                         />
@@ -245,6 +248,7 @@ export default function Demo() {
                           <WeeklyReportsHistory
                             projectStartDate={demoReportData.startDate ?? ''}
                             reportDate={demoReportData.reportDate}
+                            projectEndDate={demoReportData.endDate ?? undefined}
                             activities={demoReportData.activities}
                             onReportClick={handleReportClick}
                             isStaff={true}

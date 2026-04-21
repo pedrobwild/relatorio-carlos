@@ -5,8 +5,6 @@ import { useProjectsQuery, useProjectSummaryQuery } from '@/hooks/useProjectsQue
 import { DuplicateProjectModal } from '@/components/DuplicateProjectModal';
 import { PortfolioCommandBar } from './PortfolioCommandBar';
 import { PortfolioKpiStrip, type ProjectFinancial } from './PortfolioKpiStrip';
-import { PortfolioActionInbox } from './PortfolioActionInbox';
-import { PortfolioInsightsPanel } from './PortfolioInsightsPanel';
 import { WorkQuickPreviewDrawer } from './WorkQuickPreviewDrawer';
 import { MobileProjectList } from './MobileProjectList';
 import { ProjectsListView } from '@/components/gestao/ProjectsListView';
@@ -84,13 +82,40 @@ export default function PortfolioPage() {
 
   const displayedProjects = filters.filtered;
 
-  const handleStaleAction = useCallback((projectId: string) => {
-    if (projectId.startsWith('stale-')) {
-      setStaleDialogOpen(true);
-    } else {
-      navigate(`/obra/${projectId}`);
-    }
-  }, [navigate]);
+  // ── Export to CSV ───────────────────────────────────────────────────────
+  const handleExportCSV = useCallback(() => {
+    if (displayedProjects.length === 0) return;
+    const summaryMap = new Map(summaries.map(s => [s.id, s]));
+    const headers = [
+      'Nome', 'Status', 'Cliente', 'Responsável', 'Cidade',
+      'Início', 'Entrega Prevista', 'Entrega Real',
+      'Valor Contrato', 'Progresso (%)', 'Pendências', 'Atrasadas',
+    ];
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = displayedProjects.map(p => {
+      const s = summaryMap.get(p.id);
+      return [
+        p.name, p.status, p.customer_name ?? '', p.engineer_name ?? '', p.cidade ?? '',
+        p.planned_start_date ?? '', p.planned_end_date ?? '', p.actual_end_date ?? '',
+        p.contract_value ?? '',
+        s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : '',
+        s?.pending_count ?? 0, s?.overdue_count ?? 0,
+      ].map(escape).join(';');
+    });
+    const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `obras_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [displayedProjects, summaries]);
+
+
 
   // ── Full-page loading ───────────────────────────────────────────────────
   if (isLoading && projects.length === 0) {
@@ -111,7 +136,7 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="flex-1 bg-background">
+    <div className="flex-1 bg-background" data-testid="gestao-obras-list">
       <AppHeader>
         <div className="ml-2">
           <h1 className="text-h3 font-bold sr-only">Gestão de Obras</h1>
@@ -146,6 +171,7 @@ export default function PortfolioPage() {
           filteredCount={displayedProjects.length}
           activeFilterCount={filters.advancedFilterCount}
           onOpenFilters={() => filters.setFiltersOpen(true)}
+          onExport={handleExportCSV}
         />
 
         {/* Active filter chips */}
@@ -184,61 +210,45 @@ export default function PortfolioPage() {
           />
         )}
 
-        {/* Content: Main + Sidebar */}
-        <div className="flex gap-4 items-start">
-          {/* Main content */}
-          <section className="min-h-[400px] flex-1 min-w-0" aria-label="Lista de obras">
-            {isLoading ? (
-              <GridSkeleton rows={6} />
-            ) : error ? (
-              <PortfolioErrorState error={error} onRetry={() => refetch()} />
-            ) : projects.length === 0 ? (
-              <EmptyPortfolio onCreateProject={() => navigate('/gestao/nova-obra')} />
-            ) : displayedProjects.length === 0 ? (
-              <NoFilterResults
-                onClearFilters={filters.handleClearAll}
-                activeFilterCount={filters.totalFilterCount}
-              />
-            ) : (
-              <>
-                {/* Mobile: compact list view (default) */}
-                <div className="block md:hidden">
-                  <MobileProjectList
+        {/* Content: Main only — sidebar widgets removed per request */}
+        <section className="min-h-[400px]" aria-label="Lista de obras">
+          {isLoading ? (
+            <GridSkeleton rows={6} />
+          ) : error ? (
+            <PortfolioErrorState error={error} onRetry={() => refetch()} />
+          ) : projects.length === 0 ? (
+            <EmptyPortfolio onCreateProject={() => navigate('/gestao/nova-obra')} />
+          ) : displayedProjects.length === 0 ? (
+            <NoFilterResults
+              onClearFilters={filters.handleClearAll}
+              activeFilterCount={filters.totalFilterCount}
+            />
+          ) : (
+            <>
+              {/* Mobile: compact list view (default) */}
+              <div className="block md:hidden">
+                <MobileProjectList
+                  projects={displayedProjects}
+                  onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                />
+              </div>
+              {/* Desktop: respects view mode */}
+              <div className="hidden md:block">
+                {filters.viewMode === 'cards' ? (
+                  <ProjectsCardView
                     projects={displayedProjects}
                     onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
                   />
-                </div>
-                {/* Desktop: respects view mode */}
-                <div className="hidden md:block">
-                  {filters.viewMode === 'cards' ? (
-                    <ProjectsCardView
-                      projects={displayedProjects}
-                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-                    />
-                  ) : (
-                    <ProjectsListView
-                      projects={displayedProjects}
-                      onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
-                    />
-                  )}
-                </div>
-              </>
-            )}
-          </section>
-
-          {/* Sidebar — desktop only */}
-          <aside className="hidden lg:block w-[280px] shrink-0 space-y-3 sticky top-20">
-            <PortfolioActionInbox
-              projects={projects}
-              summaries={summaries}
-              onNavigate={handleStaleAction}
-            />
-            <PortfolioInsightsPanel
-              projects={projects}
-              summaries={summaries}
-            />
-          </aside>
-        </div>
+                ) : (
+                  <ProjectsListView
+                    projects={displayedProjects}
+                    onProjectClick={(p) => { setPreviewProject(p); setDrawerOpen(true); }}
+                  />
+                )}
+              </div>
+            </>
+          )}
+        </section>
       </main>
 
       {/* Sheets & Modals */}

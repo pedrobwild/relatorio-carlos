@@ -14,8 +14,8 @@ import { applyAdvancedFilters } from '../filters/applyFilters';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
-export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon';
-export type ViewMode = 'cards' | 'list' | 'table';
+export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon' | 'completed';
+export type ViewMode = 'cards' | 'list';
 export type ScopeFilter = 'all' | 'obras' | 'projetos';
 
 export function usePortfolioFilters(
@@ -49,9 +49,10 @@ export function usePortfolioFilters(
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── View mode ───────────────────────────────────────────────────────────
-  const [viewMode, setViewMode] = useState<ViewMode>(() =>
-    (localStorage.getItem('portfolio-view-mode') as ViewMode) || 'list'
-  );
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const stored = localStorage.getItem('portfolio-view-mode') as ViewMode | null;
+    return stored === 'cards' || stored === 'list' ? stored : 'list';
+  });
   const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     localStorage.setItem('portfolio-view-mode', mode);
@@ -95,6 +96,23 @@ export function usePortfolioFilters(
   const filtered = useMemo(() => {
     let result = projects;
 
+    // Hide completed projects by default — only show when explicitly filtered for
+    const wantsCompleted =
+      activePreset === 'completed' ||
+      kpiFilter === 'completed' ||
+      advancedFilters.status.includes('completed');
+    if (!wantsCompleted) {
+      result = result.filter(p => p.status !== 'completed');
+    }
+
+    // Hide draft projects by default — only show when explicitly filtered for
+    const wantsDraft =
+      kpiFilter === 'draft' ||
+      advancedFilters.status.includes('draft');
+    if (!wantsDraft) {
+      result = result.filter(p => p.status !== 'draft');
+    }
+
     // Scope filter (obras vs projetos)
     if (scopeFilter === 'obras') {
       result = result.filter(p => !p.is_project_phase);
@@ -136,6 +154,9 @@ export function usePortfolioFilters(
           );
           return daysLeft >= 0 && daysLeft <= 7;
         });
+        break;
+      case 'completed':
+        result = result.filter(p => p.status === 'completed');
         break;
     }
 

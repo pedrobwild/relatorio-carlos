@@ -1,5 +1,6 @@
 import { Activity } from "@/types/report";
 import { ChartDataPoint, ChartResult } from "./types";
+import { plannedProgressAt, actualProgressAt } from "@/lib/linearProgress";
 
 // Parse ISO date string to Date object
 export const parseDate = (dateStr: string): Date | null => {
@@ -69,7 +70,12 @@ const EMPTY_RESULT: ChartResult = {
   milestones: { start: 0, end: 0, today: 0, half: 0 },
 };
 
-export function generateChartData(activities: Activity[], reportDate?: string): ChartResult {
+export function generateChartData(
+  activities: Activity[],
+  reportDate?: string,
+  projectStartDate?: string | null,
+  projectEndDate?: string | null,
+): ChartResult {
   if (activities.length === 0) return EMPTY_RESULT;
 
   const toNumericWeight = (weight: Activity['weight']): number => {
@@ -78,9 +84,15 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     return Number.isFinite(parsed) ? parsed : 0;
   };
 
-  const baseYear = activities[0].plannedStart
-    ? (parseDate(activities[0].plannedStart)?.getFullYear() ?? new Date().getFullYear())
-    : new Date().getFullYear();
+  // Anchor base year on project start date when provided, otherwise first activity
+  const projectStartParsed = projectStartDate ? parseDate(projectStartDate) : null;
+  const projectEndParsed = projectEndDate ? parseDate(projectEndDate) : null;
+
+  const baseYear = projectStartParsed
+    ? projectStartParsed.getFullYear()
+    : (activities[0].plannedStart
+      ? (parseDate(activities[0].plannedStart)?.getFullYear() ?? new Date().getFullYear())
+      : new Date().getFullYear());
 
   const reportDateParsed = reportDate ? parseDate(reportDate) : new Date();
 
@@ -90,7 +102,7 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     : activities.length;
   const safeTotalWeight = totalWeight > 0 ? totalWeight : 1;
 
-  // Find project date range
+  // Find project date range from activities, then anchor to project dates when provided
   const dateRange = activities.reduce<{ min: Date | null; max: Date | null }>((acc, a) => {
     const dates = [parseDate(a.plannedStart), parseDate(a.plannedEnd), parseDate(a.actualStart), parseDate(a.actualEnd)].filter(Boolean) as Date[];
     for (const d of dates) {
@@ -100,9 +112,15 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     return acc;
   }, { min: null, max: null });
 
-  const resolvedMin = dateRange.min;
-  const resolvedMax = dateRange.max;
+  // Project dates anchor the chart axis (with activity dates as fallback)
+  let resolvedMin = projectStartParsed ?? dateRange.min;
+  let resolvedMax = projectEndParsed ?? dateRange.max;
   if (!resolvedMin || !resolvedMax) return EMPTY_RESULT;
+
+  // Safety: never let max be before min, and extend max to cover all activity data
+  if (dateRange.min && dateRange.min < resolvedMin) resolvedMin = dateRange.min;
+  if (dateRange.max && dateRange.max > resolvedMax) resolvedMax = dateRange.max;
+  if (resolvedMax < resolvedMin) resolvedMax = resolvedMin;
 
   // Generate dates at regular intervals (every 3 days)
   const INTERVAL_DAYS = 3;
@@ -140,8 +158,10 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     return latest;
   }, null as Date | null);
 
-  const endTimestamp = lastPlannedDate
-    ? Math.floor((lastPlannedDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
+  // "Entrega" milestone: prefer project end date when provided, fallback to last activity plannedEnd
+  const endMilestoneDate = projectEndParsed ?? lastPlannedDate;
+  const endTimestamp = endMilestoneDate
+    ? Math.floor((endMilestoneDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
   const todayTimestamp = reportDateParsed
     ? Math.floor((reportDateParsed.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -181,27 +201,17 @@ export function generateChartData(activities: Activity[], reportDate?: string): 
     const daysSinceStart = Math.floor((cur.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
     const activityAtDate = findActivityAtDate(activities, date);
 
-    const plannedProgress = activities.reduce((sum, a) => {
-      const plannedEnd = parseDate(a.plannedEnd);
-      if (plannedEnd && plannedEnd <= cur) return sum + (hasWeights ? toNumericWeight(a.weight) : 1);
-      return sum;
-    }, 0);
-
+    // Linear (per-activity) progress so atrasos de início/fim aparecem dia a dia,
+    // não apenas quando uma atividade fecha por completo.
+    const previstoPct = plannedProgressAt(activities, cur);
     const isFutureDate = reportDateParsed && cur > reportDateParsed;
-    let actualProgress: number | null = null;
-    if (!isFutureDate && hasAnyActualData) {
-      actualProgress = activities.reduce((sum, a) => {
-        const actualEnd = parseDate(a.actualEnd);
-        if (actualEnd && actualEnd <= cur) return sum + (hasWeights ? toNumericWeight(a.weight) : 1);
-        return sum;
-      }, 0);
-    }
+    const realizadoPct = !isFutureDate && hasAnyActualData ? actualProgressAt(activities, cur) : null;
 
     return {
       date: formatDisplayDate(date, baseYear),
       timestamp: daysSinceStart,
-      previsto: Math.round((plannedProgress / safeTotalWeight) * 100),
-      realizado: actualProgress !== null ? Math.round((actualProgress / safeTotalWeight) * 100) : null,
+      previsto: Math.round(previstoPct),
+      realizado: realizadoPct !== null ? Math.round(realizadoPct) : null,
       activity: activityAtDate,
     };
   });

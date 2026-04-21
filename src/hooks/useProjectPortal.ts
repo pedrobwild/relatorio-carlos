@@ -145,14 +145,25 @@ export function useProjectPortal() {
 
   const reportData: ReportData | null = useMemo(() => {
     if (project) {
+      // Prefer actual project dates over planned dates (with planned as fallback)
+      const effectiveStartDate = project.actual_start_date || project.planned_start_date || '';
+      const effectiveEndDate = project.actual_end_date || project.planned_end_date || '';
+
+      // Ensure endDate is never before the latest activity to avoid clipping the chart
+      const reconcileEndDate = (preferred: string | null | undefined, activitiesEnd: string | null): string => {
+        const candidates = [preferred, activitiesEnd, project.planned_end_date].filter(Boolean) as string[];
+        if (candidates.length === 0) return '';
+        return candidates.reduce((latest, d) => (d > latest ? d : latest), candidates[0]);
+      };
+
       if (formattedActivities.length > 0) {
         const activitiesEndDate = calculateEndDateFromActivities(formattedActivities);
         return {
           projectName: project.name,
           unitName: project.unit_name || '',
           clientName: project.customer_name || '',
-          startDate: project.planned_start_date,
-          endDate: activitiesEndDate || project.planned_end_date,
+          startDate: effectiveStartDate,
+          endDate: reconcileEndDate(project.actual_end_date || project.planned_end_date, activitiesEndDate),
           reportDate: new Date().toISOString().split('T')[0],
           activities: formattedActivities,
         };
@@ -163,8 +174,8 @@ export function useProjectPortal() {
           projectName: project.name,
           unitName: project.unit_name || '',
           clientName: project.customer_name || '',
-          startDate: project.planned_start_date,
-          endDate: demoEndDate || project.planned_end_date,
+          startDate: effectiveStartDate,
+          endDate: reconcileEndDate(project.actual_end_date || project.planned_end_date, demoEndDate),
           reportDate: new Date().toISOString().split('T')[0],
           activities: demoReportData.activities,
         };
@@ -173,8 +184,8 @@ export function useProjectPortal() {
         projectName: project.name,
         unitName: project.unit_name || '',
         clientName: project.customer_name || '',
-        startDate: project.planned_start_date,
-        endDate: project.planned_end_date,
+        startDate: effectiveStartDate,
+        endDate: effectiveEndDate,
         reportDate: new Date().toISOString().split('T')[0],
         activities: [],
       };
@@ -185,7 +196,7 @@ export function useProjectPortal() {
 
   const allWeeklyReports = useMemo(() => {
     if (!reportData || reportData.activities.length === 0) return [];
-    return generateWeeklyReports(reportData.startDate ?? '', reportData.reportDate, reportData.activities);
+    return generateWeeklyReports(reportData.startDate ?? '', reportData.reportDate, reportData.activities, reportData.endDate ?? undefined);
   }, [reportData]);
 
   const reportsChronological = useMemo(() => [...allWeeklyReports].reverse(), [allWeeklyReports]);
@@ -197,7 +208,7 @@ export function useProjectPortal() {
     if (reportsChronological.length === 0) return;
     const saved = getPortalViewState(viewStateKey);
     if (saved.weeklyReport?.open && typeof saved.weeklyReport?.index === "number" && reportsChronological[saved.weeklyReport.index]) {
-      setActiveTab("evolucao");
+      setActiveTab("relatorios");
       setSelectedWeekIndex(saved.weeklyReport.index);
       setSelectedWeeklyReport(reportsChronological[saved.weeklyReport.index]);
     }
@@ -225,7 +236,8 @@ export function useProjectPortal() {
   const handleReportClick = useCallback((report: WeeklyReport, index: number) => {
     setSelectedWeeklyReport(report);
     setSelectedWeekIndex(index);
-    patchPortalViewState(viewStateKey, { activeTab: "evolucao", weeklyReport: { open: true, index } });
+    setActiveTab("relatorios");
+    patchPortalViewState(viewStateKey, { activeTab: "relatorios", weeklyReport: { open: true, index } });
   }, [viewStateKey]);
 
   const handleBackToList = useCallback(() => {

@@ -3387,6 +3387,51 @@ export type Database = {
           },
         ]
       }
+      project_3d_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          project_id: string
+          sort_order: number
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          project_id: string
+          sort_order?: number
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          sort_order?: number
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_3d_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_3d_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_3d_versions: {
         Row: {
           created_at: string
@@ -5500,32 +5545,20 @@ export type Database = {
         Args: { p_formalization_id: string }
         Returns: string
       }
-      create_inspection_with_items:
-        | {
-            Args: {
-              p_activity_id?: string
-              p_inspection_date?: string
-              p_inspector_id?: string
-              p_items?: Json
-              p_notes?: string
-              p_project_id: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_activity_id?: string
-              p_client_name?: string
-              p_client_present?: boolean
-              p_inspection_date?: string
-              p_inspection_type?: string
-              p_inspector_id?: string
-              p_items?: Json
-              p_notes?: string
-              p_project_id: string
-            }
-            Returns: string
-          }
+      create_inspection_with_items: {
+        Args: {
+          p_activity_id?: string
+          p_client_name?: string
+          p_client_present?: boolean
+          p_inspection_date?: string
+          p_inspection_type?: string
+          p_inspector_id?: string
+          p_items?: Json
+          p_notes?: string
+          p_project_id: string
+        }
+        Returns: string
+      }
       create_notification: {
         Args: {
           _action_url?: string
