@@ -208,7 +208,7 @@ export function useProjectPortal() {
     if (reportsChronological.length === 0) return;
     const saved = getPortalViewState(viewStateKey);
     if (saved.weeklyReport?.open && typeof saved.weeklyReport?.index === "number" && reportsChronological[saved.weeklyReport.index]) {
-      setActiveTab("evolucao");
+      setActiveTab("relatorios");
       setSelectedWeekIndex(saved.weeklyReport.index);
       setSelectedWeeklyReport(reportsChronological[saved.weeklyReport.index]);
     }
@@ -236,7 +236,8 @@ export function useProjectPortal() {
   const handleReportClick = useCallback((report: WeeklyReport, index: number) => {
     setSelectedWeeklyReport(report);
     setSelectedWeekIndex(index);
-    patchPortalViewState(viewStateKey, { activeTab: "evolucao", weeklyReport: { open: true, index } });
+    setActiveTab("relatorios");
+    patchPortalViewState(viewStateKey, { activeTab: "relatorios", weeklyReport: { open: true, index } });
   }, [viewStateKey]);
 
   const handleBackToList = useCallback(() => {
