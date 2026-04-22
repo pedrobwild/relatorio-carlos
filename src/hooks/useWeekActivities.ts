@@ -215,6 +215,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
         created_by: user.id,
         etapa: parentRow?.etapa ?? null,
         predecessor_ids: [],
+        // Se o usuário não definir um responsável para a micro-etapa,
+        // herda da atividade-mãe (quando existir).
+        responsible_user_id:
+          s.responsible_user_id !== undefined
+            ? s.responsible_user_id
+            : parent.responsible_user_id ?? null,
       }));
 
       const { error: insErr } = await supabase.from('project_activities').insert(rows);
