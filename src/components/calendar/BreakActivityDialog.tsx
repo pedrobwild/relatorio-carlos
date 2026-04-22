@@ -280,59 +280,108 @@ export function BreakActivityDialog({
               </Button>
             </div>
 
-            {rows.map((row, i) => (
-              <div
-                key={i}
-                className="rounded-lg border bg-card p-3 grid grid-cols-12 gap-2 items-end"
-              >
-                <div className="col-span-12 md:col-span-5">
-                  <Label htmlFor={`desc-${i}`} className="text-[11px] text-muted-foreground">
-                    Título da micro-etapa {i + 1}
-                  </Label>
-                  <Input
-                    id={`desc-${i}`}
-                    value={row.description}
-                    onChange={(e) => updateRow(i, { description: e.target.value })}
-                    placeholder={`Ex.: Parte ${i + 1} – descrição interna`}
-                    className="mt-1"
-                  />
-                </div>
+            {rows.map((row, i) => {
+              const issues = rowIssues[i] ?? [];
+              const hasOverlap = issues.some((x) => x.kind === 'overlap');
+              const hasOtherIssue = issues.some((x) => x.kind !== 'overlap' && x.kind !== 'no-title');
+              const isInverted = issues.some((x) => x.kind === 'inverted');
+              const overlapsWith = issues
+                .filter((x): x is Extract<RowIssue, { kind: 'overlap' }> => x.kind === 'overlap')
+                .map((x) => x.withIndex + 1);
+              const isValid = issues.length === 0 && row.description.trim().length > 0;
+              const days = isInverted
+                ? 0
+                : differenceInCalendarDays(row.planned_end, row.planned_start) + 1;
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    'rounded-lg border p-3 grid grid-cols-12 gap-2 items-end transition-colors',
+                    hasOverlap || hasOtherIssue
+                      ? 'border-destructive/60 bg-destructive/5'
+                      : 'border-border bg-card',
+                  )}
+                >
+                  <div className="col-span-12 md:col-span-5">
+                    <Label htmlFor={`desc-${i}`} className="text-[11px] text-muted-foreground">
+                      Título da micro-etapa {i + 1}
+                    </Label>
+                    <Input
+                      id={`desc-${i}`}
+                      value={row.description}
+                      onChange={(e) => updateRow(i, { description: e.target.value })}
+                      placeholder={`Ex.: Parte ${i + 1} – descrição interna`}
+                      className="mt-1"
+                    />
+                  </div>
 
-                <div className="col-span-6 md:col-span-3">
-                  <Label className="text-[11px] text-muted-foreground">Início</Label>
-                  <DatePopover
-                    value={row.planned_start}
-                    onChange={(d) => d && updateRow(i, { planned_start: d })}
-                    min={ps ?? undefined}
-                    max={pe ?? undefined}
-                  />
-                </div>
+                  <div className="col-span-6 md:col-span-3">
+                    <Label className="text-[11px] text-muted-foreground">Início</Label>
+                    <DatePopover
+                      value={row.planned_start}
+                      onChange={(d) => d && updateRow(i, { planned_start: d })}
+                      min={ps ?? undefined}
+                      max={pe ?? undefined}
+                    />
+                  </div>
 
-                <div className="col-span-6 md:col-span-3">
-                  <Label className="text-[11px] text-muted-foreground">Fim</Label>
-                  <DatePopover
-                    value={row.planned_end}
-                    onChange={(d) => d && updateRow(i, { planned_end: d })}
-                    min={ps ?? undefined}
-                    max={pe ?? undefined}
-                  />
-                </div>
+                  <div className="col-span-6 md:col-span-3">
+                    <Label className="text-[11px] text-muted-foreground">Fim</Label>
+                    <DatePopover
+                      value={row.planned_end}
+                      onChange={(d) => d && updateRow(i, { planned_end: d })}
+                      min={ps ?? undefined}
+                      max={pe ?? undefined}
+                    />
+                  </div>
 
-                <div className="col-span-12 md:col-span-1 flex md:justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeRow(i)}
-                    disabled={rows.length <= 1}
-                    title="Remover esta micro-etapa"
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="col-span-12 md:col-span-1 flex md:justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeRow(i)}
+                      disabled={rows.length <= 1}
+                      title="Remover esta micro-etapa"
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Pré-visualização legível do intervalo + sinalização de status */}
+                  <div className="col-span-12 flex flex-wrap items-center gap-2 text-xs">
+                    {isInverted ? (
+                      <span className="inline-flex items-center gap-1 text-destructive">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Intervalo inválido (fim anterior ao início)
+                      </span>
+                    ) : (
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 font-medium',
+                          hasOverlap ? 'text-destructive' : 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="h-3.5 w-3.5" />
+                        {describeRange(row.planned_start, row.planned_end)}
+                      </span>
+                    )}
+                    {hasOverlap && (
+                      <Badge variant="destructive" className="text-[10px]">
+                        Sobrepõe com {overlapsWith.map((n) => `#${n}`).join(', ')}
+                      </Badge>
+                    )}
+                    {isValid && days > 0 && (
+                      <Badge variant="outline" className="text-[10px] border-green-500/40 text-green-600">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        OK
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <Button
               type="button"
