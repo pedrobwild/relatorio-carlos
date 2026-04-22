@@ -87,7 +87,7 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const today = new Date();
+  const today = getTodayLocal();
 
   const weeks = useMemo(() => {
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
