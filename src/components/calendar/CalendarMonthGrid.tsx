@@ -300,7 +300,7 @@ function WeekRow({
                           gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
                         }}
                         className={cn(
-                          'relative h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
+                          'relative h-full overflow-hidden px-1.5 py-[1px] mx-[1px] text-left rounded-sm border flex flex-col justify-center',
                           'hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40',
                           // Cor padrão (em andamento / futura)
                           !isPastEnd && [color.bg, color.border],
@@ -314,21 +314,32 @@ function WeekRow({
                       >
                         {isOverdue && (
                           <span
-                            className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-none shadow-sm ring-1 ring-background"
+                            className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-none shadow-sm ring-1 ring-background z-10"
                             title="Atividade atrasada — não concluída"
                             aria-label="Atrasada"
                           >
                             !
                           </span>
                         )}
-                        {/* Hierarquia: Atividade em destaque, condomínio/cliente como contexto secundário */}
-                        <span className={cn('font-semibold', isPastDone && 'line-through opacity-80')}>
+                        {/* Layout em duas linhas: atividade (destaque) + condomínio/cliente (contexto) */}
+                        <span
+                          className={cn(
+                            'block truncate text-[10.5px] leading-[11px] font-semibold',
+                            isPastDone && 'line-through opacity-80',
+                          )}
+                          title={seg.activity.description}
+                        >
                           {seg.activity.description}
                         </span>
-                        <span className="opacity-60"> · {seg.activity.project_name}</span>
-                        {seg.activity.client_name && (
-                          <span className="opacity-50"> · {seg.activity.client_name}</span>
-                        )}
+                        <span
+                          className="block truncate text-[9px] leading-[10px] opacity-70 mt-[1px]"
+                          title={[seg.activity.project_name, seg.activity.client_name].filter(Boolean).join(' · ')}
+                        >
+                          {seg.activity.project_name}
+                          {seg.activity.client_name && (
+                            <span className="opacity-80"> · {seg.activity.client_name}</span>
+                          )}
+                        </span>
                       </button>
                     </TooltipTrigger>
                     <TooltipContent
