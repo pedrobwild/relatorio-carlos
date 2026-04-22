@@ -18,6 +18,10 @@ export interface WeekActivity {
   id: string;
   project_id: string;
   project_name: string;
+  /** Nome do cliente vinculado à obra (de projects.client_name). */
+  client_name: string | null;
+  /** Status do projeto-pai (active, completed, draft, on_hold, cancelled, ...). */
+  project_status: string | null;
   description: string;
   detailed_description: string | null;
   etapa: string | null;
