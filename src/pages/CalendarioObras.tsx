@@ -78,6 +78,9 @@ export default function CalendarioObras() {
   const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  // Por padrão, ocultamos atividades de obras já concluídas para focar no que está em andamento.
+  // O usuário pode reativar via toggle "Incluir concluídas" na barra de filtros.
+  const [includeCompleted, setIncludeCompleted] = useState<boolean>(false);
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
   const draftRangeInvalid = draftRangeStart > draftRangeEnd;
