@@ -146,10 +146,25 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
   // actual_start when present, otherwise planned_start (ascending).
   // Tie-break by planned_end so shorter / earlier-ending tasks come first.
   const byProject = useMemo(() => {
-    const map = new Map<string, { project_id: string; project_name: string; items: WeekActivity[] }>();
+    const map = new Map<
+      string,
+      {
+        project_id: string;
+        project_name: string;
+        client_name: string | null;
+        project_status: string | null;
+        items: WeekActivity[];
+      }
+    >();
     for (const a of activities) {
       if (!map.has(a.project_id)) {
-        map.set(a.project_id, { project_id: a.project_id, project_name: a.project_name, items: [] });
+        map.set(a.project_id, {
+          project_id: a.project_id,
+          project_name: a.project_name,
+          client_name: a.client_name,
+          project_status: a.project_status,
+          items: [],
+        });
       }
       map.get(a.project_id)!.items.push(a);
     }
