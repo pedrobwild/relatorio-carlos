@@ -80,6 +80,9 @@ export default function CalendarioObras() {
   const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  // Filtro por etapa do cronograma (project_activities.etapa). 'all' inclui tudo,
+  // '__none__' representa atividades sem etapa preenchida.
+  const [etapaFilter, setEtapaFilter] = useState<string>('all');
   // Por padrão, ocultamos atividades de obras já concluídas para focar no que está em andamento.
   // O usuário pode reativar via toggle "Incluir concluídas" na barra de filtros.
   const [includeCompleted, setIncludeCompleted] = useState<boolean>(false);
