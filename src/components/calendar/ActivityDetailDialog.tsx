@@ -252,6 +252,51 @@ export function ActivityDetailDialog({
               </div>
             </div>
 
+            {/* Responsável (Staff) */}
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <UserRound className="h-3.5 w-3.5" />
+                  Responsável
+                </div>
+                {activity.responsible_name && responsibleUserId === activity.responsible_user_id && (
+                  <span className="text-[10.5px] text-muted-foreground">
+                    Atual: <strong className="text-foreground">{activity.responsible_name}</strong>
+                  </span>
+                )}
+              </div>
+              <Select
+                value={responsibleUserId ?? NO_RESPONSIBLE}
+                onValueChange={(v) => setResponsibleUserId(v === NO_RESPONSIBLE ? null : v)}
+                disabled={loadingStaff}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={loadingStaff ? 'Carregando equipe...' : 'Selecionar responsável'}
+                  />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-72">
+                  <SelectItem value={NO_RESPONSIBLE}>
+                    <span className="text-muted-foreground italic">Sem responsável</span>
+                  </SelectItem>
+                  {staffUsers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      <div className="flex flex-col">
+                        <span>{u.nome}</span>
+                        <span className="text-[10.5px] text-muted-foreground capitalize">
+                          {u.perfil}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Membro da equipe interna responsável por executar esta{' '}
+                {activity.parent_activity_id ? 'micro-etapa' : 'atividade'}.
+              </p>
+            </div>
+
             {/* Editable actual dates */}
             <div>
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
