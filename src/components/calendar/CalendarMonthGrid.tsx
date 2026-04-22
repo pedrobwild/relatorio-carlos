@@ -1,12 +1,17 @@
 /**
  * CalendarMonthGrid — Google-Calendar style month view.
- * Renders a 7-col grid (Mon-Sun) for the visible month, with each activity
- * shown as a colored bar spanning its [planned_start, planned_end] interval,
- * clipped to each week row. Up to 3 bars per day, "+N mais" link otherwise.
+ * Renders a 7-col grid (Mon-Sun) for the visible month. Each activity becomes
+ * a colored bar spanning its [planned_start, planned_end] interval, clipped
+ * to each week row. Up to 3 lanes per row by default; clicking "+N mais"
+ * expands the entire week inline so every lane is visible without leaving
+ * the month view.
+ *
+ * Layout uses fixed pixel tokens (DAY_NUMBER_AREA + LANE_HEIGHT * lanes +
+ * FOOTER_AREA) so the overlay grid always aligns with the day columns
+ * regardless of how many lanes are shown.
  */
 import { useMemo, useState } from 'react';
 import {
-  addDays,
   differenceInCalendarDays,
   eachDayOfInterval,
   endOfMonth,
@@ -18,13 +23,10 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Props {
   refDate: Date;
@@ -32,7 +34,14 @@ interface Props {
   onActivityClick: (a: WeekActivity) => void;
 }
 
+// Layout tokens (px). Keeping these fixed guarantees lanes never overlap and
+// stay perfectly aligned with the day columns underneath them.
 const MAX_BARS_PER_ROW = 3;
+const DAY_NUMBER_AREA = 30;   // top space reserved for the day number chip
+const LANE_HEIGHT = 22;       // 18px bar + ~4px vertical gap
+const LANE_GAP = 3;           // visual gap between lanes
+const FOOTER_AREA = 22;       // bottom space for "+N mais" / Expandir / Recolher
+const ROW_BASE_PADDING = 6;
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 interface BarSegment {
@@ -51,7 +60,6 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
 
   const today = new Date();
 
-  // Split into weeks
   const weeks = useMemo(() => {
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
     const w: Date[][] = [];
@@ -61,7 +69,6 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
 
   return (
     <div className="rounded-lg border overflow-hidden bg-card">
-      {/* Weekday header */}
       <div className="grid grid-cols-7 bg-muted/40 border-b text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
         {WEEKDAY_LABELS.map((d) => (
           <div key={d} className="px-2 py-2 text-center">
@@ -99,11 +106,11 @@ function WeekRow({
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
 }) {
+  // Inline expansion: when true, render every lane (no cap) for this row.
+  const [expanded, setExpanded] = useState(false);
   const weekStart = week[0];
   const weekEnd = week[6];
 
-  // Build bar segments for this week. Each activity that intersects the week
-  // becomes one segment clipped to [weekStart, weekEnd].
   const segments: BarSegment[] = useMemo(() => {
     const segs: BarSegment[] = [];
     for (const a of activities) {
@@ -122,7 +129,7 @@ function WeekRow({
         endsAfter: aEnd > weekEnd,
       });
     }
-    // Sort: longer spans first so they get top rows; tie-break by start
+    // Sort: longer spans first so they get top rows; tie-break by start.
     segs.sort((x, y) => {
       if (y.span !== x.span) return y.span - x.span;
       return x.activity.planned_start.localeCompare(y.activity.planned_start);
@@ -130,37 +137,57 @@ function WeekRow({
     return segs;
   }, [activities, weekStart.getTime(), weekEnd.getTime()]);
 
-  // Lane assignment (greedy) so bars don't overlap visually
-  const lanes: BarSegment[][] = [];
-  for (const seg of segments) {
-    let placed = false;
-    for (const lane of lanes) {
-      const conflict = lane.some(
-        (other) =>
-          !(seg.startCol + seg.span - 1 < other.startCol || seg.startCol > other.startCol + other.span - 1),
-      );
-      if (!conflict) {
-        lane.push(seg);
-        placed = true;
-        break;
+  // Greedy lane packing: each lane holds non-overlapping segments.
+  const lanes: BarSegment[][] = useMemo(() => {
+    const out: BarSegment[][] = [];
+    for (const seg of segments) {
+      let placed = false;
+      for (const lane of out) {
+        const conflict = lane.some(
+          (other) =>
+            !(seg.startCol + seg.span - 1 < other.startCol || seg.startCol > other.startCol + other.span - 1),
+        );
+        if (!conflict) {
+          lane.push(seg);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) out.push([seg]);
+    }
+    return out;
+  }, [segments]);
+
+  const overflow = lanes.length > MAX_BARS_PER_ROW;
+  const visibleLanes = expanded ? lanes : lanes.slice(0, MAX_BARS_PER_ROW);
+  const hiddenLaneCount = Math.max(0, lanes.length - MAX_BARS_PER_ROW);
+
+  // Per-column hidden counts (only meaningful when collapsed and overflowing).
+  const hiddenCountByCol: number[] = Array(7).fill(0);
+  if (!expanded) {
+    for (let i = MAX_BARS_PER_ROW; i < lanes.length; i++) {
+      for (const seg of lanes[i]) {
+        for (let c = seg.startCol; c < seg.startCol + seg.span; c++) {
+          hiddenCountByCol[c]++;
+        }
       }
     }
-    if (!placed) lanes.push([seg]);
   }
 
-  const visibleLanes = lanes.slice(0, MAX_BARS_PER_ROW);
-  const hiddenCountByCol: number[] = Array(7).fill(0);
-  for (let i = MAX_BARS_PER_ROW; i < lanes.length; i++) {
-    for (const seg of lanes[i]) {
-      for (let c = seg.startCol; c < seg.startCol + seg.span; c++) {
-        hiddenCountByCol[c]++;
-      }
-    }
-  }
+  const showsFooter = overflow; // either "Expandir" (collapsed) or "Recolher" (expanded)
+  const lanesArea = visibleLanes.length * LANE_HEIGHT + Math.max(0, visibleLanes.length - 1) * LANE_GAP;
+  const minHeight =
+    DAY_NUMBER_AREA +
+    lanesArea +
+    (showsFooter ? FOOTER_AREA : 0) +
+    ROW_BASE_PADDING;
+
+  // Default minimum so empty weeks don't collapse visually.
+  const finalHeight = Math.max(110, minHeight);
 
   return (
-    <div className="relative grid grid-cols-7 min-h-[110px]">
-      {/* Day cells */}
+    <div className="relative grid grid-cols-7" style={{ minHeight: finalHeight }}>
+      {/* Day cells (background + day number) */}
       {week.map((day, di) => {
         const inMonth = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, today);
@@ -185,114 +212,112 @@ function WeekRow({
         );
       })}
 
-      {/* Bar overlay */}
-      <div className="absolute inset-x-0 top-7 bottom-0 grid grid-cols-7 gap-y-1 px-1 pointer-events-none">
-        {/* Render lanes */}
-        <div className="col-span-7 grid grid-cols-7 gap-x-1 gap-y-1 content-start pointer-events-auto">
-          {visibleLanes.map((lane, laneIdx) =>
-            lane.map((seg) => {
-              const color = getProjectColor(seg.activity.project_id);
-              return (
+      {/* Lanes overlay — absolutely positioned bars aligned to day columns. */}
+      <div
+        className="absolute left-0 right-0 grid grid-cols-7 px-1 pointer-events-none"
+        style={{ top: DAY_NUMBER_AREA, height: lanesArea }}
+      >
+        {visibleLanes.map((lane, laneIdx) => (
+          <div
+            key={laneIdx}
+            className="col-span-7 relative pointer-events-auto"
+            style={{
+              position: 'absolute',
+              top: laneIdx * (LANE_HEIGHT + LANE_GAP),
+              left: 4,
+              right: 4,
+              height: LANE_HEIGHT - 4,
+            }}
+          >
+            {/* Per-lane day grid for accurate column placement */}
+            <div className="grid grid-cols-7 h-full">
+              {lane.map((seg) => {
+                const color = getProjectColor(seg.activity.project_id);
+                return (
+                  <button
+                    key={seg.activity.id}
+                    type="button"
+                    onClick={() => onActivityClick(seg.activity)}
+                    title={`${seg.activity.project_name} — ${seg.activity.description}`}
+                    style={{
+                      gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
+                    }}
+                    className={cn(
+                      'h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
+                      'hover:ring-2 hover:ring-primary/40 transition-shadow',
+                      color.bg,
+                      color.border,
+                      seg.startsBefore && 'rounded-l-none border-l-0',
+                      seg.endsAfter && 'rounded-r-none border-r-0',
+                    )}
+                  >
+                    <span className="font-medium">{seg.activity.project_name}</span>
+                    <span className="opacity-70"> · {seg.activity.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {/* Per-column "+N mais" indicators (only when collapsed) */}
+        {!expanded && (
+          <div
+            className="col-span-7 grid grid-cols-7"
+            style={{
+              position: 'absolute',
+              top: visibleLanes.length * (LANE_HEIGHT + LANE_GAP),
+              left: 4,
+              right: 4,
+              height: 16,
+            }}
+          >
+            {hiddenCountByCol.map((n, col) =>
+              n > 0 ? (
                 <button
-                  key={`${laneIdx}-${seg.activity.id}`}
+                  key={`more-${col}`}
                   type="button"
-                  onClick={() => onActivityClick(seg.activity)}
-                  title={`${seg.activity.project_name} — ${seg.activity.description}`}
-                  style={{
-                    gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
-                    gridRow: laneIdx + 1,
-                  }}
-                  className={cn(
-                    'h-5 truncate text-[10.5px] leading-5 px-1.5 text-left rounded-sm border',
-                    'hover:ring-2 hover:ring-primary/40 transition-shadow',
-                    color.bg,
-                    color.border,
-                    seg.startsBefore && 'rounded-l-none border-l-0',
-                    seg.endsAfter && 'rounded-r-none border-r-0',
-                  )}
+                  onClick={() => setExpanded(true)}
+                  style={{ gridColumn: `${col + 1} / span 1` }}
+                  className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4 pointer-events-auto"
+                  title={`Mostrar todas as ${lanes.length} faixas desta semana`}
                 >
-                  <span className="font-medium">{seg.activity.project_name}</span>
-                  <span className="opacity-70"> · {seg.activity.description}</span>
+                  +{n} mais
                 </button>
-              );
-            }),
-          )}
-          {/* "+N mais" indicators per column */}
-          {hiddenCountByCol.map((n, col) =>
-            n > 0 ? (
-              <MoreInDayPopover
-                key={`more-${col}`}
-                count={n}
-                col={col}
-                segments={segments.filter(
-                  (s) => col >= s.startCol && col < s.startCol + s.span,
-                )}
-                onActivityClick={onActivityClick}
-              />
-            ) : null,
+              ) : (
+                <span key={`more-${col}`} />
+              ),
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Footer toggle (Expandir / Recolher) — anchored to row bottom-right */}
+      {showsFooter && (
+        <div className="absolute bottom-1 right-2 pointer-events-auto">
+          {expanded ? (
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              title="Recolher esta semana"
+            >
+              <ChevronsDownUp className="h-3 w-3" />
+              Recolher
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              title={`Expandir e mostrar ${hiddenLaneCount} faixa(s) ocultas`}
+            >
+              <ChevronsUpDown className="h-3 w-3" />
+              Expandir semana ({hiddenLaneCount})
+            </button>
           )}
         </div>
-      </div>
+      )}
     </div>
-  );
-}
-
-function MoreInDayPopover({
-  count,
-  col,
-  segments,
-  onActivityClick,
-}: {
-  count: number;
-  col: number;
-  segments: BarSegment[];
-  onActivityClick: (a: WeekActivity) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          style={{ gridColumn: `${col + 1} / span 1`, gridRow: MAX_BARS_PER_ROW + 1 }}
-          className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4"
-        >
-          +{count} mais
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-2 z-50">
-        <div className="text-xs font-semibold mb-2">Atividades neste dia</div>
-        <ScrollArea className="max-h-72">
-          <ul className="space-y-1">
-            {segments.map((s) => {
-              const color = getProjectColor(s.activity.project_id);
-              return (
-                <li key={s.activity.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      onActivityClick(s.activity);
-                    }}
-                    className="w-full text-left flex items-start gap-2 p-1.5 rounded-sm hover:bg-muted/60"
-                  >
-                    <span className={cn('mt-0.5 h-3 w-3 rounded-sm border', color.bg, color.border)} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-medium truncate">{s.activity.description}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">
-                        {s.activity.project_name}
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-[9px] h-4">
-                      {format(parseISO(s.activity.planned_start), 'dd/MM')}
-                    </Badge>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
   );
 }
