@@ -163,7 +163,7 @@ const App = () => (
             <Route path="/gestao/obra/:projectId/wizard" element={<StaffRoute><GestaoShell>{withSuspense(<EditarObraWizard />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/arquivos" element={<ProtectedRoute><GestaoShell>{withSuspense(<Arquivos />)}</GestaoShell></ProtectedRoute>} />
             <Route path="/gestao/calendario-compras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioCompras />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/calendario-obras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioObras />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/calendario-obras" element={<ProtectedRoute><GestaoShell>{withSuspense(<CalendarioObras />)}</GestaoShell></ProtectedRoute>} />
             <Route path="/gestao/fornecedores" element={<StaffRoute><GestaoShell>{withSuspense(<Fornecedores />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/:id" element={<StaffRoute><GestaoShell>{withSuspense(<FornecedorDetalhe />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/admin" element={<AdminRoute><GestaoShell>{withSuspense(<FornecedoresAdmin />)}</GestaoShell></AdminRoute>} />
