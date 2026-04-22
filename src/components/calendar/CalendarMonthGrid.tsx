@@ -226,18 +226,15 @@ function WeekRow({
 
       {/* Lanes overlay — absolutely positioned bars aligned to day columns. */}
       <div
-        className="absolute left-0 right-0 grid grid-cols-7 px-1 pointer-events-none"
+        className="absolute left-1 right-1 pointer-events-none"
         style={{ top: DAY_NUMBER_AREA, height: lanesArea }}
       >
         {visibleLanes.map((lane, laneIdx) => (
           <div
             key={laneIdx}
-            className="col-span-7 relative pointer-events-auto"
+            className="absolute left-0 right-0 pointer-events-auto"
             style={{
-              position: 'absolute',
               top: laneIdx * (LANE_HEIGHT + LANE_GAP),
-              left: 4,
-              right: 4,
               height: LANE_HEIGHT - 4,
             }}
           >
@@ -282,12 +279,9 @@ function WeekRow({
         {/* Per-column "+N mais" indicators (only when collapsed) */}
         {!expanded && (
           <div
-            className="col-span-7 grid grid-cols-7"
+            className="absolute left-0 right-0 grid grid-cols-7"
             style={{
-              position: 'absolute',
               top: visibleLanes.length * (LANE_HEIGHT + LANE_GAP),
-              left: 4,
-              right: 4,
               height: 16,
             }}
           >
@@ -298,7 +292,7 @@ function WeekRow({
                   type="button"
                   onClick={() => setExpanded(true)}
                   style={{ gridColumn: `${col + 1} / span 1` }}
-                  className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4 pointer-events-auto"
+                  className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4 pointer-events-auto truncate"
                   title={`Mostrar todas as ${lanes.length} faixas desta semana`}
                 >
                   +{n} mais
