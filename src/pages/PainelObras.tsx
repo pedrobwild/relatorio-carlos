@@ -714,7 +714,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Etapa */}
-      <TableCell className={cn('sticky left-[480px] z-10 border-r border-border', stickyBase)}>
+      <TableCell className={cn('sticky left-[380px] z-10 border-r border-border', stickyBase)}>
         <Select
           value={obra.etapa ?? NONE}
           onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
