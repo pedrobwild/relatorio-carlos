@@ -476,6 +476,30 @@ function WeekRow({
                               )}
                             </div>
                           </div>
+
+                          {/* CTA: Replanejar cronograma — aparece quando esta obra
+                              tem alguma atividade anterior à semana visível ainda
+                              não concluída (sinal forte de que o cronograma está
+                              fora do plano e precisa ser revisto). */}
+                          {projectsWithOverduePrevious?.has(seg.activity.project_id) && onReplanSchedule && (
+                            <div className="pt-2 border-t">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onReplanSchedule(seg.activity.project_id);
+                                }}
+                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground text-[11px] font-semibold px-2.5 py-1.5 hover:bg-destructive/90 transition-colors shadow-sm"
+                                title="Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar."
+                              >
+                                <CalendarClock className="h-3.5 w-3.5" />
+                                Replanejar cronograma
+                              </button>
+                              <p className="text-[9.5px] text-muted-foreground mt-1 leading-snug">
+                                Há etapas anteriores desta obra ainda não concluídas.
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </TooltipContent>
