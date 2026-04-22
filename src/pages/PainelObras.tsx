@@ -1,7 +1,7 @@
 /**
  * Painel de Obras — visão executiva unificada para a equipe.
- * Lista TODAS as obras do sistema (fonte única: tabela `projects`) com
- * edição inline dos campos operacionais e métricas de progresso/pendências.
+ * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
+ * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,8 @@ import {
   Table2,
   ShieldOff,
   ExternalLink,
+  Pencil,
+  ChevronDown,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
@@ -74,40 +76,59 @@ const ALL = '__all__';
 const NONE = '__none__';
 
 const fmtDate = (iso: string | null) =>
-  iso ? format(parseISO(iso), 'dd/MM/yyyy', { locale: ptBR }) : '—';
+  iso ? format(parseISO(iso), 'dd/MM/yy', { locale: ptBR }) : '—';
 
 const fmtDateTime = (iso: string) =>
   format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 
-const statusBadgeClass = (s: PainelStatus | null): string => {
+/** Cor sólida para o "dot" e badge tipo Monday (sem hover ruidoso). */
+const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
     case 'Em dia':
-      return 'bg-green-600 text-white hover:bg-green-700';
+      return 'bg-emerald-500';
     case 'Atrasado':
-      return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+      return 'bg-destructive';
     case 'Paralisada':
-      return 'bg-muted-foreground text-background hover:bg-muted-foreground/90';
+      return 'bg-muted-foreground';
     default:
-      return 'bg-muted text-muted-foreground hover:bg-muted';
+      return 'bg-muted';
   }
 };
 
-const relacionamentoBadgeClass = (r: PainelRelacionamento | null): string => {
-  switch (r) {
-    case 'Normal':
-      return 'bg-green-600 text-white hover:bg-green-700';
-    case 'Atrito':
-      return 'bg-yellow-500 text-white hover:bg-yellow-600';
-    case 'Insatisfeito':
-      return 'bg-orange-500 text-white hover:bg-orange-600';
-    case 'Crítico':
-      return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+const statusPillClass = (s: PainelStatus | null): string => {
+  switch (s) {
+    case 'Em dia':
+      return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30';
+    case 'Atrasado':
+      return 'bg-destructive/15 text-destructive border border-destructive/30';
+    case 'Paralisada':
+      return 'bg-muted text-muted-foreground border border-border';
     default:
-      return 'bg-muted text-muted-foreground hover:bg-muted';
+      return 'bg-muted/40 text-muted-foreground border border-dashed border-border';
   }
 };
+
+const relacionamentoPillClass = (r: PainelRelacionamento | null): string => {
+  switch (r) {
+    case 'Normal':
+      return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30';
+    case 'Atrito':
+      return 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30';
+    case 'Insatisfeito':
+      return 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30';
+    case 'Crítico':
+      return 'bg-destructive/15 text-destructive border border-destructive/30';
+    default:
+      return 'bg-muted/40 text-muted-foreground border border-dashed border-border';
+  }
+};
+
+// Affordance comum a toda célula editável: hover sutil + ring no foco.
+const editableCell =
+  'group/cell w-full h-full text-left px-2 py-1 rounded text-sm transition-colors ' +
+  'hover:bg-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 // ----- inline date cell -----
 interface DateCellProps {
@@ -141,13 +162,13 @@ function DateCell({ value, onChange, confirmEdit, confirmTitle, disabled }: Date
             type="button"
             disabled={disabled}
             className={cn(
-              'flex items-center gap-1.5 px-2 py-1 rounded text-sm w-full text-left',
-              'hover:bg-accent transition-colors',
+              editableCell,
+              'flex items-center gap-1.5 tabular-nums',
               !value && 'text-muted-foreground',
               disabled && 'opacity-50 cursor-not-allowed',
             )}
           >
-            <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
+            <CalendarIcon className="h-3 w-3 shrink-0 opacity-60 group-hover/cell:opacity-100" />
             <span className="truncate">{fmtDate(value)}</span>
           </button>
         </PopoverTrigger>
@@ -242,7 +263,7 @@ function TextCell({
             setEditing(false);
           }
         }}
-        className="h-8 text-sm"
+        className="h-7 text-sm"
       />
     );
   }
@@ -252,11 +273,13 @@ function TextCell({
       type="button"
       onClick={() => setEditing(true)}
       className={cn(
-        'w-full text-left px-2 py-1 rounded text-sm hover:bg-accent transition-colors',
+        editableCell,
+        'flex items-center gap-1.5',
         !value && 'text-muted-foreground italic',
       )}
     >
-      {value ?? placeholder ?? '—'}
+      <Pencil className="h-3 w-3 shrink-0 opacity-0 group-hover/cell:opacity-60 transition-opacity" />
+      <span className="truncate">{value ?? placeholder ?? '—'}</span>
     </button>
   );
 }
@@ -344,6 +367,17 @@ export default function PainelObras() {
     filterStatus !== ALL ||
     filterRelacionamento !== ALL;
 
+  // Resumo executivo no topo (densidade de informação)
+  const summary = useMemo(() => {
+    const total = obras.length;
+    const emDia = obras.filter((o) => o.status === 'Em dia').length;
+    const atrasadas = obras.filter((o) => o.status === 'Atrasado').length;
+    const paralisadas = obras.filter((o) => o.status === 'Paralisada').length;
+    const pendencias = obras.reduce((s, o) => s + o.pending_count, 0);
+    const atrasos = obras.reduce((s, o) => s + o.overdue_count, 0);
+    return { total, emDia, atrasadas, paralisadas, pendencias, atrasos };
+  }, [obras]);
+
   if (roleLoading) {
     return (
       <PageContainer>
@@ -375,46 +409,63 @@ export default function PainelObras() {
     <button
       type="button"
       onClick={() => toggleSort(k)}
-      className="flex items-center gap-1 hover:text-primary transition-colors"
+      className="flex items-center gap-1 hover:text-foreground transition-colors uppercase tracking-wide"
     >
       {label}
-      {sortKey === k && <span className="text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+      {sortKey === k ? (
+        <span className="text-[10px]">{sortDir === 'asc' ? '↑' : '↓'}</span>
+      ) : (
+        <ChevronDown className="h-3 w-3 opacity-30" />
+      )}
     </button>
   );
 
   return (
-    <TooltipProvider>
-      <PageContainer>
-        {/* Cabeçalho */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+    <TooltipProvider delayDuration={200}>
+      <PageContainer maxWidth="full">
+        {/* Cabeçalho + KPIs */}
+        <div className="flex flex-col gap-4 mb-4 pt-4">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Painel de Obras</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Visão executiva unificada de todas as obras. Clique em qualquer célula para
-                editar.
+              <h1 className="text-xl font-semibold tracking-tight">Painel de Obras</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Visão executiva unificada · Clique nas células com fundo cinza para editar
               </p>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <KpiPill label="Total" value={summary.total} />
+              <KpiPill label="Em dia" value={summary.emDia} dot="bg-emerald-500" />
+              <KpiPill label="Atrasadas" value={summary.atrasadas} dot="bg-destructive" />
+              <KpiPill label="Paralisadas" value={summary.paralisadas} dot="bg-muted-foreground" />
+              <KpiPill
+                label="Pendências"
+                value={summary.pendencias}
+                emphasis={summary.atrasos > 0 ? 'danger' : undefined}
+                hint={summary.atrasos > 0 ? `${summary.atrasos} atrasadas` : undefined}
+              />
             </div>
           </div>
 
-          {/* Filtros */}
-          <div className="flex items-center gap-2 flex-wrap p-3 bg-muted/40 rounded-lg border border-border">
+          {/* Toolbar de filtros — compacta e leve */}
+          <div className="flex items-center gap-2 flex-wrap">
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por obra, cliente ou responsável…"
-              className="h-8 w-[260px] text-sm"
+              placeholder="Buscar obra, cliente ou responsável…"
+              className="h-8 w-[280px] text-sm"
             />
 
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filtros:</span>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" />
+              <span>Filtros</span>
+            </div>
 
             <Select value={filterEtapa} onValueChange={setFilterEtapa}>
-              <SelectTrigger className="h-8 w-[180px] text-sm">
+              <SelectTrigger className="h-8 w-[160px] text-sm">
                 <SelectValue placeholder="Etapa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>Todas as etapas</SelectItem>
+                <SelectItem value={ALL}>Todas etapas</SelectItem>
                 <SelectItem value={NONE}>(sem etapa)</SelectItem>
                 {ETAPA_OPTIONS.map((e) => (
                   <SelectItem key={e} value={e}>
@@ -425,7 +476,7 @@ export default function PainelObras() {
             </Select>
 
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="h-8 w-[160px] text-sm">
+              <SelectTrigger className="h-8 w-[140px] text-sm">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -440,7 +491,7 @@ export default function PainelObras() {
             </Select>
 
             <Select value={filterRelacionamento} onValueChange={setFilterRelacionamento}>
-              <SelectTrigger className="h-8 w-[180px] text-sm">
+              <SelectTrigger className="h-8 w-[160px] text-sm">
                 <SelectValue placeholder="Relacionamento" />
               </SelectTrigger>
               <SelectContent>
@@ -455,19 +506,19 @@ export default function PainelObras() {
             </Select>
 
             {hasFilters && (
-              <Button size="sm" variant="ghost" onClick={clearFilters} className="h-8">
+              <Button size="sm" variant="ghost" onClick={clearFilters} className="h-8 text-xs">
                 <X className="h-3.5 w-3.5 mr-1" />
                 Limpar
               </Button>
             )}
 
-            <span className="text-xs text-muted-foreground ml-auto">
-              {filtered.length} de {obras.length} {obras.length === 1 ? 'obra' : 'obras'}
+            <span className="text-xs text-muted-foreground ml-auto tabular-nums">
+              {filtered.length} de {obras.length}
             </span>
           </div>
         </div>
 
-        {/* Tabela */}
+        {/* Tabela densa */}
         {isLoading ? (
           <Skeleton className="h-96 w-full" />
         ) : filtered.length === 0 ? (
@@ -481,63 +532,61 @@ export default function PainelObras() {
             }
           />
         ) : (
-          <div className="rounded-lg border border-border overflow-x-auto">
-            <Table>
+          <div className="rounded-md border border-border overflow-x-auto bg-card">
+            <Table className="text-sm [&_th]:h-9 [&_td]:py-1.5 [&_td]:px-2 [&_th]:px-2 [&_th]:text-[11px] [&_th]:font-medium [&_th]:text-muted-foreground [&_th]:bg-muted/40 [&_tr]:border-border">
               <TableHeader>
-                <TableRow className="bg-foreground hover:bg-foreground border-foreground/20">
-                  <TableHead className="text-background font-semibold min-w-[180px] sticky left-0 bg-foreground z-10">
+                <TableRow>
+                  {/* === Colunas fixas (prioritárias) === */}
+                  <TableHead className="min-w-[200px] sticky left-0 z-20 bg-muted/40 border-r border-border">
                     Obra
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[160px]">
+                  <TableHead className="min-w-[160px] sticky left-[200px] z-20 bg-muted/40 border-r border-border">
                     Cliente
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[140px]">
-                    Responsável
+                  <TableHead className="min-w-[120px] sticky left-[360px] z-20 bg-muted/40 border-r border-border">
+                    Status
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[120px]">
-                    Prazo
+                  <TableHead className="min-w-[140px] sticky left-[480px] z-20 bg-muted/40 border-r border-border">
+                    Etapa
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[140px]">
-                    <SortableHeader label="Início Oficial" sortKey="inicio_oficial" />
-                  </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[140px]">
-                    <SortableHeader label="Entrega Oficial" sortKey="entrega_oficial" />
-                  </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[140px]">Etapa</TableHead>
-                  <TableHead className="text-white font-semibold min-w-[140px]">
-                    <SortableHeader label="Início da Etapa" sortKey="inicio_etapa" />
-                  </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[150px]">
-                    <SortableHeader label="Previsão de Avanço" sortKey="previsao_avanco" />
-                  </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[120px]">Status</TableHead>
-                  <TableHead className="text-white font-semibold min-w-[110px] text-right">
-                    Progresso
-                  </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[110px] text-center">
+                  <TableHead className="min-w-[100px] text-center sticky left-[620px] z-20 bg-muted/40 border-r-2 border-border">
                     Pendências
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[140px]">
-                    <SortableHeader label="Última Atualização" sortKey="ultima_atualizacao" />
+
+                  {/* === Colunas secundárias === */}
+                  <TableHead className="min-w-[120px]">Responsável</TableHead>
+                  <TableHead className="min-w-[100px] text-right">Progresso</TableHead>
+                  <TableHead className="min-w-[110px]">Prazo</TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <SortableHeader label="Início Of." sortKey="inicio_oficial" />
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[130px]">
+                  <TableHead className="min-w-[120px]">
+                    <SortableHeader label="Entrega Of." sortKey="entrega_oficial" />
+                  </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <SortableHeader label="Início Etapa" sortKey="inicio_etapa" />
+                  </TableHead>
+                  <TableHead className="min-w-[130px]">
+                    <SortableHeader label="Prev. Avanço" sortKey="previsao_avanco" />
+                  </TableHead>
+                  <TableHead className="min-w-[120px]">
                     <SortableHeader label="Início Real" sortKey="inicio_real" />
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[130px]">
+                  <TableHead className="min-w-[120px]">
                     <SortableHeader label="Entrega Real" sortKey="entrega_real" />
                   </TableHead>
-                  <TableHead className="text-white font-semibold min-w-[140px]">
-                    Relacionamento
+                  <TableHead className="min-w-[140px]">Relacionamento</TableHead>
+                  <TableHead className="min-w-[110px]">
+                    <SortableHeader label="Atualizado" sortKey="ultima_atualizacao" />
                   </TableHead>
-                  <TableHead className="text-white w-12"></TableHead>
+                  <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((o, idx) => (
+                {filtered.map((o) => (
                   <ObraRow
                     key={o.id}
                     obra={o}
-                    zebra={idx % 2 === 1}
                     onUpdate={(patch) => updateObra(o.id, patch)}
                     onOpen={() => navigate(`/obra/${o.id}`)}
                   />
@@ -551,50 +600,209 @@ export default function PainelObras() {
   );
 }
 
+// ----- KPI pill -----
+function KpiPill({
+  label,
+  value,
+  dot,
+  emphasis,
+  hint,
+}: {
+  label: string;
+  value: number;
+  dot?: string;
+  emphasis?: 'danger';
+  hint?: string;
+}) {
+  const content = (
+    <div
+      className={cn(
+        'flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-card',
+        emphasis === 'danger' && 'border-destructive/40 bg-destructive/5',
+      )}
+    >
+      {dot && <span className={cn('h-2 w-2 rounded-full', dot)} />}
+      <span className="text-muted-foreground">{label}</span>
+      <span
+        className={cn(
+          'font-semibold tabular-nums',
+          emphasis === 'danger' && 'text-destructive',
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  );
+  if (hint) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{content}</TooltipTrigger>
+        <TooltipContent>{hint}</TooltipContent>
+      </Tooltip>
+    );
+  }
+  return content;
+}
+
 // ----- row component -----
 interface ObraRowProps {
   obra: PainelObra;
-  zebra: boolean;
   onUpdate: (patch: PainelObraPatch) => void;
   onOpen: () => void;
 }
 
-function ObraRow({ obra, zebra, onUpdate, onOpen }: ObraRowProps) {
-  const overdueColor =
+function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
+  // Cor da pendência: vermelha se há atrasos, âmbar se há pendências, neutra senão.
+  const pendStyle =
     obra.overdue_count > 0
-      ? 'bg-destructive text-destructive-foreground'
+      ? 'bg-destructive/15 text-destructive border border-destructive/30'
       : obra.pending_count > 0
-        ? 'bg-amber-500 text-white'
-        : 'bg-muted text-muted-foreground';
+        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
+        : 'bg-muted text-muted-foreground border border-border';
+
+  // Fundo das células fixas — precisa acompanhar o hover da row.
+  const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
   return (
-    <TableRow className={cn(zebra && 'bg-muted/30')}>
-      {/* Nome da obra (link p/ detalhes; não editável aqui) */}
-      <TableCell className={cn('font-bold sticky left-0 z-10', zebra ? 'bg-muted/30' : 'bg-background')}>
+    <TableRow className="group hover:bg-accent/40">
+      {/* === FIXAS === */}
+      {/* Obra */}
+      <TableCell
+        className={cn('font-semibold sticky left-0 z-10 border-r border-border', stickyBase)}
+      >
         <button
           type="button"
           onClick={onOpen}
-          className="text-left hover:text-primary transition-colors flex items-center gap-1.5 group"
+          className="text-left hover:text-primary transition-colors flex items-center gap-1.5 w-full"
           title="Abrir obra"
         >
           <span className="truncate">{obra.nome}</span>
-          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
         </button>
       </TableCell>
 
-      {/* Cliente (negrito por preferência registrada) */}
-      <TableCell className="font-bold text-sm">
-        {obra.customer_name ?? <span className="italic text-muted-foreground">—</span>}
+      {/* Cliente */}
+      <TableCell
+        className={cn('font-medium sticky left-[200px] z-10 border-r border-border', stickyBase)}
+      >
+        <span className="truncate block">
+          {obra.customer_name ?? <span className="italic text-muted-foreground">—</span>}
+        </span>
       </TableCell>
 
+      {/* Status */}
+      <TableCell className={cn('sticky left-[360px] z-10 border-r border-border', stickyBase)}>
+        <Select
+          value={obra.status ?? NONE}
+          onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
+        >
+          <SelectTrigger
+            className={cn(
+              'h-7 text-xs border-0 shadow-none p-0 px-2 [&>svg]:hidden justify-start gap-1.5',
+              'rounded-md',
+              statusPillClass(obra.status),
+            )}
+          >
+            <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(obra.status))} />
+            <span className="font-medium">{obra.status ?? 'Definir'}</span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE}>(nenhum)</SelectItem>
+            {STATUS_OPTIONS.map((s) => (
+              <SelectItem key={s} value={s}>
+                <span className="flex items-center gap-2">
+                  <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))} />
+                  {s}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+
+      {/* Etapa */}
+      <TableCell className={cn('sticky left-[480px] z-10 border-r border-border', stickyBase)}>
+        <Select
+          value={obra.etapa ?? NONE}
+          onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
+        >
+          <SelectTrigger className="h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40">
+            <SelectValue placeholder={<span className="text-muted-foreground">Definir…</span>} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE}>(nenhuma)</SelectItem>
+            {ETAPA_OPTIONS.map((e) => (
+              <SelectItem key={e} value={e}>
+                {e}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+
+      {/* Pendências */}
+      <TableCell
+        className={cn('text-center sticky left-[620px] z-10 border-r-2 border-border', stickyBase)}
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={cn(
+                'inline-flex items-center justify-center min-w-[36px] h-6 px-2 rounded-md text-xs font-semibold tabular-nums',
+                pendStyle,
+              )}
+            >
+              {obra.pending_count}
+              {obra.overdue_count > 0 && (
+                <span className="ml-1 opacity-80">↓{obra.overdue_count}</span>
+              )}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {obra.pending_count} pendência(s)
+            {obra.overdue_count > 0 ? ` · ${obra.overdue_count} atrasada(s)` : ''}
+          </TooltipContent>
+        </Tooltip>
+      </TableCell>
+
+      {/* === SECUNDÁRIAS === */}
       {/* Responsável */}
-      <TableCell className="text-sm">
-        {obra.engineer_name ?? <span className="italic text-muted-foreground">—</span>}
+      <TableCell className="text-muted-foreground">
+        <span className="truncate block">
+          {obra.engineer_name ?? <span className="italic">—</span>}
+        </span>
+      </TableCell>
+
+      {/* Progresso — barra compacta */}
+      <TableCell className="text-right">
+        {obra.progress_percentage != null ? (
+          <div className="flex items-center justify-end gap-2">
+            <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+              <div
+                className={cn(
+                  'h-full transition-all',
+                  obra.progress_percentage >= 100 ? 'bg-emerald-500' : 'bg-primary',
+                )}
+                style={{ width: `${Math.min(100, obra.progress_percentage)}%` }}
+              />
+            </div>
+            <span
+              className={cn(
+                'text-xs tabular-nums w-9 text-right',
+                obra.progress_percentage >= 100 && 'text-emerald-600 dark:text-emerald-400 font-semibold',
+              )}
+            >
+              {obra.progress_percentage}%
+            </span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        )}
       </TableCell>
 
       {/* Prazo - texto livre */}
       <TableCell>
-        <TextCell value={obra.prazo} onSave={(v) => onUpdate({ prazo: v })} placeholder="—" />
+        <TextCell value={obra.prazo} onSave={(v) => onUpdate({ prazo: v })} placeholder="Definir…" />
       </TableCell>
 
       {/* Início oficial - exige confirmação */}
@@ -617,26 +825,6 @@ function ObraRow({ obra, zebra, onUpdate, onOpen }: ObraRowProps) {
         />
       </TableCell>
 
-      {/* Etapa */}
-      <TableCell>
-        <Select
-          value={obra.etapa ?? NONE}
-          onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
-        >
-          <SelectTrigger className="h-8 text-sm border-0 shadow-none hover:bg-accent">
-            <SelectValue placeholder="Selecionar..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>(nenhuma)</SelectItem>
-            {ETAPA_OPTIONS.map((e) => (
-              <SelectItem key={e} value={e}>
-                {e}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </TableCell>
-
       {/* Início da etapa */}
       <TableCell>
         <DateCell value={obra.inicio_etapa} onChange={(v) => onUpdate({ inicio_etapa: v })} />
@@ -644,75 +832,7 @@ function ObraRow({ obra, zebra, onUpdate, onOpen }: ObraRowProps) {
 
       {/* Previsão de avanço */}
       <TableCell>
-        <DateCell
-          value={obra.previsao_avanco}
-          onChange={(v) => onUpdate({ previsao_avanco: v })}
-        />
-      </TableCell>
-
-      {/* Status */}
-      <TableCell>
-        <Select
-          value={obra.status ?? NONE}
-          onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
-        >
-          <SelectTrigger className="h-8 text-sm border-0 shadow-none hover:bg-accent p-0 [&>span]:w-full">
-            {obra.status ? (
-              <Badge className={cn('w-full justify-center', statusBadgeClass(obra.status))}>
-                {obra.status}
-              </Badge>
-            ) : (
-              <span className="text-muted-foreground text-sm pl-2">Selecionar...</span>
-            )}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>(nenhum)</SelectItem>
-            {STATUS_OPTIONS.map((s) => (
-              <SelectItem key={s} value={s}>
-                <Badge className={cn('px-2 py-0.5', statusBadgeClass(s))}>{s}</Badge>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </TableCell>
-
-      {/* Progresso (%) — somente leitura */}
-      <TableCell className="text-right tabular-nums text-sm">
-        {obra.progress_percentage != null ? (
-          <span className={cn(obra.progress_percentage >= 100 && 'text-green-600 font-semibold')}>
-            {obra.progress_percentage}%
-          </span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </TableCell>
-
-      {/* Pendências (vermelho se atrasadas) */}
-      <TableCell className="text-center">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge className={cn('tabular-nums', overdueColor)}>
-              {obra.pending_count}
-              {obra.overdue_count > 0 && ` (${obra.overdue_count}↓)`}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            {obra.pending_count} pendência(s)
-            {obra.overdue_count > 0 ? ` · ${obra.overdue_count} atrasada(s)` : ''}
-          </TooltipContent>
-        </Tooltip>
-      </TableCell>
-
-      {/* Última atualização */}
-      <TableCell>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="text-sm text-muted-foreground cursor-default">
-              {fmtDate(obra.ultima_atualizacao)}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{fmtDateTime(obra.ultima_atualizacao)}</TooltipContent>
-        </Tooltip>
+        <DateCell value={obra.previsao_avanco} onChange={(v) => onUpdate({ previsao_avanco: v })} />
       </TableCell>
 
       {/* Início real */}
@@ -735,29 +855,36 @@ function ObraRow({ obra, zebra, onUpdate, onOpen }: ObraRowProps) {
             })
           }
         >
-          <SelectTrigger className="h-8 text-sm border-0 shadow-none hover:bg-accent p-0 [&>span]:w-full">
-            {obra.relacionamento ? (
-              <Badge
-                className={cn(
-                  'w-full justify-center',
-                  relacionamentoBadgeClass(obra.relacionamento),
-                )}
-              >
-                {obra.relacionamento}
-              </Badge>
-            ) : (
-              <span className="text-muted-foreground text-sm pl-2">Selecionar...</span>
+          <SelectTrigger
+            className={cn(
+              'h-7 text-xs border-0 shadow-none p-0 px-2 [&>svg]:hidden justify-start',
+              'rounded-md',
+              relacionamentoPillClass(obra.relacionamento),
             )}
+          >
+            <span className="font-medium">{obra.relacionamento ?? 'Definir'}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE}>(nenhum)</SelectItem>
             {RELACIONAMENTO_OPTIONS.map((r) => (
               <SelectItem key={r} value={r}>
-                <Badge className={cn('px-2 py-0.5', relacionamentoBadgeClass(r))}>{r}</Badge>
+                {r}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+      </TableCell>
+
+      {/* Última atualização */}
+      <TableCell>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-xs text-muted-foreground cursor-default tabular-nums">
+              {fmtDate(obra.ultima_atualizacao)}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{fmtDateTime(obra.ultima_atualizacao)}</TooltipContent>
+        </Tooltip>
       </TableCell>
 
       {/* Ação: abrir obra */}
@@ -765,11 +892,11 @@ function ObraRow({ obra, zebra, onUpdate, onOpen }: ObraRowProps) {
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
+          className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={onOpen}
           title="Abrir obra"
         >
-          <ExternalLink className="h-4 w-4" />
+          <ExternalLink className="h-3.5 w-3.5" />
         </Button>
       </TableCell>
     </TableRow>
