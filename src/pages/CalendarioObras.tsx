@@ -73,8 +73,27 @@ export default function CalendarioObras() {
   const [refDate, setRefDate] = useState<Date>(today);
   const [rangeStartDate, setRangeStartDate] = useState<Date>(today);
   const [rangeEndDate, setRangeEndDate] = useState<Date>(addDays(today, 13));
+  // Draft (unapplied) selection for the custom range pickers.
+  const [draftRangeStart, setDraftRangeStart] = useState<Date>(today);
+  const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [projectFilter, setProjectFilter] = useState<string>('all');
+
+  // Range validation (start ≤ end). Used to gate the "Aplicar" button.
+  const draftRangeInvalid = draftRangeStart > draftRangeEnd;
+  const draftDirty =
+    draftRangeStart.getTime() !== rangeStartDate.getTime() ||
+    draftRangeEnd.getTime() !== rangeEndDate.getTime();
+
+  const applyDraftRange = () => {
+    if (draftRangeInvalid) return;
+    setRangeStartDate(draftRangeStart);
+    setRangeEndDate(draftRangeEnd);
+  };
+  const resetDraftRange = () => {
+    setDraftRangeStart(rangeStartDate);
+    setDraftRangeEnd(rangeEndDate);
+  };
 
   // Compute fetch range based on active view.
   const { fetchStart, fetchEnd, viewStart, viewEnd } = useMemo(() => {
@@ -159,8 +178,12 @@ export default function CalendarioObras() {
     else if (view === 'day') setRefDate(addDays(refDate, -1));
     else if (view === 'range') {
       const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
-      setRangeStartDate(addDays(rangeStartDate, -span));
-      setRangeEndDate(addDays(rangeEndDate, -span));
+      const ns = addDays(rangeStartDate, -span);
+      const ne = addDays(rangeEndDate, -span);
+      setRangeStartDate(ns);
+      setRangeEndDate(ne);
+      setDraftRangeStart(ns);
+      setDraftRangeEnd(ne);
     } else setRefDate(addWeeks(refDate, -1));
   };
   const goNext = () => {
@@ -168,15 +191,22 @@ export default function CalendarioObras() {
     else if (view === 'day') setRefDate(addDays(refDate, 1));
     else if (view === 'range') {
       const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
-      setRangeStartDate(addDays(rangeStartDate, span));
-      setRangeEndDate(addDays(rangeEndDate, span));
+      const ns = addDays(rangeStartDate, span);
+      const ne = addDays(rangeEndDate, span);
+      setRangeStartDate(ns);
+      setRangeEndDate(ne);
+      setDraftRangeStart(ns);
+      setDraftRangeEnd(ne);
     } else setRefDate(addWeeks(refDate, 1));
   };
   const goToday = () => {
     setRefDate(today);
     if (view === 'range') {
+      const ne = addDays(today, 13);
       setRangeStartDate(today);
-      setRangeEndDate(addDays(today, 13));
+      setRangeEndDate(ne);
+      setDraftRangeStart(today);
+      setDraftRangeEnd(ne);
     }
   };
 
@@ -260,54 +290,100 @@ export default function CalendarioObras() {
                 </Button>
               </>
             ) : (
-              <>
-                <Button variant="outline" size="icon" onClick={goPrev} aria-label="Período anterior">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline">
-                      <CalendarDays className="h-4 w-4 mr-2" />
-                      Início: <strong className="ml-1">{format(rangeStartDate, 'dd/MM/yyyy')}</strong>
+              <div className="flex flex-col gap-2 w-full">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="outline" size="icon" onClick={goPrev} aria-label="Período anterior">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(draftRangeInvalid && 'border-destructive text-destructive')}
+                      >
+                        <CalendarDays className="h-4 w-4 mr-2" />
+                        Início: <strong className="ml-1">{format(draftRangeStart, 'dd/MM/yyyy')}</strong>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={draftRangeStart}
+                        onSelect={(d) => d && setDraftRangeStart(d)}
+                        initialFocus
+                        locale={ptBR}
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-muted-foreground text-sm">→</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(draftRangeInvalid && 'border-destructive text-destructive')}
+                      >
+                        <CalendarDays className="h-4 w-4 mr-2" />
+                        Fim: <strong className="ml-1">{format(draftRangeEnd, 'dd/MM/yyyy')}</strong>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={draftRangeEnd}
+                        onSelect={(d) => d && setDraftRangeEnd(d)}
+                        initialFocus
+                        locale={ptBR}
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <Button
+                    size="sm"
+                    onClick={applyDraftRange}
+                    disabled={draftRangeInvalid || !draftDirty}
+                    title={
+                      draftRangeInvalid
+                        ? 'A data de início deve ser anterior ou igual à data de fim'
+                        : !draftDirty
+                          ? 'Nenhuma alteração pendente'
+                          : 'Aplicar período selecionado'
+                    }
+                  >
+                    Aplicar
+                  </Button>
+                  {draftDirty && (
+                    <Button variant="ghost" size="sm" onClick={resetDraftRange} title="Descartar alterações">
+                      <X className="h-3.5 w-3.5 mr-1" />
+                      Resetar
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-50" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={rangeStartDate}
-                      onSelect={(d) => d && setRangeStartDate(d)}
-                      initialFocus
-                      locale={ptBR}
-                      className={cn('p-3 pointer-events-auto')}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <span className="text-muted-foreground text-sm">→</span>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline">
-                      <CalendarDays className="h-4 w-4 mr-2" />
-                      Fim: <strong className="ml-1">{format(rangeEndDate, 'dd/MM/yyyy')}</strong>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-50" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={rangeEndDate}
-                      onSelect={(d) => d && setRangeEndDate(d)}
-                      initialFocus
-                      locale={ptBR}
-                      className={cn('p-3 pointer-events-auto')}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Button variant="outline" size="icon" onClick={goNext} aria-label="Próximo período">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={goToday}>
-                  Hoje
-                </Button>
-              </>
+                  )}
+
+                  <Button variant="outline" size="icon" onClick={goNext} aria-label="Próximo período">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={goToday}>
+                    Hoje
+                  </Button>
+                </div>
+
+                {draftRangeInvalid ? (
+                  <p className="text-xs text-destructive">
+                    A data de início deve ser anterior ou igual à data de fim.
+                  </p>
+                ) : draftDirty ? (
+                  <p className="text-xs text-muted-foreground">
+                    Período selecionado ainda não aplicado — clique em <strong>Aplicar</strong> para
+                    atualizar a timeline.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Exibindo {format(rangeStartDate, 'dd/MM/yyyy')} → {format(rangeEndDate, 'dd/MM/yyyy')} (
+                    {Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1} dias).
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </CardContent>
