@@ -227,10 +227,19 @@ export default function CalendarioObras() {
   const fetchStartStr = format(fetchStart, 'yyyy-MM-dd');
   const fetchEndStr = format(fetchEnd, 'yyyy-MM-dd');
 
-  const { byProject, activities, isLoading, updateDates, isUpdating } = useWeekActivities(
-    fetchStartStr,
-    fetchEndStr,
-  );
+  const {
+    byProject,
+    activities,
+    isLoading,
+    updateDates,
+    isUpdating,
+    breakIntoSubActivities,
+    isBreaking,
+  } = useWeekActivities(fetchStartStr, fetchEndStr);
+
+  // Dialog: gerenciamento de dias não úteis (feriados específicos / folgas).
+  // Restrito a Admin/Engineer (mesma regra de quebrar atividades).
+  const [nonWorkingOpen, setNonWorkingOpen] = useState(false);
 
   // 1) Aplica o filtro "ocultar obras concluídas" antes de qualquer outra lógica:
   //    obras com project_status === 'completed' só aparecem quando o toggle estiver ativo.
@@ -734,7 +743,32 @@ export default function CalendarioObras() {
         onOpenChange={(o) => !o && setSelectedActivity(null)}
         onSave={updateDates}
         isUpdating={isUpdating}
+        canBreak={canBreak}
+        onBreak={(parent) => {
+          setSelectedActivity(null);
+          setBreakingActivity(parent);
+        }}
       />
+
+      {/* Dialog para quebrar atividade em micro-etapas (Admin/Engineer) */}
+      {canBreak && (
+        <BreakActivityDialog
+          parent={breakingActivity}
+          open={!!breakingActivity}
+          onOpenChange={(o) => !o && setBreakingActivity(null)}
+          onConfirm={breakIntoSubActivities}
+          isSubmitting={isBreaking}
+        />
+      )}
+
+      {/* Dialog para gerenciar dias não úteis (Admin/Engineer) */}
+      {canBreak && (
+        <NonWorkingDaysDialog
+          open={nonWorkingOpen}
+          onOpenChange={setNonWorkingOpen}
+          projects={projectOptions.map((p) => ({ id: p.id, name: p.name }))}
+        />
+      )}
     </PageContainer>
   );
 }
