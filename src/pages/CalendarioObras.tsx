@@ -49,7 +49,7 @@ import { CalendarMonthGrid } from '@/components/calendar/CalendarMonthGrid';
 import { CalendarDayAgenda } from '@/components/calendar/CalendarDayAgenda';
 import { CalendarRangeTimeline } from '@/components/calendar/CalendarRangeTimeline';
 
-type ViewMode = 'month' | 'week' | 'day' | 'range';
+type ViewMode = 'month' | 'week-list' | 'week-timeline' | 'day' | 'range';
 
 function getActivityStatus(a: WeekActivity, today: Date) {
   if (a.actual_end) return 'completed' as const;
@@ -69,7 +69,7 @@ const statusBadge: Record<string, { label: string; className: string }> = {
 export default function CalendarioObras() {
   const navigate = useNavigate();
   const today = useMemo(() => new Date(), []);
-  const [view, setView] = useState<ViewMode>('week');
+  const [view, setView] = useState<ViewMode>('week-list');
   const [refDate, setRefDate] = useState<Date>(today);
   const [rangeStartDate, setRangeStartDate] = useState<Date>(today);
   const [rangeEndDate, setRangeEndDate] = useState<Date>(addDays(today, 13));
@@ -241,9 +241,14 @@ export default function CalendarioObras() {
         <CardContent className="py-3 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
-              <TabsList>
+              <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="month">Mês</TabsTrigger>
-                <TabsTrigger value="week">Semana</TabsTrigger>
+                <TabsTrigger value="week-list" title="Semana em formato de lista agrupada por obra">
+                  Semana · Lista
+                </TabsTrigger>
+                <TabsTrigger value="week-timeline" title="Semana em formato de linha do tempo (Gantt)">
+                  Semana · Timeline
+                </TabsTrigger>
                 <TabsTrigger value="day">Dia</TabsTrigger>
                 <TabsTrigger value="range">Período</TabsTrigger>
               </TabsList>
@@ -442,8 +447,15 @@ export default function CalendarioObras() {
           byProject={filteredByProject}
           onActivityClick={setSelectedActivity}
         />
+      ) : view === 'week-timeline' ? (
+        <CalendarRangeTimeline
+          rangeStart={viewStart}
+          rangeEnd={viewEnd}
+          byProject={filteredByProject}
+          onActivityClick={setSelectedActivity}
+        />
       ) : (
-        // Week view (original list)
+        // Week list view (default)
         <WeekListView
           filteredByProject={filteredByProject}
           today={today}
