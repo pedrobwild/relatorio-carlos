@@ -15,6 +15,7 @@ import {
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarDays,
+  CalendarOff,
   ChevronLeft,
   ChevronRight,
   Building2,
@@ -52,6 +53,7 @@ import { BreakActivityDialog } from '@/components/calendar/BreakActivityDialog';
 import { CalendarMonthGrid } from '@/components/calendar/CalendarMonthGrid';
 import { CalendarDayAgenda } from '@/components/calendar/CalendarDayAgenda';
 import { CalendarRangeTimeline } from '@/components/calendar/CalendarRangeTimeline';
+import { NonWorkingDaysDialog } from '@/components/calendar/NonWorkingDaysDialog';
 
 type ViewMode = 'month' | 'week-list' | 'week-timeline' | 'day' | 'range';
 
