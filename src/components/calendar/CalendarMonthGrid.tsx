@@ -273,34 +273,126 @@ function WeekRow({
             <div className="grid grid-cols-7 h-full">
               {lane.map((seg) => {
                 const color = getProjectColor(seg.activity.project_id);
+                const status = getActivityStatus(seg.activity);
+                const StatusIcon = status.Icon;
+                const startDate = parseISO(seg.activity.planned_start);
+                const endDate = parseISO(seg.activity.planned_end);
+                const sameDay = isSameDay(startDate, endDate);
+                const durationDays = differenceInCalendarDays(endDate, startDate) + 1;
                 return (
-                  <button
-                    key={seg.activity.id}
-                    type="button"
-                    onClick={() => onActivityClick(seg.activity)}
-                    title={
-                      `${seg.activity.project_name}` +
-                      (seg.activity.client_name ? ` · ${seg.activity.client_name}` : '') +
-                      ` — ${seg.activity.description}`
-                    }
-                    style={{
-                      gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
-                    }}
-                    className={cn(
-                      'h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
-                      'hover:ring-2 hover:ring-primary/40 transition-shadow',
-                      color.bg,
-                      color.border,
-                      seg.startsBefore && 'rounded-l-none border-l-0',
-                      seg.endsAfter && 'rounded-r-none border-r-0',
-                    )}
-                  >
-                    <span className="font-medium">{seg.activity.project_name}</span>
-                    {seg.activity.client_name && (
-                      <span className="opacity-70"> · {seg.activity.client_name}</span>
-                    )}
-                    <span className="opacity-70"> · {seg.activity.description}</span>
-                  </button>
+                  <Tooltip key={seg.activity.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => onActivityClick(seg.activity)}
+                        style={{
+                          gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
+                        }}
+                        className={cn(
+                          'h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
+                          'hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40',
+                          color.bg,
+                          color.border,
+                          seg.startsBefore && 'rounded-l-none border-l-0',
+                          seg.endsAfter && 'rounded-r-none border-r-0',
+                        )}
+                      >
+                        <span className="font-medium">{seg.activity.project_name}</span>
+                        {seg.activity.client_name && (
+                          <span className="opacity-70"> · {seg.activity.client_name}</span>
+                        )}
+                        <span className="opacity-70"> · {seg.activity.description}</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      align="start"
+                      sideOffset={6}
+                      className="max-w-[320px] p-0 overflow-hidden"
+                    >
+                      <div className="flex flex-col">
+                        {/* Header colorido com a cor da obra */}
+                        <div className={cn('px-3 py-2 border-b', color.bg, color.border)}>
+                          <div className="text-[11px] font-semibold leading-tight">
+                            {seg.activity.project_name}
+                          </div>
+                          {seg.activity.client_name && (
+                            <div className="text-[10px] opacity-80 leading-tight mt-0.5">
+                              {seg.activity.client_name}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Corpo */}
+                        <div className="px-3 py-2 space-y-2 bg-popover text-popover-foreground">
+                          <div className="text-xs font-medium leading-snug">
+                            {seg.activity.description}
+                          </div>
+
+                          {seg.activity.etapa && (
+                            <div className="text-[10.5px] text-muted-foreground">
+                              Etapa: <span className="font-medium text-foreground">{seg.activity.etapa}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-start gap-1.5 text-[10.5px] text-muted-foreground">
+                            <CalendarDays className="h-3 w-3 mt-0.5 shrink-0" />
+                            <div className="flex flex-col gap-0.5">
+                              {sameDay ? (
+                                <span>
+                                  <span className="text-foreground font-medium">
+                                    {format(startDate, "dd 'de' MMM", { locale: ptBR })}
+                                  </span>{' '}
+                                  · 1 dia
+                                </span>
+                              ) : (
+                                <>
+                                  <span>
+                                    <span className="text-foreground font-medium">
+                                      {format(startDate, "dd 'de' MMM", { locale: ptBR })}
+                                    </span>
+                                    {' → '}
+                                    <span className="text-foreground font-medium">
+                                      {format(endDate, "dd 'de' MMM", { locale: ptBR })}
+                                    </span>
+                                  </span>
+                                  <span className="opacity-80">
+                                    {durationDays} {durationDays === 1 ? 'dia' : 'dias'}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {(seg.activity.actual_start || seg.activity.actual_end) && (
+                            <div className="text-[10.5px] text-muted-foreground border-t pt-1.5">
+                              {seg.activity.actual_start && (
+                                <div>
+                                  Iniciada em{' '}
+                                  <span className="text-foreground font-medium">
+                                    {format(parseISO(seg.activity.actual_start), "dd/MM/yyyy", { locale: ptBR })}
+                                  </span>
+                                </div>
+                              )}
+                              {seg.activity.actual_end && (
+                                <div>
+                                  Concluída em{' '}
+                                  <span className="text-foreground font-medium">
+                                    {format(parseISO(seg.activity.actual_end), "dd/MM/yyyy", { locale: ptBR })}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className={cn('flex items-center gap-1.5 text-[10.5px] font-medium', status.className)}>
+                            <StatusIcon className="h-3 w-3" />
+                            <span>{status.label}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 );
               })}
             </div>
