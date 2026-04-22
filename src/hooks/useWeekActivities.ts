@@ -88,7 +88,9 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
         name,
         client_name,
         status,
-        project_customers ( customer_name )
+        project_customers!project_customers_project_id_fkey (
+          customer_name
+        )
       ),
       responsible:responsible_user_id ( id, nome )
     `)
