@@ -279,6 +279,17 @@ function WeekRow({
                 const endDate = parseISO(seg.activity.planned_end);
                 const sameDay = isSameDay(startDate, endDate);
                 const durationDays = differenceInCalendarDays(endDate, startDate) + 1;
+                // Estados visuais da barra:
+                // - "completed": atividade concluída (actual_end) → mantém cor original com leve fade
+                // - "overdue": data planejada já passou e não foi concluída → cinza + badge de alerta
+                // - "past": já passou e foi concluída → acinzentada (passado)
+                // - "current/future": mantém cor cheia
+                const todayMidnight = new Date();
+                todayMidnight.setHours(0, 0, 0, 0);
+                const isCompleted = !!seg.activity.actual_end;
+                const isPastEnd = endDate < todayMidnight;
+                const isOverdue = isPastEnd && !isCompleted;
+                const isPastDone = isPastEnd && isCompleted;
                 return (
                   <Tooltip key={seg.activity.id}>
                     <TooltipTrigger asChild>
@@ -289,15 +300,28 @@ function WeekRow({
                           gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
                         }}
                         className={cn(
-                          'h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
+                          'relative h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
                           'hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40',
-                          color.bg,
-                          color.border,
-                          seg.startsBefore && 'rounded-l-none border-l-0',
-                          seg.endsAfter && 'rounded-r-none border-r-0',
+                          // Cor padrão (em andamento / futura)
+                          !isPastEnd && [color.bg, color.border],
+                          // Concluída no passado: cinza neutro
+                          isPastDone && 'bg-muted/60 border-muted-foreground/20 text-muted-foreground',
+                          // Atrasada: cinza com borda vermelha sutil para chamar atenção
+                          isOverdue && 'bg-muted/70 border-destructive/50 text-muted-foreground',
                         )}
                       >
-                        <span className="font-medium">{seg.activity.project_name}</span>
+                        {isOverdue && (
+                          <span
+                            className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-none shadow-sm ring-1 ring-background"
+                            title="Atividade atrasada — não concluída"
+                            aria-label="Atrasada"
+                          >
+                            !
+                          </span>
+                        )}
+                        <span className={cn('font-medium', isPastDone && 'line-through opacity-80')}>
+                          {seg.activity.project_name}
+                        </span>
                         {seg.activity.client_name && (
                           <span className="opacity-70"> · {seg.activity.client_name}</span>
                         )}
