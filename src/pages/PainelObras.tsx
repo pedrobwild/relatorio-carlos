@@ -734,7 +734,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Relacionamento */}
-      <TableCell>
+      <TableCell className="min-w-[110px]">
         <Select
           value={obra.relacionamento ?? NONE}
           onValueChange={(v) =>
@@ -745,12 +745,12 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
         >
           <SelectTrigger
             className={cn(
-              'h-7 text-xs border-0 shadow-none p-0 px-2 [&>svg]:hidden justify-start',
+              'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start',
               'rounded-md',
               relacionamentoPillClass(obra.relacionamento),
             )}
           >
-            <span className="font-medium">{obra.relacionamento ?? 'Definir'}</span>
+            <span className="font-medium truncate">{obra.relacionamento ?? 'Definir'}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE}>(nenhum)</SelectItem>
