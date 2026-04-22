@@ -133,18 +133,39 @@ export default function CalendarioObras() {
     fetchEndStr,
   );
 
-  // Project options derived from full dataset (so the filter remains stable)
-  const projectOptions = useMemo(
-    () =>
-      byProject
-        .map((g) => ({ id: g.project_id, name: g.project_name }))
-        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+  // 1) Aplica o filtro "ocultar obras concluídas" antes de qualquer outra lógica:
+  //    obras com project_status === 'completed' só aparecem quando o toggle estiver ativo.
+  const visibleByProject = useMemo(
+    () => (includeCompleted ? byProject : byProject.filter((g) => g.project_status !== 'completed')),
+    [byProject, includeCompleted],
+  );
+
+  // Quantidade de obras concluídas escondidas (para feedback no UI)
+  const hiddenCompletedCount = useMemo(
+    () => byProject.filter((g) => g.project_status === 'completed').length,
     [byProject],
   );
 
+  // Project options derived from visible dataset (filtro de obra reflete o toggle)
+  const projectOptions = useMemo(
+    () =>
+      visibleByProject
+        .map((g) => ({
+          id: g.project_id,
+          name: g.project_name,
+          client_name: g.client_name,
+          isCompleted: g.project_status === 'completed',
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    [visibleByProject],
+  );
+
   const filteredByProject = useMemo(
-    () => (projectFilter === 'all' ? byProject : byProject.filter((g) => g.project_id === projectFilter)),
-    [byProject, projectFilter],
+    () =>
+      projectFilter === 'all'
+        ? visibleByProject
+        : visibleByProject.filter((g) => g.project_id === projectFilter),
+    [visibleByProject, projectFilter],
   );
 
   const filteredActivities = useMemo(
