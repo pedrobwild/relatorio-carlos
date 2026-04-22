@@ -77,13 +77,39 @@ export default function CalendarioObras() {
   // Apenas Admin e Engenheiro podem criar/ver micro-etapas internas no Calendário.
   const canBreak = isAdmin || hasRole('engineer');
   const today = useMemo(() => new Date(), []);
-  const [view, setView] = useState<ViewMode>('week-list');
-  const [refDate, setRefDate] = useState<Date>(today);
-  const [rangeStartDate, setRangeStartDate] = useState<Date>(today);
-  const [rangeEndDate, setRangeEndDate] = useState<Date>(addDays(today, 13));
+
+  // ── Restauração da visualização e datas a partir da query string ────────
+  // Mantemos `view`, `date` (refDate), `from`/`to` (range) na URL para que ao
+  // recarregar ou compartilhar o link, o usuário caia exatamente no mesmo
+  // recorte temporal que estava vendo.
+  const parseDateParam = (raw: string | null, fallback: Date): Date => {
+    if (!raw) return fallback;
+    // Aceita YYYY-MM-DD; date-fns parseISO trata corretamente.
+    try {
+      const d = parseISO(raw);
+      if (isNaN(d.getTime())) return fallback;
+      return d;
+    } catch {
+      return fallback;
+    }
+  };
+  const isViewMode = (v: string | null): v is ViewMode =>
+    v === 'month' || v === 'week-list' || v === 'week-timeline' || v === 'day' || v === 'range';
+
+  const initialView: ViewMode = isViewMode(searchParams.get('view'))
+    ? (searchParams.get('view') as ViewMode)
+    : 'week-list';
+  const initialRefDate = parseDateParam(searchParams.get('date'), today);
+  const initialRangeStart = parseDateParam(searchParams.get('from'), today);
+  const initialRangeEnd = parseDateParam(searchParams.get('to'), addDays(today, 13));
+
+  const [view, setView] = useState<ViewMode>(initialView);
+  const [refDate, setRefDate] = useState<Date>(initialRefDate);
+  const [rangeStartDate, setRangeStartDate] = useState<Date>(initialRangeStart);
+  const [rangeEndDate, setRangeEndDate] = useState<Date>(initialRangeEnd);
   // Draft (unapplied) selection for the custom range pickers.
-  const [draftRangeStart, setDraftRangeStart] = useState<Date>(today);
-  const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
+  const [draftRangeStart, setDraftRangeStart] = useState<Date>(initialRangeStart);
+  const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(initialRangeEnd);
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [breakingActivity, setBreakingActivity] = useState<WeekActivity | null>(null);
   // Filtros persistidos via query string (?obra=, ?etapa=, ?concluidas=1) para que
