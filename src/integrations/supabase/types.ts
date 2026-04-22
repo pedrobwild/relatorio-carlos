@@ -3493,6 +3493,7 @@ export type Database = {
           detailed_description: string | null
           etapa: string | null
           id: string
+          parent_activity_id: string | null
           planned_end: string
           planned_start: string
           predecessor_ids: string[] | null
@@ -3513,6 +3514,7 @@ export type Database = {
           detailed_description?: string | null
           etapa?: string | null
           id?: string
+          parent_activity_id?: string | null
           planned_end: string
           planned_start: string
           predecessor_ids?: string[] | null
@@ -3533,6 +3535,7 @@ export type Database = {
           detailed_description?: string | null
           etapa?: string | null
           id?: string
+          parent_activity_id?: string | null
           planned_end?: string
           planned_start?: string
           predecessor_ids?: string[] | null
@@ -3542,6 +3545,13 @@ export type Database = {
           weight?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "project_activities_parent_activity_id_fkey"
+            columns: ["parent_activity_id"]
+            isOneToOne: false
+            referencedRelation: "project_activities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_activities_project_id_fkey"
             columns: ["project_id"]
