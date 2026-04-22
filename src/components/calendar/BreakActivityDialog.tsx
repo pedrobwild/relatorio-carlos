@@ -105,20 +105,91 @@ export function BreakActivityDialog({
   const pe = parent ? parseISO(parent.planned_end) : null;
   const totalDays = ps && pe ? differenceInCalendarDays(pe, ps) + 1 : 0;
 
+  // Validação por linha (aponta exatamente o que está errado em cada item)
+  // + detecção de pares sobrepostos para bloquear o submit. As regras são:
+  //   1) título obrigatório
+  //   2) intervalo válido (fim ≥ início, ambos no escopo da mãe)
+  //   3) sem sobreposição entre micro-etapas (mesmo 1 dia em comum bloqueia)
+  type RowIssue =
+    | { kind: 'no-title' }
+    | { kind: 'inverted' }
+    | { kind: 'before-parent' }
+    | { kind: 'after-parent' }
+    | { kind: 'overlap'; withIndex: number };
+
+  const rowIssues = useMemo<RowIssue[][]>(() => {
+    const issues: RowIssue[][] = rows.map(() => []);
+    rows.forEach((r, i) => {
+      if (!r.description.trim()) issues[i].push({ kind: 'no-title' });
+      if (r.planned_end < r.planned_start) issues[i].push({ kind: 'inverted' });
+      if (ps && r.planned_start < ps) issues[i].push({ kind: 'before-parent' });
+      if (pe && r.planned_end > pe) issues[i].push({ kind: 'after-parent' });
+    });
+    // Detecção de sobreposição (par a par, intervalos inclusivos)
+    for (let i = 0; i < rows.length; i++) {
+      const a = rows[i];
+      if (a.planned_end < a.planned_start) continue; // já marcado como invertido
+      for (let j = i + 1; j < rows.length; j++) {
+        const b = rows[j];
+        if (b.planned_end < b.planned_start) continue;
+        const overlaps = areIntervalsOverlapping(
+          { start: a.planned_start, end: a.planned_end },
+          { start: b.planned_start, end: b.planned_end },
+          { inclusive: true },
+        );
+        if (overlaps) {
+          issues[i].push({ kind: 'overlap', withIndex: j });
+          issues[j].push({ kind: 'overlap', withIndex: i });
+        }
+      }
+    }
+    return issues;
+  }, [rows, ps?.getTime(), pe?.getTime()]);
+
+  // Cobertura de dias: ajuda o usuário a ver lacunas (dias da mãe não cobertos).
+  const uncoveredDays = useMemo(() => {
+    if (!ps || !pe) return 0;
+    let count = 0;
+    for (let d = ps; d <= pe; d = addDays(d, 1)) {
+      const covered = rows.some(
+        (r) =>
+          r.planned_end >= r.planned_start &&
+          isWithinInterval(d, { start: r.planned_start, end: r.planned_end }),
+      );
+      if (!covered) count++;
+    }
+    return count;
+  }, [rows, ps?.getTime(), pe?.getTime()]);
+
   const errors = useMemo(() => {
     const out: string[] = [];
     if (rows.length < 2) out.push('Crie ao menos 2 micro-etapas para fazer sentido em quebrar.');
-    rows.forEach((r, i) => {
-      if (!r.description.trim()) out.push(`Micro-etapa ${i + 1}: título obrigatório.`);
-      if (r.planned_end < r.planned_start)
-        out.push(`Micro-etapa ${i + 1}: data fim anterior ao início.`);
-      if (ps && r.planned_start < ps)
-        out.push(`Micro-etapa ${i + 1}: início anterior ao da atividade-mãe.`);
-      if (pe && r.planned_end > pe)
-        out.push(`Micro-etapa ${i + 1}: fim posterior ao da atividade-mãe.`);
+    rowIssues.forEach((list, i) => {
+      list.forEach((iss) => {
+        switch (iss.kind) {
+          case 'no-title':
+            out.push(`Micro-etapa ${i + 1}: título obrigatório.`);
+            break;
+          case 'inverted':
+            out.push(`Micro-etapa ${i + 1}: data fim anterior ao início.`);
+            break;
+          case 'before-parent':
+            out.push(`Micro-etapa ${i + 1}: início anterior ao da atividade-mãe.`);
+            break;
+          case 'after-parent':
+            out.push(`Micro-etapa ${i + 1}: fim posterior ao da atividade-mãe.`);
+            break;
+          case 'overlap':
+            // Reporta apenas no índice menor para evitar duplicação na lista geral.
+            if (iss.withIndex > i) {
+              out.push(`Micro-etapas ${i + 1} e ${iss.withIndex + 1} têm dias em comum.`);
+            }
+            break;
+        }
+      });
     });
     return out;
-  }, [rows, ps?.getTime(), pe?.getTime()]);
+  }, [rows, rowIssues]);
 
   const canSubmit = errors.length === 0 && !isSubmitting;
 
