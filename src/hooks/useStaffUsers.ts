@@ -8,7 +8,18 @@ export interface StaffUser {
   perfil: string;
 }
 
-const STAFF_ROLES = ['admin', 'engineer', 'gestor', 'manager'] as const;
+// Mantém alinhado com a função SQL `is_staff()` para que o seletor de
+// responsável mostre todos os perfis internos (não só admin/engineer).
+const STAFF_ROLES = [
+  'admin',
+  'engineer',
+  'manager',
+  'gestor',
+  'suprimentos',
+  'financeiro',
+  'cs',
+  'arquitetura',
+] as const;
 
 export function useStaffUsers() {
   return useQuery({
