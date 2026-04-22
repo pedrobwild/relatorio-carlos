@@ -201,7 +201,7 @@ export function BreakActivityDialog({
     const last = rows[rows.length - 1];
     const start = last ? addDays(last.planned_end, 1) : ps!;
     const safeStart = start > pe ? pe : start;
-    setRows((prev) => [...prev, { description: '', planned_start: safeStart, planned_end: pe }]);
+    setRows((prev) => [...prev, { description: '', planned_start: safeStart, planned_end: pe, responsible_user_id: parent?.responsible_user_id ?? null }]);
   };
 
   const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
@@ -304,6 +304,7 @@ export function BreakActivityDialog({
         description: `Parte ${next.length + 1}`,
         planned_start: start,
         planned_end: end,
+        responsible_user_id: parent?.responsible_user_id ?? null,
       });
     }
     setRows(next);
