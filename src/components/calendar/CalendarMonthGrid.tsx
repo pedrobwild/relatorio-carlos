@@ -22,7 +22,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
@@ -65,6 +65,14 @@ interface Props {
   refDate: Date;
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
+  /**
+   * Conjunto de project_ids cuja obra possui ao menos UMA etapa anterior à
+   * semana visível ainda não concluída. Quando uma atividade pertence a um
+   * desses projetos, o tooltip exibe um CTA "Replanejar cronograma".
+   */
+  projectsWithOverduePrevious?: Set<string>;
+  /** Callback para navegar até a edição do cronograma daquela obra. */
+  onReplanSchedule?: (projectId: string) => void;
 }
 
 // Layout tokens (px). Keeping these fixed guarantees lanes never overlap and
@@ -86,7 +94,13 @@ interface BarSegment {
   endsAfter: boolean;
 }
 
-export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Props) {
+export function CalendarMonthGrid({
+  refDate,
+  activities,
+  onActivityClick,
+  projectsWithOverduePrevious,
+  onReplanSchedule,
+}: Props) {
   const monthStart = startOfMonth(refDate);
   const monthEnd = endOfMonth(refDate);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -121,6 +135,8 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
               today={today}
               activities={activities}
               onActivityClick={onActivityClick}
+              projectsWithOverduePrevious={projectsWithOverduePrevious}
+              onReplanSchedule={onReplanSchedule}
             />
           ))}
         </div>
@@ -135,12 +151,16 @@ function WeekRow({
   today,
   activities,
   onActivityClick,
+  projectsWithOverduePrevious,
+  onReplanSchedule,
 }: {
   week: Date[];
   monthStart: Date;
   today: Date;
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
+  projectsWithOverduePrevious?: Set<string>;
+  onReplanSchedule?: (projectId: string) => void;
 }) {
   // Inline expansion: when true, render every lane (no cap) for this row.
   const [expanded, setExpanded] = useState(false);
@@ -456,6 +476,30 @@ function WeekRow({
                               )}
                             </div>
                           </div>
+
+                          {/* CTA: Replanejar cronograma — aparece quando esta obra
+                              tem alguma atividade anterior à semana visível ainda
+                              não concluída (sinal forte de que o cronograma está
+                              fora do plano e precisa ser revisto). */}
+                          {projectsWithOverduePrevious?.has(seg.activity.project_id) && onReplanSchedule && (
+                            <div className="pt-2 border-t">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onReplanSchedule(seg.activity.project_id);
+                                }}
+                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground text-[11px] font-semibold px-2.5 py-1.5 hover:bg-destructive/90 transition-colors shadow-sm"
+                                title="Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar."
+                              >
+                                <CalendarClock className="h-3.5 w-3.5" />
+                                Replanejar cronograma
+                              </button>
+                              <p className="text-[9.5px] text-muted-foreground mt-1 leading-snug">
+                                Há etapas anteriores desta obra ainda não concluídas.
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </TooltipContent>

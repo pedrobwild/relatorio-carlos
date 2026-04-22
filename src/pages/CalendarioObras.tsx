@@ -46,6 +46,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
+import { useProjectsWithOverduePrevious } from '@/hooks/useProjectsWithOverduePrevious';
 import { useUserRole } from '@/hooks/useUserRole';
 import { EmptyState } from '@/components/ui/states';
 import { ActivityDetailDialog } from '@/components/calendar/ActivityDetailDialog';
@@ -236,6 +237,11 @@ export default function CalendarioObras() {
     breakIntoSubActivities,
     isBreaking,
   } = useWeekActivities(fetchStartStr, fetchEndStr);
+
+  // Conjunto de project_ids com etapas anteriores não concluídas (atrasadas)
+  // antes do início do recorte visível. Usado para sugerir "Replanejar
+  // cronograma" no tooltip do calendário mensal.
+  const { data: projectsWithOverduePrev } = useProjectsWithOverduePrevious(fetchStartStr);
 
   // Dialog: gerenciamento de dias não úteis (feriados específicos / folgas).
   // Restrito a Admin/Engineer (mesma regra de quebrar atividades).
@@ -714,6 +720,8 @@ export default function CalendarioObras() {
           refDate={refDate}
           activities={filteredActivities}
           onActivityClick={setSelectedActivity}
+          projectsWithOverduePrevious={projectsWithOverduePrev}
+          onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
         />
       ) : view === 'day' ? (
         <CalendarDayAgenda
