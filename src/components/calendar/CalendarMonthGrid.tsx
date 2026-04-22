@@ -98,28 +98,30 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
   }, [gridStart.getTime(), gridEnd.getTime()]);
 
   return (
-    <div className="rounded-lg border overflow-hidden bg-card">
-      <div className="grid grid-cols-7 bg-muted/40 border-b text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
-        {WEEKDAY_LABELS.map((d) => (
-          <div key={d} className="px-2 py-2 text-center">
-            {d}
-          </div>
-        ))}
-      </div>
+    <TooltipProvider delayDuration={150} skipDelayDuration={50}>
+      <div className="rounded-lg border overflow-hidden bg-card">
+        <div className="grid grid-cols-7 bg-muted/40 border-b text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
+          {WEEKDAY_LABELS.map((d) => (
+            <div key={d} className="px-2 py-2 text-center">
+              {d}
+            </div>
+          ))}
+        </div>
 
-      <div className="divide-y">
-        {weeks.map((week, wi) => (
-          <WeekRow
-            key={wi}
-            week={week}
-            monthStart={monthStart}
-            today={today}
-            activities={activities}
-            onActivityClick={onActivityClick}
-          />
-        ))}
+        <div className="divide-y">
+          {weeks.map((week, wi) => (
+            <WeekRow
+              key={wi}
+              week={week}
+              monthStart={monthStart}
+              today={today}
+              activities={activities}
+              onActivityClick={onActivityClick}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
