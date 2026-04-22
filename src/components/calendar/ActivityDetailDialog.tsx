@@ -76,11 +76,20 @@ export function ActivityDetailDialog({
   onOpenChange,
   onSave,
   isUpdating,
+  subActivities = [],
+  canBreak = false,
+  onBreak,
+  onMerge,
+  onRemoveSub,
+  onOpenSub,
+  isMerging = false,
+  isRemovingSub = false,
 }: ActivityDetailDialogProps) {
   const [actualStart, setActualStart] = useState<Date | undefined>();
   const [actualEnd, setActualEnd] = useState<Date | undefined>();
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const [confirmMergeOpen, setConfirmMergeOpen] = useState(false);
 
   useEffect(() => {
     if (activity) {
