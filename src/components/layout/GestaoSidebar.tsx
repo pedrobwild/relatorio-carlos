@@ -10,6 +10,7 @@ import {
   Receipt,
   AlertTriangle,
   ClipboardList,
+  Table2,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -50,9 +51,14 @@ export function GestaoSidebar() {
       label: "Obras",
       items: [
         {
-          label: "Painel de Obras",
+          label: "Portfólio",
           icon: LayoutDashboard,
           path: "/gestao",
+        },
+        {
+          label: "Painel de Obras",
+          icon: Table2,
+          path: "/gestao/painel-obras",
         },
         {
           label: "Nova Obra",
