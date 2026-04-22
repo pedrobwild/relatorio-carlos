@@ -128,9 +128,13 @@ export default function CalendarioObras() {
     () => searchParams.get('concluidas') === '1',
   );
 
-  // Sincroniza os filtros atuais para a query string. Usamos `replace` para não
-  // poluir o histórico de navegação a cada toggle e preservamos quaisquer outros
-  // parâmetros existentes na URL.
+  // Sincroniza os filtros + visualização atuais para a query string. Usamos
+  // `replace` para não poluir o histórico de navegação a cada toggle e
+  // preservamos quaisquer outros parâmetros existentes na URL. Persistimos:
+  //   - obra / etapa / concluidas → filtros do recorte
+  //   - view                      → modo de visualização ativo
+  //   - date                      → data de referência (mês/semana/dia)
+  //   - from / to                 → período personalizado (modo "range")
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     if (projectFilter && projectFilter !== 'all') next.set('obra', projectFilter);
@@ -140,11 +144,39 @@ export default function CalendarioObras() {
     if (includeCompleted) next.set('concluidas', '1');
     else next.delete('concluidas');
 
+    // Visualização: só persiste se diferente do default ('week-list') para manter URLs limpas.
+    if (view && view !== 'week-list') next.set('view', view);
+    else next.delete('view');
+
+    // Datas: only persist when the user actually navigated away from "today"
+    // / default range. Comparamos pelo formato YYYY-MM-DD para evitar ruído
+    // de horários (today guardado no estado é um Date com hora atual).
+    const todayStr = format(today, 'yyyy-MM-dd');
+    if (view === 'range') {
+      next.delete('date');
+      const fromStr = format(rangeStartDate, 'yyyy-MM-dd');
+      const toStr = format(rangeEndDate, 'yyyy-MM-dd');
+      const defaultTo = format(addDays(today, 13), 'yyyy-MM-dd');
+      if (fromStr !== todayStr || toStr !== defaultTo) {
+        next.set('from', fromStr);
+        next.set('to', toStr);
+      } else {
+        next.delete('from');
+        next.delete('to');
+      }
+    } else {
+      next.delete('from');
+      next.delete('to');
+      const dateStr = format(refDate, 'yyyy-MM-dd');
+      if (dateStr !== todayStr) next.set('date', dateStr);
+      else next.delete('date');
+    }
+
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectFilter, etapaFilter, includeCompleted]);
+  }, [projectFilter, etapaFilter, includeCompleted, view, refDate, rangeStartDate, rangeEndDate]);
 
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
