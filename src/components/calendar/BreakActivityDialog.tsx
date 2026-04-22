@@ -85,6 +85,8 @@ export function BreakActivityDialog({
   isSubmitting,
 }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
+  /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
+  const [chunkSize, setChunkSize] = useState<number>(2);
   const { isNonWorking: isCustomNonWorking, reasonFor } = useNonWorkingDays(parent?.project_id);
 
   /** True quando o dia é fim de semana, feriado SP/nacional OU custom (folga/feriado obra). */
