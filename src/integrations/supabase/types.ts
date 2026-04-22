@@ -4097,6 +4097,48 @@ export type Database = {
           },
         ]
       }
+      project_non_working_days: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          day: string
+          id: string
+          project_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          day: string
+          id?: string
+          project_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          day?: string
+          id?: string
+          project_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_non_working_days_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_non_working_days_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_page_instructions: {
         Row: {
           content_html: string
