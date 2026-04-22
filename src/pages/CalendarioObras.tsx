@@ -293,6 +293,28 @@ export default function CalendarioObras() {
                 <Button variant="ghost" size="sm" onClick={goToday}>
                   Hoje
                 </Button>
+
+                {/* Quick jumps — only on month / week views; filter de obra é preservado */}
+                {(view === 'month' || view === 'week-list' || view === 'week-timeline') && (
+                  <div className="flex items-center gap-1 ml-1 pl-2 border-l">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setRefDate(addWeeks(today, 1))}
+                      title="Ir para a próxima semana (mantém o filtro de obra)"
+                    >
+                      Próxima semana
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setRefDate(addMonths(today, 1))}
+                      title="Ir para o próximo mês (mantém o filtro de obra)"
+                    >
+                      Próximo mês
+                    </Button>
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex flex-col gap-2 w-full">
