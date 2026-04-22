@@ -607,12 +607,21 @@ function WeekListView({
           <Card key={group.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
             <CardHeader className="py-3 px-4 border-b">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md', color.bg)}>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md shrink-0', color.bg)}>
                     <Building2 className="h-4 w-4" />
                   </span>
-                  <CardTitle className="text-base font-semibold truncate">{group.project_name}</CardTitle>
-                  <Badge variant="secondary" className="text-xs">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base font-semibold truncate">
+                      {group.project_name}
+                    </CardTitle>
+                    {group.client_name && (
+                      <div className="text-xs text-muted-foreground truncate">
+                        Cliente: {group.client_name}
+                      </div>
+                    )}
+                  </div>
+                  <Badge variant="secondary" className="text-xs shrink-0">
                     {group.items.length} ativ.
                   </Badge>
                 </div>
