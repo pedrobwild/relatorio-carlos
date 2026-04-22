@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Clock, FileText, History, Save, Trash2, X } from 'lucide-react';
+import {
+  CalendarIcon,
+  Clock,
+  FileText,
+  History,
+  Layers,
+  Save,
+  Split,
+  Trash2,
+  X,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -38,6 +48,23 @@ interface ActivityDetailDialogProps {
     updates: { actual_start?: string | null; actual_end?: string | null },
   ) => Promise<unknown>;
   isUpdating: boolean;
+  /**
+   * Sub-atividades (micro-etapas) já cadastradas para esta atividade-mãe.
+   * Vem do dataset da página (visível só para Admin/Engineer).
+   */
+  subActivities?: WeekActivity[];
+  /** Se true, exibe a seção de quebra em micro-etapas (Admin/Engineer). */
+  canBreak?: boolean;
+  /** Callback para abrir o diálogo de quebra. */
+  onBreak?: (parent: WeekActivity) => void;
+  /** Callback para mesclar (apagar todas as micro-etapas). */
+  onMerge?: (parentId: string) => Promise<unknown>;
+  /** Callback para remover uma micro-etapa específica. */
+  onRemoveSub?: (subId: string) => Promise<unknown>;
+  /** Callback para abrir/focar uma micro-etapa específica. */
+  onOpenSub?: (sub: WeekActivity) => void;
+  isMerging?: boolean;
+  isRemovingSub?: boolean;
 }
 
 const toDate = (s: string | null | undefined) => (s ? parseISO(s) : undefined);
@@ -49,11 +76,20 @@ export function ActivityDetailDialog({
   onOpenChange,
   onSave,
   isUpdating,
+  subActivities = [],
+  canBreak = false,
+  onBreak,
+  onMerge,
+  onRemoveSub,
+  onOpenSub,
+  isMerging = false,
+  isRemovingSub = false,
 }: ActivityDetailDialogProps) {
   const [actualStart, setActualStart] = useState<Date | undefined>();
   const [actualEnd, setActualEnd] = useState<Date | undefined>();
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const [confirmMergeOpen, setConfirmMergeOpen] = useState(false);
 
   useEffect(() => {
     if (activity) {
@@ -237,7 +273,103 @@ export function ActivityDetailDialog({
               </>
             )}
 
-            {/* History */}
+            {/* Micro-etapas (sub-atividades) — visível apenas para Admin/Engineer */}
+            {canBreak && !activity.parent_activity_id && (
+              <>
+                <Separator />
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <Layers className="h-3.5 w-3.5" />
+                      Micro-etapas internas
+                      {subActivities.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          {subActivities.length}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      {subActivities.length > 0 && onMerge && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setConfirmMergeOpen(true)}
+                          disabled={isMerging}
+                          className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Mesclar
+                        </Button>
+                      )}
+                      {onBreak && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onBreak(activity)}
+                          className="h-7 text-xs"
+                        >
+                          <Split className="h-3 w-3 mr-1" />
+                          {subActivities.length > 0 ? 'Adicionar' : 'Quebrar em micro-etapas'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {subActivities.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Quebre esta atividade em micro-etapas para detalhar o que acontece em cada
+                      dia. O cliente continuará vendo apenas esta atividade-mãe.
+                    </p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {subActivities
+                        .slice()
+                        .sort((a, b) => a.planned_start.localeCompare(b.planned_start))
+                        .map((s) => (
+                          <li
+                            key={s.id}
+                            className="flex items-center justify-between gap-2 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => onOpenSub?.(s)}
+                              className="flex-1 text-left min-w-0 hover:text-primary"
+                              title="Abrir micro-etapa"
+                            >
+                              <div className="font-medium truncate">{s.description}</div>
+                              <div className="text-muted-foreground">
+                                {format(parseISO(s.planned_start), 'dd/MM')} →{' '}
+                                {format(parseISO(s.planned_end), 'dd/MM')}
+                              </div>
+                            </button>
+                            {onRemoveSub && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => onRemoveSub(s.id)}
+                                disabled={isRemovingSub}
+                                title="Remover esta micro-etapa"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Indicador quando esta atividade É uma micro-etapa */}
+            {activity.parent_activity_id && (
+              <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                <Layers className="inline h-3.5 w-3.5 mr-1" />
+                Esta é uma <strong>micro-etapa interna</strong>. Visível apenas para Admin e
+                Engenheiro no Calendário; clientes veem só a atividade-mãe.
+              </div>
+            )}
+
             <Separator />
             <div>
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-3">
@@ -348,6 +480,33 @@ export function ActivityDetailDialog({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Sim, limpar datas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Merge (remover todas as micro-etapas) */}
+      <AlertDialog open={confirmMergeOpen} onOpenChange={setConfirmMergeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mesclar micro-etapas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso removerá todas as {subActivities.length} micro-etapa(s) internas e a
+              atividade-mãe voltará a ocupar todo o intervalo planejado. Esta ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMerging}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isMerging}
+              onClick={async () => {
+                if (onMerge && activity) await onMerge(activity.id);
+                setConfirmMergeOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, mesclar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

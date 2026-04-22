@@ -45,8 +45,10 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
+import { useUserRole } from '@/hooks/useUserRole';
 import { EmptyState } from '@/components/ui/states';
 import { ActivityDetailDialog } from '@/components/calendar/ActivityDetailDialog';
+import { BreakActivityDialog } from '@/components/calendar/BreakActivityDialog';
 import { CalendarMonthGrid } from '@/components/calendar/CalendarMonthGrid';
 import { CalendarDayAgenda } from '@/components/calendar/CalendarDayAgenda';
 import { CalendarRangeTimeline } from '@/components/calendar/CalendarRangeTimeline';
@@ -71,6 +73,9 @@ const statusBadge: Record<string, { label: string; className: string }> = {
 export default function CalendarioObras() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isAdmin, hasRole } = useUserRole();
+  // Apenas Admin e Engenheiro podem criar/ver micro-etapas internas no Calendário.
+  const canBreak = isAdmin || hasRole('engineer');
   const today = useMemo(() => new Date(), []);
   const [view, setView] = useState<ViewMode>('week-list');
   const [refDate, setRefDate] = useState<Date>(today);
@@ -80,6 +85,7 @@ export default function CalendarioObras() {
   const [draftRangeStart, setDraftRangeStart] = useState<Date>(today);
   const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
+  const [breakingActivity, setBreakingActivity] = useState<WeekActivity | null>(null);
   // Filtros persistidos via query string (?obra=, ?etapa=, ?concluidas=1) para que
   // ao compartilhar a URL ou recarregar a página o mesmo recorte seja restaurado.
   const [projectFilter, setProjectFilter] = useState<string>(

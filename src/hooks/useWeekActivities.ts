@@ -35,6 +35,20 @@ export interface WeekActivity {
   weight: number;
   created_at: string;
   updated_at: string;
+  /**
+   * Se preenchido, indica que esta atividade é uma micro-etapa (sub-atividade)
+   * de outra atividade-mãe. Usado para que apenas Admin/Engineer enxerguem o
+   * detalhamento interno no Calendário, enquanto clientes veem apenas a
+   * atividade-mãe (mais informativa).
+   */
+  parent_activity_id: string | null;
+}
+
+/** Payload para criar uma micro-etapa (sub-atividade) de uma atividade-mãe. */
+export interface SubActivityInput {
+  description: string;
+  planned_start: string; // YYYY-MM-DD
+  planned_end: string;   // YYYY-MM-DD
 }
 
 interface FetchArgs {
@@ -62,6 +76,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       weight,
       created_at,
       updated_at,
+      parent_activity_id,
       projects:project_id ( name, client_name, status )
     `)
     .lte('planned_start', weekEnd)
@@ -89,6 +104,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     weight: row.weight,
     created_at: row.created_at,
     updated_at: row.updated_at,
+    parent_activity_id: row.parent_activity_id ?? null,
   }));
 }
 
@@ -141,6 +157,106 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     },
   });
 
+  /**
+   * Cria N micro-etapas (sub-atividades) vinculadas a uma atividade-mãe.
+   * Estratégia: enfileira inserts via supabase. Em caso de erro, desfaz nada
+   * (RLS protege contra cross-project) e exibe toast. As novas atividades
+   * recebem `parent_activity_id` e herdam `etapa` da mãe quando ausente.
+   */
+  const breakIntoSubActivities = useMutation({
+    mutationFn: async ({
+      parent,
+      subs,
+    }: {
+      parent: WeekActivity;
+      subs: SubActivityInput[];
+    }) => {
+      if (!user) throw new Error('Sessão expirada');
+      // Pega o sort_order da mãe para inserir os children logo após (incremento decimal-like via +1, +2...)
+      const { data: parentRow, error: pErr } = await supabase
+        .from('project_activities')
+        .select('sort_order, etapa, weight')
+        .eq('id', parent.id)
+        .single();
+      if (pErr) throw pErr;
+
+      const baseSortOrder = (parentRow?.sort_order ?? 0) + 1;
+      // Distribui o peso da mãe igualmente entre as micro-etapas para que o
+      // progresso ponderado total siga somando ~100%. Mantemos a mãe como
+      // agregadora visual (cliente segue vendo só ela), mas tecnicamente o
+      // peso fica nos children. A mãe permanece com weight original; o
+      // sistema de progresso continua funcionando porque as views de cliente
+      // filtram por parent_activity_id IS NULL.
+      const childWeight =
+        subs.length > 0 ? Math.max(0.01, Number((parent.weight / subs.length).toFixed(2))) : 0;
+
+      const rows = subs.map((s, idx) => ({
+        project_id: parent.project_id,
+        parent_activity_id: parent.id,
+        description: s.description.trim(),
+        planned_start: s.planned_start,
+        planned_end: s.planned_end,
+        weight: childWeight,
+        sort_order: baseSortOrder + idx,
+        created_by: user.id,
+        etapa: parentRow?.etapa ?? null,
+        predecessor_ids: [],
+      }));
+
+      const { error: insErr } = await supabase.from('project_activities').insert(rows);
+      if (insErr) throw insErr;
+      return { parentId: parent.id, count: subs.length };
+    },
+    onError: (err: any) => {
+      toast.error(err?.message ?? 'Erro ao criar micro-etapas');
+    },
+    onSuccess: (res, vars) => {
+      invalidateActivityQueries(vars.parent.project_id);
+      queryClient.invalidateQueries({ queryKey: ['week-activities'] });
+      toast.success(`${res.count} micro-etapa(s) criada(s)`);
+    },
+  });
+
+  /**
+   * Remove TODAS as micro-etapas de uma atividade-mãe (mescla de volta).
+   */
+  const mergeSubActivities = useMutation({
+    mutationFn: async (parentId: string) => {
+      const { error: err } = await supabase
+        .from('project_activities')
+        .delete()
+        .eq('parent_activity_id', parentId);
+      if (err) throw err;
+      return parentId;
+    },
+    onError: () => toast.error('Erro ao mesclar micro-etapas'),
+    onSuccess: (parentId) => {
+      const projectId = activities.find((a) => a.id === parentId)?.project_id;
+      if (projectId) invalidateActivityQueries(projectId);
+      queryClient.invalidateQueries({ queryKey: ['week-activities'] });
+      toast.success('Micro-etapas removidas');
+    },
+  });
+
+  /** Remove UMA micro-etapa específica (não a mãe). */
+  const removeSubActivity = useMutation({
+    mutationFn: async (subId: string) => {
+      const { error: err } = await supabase
+        .from('project_activities')
+        .delete()
+        .eq('id', subId);
+      if (err) throw err;
+      return subId;
+    },
+    onError: () => toast.error('Erro ao remover micro-etapa'),
+    onSuccess: (subId) => {
+      const projectId = activities.find((a) => a.id === subId)?.project_id;
+      if (projectId) invalidateActivityQueries(projectId);
+      queryClient.invalidateQueries({ queryKey: ['week-activities'] });
+      toast.success('Micro-etapa removida');
+    },
+  });
+
   // Group by project for convenience.
   // Items inside each project are ordered by effective start date:
   // actual_start when present, otherwise planned_start (ascending).
@@ -188,5 +304,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     updateDates: (activityId: string, updates: { actual_start?: string | null; actual_end?: string | null }) =>
       updateDates.mutateAsync({ activityId, updates }),
     isUpdating: updateDates.isPending,
+    breakIntoSubActivities: (parent: WeekActivity, subs: SubActivityInput[]) =>
+      breakIntoSubActivities.mutateAsync({ parent, subs }),
+    isBreaking: breakIntoSubActivities.isPending,
+    mergeSubActivities: (parentId: string) => mergeSubActivities.mutateAsync(parentId),
+    isMerging: mergeSubActivities.isPending,
+    removeSubActivity: (subId: string) => removeSubActivity.mutateAsync(subId),
+    isRemovingSub: removeSubActivity.isPending,
   };
 }
