@@ -164,10 +164,11 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
           <div>
             {byProject.map((g) => {
               const color = getProjectColor(g.project_id);
-              // Altura dinâmica: a linha da obra cresce conforme o número de
-              // faixas (lanes) necessárias para acomodar todas as atividades
-              // sem sobreposição. Garante que TODAS as obras caibam na visão.
-              const laneCount = computeLaneCount(g.items, rangeStart, rangeEnd);
+              // Fonte única: as lanes calculadas aqui são reutilizadas em
+              // ProjectBars, garantindo que a altura reservada == lanes
+              // efetivamente renderizadas (zero corte / zero sobreposição).
+              const lanes = computeLanes(g.items, rangeStart, rangeEnd);
+              const laneCount = Math.max(MIN_LANES, lanes.length);
               const rowHeight = ROW_BASE_PADDING + laneCount * LANE_HEIGHT;
               return (
                 <div key={g.project_id} className="flex border-b last:border-b-0 hover:bg-muted/20">
@@ -215,11 +216,9 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                         );
                       })}
                     </div>
-                    {/* Bars */}
+                    {/* Bars — recebem as lanes já calculadas para alinhamento exato */}
                     <ProjectBars
-                      items={g.items}
-                      rangeStart={rangeStart}
-                      rangeEnd={rangeEnd}
+                      lanes={lanes}
                       dayWidth={dayWidth}
                       colorClass={color.bg}
                       borderClass={color.border}
