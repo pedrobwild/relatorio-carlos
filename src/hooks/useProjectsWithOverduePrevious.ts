@@ -1,27 +1,21 @@
 /**
- * useProjectsWithOverduePrevious — retorna o conjunto de project_ids que têm
- * pelo menos UMA atividade anterior à semana visível ainda NÃO concluída.
+ * useProjectsWithOverduePrevious — para cada obra com pelo menos UMA atividade
+ * anterior à semana visível ainda NÃO concluída, retorna o `project_id` e a
+ * data (planned_end) MAIS RECENTE entre essas pendências.
  *
  * Regra de negócio:
  *  - "anterior à semana" = `planned_end < weekStart`
  *  - "não concluída"     = `actual_end IS NULL`
  *
- * Usado pelo Calendário para sugerir "Replanejar cronograma" quando uma obra
- * está com etapas atrasadas anteriores à semana visualizada.
+ * A query base busca todas as atividades em atraso até hoje (independe da
+ * semana visualizada) — o filtro por `weekStart` é derivado no cliente para
+ * reaproveitar o cache entre navegações de semana.
  */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
-/**
- * Busca TODAS as atividades não concluídas com `planned_end` no passado
- * (em relação a hoje). O resultado é estável: independe da semana visualizada,
- * o que evita refetch ao navegar entre semanas no Calendário.
- *
- * O filtro por `weekStart` é aplicado no cliente (derivado via useMemo) para
- * que diferentes semanas reaproveitem o mesmo cache.
- */
 async function fetchAllOpenPastActivities(): Promise<
   Array<{ project_id: string; planned_end: string }>
 > {
@@ -36,28 +30,43 @@ async function fetchAllOpenPastActivities(): Promise<
   return (data ?? []) as Array<{ project_id: string; planned_end: string }>;
 }
 
+export interface OverduePreviousInfo {
+  /** Conjunto de project_ids com etapas anteriores pendentes. */
+  ids: Set<string>;
+  /**
+   * Mapa project_id → data (YYYY-MM-DD) da etapa pendente MAIS RECENTE
+   * anterior à semana visível. Útil para mostrar contexto no CTA.
+   */
+  latestByProject: Map<string, string>;
+}
+
 export function useProjectsWithOverduePrevious(weekStart: string) {
   const { user } = useAuth();
 
-  // Chave fixa por dia — não muda com a navegação semanal.
   const today = new Date().toISOString().slice(0, 10);
 
   const query = useQuery({
     queryKey: ['projects-overdue-previous', today],
     queryFn: fetchAllOpenPastActivities,
     enabled: !!user,
-    staleTime: 5 * 60_000, // 5 min: muda pouco ao longo do dia
+    staleTime: 5 * 60_000,
     gcTime: 30 * 60_000,
   });
 
-  // Deriva o Set por semana sem refazer a query.
-  const data = useMemo(() => {
-    if (!query.data || !weekStart) return new Set<string>();
-    return new Set(
-      query.data
-        .filter((r) => r.planned_end < weekStart)
-        .map((r) => r.project_id),
-    );
+  const data: OverduePreviousInfo = useMemo(() => {
+    const ids = new Set<string>();
+    const latestByProject = new Map<string, string>();
+    if (!query.data || !weekStart) return { ids, latestByProject };
+
+    for (const r of query.data) {
+      if (r.planned_end >= weekStart) continue;
+      ids.add(r.project_id);
+      const prev = latestByProject.get(r.project_id);
+      if (!prev || r.planned_end > prev) {
+        latestByProject.set(r.project_id, r.planned_end);
+      }
+    }
+    return { ids, latestByProject };
   }, [query.data, weekStart]);
 
   return { ...query, data };

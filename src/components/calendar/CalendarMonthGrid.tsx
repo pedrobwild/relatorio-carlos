@@ -76,11 +76,14 @@ interface Props {
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
   /**
-   * Conjunto de project_ids cuja obra possui ao menos UMA etapa anterior à
-   * semana visível ainda não concluída. Quando uma atividade pertence a um
-   * desses projetos, o tooltip exibe um CTA "Replanejar cronograma".
+   * Informações sobre obras com etapas anteriores à semana visível ainda
+   * não concluídas. Inclui o conjunto de IDs e a data (planned_end) MAIS
+   * RECENTE entre as pendências, usada para enriquecer o CTA do tooltip.
    */
-  projectsWithOverduePrevious?: Set<string>;
+  projectsWithOverduePrevious?: {
+    ids: Set<string>;
+    latestByProject: Map<string, string>;
+  };
   /** Callback para navegar até a edição do cronograma daquela obra. */
   onReplanSchedule?: (projectId: string) => void;
 }
@@ -214,7 +217,10 @@ function WeekRow({
   today: Date;
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
-  projectsWithOverduePrevious?: Set<string>;
+  projectsWithOverduePrevious?: {
+    ids: Set<string>;
+    latestByProject: Map<string, string>;
+  };
   /** Pede confirmação ao usuário antes de navegar para o cronograma. */
   onRequestReplan?: (projectId: string, projectName: string) => void;
 }) {
@@ -537,28 +543,57 @@ function WeekRow({
                               tem alguma atividade anterior à semana visível ainda
                               não concluída (sinal forte de que o cronograma está
                               fora do plano e precisa ser revisto). */}
-                          {projectsWithOverduePrevious?.has(seg.activity.project_id) && onRequestReplan && (
-                            <div className="pt-2 border-t">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onRequestReplan(
-                                    seg.activity.project_id,
-                                    seg.activity.project_name,
-                                  );
-                                }}
-                                className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground text-[11px] font-semibold px-2.5 py-1.5 hover:bg-destructive/90 transition-colors shadow-sm"
-                                title="Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar."
-                              >
-                                <CalendarClock className="h-3.5 w-3.5" />
-                                Replanejar cronograma
-                              </button>
-                              <p className="text-[9.5px] text-muted-foreground mt-1 leading-snug">
-                                Há etapas anteriores desta obra ainda não concluídas.
-                              </p>
-                            </div>
-                          )}
+                          {(() => {
+                            if (
+                              !projectsWithOverduePrevious?.ids.has(
+                                seg.activity.project_id,
+                              ) ||
+                              !onRequestReplan
+                            ) {
+                              return null;
+                            }
+                            const latestIso =
+                              projectsWithOverduePrevious.latestByProject.get(
+                                seg.activity.project_id,
+                              );
+                            const latestLabel = latestIso
+                              ? format(parseLocalDate(latestIso), "dd/MM/yyyy", {
+                                  locale: ptBR,
+                                })
+                              : null;
+                            return (
+                              <div className="pt-2 border-t">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRequestReplan(
+                                      seg.activity.project_id,
+                                      seg.activity.project_name,
+                                    );
+                                  }}
+                                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground text-[11px] font-semibold px-2.5 py-1.5 hover:bg-destructive/90 transition-colors shadow-sm text-center"
+                                  title={
+                                    latestLabel
+                                      ? `Há etapas anteriores a ${latestLabel} ainda não concluídas. Abrir o cronograma para replanejar.`
+                                      : 'Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar.'
+                                  }
+                                >
+                                  <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate">
+                                    {latestLabel
+                                      ? `Replanejar — pendência anterior a ${latestLabel}`
+                                      : 'Replanejar cronograma'}
+                                  </span>
+                                </button>
+                                <p className="text-[9.5px] text-muted-foreground mt-1 leading-snug">
+                                  {latestLabel
+                                    ? `Etapa pendente fora desta semana (anterior a ${latestLabel}).`
+                                    : 'Há etapas anteriores desta obra ainda não concluídas.'}
+                                </p>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </TooltipContent>
