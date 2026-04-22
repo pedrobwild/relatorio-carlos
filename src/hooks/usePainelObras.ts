@@ -184,7 +184,7 @@ export function usePainelObras() {
             if ('inicio_real' in patch) next.actual_start_date = patch.inicio_real;
             if ('entrega_real' in patch) next.actual_end_date = patch.entrega_real;
             next.painel_ultima_atualizacao = new Date().toISOString();
-            return next as ProjectWithCustomer;
+            return next as unknown as ProjectWithCustomer;
           }),
         );
       }
