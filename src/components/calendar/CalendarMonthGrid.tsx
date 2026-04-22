@@ -2,11 +2,11 @@
  * CalendarMonthGrid — Google-Calendar style month view.
  * Renders a 7-col grid (Mon-Sun) for the visible month, with each activity
  * shown as a colored bar spanning its [planned_start, planned_end] interval,
- * clipped to each week row. Up to 3 bars per day, "+N mais" link otherwise.
+ * clipped to each week row. Up to 3 bars per day; "+N mais" expands the
+ * entire week row inline so all bars become visible without leaving the view.
  */
 import { useMemo, useState } from 'react';
 import {
-  addDays,
   differenceInCalendarDays,
   eachDayOfInterval,
   endOfMonth,
@@ -18,8 +18,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
@@ -49,7 +48,6 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
 
   const today = new Date();
 
-  // Split into weeks
   const weeks = useMemo(() => {
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
     const w: Date[][] = [];
@@ -59,7 +57,6 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
 
   return (
     <div className="rounded-lg border overflow-hidden bg-card">
-      {/* Weekday header */}
       <div className="grid grid-cols-7 bg-muted/40 border-b text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
         {WEEKDAY_LABELS.map((d) => (
           <div key={d} className="px-2 py-2 text-center">
@@ -97,11 +94,11 @@ function WeekRow({
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
 }) {
+  // Inline expansion: show every lane (no "+N mais" cap) for this row.
+  const [expanded, setExpanded] = useState(false);
   const weekStart = week[0];
   const weekEnd = week[6];
 
-  // Build bar segments for this week. Each activity that intersects the week
-  // becomes one segment clipped to [weekStart, weekEnd].
   const segments: BarSegment[] = useMemo(() => {
     const segs: BarSegment[] = [];
     for (const a of activities) {
@@ -120,7 +117,6 @@ function WeekRow({
         endsAfter: aEnd > weekEnd,
       });
     }
-    // Sort: longer spans first so they get top rows; tie-break by start
     segs.sort((x, y) => {
       if (y.span !== x.span) return y.span - x.span;
       return x.activity.planned_start.localeCompare(y.activity.planned_start);
@@ -128,7 +124,7 @@ function WeekRow({
     return segs;
   }, [activities, weekStart.getTime(), weekEnd.getTime()]);
 
-  // Lane assignment (greedy) so bars don't overlap visually
+  // Greedy lane packing
   const lanes: BarSegment[][] = [];
   for (const seg of segments) {
     let placed = false;
@@ -146,19 +142,34 @@ function WeekRow({
     if (!placed) lanes.push([seg]);
   }
 
-  const visibleLanes = lanes.slice(0, MAX_BARS_PER_ROW);
+  const overflow = lanes.length > MAX_BARS_PER_ROW;
+  const visibleLanes = expanded ? lanes : lanes.slice(0, MAX_BARS_PER_ROW);
+  const hiddenLaneCount = Math.max(0, lanes.length - MAX_BARS_PER_ROW);
+
+  // Per-column hidden counts (used only when collapsed).
   const hiddenCountByCol: number[] = Array(7).fill(0);
-  for (let i = MAX_BARS_PER_ROW; i < lanes.length; i++) {
-    for (const seg of lanes[i]) {
-      for (let c = seg.startCol; c < seg.startCol + seg.span; c++) {
-        hiddenCountByCol[c]++;
+  if (!expanded) {
+    for (let i = MAX_BARS_PER_ROW; i < lanes.length; i++) {
+      for (const seg of lanes[i]) {
+        for (let c = seg.startCol; c < seg.startCol + seg.span; c++) {
+          hiddenCountByCol[c]++;
+        }
       }
     }
   }
 
+  // Row height adapts to expansion: header + lanes*24 + footer.
+  const laneHeight = 22; // px
+  const baseTop = 28; // header (day numbers) area
+  const lanesRendered = visibleLanes.length;
+  const footer = (!expanded && hiddenCountByCol.some((n) => n > 0)) || (expanded && overflow) ? 22 : 6;
+  const minHeight = Math.max(110, baseTop + lanesRendered * laneHeight + footer);
+
+  const handleExpand = () => setExpanded(true);
+  const handleCollapse = () => setExpanded(false);
+
   return (
-    <div className="relative grid grid-cols-7 min-h-[110px]">
-      {/* Day cells */}
+    <div className="relative grid grid-cols-7" style={{ minHeight }}>
       {week.map((day, di) => {
         const inMonth = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, today);
@@ -185,7 +196,6 @@ function WeekRow({
 
       {/* Bar overlay */}
       <div className="absolute inset-x-0 top-7 bottom-0 grid grid-cols-7 gap-y-1 px-1 pointer-events-none">
-        {/* Render lanes */}
         <div className="col-span-7 grid grid-cols-7 gap-x-1 gap-y-1 content-start pointer-events-auto">
           {visibleLanes.map((lane, laneIdx) =>
             lane.map((seg) => {
@@ -215,82 +225,52 @@ function WeekRow({
               );
             }),
           )}
-          {/* "+N mais" indicators per column */}
-          {hiddenCountByCol.map((n, col) =>
-            n > 0 ? (
-              <MoreInDayPopover
-                key={`more-${col}`}
-                count={n}
-                col={col}
-                segments={segments.filter(
-                  (s) => col >= s.startCol && col < s.startCol + s.span,
-                )}
-                onActivityClick={onActivityClick}
-              />
-            ) : null,
-          )}
+
+          {/* "+N mais" per column (only when collapsed) — expands the whole row */}
+          {!expanded &&
+            hiddenCountByCol.map((n, col) =>
+              n > 0 ? (
+                <button
+                  key={`more-${col}`}
+                  type="button"
+                  onClick={handleExpand}
+                  style={{ gridColumn: `${col + 1} / span 1`, gridRow: MAX_BARS_PER_ROW + 1 }}
+                  className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4"
+                  title={`Mostrar todas as ${lanes.length} faixas desta semana`}
+                >
+                  +{n} mais
+                </button>
+              ) : null,
+            )}
         </div>
       </div>
-    </div>
-  );
-}
 
-function MoreInDayPopover({
-  count,
-  col,
-  segments,
-  onActivityClick,
-}: {
-  count: number;
-  col: number;
-  segments: BarSegment[];
-  onActivityClick: (a: WeekActivity) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          style={{ gridColumn: `${col + 1} / span 1`, gridRow: MAX_BARS_PER_ROW + 1 }}
-          className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4"
-        >
-          +{count} mais
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-2 z-50">
-        <div className="text-xs font-semibold mb-2">Atividades neste dia</div>
-        <ScrollArea className="max-h-72">
-          <ul className="space-y-1">
-            {segments.map((s) => {
-              const color = getProjectColor(s.activity.project_id);
-              return (
-                <li key={s.activity.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      onActivityClick(s.activity);
-                    }}
-                    className="w-full text-left flex items-start gap-2 p-1.5 rounded-sm hover:bg-muted/60"
-                  >
-                    <span className={cn('mt-0.5 h-3 w-3 rounded-sm border', color.bg, color.border)} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-medium truncate">{s.activity.description}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">
-                        {s.activity.project_name}
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-[9px] h-4">
-                      {format(parseISO(s.activity.planned_start), 'dd/MM')}
-                    </Badge>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
+      {/* Expand / collapse footer for the whole row */}
+      {(overflow || expanded) && (
+        <div className="absolute bottom-1 right-2 pointer-events-auto">
+          {expanded ? (
+            <button
+              type="button"
+              onClick={handleCollapse}
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              title="Recolher esta semana"
+            >
+              <ChevronsDownUp className="h-3 w-3" />
+              Recolher
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleExpand}
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              title={`Expandir e mostrar ${hiddenLaneCount} faixa(s) ocultas`}
+            >
+              <ChevronsUpDown className="h-3 w-3" />
+              Expandir semana ({hiddenLaneCount})
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
