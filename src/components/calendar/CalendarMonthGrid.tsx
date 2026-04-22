@@ -312,12 +312,14 @@ function WeekRow({
                         className={cn(
                           'relative h-full overflow-hidden px-1.5 py-[1px] mx-[1px] text-left rounded-sm border flex flex-col justify-center',
                           'hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40',
-                          // Cor padrão (em andamento / futura)
+                          // Cor padrão (em andamento / futura / atrasada-não-iniciada mantém cor da obra)
                           !isPastEnd && [color.bg, color.border],
                           // Concluída no passado: cinza neutro
                           isPastDone && 'bg-muted/60 border-muted-foreground/20 text-muted-foreground',
-                          // Atrasada: cinza com borda vermelha sutil para chamar atenção
-                          isOverdue && 'bg-muted/70 border-destructive/50 text-muted-foreground',
+                          // Atrasada (passou o fim sem concluir): cinza com borda vermelha
+                          isOverdueEnd && 'bg-muted/70 border-destructive/50 text-muted-foreground',
+                          // Atrasada por não ter iniciado: mantém cor da obra mas adiciona contorno destrutivo
+                          isOverdueStart && 'ring-1 ring-destructive/60 border-destructive/60',
                           seg.startsBefore && 'rounded-l-none border-l-0',
                           seg.endsAfter && 'rounded-r-none border-r-0',
                         )}
@@ -325,7 +327,7 @@ function WeekRow({
                         {isOverdue && (
                           <span
                             className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-none shadow-sm ring-1 ring-background z-10"
-                            title="Atividade atrasada — não concluída"
+                            title={isOverdueStart ? 'Atividade atrasada — não iniciada' : 'Atividade atrasada — não concluída'}
                             aria-label="Atrasada"
                           >
                             !
