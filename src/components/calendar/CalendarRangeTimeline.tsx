@@ -145,6 +145,11 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
           <div>
             {byProject.map((g) => {
               const color = getProjectColor(g.project_id);
+              // Altura dinâmica: a linha da obra cresce conforme o número de
+              // faixas (lanes) necessárias para acomodar todas as atividades
+              // sem sobreposição. Garante que TODAS as obras caibam na visão.
+              const laneCount = computeLaneCount(g.items, rangeStart, rangeEnd);
+              const rowHeight = ROW_BASE_PADDING + laneCount * LANE_HEIGHT;
               return (
                 <div key={g.project_id} className="flex border-b last:border-b-0 hover:bg-muted/20">
                   <div
@@ -172,7 +177,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                     className="relative"
                     style={{
                       width: totalWidth,
-                      minHeight: Math.max(ROW_HEIGHT, g.items.length * 6 + ROW_HEIGHT),
+                      minHeight: rowHeight,
                     }}
                   >
                     {/* Day grid lines */}
