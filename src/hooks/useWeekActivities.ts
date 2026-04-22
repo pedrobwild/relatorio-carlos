@@ -136,7 +136,11 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       updates,
     }: {
       activityId: string;
-      updates: { actual_start?: string | null; actual_end?: string | null };
+      updates: {
+        actual_start?: string | null;
+        actual_end?: string | null;
+        responsible_user_id?: string | null;
+      };
     }) => {
       const { error: err } = await supabase
         .from('project_activities')
@@ -158,12 +162,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     },
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
-      toast.error('Erro ao atualizar datas');
+      toast.error('Erro ao salvar atividade');
     },
     onSuccess: (_, vars) => {
       const projectId = activities.find((a) => a.id === vars.activityId)?.project_id;
       if (projectId) invalidateActivityQueries(projectId);
-      toast.success('Datas atualizadas');
+      toast.success('Atividade atualizada');
     },
   });
 
