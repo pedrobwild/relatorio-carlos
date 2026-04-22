@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { format, parseISO, differenceInDays, addDays, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, CalendarDays, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, User, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -32,7 +32,7 @@ const PROJECT_COLORS = [
   'bg-orange-500/70 border-orange-500',
 ];
 
-export function PrestadorCalendar() {
+export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
   const [weekOffset, setWeekOffset] = useState(0);
   const baseDate = useMemo(() => {
     const now = new Date();
@@ -110,11 +110,17 @@ export function PrestadorCalendar() {
 
   if (grouped.length === 0) {
     return (
-      <div className="rounded-lg border bg-card p-8 text-center space-y-2">
+      <div className="rounded-lg border bg-card p-8 text-center space-y-3">
         <CalendarDays className="h-10 w-10 mx-auto text-muted-foreground/40" />
         <p className="text-sm text-muted-foreground">
           Nenhum prestador com período de execução definido nesta faixa de datas.
         </p>
+        {onNew && (
+          <Button size="sm" onClick={onNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Prestador
+          </Button>
+        )}
       </div>
     );
   }
@@ -139,6 +145,12 @@ export function PrestadorCalendar() {
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekOffset(w => w + 1)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
+            {onNew && (
+              <Button size="sm" className="h-7 text-xs ml-2" onClick={onNew}>
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Novo Prestador
+              </Button>
+            )}
           </div>
         </div>
 
