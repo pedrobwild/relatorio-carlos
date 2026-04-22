@@ -108,14 +108,15 @@ export function BreakActivityDialog({
       const pe = parseISO(parent.planned_end);
       const totalDays = differenceInCalendarDays(pe, ps) + 1;
       // Default: 2 micro-etapas dividindo o intervalo ao meio.
+      const inheritedResp = parent?.responsible_user_id ?? null;
       if (totalDays >= 2) {
         const mid = Math.floor(totalDays / 2);
         setRows([
-          { description: '', planned_start: ps, planned_end: addDays(ps, mid - 1) },
-          { description: '', planned_start: addDays(ps, mid), planned_end: pe },
+          { description: '', planned_start: ps, planned_end: addDays(ps, mid - 1), responsible_user_id: inheritedResp },
+          { description: '', planned_start: addDays(ps, mid), planned_end: pe, responsible_user_id: inheritedResp },
         ]);
       } else {
-        setRows([{ description: '', planned_start: ps, planned_end: pe }]);
+        setRows([{ description: '', planned_start: ps, planned_end: pe, responsible_user_id: inheritedResp }]);
       }
     }
   }, [parent?.id, open]);
