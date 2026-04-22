@@ -321,13 +321,14 @@ function WeekRow({
                             !
                           </span>
                         )}
-                        <span className={cn('font-medium', isPastDone && 'line-through opacity-80')}>
-                          {seg.activity.project_name}
+                        {/* Hierarquia: Atividade em destaque, condomínio/cliente como contexto secundário */}
+                        <span className={cn('font-semibold', isPastDone && 'line-through opacity-80')}>
+                          {seg.activity.description}
                         </span>
+                        <span className="opacity-60"> · {seg.activity.project_name}</span>
                         {seg.activity.client_name && (
-                          <span className="opacity-70"> · {seg.activity.client_name}</span>
+                          <span className="opacity-50"> · {seg.activity.client_name}</span>
                         )}
-                        <span className="opacity-70"> · {seg.activity.description}</span>
                       </button>
                     </TooltipTrigger>
                     <TooltipContent
