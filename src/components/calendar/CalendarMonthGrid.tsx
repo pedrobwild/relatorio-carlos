@@ -132,6 +132,13 @@ export function CalendarMonthGrid({
     return w;
   }, [gridStart.getTime(), gridEnd.getTime()]);
 
+  // O WeekRow recebe um handler que apenas abre o dialog de confirmação.
+  // A navegação real só acontece após o usuário confirmar.
+  const handleRequestReplan = onReplanSchedule
+    ? (projectId: string, projectName: string) =>
+        setReplanTarget({ projectId, projectName })
+    : undefined;
+
   return (
     <TooltipProvider delayDuration={150} skipDelayDuration={50}>
       <div className="rounded-lg border overflow-hidden bg-card">
@@ -153,11 +160,42 @@ export function CalendarMonthGrid({
               activities={activities}
               onActivityClick={onActivityClick}
               projectsWithOverduePrevious={projectsWithOverduePrevious}
-              onReplanSchedule={onReplanSchedule}
+              onRequestReplan={handleRequestReplan}
             />
           ))}
         </div>
       </div>
+
+      <AlertDialog
+        open={!!replanTarget}
+        onOpenChange={(open) => {
+          if (!open) setReplanTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replanejar cronograma?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você sairá do calendário e abrirá o cronograma da obra
+              {replanTarget ? ` "${replanTarget.projectName}"` : ''} para revisar
+              etapas anteriores ainda não concluídas. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (replanTarget && onReplanSchedule) {
+                  onReplanSchedule(replanTarget.projectId);
+                }
+                setReplanTarget(null);
+              }}
+            >
+              Abrir cronograma
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
