@@ -226,18 +226,15 @@ function WeekRow({
 
       {/* Lanes overlay — absolutely positioned bars aligned to day columns. */}
       <div
-        className="absolute left-0 right-0 grid grid-cols-7 px-1 pointer-events-none"
+        className="absolute left-1 right-1 pointer-events-none"
         style={{ top: DAY_NUMBER_AREA, height: lanesArea }}
       >
         {visibleLanes.map((lane, laneIdx) => (
           <div
             key={laneIdx}
-            className="col-span-7 relative pointer-events-auto"
+            className="absolute left-0 right-0 pointer-events-auto"
             style={{
-              position: 'absolute',
               top: laneIdx * (LANE_HEIGHT + LANE_GAP),
-              left: 4,
-              right: 4,
               height: LANE_HEIGHT - 4,
             }}
           >
