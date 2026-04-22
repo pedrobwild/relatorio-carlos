@@ -95,7 +95,7 @@ export function FornecedorSelector({ fornecedorId, onFornecedorChange, startDate
                 <span className="flex items-center gap-1.5">
                   {f.nome}
                   {f.status === 'rascunho' && (
-                    <span className="text-[9px] uppercase tracking-wide text-amber-600 bg-amber-100 dark:bg-amber-950/40 px-1 py-0.5 rounded">
+                    <span className="text-[9px] uppercase tracking-wide text-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10 px-1 py-0.5 rounded">
                       rascunho
                     </span>
                   )}
