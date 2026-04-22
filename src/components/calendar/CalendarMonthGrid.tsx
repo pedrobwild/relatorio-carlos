@@ -42,15 +42,14 @@ function getActivityStatus(a: WeekActivity): {
   Icon: typeof CheckCircle2;
   className: string;
 } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayLocal();
   if (a.actual_end) {
     return { label: 'Concluída', Icon: CheckCircle2, className: 'text-emerald-600 dark:text-emerald-400' };
   }
   if (a.actual_start) {
     return { label: 'Em andamento', Icon: PlayCircle, className: 'text-blue-600 dark:text-blue-400' };
   }
-  const plannedEnd = parseISO(a.planned_end);
+  const plannedEnd = parseLocalDate(a.planned_end);
   if (plannedEnd < today) {
     return { label: 'Atrasada', Icon: AlertTriangle, className: 'text-destructive' };
   }
