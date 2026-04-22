@@ -323,12 +323,19 @@ export function PurchaseFormDialog({
               <>
                 <div>
                   <Label htmlFor="supplier_name">Fornecedor</Label>
-                  <Input
-                    id="supplier_name"
-                    value={formData.supplier_name || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
-                    placeholder="Nome do fornecedor"
-                  />
+                  <div className="flex gap-2 items-start">
+                    <Input
+                      id="supplier_name"
+                      value={formData.supplier_name || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
+                      placeholder="Nome do fornecedor"
+                    />
+                    <QuickCreateFornecedor
+                      supplierType="produtos"
+                      defaultName={formData.supplier_name || ''}
+                      onCreated={(_id, nome) => setFormData(prev => ({ ...prev, supplier_name: nome }))}
+                    />
+                  </div>
                 </div>
 
                 <div>
