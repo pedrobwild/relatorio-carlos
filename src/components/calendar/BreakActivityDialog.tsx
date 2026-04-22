@@ -543,7 +543,7 @@ export function BreakActivityDialog({
                       <SelectTrigger className="mt-1 h-9">
                         <SelectValue placeholder={loadingStaff ? 'Carregando...' : 'Selecionar responsável'} />
                       </SelectTrigger>
-                      <SelectContent position="popper" className="z-[100]">
+                      <SelectContent position="popper" className="z-[200]">
                         <SelectItem value={NO_RESPONSIBLE}>Sem responsável</SelectItem>
                         {staffUsers.map((u) => (
                           <SelectItem key={u.id} value={u.id}>
@@ -746,7 +746,7 @@ function DatePopover({
           {format(value, 'dd/MM/yyyy')}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 z-50" align="start">
+      <PopoverContent className="w-auto p-0 z-[200]" align="start">
         <Calendar
           mode="single"
           selected={value}
