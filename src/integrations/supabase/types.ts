@@ -3498,6 +3498,7 @@ export type Database = {
           planned_start: string
           predecessor_ids: string[] | null
           project_id: string
+          responsible_user_id: string | null
           sort_order: number
           updated_at: string
           weight: number
@@ -3519,6 +3520,7 @@ export type Database = {
           planned_start: string
           predecessor_ids?: string[] | null
           project_id: string
+          responsible_user_id?: string | null
           sort_order?: number
           updated_at?: string
           weight?: number
@@ -3540,6 +3542,7 @@ export type Database = {
           planned_start?: string
           predecessor_ids?: string[] | null
           project_id?: string
+          responsible_user_id?: string | null
           sort_order?: number
           updated_at?: string
           weight?: number
@@ -3564,6 +3567,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_activities_responsible_user_id_fkey"
+            columns: ["responsible_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
             referencedColumns: ["id"]
           },
         ]

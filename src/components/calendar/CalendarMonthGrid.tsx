@@ -23,7 +23,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
@@ -385,9 +385,23 @@ function WeekRow({
                             </div>
                           )}
 
-                          <div className={cn('flex items-center gap-1.5 text-[10.5px] font-medium', status.className)}>
-                            <StatusIcon className="h-3 w-3" />
-                            <span>{status.label}</span>
+                          <div className="flex items-center justify-between gap-2 pt-1">
+                            <div className={cn('flex items-center gap-1.5 text-[10.5px] font-medium', status.className)}>
+                              <StatusIcon className="h-3 w-3" />
+                              <span>{status.label}</span>
+                            </div>
+                            {seg.activity.responsible_name ? (
+                              <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
+                                <UserRound className="h-3 w-3" />
+                                <span className="truncate max-w-[140px]" title={seg.activity.responsible_name}>
+                                  {seg.activity.responsible_name}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] italic text-muted-foreground/70">
+                                Sem responsável
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

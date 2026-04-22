@@ -10,6 +10,7 @@ import {
   Save,
   Split,
   Trash2,
+  UserRound,
   X,
 } from 'lucide-react';
 import {
@@ -27,6 +28,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -38,6 +46,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
+
+/** Valor sentinela para representar "sem responsável" no Select (Radix não aceita value=""). */
+const NO_RESPONSIBLE = '__none__';
 
 interface ActivityDetailDialogProps {
   activity: WeekActivity | null;
@@ -45,7 +57,11 @@ interface ActivityDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (
     activityId: string,
-    updates: { actual_start?: string | null; actual_end?: string | null },
+    updates: {
+      actual_start?: string | null;
+      actual_end?: string | null;
+      responsible_user_id?: string | null;
+    },
   ) => Promise<unknown>;
   isUpdating: boolean;
   /**
@@ -87,14 +103,18 @@ export function ActivityDetailDialog({
 }: ActivityDetailDialogProps) {
   const [actualStart, setActualStart] = useState<Date | undefined>();
   const [actualEnd, setActualEnd] = useState<Date | undefined>();
+  const [responsibleUserId, setResponsibleUserId] = useState<string | null>(null);
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [confirmMergeOpen, setConfirmMergeOpen] = useState(false);
+
+  const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
 
   useEffect(() => {
     if (activity) {
       setActualStart(toDate(activity.actual_start));
       setActualEnd(toDate(activity.actual_end));
+      setResponsibleUserId(activity.responsible_user_id ?? null);
     }
   }, [activity]);
 
@@ -106,12 +126,14 @@ export function ActivityDetailDialog({
 
   const dirty =
     fromDate(actualStart) !== (activity.actual_start ?? null) ||
-    fromDate(actualEnd) !== (activity.actual_end ?? null);
+    fromDate(actualEnd) !== (activity.actual_end ?? null) ||
+    (responsibleUserId ?? null) !== (activity.responsible_user_id ?? null);
 
   const handleSave = async () => {
     await onSave(activity.id, {
       actual_start: fromDate(actualStart),
       actual_end: fromDate(actualEnd),
+      responsible_user_id: responsibleUserId,
     });
     setConfirmSaveOpen(false);
     onOpenChange(false);
@@ -228,6 +250,51 @@ export function ActivityDetailDialog({
                   Duração planejada: <strong>{plannedDays} dia(s)</strong>
                 </div>
               </div>
+            </div>
+
+            {/* Responsável (Staff) */}
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <UserRound className="h-3.5 w-3.5" />
+                  Responsável
+                </div>
+                {activity.responsible_name && responsibleUserId === activity.responsible_user_id && (
+                  <span className="text-[10.5px] text-muted-foreground">
+                    Atual: <strong className="text-foreground">{activity.responsible_name}</strong>
+                  </span>
+                )}
+              </div>
+              <Select
+                value={responsibleUserId ?? NO_RESPONSIBLE}
+                onValueChange={(v) => setResponsibleUserId(v === NO_RESPONSIBLE ? null : v)}
+                disabled={loadingStaff}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={loadingStaff ? 'Carregando equipe...' : 'Selecionar responsável'}
+                  />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-72">
+                  <SelectItem value={NO_RESPONSIBLE}>
+                    <span className="text-muted-foreground italic">Sem responsável</span>
+                  </SelectItem>
+                  {staffUsers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      <div className="flex flex-col">
+                        <span>{u.nome}</span>
+                        <span className="text-[10.5px] text-muted-foreground capitalize">
+                          {u.perfil}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Membro da equipe interna responsável por executar esta{' '}
+                {activity.parent_activity_id ? 'micro-etapa' : 'atividade'}.
+              </p>
             </div>
 
             {/* Editable actual dates */}

@@ -57,12 +57,17 @@ import { cn } from '@/lib/utils';
 import { isNonBusinessDay } from '@/lib/businessDays';
 import { useNonWorkingDays } from '@/hooks/useNonWorkingDays';
 import type { WeekActivity, SubActivityInput } from '@/hooks/useWeekActivities';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Row {
   description: string;
   planned_start: Date;
   planned_end: Date;
+  responsible_user_id: string | null;
 }
+
+const NO_RESPONSIBLE = '__none__';
 
 interface Props {
   parent: WeekActivity | null;
@@ -87,6 +92,7 @@ export function BreakActivityDialog({
   const [rows, setRows] = useState<Row[]>([]);
   /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
   const [chunkSize, setChunkSize] = useState<number>(2);
+  const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
   const { isNonWorking: isCustomNonWorking, reasonFor } = useNonWorkingDays(parent?.project_id);
 
   /** True quando o dia é fim de semana, feriado SP/nacional OU custom (folga/feriado obra). */
@@ -105,14 +111,15 @@ export function BreakActivityDialog({
       const pe = parseISO(parent.planned_end);
       const totalDays = differenceInCalendarDays(pe, ps) + 1;
       // Default: 2 micro-etapas dividindo o intervalo ao meio.
+      const inheritedResp = parent?.responsible_user_id ?? null;
       if (totalDays >= 2) {
         const mid = Math.floor(totalDays / 2);
         setRows([
-          { description: '', planned_start: ps, planned_end: addDays(ps, mid - 1) },
-          { description: '', planned_start: addDays(ps, mid), planned_end: pe },
+          { description: '', planned_start: ps, planned_end: addDays(ps, mid - 1), responsible_user_id: inheritedResp },
+          { description: '', planned_start: addDays(ps, mid), planned_end: pe, responsible_user_id: inheritedResp },
         ]);
       } else {
-        setRows([{ description: '', planned_start: ps, planned_end: pe }]);
+        setRows([{ description: '', planned_start: ps, planned_end: pe, responsible_user_id: inheritedResp }]);
       }
     }
   }, [parent?.id, open]);
@@ -197,7 +204,7 @@ export function BreakActivityDialog({
     const last = rows[rows.length - 1];
     const start = last ? addDays(last.planned_end, 1) : ps!;
     const safeStart = start > pe ? pe : start;
-    setRows((prev) => [...prev, { description: '', planned_start: safeStart, planned_end: pe }]);
+    setRows((prev) => [...prev, { description: '', planned_start: safeStart, planned_end: pe, responsible_user_id: parent?.responsible_user_id ?? null }]);
   };
 
   const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
@@ -300,6 +307,7 @@ export function BreakActivityDialog({
         description: `Parte ${next.length + 1}`,
         planned_start: start,
         planned_end: end,
+        responsible_user_id: parent?.responsible_user_id ?? null,
       });
     }
     setRows(next);
@@ -311,6 +319,7 @@ export function BreakActivityDialog({
       description: r.description.trim(),
       planned_start: fmtDate(r.planned_start),
       planned_end: fmtDate(r.planned_end),
+      responsible_user_id: r.responsible_user_id,
     }));
     await onConfirm(parent, payload);
     onOpenChange(false);

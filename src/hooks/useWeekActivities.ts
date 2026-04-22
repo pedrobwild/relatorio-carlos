@@ -42,6 +42,10 @@ export interface WeekActivity {
    * atividade-mãe (mais informativa).
    */
   parent_activity_id: string | null;
+  /** ID do membro da equipe (Staff) responsável por esta atividade/micro-etapa. */
+  responsible_user_id: string | null;
+  /** Nome do responsável (pré-resolvido a partir de users_profile). */
+  responsible_name: string | null;
 }
 
 /** Payload para criar uma micro-etapa (sub-atividade) de uma atividade-mãe. */
@@ -49,6 +53,8 @@ export interface SubActivityInput {
   description: string;
   planned_start: string; // YYYY-MM-DD
   planned_end: string;   // YYYY-MM-DD
+  /** Opcional: Staff responsável por esta micro-etapa. */
+  responsible_user_id?: string | null;
 }
 
 interface FetchArgs {
@@ -77,7 +83,9 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       created_at,
       updated_at,
       parent_activity_id,
-      projects:project_id ( name, client_name, status )
+      responsible_user_id,
+      projects:project_id ( name, client_name, status ),
+      responsible:responsible_user_id ( id, nome )
     `)
     .lte('planned_start', weekEnd)
     .gte('planned_end', weekStart)
@@ -105,6 +113,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     created_at: row.created_at,
     updated_at: row.updated_at,
     parent_activity_id: row.parent_activity_id ?? null,
+    responsible_user_id: row.responsible_user_id ?? null,
+    responsible_name: row.responsible?.nome ?? null,
   }));
 }
 
@@ -126,7 +136,11 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       updates,
     }: {
       activityId: string;
-      updates: { actual_start?: string | null; actual_end?: string | null };
+      updates: {
+        actual_start?: string | null;
+        actual_end?: string | null;
+        responsible_user_id?: string | null;
+      };
     }) => {
       const { error: err } = await supabase
         .from('project_activities')
@@ -148,12 +162,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     },
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
-      toast.error('Erro ao atualizar datas');
+      toast.error('Erro ao salvar atividade');
     },
     onSuccess: (_, vars) => {
       const projectId = activities.find((a) => a.id === vars.activityId)?.project_id;
       if (projectId) invalidateActivityQueries(projectId);
-      toast.success('Datas atualizadas');
+      toast.success('Atividade atualizada');
     },
   });
 
@@ -201,6 +215,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
         created_by: user.id,
         etapa: parentRow?.etapa ?? null,
         predecessor_ids: [],
+        // Se o usuário não definir um responsável para a micro-etapa,
+        // herda da atividade-mãe (quando existir).
+        responsible_user_id:
+          s.responsible_user_id !== undefined
+            ? s.responsible_user_id
+            : parent.responsible_user_id ?? null,
       }));
 
       const { error: insErr } = await supabase.from('project_activities').insert(rows);
@@ -301,8 +321,14 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     isLoading,
     error: error ? (error as Error).message : null,
     refetch,
-    updateDates: (activityId: string, updates: { actual_start?: string | null; actual_end?: string | null }) =>
-      updateDates.mutateAsync({ activityId, updates }),
+    updateDates: (
+      activityId: string,
+      updates: {
+        actual_start?: string | null;
+        actual_end?: string | null;
+        responsible_user_id?: string | null;
+      },
+    ) => updateDates.mutateAsync({ activityId, updates }),
     isUpdating: updateDates.isPending,
     breakIntoSubActivities: (parent: WeekActivity, subs: SubActivityInput[]) =>
       breakIntoSubActivities.mutateAsync({ parent, subs }),
