@@ -43,6 +43,7 @@ const AdminUxInsights = lazy(() => import("./pages/AdminUxInsights"));
 const Demo = lazy(() => import("./pages/Demo"));
 const AdminResearch = lazy(() => import("./pages/AdminResearch"));
 const CalendarioCompras = lazy(() => import("./pages/CalendarioCompras"));
+const CalendarioObras = lazy(() => import("./pages/CalendarioObras"));
 const Fornecedores = lazy(() => import("./pages/gestao/Fornecedores"));
 const FornecedorDetalhe = lazy(() => import("./pages/gestao/FornecedorDetalhe"));
 const FornecedoresAdmin = lazy(() => import("./pages/gestao/FornecedoresAdmin"));
@@ -162,6 +163,7 @@ const App = () => (
             <Route path="/gestao/obra/:projectId/wizard" element={<StaffRoute><GestaoShell>{withSuspense(<EditarObraWizard />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/arquivos" element={<ProtectedRoute><GestaoShell>{withSuspense(<Arquivos />)}</GestaoShell></ProtectedRoute>} />
             <Route path="/gestao/calendario-compras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioCompras />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/calendario-obras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioObras />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores" element={<StaffRoute><GestaoShell>{withSuspense(<Fornecedores />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/:id" element={<StaffRoute><GestaoShell>{withSuspense(<FornecedorDetalhe />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/admin" element={<AdminRoute><GestaoShell>{withSuspense(<FornecedoresAdmin />)}</GestaoShell></AdminRoute>} />

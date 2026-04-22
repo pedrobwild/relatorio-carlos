@@ -85,6 +85,11 @@ export function GestaoSidebar() {
           path: "/gestao/fornecedores",
         },
         {
+          label: "Calendário de Obras",
+          icon: CalendarDays,
+          path: "/gestao/calendario-obras",
+        },
+        {
           label: "Calendário de Compras",
           icon: CalendarDays,
           path: "/gestao/calendario-compras",
