@@ -32,6 +32,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CornerDownRight,
+  LayoutGrid,
   Plus,
   Split,
   Trash2,
@@ -84,6 +85,8 @@ export function BreakActivityDialog({
   isSubmitting,
 }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
+  /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
+  const [chunkSize, setChunkSize] = useState<number>(2);
   const { isNonWorking: isCustomNonWorking, reasonFor } = useNonWorkingDays(parent?.project_id);
 
   /** True quando o dia é fim de semana, feriado SP/nacional OU custom (folga/feriado obra). */
@@ -268,6 +271,40 @@ export function BreakActivityDialog({
     setRows(next);
   };
 
+  /**
+   * Gera automaticamente micro-etapas para cobrir 100% dos dias *úteis* da
+   * atividade-mãe em blocos do tamanho informado. Pula fins de semana,
+   * feriados e folgas. O último bloco pode ser menor que `size` para fechar
+   * exatamente no fim da atividade-mãe (sem deixar dias úteis descobertos).
+   *
+   * Substitui as linhas atuais (mantém esta operação como uma "ação" — o
+   * usuário pode editar título/datas em seguida normalmente).
+   */
+  const generateChunks = (size: number) => {
+    if (!ps || !pe) return;
+    const safeSize = Math.max(1, Math.floor(size));
+    // Lista ordenada de dias úteis dentro do range da mãe.
+    const businessDays = eachDayOfInterval({ start: ps, end: pe }).filter(
+      (d) => !isBlockedDay(d),
+    );
+    if (businessDays.length === 0) {
+      setRows([]);
+      return;
+    }
+    const next: Row[] = [];
+    for (let i = 0; i < businessDays.length; i += safeSize) {
+      const chunk = businessDays.slice(i, i + safeSize);
+      const start = chunk[0];
+      const end = chunk[chunk.length - 1];
+      next.push({
+        description: `Parte ${next.length + 1}`,
+        planned_start: start,
+        planned_end: end,
+      });
+    }
+    setRows(next);
+  };
+
   const handleConfirm = async () => {
     if (!parent || !canSubmit) return;
     const payload: SubActivityInput[] = rows.map((r) => ({
@@ -312,20 +349,64 @@ export function BreakActivityDialog({
 
         <ScrollArea className="flex-1 -mx-6 px-6">
           <div className="space-y-3 pb-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Label className="text-xs text-muted-foreground">
                 {rows.length} micro-etapa{rows.length !== 1 ? 's' : ''}
               </Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={distributeEvenly}
-                title="Distribuir os dias entre as micro-etapas existentes"
-              >
-                <Wand2 className="h-3.5 w-3.5 mr-1" />
-                Distribuir igualmente
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Gerador automático: cobre 100% dos dias úteis em blocos de N dias */}
+                <div
+                  className="inline-flex items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1"
+                  title="Gera micro-etapas cobrindo 100% dos dias úteis da atividade-mãe, em blocos do tamanho escolhido. Pula fins de semana, feriados e folgas."
+                >
+                  <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[11px] text-muted-foreground">Cobrir 100% em blocos de</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={Math.max(1, businessDaysInParent || 1)}
+                    value={chunkSize}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (Number.isFinite(v) && v > 0) setChunkSize(v);
+                    }}
+                    className="h-7 w-14 px-2 text-xs"
+                  />
+                  <span className="text-[11px] text-muted-foreground">
+                    dia{chunkSize !== 1 ? 's' : ''} úte{chunkSize !== 1 ? 'is' : 'l'}
+                    {businessDaysInParent > 0 && (
+                      <>
+                        {' '}
+                        ·{' '}
+                        <strong className="text-foreground">
+                          {Math.ceil(businessDaysInParent / Math.max(1, chunkSize))}
+                        </strong>{' '}
+                        bloco{Math.ceil(businessDaysInParent / Math.max(1, chunkSize)) !== 1 ? 's' : ''}
+                      </>
+                    )}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="h-7 px-2 text-[11px]"
+                    onClick={() => generateChunks(chunkSize)}
+                    disabled={!ps || !pe || businessDaysInParent === 0}
+                  >
+                    Gerar
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={distributeEvenly}
+                  title="Distribuir os dias entre as micro-etapas existentes"
+                >
+                  <Wand2 className="h-3.5 w-3.5 mr-1" />
+                  Distribuir igualmente
+                </Button>
+              </div>
             </div>
 
             {rows.map((row, i) => {
