@@ -80,6 +80,9 @@ export default function CalendarioObras() {
   const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  // Filtro por etapa do cronograma (project_activities.etapa). 'all' inclui tudo,
+  // '__none__' representa atividades sem etapa preenchida.
+  const [etapaFilter, setEtapaFilter] = useState<string>('all');
   // Por padrão, ocultamos atividades de obras já concluídas para focar no que está em andamento.
   // O usuário pode reativar via toggle "Incluir concluídas" na barra de filtros.
   const [includeCompleted, setIncludeCompleted] = useState<boolean>(false);
@@ -162,13 +165,42 @@ export default function CalendarioObras() {
     [visibleByProject],
   );
 
-  const filteredByProject = useMemo(
-    () =>
+  // Etapas disponíveis (derivadas do dataset já visível, sem aplicar filtro de etapa
+  // para que o usuário sempre enxergue todas as opções existentes no período).
+  // Inclui um sentinela '__none__' quando há atividades sem etapa preenchida.
+  const etapaOptions = useMemo(() => {
+    const set = new Set<string>();
+    let hasEmpty = false;
+    for (const g of visibleByProject) {
+      for (const a of g.items) {
+        const e = (a.etapa ?? '').trim();
+        if (e) set.add(e);
+        else hasEmpty = true;
+      }
+    }
+    const list = Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    return { list, hasEmpty };
+  }, [visibleByProject]);
+
+  const filteredByProject = useMemo(() => {
+    // 1) Filtro de obra
+    const byProj =
       projectFilter === 'all'
         ? visibleByProject
-        : visibleByProject.filter((g) => g.project_id === projectFilter),
-    [visibleByProject, projectFilter],
-  );
+        : visibleByProject.filter((g) => g.project_id === projectFilter);
+    // 2) Filtro de etapa: aplicado por atividade; remove grupos vazios.
+    if (etapaFilter === 'all') return byProj;
+    return byProj
+      .map((g) => ({
+        ...g,
+        items: g.items.filter((a) => {
+          const e = (a.etapa ?? '').trim();
+          if (etapaFilter === '__none__') return e === '';
+          return e === etapaFilter;
+        }),
+      }))
+      .filter((g) => g.items.length > 0);
+  }, [visibleByProject, projectFilter, etapaFilter]);
 
   const filteredActivities = useMemo(
     () => filteredByProject.flatMap((g) => g.items),
@@ -469,6 +501,40 @@ export default function CalendarioObras() {
             <Button variant="ghost" size="sm" onClick={() => setProjectFilter('all')} className="h-9">
               <X className="h-3.5 w-3.5 mr-1" />
               Limpar filtro
+            </Button>
+          )}
+        </div>
+
+        {/* Filtro por etapa do cronograma */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Filter className="h-3.5 w-3.5" />
+            Etapa:
+          </div>
+          <Select value={etapaFilter} onValueChange={setEtapaFilter}>
+            <SelectTrigger className="h-9 w-full sm:w-[220px]">
+              <SelectValue placeholder="Todas as etapas" />
+            </SelectTrigger>
+            <SelectContent position="popper" className="z-50 max-h-72">
+              <SelectItem value="all">
+                Todas as etapas ({etapaOptions.list.length + (etapaOptions.hasEmpty ? 1 : 0)})
+              </SelectItem>
+              {etapaOptions.list.map((etapa) => (
+                <SelectItem key={etapa} value={etapa}>
+                  {etapa}
+                </SelectItem>
+              ))}
+              {etapaOptions.hasEmpty && (
+                <SelectItem value="__none__">
+                  <span className="text-muted-foreground italic">Sem etapa</span>
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          {etapaFilter !== 'all' && (
+            <Button variant="ghost" size="sm" onClick={() => setEtapaFilter('all')} className="h-9">
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar
             </Button>
           )}
         </div>
