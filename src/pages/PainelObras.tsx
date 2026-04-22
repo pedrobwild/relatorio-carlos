@@ -740,7 +740,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
 
       {/* Pendências */}
       <TableCell
-        className={cn('text-center sticky left-[620px] z-10 border-r-2 border-border', stickyBase)}
+        className={cn('text-center sticky left-[520px] z-10 border-r-2 border-border', stickyBase)}
       >
         <Tooltip>
           <TooltipTrigger asChild>
