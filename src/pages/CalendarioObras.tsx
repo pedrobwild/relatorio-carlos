@@ -443,30 +443,54 @@ export default function CalendarioObras() {
       </Card>
 
       {/* Filter bar */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Filter className="h-3.5 w-3.5" />
-          Filtrar por obra:
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Filter className="h-3.5 w-3.5" />
+            Filtrar por obra:
+          </div>
+          <Select value={projectFilter} onValueChange={setProjectFilter}>
+            <SelectTrigger className="h-9 w-full sm:w-[320px]">
+              <SelectValue placeholder="Todas as obras" />
+            </SelectTrigger>
+            <SelectContent position="popper" className="z-50 max-h-72">
+              <SelectItem value="all">Todas as obras ({visibleByProject.length})</SelectItem>
+              {projectOptions.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="font-medium">{p.name}</span>
+                  {p.client_name && (
+                    <span className="text-muted-foreground"> · {p.client_name}</span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {projectFilter !== 'all' && (
+            <Button variant="ghost" size="sm" onClick={() => setProjectFilter('all')} className="h-9">
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar filtro
+            </Button>
+          )}
         </div>
-        <Select value={projectFilter} onValueChange={setProjectFilter}>
-          <SelectTrigger className="h-9 w-full sm:w-[280px]">
-            <SelectValue placeholder="Todas as obras" />
-          </SelectTrigger>
-          <SelectContent position="popper" className="z-50 max-h-72">
-            <SelectItem value="all">Todas as obras ({byProject.length})</SelectItem>
-            {projectOptions.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {projectFilter !== 'all' && (
-          <Button variant="ghost" size="sm" onClick={() => setProjectFilter('all')} className="h-9">
-            <X className="h-3.5 w-3.5 mr-1" />
-            Limpar filtro
-          </Button>
-        )}
+
+        {/* Toggle: incluir obras concluídas (ocultas por padrão) */}
+        <div className="flex items-center gap-2 ml-auto">
+          <Switch
+            id="include-completed"
+            checked={includeCompleted}
+            onCheckedChange={setIncludeCompleted}
+          />
+          <Label
+            htmlFor="include-completed"
+            className="text-xs text-muted-foreground cursor-pointer select-none"
+            title="Por padrão, obras com status 'Concluída' ficam ocultas. Ative para mostrá-las novamente."
+          >
+            Incluir obras concluídas
+            {hiddenCompletedCount > 0 && !includeCompleted && (
+              <span className="ml-1 text-foreground font-medium">({hiddenCompletedCount})</span>
+            )}
+          </Label>
+        </div>
       </div>
 
       {/* Body */}
