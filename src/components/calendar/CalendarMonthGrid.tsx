@@ -145,8 +145,8 @@ function WeekRow({
   const segments: BarSegment[] = useMemo(() => {
     const segs: BarSegment[] = [];
     for (const a of activities) {
-      const aStart = parseISO(a.planned_start);
-      const aEnd = parseISO(a.planned_end);
+      const aStart = parseLocalDate(a.planned_start);
+      const aEnd = parseLocalDate(a.planned_end);
       if (aEnd < weekStart || aStart > weekEnd) continue;
       const clippedStart = aStart < weekStart ? weekStart : aStart;
       const clippedEnd = aEnd > weekEnd ? weekEnd : aEnd;
@@ -274,8 +274,8 @@ function WeekRow({
                 const color = getProjectColor(seg.activity.project_id);
                 const status = getActivityStatus(seg.activity);
                 const StatusIcon = status.Icon;
-                const startDate = parseISO(seg.activity.planned_start);
-                const endDate = parseISO(seg.activity.planned_end);
+                const startDate = parseLocalDate(seg.activity.planned_start);
+                const endDate = parseLocalDate(seg.activity.planned_end);
                 const sameDay = isSameDay(startDate, endDate);
                 const durationDays = differenceInCalendarDays(endDate, startDate) + 1;
                 // Estados visuais da barra:
@@ -397,7 +397,7 @@ function WeekRow({
                                 <div>
                                   Iniciada em{' '}
                                   <span className="text-foreground font-medium">
-                                    {format(parseISO(seg.activity.actual_start), "dd/MM/yyyy", { locale: ptBR })}
+                                    {format(parseLocalDate(seg.activity.actual_start), "dd/MM/yyyy", { locale: ptBR })}
                                   </span>
                                 </div>
                               )}
@@ -405,7 +405,7 @@ function WeekRow({
                                 <div>
                                   Concluída em{' '}
                                   <span className="text-foreground font-medium">
-                                    {format(parseISO(seg.activity.actual_end), "dd/MM/yyyy", { locale: ptBR })}
+                                    {format(parseLocalDate(seg.activity.actual_end), "dd/MM/yyyy", { locale: ptBR })}
                                   </span>
                                 </div>
                               )}
