@@ -22,7 +22,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
@@ -65,6 +65,14 @@ interface Props {
   refDate: Date;
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
+  /**
+   * Conjunto de project_ids cuja obra possui ao menos UMA etapa anterior à
+   * semana visível ainda não concluída. Quando uma atividade pertence a um
+   * desses projetos, o tooltip exibe um CTA "Replanejar cronograma".
+   */
+  projectsWithOverduePrevious?: Set<string>;
+  /** Callback para navegar até a edição do cronograma daquela obra. */
+  onReplanSchedule?: (projectId: string) => void;
 }
 
 // Layout tokens (px). Keeping these fixed guarantees lanes never overlap and
@@ -86,7 +94,13 @@ interface BarSegment {
   endsAfter: boolean;
 }
 
-export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Props) {
+export function CalendarMonthGrid({
+  refDate,
+  activities,
+  onActivityClick,
+  projectsWithOverduePrevious,
+  onReplanSchedule,
+}: Props) {
   const monthStart = startOfMonth(refDate);
   const monthEnd = endOfMonth(refDate);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -121,6 +135,8 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
               today={today}
               activities={activities}
               onActivityClick={onActivityClick}
+              projectsWithOverduePrevious={projectsWithOverduePrevious}
+              onReplanSchedule={onReplanSchedule}
             />
           ))}
         </div>
@@ -135,12 +151,16 @@ function WeekRow({
   today,
   activities,
   onActivityClick,
+  projectsWithOverduePrevious,
+  onReplanSchedule,
 }: {
   week: Date[];
   monthStart: Date;
   today: Date;
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
+  projectsWithOverduePrevious?: Set<string>;
+  onReplanSchedule?: (projectId: string) => void;
 }) {
   // Inline expansion: when true, render every lane (no cap) for this row.
   const [expanded, setExpanded] = useState(false);
