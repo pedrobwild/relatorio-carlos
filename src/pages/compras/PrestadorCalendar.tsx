@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { format, parseISO, differenceInDays, addDays, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, CalendarDays, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, User, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
