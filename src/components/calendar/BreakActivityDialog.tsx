@@ -271,6 +271,40 @@ export function BreakActivityDialog({
     setRows(next);
   };
 
+  /**
+   * Gera automaticamente micro-etapas para cobrir 100% dos dias *úteis* da
+   * atividade-mãe em blocos do tamanho informado. Pula fins de semana,
+   * feriados e folgas. O último bloco pode ser menor que `size` para fechar
+   * exatamente no fim da atividade-mãe (sem deixar dias úteis descobertos).
+   *
+   * Substitui as linhas atuais (mantém esta operação como uma "ação" — o
+   * usuário pode editar título/datas em seguida normalmente).
+   */
+  const generateChunks = (size: number) => {
+    if (!ps || !pe) return;
+    const safeSize = Math.max(1, Math.floor(size));
+    // Lista ordenada de dias úteis dentro do range da mãe.
+    const businessDays = eachDayOfInterval({ start: ps, end: pe }).filter(
+      (d) => !isBlockedDay(d),
+    );
+    if (businessDays.length === 0) {
+      setRows([]);
+      return;
+    }
+    const next: Row[] = [];
+    for (let i = 0; i < businessDays.length; i += safeSize) {
+      const chunk = businessDays.slice(i, i + safeSize);
+      const start = chunk[0];
+      const end = chunk[chunk.length - 1];
+      next.push({
+        description: `Parte ${next.length + 1}`,
+        planned_start: start,
+        planned_end: end,
+      });
+    }
+    setRows(next);
+  };
+
   const handleConfirm = async () => {
     if (!parent || !canSubmit) return;
     const payload: SubActivityInput[] = rows.map((r) => ({
