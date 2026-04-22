@@ -103,14 +103,18 @@ export function ActivityDetailDialog({
 }: ActivityDetailDialogProps) {
   const [actualStart, setActualStart] = useState<Date | undefined>();
   const [actualEnd, setActualEnd] = useState<Date | undefined>();
+  const [responsibleUserId, setResponsibleUserId] = useState<string | null>(null);
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [confirmMergeOpen, setConfirmMergeOpen] = useState(false);
+
+  const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
 
   useEffect(() => {
     if (activity) {
       setActualStart(toDate(activity.actual_start));
       setActualEnd(toDate(activity.actual_end));
+      setResponsibleUserId(activity.responsible_user_id ?? null);
     }
   }, [activity]);
 
@@ -122,12 +126,14 @@ export function ActivityDetailDialog({
 
   const dirty =
     fromDate(actualStart) !== (activity.actual_start ?? null) ||
-    fromDate(actualEnd) !== (activity.actual_end ?? null);
+    fromDate(actualEnd) !== (activity.actual_end ?? null) ||
+    (responsibleUserId ?? null) !== (activity.responsible_user_id ?? null);
 
   const handleSave = async () => {
     await onSave(activity.id, {
       actual_start: fromDate(actualStart),
       actual_end: fromDate(actualEnd),
+      responsible_user_id: responsibleUserId,
     });
     setConfirmSaveOpen(false);
     onOpenChange(false);
