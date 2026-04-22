@@ -207,7 +207,7 @@ function WeekRow({
   activities,
   onActivityClick,
   projectsWithOverduePrevious,
-  onReplanSchedule,
+  onRequestReplan,
 }: {
   week: Date[];
   monthStart: Date;
@@ -215,7 +215,8 @@ function WeekRow({
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
   projectsWithOverduePrevious?: Set<string>;
-  onReplanSchedule?: (projectId: string) => void;
+  /** Pede confirmação ao usuário antes de navegar para o cronograma. */
+  onRequestReplan?: (projectId: string, projectName: string) => void;
 }) {
   // Inline expansion: when true, render every lane (no cap) for this row.
   const [expanded, setExpanded] = useState(false);
@@ -536,16 +537,16 @@ function WeekRow({
                               tem alguma atividade anterior à semana visível ainda
                               não concluída (sinal forte de que o cronograma está
                               fora do plano e precisa ser revisto). */}
-                          {projectsWithOverduePrevious?.has(seg.activity.project_id) && onReplanSchedule && (
+                          {projectsWithOverduePrevious?.has(seg.activity.project_id) && onRequestReplan && (
                             <div className="pt-2 border-t">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setReplanTarget({
-                                    projectId: seg.activity.project_id,
-                                    projectName: seg.activity.project_name,
-                                  });
+                                  onRequestReplan(
+                                    seg.activity.project_id,
+                                    seg.activity.project_name,
+                                  );
                                 }}
                                 className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground text-[11px] font-semibold px-2.5 py-1.5 hover:bg-destructive/90 transition-colors shadow-sm"
                                 title="Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar."
