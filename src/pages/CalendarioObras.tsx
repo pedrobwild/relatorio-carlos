@@ -49,7 +49,10 @@ import { CalendarMonthGrid } from '@/components/calendar/CalendarMonthGrid';
 import { CalendarDayAgenda } from '@/components/calendar/CalendarDayAgenda';
 import { CalendarRangeTimeline } from '@/components/calendar/CalendarRangeTimeline';
 
-type ViewMode = 'month' | 'week' | 'day' | 'range';
+type ViewMode = 'month' | 'week-list' | 'week-timeline' | 'day' | 'range';
+
+// Week views (list + timeline) share the same fetch range and navigation.
+const isWeekView = (v: ViewMode) => v === 'week-list' || v === 'week-timeline';
 
 function getActivityStatus(a: WeekActivity, today: Date) {
   if (a.actual_end) return 'completed' as const;
