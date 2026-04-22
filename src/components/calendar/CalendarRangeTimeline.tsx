@@ -237,65 +237,18 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
 }
 
 function ProjectBars({
-  items,
-  rangeStart,
-  rangeEnd,
+  lanes,
   dayWidth,
   colorClass,
   borderClass,
   onActivityClick,
 }: {
-  items: WeekActivity[];
-  rangeStart: Date;
-  rangeEnd: Date;
+  lanes: BarSegment[][];
   dayWidth: number;
   colorClass: string;
   borderClass: string;
   onActivityClick: (a: WeekActivity) => void;
 }) {
-  // Lane assignment so overlapping activities stack vertically.
-  const segments = useMemo(() => {
-    return items
-      .map((a) => {
-        const s = parseISO(a.planned_start);
-        const e = parseISO(a.planned_end);
-        if (e < rangeStart || s > rangeEnd) return null;
-        const cs = s < rangeStart ? rangeStart : s;
-        const ce = e > rangeEnd ? rangeEnd : e;
-        return {
-          activity: a,
-          startOffset: differenceInCalendarDays(cs, rangeStart),
-          span: differenceInCalendarDays(ce, cs) + 1,
-          startsBefore: s < rangeStart,
-          endsAfter: e > rangeEnd,
-        };
-      })
-      .filter(Boolean) as {
-      activity: WeekActivity;
-      startOffset: number;
-      span: number;
-      startsBefore: boolean;
-      endsAfter: boolean;
-    }[];
-  }, [items, rangeStart.getTime(), rangeEnd.getTime()]);
-
-  const lanes: typeof segments[] = [];
-  segments
-    .slice()
-    .sort((a, b) => a.startOffset - b.startOffset)
-    .forEach((seg) => {
-      let placed = false;
-      for (const lane of lanes) {
-        const last = lane[lane.length - 1];
-        if (last.startOffset + last.span <= seg.startOffset) {
-          lane.push(seg);
-          placed = true;
-          break;
-        }
-      }
-      if (!placed) lanes.push([seg]);
-    });
-
   return (
     <div className="absolute inset-0 py-1.5">
       {lanes.map((lane, laneIdx) => (
