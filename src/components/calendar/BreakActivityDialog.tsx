@@ -11,9 +11,16 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { format, parseISO, addDays, differenceInCalendarDays } from 'date-fns';
+import {
+  format,
+  parseISO,
+  addDays,
+  differenceInCalendarDays,
+  isWithinInterval,
+  areIntervalsOverlapping,
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, Split, Trash2, Wand2 } from 'lucide-react';
+import { CalendarIcon, Plus, Split, Trash2, Wand2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +55,23 @@ interface Props {
 
 const fmtDate = (d: Date) => format(d, 'yyyy-MM-dd');
 const labelDate = (d: Date) => format(d, "dd 'de' MMM", { locale: ptBR });
+
+/**
+ * Pré-visualização compacta do intervalo de uma micro-etapa, ex.:
+ *   - mesmo dia       → "Seg, 22/04"
+ *   - mesma semana    → "Seg–Ter (22/04 → 23/04)"
+ *   - cruzando semanas→ "Qua 24/04 → Sex 03/05 · 11 dias"
+ * Mantém português abreviado (Seg, Ter…) para densidade visual.
+ */
+const WEEKDAY_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+function describeRange(start: Date, end: Date): string {
+  const days = differenceInCalendarDays(end, start) + 1;
+  const sw = WEEKDAY_PT[start.getDay()];
+  const ew = WEEKDAY_PT[end.getDay()];
+  if (days === 1) return `${sw}, ${format(start, 'dd/MM')}`;
+  if (days <= 7) return `${sw}–${ew} (${format(start, 'dd/MM')} → ${format(end, 'dd/MM')}) · ${days} dias`;
+  return `${sw} ${format(start, 'dd/MM')} → ${ew} ${format(end, 'dd/MM')} · ${days} dias`;
+}
 
 export function BreakActivityDialog({
   parent,
