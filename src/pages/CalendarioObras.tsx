@@ -11,6 +11,8 @@ import {
   PlayCircle,
   RotateCcw,
   ExternalLink,
+  Filter,
+  X,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +21,13 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
@@ -47,6 +56,7 @@ export default function CalendarioObras() {
   const today = useMemo(() => new Date(), []);
   const [refDate, setRefDate] = useState<Date>(today);
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
+  const [projectFilter, setProjectFilter] = useState<string>('all');
 
   const weekStartDate = startOfWeek(refDate, { weekStartsOn: 1 });
   const weekEndDate = endOfWeek(refDate, { weekStartsOn: 1 });
@@ -55,14 +65,33 @@ export default function CalendarioObras() {
 
   const { byProject, activities, isLoading, updateDates, isUpdating } = useWeekActivities(weekStart, weekEnd);
 
+  // Project options derived from full week dataset (so the filter remains stable)
+  const projectOptions = useMemo(
+    () =>
+      byProject
+        .map((g) => ({ id: g.project_id, name: g.project_name }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    [byProject],
+  );
+
+  const filteredByProject = useMemo(
+    () => (projectFilter === 'all' ? byProject : byProject.filter((g) => g.project_id === projectFilter)),
+    [byProject, projectFilter],
+  );
+
+  const filteredActivities = useMemo(
+    () => filteredByProject.flatMap((g) => g.items),
+    [filteredByProject],
+  );
+
   const counts = useMemo(() => {
-    const c = { total: activities.length, completed: 0, in_progress: 0, overdue: 0, pending: 0 };
-    for (const a of activities) {
+    const c = { total: filteredActivities.length, completed: 0, in_progress: 0, overdue: 0, pending: 0 };
+    for (const a of filteredActivities) {
       const s = getActivityStatus(a, today);
       c[s]++;
     }
     return c;
-  }, [activities, today]);
+  }, [filteredActivities, today]);
 
   const handleStart = async (a: WeekActivity) => {
     await updateDates(a.id, { actual_start: format(today, 'yyyy-MM-dd') });
@@ -144,6 +173,33 @@ export default function CalendarioObras() {
         </CardContent>
       </Card>
 
+      {/* Filter bar */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Filter className="h-3.5 w-3.5" />
+          Filtrar por obra:
+        </div>
+        <Select value={projectFilter} onValueChange={setProjectFilter}>
+          <SelectTrigger className="h-9 w-full sm:w-[280px]">
+            <SelectValue placeholder="Todas as obras" />
+          </SelectTrigger>
+          <SelectContent position="popper" className="z-50 max-h-72">
+            <SelectItem value="all">Todas as obras ({byProject.length})</SelectItem>
+            {projectOptions.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {projectFilter !== 'all' && (
+          <Button variant="ghost" size="sm" onClick={() => setProjectFilter('all')} className="h-9">
+            <X className="h-3.5 w-3.5 mr-1" />
+            Limpar filtro
+          </Button>
+        )}
+      </div>
+
       {/* Body */}
       {isLoading ? (
         <div className="space-y-3">
@@ -151,15 +207,19 @@ export default function CalendarioObras() {
             <Skeleton key={i} className="h-24 w-full" />
           ))}
         </div>
-      ) : byProject.length === 0 ? (
+      ) : filteredByProject.length === 0 ? (
         <EmptyState
           icon={CalendarDays}
-          title="Nenhuma atividade programada"
-          description="Não há atividades planejadas para esta semana em nenhuma obra."
+          title={projectFilter === 'all' ? 'Nenhuma atividade programada' : 'Nenhuma atividade para esta obra'}
+          description={
+            projectFilter === 'all'
+              ? 'Não há atividades planejadas para esta semana em nenhuma obra.'
+              : 'Esta obra não possui atividades planejadas para a semana selecionada.'
+          }
         />
       ) : (
         <div className="space-y-4">
-          {byProject.map((group) => {
+          {filteredByProject.map((group) => {
             const color = getProjectColor(group.project_id);
             return (
               <Card key={group.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
