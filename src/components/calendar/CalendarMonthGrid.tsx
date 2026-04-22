@@ -308,6 +308,8 @@ function WeekRow({
                           isPastDone && 'bg-muted/60 border-muted-foreground/20 text-muted-foreground',
                           // Atrasada: cinza com borda vermelha sutil para chamar atenção
                           isOverdue && 'bg-muted/70 border-destructive/50 text-muted-foreground',
+                          seg.startsBefore && 'rounded-l-none border-l-0',
+                          seg.endsAfter && 'rounded-r-none border-r-0',
                         )}
                       >
                         {isOverdue && (
