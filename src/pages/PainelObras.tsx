@@ -427,12 +427,12 @@ export default function PainelObras() {
         <div className="flex flex-col gap-4 mb-4 pt-4">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">Painel de Obras</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Visão executiva unificada · Clique nas células com fundo cinza para editar
+              <h1 className="text-2xl font-bold tracking-tight">Painel de Obras</h1>
+              <p className="text-sm text-muted-foreground">
+                Visão executiva unificada de todas as obras
               </p>
             </div>
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-2 text-xs flex-wrap">
               <KpiPill label="Total" value={summary.total} />
               <KpiPill label="Em dia" value={summary.emDia} dot="bg-emerald-500" />
               <KpiPill label="Atrasadas" value={summary.atrasadas} dot="bg-destructive" />
