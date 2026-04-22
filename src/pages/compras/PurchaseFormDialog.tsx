@@ -12,6 +12,7 @@ import { useMemo } from 'react';
 import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './types';
 import { PaymentScheduleSection, type PaymentInstallment } from './PaymentScheduleSection';
 import { FornecedorSelector } from './FornecedorSelector';
+import { QuickCreateFornecedor } from './QuickCreateFornecedor';
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
