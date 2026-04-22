@@ -34,8 +34,9 @@ import { ptBR } from 'date-fns/locale';
  * Determina o status visual de uma atividade para exibir no tooltip:
  * - "Concluída": tem actual_end
  * - "Em andamento": tem actual_start mas não actual_end
- * - "Atrasada": planned_end < hoje e ainda não foi concluída
- * - "Planejada": ainda não iniciada
+ * - "Atrasada (não concluída)": planned_end < hoje e não foi concluída
+ * - "Atrasada (não iniciada)": planned_start <= hoje, sem actual_start, e ainda não venceu
+ * - "Planejada": ainda não iniciada e dentro do prazo
  */
 function getActivityStatus(a: WeekActivity): {
   label: string;
@@ -49,9 +50,13 @@ function getActivityStatus(a: WeekActivity): {
   if (a.actual_start) {
     return { label: 'Em andamento', Icon: PlayCircle, className: 'text-blue-600 dark:text-blue-400' };
   }
+  const plannedStart = parseLocalDate(a.planned_start);
   const plannedEnd = parseLocalDate(a.planned_end);
   if (plannedEnd < today) {
-    return { label: 'Atrasada', Icon: AlertTriangle, className: 'text-destructive' };
+    return { label: 'Atrasada — não concluída', Icon: AlertTriangle, className: 'text-destructive' };
+  }
+  if (plannedStart <= today) {
+    return { label: 'Atrasada — não iniciada', Icon: AlertTriangle, className: 'text-destructive' };
   }
   return { label: 'Planejada', Icon: Clock, className: 'text-muted-foreground' };
 }
@@ -287,8 +292,13 @@ function WeekRow({
                 // evitar divergência entre datas-só-data (sem fuso) e Date()
                 // (com fuso do navegador).
                 const isCompleted = !!seg.activity.actual_end;
+                const isStarted = !!seg.activity.actual_start;
                 const isPastEnd = endDate < today;
-                const isOverdue = isPastEnd && !isCompleted;
+                const isOverdueEnd = isPastEnd && !isCompleted;
+                // Não iniciada no prazo: já passou (ou é) a data de início planejada,
+                // não foi marcada como iniciada e ainda não venceu o prazo final.
+                const isOverdueStart = !isStarted && !isCompleted && startDate <= today && !isPastEnd;
+                const isOverdue = isOverdueEnd || isOverdueStart;
                 const isPastDone = isPastEnd && isCompleted;
                 return (
                   <Tooltip key={seg.activity.id}>
@@ -302,12 +312,14 @@ function WeekRow({
                         className={cn(
                           'relative h-full overflow-hidden px-1.5 py-[1px] mx-[1px] text-left rounded-sm border flex flex-col justify-center',
                           'hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40',
-                          // Cor padrão (em andamento / futura)
+                          // Cor padrão (em andamento / futura / atrasada-não-iniciada mantém cor da obra)
                           !isPastEnd && [color.bg, color.border],
                           // Concluída no passado: cinza neutro
                           isPastDone && 'bg-muted/60 border-muted-foreground/20 text-muted-foreground',
-                          // Atrasada: cinza com borda vermelha sutil para chamar atenção
-                          isOverdue && 'bg-muted/70 border-destructive/50 text-muted-foreground',
+                          // Atrasada (passou o fim sem concluir): cinza com borda vermelha
+                          isOverdueEnd && 'bg-muted/70 border-destructive/50 text-muted-foreground',
+                          // Atrasada por não ter iniciado: mantém cor da obra mas adiciona contorno destrutivo
+                          isOverdueStart && 'ring-1 ring-destructive/60 border-destructive/60',
                           seg.startsBefore && 'rounded-l-none border-l-0',
                           seg.endsAfter && 'rounded-r-none border-r-0',
                         )}
@@ -315,7 +327,7 @@ function WeekRow({
                         {isOverdue && (
                           <span
                             className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold leading-none shadow-sm ring-1 ring-background z-10"
-                            title="Atividade atrasada — não concluída"
+                            title={isOverdueStart ? 'Atividade atrasada — não iniciada' : 'Atividade atrasada — não concluída'}
                             aria-label="Atrasada"
                           >
                             !
