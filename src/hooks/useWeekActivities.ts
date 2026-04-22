@@ -83,7 +83,9 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       created_at,
       updated_at,
       parent_activity_id,
-      projects:project_id ( name, client_name, status )
+      responsible_user_id,
+      projects:project_id ( name, client_name, status ),
+      responsible:responsible_user_id ( id, nome )
     `)
     .lte('planned_start', weekEnd)
     .gte('planned_end', weekStart)
@@ -111,6 +113,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     created_at: row.created_at,
     updated_at: row.updated_at,
     parent_activity_id: row.parent_activity_id ?? null,
+    responsible_user_id: row.responsible_user_id ?? null,
+    responsible_name: row.responsible?.nome ?? null,
   }));
 }
 
