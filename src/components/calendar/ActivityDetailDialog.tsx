@@ -484,6 +484,33 @@ export function ActivityDetailDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Confirm Merge (remover todas as micro-etapas) */}
+      <AlertDialog open={confirmMergeOpen} onOpenChange={setConfirmMergeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mesclar micro-etapas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso removerá todas as {subActivities.length} micro-etapa(s) internas e a
+              atividade-mãe voltará a ocupar todo o intervalo planejado. Esta ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMerging}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isMerging}
+              onClick={async () => {
+                if (onMerge && activity) await onMerge(activity.id);
+                setConfirmMergeOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, mesclar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
