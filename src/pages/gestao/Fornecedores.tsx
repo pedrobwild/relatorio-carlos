@@ -567,6 +567,7 @@ export default function Fornecedores() {
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent position="popper" className="z-[200]">
+                    <SelectItem value="rascunho">Rascunho</SelectItem>
                     <SelectItem value="ativo">Ativo</SelectItem>
                     <SelectItem value="inativo">Inativo</SelectItem>
                   </SelectContent>
