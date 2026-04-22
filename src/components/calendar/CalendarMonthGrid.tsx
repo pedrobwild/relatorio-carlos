@@ -39,9 +39,10 @@ interface Props {
 const MAX_BARS_PER_ROW = 3;
 const DAY_NUMBER_AREA = 30;   // top space reserved for the day number chip
 const LANE_HEIGHT = 22;       // 18px bar + ~4px vertical gap
-const LANE_GAP = 3;           // visual gap between lanes
-const FOOTER_AREA = 22;       // bottom space for "+N mais" / Expandir / Recolher
-const ROW_BASE_PADDING = 6;
+const LANE_GAP = 4;           // visual gap between lanes
+const FOOTER_AREA = 24;       // bottom space for "+N mais" / Expandir / Recolher
+const ROW_BASE_PADDING = 8;
+const EXPANDED_BOTTOM_PADDING = 8; // extra breathing room below last lane when expanded
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 interface BarSegment {
