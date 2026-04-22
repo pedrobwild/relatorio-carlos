@@ -57,6 +57,8 @@ import { cn } from '@/lib/utils';
 import { isNonBusinessDay } from '@/lib/businessDays';
 import { useNonWorkingDays } from '@/hooks/useNonWorkingDays';
 import type { WeekActivity, SubActivityInput } from '@/hooks/useWeekActivities';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Row {
   description: string;
@@ -90,6 +92,7 @@ export function BreakActivityDialog({
   const [rows, setRows] = useState<Row[]>([]);
   /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
   const [chunkSize, setChunkSize] = useState<number>(2);
+  const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
   const { isNonWorking: isCustomNonWorking, reasonFor } = useNonWorkingDays(parent?.project_id);
 
   /** True quando o dia é fim de semana, feriado SP/nacional OU custom (folga/feriado obra). */
@@ -316,6 +319,7 @@ export function BreakActivityDialog({
       description: r.description.trim(),
       planned_start: fmtDate(r.planned_start),
       planned_end: fmtDate(r.planned_end),
+      responsible_user_id: r.responsible_user_id,
     }));
     await onConfirm(parent, payload);
     onOpenChange(false);
