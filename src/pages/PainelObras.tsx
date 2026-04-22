@@ -471,9 +471,9 @@ export default function PainelObras() {
           <div className="rounded-lg border border-border overflow-x-auto">
             <Table>
               <TableHeader>
-                {/* Cabeçalho azul escuro com texto branco (per spec) */}
-                <TableRow className="bg-slate-800 hover:bg-slate-800 border-slate-700">
-                  <TableHead className="text-white font-semibold min-w-[160px]">
+                {/* Cabeçalho com fundo escuro e texto claro (per spec) */}
+                <TableRow className="bg-foreground hover:bg-foreground border-foreground/20">
+                  <TableHead className="text-background font-semibold min-w-[160px]">
                     Obra
                   </TableHead>
                   <TableHead className="text-white font-semibold min-w-[120px]">
