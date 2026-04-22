@@ -16,7 +16,7 @@ import {
   ShieldOff,
   ExternalLink,
   ChevronDown,
-  BookOpen,
+  ChevronRight,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
@@ -69,7 +69,7 @@ import {
   type PainelStatus,
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
-import { DailyLogDialog } from '@/components/admin/obras/DailyLogDialog';
+import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 
 // ----- helpers -----
 const ALL = '__all__';
@@ -259,12 +259,16 @@ export default function PainelObras() {
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-  // Modal "Registro do dia"
-  const [dailyLogObraId, setDailyLogObraId] = useState<string | null>(null);
-  const dailyLogObra = useMemo(
-    () => obras.find((o) => o.id === dailyLogObraId) ?? null,
-    [obras, dailyLogObraId],
-  );
+  // Linhas com detalhes expandidos (registro da semana)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set());
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((curr) => {
+      const next = new Set(curr);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const filtered = useMemo(() => {
     let rows = obras;
@@ -521,9 +525,10 @@ export default function PainelObras() {
                   <ObraRow
                     key={o.id}
                     obra={o}
+                    expanded={expandedIds.has(o.id)}
+                    onToggleExpanded={() => toggleExpanded(o.id)}
                     onUpdate={(patch) => updateObra(o.id, patch)}
                     onOpen={() => navigate(`/obra/${o.id}`)}
-                    onOpenDailyLog={() => setDailyLogObraId(o.id)}
                   />
                 ))}
               </TableBody>
@@ -531,16 +536,6 @@ export default function PainelObras() {
           </div>
         )}
 
-        {dailyLogObra && (
-          <DailyLogDialog
-            open={!!dailyLogObraId}
-            onOpenChange={(open) => {
-              if (!open) setDailyLogObraId(null);
-            }}
-            projectId={dailyLogObra.id}
-            projectTitle={`${dailyLogObra.customer_name ?? 'Sem cliente'} — ${dailyLogObra.nome}`}
-          />
-        )}
       </PageContainer>
     </TooltipProvider>
   );
@@ -591,38 +586,60 @@ function KpiPill({
 }
 
 // ----- row component -----
+const PAINEL_COLUMN_COUNT = 12;
+
 interface ObraRowProps {
   obra: PainelObra;
+  expanded: boolean;
+  onToggleExpanded: () => void;
   onUpdate: (patch: PainelObraPatch) => void;
   onOpen: () => void;
-  onOpenDailyLog: () => void;
 }
 
-function ObraRow({ obra, onUpdate, onOpen, onOpenDailyLog }: ObraRowProps) {
+function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRowProps) {
   // Fundo da célula fixa — precisa acompanhar o hover da row.
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
   return (
-    <TableRow className="group hover:bg-accent/40">
+    <>
+    <TableRow className={cn('group hover:bg-accent/40', expanded && 'bg-accent/20')}>
       {/* === Única coluna fixa === */}
       {/* Cliente / Obra (unificada com hierarquia tipográfica) */}
       <TableCell
         className={cn('sticky left-0 z-10 border-r-2 border-border', stickyBase)}
       >
-        <button
-          type="button"
-          onClick={onOpen}
-          className="text-left flex flex-col gap-0.5 w-full group/link"
-          title="Abrir obra"
-        >
-          <span className="flex items-center gap-1.5">
-            <span className="font-semibold text-sm truncate group-hover/link:text-primary transition-colors">
-              {obra.customer_name ?? 'Sem cliente'}
+        <div className="flex items-start gap-1.5">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={onToggleExpanded}
+            aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
+            aria-expanded={expanded}
+            className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-[hsl(var(--primary))] hover:bg-transparent"
+          >
+            <ChevronRight
+              className={cn(
+                'h-4 w-4 transition-transform duration-200',
+                expanded && 'rotate-90',
+              )}
+            />
+          </Button>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="text-left flex flex-col gap-0.5 flex-1 min-w-0 group/link"
+            title="Abrir obra"
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="font-semibold text-sm truncate group-hover/link:text-[hsl(var(--primary))] transition-colors">
+                {obra.customer_name ?? 'Sem cliente'}
+              </span>
+              <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
             </span>
-            <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
-          </span>
-          <span className="text-xs text-muted-foreground truncate">{obra.nome}</span>
-        </button>
+            <span className="text-xs text-muted-foreground truncate">{obra.nome}</span>
+          </button>
+        </div>
       </TableCell>
 
       {/* Status */}
@@ -797,7 +814,7 @@ function ObraRow({ obra, onUpdate, onOpen, onOpenDailyLog }: ObraRowProps) {
         </Tooltip>
       </TableCell>
 
-      {/* Ações: registro do dia + abrir obra */}
+      {/* Ações: abrir obra */}
       <TableCell>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <Tooltip>
@@ -805,21 +822,7 @@ function ObraRow({ obra, onUpdate, onOpen, onOpenDailyLog }: ObraRowProps) {
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 text-muted-foreground hover:text-primary"
-                onClick={onOpenDailyLog}
-                aria-label="Registro do dia"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top">Registro do dia</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                className="h-7 w-7 text-muted-foreground hover:text-[hsl(var(--primary))]"
                 onClick={onOpen}
                 aria-label="Abrir obra"
               >
@@ -831,5 +834,16 @@ function ObraRow({ obra, onUpdate, onOpen, onOpenDailyLog }: ObraRowProps) {
         </div>
       </TableCell>
     </TableRow>
+    {expanded && (
+      <TableRow className="bg-accent/10 hover:bg-accent/10">
+        <TableCell
+          colSpan={PAINEL_COLUMN_COUNT}
+          className="p-0 border-t border-b border-border"
+        >
+          <DailyLogInline projectId={obra.id} />
+        </TableCell>
+      </TableRow>
+    )}
+    </>
   );
 }
