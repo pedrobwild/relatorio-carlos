@@ -72,7 +72,7 @@ const statusBadge: Record<string, { label: string; className: string }> = {
 export default function CalendarioObras() {
   const navigate = useNavigate();
   const today = useMemo(() => new Date(), []);
-  const [view, setView] = useState<ViewMode>('week');
+  const [view, setView] = useState<ViewMode>('week-list');
   const [refDate, setRefDate] = useState<Date>(today);
   const [rangeStartDate, setRangeStartDate] = useState<Date>(today);
   const [rangeEndDate, setRangeEndDate] = useState<Date>(addDays(today, 13));
