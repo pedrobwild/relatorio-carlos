@@ -19,13 +19,13 @@ import {
   format,
   isSameDay,
   isSameMonth,
-  parseISO,
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
 import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
+import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ptBR } from 'date-fns/locale';
@@ -42,15 +42,14 @@ function getActivityStatus(a: WeekActivity): {
   Icon: typeof CheckCircle2;
   className: string;
 } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayLocal();
   if (a.actual_end) {
     return { label: 'Concluída', Icon: CheckCircle2, className: 'text-emerald-600 dark:text-emerald-400' };
   }
   if (a.actual_start) {
     return { label: 'Em andamento', Icon: PlayCircle, className: 'text-blue-600 dark:text-blue-400' };
   }
-  const plannedEnd = parseISO(a.planned_end);
+  const plannedEnd = parseLocalDate(a.planned_end);
   if (plannedEnd < today) {
     return { label: 'Atrasada', Icon: AlertTriangle, className: 'text-destructive' };
   }
@@ -88,7 +87,7 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const today = new Date();
+  const today = getTodayLocal();
 
   const weeks = useMemo(() => {
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
@@ -146,8 +145,8 @@ function WeekRow({
   const segments: BarSegment[] = useMemo(() => {
     const segs: BarSegment[] = [];
     for (const a of activities) {
-      const aStart = parseISO(a.planned_start);
-      const aEnd = parseISO(a.planned_end);
+      const aStart = parseLocalDate(a.planned_start);
+      const aEnd = parseLocalDate(a.planned_end);
       if (aEnd < weekStart || aStart > weekEnd) continue;
       const clippedStart = aStart < weekStart ? weekStart : aStart;
       const clippedEnd = aEnd > weekEnd ? weekEnd : aEnd;
@@ -275,8 +274,8 @@ function WeekRow({
                 const color = getProjectColor(seg.activity.project_id);
                 const status = getActivityStatus(seg.activity);
                 const StatusIcon = status.Icon;
-                const startDate = parseISO(seg.activity.planned_start);
-                const endDate = parseISO(seg.activity.planned_end);
+                const startDate = parseLocalDate(seg.activity.planned_start);
+                const endDate = parseLocalDate(seg.activity.planned_end);
                 const sameDay = isSameDay(startDate, endDate);
                 const durationDays = differenceInCalendarDays(endDate, startDate) + 1;
                 // Estados visuais da barra:
@@ -284,10 +283,11 @@ function WeekRow({
                 // - "overdue": data planejada já passou e não foi concluída → cinza + badge de alerta
                 // - "past": já passou e foi concluída → acinzentada (passado)
                 // - "current/future": mantém cor cheia
-                const todayMidnight = new Date();
-                todayMidnight.setHours(0, 0, 0, 0);
+                // Usa o "hoje" local (mesmo cálculo do restante da grade) para
+                // evitar divergência entre datas-só-data (sem fuso) e Date()
+                // (com fuso do navegador).
                 const isCompleted = !!seg.activity.actual_end;
-                const isPastEnd = endDate < todayMidnight;
+                const isPastEnd = endDate < today;
                 const isOverdue = isPastEnd && !isCompleted;
                 const isPastDone = isPastEnd && isCompleted;
                 return (
@@ -398,7 +398,7 @@ function WeekRow({
                                 <div>
                                   Iniciada em{' '}
                                   <span className="text-foreground font-medium">
-                                    {format(parseISO(seg.activity.actual_start), "dd/MM/yyyy", { locale: ptBR })}
+                                    {format(parseLocalDate(seg.activity.actual_start), "dd/MM/yyyy", { locale: ptBR })}
                                   </span>
                                 </div>
                               )}
@@ -406,7 +406,7 @@ function WeekRow({
                                 <div>
                                   Concluída em{' '}
                                   <span className="text-foreground font-medium">
-                                    {format(parseISO(seg.activity.actual_end), "dd/MM/yyyy", { locale: ptBR })}
+                                    {format(parseLocalDate(seg.activity.actual_end), "dd/MM/yyyy", { locale: ptBR })}
                                   </span>
                                 </div>
                               )}
