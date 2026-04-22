@@ -28,6 +28,16 @@ import { getProjectColor } from '@/lib/taskUtils';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ptBR } from 'date-fns/locale';
 
 /**
@@ -108,12 +118,26 @@ export function CalendarMonthGrid({
 
   const today = getTodayLocal();
 
+  // Confirmação antes de navegar para o cronograma — evita cliques acidentais
+  // dentro do tooltip que poderiam tirar o usuário do contexto do calendário.
+  const [replanTarget, setReplanTarget] = useState<{
+    projectId: string;
+    projectName: string;
+  } | null>(null);
+
   const weeks = useMemo(() => {
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
     const w: Date[][] = [];
     for (let i = 0; i < days.length; i += 7) w.push(days.slice(i, i + 7));
     return w;
   }, [gridStart.getTime(), gridEnd.getTime()]);
+
+  // O WeekRow recebe um handler que apenas abre o dialog de confirmação.
+  // A navegação real só acontece após o usuário confirmar.
+  const handleRequestReplan = onReplanSchedule
+    ? (projectId: string, projectName: string) =>
+        setReplanTarget({ projectId, projectName })
+    : undefined;
 
   return (
     <TooltipProvider delayDuration={150} skipDelayDuration={50}>
@@ -136,11 +160,42 @@ export function CalendarMonthGrid({
               activities={activities}
               onActivityClick={onActivityClick}
               projectsWithOverduePrevious={projectsWithOverduePrevious}
-              onReplanSchedule={onReplanSchedule}
+              onRequestReplan={handleRequestReplan}
             />
           ))}
         </div>
       </div>
+
+      <AlertDialog
+        open={!!replanTarget}
+        onOpenChange={(open) => {
+          if (!open) setReplanTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replanejar cronograma?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você sairá do calendário e abrirá o cronograma da obra
+              {replanTarget ? ` "${replanTarget.projectName}"` : ''} para revisar
+              etapas anteriores ainda não concluídas. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (replanTarget && onReplanSchedule) {
+                  onReplanSchedule(replanTarget.projectId);
+                }
+                setReplanTarget(null);
+              }}
+            >
+              Abrir cronograma
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TooltipProvider>
   );
 }
@@ -152,7 +207,7 @@ function WeekRow({
   activities,
   onActivityClick,
   projectsWithOverduePrevious,
-  onReplanSchedule,
+  onRequestReplan,
 }: {
   week: Date[];
   monthStart: Date;
@@ -160,7 +215,8 @@ function WeekRow({
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
   projectsWithOverduePrevious?: Set<string>;
-  onReplanSchedule?: (projectId: string) => void;
+  /** Pede confirmação ao usuário antes de navegar para o cronograma. */
+  onRequestReplan?: (projectId: string, projectName: string) => void;
 }) {
   // Inline expansion: when true, render every lane (no cap) for this row.
   const [expanded, setExpanded] = useState(false);
@@ -481,13 +537,16 @@ function WeekRow({
                               tem alguma atividade anterior à semana visível ainda
                               não concluída (sinal forte de que o cronograma está
                               fora do plano e precisa ser revisto). */}
-                          {projectsWithOverduePrevious?.has(seg.activity.project_id) && onReplanSchedule && (
+                          {projectsWithOverduePrevious?.has(seg.activity.project_id) && onRequestReplan && (
                             <div className="pt-2 border-t">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onReplanSchedule(seg.activity.project_id);
+                                  onRequestReplan(
+                                    seg.activity.project_id,
+                                    seg.activity.project_name,
+                                  );
                                 }}
                                 className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground text-[11px] font-semibold px-2.5 py-1.5 hover:bg-destructive/90 transition-colors shadow-sm"
                                 title="Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar."
