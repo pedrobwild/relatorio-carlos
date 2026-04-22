@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   addDays,
   addMonths,
@@ -70,6 +70,7 @@ const statusBadge: Record<string, { label: string; className: string }> = {
 
 export default function CalendarioObras() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const today = useMemo(() => new Date(), []);
   const [view, setView] = useState<ViewMode>('week-list');
   const [refDate, setRefDate] = useState<Date>(today);
@@ -79,13 +80,40 @@ export default function CalendarioObras() {
   const [draftRangeStart, setDraftRangeStart] = useState<Date>(today);
   const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
-  const [projectFilter, setProjectFilter] = useState<string>('all');
+  // Filtros persistidos via query string (?obra=, ?etapa=, ?concluidas=1) para que
+  // ao compartilhar a URL ou recarregar a página o mesmo recorte seja restaurado.
+  const [projectFilter, setProjectFilter] = useState<string>(
+    () => searchParams.get('obra') || 'all',
+  );
   // Filtro por etapa do cronograma (project_activities.etapa). 'all' inclui tudo,
   // '__none__' representa atividades sem etapa preenchida.
-  const [etapaFilter, setEtapaFilter] = useState<string>('all');
+  const [etapaFilter, setEtapaFilter] = useState<string>(
+    () => searchParams.get('etapa') || 'all',
+  );
   // Por padrão, ocultamos atividades de obras já concluídas para focar no que está em andamento.
   // O usuário pode reativar via toggle "Incluir concluídas" na barra de filtros.
-  const [includeCompleted, setIncludeCompleted] = useState<boolean>(false);
+  const [includeCompleted, setIncludeCompleted] = useState<boolean>(
+    () => searchParams.get('concluidas') === '1',
+  );
+
+  // Sincroniza os filtros atuais para a query string. Usamos `replace` para não
+  // poluir o histórico de navegação a cada toggle e preservamos quaisquer outros
+  // parâmetros existentes na URL.
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (projectFilter && projectFilter !== 'all') next.set('obra', projectFilter);
+    else next.delete('obra');
+    if (etapaFilter && etapaFilter !== 'all') next.set('etapa', etapaFilter);
+    else next.delete('etapa');
+    if (includeCompleted) next.set('concluidas', '1');
+    else next.delete('concluidas');
+
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectFilter, etapaFilter, includeCompleted]);
+
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
   const draftRangeInvalid = draftRangeStart > draftRangeEnd;
