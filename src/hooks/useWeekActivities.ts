@@ -155,6 +155,8 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
       if (projectId) invalidateActivityQueries(projectId);
       toast.success('Datas atualizadas');
     },
+  });
+
   /**
    * Cria N micro-etapas (sub-atividades) vinculadas a uma atividade-mãe.
    * Estratégia: enfileira inserts via supabase. Em caso de erro, desfaz nada
