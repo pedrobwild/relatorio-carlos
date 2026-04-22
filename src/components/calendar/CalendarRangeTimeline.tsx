@@ -19,7 +19,12 @@ const PROJECT_LABEL_WIDTH = 200;
 interface Props {
   rangeStart: Date;
   rangeEnd: Date;
-  byProject: { project_id: string; project_name: string; items: WeekActivity[] }[];
+  byProject: {
+    project_id: string;
+    project_name: string;
+    client_name?: string | null;
+    items: WeekActivity[];
+  }[];
   onActivityClick: (a: WeekActivity) => void;
 }
 
