@@ -283,10 +283,11 @@ function WeekRow({
                 // - "overdue": data planejada já passou e não foi concluída → cinza + badge de alerta
                 // - "past": já passou e foi concluída → acinzentada (passado)
                 // - "current/future": mantém cor cheia
-                const todayMidnight = new Date();
-                todayMidnight.setHours(0, 0, 0, 0);
+                // Usa o "hoje" local (mesmo cálculo do restante da grade) para
+                // evitar divergência entre datas-só-data (sem fuso) e Date()
+                // (com fuso do navegador).
                 const isCompleted = !!seg.activity.actual_end;
-                const isPastEnd = endDate < todayMidnight;
+                const isPastEnd = endDate < today;
                 const isOverdue = isPastEnd && !isCompleted;
                 const isPastDone = isPastEnd && isCompleted;
                 return (
