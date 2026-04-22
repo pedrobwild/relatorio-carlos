@@ -378,11 +378,17 @@ function ProjectRow({
         {/* Name */}
         <TableCell className="py-2" onClick={(e) => { e.stopPropagation(); onNavigate(); }}>
           <div className="min-w-0">
-            <p className="font-semibold text-[13px] truncate max-w-[280px] group-hover/row:text-primary transition-colors leading-tight">
-              {project.name}
-            </p>
-            {project.customer_name && (
-              <p className="text-[11px] text-muted-foreground/70 truncate mt-0.5 leading-tight">{project.customer_name}</p>
+            {project.customer_name ? (
+              <>
+                <p className="font-bold text-[13px] truncate max-w-[280px] group-hover/row:text-primary transition-colors leading-tight">
+                  {project.customer_name}
+                </p>
+                <p className="text-[11px] text-muted-foreground/70 truncate mt-0.5 leading-tight">{project.name}</p>
+              </>
+            ) : (
+              <p className="font-bold text-[13px] truncate max-w-[280px] group-hover/row:text-primary transition-colors leading-tight">
+                {project.name}
+              </p>
             )}
           </div>
          </TableCell>
