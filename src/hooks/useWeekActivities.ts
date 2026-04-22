@@ -19,12 +19,18 @@ export interface WeekActivity {
   project_id: string;
   project_name: string;
   description: string;
+  detailed_description: string | null;
   etapa: string | null;
   planned_start: string;
   planned_end: string;
   actual_start: string | null;
   actual_end: string | null;
+  baseline_start: string | null;
+  baseline_end: string | null;
+  baseline_saved_at: string | null;
   weight: number;
+  created_at: string;
+  updated_at: string;
 }
 
 interface FetchArgs {
@@ -40,12 +46,18 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       id,
       project_id,
       description,
+      detailed_description,
       etapa,
       planned_start,
       planned_end,
       actual_start,
       actual_end,
+      baseline_start,
+      baseline_end,
+      baseline_saved_at,
       weight,
+      created_at,
+      updated_at,
       projects:project_id ( name )
     `)
     .lte('planned_start', weekEnd)
@@ -59,12 +71,18 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     project_id: row.project_id,
     project_name: row.projects?.name ?? 'Obra sem nome',
     description: row.description,
+    detailed_description: row.detailed_description ?? null,
     etapa: row.etapa,
     planned_start: row.planned_start,
     planned_end: row.planned_end,
     actual_start: row.actual_start,
     actual_end: row.actual_end,
+    baseline_start: row.baseline_start ?? null,
+    baseline_end: row.baseline_end ?? null,
+    baseline_saved_at: row.baseline_saved_at ?? null,
     weight: row.weight,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   }));
 }
 
