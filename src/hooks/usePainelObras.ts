@@ -20,11 +20,28 @@ export type PainelEtapa =
   | 'Emissão RRT'
   | 'Condomínio'
   | 'Planejamento'
-  | 'Mobilização';
+  | 'Mobilização'
+  | 'Execução'
+  | 'Vistoria'
+  | 'Vistoria reprovada'
+  | 'Finalizada';
 
-export type PainelStatus = 'Em dia' | 'Atrasado' | 'Paralisada';
+export type PainelStatus = 'Aguardando' | 'Em dia' | 'Atrasado' | 'Paralisada';
 
 export type PainelRelacionamento = 'Normal' | 'Atrito' | 'Insatisfeito' | 'Crítico';
+
+/**
+ * Prazo é armazenado como text livre (painel_prazo) mas editado via select
+ * controlado no painel. Mantemos a lista aqui como fonte única de verdade.
+ */
+export type PainelPrazo = '55 dias' | '60 dias' | '65 dias' | '75 dias';
+
+export const PAINEL_PRAZO_OPTIONS: PainelPrazo[] = [
+  '55 dias',
+  '60 dias',
+  '65 dias',
+  '75 dias',
+];
 
 /** Linha unificada do Painel: dados da obra + campos operacionais + métricas. */
 export interface PainelObra {
@@ -54,6 +71,11 @@ export interface PainelObra {
   overdue_count: number;
 }
 
+/**
+ * Ordem canônica das etapas (reflete o ciclo de vida de uma obra).
+ * A primeira etapa (`Medição`) espelha o início oficial via cronograma;
+ * a última etapa (`Finalizada`) indica entrega consolidada.
+ */
 export const ETAPA_OPTIONS: PainelEtapa[] = [
   'Medição',
   'Executivo',
@@ -61,9 +83,18 @@ export const ETAPA_OPTIONS: PainelEtapa[] = [
   'Condomínio',
   'Planejamento',
   'Mobilização',
+  'Execução',
+  'Vistoria',
+  'Vistoria reprovada',
+  'Finalizada',
 ];
 
-export const STATUS_OPTIONS: PainelStatus[] = ['Em dia', 'Atrasado', 'Paralisada'];
+export const STATUS_OPTIONS: PainelStatus[] = [
+  'Aguardando',
+  'Em dia',
+  'Atrasado',
+  'Paralisada',
+];
 
 export const RELACIONAMENTO_OPTIONS: PainelRelacionamento[] = [
   'Normal',
@@ -174,7 +205,15 @@ export function usePainelObras() {
             if (p.id !== id) return p;
             const next: Record<string, unknown> = { ...p };
             if ('prazo' in patch) next.painel_prazo = patch.prazo;
-            if ('etapa' in patch) next.painel_etapa = patch.etapa;
+            if ('etapa' in patch) {
+              next.painel_etapa = patch.etapa;
+              // Espelha o trigger do banco: ao mudar a etapa, início da
+              // etapa é "hoje" — a menos que o caller tenha enviado um
+              // valor explícito no mesmo patch.
+              if (!('inicio_etapa' in patch)) {
+                next.painel_inicio_etapa = new Date().toISOString().slice(0, 10);
+              }
+            }
             if ('inicio_etapa' in patch) next.painel_inicio_etapa = patch.inicio_etapa;
             if ('previsao_avanco' in patch) next.painel_previsao_avanco = patch.previsao_avanco;
             if ('status' in patch) next.painel_status = patch.status;
