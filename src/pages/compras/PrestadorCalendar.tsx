@@ -145,6 +145,12 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekOffset(w => w + 1)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
+            {onNew && (
+              <Button size="sm" className="h-7 text-xs ml-2" onClick={onNew}>
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Novo Prestador
+              </Button>
+            )}
           </div>
         </div>
 
