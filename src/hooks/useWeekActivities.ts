@@ -35,6 +35,20 @@ export interface WeekActivity {
   weight: number;
   created_at: string;
   updated_at: string;
+  /**
+   * Se preenchido, indica que esta atividade é uma micro-etapa (sub-atividade)
+   * de outra atividade-mãe. Usado para que apenas Admin/Engineer enxerguem o
+   * detalhamento interno no Calendário, enquanto clientes veem apenas a
+   * atividade-mãe (mais informativa).
+   */
+  parent_activity_id: string | null;
+}
+
+/** Payload para criar uma micro-etapa (sub-atividade) de uma atividade-mãe. */
+export interface SubActivityInput {
+  description: string;
+  planned_start: string; // YYYY-MM-DD
+  planned_end: string;   // YYYY-MM-DD
 }
 
 interface FetchArgs {
@@ -62,6 +76,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       weight,
       created_at,
       updated_at,
+      parent_activity_id,
       projects:project_id ( name, client_name, status )
     `)
     .lte('planned_start', weekEnd)
@@ -89,6 +104,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     weight: row.weight,
     created_at: row.created_at,
     updated_at: row.updated_at,
+    parent_activity_id: row.parent_activity_id ?? null,
   }));
 }
 
