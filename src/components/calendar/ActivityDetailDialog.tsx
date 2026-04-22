@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Clock, FileText, History, Save, Trash2, X } from 'lucide-react';
+import {
+  CalendarIcon,
+  Clock,
+  FileText,
+  History,
+  Layers,
+  Save,
+  Split,
+  Trash2,
+  X,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -38,6 +48,23 @@ interface ActivityDetailDialogProps {
     updates: { actual_start?: string | null; actual_end?: string | null },
   ) => Promise<unknown>;
   isUpdating: boolean;
+  /**
+   * Sub-atividades (micro-etapas) já cadastradas para esta atividade-mãe.
+   * Vem do dataset da página (visível só para Admin/Engineer).
+   */
+  subActivities?: WeekActivity[];
+  /** Se true, exibe a seção de quebra em micro-etapas (Admin/Engineer). */
+  canBreak?: boolean;
+  /** Callback para abrir o diálogo de quebra. */
+  onBreak?: (parent: WeekActivity) => void;
+  /** Callback para mesclar (apagar todas as micro-etapas). */
+  onMerge?: (parentId: string) => Promise<unknown>;
+  /** Callback para remover uma micro-etapa específica. */
+  onRemoveSub?: (subId: string) => Promise<unknown>;
+  /** Callback para abrir/focar uma micro-etapa específica. */
+  onOpenSub?: (sub: WeekActivity) => void;
+  isMerging?: boolean;
+  isRemovingSub?: boolean;
 }
 
 const toDate = (s: string | null | undefined) => (s ? parseISO(s) : undefined);
