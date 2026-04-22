@@ -12,9 +12,10 @@ import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
 import { EmptyState } from '@/components/ui/states';
 
-const MIN_DAY_WIDTH = 28; // px
-const ROW_BASE_PADDING = 12; // py-1.5 * 2 dentro do container
-const LANE_HEIGHT = 28;      // 24px da barra (h-6) + 4px de gap (mb-1)
+const MIN_DAY_WIDTH = 28;     // px
+const ROW_BASE_PADDING = 12;  // py-1.5 * 2 dentro do container
+const LANE_HEIGHT = 28;       // 24px da barra (h-6) + 4px de gap (mb-1)
+const MIN_LANES = 1;          // mínimo de faixas mesmo quando a obra não tem atividades no range
 const PROJECT_LABEL_WIDTH = 200;
 
 /**
