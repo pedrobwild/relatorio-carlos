@@ -46,6 +46,7 @@ export default function CalendarioObras() {
   const navigate = useNavigate();
   const today = useMemo(() => new Date(), []);
   const [refDate, setRefDate] = useState<Date>(today);
+  const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
 
   const weekStartDate = startOfWeek(refDate, { weekStartsOn: 1 });
   const weekEndDate = endOfWeek(refDate, { weekStartsOn: 1 });
