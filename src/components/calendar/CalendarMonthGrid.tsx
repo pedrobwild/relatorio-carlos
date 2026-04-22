@@ -306,18 +306,20 @@ function WeekRow({
                     </TooltipTrigger>
                     <TooltipContent
                       side="top"
-                      align="start"
-                      sideOffset={6}
-                      className="max-w-[320px] p-0 overflow-hidden"
+                      align="center"
+                      sideOffset={8}
+                      collisionPadding={12}
+                      avoidCollisions
+                      className="w-[min(360px,calc(100vw-24px))] max-w-[360px] p-0 overflow-hidden shadow-xl"
                     >
                       <div className="flex flex-col">
                         {/* Header colorido com a cor da obra */}
                         <div className={cn('px-3 py-2 border-b', color.bg, color.border)}>
-                          <div className="text-[11px] font-semibold leading-tight">
+                          <div className="text-[11px] font-semibold leading-tight break-words">
                             {seg.activity.project_name}
                           </div>
                           {seg.activity.client_name && (
-                            <div className="text-[10px] opacity-80 leading-tight mt-0.5">
+                            <div className="text-[10px] opacity-80 leading-tight mt-0.5 break-words">
                               {seg.activity.client_name}
                             </div>
                           )}
@@ -325,19 +327,19 @@ function WeekRow({
 
                         {/* Corpo */}
                         <div className="px-3 py-2 space-y-2 bg-popover text-popover-foreground">
-                          <div className="text-xs font-medium leading-snug">
+                          <div className="text-xs font-medium leading-snug break-words">
                             {seg.activity.description}
                           </div>
 
                           {seg.activity.etapa && (
-                            <div className="text-[10.5px] text-muted-foreground">
+                            <div className="text-[10.5px] text-muted-foreground break-words">
                               Etapa: <span className="font-medium text-foreground">{seg.activity.etapa}</span>
                             </div>
                           )}
 
                           <div className="flex items-start gap-1.5 text-[10.5px] text-muted-foreground">
                             <CalendarDays className="h-3 w-3 mt-0.5 shrink-0" />
-                            <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col gap-0.5 min-w-0">
                               {sameDay ? (
                                 <span>
                                   <span className="text-foreground font-medium">
@@ -385,23 +387,24 @@ function WeekRow({
                             </div>
                           )}
 
-                          <div className="flex items-center justify-between gap-2 pt-1">
+                          {/* Status + Responsável em linhas separadas para não truncar */}
+                          <div className="flex flex-col gap-1.5 pt-1.5 border-t">
                             <div className={cn('flex items-center gap-1.5 text-[10.5px] font-medium', status.className)}>
-                              <StatusIcon className="h-3 w-3" />
+                              <StatusIcon className="h-3 w-3 shrink-0" />
                               <span>{status.label}</span>
                             </div>
-                            {seg.activity.responsible_name ? (
-                              <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
-                                <UserRound className="h-3 w-3" />
-                                <span className="truncate max-w-[140px]" title={seg.activity.responsible_name}>
+                            <div className="flex items-start gap-1.5 text-[10.5px]">
+                              <UserRound className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground" />
+                              {seg.activity.responsible_name ? (
+                                <span className="text-foreground font-medium break-words leading-snug">
                                   {seg.activity.responsible_name}
                                 </span>
-                              </div>
-                            ) : (
-                              <span className="text-[10px] italic text-muted-foreground/70">
-                                Sem responsável
-                              </span>
-                            )}
+                              ) : (
+                                <span className="italic text-muted-foreground/70">
+                                  Sem responsável
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
