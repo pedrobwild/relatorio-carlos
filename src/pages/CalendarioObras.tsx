@@ -77,13 +77,39 @@ export default function CalendarioObras() {
   // Apenas Admin e Engenheiro podem criar/ver micro-etapas internas no Calendário.
   const canBreak = isAdmin || hasRole('engineer');
   const today = useMemo(() => new Date(), []);
-  const [view, setView] = useState<ViewMode>('week-list');
-  const [refDate, setRefDate] = useState<Date>(today);
-  const [rangeStartDate, setRangeStartDate] = useState<Date>(today);
-  const [rangeEndDate, setRangeEndDate] = useState<Date>(addDays(today, 13));
+
+  // ── Restauração da visualização e datas a partir da query string ────────
+  // Mantemos `view`, `date` (refDate), `from`/`to` (range) na URL para que ao
+  // recarregar ou compartilhar o link, o usuário caia exatamente no mesmo
+  // recorte temporal que estava vendo.
+  const parseDateParam = (raw: string | null, fallback: Date): Date => {
+    if (!raw) return fallback;
+    // Aceita YYYY-MM-DD; date-fns parseISO trata corretamente.
+    try {
+      const d = parseISO(raw);
+      if (isNaN(d.getTime())) return fallback;
+      return d;
+    } catch {
+      return fallback;
+    }
+  };
+  const isViewMode = (v: string | null): v is ViewMode =>
+    v === 'month' || v === 'week-list' || v === 'week-timeline' || v === 'day' || v === 'range';
+
+  const initialView: ViewMode = isViewMode(searchParams.get('view'))
+    ? (searchParams.get('view') as ViewMode)
+    : 'week-list';
+  const initialRefDate = parseDateParam(searchParams.get('date'), today);
+  const initialRangeStart = parseDateParam(searchParams.get('from'), today);
+  const initialRangeEnd = parseDateParam(searchParams.get('to'), addDays(today, 13));
+
+  const [view, setView] = useState<ViewMode>(initialView);
+  const [refDate, setRefDate] = useState<Date>(initialRefDate);
+  const [rangeStartDate, setRangeStartDate] = useState<Date>(initialRangeStart);
+  const [rangeEndDate, setRangeEndDate] = useState<Date>(initialRangeEnd);
   // Draft (unapplied) selection for the custom range pickers.
-  const [draftRangeStart, setDraftRangeStart] = useState<Date>(today);
-  const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
+  const [draftRangeStart, setDraftRangeStart] = useState<Date>(initialRangeStart);
+  const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(initialRangeEnd);
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [breakingActivity, setBreakingActivity] = useState<WeekActivity | null>(null);
   // Filtros persistidos via query string (?obra=, ?etapa=, ?concluidas=1) para que
@@ -102,9 +128,13 @@ export default function CalendarioObras() {
     () => searchParams.get('concluidas') === '1',
   );
 
-  // Sincroniza os filtros atuais para a query string. Usamos `replace` para não
-  // poluir o histórico de navegação a cada toggle e preservamos quaisquer outros
-  // parâmetros existentes na URL.
+  // Sincroniza os filtros + visualização atuais para a query string. Usamos
+  // `replace` para não poluir o histórico de navegação a cada toggle e
+  // preservamos quaisquer outros parâmetros existentes na URL. Persistimos:
+  //   - obra / etapa / concluidas → filtros do recorte
+  //   - view                      → modo de visualização ativo
+  //   - date                      → data de referência (mês/semana/dia)
+  //   - from / to                 → período personalizado (modo "range")
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     if (projectFilter && projectFilter !== 'all') next.set('obra', projectFilter);
@@ -114,11 +144,39 @@ export default function CalendarioObras() {
     if (includeCompleted) next.set('concluidas', '1');
     else next.delete('concluidas');
 
+    // Visualização: só persiste se diferente do default ('week-list') para manter URLs limpas.
+    if (view && view !== 'week-list') next.set('view', view);
+    else next.delete('view');
+
+    // Datas: only persist when the user actually navigated away from "today"
+    // / default range. Comparamos pelo formato YYYY-MM-DD para evitar ruído
+    // de horários (today guardado no estado é um Date com hora atual).
+    const todayStr = format(today, 'yyyy-MM-dd');
+    if (view === 'range') {
+      next.delete('date');
+      const fromStr = format(rangeStartDate, 'yyyy-MM-dd');
+      const toStr = format(rangeEndDate, 'yyyy-MM-dd');
+      const defaultTo = format(addDays(today, 13), 'yyyy-MM-dd');
+      if (fromStr !== todayStr || toStr !== defaultTo) {
+        next.set('from', fromStr);
+        next.set('to', toStr);
+      } else {
+        next.delete('from');
+        next.delete('to');
+      }
+    } else {
+      next.delete('from');
+      next.delete('to');
+      const dateStr = format(refDate, 'yyyy-MM-dd');
+      if (dateStr !== todayStr) next.set('date', dateStr);
+      else next.delete('date');
+    }
+
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectFilter, etapaFilter, includeCompleted]);
+  }, [projectFilter, etapaFilter, includeCompleted, view, refDate, rangeStartDate, rangeEndDate]);
 
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
@@ -174,10 +232,35 @@ export default function CalendarioObras() {
 
   // 1) Aplica o filtro "ocultar obras concluídas" antes de qualquer outra lógica:
   //    obras com project_status === 'completed' só aparecem quando o toggle estiver ativo.
-  const visibleByProject = useMemo(
+  const visibleByProjectRaw = useMemo(
     () => (includeCompleted ? byProject : byProject.filter((g) => g.project_status !== 'completed')),
     [byProject, includeCompleted],
   );
+
+  // 1.b) Recorte hierárquico das micro-etapas:
+  //   - Admin/Engineer enxergam o detalhamento interno: quando uma atividade-mãe
+  //     possui pelo menos um child visível neste recorte, ocultamos a mãe e
+  //     mostramos apenas os children (que são mais granulares).
+  //   - Demais papéis (defesa em profundidade — esta página é restrita a staff)
+  //     veem apenas as mães e nunca os children, preservando a visão informativa
+  //     compartilhada com o cliente.
+  const visibleByProject = useMemo(() => {
+    return visibleByProjectRaw.map((g) => {
+      if (canBreak) {
+        const parentsWithVisibleChildren = new Set<string>();
+        for (const a of g.items) {
+          if (a.parent_activity_id) parentsWithVisibleChildren.add(a.parent_activity_id);
+        }
+        return {
+          ...g,
+          items: g.items.filter(
+            (a) => !(a.parent_activity_id === null && parentsWithVisibleChildren.has(a.id)),
+          ),
+        };
+      }
+      return { ...g, items: g.items.filter((a) => a.parent_activity_id === null) };
+    });
+  }, [visibleByProjectRaw, canBreak]);
 
   // Quantidade de obras concluídas escondidas (para feedback no UI)
   const hiddenCompletedCount = useMemo(
