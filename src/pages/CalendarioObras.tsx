@@ -165,13 +165,42 @@ export default function CalendarioObras() {
     [visibleByProject],
   );
 
-  const filteredByProject = useMemo(
-    () =>
+  // Etapas disponíveis (derivadas do dataset já visível, sem aplicar filtro de etapa
+  // para que o usuário sempre enxergue todas as opções existentes no período).
+  // Inclui um sentinela '__none__' quando há atividades sem etapa preenchida.
+  const etapaOptions = useMemo(() => {
+    const set = new Set<string>();
+    let hasEmpty = false;
+    for (const g of visibleByProject) {
+      for (const a of g.items) {
+        const e = (a.etapa ?? '').trim();
+        if (e) set.add(e);
+        else hasEmpty = true;
+      }
+    }
+    const list = Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    return { list, hasEmpty };
+  }, [visibleByProject]);
+
+  const filteredByProject = useMemo(() => {
+    // 1) Filtro de obra
+    const byProj =
       projectFilter === 'all'
         ? visibleByProject
-        : visibleByProject.filter((g) => g.project_id === projectFilter),
-    [visibleByProject, projectFilter],
-  );
+        : visibleByProject.filter((g) => g.project_id === projectFilter);
+    // 2) Filtro de etapa: aplicado por atividade; remove grupos vazios.
+    if (etapaFilter === 'all') return byProj;
+    return byProj
+      .map((g) => ({
+        ...g,
+        items: g.items.filter((a) => {
+          const e = (a.etapa ?? '').trim();
+          if (etapaFilter === '__none__') return e === '';
+          return e === etapaFilter;
+        }),
+      }))
+      .filter((g) => g.items.length > 0);
+  }, [visibleByProject, projectFilter, etapaFilter]);
 
   const filteredActivities = useMemo(
     () => filteredByProject.flatMap((g) => g.items),
