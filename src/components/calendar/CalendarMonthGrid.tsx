@@ -23,10 +23,39 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ptBR } from 'date-fns/locale';
+
+/**
+ * Determina o status visual de uma atividade para exibir no tooltip:
+ * - "Concluída": tem actual_end
+ * - "Em andamento": tem actual_start mas não actual_end
+ * - "Atrasada": planned_end < hoje e ainda não foi concluída
+ * - "Planejada": ainda não iniciada
+ */
+function getActivityStatus(a: WeekActivity): {
+  label: string;
+  Icon: typeof CheckCircle2;
+  className: string;
+} {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (a.actual_end) {
+    return { label: 'Concluída', Icon: CheckCircle2, className: 'text-emerald-600 dark:text-emerald-400' };
+  }
+  if (a.actual_start) {
+    return { label: 'Em andamento', Icon: PlayCircle, className: 'text-blue-600 dark:text-blue-400' };
+  }
+  const plannedEnd = parseISO(a.planned_end);
+  if (plannedEnd < today) {
+    return { label: 'Atrasada', Icon: AlertTriangle, className: 'text-destructive' };
+  }
+  return { label: 'Planejada', Icon: Clock, className: 'text-muted-foreground' };
+}
 
 interface Props {
   refDate: Date;
@@ -69,28 +98,30 @@ export function CalendarMonthGrid({ refDate, activities, onActivityClick }: Prop
   }, [gridStart.getTime(), gridEnd.getTime()]);
 
   return (
-    <div className="rounded-lg border overflow-hidden bg-card">
-      <div className="grid grid-cols-7 bg-muted/40 border-b text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
-        {WEEKDAY_LABELS.map((d) => (
-          <div key={d} className="px-2 py-2 text-center">
-            {d}
-          </div>
-        ))}
-      </div>
+    <TooltipProvider delayDuration={150} skipDelayDuration={50}>
+      <div className="rounded-lg border overflow-hidden bg-card">
+        <div className="grid grid-cols-7 bg-muted/40 border-b text-[11px] uppercase tracking-wide font-medium text-muted-foreground">
+          {WEEKDAY_LABELS.map((d) => (
+            <div key={d} className="px-2 py-2 text-center">
+              {d}
+            </div>
+          ))}
+        </div>
 
-      <div className="divide-y">
-        {weeks.map((week, wi) => (
-          <WeekRow
-            key={wi}
-            week={week}
-            monthStart={monthStart}
-            today={today}
-            activities={activities}
-            onActivityClick={onActivityClick}
-          />
-        ))}
+        <div className="divide-y">
+          {weeks.map((week, wi) => (
+            <WeekRow
+              key={wi}
+              week={week}
+              monthStart={monthStart}
+              today={today}
+              activities={activities}
+              onActivityClick={onActivityClick}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
@@ -242,34 +273,126 @@ function WeekRow({
             <div className="grid grid-cols-7 h-full">
               {lane.map((seg) => {
                 const color = getProjectColor(seg.activity.project_id);
+                const status = getActivityStatus(seg.activity);
+                const StatusIcon = status.Icon;
+                const startDate = parseISO(seg.activity.planned_start);
+                const endDate = parseISO(seg.activity.planned_end);
+                const sameDay = isSameDay(startDate, endDate);
+                const durationDays = differenceInCalendarDays(endDate, startDate) + 1;
                 return (
-                  <button
-                    key={seg.activity.id}
-                    type="button"
-                    onClick={() => onActivityClick(seg.activity)}
-                    title={
-                      `${seg.activity.project_name}` +
-                      (seg.activity.client_name ? ` · ${seg.activity.client_name}` : '') +
-                      ` — ${seg.activity.description}`
-                    }
-                    style={{
-                      gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
-                    }}
-                    className={cn(
-                      'h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
-                      'hover:ring-2 hover:ring-primary/40 transition-shadow',
-                      color.bg,
-                      color.border,
-                      seg.startsBefore && 'rounded-l-none border-l-0',
-                      seg.endsAfter && 'rounded-r-none border-r-0',
-                    )}
-                  >
-                    <span className="font-medium">{seg.activity.project_name}</span>
-                    {seg.activity.client_name && (
-                      <span className="opacity-70"> · {seg.activity.client_name}</span>
-                    )}
-                    <span className="opacity-70"> · {seg.activity.description}</span>
-                  </button>
+                  <Tooltip key={seg.activity.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => onActivityClick(seg.activity)}
+                        style={{
+                          gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
+                        }}
+                        className={cn(
+                          'h-full truncate text-[10.5px] leading-[18px] px-1.5 mx-[1px] text-left rounded-sm border',
+                          'hover:ring-2 hover:ring-primary/40 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/40',
+                          color.bg,
+                          color.border,
+                          seg.startsBefore && 'rounded-l-none border-l-0',
+                          seg.endsAfter && 'rounded-r-none border-r-0',
+                        )}
+                      >
+                        <span className="font-medium">{seg.activity.project_name}</span>
+                        {seg.activity.client_name && (
+                          <span className="opacity-70"> · {seg.activity.client_name}</span>
+                        )}
+                        <span className="opacity-70"> · {seg.activity.description}</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      align="start"
+                      sideOffset={6}
+                      className="max-w-[320px] p-0 overflow-hidden"
+                    >
+                      <div className="flex flex-col">
+                        {/* Header colorido com a cor da obra */}
+                        <div className={cn('px-3 py-2 border-b', color.bg, color.border)}>
+                          <div className="text-[11px] font-semibold leading-tight">
+                            {seg.activity.project_name}
+                          </div>
+                          {seg.activity.client_name && (
+                            <div className="text-[10px] opacity-80 leading-tight mt-0.5">
+                              {seg.activity.client_name}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Corpo */}
+                        <div className="px-3 py-2 space-y-2 bg-popover text-popover-foreground">
+                          <div className="text-xs font-medium leading-snug">
+                            {seg.activity.description}
+                          </div>
+
+                          {seg.activity.etapa && (
+                            <div className="text-[10.5px] text-muted-foreground">
+                              Etapa: <span className="font-medium text-foreground">{seg.activity.etapa}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-start gap-1.5 text-[10.5px] text-muted-foreground">
+                            <CalendarDays className="h-3 w-3 mt-0.5 shrink-0" />
+                            <div className="flex flex-col gap-0.5">
+                              {sameDay ? (
+                                <span>
+                                  <span className="text-foreground font-medium">
+                                    {format(startDate, "dd 'de' MMM", { locale: ptBR })}
+                                  </span>{' '}
+                                  · 1 dia
+                                </span>
+                              ) : (
+                                <>
+                                  <span>
+                                    <span className="text-foreground font-medium">
+                                      {format(startDate, "dd 'de' MMM", { locale: ptBR })}
+                                    </span>
+                                    {' → '}
+                                    <span className="text-foreground font-medium">
+                                      {format(endDate, "dd 'de' MMM", { locale: ptBR })}
+                                    </span>
+                                  </span>
+                                  <span className="opacity-80">
+                                    {durationDays} {durationDays === 1 ? 'dia' : 'dias'}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {(seg.activity.actual_start || seg.activity.actual_end) && (
+                            <div className="text-[10.5px] text-muted-foreground border-t pt-1.5">
+                              {seg.activity.actual_start && (
+                                <div>
+                                  Iniciada em{' '}
+                                  <span className="text-foreground font-medium">
+                                    {format(parseISO(seg.activity.actual_start), "dd/MM/yyyy", { locale: ptBR })}
+                                  </span>
+                                </div>
+                              )}
+                              {seg.activity.actual_end && (
+                                <div>
+                                  Concluída em{' '}
+                                  <span className="text-foreground font-medium">
+                                    {format(parseISO(seg.activity.actual_end), "dd/MM/yyyy", { locale: ptBR })}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className={cn('flex items-center gap-1.5 text-[10.5px] font-medium', status.className)}>
+                            <StatusIcon className="h-3 w-3" />
+                            <span>{status.label}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 );
               })}
             </div>
