@@ -1,11 +1,9 @@
 import { useLocation } from "react-router-dom";
 import {
-  Building2,
   Plus,
   FolderOpen,
   CalendarDays,
   Settings,
-  LayoutDashboard,
   Truck,
   Receipt,
   AlertTriangle,
@@ -51,14 +49,10 @@ export function GestaoSidebar() {
       label: "Obras",
       items: [
         {
-          label: "Portfólio",
-          icon: LayoutDashboard,
-          path: "/gestao",
-        },
-        {
           label: "Painel de Obras",
           icon: Table2,
           path: "/gestao/painel-obras",
+          matchPaths: ["/gestao/obra/"],
         },
         {
           label: "Nova Obra",
@@ -128,8 +122,12 @@ export function GestaoSidebar() {
 
   const isActive = (item: NavItem) => {
     const currentPath = location.pathname;
-    if (item.path === "/gestao") {
-      return currentPath === "/gestao" || currentPath.startsWith("/gestao/obra/");
+    if (item.path === "/gestao/painel-obras") {
+      return (
+        currentPath === "/gestao/painel-obras" ||
+        currentPath === "/gestao" ||
+        currentPath.startsWith("/gestao/obra/")
+      );
     }
     if (currentPath === item.path) return true;
     if (item.matchPaths?.some((p) => currentPath.startsWith(p))) return true;
