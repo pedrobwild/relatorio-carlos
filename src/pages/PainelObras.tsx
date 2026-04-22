@@ -663,32 +663,28 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
   return (
     <TableRow className="group hover:bg-accent/40">
       {/* === FIXAS === */}
-      {/* Obra */}
+      {/* Cliente / Obra (unificada com hierarquia tipográfica) */}
       <TableCell
-        className={cn('font-semibold sticky left-0 z-10 border-r border-border', stickyBase)}
+        className={cn('sticky left-0 z-10 border-r border-border', stickyBase)}
       >
         <button
           type="button"
           onClick={onOpen}
-          className="text-left hover:text-primary transition-colors flex items-center gap-1.5 w-full"
+          className="text-left flex flex-col gap-0.5 w-full group/link"
           title="Abrir obra"
         >
-          <span className="truncate">{obra.nome}</span>
-          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+          <span className="flex items-center gap-1.5">
+            <span className="font-semibold text-sm truncate group-hover/link:text-primary transition-colors">
+              {obra.customer_name ?? 'Sem cliente'}
+            </span>
+            <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+          </span>
+          <span className="text-xs text-muted-foreground truncate">{obra.nome}</span>
         </button>
       </TableCell>
 
-      {/* Cliente */}
-      <TableCell
-        className={cn('font-medium sticky left-[200px] z-10 border-r border-border', stickyBase)}
-      >
-        <span className="truncate block">
-          {obra.customer_name ?? <span className="italic text-muted-foreground">—</span>}
-        </span>
-      </TableCell>
-
       {/* Status */}
-      <TableCell className={cn('sticky left-[360px] z-10 border-r border-border', stickyBase)}>
+      <TableCell className={cn('sticky left-[260px] z-10 border-r border-border', stickyBase)}>
         <Select
           value={obra.status ?? NONE}
           onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
