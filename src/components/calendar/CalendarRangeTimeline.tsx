@@ -13,8 +13,53 @@ import type { WeekActivity } from '@/hooks/useWeekActivities';
 import { EmptyState } from '@/components/ui/states';
 
 const MIN_DAY_WIDTH = 28; // px
-const ROW_HEIGHT = 36; // px
+const ROW_BASE_PADDING = 12; // py-1.5 * 2 dentro do container
+const LANE_HEIGHT = 28;      // 24px da barra (h-6) + 4px de gap (mb-1)
 const PROJECT_LABEL_WIDTH = 200;
+
+/**
+ * Pré-calcula quantas faixas (lanes) são necessárias para renderizar todas as
+ * atividades de uma obra sem sobreposição dentro do range visível. Usado para
+ * dimensionar a altura da linha ANTES da renderização, garantindo que TODAS
+ * as obras caibam perfeitamente na visão da semana/período sem cortes.
+ */
+function computeLaneCount(
+  items: WeekActivity[],
+  rangeStart: Date,
+  rangeEnd: Date,
+): number {
+  const segs = items
+    .map((a) => {
+      const s = parseISO(a.planned_start);
+      const e = parseISO(a.planned_end);
+      if (e < rangeStart || s > rangeEnd) return null;
+      const cs = s < rangeStart ? rangeStart : s;
+      const ce = e > rangeEnd ? rangeEnd : e;
+      return {
+        startOffset: differenceInCalendarDays(cs, rangeStart),
+        span: differenceInCalendarDays(ce, cs) + 1,
+      };
+    })
+    .filter(Boolean) as { startOffset: number; span: number }[];
+
+  const lanes: { startOffset: number; span: number }[][] = [];
+  segs
+    .slice()
+    .sort((a, b) => a.startOffset - b.startOffset)
+    .forEach((seg) => {
+      let placed = false;
+      for (const lane of lanes) {
+        const last = lane[lane.length - 1];
+        if (last.startOffset + last.span <= seg.startOffset) {
+          lane.push(seg);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) lanes.push([seg]);
+    });
+  return Math.max(1, lanes.length);
+}
 
 interface Props {
   rangeStart: Date;
@@ -100,6 +145,11 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
           <div>
             {byProject.map((g) => {
               const color = getProjectColor(g.project_id);
+              // Altura dinâmica: a linha da obra cresce conforme o número de
+              // faixas (lanes) necessárias para acomodar todas as atividades
+              // sem sobreposição. Garante que TODAS as obras caibam na visão.
+              const laneCount = computeLaneCount(g.items, rangeStart, rangeEnd);
+              const rowHeight = ROW_BASE_PADDING + laneCount * LANE_HEIGHT;
               return (
                 <div key={g.project_id} className="flex border-b last:border-b-0 hover:bg-muted/20">
                   <div
@@ -127,7 +177,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                     className="relative"
                     style={{
                       width: totalWidth,
-                      minHeight: Math.max(ROW_HEIGHT, g.items.length * 6 + ROW_HEIGHT),
+                      minHeight: rowHeight,
                     }}
                   >
                     {/* Day grid lines */}
