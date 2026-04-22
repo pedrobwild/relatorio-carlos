@@ -84,7 +84,12 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       updated_at,
       parent_activity_id,
       responsible_user_id,
-      projects:project_id ( name, client_name, status ),
+      projects:project_id (
+        name,
+        client_name,
+        status,
+        project_customers ( customer_name )
+      ),
       responsible:responsible_user_id ( id, nome )
     `)
     .lte('planned_start', weekEnd)
@@ -97,7 +102,12 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     id: row.id,
     project_id: row.project_id,
     project_name: row.projects?.name ?? 'Obra sem nome',
-    client_name: row.projects?.client_name ?? null,
+    // Preferimos o nome real do contratante (project_customers.customer_name)
+    // pois projects.client_name geralmente vem vazio no banco atual.
+    client_name:
+      row.projects?.project_customers?.[0]?.customer_name ??
+      row.projects?.client_name ??
+      null,
     project_status: row.projects?.status ?? null,
     description: row.description,
     detailed_description: row.detailed_description ?? null,
