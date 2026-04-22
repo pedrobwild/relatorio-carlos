@@ -450,8 +450,15 @@ export default function CalendarioObras() {
           byProject={filteredByProject}
           onActivityClick={setSelectedActivity}
         />
+      ) : view === 'week-timeline' ? (
+        <CalendarRangeTimeline
+          rangeStart={viewStart}
+          rangeEnd={viewEnd}
+          byProject={filteredByProject}
+          onActivityClick={setSelectedActivity}
+        />
       ) : (
-        // Week view (original list)
+        // Week list view (default)
         <WeekListView
           filteredByProject={filteredByProject}
           today={today}
