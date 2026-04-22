@@ -39,9 +39,10 @@ interface Props {
 const MAX_BARS_PER_ROW = 3;
 const DAY_NUMBER_AREA = 30;   // top space reserved for the day number chip
 const LANE_HEIGHT = 22;       // 18px bar + ~4px vertical gap
-const LANE_GAP = 3;           // visual gap between lanes
-const FOOTER_AREA = 22;       // bottom space for "+N mais" / Expandir / Recolher
-const ROW_BASE_PADDING = 6;
+const LANE_GAP = 4;           // visual gap between lanes
+const FOOTER_AREA = 24;       // bottom space for "+N mais" / Expandir / Recolher
+const ROW_BASE_PADDING = 8;
+const EXPANDED_BOTTOM_PADDING = 8; // extra breathing room below last lane when expanded
 const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 interface BarSegment {
@@ -181,12 +182,15 @@ function WeekRow({
   const lanesArea = visibleLanes.length * LANE_HEIGHT + Math.max(0, visibleLanes.length - 1) * LANE_GAP;
   // The week row must always reserve enough vertical space to render every
   // visible lane + day number + optional "+N mais" strip + optional footer
-  // toggle, so bars never spill into the next week row.
+  // toggle, so bars never spill into the next week row. When expanded, add
+  // extra bottom padding so the last bar never visually collides with the
+  // "Recolher" toggle anchored to the row's bottom-right.
   const minHeight =
     DAY_NUMBER_AREA +
     lanesArea +
     moreStripHeight +
     (showsFooter ? FOOTER_AREA : 0) +
+    (expanded ? EXPANDED_BOTTOM_PADDING : 0) +
     ROW_BASE_PADDING;
 
   // Default minimum so empty weeks don't collapse visually. When expanded the
