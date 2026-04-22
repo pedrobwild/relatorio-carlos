@@ -158,7 +158,8 @@ const App = () => (
             <Route path="/verificar/:hash" element={withSuspense(<VerificarAssinatura />)} />
             
             {/* Staff-only routes — wrapped in GestaoShell */}
-            <Route path="/gestao" element={<StaffRoute><GestaoShell>{withSuspense(<GestaoObras />)}</GestaoShell></StaffRoute>} />
+            {/* /gestao foi unificada no Painel de Obras */}
+            <Route path="/gestao" element={<Navigate to="/gestao/painel-obras" replace />} />
             <Route path="/gestao/nova-obra" element={<StaffRoute><GestaoShell>{withSuspense(<NovaObra />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/obra/:projectId" element={<StaffRoute><GestaoShell>{withSuspense(<EditarObra />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/obra/:projectId/wizard" element={<StaffRoute><GestaoShell>{withSuspense(<EditarObraWizard />)}</GestaoShell></StaffRoute>} />
