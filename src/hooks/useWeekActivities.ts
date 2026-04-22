@@ -42,6 +42,10 @@ export interface WeekActivity {
    * atividade-mãe (mais informativa).
    */
   parent_activity_id: string | null;
+  /** ID do membro da equipe (Staff) responsável por esta atividade/micro-etapa. */
+  responsible_user_id: string | null;
+  /** Nome do responsável (pré-resolvido a partir de users_profile). */
+  responsible_name: string | null;
 }
 
 /** Payload para criar uma micro-etapa (sub-atividade) de uma atividade-mãe. */
@@ -49,6 +53,8 @@ export interface SubActivityInput {
   description: string;
   planned_start: string; // YYYY-MM-DD
   planned_end: string;   // YYYY-MM-DD
+  /** Opcional: Staff responsável por esta micro-etapa. */
+  responsible_user_id?: string | null;
 }
 
 interface FetchArgs {
