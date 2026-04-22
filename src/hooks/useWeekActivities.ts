@@ -321,8 +321,14 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     isLoading,
     error: error ? (error as Error).message : null,
     refetch,
-    updateDates: (activityId: string, updates: { actual_start?: string | null; actual_end?: string | null }) =>
-      updateDates.mutateAsync({ activityId, updates }),
+    updateDates: (
+      activityId: string,
+      updates: {
+        actual_start?: string | null;
+        actual_end?: string | null;
+        responsible_user_id?: string | null;
+      },
+    ) => updateDates.mutateAsync({ activityId, updates }),
     isUpdating: updateDates.isPending,
     breakIntoSubActivities: (parent: WeekActivity, subs: SubActivityInput[]) =>
       breakIntoSubActivities.mutateAsync({ parent, subs }),
