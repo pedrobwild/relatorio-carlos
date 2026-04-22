@@ -339,6 +339,7 @@ export default function Fornecedores() {
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="ativo">Ativos</SelectItem>
+                  <SelectItem value="rascunho">Rascunhos</SelectItem>
                   <SelectItem value="inativo">Inativos</SelectItem>
                 </SelectContent>
               </Select>
