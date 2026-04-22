@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, Trash2, Filter, X, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2, Filter, X, AlertTriangle, Table2, ShieldOff } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -336,6 +336,7 @@ export default function PainelObras() {
     return (
       <PageContainer>
         <EmptyState
+          icon={ShieldOff}
           title="Acesso restrito"
           description="O Painel de Obras é exclusivo da equipe interna."
         />
@@ -458,6 +459,7 @@ export default function PainelObras() {
           <Skeleton className="h-96 w-full" />
         ) : filtered.length === 0 ? (
           <EmptyState
+            icon={Table2}
             title={obras.length === 0 ? 'Nenhuma obra ainda' : 'Nenhum resultado'}
             description={
               obras.length === 0
