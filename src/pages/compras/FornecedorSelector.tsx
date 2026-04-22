@@ -23,15 +23,15 @@ interface Conflict {
 }
 
 export function FornecedorSelector({ fornecedorId, onFornecedorChange, startDate, endDate, currentPurchaseId }: Props) {
-  // Fetch prestador-type fornecedores
+  // Fetch prestador-type fornecedores (include rascunhos so quick-created appears immediately)
   const { data: fornecedores = [] } = useQuery({
     queryKey: ['fornecedores-prestadores'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('fornecedores')
-        .select('id, nome')
+        .select('id, nome, status')
         .eq('supplier_type', 'prestador')
-        .eq('status', 'ativo')
+        .in('status', ['ativo', 'rascunho'])
         .order('nome');
       if (error) throw error;
       return data;
