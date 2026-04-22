@@ -568,7 +568,12 @@ function WeekListView({
   onOpenSchedule,
   projectFilter,
 }: {
-  filteredByProject: { project_id: string; project_name: string; items: WeekActivity[] }[];
+  filteredByProject: {
+    project_id: string;
+    project_name: string;
+    client_name?: string | null;
+    items: WeekActivity[];
+  }[];
   today: Date;
   weekStart: Date;
   weekEnd: Date;
