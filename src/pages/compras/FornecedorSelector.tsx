@@ -78,22 +78,38 @@ export function FornecedorSelector({ fornecedorId, onFornecedorChange, startDate
   return (
     <div className="col-span-2 space-y-1.5">
       <Label>Prestador (Cadastro) *</Label>
-      <Select
-        value={fornecedorId || ''}
-        onValueChange={(id) => {
-          const f = fornecedores.find(f => f.id === id);
-          onFornecedorChange(id, f?.nome || '');
-        }}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Selecione um prestador cadastrado" />
-        </SelectTrigger>
-        <SelectContent>
-          {fornecedores.map(f => (
-            <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex gap-2 items-start">
+        <Select
+          value={fornecedorId || ''}
+          onValueChange={(id) => {
+            const f = fornecedores.find(f => f.id === id);
+            onFornecedorChange(id, f?.nome || '');
+          }}
+        >
+          <SelectTrigger className="flex-1">
+            <SelectValue placeholder="Selecione um prestador cadastrado" />
+          </SelectTrigger>
+          <SelectContent>
+            {fornecedores.map(f => (
+              <SelectItem key={f.id} value={f.id}>
+                <span className="flex items-center gap-1.5">
+                  {f.nome}
+                  {f.status === 'rascunho' && (
+                    <span className="text-[9px] uppercase tracking-wide text-amber-600 bg-amber-100 dark:bg-amber-950/40 px-1 py-0.5 rounded">
+                      rascunho
+                    </span>
+                  )}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <QuickCreateFornecedor
+          supplierType="prestador"
+          onCreated={(id, nome) => onFornecedorChange(id, nome)}
+          invalidateKeys={[['fornecedores-prestadores']]}
+        />
+      </div>
 
       {conflicts.length > 0 && (
         <div className="rounded-md border border-[hsl(var(--warning))]/40 bg-[hsl(var(--warning))]/10 p-2.5 space-y-1">
