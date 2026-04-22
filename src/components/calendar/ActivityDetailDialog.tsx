@@ -10,6 +10,7 @@ import {
   Save,
   Split,
   Trash2,
+  UserRound,
   X,
 } from 'lucide-react';
 import {
@@ -27,6 +28,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -38,6 +46,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
+
+/** Valor sentinela para representar "sem responsável" no Select (Radix não aceita value=""). */
+const NO_RESPONSIBLE = '__none__';
 
 interface ActivityDetailDialogProps {
   activity: WeekActivity | null;
@@ -45,7 +57,11 @@ interface ActivityDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (
     activityId: string,
-    updates: { actual_start?: string | null; actual_end?: string | null },
+    updates: {
+      actual_start?: string | null;
+      actual_end?: string | null;
+      responsible_user_id?: string | null;
+    },
   ) => Promise<unknown>;
   isUpdating: boolean;
   /**
