@@ -62,7 +62,10 @@ interface Row {
   description: string;
   planned_start: Date;
   planned_end: Date;
+  responsible_user_id: string | null;
 }
+
+const NO_RESPONSIBLE = '__none__';
 
 interface Props {
   parent: WeekActivity | null;
