@@ -604,20 +604,20 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Status */}
-      <TableCell>
+      <TableCell className="min-w-[120px]">
         <Select
           value={obra.status ?? NONE}
           onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
         >
           <SelectTrigger
             className={cn(
-              'h-7 text-xs border-0 shadow-none p-0 px-2 [&>svg]:hidden justify-start gap-1.5',
+              'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5',
               'rounded-md',
               statusPillClass(obra.status),
             )}
           >
-            <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(obra.status))} />
-            <span className="font-medium">{obra.status ?? 'Definir'}</span>
+            <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(obra.status))} />
+            <span className="font-medium truncate">{obra.status ?? 'Definir'}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE}>(nenhum)</SelectItem>
@@ -634,14 +634,14 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Etapa */}
-      <TableCell>
+      <TableCell className="min-w-[140px]">
         <Select
           value={obra.etapa ?? NONE}
           onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
         >
           <SelectTrigger
             className={cn(
-              'h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40',
+              'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1',
               !obra.etapa && 'text-muted-foreground italic',
               obra.etapa === 'Finalizada' &&
                 'text-emerald-700 dark:text-emerald-400 font-medium',
@@ -734,7 +734,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Relacionamento */}
-      <TableCell>
+      <TableCell className="min-w-[110px]">
         <Select
           value={obra.relacionamento ?? NONE}
           onValueChange={(v) =>
@@ -745,12 +745,12 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
         >
           <SelectTrigger
             className={cn(
-              'h-7 text-xs border-0 shadow-none p-0 px-2 [&>svg]:hidden justify-start',
+              'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start',
               'rounded-md',
               relacionamentoPillClass(obra.relacionamento),
             )}
           >
-            <span className="font-medium">{obra.relacionamento ?? 'Definir'}</span>
+            <span className="font-medium truncate">{obra.relacionamento ?? 'Definir'}</span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE}>(nenhum)</SelectItem>
