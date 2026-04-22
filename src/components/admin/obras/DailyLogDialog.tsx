@@ -18,7 +18,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ChevronDown,
+  ChevronRight,
   ClipboardList,
   HardHat,
   Loader2,
@@ -510,12 +510,31 @@ function SectionCard({
   const [open, setOpen] = useState(defaultOpen);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="rounded-md border border-border bg-card">
+      <div
+        className={cn(
+          'rounded-md border border-border bg-card transition-colors',
+          open && 'bg-card',
+        )}
+      >
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent/40 transition-colors rounded-t-md"
+            aria-expanded={open}
+            aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
+            className={cn(
+              'w-full flex items-center gap-2 px-3 py-2 text-left',
+              'hover:bg-accent/40 transition-colors',
+              open ? 'rounded-t-md' : 'rounded-md',
+            )}
           >
+            {/* Indicador de expansão — seta à esquerda que rotaciona */}
+            <ChevronRight
+              aria-hidden
+              className={cn(
+                'h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200',
+                open && 'rotate-90 text-foreground',
+              )}
+            />
             {icon}
             <span className="text-sm font-medium">{title}</span>
             {typeof count === 'number' && count > 0 && (
@@ -523,12 +542,6 @@ function SectionCard({
                 ({count})
               </span>
             )}
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 text-muted-foreground ml-auto transition-transform',
-                open && 'rotate-180',
-              )}
-            />
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
