@@ -62,7 +62,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       weight,
       created_at,
       updated_at,
-      projects:project_id ( name )
+      projects:project_id ( name, client_name, status )
     `)
     .lte('planned_start', weekEnd)
     .gte('planned_end', weekStart)
@@ -74,6 +74,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     id: row.id,
     project_id: row.project_id,
     project_name: row.projects?.name ?? 'Obra sem nome',
+    client_name: row.projects?.client_name ?? null,
+    project_status: row.projects?.status ?? null,
     description: row.description,
     detailed_description: row.detailed_description ?? null,
     etapa: row.etapa,
