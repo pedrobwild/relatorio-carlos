@@ -135,7 +135,10 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
     },
   });
 
-  // Group by project for convenience
+  // Group by project for convenience.
+  // Items inside each project are ordered by effective start date:
+  // actual_start when present, otherwise planned_start (ascending).
+  // Tie-break by planned_end so shorter / earlier-ending tasks come first.
   const byProject = useMemo(() => {
     const map = new Map<string, { project_id: string; project_name: string; items: WeekActivity[] }>();
     for (const a of activities) {
@@ -143,6 +146,14 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
         map.set(a.project_id, { project_id: a.project_id, project_name: a.project_name, items: [] });
       }
       map.get(a.project_id)!.items.push(a);
+    }
+    for (const group of map.values()) {
+      group.items.sort((a, b) => {
+        const aStart = a.actual_start ?? a.planned_start;
+        const bStart = b.actual_start ?? b.planned_start;
+        if (aStart !== bStart) return aStart.localeCompare(bStart);
+        return a.planned_end.localeCompare(b.planned_end);
+      });
     }
     return Array.from(map.values()).sort((x, y) => x.project_name.localeCompare(y.project_name, 'pt-BR'));
   }, [activities]);
