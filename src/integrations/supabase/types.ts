@@ -3106,66 +3106,6 @@ export type Database = {
         }
         Relationships: []
       }
-      painel_obras: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          entrega_oficial: string | null
-          entrega_real: string | null
-          etapa: Database["public"]["Enums"]["painel_etapa_enum"] | null
-          id: string
-          inicio_etapa: string | null
-          inicio_oficial: string | null
-          inicio_real: string | null
-          nome: string | null
-          prazo: string | null
-          previsao_avanco: string | null
-          relacionamento:
-            | Database["public"]["Enums"]["painel_relacionamento_enum"]
-            | null
-          status: Database["public"]["Enums"]["painel_status_enum"] | null
-          ultima_atualizacao: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          entrega_oficial?: string | null
-          entrega_real?: string | null
-          etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
-          id?: string
-          inicio_etapa?: string | null
-          inicio_oficial?: string | null
-          inicio_real?: string | null
-          nome?: string | null
-          prazo?: string | null
-          previsao_avanco?: string | null
-          relacionamento?:
-            | Database["public"]["Enums"]["painel_relacionamento_enum"]
-            | null
-          status?: Database["public"]["Enums"]["painel_status_enum"] | null
-          ultima_atualizacao?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          entrega_oficial?: string | null
-          entrega_real?: string | null
-          etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
-          id?: string
-          inicio_etapa?: string | null
-          inicio_oficial?: string | null
-          inicio_real?: string | null
-          nome?: string | null
-          prazo?: string | null
-          previsao_avanco?: string | null
-          relacionamento?:
-            | Database["public"]["Enums"]["painel_relacionamento_enum"]
-            | null
-          status?: Database["public"]["Enums"]["painel_status_enum"] | null
-          ultima_atualizacao?: string
-        }
-        Relationships: []
-      }
       pending_items: {
         Row: {
           action_url: string | null
@@ -4702,6 +4642,17 @@ export type Database = {
           neighborhood: string | null
           notes: string | null
           org_id: string | null
+          painel_etapa: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          painel_inicio_etapa: string | null
+          painel_prazo: string | null
+          painel_previsao_avanco: string | null
+          painel_relacionamento:
+            | Database["public"]["Enums"]["painel_relacionamento_enum"]
+            | null
+          painel_status:
+            | Database["public"]["Enums"]["painel_status_enum"]
+            | null
+          painel_ultima_atualizacao: string
           planned_end_date: string | null
           planned_start_date: string | null
           property_type: string | null
@@ -4744,6 +4695,17 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           org_id?: string | null
+          painel_etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          painel_inicio_etapa?: string | null
+          painel_prazo?: string | null
+          painel_previsao_avanco?: string | null
+          painel_relacionamento?:
+            | Database["public"]["Enums"]["painel_relacionamento_enum"]
+            | null
+          painel_status?:
+            | Database["public"]["Enums"]["painel_status_enum"]
+            | null
+          painel_ultima_atualizacao?: string
           planned_end_date?: string | null
           planned_start_date?: string | null
           property_type?: string | null
@@ -4786,6 +4748,17 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           org_id?: string | null
+          painel_etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          painel_inicio_etapa?: string | null
+          painel_prazo?: string | null
+          painel_previsao_avanco?: string | null
+          painel_relacionamento?:
+            | Database["public"]["Enums"]["painel_relacionamento_enum"]
+            | null
+          painel_status?:
+            | Database["public"]["Enums"]["painel_status_enum"]
+            | null
+          painel_ultima_atualizacao?: string
           planned_end_date?: string | null
           planned_start_date?: string | null
           property_type?: string | null
