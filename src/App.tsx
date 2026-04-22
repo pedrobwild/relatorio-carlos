@@ -31,7 +31,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const VerificarAssinatura = lazy(() => import("./pages/VerificarAssinatura"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const GestaoObras = lazy(() => import("./pages/GestaoObras"));
+// GestaoObras (Portfólio antigo) foi descontinuado — /gestao redireciona para /gestao/painel-obras
 const NovaObra = lazy(() => import("./pages/NovaObra"));
 const EditarObra = lazy(() => import("./pages/EditarObra"));
 const EditarObraWizard = lazy(() => import("./pages/EditarObraWizard"));

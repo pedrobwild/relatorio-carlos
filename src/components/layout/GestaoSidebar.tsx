@@ -1,11 +1,9 @@
 import { useLocation } from "react-router-dom";
 import {
-  Building2,
   Plus,
   FolderOpen,
   CalendarDays,
   Settings,
-  LayoutDashboard,
   Truck,
   Receipt,
   AlertTriangle,
