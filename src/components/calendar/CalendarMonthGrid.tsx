@@ -279,12 +279,9 @@ function WeekRow({
         {/* Per-column "+N mais" indicators (only when collapsed) */}
         {!expanded && (
           <div
-            className="col-span-7 grid grid-cols-7"
+            className="absolute left-0 right-0 grid grid-cols-7"
             style={{
-              position: 'absolute',
               top: visibleLanes.length * (LANE_HEIGHT + LANE_GAP),
-              left: 4,
-              right: 4,
               height: 16,
             }}
           >
@@ -295,7 +292,7 @@ function WeekRow({
                   type="button"
                   onClick={() => setExpanded(true)}
                   style={{ gridColumn: `${col + 1} / span 1` }}
-                  className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4 pointer-events-auto"
+                  className="text-[10px] text-primary hover:underline text-left px-1.5 leading-4 pointer-events-auto truncate"
                   title={`Mostrar todas as ${lanes.length} faixas desta semana`}
                 >
                   +{n} mais
