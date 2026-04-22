@@ -160,14 +160,13 @@ export default function CalendarioObras() {
           {byProject.map((group) => {
             const color = getProjectColor(group.project_id);
             return (
-              <Card key={group.project_id} className="overflow-hidden">
-                <CardHeader
-                  className="py-3 px-4 border-b"
-                  style={{ borderLeft: `4px solid ${color}` }}
-                >
+              <Card key={group.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
+                <CardHeader className="py-3 px-4 border-b">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Building2 className="h-4 w-4 shrink-0" style={{ color }} />
+                      <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md', color.bg)}>
+                        <Building2 className="h-4 w-4" />
+                      </span>
                       <CardTitle className="text-base font-semibold truncate">
                         {group.project_name}
                       </CardTitle>
