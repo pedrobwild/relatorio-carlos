@@ -11,9 +11,16 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { format, parseISO, addDays, differenceInCalendarDays } from 'date-fns';
+import {
+  format,
+  parseISO,
+  addDays,
+  differenceInCalendarDays,
+  isWithinInterval,
+  areIntervalsOverlapping,
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, Split, Trash2, Wand2 } from 'lucide-react';
+import { CalendarIcon, Plus, Split, Trash2, Wand2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -49,6 +56,23 @@ interface Props {
 const fmtDate = (d: Date) => format(d, 'yyyy-MM-dd');
 const labelDate = (d: Date) => format(d, "dd 'de' MMM", { locale: ptBR });
 
+/**
+ * Pré-visualização compacta do intervalo de uma micro-etapa, ex.:
+ *   - mesmo dia       → "Seg, 22/04"
+ *   - mesma semana    → "Seg–Ter (22/04 → 23/04)"
+ *   - cruzando semanas→ "Qua 24/04 → Sex 03/05 · 11 dias"
+ * Mantém português abreviado (Seg, Ter…) para densidade visual.
+ */
+const WEEKDAY_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+function describeRange(start: Date, end: Date): string {
+  const days = differenceInCalendarDays(end, start) + 1;
+  const sw = WEEKDAY_PT[start.getDay()];
+  const ew = WEEKDAY_PT[end.getDay()];
+  if (days === 1) return `${sw}, ${format(start, 'dd/MM')}`;
+  if (days <= 7) return `${sw}–${ew} (${format(start, 'dd/MM')} → ${format(end, 'dd/MM')}) · ${days} dias`;
+  return `${sw} ${format(start, 'dd/MM')} → ${ew} ${format(end, 'dd/MM')} · ${days} dias`;
+}
+
 export function BreakActivityDialog({
   parent,
   open,
@@ -81,20 +105,91 @@ export function BreakActivityDialog({
   const pe = parent ? parseISO(parent.planned_end) : null;
   const totalDays = ps && pe ? differenceInCalendarDays(pe, ps) + 1 : 0;
 
+  // Validação por linha (aponta exatamente o que está errado em cada item)
+  // + detecção de pares sobrepostos para bloquear o submit. As regras são:
+  //   1) título obrigatório
+  //   2) intervalo válido (fim ≥ início, ambos no escopo da mãe)
+  //   3) sem sobreposição entre micro-etapas (mesmo 1 dia em comum bloqueia)
+  type RowIssue =
+    | { kind: 'no-title' }
+    | { kind: 'inverted' }
+    | { kind: 'before-parent' }
+    | { kind: 'after-parent' }
+    | { kind: 'overlap'; withIndex: number };
+
+  const rowIssues = useMemo<RowIssue[][]>(() => {
+    const issues: RowIssue[][] = rows.map(() => []);
+    rows.forEach((r, i) => {
+      if (!r.description.trim()) issues[i].push({ kind: 'no-title' });
+      if (r.planned_end < r.planned_start) issues[i].push({ kind: 'inverted' });
+      if (ps && r.planned_start < ps) issues[i].push({ kind: 'before-parent' });
+      if (pe && r.planned_end > pe) issues[i].push({ kind: 'after-parent' });
+    });
+    // Detecção de sobreposição (par a par, intervalos inclusivos)
+    for (let i = 0; i < rows.length; i++) {
+      const a = rows[i];
+      if (a.planned_end < a.planned_start) continue; // já marcado como invertido
+      for (let j = i + 1; j < rows.length; j++) {
+        const b = rows[j];
+        if (b.planned_end < b.planned_start) continue;
+        const overlaps = areIntervalsOverlapping(
+          { start: a.planned_start, end: a.planned_end },
+          { start: b.planned_start, end: b.planned_end },
+          { inclusive: true },
+        );
+        if (overlaps) {
+          issues[i].push({ kind: 'overlap', withIndex: j });
+          issues[j].push({ kind: 'overlap', withIndex: i });
+        }
+      }
+    }
+    return issues;
+  }, [rows, ps?.getTime(), pe?.getTime()]);
+
+  // Cobertura de dias: ajuda o usuário a ver lacunas (dias da mãe não cobertos).
+  const uncoveredDays = useMemo(() => {
+    if (!ps || !pe) return 0;
+    let count = 0;
+    for (let d = ps; d <= pe; d = addDays(d, 1)) {
+      const covered = rows.some(
+        (r) =>
+          r.planned_end >= r.planned_start &&
+          isWithinInterval(d, { start: r.planned_start, end: r.planned_end }),
+      );
+      if (!covered) count++;
+    }
+    return count;
+  }, [rows, ps?.getTime(), pe?.getTime()]);
+
   const errors = useMemo(() => {
     const out: string[] = [];
     if (rows.length < 2) out.push('Crie ao menos 2 micro-etapas para fazer sentido em quebrar.');
-    rows.forEach((r, i) => {
-      if (!r.description.trim()) out.push(`Micro-etapa ${i + 1}: título obrigatório.`);
-      if (r.planned_end < r.planned_start)
-        out.push(`Micro-etapa ${i + 1}: data fim anterior ao início.`);
-      if (ps && r.planned_start < ps)
-        out.push(`Micro-etapa ${i + 1}: início anterior ao da atividade-mãe.`);
-      if (pe && r.planned_end > pe)
-        out.push(`Micro-etapa ${i + 1}: fim posterior ao da atividade-mãe.`);
+    rowIssues.forEach((list, i) => {
+      list.forEach((iss) => {
+        switch (iss.kind) {
+          case 'no-title':
+            out.push(`Micro-etapa ${i + 1}: título obrigatório.`);
+            break;
+          case 'inverted':
+            out.push(`Micro-etapa ${i + 1}: data fim anterior ao início.`);
+            break;
+          case 'before-parent':
+            out.push(`Micro-etapa ${i + 1}: início anterior ao da atividade-mãe.`);
+            break;
+          case 'after-parent':
+            out.push(`Micro-etapa ${i + 1}: fim posterior ao da atividade-mãe.`);
+            break;
+          case 'overlap':
+            // Reporta apenas no índice menor para evitar duplicação na lista geral.
+            if (iss.withIndex > i) {
+              out.push(`Micro-etapas ${i + 1} e ${iss.withIndex + 1} têm dias em comum.`);
+            }
+            break;
+        }
+      });
     });
     return out;
-  }, [rows, ps?.getTime(), pe?.getTime()]);
+  }, [rows, rowIssues]);
 
   const canSubmit = errors.length === 0 && !isSubmitting;
 
@@ -185,59 +280,111 @@ export function BreakActivityDialog({
               </Button>
             </div>
 
-            {rows.map((row, i) => (
-              <div
-                key={i}
-                className="rounded-lg border bg-card p-3 grid grid-cols-12 gap-2 items-end"
-              >
-                <div className="col-span-12 md:col-span-5">
-                  <Label htmlFor={`desc-${i}`} className="text-[11px] text-muted-foreground">
-                    Título da micro-etapa {i + 1}
-                  </Label>
-                  <Input
-                    id={`desc-${i}`}
-                    value={row.description}
-                    onChange={(e) => updateRow(i, { description: e.target.value })}
-                    placeholder={`Ex.: Parte ${i + 1} – descrição interna`}
-                    className="mt-1"
-                  />
-                </div>
+            {rows.map((row, i) => {
+              const issues = rowIssues[i] ?? [];
+              const hasOverlap = issues.some((x) => x.kind === 'overlap');
+              const hasOtherIssue = issues.some((x) => x.kind !== 'overlap' && x.kind !== 'no-title');
+              const isInverted = issues.some((x) => x.kind === 'inverted');
+              const overlapsWith = issues
+                .filter((x): x is Extract<RowIssue, { kind: 'overlap' }> => x.kind === 'overlap')
+                .map((x) => x.withIndex + 1);
+              const isValid = issues.length === 0 && row.description.trim().length > 0;
+              const days = isInverted
+                ? 0
+                : differenceInCalendarDays(row.planned_end, row.planned_start) + 1;
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    'rounded-lg border p-3 grid grid-cols-12 gap-2 items-end transition-colors',
+                    hasOverlap || hasOtherIssue
+                      ? 'border-destructive/60 bg-destructive/5'
+                      : 'border-border bg-card',
+                  )}
+                >
+                  <div className="col-span-12 md:col-span-5">
+                    <Label htmlFor={`desc-${i}`} className="text-[11px] text-muted-foreground">
+                      Título da micro-etapa {i + 1}
+                    </Label>
+                    <Input
+                      id={`desc-${i}`}
+                      value={row.description}
+                      onChange={(e) => updateRow(i, { description: e.target.value })}
+                      placeholder={`Ex.: Parte ${i + 1} – descrição interna`}
+                      className="mt-1"
+                    />
+                  </div>
 
-                <div className="col-span-6 md:col-span-3">
-                  <Label className="text-[11px] text-muted-foreground">Início</Label>
-                  <DatePopover
-                    value={row.planned_start}
-                    onChange={(d) => d && updateRow(i, { planned_start: d })}
-                    min={ps ?? undefined}
-                    max={pe ?? undefined}
-                  />
-                </div>
+                  <div className="col-span-6 md:col-span-3">
+                    <Label className="text-[11px] text-muted-foreground">Início</Label>
+                    <DatePopover
+                      value={row.planned_start}
+                      onChange={(d) => d && updateRow(i, { planned_start: d })}
+                      min={ps ?? undefined}
+                      max={pe ?? undefined}
+                    />
+                  </div>
 
-                <div className="col-span-6 md:col-span-3">
-                  <Label className="text-[11px] text-muted-foreground">Fim</Label>
-                  <DatePopover
-                    value={row.planned_end}
-                    onChange={(d) => d && updateRow(i, { planned_end: d })}
-                    min={ps ?? undefined}
-                    max={pe ?? undefined}
-                  />
-                </div>
+                  <div className="col-span-6 md:col-span-3">
+                    <Label className="text-[11px] text-muted-foreground">Fim</Label>
+                    <DatePopover
+                      value={row.planned_end}
+                      onChange={(d) => d && updateRow(i, { planned_end: d })}
+                      min={ps ?? undefined}
+                      max={pe ?? undefined}
+                    />
+                  </div>
 
-                <div className="col-span-12 md:col-span-1 flex md:justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeRow(i)}
-                    disabled={rows.length <= 1}
-                    title="Remover esta micro-etapa"
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="col-span-12 md:col-span-1 flex md:justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeRow(i)}
+                      disabled={rows.length <= 1}
+                      title="Remover esta micro-etapa"
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Pré-visualização legível do intervalo + sinalização de status */}
+                  <div className="col-span-12 flex flex-wrap items-center gap-2 text-xs">
+                    {isInverted ? (
+                      <span className="inline-flex items-center gap-1 text-destructive">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Intervalo inválido (fim anterior ao início)
+                      </span>
+                    ) : (
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 font-medium',
+                          hasOverlap ? 'text-destructive' : 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="h-3.5 w-3.5" />
+                        {describeRange(row.planned_start, row.planned_end)}
+                      </span>
+                    )}
+                    {hasOverlap && (
+                      <Badge variant="destructive" className="text-[10px]">
+                        Sobrepõe com {overlapsWith.map((n) => `#${n}`).join(', ')}
+                      </Badge>
+                    )}
+                    {isValid && days > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] border-primary/40 text-primary"
+                      >
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        OK · {days} dia{days > 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <Button
               type="button"
@@ -250,12 +397,36 @@ export function BreakActivityDialog({
               Adicionar micro-etapa
             </Button>
 
+            {/* Sumário de cobertura: ajuda o usuário a perceber lacunas sem ser bloqueante.
+                Lacunas (dias não cobertos) são apenas um aviso — o submit só é bloqueado por
+                erros reais (sobreposição, intervalo inválido ou título faltando). */}
+            {totalDays > 0 && rows.length > 0 && (
+              <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-muted-foreground">
+                  Cobertura: <strong className="text-foreground">{totalDays - uncoveredDays}</strong> de{' '}
+                  <strong className="text-foreground">{totalDays}</strong> dia(s) da atividade-mãe.
+                </span>
+                {uncoveredDays > 0 && (
+                  <span className="inline-flex items-center gap-1 text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    {uncoveredDays} dia(s) sem micro-etapa (lacuna)
+                  </span>
+                )}
+                {uncoveredDays === 0 && errors.length === 0 && (
+                  <span className="inline-flex items-center gap-1 text-primary">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Todos os dias cobertos, sem sobreposição
+                  </span>
+                )}
+              </div>
+            )}
+
             {errors.length > 0 && (
               <ul className="text-xs text-destructive space-y-0.5 list-disc list-inside">
-                {errors.slice(0, 3).map((e, i) => (
+                {errors.slice(0, 4).map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}
-                {errors.length > 3 && <li>+{errors.length - 3} outro(s) ajuste(s) necessário(s)</li>}
+                {errors.length > 4 && <li>+{errors.length - 4} outro(s) ajuste(s) necessário(s)</li>}
               </ul>
             )}
           </div>
