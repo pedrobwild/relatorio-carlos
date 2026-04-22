@@ -1,10 +1,18 @@
 /**
- * usePainelObras — CRUD para a tabela `painel_obras` (visão executiva de obras).
- * Usa TanStack Query com optimistic updates para edição inline ágil.
+ * usePainelObras — visão executiva unificada de obras.
+ * Lê da tabela `projects` (fonte única) e dos summaries (progresso/pendências).
+ * Edição inline de campos do painel via optimistic updates.
  */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  useProjectsQuery,
+  useProjectSummaryQuery,
+  projectKeys,
+} from './useProjectsQuery';
+import type { ProjectWithCustomer } from '@/infra/repositories/projects.repository';
 
 export type PainelEtapa =
   | 'Medição'
@@ -18,21 +26,32 @@ export type PainelStatus = 'Em dia' | 'Atrasado' | 'Paralisada';
 
 export type PainelRelacionamento = 'Normal' | 'Atrito' | 'Insatisfeito' | 'Crítico';
 
+/** Linha unificada do Painel: dados da obra + campos operacionais + métricas. */
 export interface PainelObra {
   id: string;
-  nome: string | null;
-  prazo: string | null;
+  nome: string;
+  customer_name: string | null;
+  engineer_name: string | null;
+
+  // Datas oficiais (vindas de projects.planned_start_date / planned_end_date)
   inicio_oficial: string | null;
   entrega_oficial: string | null;
+  inicio_real: string | null;
+  entrega_real: string | null;
+
+  // Campos operacionais do painel (colunas adicionadas em projects)
+  prazo: string | null;
   etapa: PainelEtapa | null;
   inicio_etapa: string | null;
   previsao_avanco: string | null;
   status: PainelStatus | null;
-  inicio_real: string | null;
-  entrega_real: string | null;
   relacionamento: PainelRelacionamento | null;
   ultima_atualizacao: string;
-  created_at: string;
+
+  // Métricas (do summary)
+  progress_percentage: number | null;
+  pending_count: number;
+  overdue_count: number;
 }
 
 export const ETAPA_OPTIONS: PainelEtapa[] = [
@@ -53,95 +72,141 @@ export const RELACIONAMENTO_OPTIONS: PainelRelacionamento[] = [
   'Crítico',
 ];
 
-const QUERY_KEY = ['painel-obras'] as const;
+/** Patch suportado para edição inline (somente campos operacionais). */
+export type PainelObraPatch = Partial<{
+  prazo: string | null;
+  etapa: PainelEtapa | null;
+  inicio_etapa: string | null;
+  previsao_avanco: string | null;
+  status: PainelStatus | null;
+  relacionamento: PainelRelacionamento | null;
+  inicio_oficial: string | null;
+  entrega_oficial: string | null;
+  inicio_real: string | null;
+  entrega_real: string | null;
+}>;
+
+/** Mapeamento patch lógico → colunas reais do `projects`. */
+function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if ('prazo' in patch) out.painel_prazo = patch.prazo;
+  if ('etapa' in patch) out.painel_etapa = patch.etapa;
+  if ('inicio_etapa' in patch) out.painel_inicio_etapa = patch.inicio_etapa;
+  if ('previsao_avanco' in patch) out.painel_previsao_avanco = patch.previsao_avanco;
+  if ('status' in patch) out.painel_status = patch.status;
+  if ('relacionamento' in patch) out.painel_relacionamento = patch.relacionamento;
+  if ('inicio_oficial' in patch) out.planned_start_date = patch.inicio_oficial;
+  if ('entrega_oficial' in patch) out.planned_end_date = patch.entrega_oficial;
+  if ('inicio_real' in patch) out.actual_start_date = patch.inicio_real;
+  if ('entrega_real' in patch) out.actual_end_date = patch.entrega_real;
+  return out;
+}
 
 export function usePainelObras() {
   const qc = useQueryClient();
+  const {
+    data: projects = [],
+    isLoading: projectsLoading,
+    error,
+    refetch,
+  } = useProjectsQuery();
+  const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
 
-  const { data: obras = [], isLoading, error, refetch } = useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('painel_obras' as any)
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as PainelObra[];
-    },
-    staleTime: 30_000,
-  });
-
-  const create = useMutation({
-    mutationFn: async (input: Partial<PainelObra>) => {
-      const { data, error } = await supabase
-        .from('painel_obras' as any)
-        .insert(input as any)
-        .select('*')
-        .single();
-      if (error) throw error;
-      return data as unknown as PainelObra;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('Obra adicionada');
-    },
-    onError: (e: any) => toast.error(e?.message ?? 'Erro ao adicionar obra'),
-  });
+  const obras = useMemo<PainelObra[]>(() => {
+    const summaryMap = new Map(summaries.map((s) => [s.id, s]));
+    return projects.map((p) => {
+      const s = summaryMap.get(p.id);
+      // Campos do painel vêm da row crua de projects (cast por compatibilidade
+      // até regenerar types do Supabase).
+      const raw = p as ProjectWithCustomer & {
+        painel_prazo?: string | null;
+        painel_etapa?: PainelEtapa | null;
+        painel_inicio_etapa?: string | null;
+        painel_previsao_avanco?: string | null;
+        painel_status?: PainelStatus | null;
+        painel_relacionamento?: PainelRelacionamento | null;
+        painel_ultima_atualizacao?: string;
+      };
+      return {
+        id: p.id,
+        nome: p.name,
+        customer_name: p.customer_name ?? null,
+        engineer_name: p.engineer_name ?? null,
+        inicio_oficial: p.planned_start_date,
+        entrega_oficial: p.planned_end_date,
+        inicio_real: p.actual_start_date,
+        entrega_real: p.actual_end_date,
+        prazo: raw.painel_prazo ?? null,
+        etapa: raw.painel_etapa ?? null,
+        inicio_etapa: raw.painel_inicio_etapa ?? null,
+        previsao_avanco: raw.painel_previsao_avanco ?? null,
+        status: raw.painel_status ?? null,
+        relacionamento: raw.painel_relacionamento ?? null,
+        ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
+        progress_percentage:
+          s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
+        pending_count: s?.pending_count ?? 0,
+        overdue_count: s?.overdue_count ?? 0,
+      };
+    });
+  }, [projects, summaries]);
 
   const update = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<PainelObra> }) => {
-      const { error } = await supabase
-        .from('painel_obras' as any)
-        .update(patch as any)
+    mutationFn: async ({ id, patch }: { id: string; patch: PainelObraPatch }) => {
+      const dbPatch = patchToDbColumns(patch);
+      if (Object.keys(dbPatch).length === 0) return { id, patch };
+      const { error: updateErr } = await supabase
+        .from('projects')
+        .update(dbPatch as never)
         .eq('id', id);
-      if (error) throw error;
+      if (updateErr) throw updateErr;
       return { id, patch };
     },
     onMutate: async ({ id, patch }) => {
-      await qc.cancelQueries({ queryKey: QUERY_KEY });
-      const prev = qc.getQueryData<PainelObra[]>(QUERY_KEY);
-      if (prev) {
-        qc.setQueryData<PainelObra[]>(
-          QUERY_KEY,
-          prev.map((o) =>
-            o.id === id ? { ...o, ...patch, ultima_atualizacao: new Date().toISOString() } : o,
-          ),
+      // Optimistic: atualiza todas as listas em cache
+      await qc.cancelQueries({ queryKey: projectKeys.lists() });
+      const snapshots = qc.getQueriesData<ProjectWithCustomer[]>({ queryKey: projectKeys.lists() });
+      for (const [key, prev] of snapshots) {
+        if (!prev) continue;
+        qc.setQueryData<ProjectWithCustomer[]>(
+          key,
+          prev.map((p) => {
+            if (p.id !== id) return p;
+            const next: Record<string, unknown> = { ...p };
+            if ('prazo' in patch) next.painel_prazo = patch.prazo;
+            if ('etapa' in patch) next.painel_etapa = patch.etapa;
+            if ('inicio_etapa' in patch) next.painel_inicio_etapa = patch.inicio_etapa;
+            if ('previsao_avanco' in patch) next.painel_previsao_avanco = patch.previsao_avanco;
+            if ('status' in patch) next.painel_status = patch.status;
+            if ('relacionamento' in patch) next.painel_relacionamento = patch.relacionamento;
+            if ('inicio_oficial' in patch) next.planned_start_date = patch.inicio_oficial;
+            if ('entrega_oficial' in patch) next.planned_end_date = patch.entrega_oficial;
+            if ('inicio_real' in patch) next.actual_start_date = patch.inicio_real;
+            if ('entrega_real' in patch) next.actual_end_date = patch.entrega_real;
+            next.painel_ultima_atualizacao = new Date().toISOString();
+            return next as ProjectWithCustomer;
+          }),
         );
       }
-      return { prev };
+      return { snapshots };
     },
     onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(QUERY_KEY, ctx.prev);
+      if (ctx?.snapshots) {
+        for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
+      }
       toast.error('Erro ao salvar alteração');
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: QUERY_KEY });
+      qc.invalidateQueries({ queryKey: projectKeys.lists() });
     },
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('painel_obras' as any).delete().eq('id', id);
-      if (error) throw error;
-      return id;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success('Obra removida');
-    },
-    onError: (e: any) => toast.error(e?.message ?? 'Erro ao remover obra'),
   });
 
   return {
     obras,
-    isLoading,
+    isLoading: projectsLoading || summariesLoading,
     error: error ? (error as Error).message : null,
     refetch,
-    createObra: (input: Partial<PainelObra>) => create.mutateAsync(input),
-    updateObra: (id: string, patch: Partial<PainelObra>) =>
-      update.mutateAsync({ id, patch }),
-    removeObra: (id: string) => remove.mutateAsync(id),
-    isCreating: create.isPending,
+    updateObra: (id: string, patch: PainelObraPatch) => update.mutateAsync({ id, patch }),
     isUpdating: update.isPending,
   };
 }

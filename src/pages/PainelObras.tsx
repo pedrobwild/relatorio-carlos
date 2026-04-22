@@ -1,15 +1,21 @@
 /**
- * Painel de Obras — visão executiva tabular para acompanhamento operacional
- * de obras com edição inline, filtros e badges coloridos.
- *
- * Spec: 11 colunas (Prazo, Início Oficial, Entrega Oficial, Etapa, Início da
- * Etapa, Previsão de Avanço, Status, Última Atualização, Início Real,
- * Entrega Real, Relacionamento). Última atualização é automática (trigger DB).
+ * Painel de Obras — visão executiva unificada para a equipe.
+ * Lista TODAS as obras do sistema (fonte única: tabela `projects`) com
+ * edição inline dos campos operacionais e métricas de progresso/pendências.
  */
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Plus, Trash2, Filter, X, AlertTriangle, Table2, ShieldOff } from 'lucide-react';
+import {
+  CalendarIcon,
+  Filter,
+  X,
+  AlertTriangle,
+  Table2,
+  ShieldOff,
+  ExternalLink,
+} from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +63,7 @@ import {
   usePainelObras,
   type PainelEtapa,
   type PainelObra,
+  type PainelObraPatch,
   type PainelRelacionamento,
   type PainelStatus,
 } from '@/hooks/usePainelObras';
@@ -72,8 +79,7 @@ const fmtDate = (iso: string | null) =>
 const fmtDateTime = (iso: string) =>
   format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
-const toIsoDate = (d: Date | undefined) =>
-  d ? format(d, 'yyyy-MM-dd') : null;
+const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 
 const statusBadgeClass = (s: PainelStatus | null): string => {
   switch (s) {
@@ -257,16 +263,17 @@ function TextCell({
 
 // ----- main page -----
 export default function PainelObras() {
-  const { isAdmin, isStaff, loading: roleLoading } = useUserRole();
-  const { obras, isLoading, createObra, updateObra, removeObra, isCreating } = usePainelObras();
+  const navigate = useNavigate();
+  const { isStaff, loading: roleLoading } = useUserRole();
+  const { obras, isLoading, updateObra } = usePainelObras();
 
   // Filtros
+  const [search, setSearch] = useState('');
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
   const [filterStatus, setFilterStatus] = useState<string>(ALL);
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
-  const [removeId, setRemoveId] = useState<string | null>(null);
 
-  // Ordenação por colunas de data
+  // Ordenação
   type SortKey =
     | 'inicio_oficial'
     | 'entrega_oficial'
@@ -281,6 +288,16 @@ export default function PainelObras() {
 
   const filtered = useMemo(() => {
     let rows = obras;
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      rows = rows.filter(
+        (o) =>
+          o.nome.toLowerCase().includes(q) ||
+          (o.customer_name ?? '').toLowerCase().includes(q) ||
+          (o.engineer_name ?? '').toLowerCase().includes(q),
+      );
+    }
     if (filterEtapa !== ALL)
       rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));
     if (filterStatus !== ALL)
@@ -303,7 +320,7 @@ export default function PainelObras() {
       });
     }
     return rows;
-  }, [obras, filterEtapa, filterStatus, filterRelacionamento, sortKey, sortDir]);
+  }, [obras, search, filterEtapa, filterStatus, filterRelacionamento, sortKey, sortDir]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
     if (sortKey === key) {
@@ -315,13 +332,17 @@ export default function PainelObras() {
   };
 
   const clearFilters = () => {
+    setSearch('');
     setFilterEtapa(ALL);
     setFilterStatus(ALL);
     setFilterRelacionamento(ALL);
   };
 
   const hasFilters =
-    filterEtapa !== ALL || filterStatus !== ALL || filterRelacionamento !== ALL;
+    !!search.trim() ||
+    filterEtapa !== ALL ||
+    filterStatus !== ALL ||
+    filterRelacionamento !== ALL;
 
   if (roleLoading) {
     return (
@@ -357,9 +378,7 @@ export default function PainelObras() {
       className="flex items-center gap-1 hover:text-primary transition-colors"
     >
       {label}
-      {sortKey === k && (
-        <span className="text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>
-      )}
+      {sortKey === k && <span className="text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>}
     </button>
   );
 
@@ -372,27 +391,21 @@ export default function PainelObras() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Painel de Obras</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Visão executiva para acompanhamento operacional. Clique em qualquer célula
-                para editar.
+                Visão executiva unificada de todas as obras. Clique em qualquer célula para
+                editar.
               </p>
             </div>
-            <Button
-              onClick={() =>
-                createObra({
-                  nome: 'Nova obra',
-                  status: 'Em dia',
-                  relacionamento: 'Normal',
-                })
-              }
-              disabled={isCreating}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Nova obra
-            </Button>
           </div>
 
           {/* Filtros */}
           <div className="flex items-center gap-2 flex-wrap p-3 bg-muted/40 rounded-lg border border-border">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por obra, cliente ou responsável…"
+              className="h-8 w-[260px] text-sm"
+            />
+
             <Filter className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filtros:</span>
 
@@ -460,10 +473,10 @@ export default function PainelObras() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={Table2}
-            title={obras.length === 0 ? 'Nenhuma obra ainda' : 'Nenhum resultado'}
+            title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
             description={
               obras.length === 0
-                ? 'Comece adicionando uma nova obra ao painel.'
+                ? 'Crie uma nova obra a partir do menu lateral.'
                 : 'Tente ajustar ou limpar os filtros.'
             }
           />
@@ -471,10 +484,15 @@ export default function PainelObras() {
           <div className="rounded-lg border border-border overflow-x-auto">
             <Table>
               <TableHeader>
-                {/* Cabeçalho com fundo escuro e texto claro (per spec) */}
                 <TableRow className="bg-foreground hover:bg-foreground border-foreground/20">
-                  <TableHead className="text-background font-semibold min-w-[160px]">
+                  <TableHead className="text-background font-semibold min-w-[180px] sticky left-0 bg-foreground z-10">
                     Obra
+                  </TableHead>
+                  <TableHead className="text-white font-semibold min-w-[160px]">
+                    Cliente
+                  </TableHead>
+                  <TableHead className="text-white font-semibold min-w-[140px]">
+                    Responsável
                   </TableHead>
                   <TableHead className="text-white font-semibold min-w-[120px]">
                     Prazo
@@ -493,6 +511,12 @@ export default function PainelObras() {
                     <SortableHeader label="Previsão de Avanço" sortKey="previsao_avanco" />
                   </TableHead>
                   <TableHead className="text-white font-semibold min-w-[120px]">Status</TableHead>
+                  <TableHead className="text-white font-semibold min-w-[110px] text-right">
+                    Progresso
+                  </TableHead>
+                  <TableHead className="text-white font-semibold min-w-[110px] text-center">
+                    Pendências
+                  </TableHead>
                   <TableHead className="text-white font-semibold min-w-[140px]">
                     <SortableHeader label="Última Atualização" sortKey="ultima_atualizacao" />
                   </TableHead>
@@ -505,7 +529,7 @@ export default function PainelObras() {
                   <TableHead className="text-white font-semibold min-w-[140px]">
                     Relacionamento
                   </TableHead>
-                  {isAdmin && <TableHead className="text-white w-12"></TableHead>}
+                  <TableHead className="text-white w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -514,40 +538,14 @@ export default function PainelObras() {
                     key={o.id}
                     obra={o}
                     zebra={idx % 2 === 1}
-                    isAdmin={isAdmin}
                     onUpdate={(patch) => updateObra(o.id, patch)}
-                    onRequestRemove={() => setRemoveId(o.id)}
+                    onOpen={() => navigate(`/obra/${o.id}`)}
                   />
                 ))}
               </TableBody>
             </Table>
           </div>
         )}
-
-        {/* Confirmação de exclusão */}
-        <AlertDialog open={!!removeId} onOpenChange={(open) => !open && setRemoveId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remover obra do painel?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Os dados desta linha serão excluídos
-                permanentemente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={() => {
-                  if (removeId) removeObra(removeId);
-                  setRemoveId(null);
-                }}
-              >
-                Remover
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </PageContainer>
     </TooltipProvider>
   );
@@ -557,21 +555,41 @@ export default function PainelObras() {
 interface ObraRowProps {
   obra: PainelObra;
   zebra: boolean;
-  isAdmin: boolean;
-  onUpdate: (patch: Partial<PainelObra>) => void;
-  onRequestRemove: () => void;
+  onUpdate: (patch: PainelObraPatch) => void;
+  onOpen: () => void;
 }
 
-function ObraRow({ obra, zebra, isAdmin, onUpdate, onRequestRemove }: ObraRowProps) {
+function ObraRow({ obra, zebra, onUpdate, onOpen }: ObraRowProps) {
+  const overdueColor =
+    obra.overdue_count > 0
+      ? 'bg-destructive text-destructive-foreground'
+      : obra.pending_count > 0
+        ? 'bg-amber-500 text-white'
+        : 'bg-muted text-muted-foreground';
+
   return (
     <TableRow className={cn(zebra && 'bg-muted/30')}>
-      {/* Nome da obra (identificador) */}
-      <TableCell className="font-medium">
-        <TextCell
-          value={obra.nome}
-          onSave={(v) => onUpdate({ nome: v })}
-          placeholder="Nome da obra"
-        />
+      {/* Nome da obra (link p/ detalhes; não editável aqui) */}
+      <TableCell className={cn('font-bold sticky left-0 z-10', zebra ? 'bg-muted/30' : 'bg-background')}>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="text-left hover:text-primary transition-colors flex items-center gap-1.5 group"
+          title="Abrir obra"
+        >
+          <span className="truncate">{obra.nome}</span>
+          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        </button>
+      </TableCell>
+
+      {/* Cliente (negrito por preferência registrada) */}
+      <TableCell className="font-bold text-sm">
+        {obra.customer_name ?? <span className="italic text-muted-foreground">—</span>}
+      </TableCell>
+
+      {/* Responsável */}
+      <TableCell className="text-sm">
+        {obra.engineer_name ?? <span className="italic text-muted-foreground">—</span>}
       </TableCell>
 
       {/* Prazo - texto livre */}
@@ -599,13 +617,11 @@ function ObraRow({ obra, zebra, isAdmin, onUpdate, onRequestRemove }: ObraRowPro
         />
       </TableCell>
 
-      {/* Etapa - select */}
+      {/* Etapa */}
       <TableCell>
         <Select
           value={obra.etapa ?? NONE}
-          onValueChange={(v) =>
-            onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })
-          }
+          onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
         >
           <SelectTrigger className="h-8 text-sm border-0 shadow-none hover:bg-accent">
             <SelectValue placeholder="Selecionar..." />
@@ -634,13 +650,11 @@ function ObraRow({ obra, zebra, isAdmin, onUpdate, onRequestRemove }: ObraRowPro
         />
       </TableCell>
 
-      {/* Status - badge select */}
+      {/* Status */}
       <TableCell>
         <Select
           value={obra.status ?? NONE}
-          onValueChange={(v) =>
-            onUpdate({ status: v === NONE ? null : (v as PainelStatus) })
-          }
+          onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
         >
           <SelectTrigger className="h-8 text-sm border-0 shadow-none hover:bg-accent p-0 [&>span]:w-full">
             {obra.status ? (
@@ -662,7 +676,34 @@ function ObraRow({ obra, zebra, isAdmin, onUpdate, onRequestRemove }: ObraRowPro
         </Select>
       </TableCell>
 
-      {/* Última atualização - automática, com tooltip */}
+      {/* Progresso (%) — somente leitura */}
+      <TableCell className="text-right tabular-nums text-sm">
+        {obra.progress_percentage != null ? (
+          <span className={cn(obra.progress_percentage >= 100 && 'text-green-600 font-semibold')}>
+            {obra.progress_percentage}%
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </TableCell>
+
+      {/* Pendências (vermelho se atrasadas) */}
+      <TableCell className="text-center">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge className={cn('tabular-nums', overdueColor)}>
+              {obra.pending_count}
+              {obra.overdue_count > 0 && ` (${obra.overdue_count}↓)`}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            {obra.pending_count} pendência(s)
+            {obra.overdue_count > 0 ? ` · ${obra.overdue_count} atrasada(s)` : ''}
+          </TooltipContent>
+        </Tooltip>
+      </TableCell>
+
+      {/* Última atualização */}
       <TableCell>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -684,7 +725,7 @@ function ObraRow({ obra, zebra, isAdmin, onUpdate, onRequestRemove }: ObraRowPro
         <DateCell value={obra.entrega_real} onChange={(v) => onUpdate({ entrega_real: v })} />
       </TableCell>
 
-      {/* Relacionamento - badge select */}
+      {/* Relacionamento */}
       <TableCell>
         <Select
           value={obra.relacionamento ?? NONE}
@@ -712,28 +753,25 @@ function ObraRow({ obra, zebra, isAdmin, onUpdate, onRequestRemove }: ObraRowPro
             <SelectItem value={NONE}>(nenhum)</SelectItem>
             {RELACIONAMENTO_OPTIONS.map((r) => (
               <SelectItem key={r} value={r}>
-                <Badge className={cn('px-2 py-0.5', relacionamentoBadgeClass(r))}>
-                  {r}
-                </Badge>
+                <Badge className={cn('px-2 py-0.5', relacionamentoBadgeClass(r))}>{r}</Badge>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </TableCell>
 
-      {/* Ação: remover (admin) */}
-      {isAdmin && (
-        <TableCell>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            onClick={onRequestRemove}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </TableCell>
-      )}
+      {/* Ação: abrir obra */}
+      <TableCell>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 text-muted-foreground hover:text-primary"
+          onClick={onOpen}
+          title="Abrir obra"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
+      </TableCell>
     </TableRow>
   );
 }
