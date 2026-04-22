@@ -373,9 +373,12 @@ export function BreakActivityDialog({
                       </Badge>
                     )}
                     {isValid && days > 0 && (
-                      <Badge variant="outline" className="text-[10px] border-green-500/40 text-green-600">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] border-primary/40 text-primary"
+                      >
                         <CheckCircle2 className="h-3 w-3 mr-1" />
-                        OK
+                        OK · {days} dia{days > 1 ? 's' : ''}
                       </Badge>
                     )}
                   </div>
@@ -394,12 +397,36 @@ export function BreakActivityDialog({
               Adicionar micro-etapa
             </Button>
 
+            {/* Sumário de cobertura: ajuda o usuário a perceber lacunas sem ser bloqueante.
+                Lacunas (dias não cobertos) são apenas um aviso — o submit só é bloqueado por
+                erros reais (sobreposição, intervalo inválido ou título faltando). */}
+            {totalDays > 0 && rows.length > 0 && (
+              <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-muted-foreground">
+                  Cobertura: <strong className="text-foreground">{totalDays - uncoveredDays}</strong> de{' '}
+                  <strong className="text-foreground">{totalDays}</strong> dia(s) da atividade-mãe.
+                </span>
+                {uncoveredDays > 0 && (
+                  <span className="inline-flex items-center gap-1 text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    {uncoveredDays} dia(s) sem micro-etapa (lacuna)
+                  </span>
+                )}
+                {uncoveredDays === 0 && errors.length === 0 && (
+                  <span className="inline-flex items-center gap-1 text-primary">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Todos os dias cobertos, sem sobreposição
+                  </span>
+                )}
+              </div>
+            )}
+
             {errors.length > 0 && (
               <ul className="text-xs text-destructive space-y-0.5 list-disc list-inside">
-                {errors.slice(0, 3).map((e, i) => (
+                {errors.slice(0, 4).map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}
-                {errors.length > 3 && <li>+{errors.length - 3} outro(s) ajuste(s) necessário(s)</li>}
+                {errors.length > 4 && <li>+{errors.length - 4} outro(s) ajuste(s) necessário(s)</li>}
               </ul>
             )}
           </div>
