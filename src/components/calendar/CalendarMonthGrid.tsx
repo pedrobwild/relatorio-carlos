@@ -28,6 +28,16 @@ import { getProjectColor } from '@/lib/taskUtils';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ptBR } from 'date-fns/locale';
 
 /**
@@ -107,6 +117,13 @@ export function CalendarMonthGrid({
   const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
   const today = getTodayLocal();
+
+  // Confirmação antes de navegar para o cronograma — evita cliques acidentais
+  // dentro do tooltip que poderiam tirar o usuário do contexto do calendário.
+  const [replanTarget, setReplanTarget] = useState<{
+    projectId: string;
+    projectName: string;
+  } | null>(null);
 
   const weeks = useMemo(() => {
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
@@ -487,7 +504,10 @@ function WeekRow({
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onReplanSchedule(seg.activity.project_id);
+                                  setReplanTarget({
+                                    projectId: seg.activity.project_id,
+                                    projectName: seg.activity.project_name,
+                                  });
                                 }}
                                 className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive text-destructive-foreground text-[11px] font-semibold px-2.5 py-1.5 hover:bg-destructive/90 transition-colors shadow-sm"
                                 title="Esta obra tem etapas anteriores não concluídas. Abrir o cronograma para replanejar."
