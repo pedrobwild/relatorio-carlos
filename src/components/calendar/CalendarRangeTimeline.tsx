@@ -12,23 +12,40 @@ import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
 import { EmptyState } from '@/components/ui/states';
 
-const MIN_DAY_WIDTH = 28; // px
-const ROW_BASE_PADDING = 12; // py-1.5 * 2 dentro do container
-const LANE_HEIGHT = 28;      // 24px da barra (h-6) + 4px de gap (mb-1)
+const MIN_DAY_WIDTH = 28;     // px
+const ROW_BASE_PADDING = 12;  // py-1.5 * 2 dentro do container
+const LANE_HEIGHT = 28;       // 24px da barra (h-6) + 4px de gap (mb-1)
+const MIN_LANES = 1;          // mínimo de faixas mesmo quando a obra não tem atividades no range
 const PROJECT_LABEL_WIDTH = 200;
 
 /**
- * Pré-calcula quantas faixas (lanes) são necessárias para renderizar todas as
- * atividades de uma obra sem sobreposição dentro do range visível. Usado para
- * dimensionar a altura da linha ANTES da renderização, garantindo que TODAS
- * as obras caibam perfeitamente na visão da semana/período sem cortes.
+ * Segmento de atividade já clipado ao range visível.
  */
-function computeLaneCount(
+interface BarSegment {
+  activity: WeekActivity;
+  startOffset: number;
+  span: number;
+  startsBefore: boolean;
+  endsAfter: boolean;
+}
+
+/**
+ * Regra de altura dinâmica:
+ *   row_height = ROW_BASE_PADDING + max(MIN_LANES, lanes.length) * LANE_HEIGHT
+ *
+ * Onde `lanes.length` é o número real de faixas necessárias para renderizar
+ * TODAS as atividades da obra dentro do período visível sem sobreposição.
+ *
+ * `computeLanes` é a fonte ÚNICA da verdade — é usada tanto para reservar
+ * a altura da linha quanto para renderizar as barras em `ProjectBars`,
+ * eliminando qualquer chance de corte ou desalinhamento.
+ */
+function computeLanes(
   items: WeekActivity[],
   rangeStart: Date,
   rangeEnd: Date,
-): number {
-  const segs = items
+): BarSegment[][] {
+  const segs: BarSegment[] = items
     .map((a) => {
       const s = parseISO(a.planned_start);
       const e = parseISO(a.planned_end);
@@ -36,13 +53,16 @@ function computeLaneCount(
       const cs = s < rangeStart ? rangeStart : s;
       const ce = e > rangeEnd ? rangeEnd : e;
       return {
+        activity: a,
         startOffset: differenceInCalendarDays(cs, rangeStart),
         span: differenceInCalendarDays(ce, cs) + 1,
-      };
+        startsBefore: s < rangeStart,
+        endsAfter: e > rangeEnd,
+      } as BarSegment;
     })
-    .filter(Boolean) as { startOffset: number; span: number }[];
+    .filter(Boolean) as BarSegment[];
 
-  const lanes: { startOffset: number; span: number }[][] = [];
+  const lanes: BarSegment[][] = [];
   segs
     .slice()
     .sort((a, b) => a.startOffset - b.startOffset)
@@ -58,7 +78,7 @@ function computeLaneCount(
       }
       if (!placed) lanes.push([seg]);
     });
-  return Math.max(1, lanes.length);
+  return lanes;
 }
 
 interface Props {
@@ -145,10 +165,11 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
           <div>
             {byProject.map((g) => {
               const color = getProjectColor(g.project_id);
-              // Altura dinâmica: a linha da obra cresce conforme o número de
-              // faixas (lanes) necessárias para acomodar todas as atividades
-              // sem sobreposição. Garante que TODAS as obras caibam na visão.
-              const laneCount = computeLaneCount(g.items, rangeStart, rangeEnd);
+              // Fonte única: as lanes calculadas aqui são reutilizadas em
+              // ProjectBars, garantindo que a altura reservada == lanes
+              // efetivamente renderizadas (zero corte / zero sobreposição).
+              const lanes = computeLanes(g.items, rangeStart, rangeEnd);
+              const laneCount = Math.max(MIN_LANES, lanes.length);
               const rowHeight = ROW_BASE_PADDING + laneCount * LANE_HEIGHT;
               return (
                 <div key={g.project_id} className="flex border-b last:border-b-0 hover:bg-muted/20">
@@ -196,11 +217,9 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                         );
                       })}
                     </div>
-                    {/* Bars */}
+                    {/* Bars — recebem as lanes já calculadas para alinhamento exato */}
                     <ProjectBars
-                      items={g.items}
-                      rangeStart={rangeStart}
-                      rangeEnd={rangeEnd}
+                      lanes={lanes}
                       dayWidth={dayWidth}
                       colorClass={color.bg}
                       borderClass={color.border}
@@ -218,65 +237,18 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
 }
 
 function ProjectBars({
-  items,
-  rangeStart,
-  rangeEnd,
+  lanes,
   dayWidth,
   colorClass,
   borderClass,
   onActivityClick,
 }: {
-  items: WeekActivity[];
-  rangeStart: Date;
-  rangeEnd: Date;
+  lanes: BarSegment[][];
   dayWidth: number;
   colorClass: string;
   borderClass: string;
   onActivityClick: (a: WeekActivity) => void;
 }) {
-  // Lane assignment so overlapping activities stack vertically.
-  const segments = useMemo(() => {
-    return items
-      .map((a) => {
-        const s = parseISO(a.planned_start);
-        const e = parseISO(a.planned_end);
-        if (e < rangeStart || s > rangeEnd) return null;
-        const cs = s < rangeStart ? rangeStart : s;
-        const ce = e > rangeEnd ? rangeEnd : e;
-        return {
-          activity: a,
-          startOffset: differenceInCalendarDays(cs, rangeStart),
-          span: differenceInCalendarDays(ce, cs) + 1,
-          startsBefore: s < rangeStart,
-          endsAfter: e > rangeEnd,
-        };
-      })
-      .filter(Boolean) as {
-      activity: WeekActivity;
-      startOffset: number;
-      span: number;
-      startsBefore: boolean;
-      endsAfter: boolean;
-    }[];
-  }, [items, rangeStart.getTime(), rangeEnd.getTime()]);
-
-  const lanes: typeof segments[] = [];
-  segments
-    .slice()
-    .sort((a, b) => a.startOffset - b.startOffset)
-    .forEach((seg) => {
-      let placed = false;
-      for (const lane of lanes) {
-        const last = lane[lane.length - 1];
-        if (last.startOffset + last.span <= seg.startOffset) {
-          lane.push(seg);
-          placed = true;
-          break;
-        }
-      }
-      if (!placed) lanes.push([seg]);
-    });
-
   return (
     <div className="absolute inset-0 py-1.5">
       {lanes.map((lane, laneIdx) => (
