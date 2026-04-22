@@ -1,6 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addWeeks, endOfWeek, format, isWithinInterval, parseISO, startOfWeek } from 'date-fns';
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isWithinInterval,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarDays,
@@ -28,13 +39,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
 import { EmptyState } from '@/components/ui/states';
 import { ActivityDetailDialog } from '@/components/calendar/ActivityDetailDialog';
+import { CalendarMonthGrid } from '@/components/calendar/CalendarMonthGrid';
+import { CalendarDayAgenda } from '@/components/calendar/CalendarDayAgenda';
+import { CalendarRangeTimeline } from '@/components/calendar/CalendarRangeTimeline';
 
-const weekdayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+type ViewMode = 'month' | 'week' | 'day' | 'range';
 
 function getActivityStatus(a: WeekActivity, today: Date) {
   if (a.actual_end) return 'completed' as const;
@@ -54,18 +69,49 @@ const statusBadge: Record<string, { label: string; className: string }> = {
 export default function CalendarioObras() {
   const navigate = useNavigate();
   const today = useMemo(() => new Date(), []);
+  const [view, setView] = useState<ViewMode>('week');
   const [refDate, setRefDate] = useState<Date>(today);
+  const [rangeStartDate, setRangeStartDate] = useState<Date>(today);
+  const [rangeEndDate, setRangeEndDate] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [projectFilter, setProjectFilter] = useState<string>('all');
 
-  const weekStartDate = startOfWeek(refDate, { weekStartsOn: 1 });
-  const weekEndDate = endOfWeek(refDate, { weekStartsOn: 1 });
-  const weekStart = format(weekStartDate, 'yyyy-MM-dd');
-  const weekEnd = format(weekEndDate, 'yyyy-MM-dd');
+  // Compute fetch range based on active view.
+  const { fetchStart, fetchEnd, viewStart, viewEnd } = useMemo(() => {
+    if (view === 'month') {
+      const ms = startOfMonth(refDate);
+      const me = endOfMonth(refDate);
+      // Fetch the visible grid (Mon..Sun expanded)
+      return {
+        fetchStart: startOfWeek(ms, { weekStartsOn: 1 }),
+        fetchEnd: endOfWeek(me, { weekStartsOn: 1 }),
+        viewStart: ms,
+        viewEnd: me,
+      };
+    }
+    if (view === 'day') {
+      return { fetchStart: refDate, fetchEnd: refDate, viewStart: refDate, viewEnd: refDate };
+    }
+    if (view === 'range') {
+      const s = rangeStartDate <= rangeEndDate ? rangeStartDate : rangeEndDate;
+      const e = rangeStartDate <= rangeEndDate ? rangeEndDate : rangeStartDate;
+      return { fetchStart: s, fetchEnd: e, viewStart: s, viewEnd: e };
+    }
+    // week
+    const ws = startOfWeek(refDate, { weekStartsOn: 1 });
+    const we = endOfWeek(refDate, { weekStartsOn: 1 });
+    return { fetchStart: ws, fetchEnd: we, viewStart: ws, viewEnd: we };
+  }, [view, refDate, rangeStartDate, rangeEndDate]);
 
-  const { byProject, activities, isLoading, updateDates, isUpdating } = useWeekActivities(weekStart, weekEnd);
+  const fetchStartStr = format(fetchStart, 'yyyy-MM-dd');
+  const fetchEndStr = format(fetchEnd, 'yyyy-MM-dd');
 
-  // Project options derived from full week dataset (so the filter remains stable)
+  const { byProject, activities, isLoading, updateDates, isUpdating } = useWeekActivities(
+    fetchStartStr,
+    fetchEndStr,
+  );
+
+  // Project options derived from full dataset (so the filter remains stable)
   const projectOptions = useMemo(
     () =>
       byProject
@@ -107,15 +153,43 @@ export default function CalendarioObras() {
     await updateDates(a.id, { actual_start: null, actual_end: null });
   };
 
-  const goPrev = () => setRefDate(addWeeks(refDate, -1));
-  const goNext = () => setRefDate(addWeeks(refDate, 1));
-  const goToday = () => setRefDate(today);
+  // Navigation per view
+  const goPrev = () => {
+    if (view === 'month') setRefDate(addMonths(refDate, -1));
+    else if (view === 'day') setRefDate(addDays(refDate, -1));
+    else if (view === 'range') {
+      const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
+      setRangeStartDate(addDays(rangeStartDate, -span));
+      setRangeEndDate(addDays(rangeEndDate, -span));
+    } else setRefDate(addWeeks(refDate, -1));
+  };
+  const goNext = () => {
+    if (view === 'month') setRefDate(addMonths(refDate, 1));
+    else if (view === 'day') setRefDate(addDays(refDate, 1));
+    else if (view === 'range') {
+      const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
+      setRangeStartDate(addDays(rangeStartDate, span));
+      setRangeEndDate(addDays(rangeEndDate, span));
+    } else setRefDate(addWeeks(refDate, 1));
+  };
+  const goToday = () => {
+    setRefDate(today);
+    if (view === 'range') {
+      setRangeStartDate(today);
+      setRangeEndDate(addDays(today, 13));
+    }
+  };
 
-  const weekLabel = `${format(weekStartDate, "d 'de' MMM", { locale: ptBR })} – ${format(
-    weekEndDate,
-    "d 'de' MMM 'de' yyyy",
-    { locale: ptBR },
-  )}`;
+  const periodLabel = useMemo(() => {
+    if (view === 'month') return format(refDate, "MMMM 'de' yyyy", { locale: ptBR });
+    if (view === 'day') return format(refDate, "EEEE, d 'de' MMM 'de' yyyy", { locale: ptBR });
+    if (view === 'range')
+      return `${format(viewStart, "d 'de' MMM", { locale: ptBR })} – ${format(viewEnd, "d 'de' MMM 'de' yyyy", { locale: ptBR })}`;
+    return `${format(viewStart, "d 'de' MMM", { locale: ptBR })} – ${format(viewEnd, "d 'de' MMM 'de' yyyy", { locale: ptBR })}`;
+  }, [view, refDate, viewStart, viewEnd]);
+
+  // Capitalize first letter
+  const periodLabelCap = periodLabel.charAt(0).toUpperCase() + periodLabel.slice(1);
 
   return (
     <PageContainer>
@@ -123,52 +197,118 @@ export default function CalendarioObras() {
       <header className="mb-6">
         <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
           <CalendarDays className="h-4 w-4" />
-          <span>Visão semanal</span>
+          <span>Visão de calendário</span>
         </div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Calendário de Obras</h1>
         <p className="text-muted-foreground mt-1">
-          Atividades programadas para a semana em todas as obras. Atualize as datas reais e veja o reflexo
-          imediato no cronograma de cada obra.
+          Atividades programadas em todas as obras. Alterne entre visões de mês, semana, dia ou período
+          personalizado para acompanhar e atualizar o cronograma.
         </p>
       </header>
 
-      {/* Week navigator */}
+      {/* View toggle + navigator */}
       <Card className="mb-4">
-        <CardContent className="py-3 flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="icon" onClick={goPrev} aria-label="Semana anterior">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="font-semibold">
-                <CalendarDays className="h-4 w-4 mr-2" />
-                {weekLabel}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-50" align="start">
-              <Calendar
-                mode="single"
-                selected={refDate}
-                onSelect={(d) => d && setRefDate(d)}
-                initialFocus
-                locale={ptBR}
-                className={cn('p-3 pointer-events-auto')}
-              />
-            </PopoverContent>
-          </Popover>
-          <Button variant="outline" size="icon" onClick={goNext} aria-label="Próxima semana">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={goToday}>
-            Hoje
-          </Button>
+        <CardContent className="py-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
+              <TabsList>
+                <TabsTrigger value="month">Mês</TabsTrigger>
+                <TabsTrigger value="week">Semana</TabsTrigger>
+                <TabsTrigger value="day">Dia</TabsTrigger>
+                <TabsTrigger value="range">Período</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-          <div className="ml-auto flex flex-wrap items-center gap-2 text-xs">
-            <Badge variant="outline">Total: {counts.total}</Badge>
-            <Badge className={statusBadge.in_progress.className}>Em andamento: {counts.in_progress}</Badge>
-            <Badge className={statusBadge.overdue.className}>Atrasadas: {counts.overdue}</Badge>
-            <Badge className={statusBadge.pending.className}>Pendentes: {counts.pending}</Badge>
-            <Badge className={statusBadge.completed.className}>Concluídas: {counts.completed}</Badge>
+            <div className="ml-auto flex flex-wrap items-center gap-2 text-xs">
+              <Badge variant="outline">Total: {counts.total}</Badge>
+              <Badge className={statusBadge.in_progress.className}>Em andamento: {counts.in_progress}</Badge>
+              <Badge className={statusBadge.overdue.className}>Atrasadas: {counts.overdue}</Badge>
+              <Badge className={statusBadge.pending.className}>Pendentes: {counts.pending}</Badge>
+              <Badge className={statusBadge.completed.className}>Concluídas: {counts.completed}</Badge>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {view !== 'range' ? (
+              <>
+                <Button variant="outline" size="icon" onClick={goPrev} aria-label="Anterior">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="font-semibold">
+                      <CalendarDays className="h-4 w-4 mr-2" />
+                      {periodLabelCap}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={refDate}
+                      onSelect={(d) => d && setRefDate(d)}
+                      initialFocus
+                      locale={ptBR}
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Button variant="outline" size="icon" onClick={goNext} aria-label="Próximo">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={goToday}>
+                  Hoje
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="icon" onClick={goPrev} aria-label="Período anterior">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline">
+                      <CalendarDays className="h-4 w-4 mr-2" />
+                      Início: <strong className="ml-1">{format(rangeStartDate, 'dd/MM/yyyy')}</strong>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={rangeStartDate}
+                      onSelect={(d) => d && setRangeStartDate(d)}
+                      initialFocus
+                      locale={ptBR}
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-muted-foreground text-sm">→</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline">
+                      <CalendarDays className="h-4 w-4 mr-2" />
+                      Fim: <strong className="ml-1">{format(rangeEndDate, 'dd/MM/yyyy')}</strong>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={rangeEndDate}
+                      onSelect={(d) => d && setRangeEndDate(d)}
+                      initialFocus
+                      locale={ptBR}
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Button variant="outline" size="icon" onClick={goNext} aria-label="Próximo período">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={goToday}>
+                  Hoje
+                </Button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -207,150 +347,41 @@ export default function CalendarioObras() {
             <Skeleton key={i} className="h-24 w-full" />
           ))}
         </div>
-      ) : filteredByProject.length === 0 ? (
-        <EmptyState
-          icon={CalendarDays}
-          title={projectFilter === 'all' ? 'Nenhuma atividade programada' : 'Nenhuma atividade para esta obra'}
-          description={
-            projectFilter === 'all'
-              ? 'Não há atividades planejadas para esta semana em nenhuma obra.'
-              : 'Esta obra não possui atividades planejadas para a semana selecionada.'
-          }
+      ) : view === 'month' ? (
+        <CalendarMonthGrid
+          refDate={refDate}
+          activities={filteredActivities}
+          onActivityClick={setSelectedActivity}
+        />
+      ) : view === 'day' ? (
+        <CalendarDayAgenda
+          day={refDate}
+          activities={filteredActivities}
+          onActivityClick={setSelectedActivity}
+        />
+      ) : view === 'range' ? (
+        <CalendarRangeTimeline
+          rangeStart={viewStart}
+          rangeEnd={viewEnd}
+          byProject={filteredByProject}
+          onActivityClick={setSelectedActivity}
         />
       ) : (
-        <div className="space-y-4">
-          {filteredByProject.map((group) => {
-            const color = getProjectColor(group.project_id);
-            return (
-              <Card key={group.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
-                <CardHeader className="py-3 px-4 border-b">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md', color.bg)}>
-                        <Building2 className="h-4 w-4" />
-                      </span>
-                      <CardTitle className="text-base font-semibold truncate">
-                        {group.project_name}
-                      </CardTitle>
-                      <Badge variant="secondary" className="text-xs">
-                        {group.items.length} ativ.
-                      </Badge>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/obra/${group.project_id}/cronograma`)}
-                      className="h-7 text-xs"
-                    >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Ver cronograma
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0 divide-y">
-                  {group.items.map((a) => {
-                    const status = getActivityStatus(a, today);
-                    const sb = statusBadge[status];
-                    const ps = parseISO(a.planned_start);
-                    const pe = parseISO(a.planned_end);
-                    const inThisWeek = isWithinInterval(today, { start: weekStartDate, end: weekEndDate });
-                    return (
-                      <div
-                        key={a.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setSelectedActivity(a)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            setSelectedActivity(a);
-                          }
-                        }}
-                        className="p-4 flex flex-col md:flex-row md:items-center gap-3 hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus-visible:bg-muted/40"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-sm truncate">{a.description}</span>
-                            {a.etapa && (
-                              <Badge variant="outline" className="text-[10px]">
-                                {a.etapa}
-                              </Badge>
-                            )}
-                            <Badge className={cn('text-[10px]', sb.className)}>{sb.label}</Badge>
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                            <span>
-                              Previsto: <strong>{format(ps, 'dd/MM')}</strong> →{' '}
-                              <strong>{format(pe, 'dd/MM')}</strong>
-                            </span>
-                            {a.actual_start && (
-                              <span className="text-blue-600">
-                                Início real: <strong>{format(parseISO(a.actual_start), 'dd/MM')}</strong>
-                              </span>
-                            )}
-                            {a.actual_end && (
-                              <span className="text-green-600">
-                                Fim real: <strong>{format(parseISO(a.actual_end), 'dd/MM')}</strong>
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          {!a.actual_start && !a.actual_end && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={isUpdating}
-                              onClick={() => handleStart(a)}
-                              title={
-                                inThisWeek
-                                  ? 'Marcar início real como hoje'
-                                  : 'Marcar início real como hoje (data atual do sistema)'
-                              }
-                            >
-                              <PlayCircle className="h-4 w-4 mr-1" />
-                              Iniciar
-                            </Button>
-                          )}
-                          {!a.actual_end && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              disabled={isUpdating}
-                              onClick={() => handleFinish(a)}
-                              title="Marcar conclusão real como hoje"
-                            >
-                              <CheckCircle2 className="h-4 w-4 mr-1" />
-                              Concluir
-                            </Button>
-                          )}
-                          {(a.actual_start || a.actual_end) && (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              disabled={isUpdating}
-                              onClick={() => handleReset(a)}
-                              title="Limpar datas reais"
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        // Week view (original list)
+        <WeekListView
+          filteredByProject={filteredByProject}
+          today={today}
+          weekStart={viewStart}
+          weekEnd={viewEnd}
+          isUpdating={isUpdating}
+          onActivityClick={setSelectedActivity}
+          onStart={handleStart}
+          onFinish={handleFinish}
+          onReset={handleReset}
+          onOpenSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
+          projectFilter={projectFilter}
+        />
       )}
-
-      {/* Weekday legend */}
-      <p className="text-[11px] text-muted-foreground text-center mt-6">
-        Semana {weekdayLabels.join(' · ')} — referenciada pela segunda-feira.
-      </p>
 
       <ActivityDetailDialog
         activity={selectedActivity}
@@ -360,5 +391,178 @@ export default function CalendarioObras() {
         isUpdating={isUpdating}
       />
     </PageContainer>
+  );
+}
+
+// ── Week list view kept here for parity with previous UI ────────────
+function WeekListView({
+  filteredByProject,
+  today,
+  weekStart,
+  weekEnd,
+  isUpdating,
+  onActivityClick,
+  onStart,
+  onFinish,
+  onReset,
+  onOpenSchedule,
+  projectFilter,
+}: {
+  filteredByProject: { project_id: string; project_name: string; items: WeekActivity[] }[];
+  today: Date;
+  weekStart: Date;
+  weekEnd: Date;
+  isUpdating: boolean;
+  onActivityClick: (a: WeekActivity) => void;
+  onStart: (a: WeekActivity) => void;
+  onFinish: (a: WeekActivity) => void;
+  onReset: (a: WeekActivity) => void;
+  onOpenSchedule: (projectId: string) => void;
+  projectFilter: string;
+}) {
+  if (filteredByProject.length === 0) {
+    return (
+      <EmptyState
+        icon={CalendarDays}
+        title={projectFilter === 'all' ? 'Nenhuma atividade programada' : 'Nenhuma atividade para esta obra'}
+        description={
+          projectFilter === 'all'
+            ? 'Não há atividades planejadas para esta semana em nenhuma obra.'
+            : 'Esta obra não possui atividades planejadas para a semana selecionada.'
+        }
+      />
+    );
+  }
+  const inThisWeek = isWithinInterval(today, { start: weekStart, end: weekEnd });
+  return (
+    <div className="space-y-4">
+      {filteredByProject.map((group) => {
+        const color = getProjectColor(group.project_id);
+        return (
+          <Card key={group.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
+            <CardHeader className="py-3 px-4 border-b">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md', color.bg)}>
+                    <Building2 className="h-4 w-4" />
+                  </span>
+                  <CardTitle className="text-base font-semibold truncate">{group.project_name}</CardTitle>
+                  <Badge variant="secondary" className="text-xs">
+                    {group.items.length} ativ.
+                  </Badge>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onOpenSchedule(group.project_id)}
+                  className="h-7 text-xs"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Ver cronograma
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 divide-y">
+              {group.items.map((a) => {
+                const status = (() => {
+                  if (a.actual_end) return 'completed' as const;
+                  if (a.actual_start) return 'in_progress' as const;
+                  if (today > parseISO(a.planned_start)) return 'overdue' as const;
+                  return 'pending' as const;
+                })();
+                const sb = statusBadge[status];
+                const ps = parseISO(a.planned_start);
+                const pe = parseISO(a.planned_end);
+                return (
+                  <div
+                    key={a.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onActivityClick(a)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onActivityClick(a);
+                      }
+                    }}
+                    className="p-4 flex flex-col md:flex-row md:items-center gap-3 hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus-visible:bg-muted/40"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm truncate">{a.description}</span>
+                        {a.etapa && (
+                          <Badge variant="outline" className="text-[10px]">
+                            {a.etapa}
+                          </Badge>
+                        )}
+                        <Badge className={cn('text-[10px]', sb.className)}>{sb.label}</Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                        <span>
+                          Previsto: <strong>{format(ps, 'dd/MM')}</strong> →{' '}
+                          <strong>{format(pe, 'dd/MM')}</strong>
+                        </span>
+                        {a.actual_start && (
+                          <span className="text-blue-600">
+                            Início real: <strong>{format(parseISO(a.actual_start), 'dd/MM')}</strong>
+                          </span>
+                        )}
+                        {a.actual_end && (
+                          <span className="text-green-600">
+                            Fim real: <strong>{format(parseISO(a.actual_end), 'dd/MM')}</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {!a.actual_start && !a.actual_end && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isUpdating}
+                          onClick={() => onStart(a)}
+                          title={
+                            inThisWeek
+                              ? 'Marcar início real como hoje'
+                              : 'Marcar início real como hoje (data atual do sistema)'
+                          }
+                        >
+                          <PlayCircle className="h-4 w-4 mr-1" />
+                          Iniciar
+                        </Button>
+                      )}
+                      {!a.actual_end && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={isUpdating}
+                          onClick={() => onFinish(a)}
+                          title="Marcar conclusão real como hoje"
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          Concluir
+                        </Button>
+                      )}
+                      {(a.actual_start || a.actual_end) && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={isUpdating}
+                          onClick={() => onReset(a)}
+                          title="Limpar datas reais"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
 }
