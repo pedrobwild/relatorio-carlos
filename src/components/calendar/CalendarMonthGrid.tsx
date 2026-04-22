@@ -23,10 +23,39 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ptBR } from 'date-fns/locale';
+
+/**
+ * Determina o status visual de uma atividade para exibir no tooltip:
+ * - "Concluída": tem actual_end
+ * - "Em andamento": tem actual_start mas não actual_end
+ * - "Atrasada": planned_end < hoje e ainda não foi concluída
+ * - "Planejada": ainda não iniciada
+ */
+function getActivityStatus(a: WeekActivity): {
+  label: string;
+  Icon: typeof CheckCircle2;
+  className: string;
+} {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (a.actual_end) {
+    return { label: 'Concluída', Icon: CheckCircle2, className: 'text-emerald-600 dark:text-emerald-400' };
+  }
+  if (a.actual_start) {
+    return { label: 'Em andamento', Icon: PlayCircle, className: 'text-blue-600 dark:text-blue-400' };
+  }
+  const plannedEnd = parseISO(a.planned_end);
+  if (plannedEnd < today) {
+    return { label: 'Atrasada', Icon: AlertTriangle, className: 'text-destructive' };
+  }
+  return { label: 'Planejada', Icon: Clock, className: 'text-muted-foreground' };
+}
 
 interface Props {
   refDate: Date;
