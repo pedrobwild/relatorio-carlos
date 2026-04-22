@@ -40,6 +40,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
@@ -78,6 +80,9 @@ export default function CalendarioObras() {
   const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  // Por padrão, ocultamos atividades de obras já concluídas para focar no que está em andamento.
+  // O usuário pode reativar via toggle "Incluir concluídas" na barra de filtros.
+  const [includeCompleted, setIncludeCompleted] = useState<boolean>(false);
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
   const draftRangeInvalid = draftRangeStart > draftRangeEnd;
@@ -130,18 +135,39 @@ export default function CalendarioObras() {
     fetchEndStr,
   );
 
-  // Project options derived from full dataset (so the filter remains stable)
-  const projectOptions = useMemo(
-    () =>
-      byProject
-        .map((g) => ({ id: g.project_id, name: g.project_name }))
-        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+  // 1) Aplica o filtro "ocultar obras concluídas" antes de qualquer outra lógica:
+  //    obras com project_status === 'completed' só aparecem quando o toggle estiver ativo.
+  const visibleByProject = useMemo(
+    () => (includeCompleted ? byProject : byProject.filter((g) => g.project_status !== 'completed')),
+    [byProject, includeCompleted],
+  );
+
+  // Quantidade de obras concluídas escondidas (para feedback no UI)
+  const hiddenCompletedCount = useMemo(
+    () => byProject.filter((g) => g.project_status === 'completed').length,
     [byProject],
   );
 
+  // Project options derived from visible dataset (filtro de obra reflete o toggle)
+  const projectOptions = useMemo(
+    () =>
+      visibleByProject
+        .map((g) => ({
+          id: g.project_id,
+          name: g.project_name,
+          client_name: g.client_name,
+          isCompleted: g.project_status === 'completed',
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    [visibleByProject],
+  );
+
   const filteredByProject = useMemo(
-    () => (projectFilter === 'all' ? byProject : byProject.filter((g) => g.project_id === projectFilter)),
-    [byProject, projectFilter],
+    () =>
+      projectFilter === 'all'
+        ? visibleByProject
+        : visibleByProject.filter((g) => g.project_id === projectFilter),
+    [visibleByProject, projectFilter],
   );
 
   const filteredActivities = useMemo(
@@ -417,30 +443,54 @@ export default function CalendarioObras() {
       </Card>
 
       {/* Filter bar */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Filter className="h-3.5 w-3.5" />
-          Filtrar por obra:
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Filter className="h-3.5 w-3.5" />
+            Filtrar por obra:
+          </div>
+          <Select value={projectFilter} onValueChange={setProjectFilter}>
+            <SelectTrigger className="h-9 w-full sm:w-[320px]">
+              <SelectValue placeholder="Todas as obras" />
+            </SelectTrigger>
+            <SelectContent position="popper" className="z-50 max-h-72">
+              <SelectItem value="all">Todas as obras ({visibleByProject.length})</SelectItem>
+              {projectOptions.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="font-medium">{p.name}</span>
+                  {p.client_name && (
+                    <span className="text-muted-foreground"> · {p.client_name}</span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {projectFilter !== 'all' && (
+            <Button variant="ghost" size="sm" onClick={() => setProjectFilter('all')} className="h-9">
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar filtro
+            </Button>
+          )}
         </div>
-        <Select value={projectFilter} onValueChange={setProjectFilter}>
-          <SelectTrigger className="h-9 w-full sm:w-[280px]">
-            <SelectValue placeholder="Todas as obras" />
-          </SelectTrigger>
-          <SelectContent position="popper" className="z-50 max-h-72">
-            <SelectItem value="all">Todas as obras ({byProject.length})</SelectItem>
-            {projectOptions.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {projectFilter !== 'all' && (
-          <Button variant="ghost" size="sm" onClick={() => setProjectFilter('all')} className="h-9">
-            <X className="h-3.5 w-3.5 mr-1" />
-            Limpar filtro
-          </Button>
-        )}
+
+        {/* Toggle: incluir obras concluídas (ocultas por padrão) */}
+        <div className="flex items-center gap-2 ml-auto">
+          <Switch
+            id="include-completed"
+            checked={includeCompleted}
+            onCheckedChange={setIncludeCompleted}
+          />
+          <Label
+            htmlFor="include-completed"
+            className="text-xs text-muted-foreground cursor-pointer select-none"
+            title="Por padrão, obras com status 'Concluída' ficam ocultas. Ative para mostrá-las novamente."
+          >
+            Incluir obras concluídas
+            {hiddenCompletedCount > 0 && !includeCompleted && (
+              <span className="ml-1 text-foreground font-medium">({hiddenCompletedCount})</span>
+            )}
+          </Label>
+        </div>
       </div>
 
       {/* Body */}
@@ -518,7 +568,12 @@ function WeekListView({
   onOpenSchedule,
   projectFilter,
 }: {
-  filteredByProject: { project_id: string; project_name: string; items: WeekActivity[] }[];
+  filteredByProject: {
+    project_id: string;
+    project_name: string;
+    client_name?: string | null;
+    items: WeekActivity[];
+  }[];
   today: Date;
   weekStart: Date;
   weekEnd: Date;
@@ -552,12 +607,21 @@ function WeekListView({
           <Card key={group.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
             <CardHeader className="py-3 px-4 border-b">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md', color.bg)}>
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className={cn('inline-flex items-center justify-center h-7 w-7 rounded-md shrink-0', color.bg)}>
                     <Building2 className="h-4 w-4" />
                   </span>
-                  <CardTitle className="text-base font-semibold truncate">{group.project_name}</CardTitle>
-                  <Badge variant="secondary" className="text-xs">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base font-semibold truncate">
+                      {group.project_name}
+                    </CardTitle>
+                    {group.client_name && (
+                      <div className="text-xs text-muted-foreground truncate">
+                        Cliente: {group.client_name}
+                      </div>
+                    )}
+                  </div>
+                  <Badge variant="secondary" className="text-xs shrink-0">
                     {group.items.length} ativ.
                   </Badge>
                 </div>

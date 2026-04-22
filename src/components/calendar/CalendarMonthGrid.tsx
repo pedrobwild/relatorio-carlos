@@ -238,7 +238,11 @@ function WeekRow({
                     key={seg.activity.id}
                     type="button"
                     onClick={() => onActivityClick(seg.activity)}
-                    title={`${seg.activity.project_name} — ${seg.activity.description}`}
+                    title={
+                      `${seg.activity.project_name}` +
+                      (seg.activity.client_name ? ` · ${seg.activity.client_name}` : '') +
+                      ` — ${seg.activity.description}`
+                    }
                     style={{
                       gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
                     }}
@@ -252,6 +256,9 @@ function WeekRow({
                     )}
                   >
                     <span className="font-medium">{seg.activity.project_name}</span>
+                    {seg.activity.client_name && (
+                      <span className="opacity-70"> · {seg.activity.client_name}</span>
+                    )}
                     <span className="opacity-70"> · {seg.activity.description}</span>
                   </button>
                 );

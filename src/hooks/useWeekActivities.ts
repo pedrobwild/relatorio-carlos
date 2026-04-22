@@ -18,6 +18,10 @@ export interface WeekActivity {
   id: string;
   project_id: string;
   project_name: string;
+  /** Nome do cliente vinculado à obra (de projects.client_name). */
+  client_name: string | null;
+  /** Status do projeto-pai (active, completed, draft, on_hold, cancelled, ...). */
+  project_status: string | null;
   description: string;
   detailed_description: string | null;
   etapa: string | null;
@@ -58,7 +62,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       weight,
       created_at,
       updated_at,
-      projects:project_id ( name )
+      projects:project_id ( name, client_name, status )
     `)
     .lte('planned_start', weekEnd)
     .gte('planned_end', weekStart)
@@ -70,6 +74,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     id: row.id,
     project_id: row.project_id,
     project_name: row.projects?.name ?? 'Obra sem nome',
+    client_name: row.projects?.client_name ?? null,
+    project_status: row.projects?.status ?? null,
     description: row.description,
     detailed_description: row.detailed_description ?? null,
     etapa: row.etapa,
@@ -140,10 +146,25 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
   // actual_start when present, otherwise planned_start (ascending).
   // Tie-break by planned_end so shorter / earlier-ending tasks come first.
   const byProject = useMemo(() => {
-    const map = new Map<string, { project_id: string; project_name: string; items: WeekActivity[] }>();
+    const map = new Map<
+      string,
+      {
+        project_id: string;
+        project_name: string;
+        client_name: string | null;
+        project_status: string | null;
+        items: WeekActivity[];
+      }
+    >();
     for (const a of activities) {
       if (!map.has(a.project_id)) {
-        map.set(a.project_id, { project_id: a.project_id, project_name: a.project_name, items: [] });
+        map.set(a.project_id, {
+          project_id: a.project_id,
+          project_name: a.project_name,
+          client_name: a.client_name,
+          project_status: a.project_status,
+          items: [],
+        });
       }
       map.get(a.project_id)!.items.push(a);
     }

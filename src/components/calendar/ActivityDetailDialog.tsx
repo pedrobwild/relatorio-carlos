@@ -159,7 +159,9 @@ export function ActivityDetailDialog({
                 {activity.description}
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs">
-                {activity.project_name} · Peso {activity.weight}%
+                {activity.project_name}
+                {activity.client_name && ` · Cliente: ${activity.client_name}`}
+                {' · '}Peso {activity.weight}%
               </DialogDescription>
             </div>
           </div>

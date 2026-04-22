@@ -19,7 +19,12 @@ const PROJECT_LABEL_WIDTH = 200;
 interface Props {
   rangeStart: Date;
   rangeEnd: Date;
-  byProject: { project_id: string; project_name: string; items: WeekActivity[] }[];
+  byProject: {
+    project_id: string;
+    project_name: string;
+    client_name?: string | null;
+    items: WeekActivity[];
+  }[];
   onActivityClick: (a: WeekActivity) => void;
 }
 
@@ -104,8 +109,18 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                     <span className={cn('inline-flex h-6 w-6 items-center justify-center rounded-md shrink-0', color.bg)}>
                       <Building2 className="h-3 w-3" />
                     </span>
-                    <div className="text-xs font-medium truncate" title={g.project_name}>
-                      {g.project_name}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium truncate" title={g.project_name}>
+                        {g.project_name}
+                      </div>
+                      {g.client_name && (
+                        <div
+                          className="text-[10px] text-muted-foreground truncate"
+                          title={g.client_name}
+                        >
+                          {g.client_name}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div
