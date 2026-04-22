@@ -427,12 +427,12 @@ export default function PainelObras() {
         <div className="flex flex-col gap-4 mb-4 pt-4">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">Painel de Obras</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Visão executiva unificada · Clique nas células com fundo cinza para editar
+              <h1 className="text-2xl font-bold tracking-tight">Painel de Obras</h1>
+              <p className="text-sm text-muted-foreground">
+                Visão executiva unificada de todas as obras
               </p>
             </div>
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-2 text-xs flex-wrap">
               <KpiPill label="Total" value={summary.total} />
               <KpiPill label="Em dia" value={summary.emDia} dot="bg-emerald-500" />
               <KpiPill label="Atrasadas" value={summary.atrasadas} dot="bg-destructive" />
@@ -537,19 +537,16 @@ export default function PainelObras() {
               <TableHeader>
                 <TableRow>
                   {/* === Colunas fixas (prioritárias) === */}
-                  <TableHead className="min-w-[200px] sticky left-0 z-20 bg-muted/40 border-r border-border">
-                    Obra
+                  <TableHead className="min-w-[260px] sticky left-0 z-20 bg-muted/40 border-r border-border">
+                    Cliente / Obra
                   </TableHead>
-                  <TableHead className="min-w-[160px] sticky left-[200px] z-20 bg-muted/40 border-r border-border">
-                    Cliente
-                  </TableHead>
-                  <TableHead className="min-w-[120px] sticky left-[360px] z-20 bg-muted/40 border-r border-border">
+                  <TableHead className="min-w-[120px] sticky left-[260px] z-20 bg-muted/40 border-r border-border">
                     Status
                   </TableHead>
-                  <TableHead className="min-w-[140px] sticky left-[480px] z-20 bg-muted/40 border-r border-border">
+                  <TableHead className="min-w-[140px] sticky left-[380px] z-20 bg-muted/40 border-r border-border">
                     Etapa
                   </TableHead>
-                  <TableHead className="min-w-[100px] text-center sticky left-[620px] z-20 bg-muted/40 border-r-2 border-border">
+                  <TableHead className="min-w-[100px] text-center sticky left-[520px] z-20 bg-muted/40 border-r-2 border-border">
                     Pendências
                   </TableHead>
 
@@ -666,32 +663,28 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
   return (
     <TableRow className="group hover:bg-accent/40">
       {/* === FIXAS === */}
-      {/* Obra */}
+      {/* Cliente / Obra (unificada com hierarquia tipográfica) */}
       <TableCell
-        className={cn('font-semibold sticky left-0 z-10 border-r border-border', stickyBase)}
+        className={cn('sticky left-0 z-10 border-r border-border', stickyBase)}
       >
         <button
           type="button"
           onClick={onOpen}
-          className="text-left hover:text-primary transition-colors flex items-center gap-1.5 w-full"
+          className="text-left flex flex-col gap-0.5 w-full group/link"
           title="Abrir obra"
         >
-          <span className="truncate">{obra.nome}</span>
-          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+          <span className="flex items-center gap-1.5">
+            <span className="font-semibold text-sm truncate group-hover/link:text-primary transition-colors">
+              {obra.customer_name ?? 'Sem cliente'}
+            </span>
+            <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+          </span>
+          <span className="text-xs text-muted-foreground truncate">{obra.nome}</span>
         </button>
       </TableCell>
 
-      {/* Cliente */}
-      <TableCell
-        className={cn('font-medium sticky left-[200px] z-10 border-r border-border', stickyBase)}
-      >
-        <span className="truncate block">
-          {obra.customer_name ?? <span className="italic text-muted-foreground">—</span>}
-        </span>
-      </TableCell>
-
       {/* Status */}
-      <TableCell className={cn('sticky left-[360px] z-10 border-r border-border', stickyBase)}>
+      <TableCell className={cn('sticky left-[260px] z-10 border-r border-border', stickyBase)}>
         <Select
           value={obra.status ?? NONE}
           onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
@@ -721,7 +714,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Etapa */}
-      <TableCell className={cn('sticky left-[480px] z-10 border-r border-border', stickyBase)}>
+      <TableCell className={cn('sticky left-[380px] z-10 border-r border-border', stickyBase)}>
         <Select
           value={obra.etapa ?? NONE}
           onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
@@ -747,7 +740,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
 
       {/* Pendências */}
       <TableCell
-        className={cn('text-center sticky left-[620px] z-10 border-r-2 border-border', stickyBase)}
+        className={cn('text-center sticky left-[520px] z-10 border-r-2 border-border', stickyBase)}
       >
         <Tooltip>
           <TooltipTrigger asChild>
