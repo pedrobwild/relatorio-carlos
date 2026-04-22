@@ -3106,6 +3106,66 @@ export type Database = {
         }
         Relationships: []
       }
+      painel_obras: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entrega_oficial: string | null
+          entrega_real: string | null
+          etapa: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          id: string
+          inicio_etapa: string | null
+          inicio_oficial: string | null
+          inicio_real: string | null
+          nome: string | null
+          prazo: string | null
+          previsao_avanco: string | null
+          relacionamento:
+            | Database["public"]["Enums"]["painel_relacionamento_enum"]
+            | null
+          status: Database["public"]["Enums"]["painel_status_enum"] | null
+          ultima_atualizacao: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entrega_oficial?: string | null
+          entrega_real?: string | null
+          etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          id?: string
+          inicio_etapa?: string | null
+          inicio_oficial?: string | null
+          inicio_real?: string | null
+          nome?: string | null
+          prazo?: string | null
+          previsao_avanco?: string | null
+          relacionamento?:
+            | Database["public"]["Enums"]["painel_relacionamento_enum"]
+            | null
+          status?: Database["public"]["Enums"]["painel_status_enum"] | null
+          ultima_atualizacao?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entrega_oficial?: string | null
+          entrega_real?: string | null
+          etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          id?: string
+          inicio_etapa?: string | null
+          inicio_oficial?: string | null
+          inicio_real?: string | null
+          nome?: string | null
+          prazo?: string | null
+          previsao_avanco?: string | null
+          relacionamento?:
+            | Database["public"]["Enums"]["painel_relacionamento_enum"]
+            | null
+          status?: Database["public"]["Enums"]["painel_status_enum"] | null
+          ultima_atualizacao?: string
+        }
+        Relationships: []
+      }
       pending_items: {
         Row: {
           action_url: string | null
@@ -5974,6 +6034,19 @@ export type Database = {
         | "approved"
         | "rejected"
         | "cancelled"
+      painel_etapa_enum:
+        | "Medição"
+        | "Executivo"
+        | "Emissão RRT"
+        | "Condomínio"
+        | "Planejamento"
+        | "Mobilização"
+      painel_relacionamento_enum:
+        | "Normal"
+        | "Atrito"
+        | "Insatisfeito"
+        | "Crítico"
+      painel_status_enum: "Em dia" | "Atrasado" | "Paralisada"
       party_type: "customer" | "company"
       pending_item_status: "pending" | "completed" | "cancelled"
       pending_item_type:
@@ -6225,6 +6298,21 @@ export const Constants = {
         "rejected",
         "cancelled",
       ],
+      painel_etapa_enum: [
+        "Medição",
+        "Executivo",
+        "Emissão RRT",
+        "Condomínio",
+        "Planejamento",
+        "Mobilização",
+      ],
+      painel_relacionamento_enum: [
+        "Normal",
+        "Atrito",
+        "Insatisfeito",
+        "Crítico",
+      ],
+      painel_status_enum: ["Em dia", "Atrasado", "Paralisada"],
       party_type: ["customer", "company"],
       pending_item_status: ["pending", "completed", "cancelled"],
       pending_item_type: [
