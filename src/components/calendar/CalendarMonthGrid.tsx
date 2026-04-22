@@ -76,11 +76,14 @@ interface Props {
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
   /**
-   * Conjunto de project_ids cuja obra possui ao menos UMA etapa anterior à
-   * semana visível ainda não concluída. Quando uma atividade pertence a um
-   * desses projetos, o tooltip exibe um CTA "Replanejar cronograma".
+   * Informações sobre obras com etapas anteriores à semana visível ainda
+   * não concluídas. Inclui o conjunto de IDs e a data (planned_end) MAIS
+   * RECENTE entre as pendências, usada para enriquecer o CTA do tooltip.
    */
-  projectsWithOverduePrevious?: Set<string>;
+  projectsWithOverduePrevious?: {
+    ids: Set<string>;
+    latestByProject: Map<string, string>;
+  };
   /** Callback para navegar até a edição do cronograma daquela obra. */
   onReplanSchedule?: (projectId: string) => void;
 }
@@ -214,7 +217,10 @@ function WeekRow({
   today: Date;
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
-  projectsWithOverduePrevious?: Set<string>;
+  projectsWithOverduePrevious?: {
+    ids: Set<string>;
+    latestByProject: Map<string, string>;
+  };
   /** Pede confirmação ao usuário antes de navegar para o cronograma. */
   onRequestReplan?: (projectId: string, projectName: string) => void;
 }) {
