@@ -411,15 +411,30 @@ export default function CalendarioObras() {
     <PageContainer>
       {/* Header */}
       <header className="mb-6">
-        <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-          <CalendarDays className="h-4 w-4" />
-          <span>Visão de calendário</span>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+              <CalendarDays className="h-4 w-4" />
+              <span>Visão de calendário</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Calendário de Obras</h1>
+            <p className="text-muted-foreground mt-1">
+              Atividades programadas em todas as obras. Alterne entre visões de mês, semana, dia ou
+              período personalizado para acompanhar e atualizar o cronograma.
+            </p>
+          </div>
+          {canBreak && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setNonWorkingOpen(true)}
+              title="Marcar feriados específicos ou folgas que bloqueiam micro-etapas"
+            >
+              <CalendarOff className="h-4 w-4 mr-1.5" />
+              Dias não úteis
+            </Button>
+          )}
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Calendário de Obras</h1>
-        <p className="text-muted-foreground mt-1">
-          Atividades programadas em todas as obras. Alterne entre visões de mês, semana, dia ou período
-          personalizado para acompanhar e atualizar o cronograma.
-        </p>
       </header>
 
       {/* View toggle + navigator */}
