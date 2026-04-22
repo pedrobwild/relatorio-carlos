@@ -273,7 +273,103 @@ export function ActivityDetailDialog({
               </>
             )}
 
-            {/* History */}
+            {/* Micro-etapas (sub-atividades) — visível apenas para Admin/Engineer */}
+            {canBreak && !activity.parent_activity_id && (
+              <>
+                <Separator />
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <Layers className="h-3.5 w-3.5" />
+                      Micro-etapas internas
+                      {subActivities.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          {subActivities.length}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      {subActivities.length > 0 && onMerge && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setConfirmMergeOpen(true)}
+                          disabled={isMerging}
+                          className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Mesclar
+                        </Button>
+                      )}
+                      {onBreak && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onBreak(activity)}
+                          className="h-7 text-xs"
+                        >
+                          <Split className="h-3 w-3 mr-1" />
+                          {subActivities.length > 0 ? 'Adicionar' : 'Quebrar em micro-etapas'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {subActivities.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Quebre esta atividade em micro-etapas para detalhar o que acontece em cada
+                      dia. O cliente continuará vendo apenas esta atividade-mãe.
+                    </p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {subActivities
+                        .slice()
+                        .sort((a, b) => a.planned_start.localeCompare(b.planned_start))
+                        .map((s) => (
+                          <li
+                            key={s.id}
+                            className="flex items-center justify-between gap-2 rounded-md border bg-muted/30 px-2.5 py-1.5 text-xs"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => onOpenSub?.(s)}
+                              className="flex-1 text-left min-w-0 hover:text-primary"
+                              title="Abrir micro-etapa"
+                            >
+                              <div className="font-medium truncate">{s.description}</div>
+                              <div className="text-muted-foreground">
+                                {format(parseISO(s.planned_start), 'dd/MM')} →{' '}
+                                {format(parseISO(s.planned_end), 'dd/MM')}
+                              </div>
+                            </button>
+                            {onRemoveSub && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => onRemoveSub(s.id)}
+                                disabled={isRemovingSub}
+                                title="Remover esta micro-etapa"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Indicador quando esta atividade É uma micro-etapa */}
+            {activity.parent_activity_id && (
+              <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                <Layers className="inline h-3.5 w-3.5 mr-1" />
+                Esta é uma <strong>micro-etapa interna</strong>. Visível apenas para Admin e
+                Engenheiro no Calendário; clientes veem só a atividade-mãe.
+              </div>
+            )}
+
             <Separator />
             <div>
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-3">
