@@ -175,15 +175,23 @@ function WeekRow({
   }
 
   const showsFooter = overflow; // either "Expandir" (collapsed) or "Recolher" (expanded)
+  // When collapsed, reserve a thin strip for the per-column "+N mais" markers
+  // so they don't collide with the footer toggle.
+  const moreStripHeight = !expanded && overflow ? 18 : 0;
   const lanesArea = visibleLanes.length * LANE_HEIGHT + Math.max(0, visibleLanes.length - 1) * LANE_GAP;
+  // The week row must always reserve enough vertical space to render every
+  // visible lane + day number + optional "+N mais" strip + optional footer
+  // toggle, so bars never spill into the next week row.
   const minHeight =
     DAY_NUMBER_AREA +
     lanesArea +
+    moreStripHeight +
     (showsFooter ? FOOTER_AREA : 0) +
     ROW_BASE_PADDING;
 
-  // Default minimum so empty weeks don't collapse visually.
-  const finalHeight = Math.max(110, minHeight);
+  // Default minimum so empty weeks don't collapse visually. When expanded the
+  // row grows freely to fit every lane (no upper cap).
+  const finalHeight = expanded ? minHeight : Math.max(110, minHeight);
 
   return (
     <div className="relative grid grid-cols-7" style={{ minHeight: finalHeight }}>
