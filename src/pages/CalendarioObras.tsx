@@ -73,8 +73,27 @@ export default function CalendarioObras() {
   const [refDate, setRefDate] = useState<Date>(today);
   const [rangeStartDate, setRangeStartDate] = useState<Date>(today);
   const [rangeEndDate, setRangeEndDate] = useState<Date>(addDays(today, 13));
+  // Draft (unapplied) selection for the custom range pickers.
+  const [draftRangeStart, setDraftRangeStart] = useState<Date>(today);
+  const [draftRangeEnd, setDraftRangeEnd] = useState<Date>(addDays(today, 13));
   const [selectedActivity, setSelectedActivity] = useState<WeekActivity | null>(null);
   const [projectFilter, setProjectFilter] = useState<string>('all');
+
+  // Range validation (start ≤ end). Used to gate the "Aplicar" button.
+  const draftRangeInvalid = draftRangeStart > draftRangeEnd;
+  const draftDirty =
+    draftRangeStart.getTime() !== rangeStartDate.getTime() ||
+    draftRangeEnd.getTime() !== rangeEndDate.getTime();
+
+  const applyDraftRange = () => {
+    if (draftRangeInvalid) return;
+    setRangeStartDate(draftRangeStart);
+    setRangeEndDate(draftRangeEnd);
+  };
+  const resetDraftRange = () => {
+    setDraftRangeStart(rangeStartDate);
+    setDraftRangeEnd(rangeEndDate);
+  };
 
   // Compute fetch range based on active view.
   const { fetchStart, fetchEnd, viewStart, viewEnd } = useMemo(() => {
