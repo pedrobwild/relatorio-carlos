@@ -32,6 +32,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CornerDownRight,
+  LayoutGrid,
   Plus,
   Split,
   Trash2,
