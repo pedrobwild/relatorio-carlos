@@ -634,14 +634,14 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Etapa */}
-      <TableCell>
+      <TableCell className="min-w-[140px]">
         <Select
           value={obra.etapa ?? NONE}
           onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
         >
           <SelectTrigger
             className={cn(
-              'h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40',
+              'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1',
               !obra.etapa && 'text-muted-foreground italic',
               obra.etapa === 'Finalizada' &&
                 'text-emerald-700 dark:text-emerald-400 font-medium',
