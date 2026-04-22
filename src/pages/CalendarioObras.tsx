@@ -505,6 +505,40 @@ export default function CalendarioObras() {
           )}
         </div>
 
+        {/* Filtro por etapa do cronograma */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Filter className="h-3.5 w-3.5" />
+            Etapa:
+          </div>
+          <Select value={etapaFilter} onValueChange={setEtapaFilter}>
+            <SelectTrigger className="h-9 w-full sm:w-[220px]">
+              <SelectValue placeholder="Todas as etapas" />
+            </SelectTrigger>
+            <SelectContent position="popper" className="z-50 max-h-72">
+              <SelectItem value="all">
+                Todas as etapas ({etapaOptions.list.length + (etapaOptions.hasEmpty ? 1 : 0)})
+              </SelectItem>
+              {etapaOptions.list.map((etapa) => (
+                <SelectItem key={etapa} value={etapa}>
+                  {etapa}
+                </SelectItem>
+              ))}
+              {etapaOptions.hasEmpty && (
+                <SelectItem value="__none__">
+                  <span className="text-muted-foreground italic">Sem etapa</span>
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          {etapaFilter !== 'all' && (
+            <Button variant="ghost" size="sm" onClick={() => setEtapaFilter('all')} className="h-9">
+              <X className="h-3.5 w-3.5 mr-1" />
+              Limpar
+            </Button>
+          )}
+        </div>
+
         {/* Toggle: incluir obras concluídas (ocultas por padrão) */}
         <div className="flex items-center gap-2 ml-auto">
           <Switch
