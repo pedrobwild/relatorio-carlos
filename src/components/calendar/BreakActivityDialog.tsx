@@ -199,6 +199,63 @@ export function BreakActivityDialog({
 
   const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
 
+  /**
+   * Avança/recua uma data em N dias *úteis*, pulando fins de semana, feriados
+   * e dias customizados como folga. Respeita os limites da atividade-mãe.
+   * Retorna `null` se não houver dia útil disponível dentro do range.
+   */
+  const shiftBusinessDays = (date: Date, delta: number): Date | null => {
+    if (delta === 0) return date;
+    const step = delta > 0 ? 1 : -1;
+    let remaining = Math.abs(delta);
+    let cursor = date;
+    while (remaining > 0) {
+      cursor = addDays(cursor, step);
+      if (ps && cursor < ps) return null;
+      if (pe && cursor > pe) return null;
+      if (!isBlockedDay(cursor)) remaining -= 1;
+    }
+    return cursor;
+  };
+
+  /** Nudge no início (mantém o fim fixo). */
+  const nudgeStart = (i: number, delta: number) => {
+    const row = rows[i];
+    const next = shiftBusinessDays(row.planned_start, delta);
+    if (!next || next > row.planned_end) return;
+    updateRow(i, { planned_start: next });
+  };
+
+  /** Nudge no fim (mantém o início fixo). */
+  const nudgeEnd = (i: number, delta: number) => {
+    const row = rows[i];
+    const next = shiftBusinessDays(row.planned_end, delta);
+    if (!next || next < row.planned_start) return;
+    updateRow(i, { planned_end: next });
+  };
+
+  /**
+   * "Encaixa" a micro-etapa logo após o fim da anterior, pulando dias
+   * bloqueados. Preserva a duração (em dias corridos) sempre que possível;
+   * caso o range remanescente não comporte, encurta para caber.
+   */
+  const snapAfterPrevious = (i: number) => {
+    if (i === 0 || !pe) return;
+    const prev = rows[i - 1];
+    if (prev.planned_end >= pe) return;
+    let nextStart = addDays(prev.planned_end, 1);
+    while (nextStart <= pe && isBlockedDay(nextStart)) nextStart = addDays(nextStart, 1);
+    if (nextStart > pe) return;
+    const current = rows[i];
+    const currentSpan =
+      current.planned_end >= current.planned_start
+        ? differenceInCalendarDays(current.planned_end, current.planned_start) + 1
+        : 1;
+    let nextEnd = addDays(nextStart, currentSpan - 1);
+    if (nextEnd > pe) nextEnd = pe;
+    updateRow(i, { planned_start: nextStart, planned_end: nextEnd });
+  };
+
   /** Distribui igualmente os dias entre as micro-etapas existentes. */
   const distributeEvenly = () => {
     if (!ps || !pe || rows.length === 0) return;
