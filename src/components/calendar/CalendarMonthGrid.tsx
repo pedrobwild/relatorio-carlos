@@ -66,7 +66,7 @@ interface Props {
 // stay perfectly aligned with the day columns underneath them.
 const MAX_BARS_PER_ROW = 3;
 const DAY_NUMBER_AREA = 30;   // top space reserved for the day number chip
-const LANE_HEIGHT = 22;       // 18px bar + ~4px vertical gap
+const LANE_HEIGHT = 30;       // 26px bar (2 linhas) + ~4px vertical gap
 const LANE_GAP = 4;           // visual gap between lanes
 const FOOTER_AREA = 24;       // bottom space for "+N mais" / Expandir / Recolher
 const ROW_BASE_PADDING = 8;
