@@ -34,8 +34,9 @@ import { ptBR } from 'date-fns/locale';
  * Determina o status visual de uma atividade para exibir no tooltip:
  * - "Concluída": tem actual_end
  * - "Em andamento": tem actual_start mas não actual_end
- * - "Atrasada": planned_end < hoje e ainda não foi concluída
- * - "Planejada": ainda não iniciada
+ * - "Atrasada (não concluída)": planned_end < hoje e não foi concluída
+ * - "Atrasada (não iniciada)": planned_start <= hoje, sem actual_start, e ainda não venceu
+ * - "Planejada": ainda não iniciada e dentro do prazo
  */
 function getActivityStatus(a: WeekActivity): {
   label: string;
@@ -49,9 +50,13 @@ function getActivityStatus(a: WeekActivity): {
   if (a.actual_start) {
     return { label: 'Em andamento', Icon: PlayCircle, className: 'text-blue-600 dark:text-blue-400' };
   }
+  const plannedStart = parseLocalDate(a.planned_start);
   const plannedEnd = parseLocalDate(a.planned_end);
   if (plannedEnd < today) {
-    return { label: 'Atrasada', Icon: AlertTriangle, className: 'text-destructive' };
+    return { label: 'Atrasada — não concluída', Icon: AlertTriangle, className: 'text-destructive' };
+  }
+  if (plannedStart <= today) {
+    return { label: 'Atrasada — não iniciada', Icon: AlertTriangle, className: 'text-destructive' };
   }
   return { label: 'Planejada', Icon: Clock, className: 'text-muted-foreground' };
 }
@@ -287,8 +292,13 @@ function WeekRow({
                 // evitar divergência entre datas-só-data (sem fuso) e Date()
                 // (com fuso do navegador).
                 const isCompleted = !!seg.activity.actual_end;
+                const isStarted = !!seg.activity.actual_start;
                 const isPastEnd = endDate < today;
-                const isOverdue = isPastEnd && !isCompleted;
+                const isOverdueEnd = isPastEnd && !isCompleted;
+                // Não iniciada no prazo: já passou (ou é) a data de início planejada,
+                // não foi marcada como iniciada e ainda não venceu o prazo final.
+                const isOverdueStart = !isStarted && !isCompleted && startDate <= today && !isPastEnd;
+                const isOverdue = isOverdueEnd || isOverdueStart;
                 const isPastDone = isPastEnd && isCompleted;
                 return (
                   <Tooltip key={seg.activity.id}>
