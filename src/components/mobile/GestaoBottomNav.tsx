@@ -23,6 +23,7 @@ export function GestaoBottomNav() {
 
   const secondaryItems = [
     { label: "Fornecedores", icon: Truck, to: "/gestao/fornecedores", description: "Gerencie seus fornecedores" },
+    { label: "Calendário de Obras", icon: CalendarDays, to: "/gestao/calendario-obras", description: "Atividades da semana em todas as obras" },
     { label: "Calendário de Compras", icon: CalendarDays, to: "/gestao/calendario-compras", description: "Acompanhe compras programadas" },
     { label: "Arquivos", icon: FolderOpen, to: "/gestao/arquivos", description: "Documentos e anexos" },
     ...(isAdmin
