@@ -16,6 +16,7 @@ import {
   ShieldOff,
   ExternalLink,
   ChevronDown,
+  BookOpen,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,7 @@ import {
   type PainelStatus,
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
+import { DailyLogDialog } from '@/components/admin/obras/DailyLogDialog';
 
 // ----- helpers -----
 const ALL = '__all__';
@@ -256,6 +258,13 @@ export default function PainelObras() {
     | null;
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  // Modal "Registro do dia"
+  const [dailyLogObraId, setDailyLogObraId] = useState<string | null>(null);
+  const dailyLogObra = useMemo(
+    () => obras.find((o) => o.id === dailyLogObraId) ?? null,
+    [obras, dailyLogObraId],
+  );
 
   const filtered = useMemo(() => {
     let rows = obras;
@@ -504,7 +513,7 @@ export default function PainelObras() {
                   <TableHead className="min-w-[110px]">
                     <SortableHeader label="Atualizado" sortKey="ultima_atualizacao" />
                   </TableHead>
-                  <TableHead className="w-10"></TableHead>
+                  <TableHead className="w-20"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -514,11 +523,23 @@ export default function PainelObras() {
                     obra={o}
                     onUpdate={(patch) => updateObra(o.id, patch)}
                     onOpen={() => navigate(`/obra/${o.id}`)}
+                    onOpenDailyLog={() => setDailyLogObraId(o.id)}
                   />
                 ))}
               </TableBody>
             </Table>
           </div>
+        )}
+
+        {dailyLogObra && (
+          <DailyLogDialog
+            open={!!dailyLogObraId}
+            onOpenChange={(open) => {
+              if (!open) setDailyLogObraId(null);
+            }}
+            projectId={dailyLogObra.id}
+            projectTitle={`${dailyLogObra.customer_name ?? 'Sem cliente'} — ${dailyLogObra.nome}`}
+          />
         )}
       </PageContainer>
     </TooltipProvider>
@@ -574,9 +595,10 @@ interface ObraRowProps {
   obra: PainelObra;
   onUpdate: (patch: PainelObraPatch) => void;
   onOpen: () => void;
+  onOpenDailyLog: () => void;
 }
 
-function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
+function ObraRow({ obra, onUpdate, onOpen, onOpenDailyLog }: ObraRowProps) {
   // Fundo da célula fixa — precisa acompanhar o hover da row.
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
@@ -775,17 +797,38 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
         </Tooltip>
       </TableCell>
 
-      {/* Ação: abrir obra */}
+      {/* Ações: registro do dia + abrir obra */}
       <TableCell>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={onOpen}
-          title="Abrir obra"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={onOpenDailyLog}
+                aria-label="Registro do dia"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Registro do dia</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={onOpen}
+                aria-label="Abrir obra"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Abrir obra</TooltipContent>
+          </Tooltip>
+        </div>
       </TableCell>
     </TableRow>
   );
