@@ -726,8 +726,13 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
           value={obra.etapa ?? NONE}
           onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
         >
-          <SelectTrigger className="h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40">
-            <SelectValue placeholder={<span className="text-muted-foreground">Definir…</span>} />
+          <SelectTrigger
+            className={cn(
+              'h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40',
+              !obra.etapa && 'text-muted-foreground italic',
+            )}
+          >
+            <SelectValue placeholder="Definir…" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NONE}>(nenhuma)</SelectItem>
