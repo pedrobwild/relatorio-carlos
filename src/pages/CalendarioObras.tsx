@@ -232,10 +232,35 @@ export default function CalendarioObras() {
 
   // 1) Aplica o filtro "ocultar obras concluídas" antes de qualquer outra lógica:
   //    obras com project_status === 'completed' só aparecem quando o toggle estiver ativo.
-  const visibleByProject = useMemo(
+  const visibleByProjectRaw = useMemo(
     () => (includeCompleted ? byProject : byProject.filter((g) => g.project_status !== 'completed')),
     [byProject, includeCompleted],
   );
+
+  // 1.b) Recorte hierárquico das micro-etapas:
+  //   - Admin/Engineer enxergam o detalhamento interno: quando uma atividade-mãe
+  //     possui pelo menos um child visível neste recorte, ocultamos a mãe e
+  //     mostramos apenas os children (que são mais granulares).
+  //   - Demais papéis (defesa em profundidade — esta página é restrita a staff)
+  //     veem apenas as mães e nunca os children, preservando a visão informativa
+  //     compartilhada com o cliente.
+  const visibleByProject = useMemo(() => {
+    return visibleByProjectRaw.map((g) => {
+      if (canBreak) {
+        const parentsWithVisibleChildren = new Set<string>();
+        for (const a of g.items) {
+          if (a.parent_activity_id) parentsWithVisibleChildren.add(a.parent_activity_id);
+        }
+        return {
+          ...g,
+          items: g.items.filter(
+            (a) => !(a.parent_activity_id === null && parentsWithVisibleChildren.has(a.id)),
+          ),
+        };
+      }
+      return { ...g, items: g.items.filter((a) => a.parent_activity_id === null) };
+    });
+  }, [visibleByProjectRaw, canBreak]);
 
   // Quantidade de obras concluídas escondidas (para feedback no UI)
   const hiddenCompletedCount = useMemo(
