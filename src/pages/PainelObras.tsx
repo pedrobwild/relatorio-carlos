@@ -58,14 +58,12 @@ import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   ETAPA_OPTIONS,
-  PAINEL_PRAZO_OPTIONS,
   RELACIONAMENTO_OPTIONS,
   STATUS_OPTIONS,
   usePainelObras,
   type PainelEtapa,
   type PainelObra,
   type PainelObraPatch,
-  type PainelPrazo,
   type PainelRelacionamento,
   type PainelStatus,
 } from '@/hooks/usePainelObras';
@@ -252,8 +250,6 @@ export default function PainelObras() {
   type SortKey =
     | 'inicio_oficial'
     | 'entrega_oficial'
-    | 'inicio_etapa'
-    | 'previsao_avanco'
     | 'inicio_real'
     | 'entrega_real'
     | 'ultima_atualizacao'
@@ -326,9 +322,7 @@ export default function PainelObras() {
     const emDia = obras.filter((o) => o.status === 'Em dia').length;
     const atrasadas = obras.filter((o) => o.status === 'Atrasado').length;
     const paralisadas = obras.filter((o) => o.status === 'Paralisada').length;
-    const pendencias = obras.reduce((s, o) => s + o.pending_count, 0);
-    const atrasos = obras.reduce((s, o) => s + o.overdue_count, 0);
-    return { total, aguardando, emDia, atrasadas, paralisadas, pendencias, atrasos };
+    return { total, aguardando, emDia, atrasadas, paralisadas };
   }, [obras]);
 
   if (roleLoading) {
@@ -391,12 +385,6 @@ export default function PainelObras() {
               <KpiPill label="Em dia" value={summary.emDia} dot="bg-emerald-500" />
               <KpiPill label="Atrasadas" value={summary.atrasadas} dot="bg-destructive" />
               <KpiPill label="Paralisadas" value={summary.paralisadas} dot="bg-muted-foreground" />
-              <KpiPill
-                label="Pendências"
-                value={summary.pendencias}
-                emphasis={summary.atrasos > 0 ? 'danger' : undefined}
-                hint={summary.atrasos > 0 ? `${summary.atrasos} atrasadas` : undefined}
-              />
             </div>
           </div>
 
@@ -490,35 +478,21 @@ export default function PainelObras() {
             <Table className="text-sm [&_th]:h-9 [&_td]:py-1.5 [&_td]:px-2 [&_th]:px-2 [&_th]:text-[11px] [&_th]:font-medium [&_th]:text-muted-foreground [&_th]:bg-muted/40 [&_tr]:border-border">
               <TableHeader>
                 <TableRow>
-                  {/* === Colunas fixas (prioritárias) === */}
-                  <TableHead className="min-w-[260px] sticky left-0 z-20 bg-muted/40 border-r border-border">
+                  {/* === Única coluna fixa === */}
+                  <TableHead className="min-w-[260px] sticky left-0 z-20 bg-muted/40 border-r-2 border-border">
                     Cliente / Obra
                   </TableHead>
-                  <TableHead className="min-w-[120px] sticky left-[260px] z-20 bg-muted/40 border-r border-border">
-                    Status
-                  </TableHead>
-                  <TableHead className="min-w-[140px] sticky left-[380px] z-20 bg-muted/40 border-r border-border">
-                    Etapa
-                  </TableHead>
-                  <TableHead className="min-w-[100px] text-center sticky left-[520px] z-20 bg-muted/40 border-r-2 border-border">
-                    Pendências
-                  </TableHead>
 
-                  {/* === Colunas secundárias === */}
+                  {/* === Demais colunas (rolláveis) === */}
+                  <TableHead className="min-w-[120px]">Status</TableHead>
+                  <TableHead className="min-w-[140px]">Etapa</TableHead>
                   <TableHead className="min-w-[120px]">Responsável</TableHead>
                   <TableHead className="min-w-[100px] text-right">Progresso</TableHead>
-                  <TableHead className="min-w-[110px]">Prazo</TableHead>
                   <TableHead className="min-w-[120px]">
                     <SortableHeader label="Início Of." sortKey="inicio_oficial" />
                   </TableHead>
                   <TableHead className="min-w-[120px]">
                     <SortableHeader label="Entrega Of." sortKey="entrega_oficial" />
-                  </TableHead>
-                  <TableHead className="min-w-[120px]">
-                    <SortableHeader label="Início Etapa" sortKey="inicio_etapa" />
-                  </TableHead>
-                  <TableHead className="min-w-[130px]">
-                    <SortableHeader label="Prev. Avanço" sortKey="previsao_avanco" />
                   </TableHead>
                   <TableHead className="min-w-[120px]">
                     <SortableHeader label="Início Real" sortKey="inicio_real" />
@@ -603,23 +577,15 @@ interface ObraRowProps {
 }
 
 function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
-  // Cor da pendência: vermelha se há atrasos, âmbar se há pendências, neutra senão.
-  const pendStyle =
-    obra.overdue_count > 0
-      ? 'bg-destructive/15 text-destructive border border-destructive/30'
-      : obra.pending_count > 0
-        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
-        : 'bg-muted text-muted-foreground border border-border';
-
-  // Fundo das células fixas — precisa acompanhar o hover da row.
+  // Fundo da célula fixa — precisa acompanhar o hover da row.
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
   return (
     <TableRow className="group hover:bg-accent/40">
-      {/* === FIXAS === */}
+      {/* === Única coluna fixa === */}
       {/* Cliente / Obra (unificada com hierarquia tipográfica) */}
       <TableCell
-        className={cn('sticky left-0 z-10 border-r border-border', stickyBase)}
+        className={cn('sticky left-0 z-10 border-r-2 border-border', stickyBase)}
       >
         <button
           type="button"
@@ -638,7 +604,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Status */}
-      <TableCell className={cn('sticky left-[260px] z-10 border-r border-border', stickyBase)}>
+      <TableCell>
         <Select
           value={obra.status ?? NONE}
           onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
@@ -668,7 +634,7 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
       </TableCell>
 
       {/* Etapa */}
-      <TableCell className={cn('sticky left-[380px] z-10 border-r border-border', stickyBase)}>
+      <TableCell>
         <Select
           value={obra.etapa ?? NONE}
           onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}
@@ -703,32 +669,6 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
         </Select>
       </TableCell>
 
-      {/* Pendências */}
-      <TableCell
-        className={cn('text-center sticky left-[520px] z-10 border-r-2 border-border', stickyBase)}
-      >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span
-              className={cn(
-                'inline-flex items-center justify-center min-w-[36px] h-6 px-2 rounded-md text-xs font-semibold tabular-nums',
-                pendStyle,
-              )}
-            >
-              {obra.pending_count}
-              {obra.overdue_count > 0 && (
-                <span className="ml-1 opacity-80">↓{obra.overdue_count}</span>
-              )}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {obra.pending_count} pendência(s)
-            {obra.overdue_count > 0 ? ` · ${obra.overdue_count} atrasada(s)` : ''}
-          </TooltipContent>
-        </Tooltip>
-      </TableCell>
-
-      {/* === SECUNDÁRIAS === */}
       {/* Responsável */}
       <TableCell className="text-muted-foreground">
         <span className="truncate block">
@@ -763,33 +703,6 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
         )}
       </TableCell>
 
-      {/* Prazo - select controlado (55/60/65/75 dias) */}
-      <TableCell>
-        <Select
-          value={obra.prazo ?? NONE}
-          onValueChange={(v) =>
-            onUpdate({ prazo: v === NONE ? null : (v as PainelPrazo) })
-          }
-        >
-          <SelectTrigger
-            className={cn(
-              'h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40 tabular-nums',
-              !obra.prazo && 'text-muted-foreground italic',
-            )}
-          >
-            <SelectValue placeholder="Definir…" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>(nenhum)</SelectItem>
-            {PAINEL_PRAZO_OPTIONS.map((p) => (
-              <SelectItem key={p} value={p} className="tabular-nums">
-                {p}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </TableCell>
-
       {/* Início oficial - exige confirmação */}
       <TableCell>
         <DateCell
@@ -808,16 +721,6 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
           confirmEdit
           confirmTitle="Alterar entrega oficial?"
         />
-      </TableCell>
-
-      {/* Início da etapa */}
-      <TableCell>
-        <DateCell value={obra.inicio_etapa} onChange={(v) => onUpdate({ inicio_etapa: v })} />
-      </TableCell>
-
-      {/* Previsão de avanço */}
-      <TableCell>
-        <DateCell value={obra.previsao_avanco} onChange={(v) => onUpdate({ previsao_avanco: v })} />
       </TableCell>
 
       {/* Início real */}
