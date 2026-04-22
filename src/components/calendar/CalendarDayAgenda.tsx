@@ -45,10 +45,18 @@ export function CalendarDayAgenda({ day, activities, onActivityClick }: Props) {
   );
 
   const grouped = useMemo(() => {
-    const m = new Map<string, { project_id: string; project_name: string; items: WeekActivity[] }>();
+    const m = new Map<
+      string,
+      { project_id: string; project_name: string; client_name: string | null; items: WeekActivity[] }
+    >();
     for (const a of dayActivities) {
       if (!m.has(a.project_id)) {
-        m.set(a.project_id, { project_id: a.project_id, project_name: a.project_name, items: [] });
+        m.set(a.project_id, {
+          project_id: a.project_id,
+          project_name: a.project_name,
+          client_name: a.client_name,
+          items: [],
+        });
       }
       m.get(a.project_id)!.items.push(a);
     }
@@ -77,12 +85,17 @@ export function CalendarDayAgenda({ day, activities, onActivityClick }: Props) {
         return (
           <Card key={g.project_id} className={cn('overflow-hidden border-l-4', color.border)}>
             <CardHeader className="py-2.5 px-4 border-b">
-              <div className="flex items-center gap-2">
-                <span className={cn('inline-flex h-7 w-7 items-center justify-center rounded-md', color.bg)}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className={cn('inline-flex h-7 w-7 items-center justify-center rounded-md shrink-0', color.bg)}>
                   <Building2 className="h-4 w-4" />
                 </span>
-                <CardTitle className="text-sm font-semibold truncate">{g.project_name}</CardTitle>
-                <Badge variant="secondary" className="text-[10px]">{g.items.length} ativ.</Badge>
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-sm font-semibold truncate">{g.project_name}</CardTitle>
+                  {g.client_name && (
+                    <div className="text-[11px] text-muted-foreground truncate">{g.client_name}</div>
+                  )}
+                </div>
+                <Badge variant="secondary" className="text-[10px] shrink-0">{g.items.length} ativ.</Badge>
               </div>
             </CardHeader>
             <CardContent className="p-0 divide-y">
