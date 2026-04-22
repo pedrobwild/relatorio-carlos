@@ -16,6 +16,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
 
@@ -42,6 +52,8 @@ export function ActivityDetailDialog({
 }: ActivityDetailDialogProps) {
   const [actualStart, setActualStart] = useState<Date | undefined>();
   const [actualEnd, setActualEnd] = useState<Date | undefined>();
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   useEffect(() => {
     if (activity) {
@@ -65,6 +77,7 @@ export function ActivityDetailDialog({
       actual_start: fromDate(actualStart),
       actual_end: fromDate(actualEnd),
     });
+    setConfirmSaveOpen(false);
     onOpenChange(false);
   };
 
@@ -72,8 +85,12 @@ export function ActivityDetailDialog({
     setActualStart(undefined);
     setActualEnd(undefined);
     await onSave(activity.id, { actual_start: null, actual_end: null });
+    setConfirmClearOpen(false);
     onOpenChange(false);
   };
+
+  const formatPreview = (d: Date | undefined) =>
+    d ? format(d, "dd 'de' MMM 'de' yyyy", { locale: ptBR }) : '—';
 
   // Build inline history from available signals
   type Event = { date: string; label: string; tone: 'muted' | 'info' | 'success' | 'warn' };
@@ -251,7 +268,7 @@ export function ActivityDetailDialog({
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleClear}
+            onClick={() => setConfirmClearOpen(true)}
             disabled={isUpdating || (!activity.actual_start && !activity.actual_end)}
             className="text-muted-foreground hover:text-destructive"
           >
@@ -264,7 +281,7 @@ export function ActivityDetailDialog({
             </Button>
             <Button
               size="sm"
-              onClick={handleSave}
+              onClick={() => setConfirmSaveOpen(true)}
               disabled={
                 isUpdating ||
                 !dirty ||
@@ -277,6 +294,62 @@ export function ActivityDetailDialog({
           </div>
         </DialogFooter>
       </DialogContent>
+
+      {/* Confirm Save */}
+      <AlertDialog open={confirmSaveOpen} onOpenChange={setConfirmSaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar alteração de datas reais</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Você está prestes a registrar as seguintes datas reais para esta atividade:</p>
+                <div className="rounded-md border bg-muted/40 p-3 space-y-1">
+                  <div>
+                    <span className="text-muted-foreground">Início real: </span>
+                    <strong className="text-foreground">{formatPreview(actualStart)}</strong>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Fim real: </span>
+                    <strong className="text-foreground">{formatPreview(actualEnd)}</strong>
+                  </div>
+                </div>
+                <p className="text-muted-foreground">
+                  Esta alteração ficará registrada no histórico da atividade.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUpdating}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSave} disabled={isUpdating}>
+              Confirmar e salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm Clear */}
+      <AlertDialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar datas reais?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso removerá o início e o fim reais já registrados. A atividade voltará a ser tratada
+              como pendente segundo o planejamento. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUpdating}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClear}
+              disabled={isUpdating}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, limpar datas
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
