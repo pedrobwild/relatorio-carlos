@@ -358,26 +358,70 @@ export function BreakActivityDialog({
 
                   <div className="col-span-6 md:col-span-3">
                     <Label className="text-[11px] text-muted-foreground">Início</Label>
-                    <DatePopover
-                      value={row.planned_start}
-                      onChange={(d) => d && updateRow(i, { planned_start: d })}
-                      min={ps ?? undefined}
-                      max={pe ?? undefined}
-                      isBlocked={isBlockedDay}
-                      reasonFor={reasonFor}
-                    />
+                    <div className="flex items-center gap-1 mt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-7 shrink-0"
+                        onClick={() => nudgeStart(i, -1)}
+                        title="Recuar 1 dia útil (mantém o fim)"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </Button>
+                      <DatePopover
+                        value={row.planned_start}
+                        onChange={(d) => d && updateRow(i, { planned_start: d })}
+                        min={ps ?? undefined}
+                        max={pe ?? undefined}
+                        isBlocked={isBlockedDay}
+                        reasonFor={reasonFor}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-7 shrink-0"
+                        onClick={() => nudgeStart(i, 1)}
+                        title="Avançar 1 dia útil (mantém o fim)"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="col-span-6 md:col-span-3">
                     <Label className="text-[11px] text-muted-foreground">Fim</Label>
-                    <DatePopover
-                      value={row.planned_end}
-                      onChange={(d) => d && updateRow(i, { planned_end: d })}
-                      min={ps ?? undefined}
-                      max={pe ?? undefined}
-                      isBlocked={isBlockedDay}
-                      reasonFor={reasonFor}
-                    />
+                    <div className="flex items-center gap-1 mt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-7 shrink-0"
+                        onClick={() => nudgeEnd(i, -1)}
+                        title="Recuar 1 dia útil (mantém o início)"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </Button>
+                      <DatePopover
+                        value={row.planned_end}
+                        onChange={(d) => d && updateRow(i, { planned_end: d })}
+                        min={ps ?? undefined}
+                        max={pe ?? undefined}
+                        isBlocked={isBlockedDay}
+                        reasonFor={reasonFor}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-7 shrink-0"
+                        onClick={() => nudgeEnd(i, 1)}
+                        title="Avançar 1 dia útil (mantém o início)"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="col-span-12 md:col-span-1 flex md:justify-end">
@@ -413,10 +457,25 @@ export function BreakActivityDialog({
                     {issues.map((iss, k) => (
                       <IssueBadge key={k} issue={iss} />
                     ))}
+                    {/* Atalho contextual: aparece quando a linha sobrepõe a anterior */}
+                    {i > 0 && issues.some((iss) => iss.kind === 'overlap' && iss.withIndex === i - 1) && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-[10px] gap-1"
+                        onClick={() => snapAfterPrevious(i)}
+                        title={`Mover esta micro-etapa para logo após o fim da #${i}`}
+                      >
+                        <CornerDownRight className="h-3 w-3" />
+                        Encaixar após #{i}
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
             })}
+
 
             <Button
               type="button"
