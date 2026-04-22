@@ -197,7 +197,16 @@ export default function CalendarioObras() {
                     return (
                       <div
                         key={a.id}
-                        className="p-4 flex flex-col md:flex-row md:items-center gap-3 hover:bg-muted/30 transition-colors"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setSelectedActivity(a)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedActivity(a);
+                          }
+                        }}
+                        className="p-4 flex flex-col md:flex-row md:items-center gap-3 hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus-visible:bg-muted/40"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -227,7 +236,7 @@ export default function CalendarioObras() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                           {!a.actual_start && !a.actual_end && (
                             <Button
                               size="sm"
@@ -282,6 +291,14 @@ export default function CalendarioObras() {
       <p className="text-[11px] text-muted-foreground text-center mt-6">
         Semana {weekdayLabels.join(' · ')} — referenciada pela segunda-feira.
       </p>
+
+      <ActivityDetailDialog
+        activity={selectedActivity}
+        open={!!selectedActivity}
+        onOpenChange={(o) => !o && setSelectedActivity(null)}
+        onSave={updateDates}
+        isUpdating={isUpdating}
+      />
     </PageContainer>
   );
 }
