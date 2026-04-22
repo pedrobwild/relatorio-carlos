@@ -468,8 +468,14 @@ export default function Fornecedores() {
                       </TableCell>
                       <TableCell>{renderStars(s.nota_avaliacao)}</TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <Badge variant={s.status === "ativo" ? "default" : "secondary"}>
-                          {s.status === "ativo" ? "Ativo" : "Inativo"}
+                        <Badge
+                          variant={
+                            s.status === "ativo" ? "default" :
+                            s.status === "rascunho" ? "outline" : "secondary"
+                          }
+                          className={s.status === "rascunho" ? "border-[hsl(var(--warning))] text-[hsl(var(--warning))]" : undefined}
+                        >
+                          {s.status === "ativo" ? "Ativo" : s.status === "rascunho" ? "Rascunho" : "Inativo"}
                         </Badge>
                       </TableCell>
                       <TableCell>
