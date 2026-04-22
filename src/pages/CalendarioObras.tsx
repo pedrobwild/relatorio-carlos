@@ -244,9 +244,14 @@ export default function CalendarioObras() {
         <CardContent className="py-3 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
-              <TabsList>
+              <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="month">Mês</TabsTrigger>
-                <TabsTrigger value="week">Semana</TabsTrigger>
+                <TabsTrigger value="week-list" title="Semana em formato de lista agrupada por obra">
+                  Semana · Lista
+                </TabsTrigger>
+                <TabsTrigger value="week-timeline" title="Semana em formato de linha do tempo (Gantt)">
+                  Semana · Timeline
+                </TabsTrigger>
                 <TabsTrigger value="day">Dia</TabsTrigger>
                 <TabsTrigger value="range">Período</TabsTrigger>
               </TabsList>
