@@ -528,6 +528,32 @@ export function BreakActivityDialog({
                     </Button>
                   </div>
 
+                  {/* Responsável pela micro-etapa (Staff interno) */}
+                  <div className="col-span-12 md:col-span-6">
+                    <Label className="text-[11px] text-muted-foreground">Responsável</Label>
+                    <Select
+                      value={row.responsible_user_id ?? NO_RESPONSIBLE}
+                      onValueChange={(value) =>
+                        updateRow(i, {
+                          responsible_user_id: value === NO_RESPONSIBLE ? null : value,
+                        })
+                      }
+                      disabled={loadingStaff}
+                    >
+                      <SelectTrigger className="mt-1 h-9">
+                        <SelectValue placeholder={loadingStaff ? 'Carregando...' : 'Selecionar responsável'} />
+                      </SelectTrigger>
+                      <SelectContent position="popper" className="z-[100]">
+                        <SelectItem value={NO_RESPONSIBLE}>Sem responsável</SelectItem>
+                        {staffUsers.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Preview / status do intervalo */}
                   <div className="col-span-12 -mt-1 flex items-center gap-2 flex-wrap text-[11px]">
                     {span > 0 && (
