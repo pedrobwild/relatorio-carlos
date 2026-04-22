@@ -24,15 +24,19 @@ export const priorityConfig: Record<ObraTaskPriority, { label: string; color: st
 };
 
 // ── Deterministic color for project badges ───────────────────
+// Cores fortes (saturadas) com texto branco para garantir alto contraste sobre
+// qualquer fundo (cards, modais, dialogs). Antes usávamos bg /15 que ficava
+// quase invisível em alguns contextos. Agora as barras do calendário ficam
+// legíveis tanto em light quanto em dark mode.
 const PROJECT_COLORS = [
-  { bg: 'bg-blue-500/15 text-blue-700 dark:text-blue-400', border: 'border-blue-300 dark:border-blue-700' },
-  { bg: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400', border: 'border-emerald-300 dark:border-emerald-700' },
-  { bg: 'bg-violet-500/15 text-violet-700 dark:text-violet-400', border: 'border-violet-300 dark:border-violet-700' },
-  { bg: 'bg-amber-500/15 text-amber-700 dark:text-amber-400', border: 'border-amber-300 dark:border-amber-700' },
-  { bg: 'bg-rose-500/15 text-rose-700 dark:text-rose-400', border: 'border-rose-300 dark:border-rose-700' },
-  { bg: 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-400', border: 'border-cyan-300 dark:border-cyan-700' },
-  { bg: 'bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-400', border: 'border-fuchsia-300 dark:border-fuchsia-700' },
-  { bg: 'bg-lime-500/15 text-lime-700 dark:text-lime-400', border: 'border-lime-300 dark:border-lime-700' },
+  { bg: 'bg-blue-600 text-white dark:bg-blue-500', border: 'border-blue-700 dark:border-blue-400' },
+  { bg: 'bg-emerald-600 text-white dark:bg-emerald-500', border: 'border-emerald-700 dark:border-emerald-400' },
+  { bg: 'bg-violet-600 text-white dark:bg-violet-500', border: 'border-violet-700 dark:border-violet-400' },
+  { bg: 'bg-amber-600 text-white dark:bg-amber-500', border: 'border-amber-700 dark:border-amber-400' },
+  { bg: 'bg-rose-600 text-white dark:bg-rose-500', border: 'border-rose-700 dark:border-rose-400' },
+  { bg: 'bg-cyan-700 text-white dark:bg-cyan-500', border: 'border-cyan-800 dark:border-cyan-400' },
+  { bg: 'bg-fuchsia-600 text-white dark:bg-fuchsia-500', border: 'border-fuchsia-700 dark:border-fuchsia-400' },
+  { bg: 'bg-lime-700 text-white dark:bg-lime-500 dark:text-slate-900', border: 'border-lime-800 dark:border-lime-400' },
 ];
 
 export function getProjectColor(projectId: string) {
