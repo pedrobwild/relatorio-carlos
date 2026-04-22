@@ -178,8 +178,12 @@ export default function CalendarioObras() {
     else if (view === 'day') setRefDate(addDays(refDate, -1));
     else if (view === 'range') {
       const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
-      setRangeStartDate(addDays(rangeStartDate, -span));
-      setRangeEndDate(addDays(rangeEndDate, -span));
+      const ns = addDays(rangeStartDate, -span);
+      const ne = addDays(rangeEndDate, -span);
+      setRangeStartDate(ns);
+      setRangeEndDate(ne);
+      setDraftRangeStart(ns);
+      setDraftRangeEnd(ne);
     } else setRefDate(addWeeks(refDate, -1));
   };
   const goNext = () => {
@@ -187,15 +191,22 @@ export default function CalendarioObras() {
     else if (view === 'day') setRefDate(addDays(refDate, 1));
     else if (view === 'range') {
       const span = Math.max(1, Math.round((rangeEndDate.getTime() - rangeStartDate.getTime()) / 86_400_000) + 1);
-      setRangeStartDate(addDays(rangeStartDate, span));
-      setRangeEndDate(addDays(rangeEndDate, span));
+      const ns = addDays(rangeStartDate, span);
+      const ne = addDays(rangeEndDate, span);
+      setRangeStartDate(ns);
+      setRangeEndDate(ne);
+      setDraftRangeStart(ns);
+      setDraftRangeEnd(ne);
     } else setRefDate(addWeeks(refDate, 1));
   };
   const goToday = () => {
     setRefDate(today);
     if (view === 'range') {
+      const ne = addDays(today, 13);
       setRangeStartDate(today);
-      setRangeEndDate(addDays(today, 13));
+      setRangeEndDate(ne);
+      setDraftRangeStart(today);
+      setDraftRangeEnd(ne);
     }
   };
 
