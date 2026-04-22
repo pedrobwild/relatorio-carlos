@@ -110,11 +110,17 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
 
   if (grouped.length === 0) {
     return (
-      <div className="rounded-lg border bg-card p-8 text-center space-y-2">
+      <div className="rounded-lg border bg-card p-8 text-center space-y-3">
         <CalendarDays className="h-10 w-10 mx-auto text-muted-foreground/40" />
         <p className="text-sm text-muted-foreground">
           Nenhum prestador com período de execução definido nesta faixa de datas.
         </p>
+        {onNew && (
+          <Button size="sm" onClick={onNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Prestador
+          </Button>
+        )}
       </div>
     );
   }
