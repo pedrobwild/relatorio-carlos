@@ -537,19 +537,16 @@ export default function PainelObras() {
               <TableHeader>
                 <TableRow>
                   {/* === Colunas fixas (prioritárias) === */}
-                  <TableHead className="min-w-[200px] sticky left-0 z-20 bg-muted/40 border-r border-border">
-                    Obra
+                  <TableHead className="min-w-[260px] sticky left-0 z-20 bg-muted/40 border-r border-border">
+                    Cliente / Obra
                   </TableHead>
-                  <TableHead className="min-w-[160px] sticky left-[200px] z-20 bg-muted/40 border-r border-border">
-                    Cliente
-                  </TableHead>
-                  <TableHead className="min-w-[120px] sticky left-[360px] z-20 bg-muted/40 border-r border-border">
+                  <TableHead className="min-w-[120px] sticky left-[260px] z-20 bg-muted/40 border-r border-border">
                     Status
                   </TableHead>
-                  <TableHead className="min-w-[140px] sticky left-[480px] z-20 bg-muted/40 border-r border-border">
+                  <TableHead className="min-w-[140px] sticky left-[380px] z-20 bg-muted/40 border-r border-border">
                     Etapa
                   </TableHead>
-                  <TableHead className="min-w-[100px] text-center sticky left-[620px] z-20 bg-muted/40 border-r-2 border-border">
+                  <TableHead className="min-w-[100px] text-center sticky left-[520px] z-20 bg-muted/40 border-r-2 border-border">
                     Pendências
                   </TableHead>
 
