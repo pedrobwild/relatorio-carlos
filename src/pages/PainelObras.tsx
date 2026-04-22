@@ -15,13 +15,11 @@ import {
   Table2,
   ShieldOff,
   ExternalLink,
-  Pencil,
   ChevronDown,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -60,12 +58,14 @@ import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   ETAPA_OPTIONS,
+  PAINEL_PRAZO_OPTIONS,
   RELACIONAMENTO_OPTIONS,
   STATUS_OPTIONS,
   usePainelObras,
   type PainelEtapa,
   type PainelObra,
   type PainelObraPatch,
+  type PainelPrazo,
   type PainelRelacionamento,
   type PainelStatus,
 } from '@/hooks/usePainelObras';
@@ -86,6 +86,8 @@ const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 /** Cor sólida para o "dot" e badge tipo Monday (sem hover ruidoso). */
 const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
+    case 'Aguardando':
+      return 'bg-sky-500';
     case 'Em dia':
       return 'bg-emerald-500';
     case 'Atrasado':
@@ -99,6 +101,8 @@ const statusDotClass = (s: PainelStatus | null): string => {
 
 const statusPillClass = (s: PainelStatus | null): string => {
   switch (s) {
+    case 'Aguardando':
+      return 'bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30';
     case 'Em dia':
       return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30';
     case 'Atrasado':
@@ -232,58 +236,6 @@ function DateCell({ value, onChange, confirmEdit, confirmTitle, disabled }: Date
   );
 }
 
-// ----- inline text cell -----
-function TextCell({
-  value,
-  onSave,
-  placeholder,
-}: {
-  value: string | null;
-  onSave: (v: string | null) => void;
-  placeholder?: string;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value ?? '');
-
-  if (editing) {
-    return (
-      <Input
-        autoFocus
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          setEditing(false);
-          const next = draft.trim() || null;
-          if (next !== value) onSave(next);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-          if (e.key === 'Escape') {
-            setDraft(value ?? '');
-            setEditing(false);
-          }
-        }}
-        className="h-7 text-sm"
-      />
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => setEditing(true)}
-      className={cn(
-        editableCell,
-        'flex items-center gap-1.5',
-        !value && 'text-muted-foreground italic',
-      )}
-    >
-      <Pencil className="h-3 w-3 shrink-0 opacity-0 group-hover/cell:opacity-60 transition-opacity" />
-      <span className="truncate">{value ?? placeholder ?? '—'}</span>
-    </button>
-  );
-}
-
 // ----- main page -----
 export default function PainelObras() {
   const navigate = useNavigate();
@@ -370,12 +322,13 @@ export default function PainelObras() {
   // Resumo executivo no topo (densidade de informação)
   const summary = useMemo(() => {
     const total = obras.length;
+    const aguardando = obras.filter((o) => o.status === 'Aguardando').length;
     const emDia = obras.filter((o) => o.status === 'Em dia').length;
     const atrasadas = obras.filter((o) => o.status === 'Atrasado').length;
     const paralisadas = obras.filter((o) => o.status === 'Paralisada').length;
     const pendencias = obras.reduce((s, o) => s + o.pending_count, 0);
     const atrasos = obras.reduce((s, o) => s + o.overdue_count, 0);
-    return { total, emDia, atrasadas, paralisadas, pendencias, atrasos };
+    return { total, aguardando, emDia, atrasadas, paralisadas, pendencias, atrasos };
   }, [obras]);
 
   if (roleLoading) {
@@ -434,6 +387,7 @@ export default function PainelObras() {
             </div>
             <div className="flex items-center gap-2 text-xs flex-wrap">
               <KpiPill label="Total" value={summary.total} />
+              <KpiPill label="Aguardando" value={summary.aguardando} dot="bg-sky-500" />
               <KpiPill label="Em dia" value={summary.emDia} dot="bg-emerald-500" />
               <KpiPill label="Atrasadas" value={summary.atrasadas} dot="bg-destructive" />
               <KpiPill label="Paralisadas" value={summary.paralisadas} dot="bg-muted-foreground" />
@@ -723,6 +677,10 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
             className={cn(
               'h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40',
               !obra.etapa && 'text-muted-foreground italic',
+              obra.etapa === 'Finalizada' &&
+                'text-emerald-700 dark:text-emerald-400 font-medium',
+              obra.etapa === 'Vistoria reprovada' &&
+                'text-destructive font-medium',
             )}
           >
             <SelectValue placeholder="Definir…" />
@@ -731,7 +689,14 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
             <SelectItem value={NONE}>(nenhuma)</SelectItem>
             {ETAPA_OPTIONS.map((e) => (
               <SelectItem key={e} value={e}>
-                {e}
+                <span
+                  className={cn(
+                    e === 'Finalizada' && 'text-emerald-700 dark:text-emerald-400 font-medium',
+                    e === 'Vistoria reprovada' && 'text-destructive font-medium',
+                  )}
+                >
+                  {e}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -798,9 +763,31 @@ function ObraRow({ obra, onUpdate, onOpen }: ObraRowProps) {
         )}
       </TableCell>
 
-      {/* Prazo - texto livre */}
+      {/* Prazo - select controlado (55/60/65/75 dias) */}
       <TableCell>
-        <TextCell value={obra.prazo} onSave={(v) => onUpdate({ prazo: v })} placeholder="Definir…" />
+        <Select
+          value={obra.prazo ?? NONE}
+          onValueChange={(v) =>
+            onUpdate({ prazo: v === NONE ? null : (v as PainelPrazo) })
+          }
+        >
+          <SelectTrigger
+            className={cn(
+              'h-7 text-xs border-0 shadow-none hover:bg-accent/60 [&>svg]:opacity-40 tabular-nums',
+              !obra.prazo && 'text-muted-foreground italic',
+            )}
+          >
+            <SelectValue placeholder="Definir…" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE}>(nenhum)</SelectItem>
+            {PAINEL_PRAZO_OPTIONS.map((p) => (
+              <SelectItem key={p} value={p} className="tabular-nums">
+                {p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </TableCell>
 
       {/* Início oficial - exige confirmação */}
