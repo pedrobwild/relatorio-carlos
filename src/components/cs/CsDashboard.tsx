@@ -25,6 +25,7 @@ import {
   CalendarRange,
   UserX,
   UserCheck,
+  Check,
 } from 'lucide-react';
 import { differenceInDays, formatDistanceToNow, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
