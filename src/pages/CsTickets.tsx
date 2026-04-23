@@ -75,6 +75,7 @@ import {
   useUpdateCsTicket,
 } from '@/hooks/useCsTickets';
 import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
+import { CsDashboard } from '@/components/cs/CsDashboard';
 
 const ALL = '__all__';
 
@@ -112,42 +113,6 @@ const statusLabel = (s: CsTicketStatus): string =>
 
 const fmtDateTime = (iso: string | null) =>
   iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '—';
-
-// ----- KPI helpers -----
-type KpiAccent = 'default' | 'info' | 'warning' | 'success' | 'destructive';
-
-const kpiAccentMap: Record<KpiAccent, { dot: string; value: string }> = {
-  default: { dot: 'bg-muted-foreground', value: 'text-foreground' },
-  info: { dot: 'bg-info', value: 'text-info' },
-  warning: { dot: 'bg-warning', value: 'text-warning' },
-  success: { dot: 'bg-success', value: 'text-success' },
-  destructive: { dot: 'bg-destructive', value: 'text-destructive' },
-};
-
-function KpiCard({
-  label,
-  value,
-  accent = 'default',
-}: {
-  label: string;
-  value: number | string;
-  accent?: KpiAccent;
-}) {
-  const cfg = kpiAccentMap[accent];
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:bg-accent/30">
-      <span className={cn('h-2 w-2 rounded-full shrink-0', cfg.dot)} />
-      <div className="flex flex-col min-w-0 leading-tight">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium truncate">
-          {label}
-        </span>
-        <span className={cn('text-xl font-bold tabular-nums leading-none mt-0.5', cfg.value)}>
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 // ============================================================
 // Página
@@ -191,15 +156,17 @@ export default function CsTickets() {
     });
   }, [tickets, search, statusFilter, severityFilter]);
 
-  const kpis = useMemo(() => {
-    return {
-      total: tickets.length,
-      abertos: tickets.filter((t) => t.status === 'aberto').length,
-      em_andamento: tickets.filter((t) => t.status === 'em_andamento').length,
-      concluidos: tickets.filter((t) => t.status === 'concluido').length,
-      criticos: tickets.filter((t) => t.severity === 'critica' && t.status !== 'concluido').length,
-    };
-  }, [tickets]);
+  const handleDashboardFilter = ({
+    status,
+    severity,
+  }: {
+    status?: CsTicketStatus | null;
+    severity?: CsTicketSeverity | null;
+  }) => {
+    if (status !== undefined) setStatusFilter(status ?? ALL);
+    if (severity !== undefined) setSeverityFilter(severity ?? ALL);
+    if (status === null && severity === null) setSearch('');
+  };
 
   const clearFilters = () => {
     setSearch('');
@@ -256,14 +223,8 @@ export default function CsTickets() {
           </Button>
         </div>
 
-        {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
-          <KpiCard label="Total" value={kpis.total} />
-          <KpiCard label="Abertos" value={kpis.abertos} accent="info" />
-          <KpiCard label="Em andamento" value={kpis.em_andamento} accent="warning" />
-          <KpiCard label="Concluídos" value={kpis.concluidos} accent="success" />
-          <KpiCard label="Críticos ativos" value={kpis.criticos} accent="destructive" />
-        </div>
+        {/* Dashboard executivo */}
+        <CsDashboard tickets={tickets} onFilter={handleDashboardFilter} />
 
         {/* Toolbar de filtros */}
         <div className="rounded-lg border border-border bg-card p-3 mb-4">
