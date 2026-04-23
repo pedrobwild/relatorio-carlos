@@ -542,6 +542,22 @@ export default function CalendarioCompras() {
                   </Select>
                 </div>
 
+                {/* Custo Real status */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Custo Real</Label>
+                  <Select
+                    value={filterActualCost}
+                    onValueChange={(v) => setFilterActualCost(v as 'all' | 'informed' | 'pending')}
+                  >
+                    <SelectTrigger className="w-44 h-9"><SelectValue placeholder="Custo Real" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="informed">Informado</SelectItem>
+                      <SelectItem value="pending">Não informado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Clear filters */}
                 {activeFilterCount > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-muted-foreground">
