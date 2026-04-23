@@ -171,22 +171,22 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       concluido: { baixa: 0, media: 0, alta: 0, critica: 0 },
     };
 
-    tickets.forEach((t) => {
+    scopedTickets.forEach((t) => {
       byStatus[t.status]++;
       bySeverity[t.severity]++;
       matrix[t.status][t.severity]++;
     });
 
     const ativos = total - byStatus.concluido;
-    const criticosAtivos = tickets.filter(
+    const criticosAtivos = scopedTickets.filter(
       (t) => t.severity === 'critica' && t.status !== 'concluido',
     ).length;
-    const altosAtivos = tickets.filter(
+    const altosAtivos = scopedTickets.filter(
       (t) => t.severity === 'alta' && t.status !== 'concluido',
     ).length;
 
     // Tickets sem responsável (ativos)
-    const semResponsavel = tickets.filter(
+    const semResponsavel = scopedTickets.filter(
       (t) => !t.responsible_user_id && t.status !== 'concluido',
     ).length;
 
@@ -204,25 +204,25 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       semResponsavel,
       taxaConclusao,
     };
-  }, [tickets]);
+  }, [scopedTickets]);
 
   // Listas priorizadas
   const criticosAbertos = useMemo(
     () =>
-      tickets
+      scopedTickets
         .filter((t) => t.severity === 'critica' && t.status !== 'concluido')
         .sort((a, b) => parseISO(a.created_at).getTime() - parseISO(b.created_at).getTime())
         .slice(0, 5),
-    [tickets],
+    [scopedTickets],
   );
 
   const paradosHa7d = useMemo(() => {
     const now = new Date();
-    return tickets
+    return scopedTickets
       .filter((t) => t.status !== 'concluido' && differenceInDays(now, parseISO(t.updated_at)) >= 7)
       .sort((a, b) => parseISO(a.updated_at).getTime() - parseISO(b.updated_at).getTime())
       .slice(0, 5);
-  }, [tickets]);
+  }, [scopedTickets]);
 
   return (
     <div className="space-y-4 mb-5">
