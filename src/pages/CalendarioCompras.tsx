@@ -246,6 +246,25 @@ export default function CalendarioCompras() {
     },
   });
 
+  // Mutation: update status inline
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, value }: { id: string; value: CalendarStatus }) => {
+      const { error } = await supabase
+        .from('project_purchases')
+        .update({ status: value })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      toast.success('Status atualizado');
+    },
+    onError: (e) => {
+      console.error(e);
+      toast.error('Erro ao atualizar status');
+    },
+  });
+
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach(p => map.set(p.project_id, p.project_name));
