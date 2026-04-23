@@ -19,8 +19,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
-import type { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
-import { statusConfig } from '@/pages/compras/types';
+import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface PurchaseWithProject extends ProjectPurchase {
