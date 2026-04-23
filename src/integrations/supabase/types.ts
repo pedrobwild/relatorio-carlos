@@ -6259,12 +6259,16 @@ export type Database = {
         | "Condomínio"
         | "Planejamento"
         | "Mobilização"
+        | "Execução"
+        | "Vistoria"
+        | "Vistoria reprovada"
+        | "Finalizada"
       painel_relacionamento_enum:
         | "Normal"
         | "Atrito"
         | "Insatisfeito"
         | "Crítico"
-      painel_status_enum: "Em dia" | "Atrasado" | "Paralisada"
+      painel_status_enum: "Em dia" | "Atrasado" | "Paralisada" | "Aguardando"
       party_type: "customer" | "company"
       pending_item_status: "pending" | "completed" | "cancelled"
       pending_item_type:
@@ -6525,6 +6529,10 @@ export const Constants = {
         "Condomínio",
         "Planejamento",
         "Mobilização",
+        "Execução",
+        "Vistoria",
+        "Vistoria reprovada",
+        "Finalizada",
       ],
       painel_relacionamento_enum: [
         "Normal",
@@ -6532,7 +6540,7 @@ export const Constants = {
         "Insatisfeito",
         "Crítico",
       ],
-      painel_status_enum: ["Em dia", "Atrasado", "Paralisada"],
+      painel_status_enum: ["Em dia", "Atrasado", "Paralisada", "Aguardando"],
       party_type: ["customer", "company"],
       pending_item_status: ["pending", "completed", "cancelled"],
       pending_item_type: [
