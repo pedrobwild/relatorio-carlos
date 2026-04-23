@@ -292,6 +292,27 @@ export default function CalendarioCompras() {
   const totalDiff = totalEstimatedWithBoth - totalActualWithBoth;
   const diffPositive = totalDiff >= 0;
 
+  // Available budget: sum of payments received from clients of the projects shown,
+  // restricted to the same period filter (when active). Project filter also applies.
+  const availableBudget = useMemo(() => {
+    const projectIdSet = new Set(filtered.map(p => p.project_id));
+    return allPayments.reduce((sum, pay) => {
+      if (!pay.paid_at) return sum;
+      // Restrict to projects currently in the filtered view
+      if (projectIdSet.size > 0 && !projectIdSet.has(pay.project_id)) return sum;
+      // If a single project filter is active but no purchases match, still respect the project
+      if (filterProject !== 'all' && pay.project_id !== filterProject) return sum;
+      // Apply period filter to paid_at
+      const paidDate = pay.paid_at.slice(0, 10);
+      if (dateFromStr && paidDate < dateFromStr) return sum;
+      if (dateToStr && paidDate > dateToStr) return sum;
+      return sum + (Number(pay.amount) || 0);
+    }, 0);
+  }, [allPayments, filtered, filterProject, dateFromStr, dateToStr]);
+
+  const budgetBalance = availableBudget - totalEstimated;
+  const balancePositive = budgetBalance >= 0;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-6">
