@@ -565,9 +565,9 @@ export default function CalendarioCompras() {
                     <SelectContent>
                       <SelectItem value="all">Todos os status</SelectItem>
                       <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="ordered">Pedido</SelectItem>
-                      <SelectItem value="in_transit">Em Trânsito</SelectItem>
+                      <SelectItem value="approved">Aprovado</SelectItem>
                       <SelectItem value="delivered">Concluído</SelectItem>
+                      <SelectItem value="delayed">Atrasado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
