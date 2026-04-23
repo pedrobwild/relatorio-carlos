@@ -218,6 +218,50 @@ export function useProjectPortal() {
 
   const reportsChronological = useMemo(() => [...allWeeklyReports].reverse(), [allWeeklyReports]);
 
+  // Telemetria de diagnóstico: registra qual effectiveStartDate foi usada e
+  // quantas semanas foram geradas para cada obra. Útil para investigar casos
+  // onde o número de relatórios não bate com a duração real do cronograma.
+  useEffect(() => {
+    if (!project || !reportData) return;
+
+    const earliestActivityStart = formattedActivities.reduce<string | null>((min, a) => {
+      const candidate = a.actualStart || a.plannedStart;
+      if (!candidate) return min;
+      if (!min || candidate < min) return candidate;
+      return min;
+    }, null);
+
+    // Determine the source that "won" as the earliest start
+    const candidates: Array<{ source: string; date: string | null | undefined }> = [
+      { source: 'project.actual_start_date', date: project.actual_start_date },
+      { source: 'project.planned_start_date', date: project.planned_start_date },
+      { source: 'earliestActivityStart', date: earliestActivityStart },
+    ];
+    const validCandidates = candidates.filter(c => !!c.date) as Array<{ source: string; date: string }>;
+    const winner = validCandidates.length > 0
+      ? validCandidates.reduce((earliest, c) => (c.date < earliest.date ? c : earliest), validCandidates[0])
+      : null;
+
+    const diagnostic = {
+      projectId: project.id,
+      projectName: project.name,
+      effectiveStartDate: reportData.startDate,
+      effectiveEndDate: reportData.endDate,
+      effectiveStartSource: winner?.source ?? 'none',
+      candidates: {
+        actual_start_date: project.actual_start_date ?? null,
+        planned_start_date: project.planned_start_date ?? null,
+        earliestActivityStart,
+      },
+      activitiesCount: formattedActivities.length,
+      weeksGenerated: allWeeklyReports.length,
+      reportDate: reportData.reportDate,
+    };
+
+    // Console diagnostic — visível em dev e prod para debugging
+    console.info('[ReportsTelemetry] effectiveStartDate diagnostic', diagnostic);
+  }, [project, reportData, formattedActivities, allWeeklyReports.length]);
+
   // Restore weekly report state
   const hasRestoredWeeklyRef = useRef(false);
   useEffect(() => {
