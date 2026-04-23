@@ -127,6 +127,10 @@ export default function CalendarioCompras() {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProject, setFilterProject] = useState<string>('all');
+  const [filterSupplier, setFilterSupplier] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
   // Fetch all purchases across all projects with project names
   const { data: allPurchases = [], isLoading } = useQuery({
