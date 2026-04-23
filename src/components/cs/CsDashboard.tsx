@@ -236,6 +236,30 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       .slice(0, 5);
   }, [scopedTickets]);
 
+  // Tickets ativos sem responsável (mais antigos primeiro)
+  const semResponsavelLista = useMemo(
+    () =>
+      scopedTickets
+        .filter((t) => !t.responsible_user_id && t.status !== 'concluido')
+        .sort((a, b) => parseISO(a.created_at).getTime() - parseISO(b.created_at).getTime())
+        .slice(0, 5),
+    [scopedTickets],
+  );
+
+  // Tickets com responsável mas sem update há 7d+ (follow-up)
+  const followUpAtrasado = useMemo(() => {
+    const now = new Date();
+    return scopedTickets
+      .filter(
+        (t) =>
+          t.responsible_user_id &&
+          t.status !== 'concluido' &&
+          differenceInDays(now, parseISO(t.updated_at)) >= 7,
+      )
+      .sort((a, b) => parseISO(a.updated_at).getTime() - parseISO(b.updated_at).getTime())
+      .slice(0, 5);
+  }, [scopedTickets]);
+
   return (
     <div className="space-y-4 mb-5">
       {/* Seletor de período */}
