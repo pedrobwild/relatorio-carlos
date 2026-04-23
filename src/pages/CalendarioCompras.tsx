@@ -355,7 +355,7 @@ export default function CalendarioCompras() {
 
   // KPIs
   const totalItems = filtered.length;
-  const pendingItems = filtered.filter(p => p.status === 'pending').length;
+  const pendingItems = filtered.filter(p => toCalendarStatus(p.status) === 'pending').length;
   const thisMonthItems = filtered.filter(p => {
     if (!p.planned_purchase_date) return false;
     return isSameMonth(parseISO(p.planned_purchase_date), currentMonth);
