@@ -374,6 +374,47 @@ export type Database = {
           },
         ]
       }
+      cs_ticket_history: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+          ticket_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          ticket_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_ticket_history_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "cs_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cs_tickets: {
         Row: {
           action_plan: string | null
