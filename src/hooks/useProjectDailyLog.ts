@@ -28,10 +28,12 @@ export type DailyLogServiceStatus =
   | null;
 
 export interface DailyLogService {
-  id?: string;             // ausente para itens novos ainda n\u00e3o salvos
+  id?: string;             // ausente para itens novos ainda não salvos
   description: string;
   status: DailyLogServiceStatus;
   observations: string | null;
+  start_date: string | null;  // ISO date (YYYY-MM-DD)
+  end_date: string | null;    // ISO date (YYYY-MM-DD)
   position: number;
 }
 
@@ -89,7 +91,7 @@ export function useProjectDailyLog(projectId: string | null, logDate: string) {
       const [servicesRes, workersRes] = await Promise.all([
         supabase
           .from('project_daily_log_services')
-          .select('id, description, status, observations, position')
+          .select('id, description, status, observations, start_date, end_date, position')
           .eq('daily_log_id', log.id)
           .order('position', { ascending: true }),
         supabase
@@ -171,6 +173,8 @@ export function useSaveProjectDailyLog() {
               description: s.description,
               status: s.status,
               observations: s.observations,
+              start_date: s.start_date,
+              end_date: s.end_date,
               position: idx,
             })),
           );
