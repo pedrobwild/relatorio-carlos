@@ -19,11 +19,63 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
-import type { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
-import { statusConfig } from '@/pages/compras/types';
+import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
+import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface PurchaseWithProject extends ProjectPurchase {
   project_name: string;
+}
+
+// Simplified status set requested for the calendar view.
+// "delayed" is a UI-managed status (string stored in the same column).
+type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'delayed';
+
+const calendarStatusConfig: Record<CalendarStatus, { label: string; color: string; icon: React.ElementType }> = {
+  pending:   { label: 'Pendente',  color: 'bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30', icon: Clock },
+  approved:  { label: 'Aprovado',  color: 'bg-blue-500/20 text-blue-600 border-blue-500/30', icon: ThumbsUp },
+  delivered: { label: 'Concluído', color: 'bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border-[hsl(var(--success))]/30', icon: CheckCircle2 },
+  delayed:   { label: 'Atrasado',  color: 'bg-red-500/20 text-red-600 border-red-500/30', icon: AlertTriangle },
+};
+
+const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'delayed'];
+
+/** Map any DB status to one of the 4 calendar buckets for display */
+function toCalendarStatus(s: string | null | undefined): CalendarStatus {
+  if (s === 'approved' || s === 'awaiting_approval' || s === 'purchased' || s === 'ordered' || s === 'in_transit') return 'approved';
+  if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
+  if (s === 'delayed') return 'delayed';
+  return 'pending';
+}
+
+function StatusCell({
+  purchase,
+  onSave,
+}: {
+  purchase: PurchaseWithProject;
+  onSave: (id: string, value: CalendarStatus) => void;
+}) {
+  const current = toCalendarStatus(purchase.status);
+  return (
+    <Select value={current} onValueChange={(v) => onSave(purchase.id, v as CalendarStatus)}>
+      <SelectTrigger className="h-7 w-[120px] text-[10px] px-2 py-0 gap-1">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {CALENDAR_STATUS_OPTIONS.map((s) => {
+          const cfg = calendarStatusConfig[s];
+          const Icon = cfg.icon;
+          return (
+            <SelectItem key={s} value={s} className="text-xs">
+              <span className="inline-flex items-center gap-1.5">
+                <Icon className="h-3 w-3" />
+                {cfg.label}
+              </span>
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
+  );
 }
 
 const fmt = (v: number | null) =>
@@ -193,6 +245,25 @@ export default function CalendarioCompras() {
     },
   });
 
+  // Mutation: update status inline
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, value }: { id: string; value: CalendarStatus }) => {
+      const { error } = await supabase
+        .from('project_purchases')
+        .update({ status: value })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      toast.success('Status atualizado');
+    },
+    onError: (e) => {
+      console.error(e);
+      toast.error('Erro ao atualizar status');
+    },
+  });
+
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach(p => map.set(p.project_id, p.project_name));
@@ -222,7 +293,7 @@ export default function CalendarioCompras() {
 
   const filtered = useMemo(() => {
     return allPurchases.filter(p => {
-      if (filterStatus !== 'all' && p.status !== filterStatus) return false;
+      if (filterStatus !== 'all' && toCalendarStatus(p.status) !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
       if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
@@ -283,7 +354,7 @@ export default function CalendarioCompras() {
 
   // KPIs
   const totalItems = filtered.length;
-  const pendingItems = filtered.filter(p => p.status === 'pending').length;
+  const pendingItems = filtered.filter(p => toCalendarStatus(p.status) === 'pending').length;
   const thisMonthItems = filtered.filter(p => {
     if (!p.planned_purchase_date) return false;
     return isSameMonth(parseISO(p.planned_purchase_date), currentMonth);
@@ -493,9 +564,9 @@ export default function CalendarioCompras() {
                     <SelectContent>
                       <SelectItem value="all">Todos os status</SelectItem>
                       <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="ordered">Pedido</SelectItem>
-                      <SelectItem value="in_transit">Em Trânsito</SelectItem>
+                      <SelectItem value="approved">Aprovado</SelectItem>
                       <SelectItem value="delivered">Concluído</SelectItem>
+                      <SelectItem value="delayed">Atrasado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -628,21 +699,24 @@ export default function CalendarioCompras() {
                       >
                         <span className={cn('font-medium', isToday && 'text-primary')}>{format(day, 'd')}</span>
                         <div className="mt-1 space-y-0.5">
-                          {dayPurchases.slice(0, 3).map(p => (
-                            <div
-                              key={p.id}
-                              className={cn(
-                                'text-[10px] leading-tight rounded px-1 py-0.5 truncate cursor-default',
-                                p.status === 'pending' && 'bg-amber-100 text-amber-800',
-                                p.status === 'ordered' && 'bg-blue-100 text-blue-800',
-                                p.status === 'delivered' && 'bg-green-100 text-green-800',
-                                p.status === 'in_transit' && 'bg-purple-100 text-purple-800',
-                              )}
-                              title={`${p.project_name} — ${p.item_name}`}
-                            >
-                              {p.item_name}
-                            </div>
-                          ))}
+                          {dayPurchases.slice(0, 3).map(p => {
+                            const cs = toCalendarStatus(p.status);
+                            return (
+                              <div
+                                key={p.id}
+                                className={cn(
+                                  'text-[10px] leading-tight rounded px-1 py-0.5 truncate cursor-default',
+                                  cs === 'pending' && 'bg-amber-100 text-amber-800',
+                                  cs === 'approved' && 'bg-blue-100 text-blue-800',
+                                  cs === 'delivered' && 'bg-green-100 text-green-800',
+                                  cs === 'delayed' && 'bg-red-100 text-red-800',
+                                )}
+                                title={`${p.project_name} — ${p.item_name}`}
+                              >
+                                {p.item_name}
+                              </div>
+                            );
+                          })}
                           {dayPurchases.length > 3 && (
                             <span className="text-[10px] text-muted-foreground">+{dayPurchases.length - 3}</span>
                           )}
@@ -676,8 +750,6 @@ export default function CalendarioCompras() {
                     </TableHeader>
                     <TableBody>
                       {sortedForList.map(p => {
-                        const config = statusConfig[p.status as PurchaseStatus];
-                        const StatusIcon = config?.icon;
                         const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                         const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
                         return (
@@ -719,12 +791,10 @@ export default function CalendarioCompras() {
                               {diff == null ? '—' : fmtDiff(diff)}
                             </TableCell>
                             <TableCell className="whitespace-nowrap">
-                              {config && StatusIcon && (
-                                <Badge className={cn('gap-1 text-[10px] py-0 px-1.5', config.color)}>
-                                  <StatusIcon className="h-2.5 w-2.5" />
-                                  {config.label}
-                                </Badge>
-                              )}
+                              <StatusCell
+                                purchase={p}
+                                onSave={(id, value) => updateStatus.mutate({ id, value })}
+                              />
                             </TableCell>
                           </TableRow>
                         );
@@ -764,8 +834,6 @@ export default function CalendarioCompras() {
                       </TableHeader>
                       <TableBody>
                         {withoutDate.map(p => {
-                          const config = statusConfig[p.status as PurchaseStatus];
-                          const StatusIcon = config?.icon;
                           const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                           const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
                           return (
@@ -804,12 +872,10 @@ export default function CalendarioCompras() {
                                 {diff == null ? '—' : fmtDiff(diff)}
                               </TableCell>
                               <TableCell className="whitespace-nowrap">
-                                {config && StatusIcon && (
-                                  <Badge className={cn('gap-1 text-[10px] py-0 px-1.5', config.color)}>
-                                    <StatusIcon className="h-2.5 w-2.5" />
-                                    {config.label}
-                                  </Badge>
-                                )}
+                                <StatusCell
+                                  purchase={p}
+                                  onSave={(id, value) => updateStatus.mutate({ id, value })}
+                                />
                               </TableCell>
                             </TableRow>
                           );
