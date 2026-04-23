@@ -3578,6 +3578,111 @@ export type Database = {
           },
         ]
       }
+      project_daily_logs: {
+        Row: {
+          id: string
+          project_id: string
+          log_date: string
+          notes: string | null
+          created_by: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          log_date?: string
+          notes?: string | null
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          log_date?: string
+          notes?: string | null
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_daily_log_services: {
+        Row: {
+          id: string
+          daily_log_id: string
+          description: string
+          status: string | null
+          observations: string | null
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          daily_log_id: string
+          description: string
+          status?: string | null
+          observations?: string | null
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          daily_log_id?: string
+          description?: string
+          status?: string | null
+          observations?: string | null
+          position?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      project_daily_log_workers: {
+        Row: {
+          id: string
+          daily_log_id: string
+          name: string
+          role: string | null
+          period_start: string | null
+          period_end: string | null
+          shift_start: string | null
+          shift_end: string | null
+          notes: string | null
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          daily_log_id: string
+          name: string
+          role?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          shift_start?: string | null
+          shift_end?: string | null
+          notes?: string | null
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          daily_log_id?: string
+          name?: string
+          role?: string | null
+          period_start?: string | null
+          period_end?: string | null
+          shift_start?: string | null
+          shift_end?: string | null
+          notes?: string | null
+          position?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
       project_customers: {
         Row: {
           cidade: string | null
