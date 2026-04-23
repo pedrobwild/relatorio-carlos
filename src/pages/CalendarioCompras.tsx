@@ -226,6 +226,8 @@ export default function CalendarioCompras() {
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
       if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
+      if (filterActualCost === 'informed' && (p.actual_cost == null)) return false;
+      if (filterActualCost === 'pending' && (p.actual_cost != null)) return false;
       // Period filter applies only to items with a planned_purchase_date.
       // Items without date are excluded when a period is active.
       if (dateFromStr || dateToStr) {
@@ -235,13 +237,14 @@ export default function CalendarioCompras() {
       }
       return true;
     });
-  }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, dateFromStr, dateToStr]);
+  }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, filterActualCost, dateFromStr, dateToStr]);
 
   const activeFilterCount =
     (filterStatus !== 'all' ? 1 : 0) +
     (filterProject !== 'all' ? 1 : 0) +
     (filterSupplier !== 'all' ? 1 : 0) +
     (filterCategory !== 'all' ? 1 : 0) +
+    (filterActualCost !== 'all' ? 1 : 0) +
     (dateFrom ? 1 : 0) +
     (dateTo ? 1 : 0);
 
