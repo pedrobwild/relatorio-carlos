@@ -192,6 +192,15 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       (t) => !t.responsible_user_id && t.status !== 'concluido',
     ).length;
 
+    // Tickets com responsável mas sem update há 7d+ (follow-up necessário)
+    const now = new Date();
+    const atrasadosComDono = scopedTickets.filter(
+      (t) =>
+        t.responsible_user_id &&
+        t.status !== 'concluido' &&
+        differenceInDays(now, parseISO(t.updated_at)) >= 7,
+    ).length;
+
     // Resolução: % concluídos
     const taxaConclusao = total > 0 ? Math.round((byStatus.concluido / total) * 100) : 0;
 
@@ -204,6 +213,7 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       criticosAtivos,
       altosAtivos,
       semResponsavel,
+      atrasadosComDono,
       taxaConclusao,
     };
   }, [scopedTickets]);
