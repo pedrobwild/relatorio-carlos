@@ -17,6 +17,8 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronRight,
+  Search,
+  LayoutGrid,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
