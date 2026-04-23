@@ -374,6 +374,66 @@ export type Database = {
           },
         ]
       }
+      cs_tickets: {
+        Row: {
+          action_plan: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          project_id: string
+          resolved_at: string | null
+          responsible_user_id: string | null
+          severity: Database["public"]["Enums"]["cs_ticket_severity"]
+          situation: string
+          status: Database["public"]["Enums"]["cs_ticket_status"]
+          updated_at: string
+        }
+        Insert: {
+          action_plan?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          project_id: string
+          resolved_at?: string | null
+          responsible_user_id?: string | null
+          severity?: Database["public"]["Enums"]["cs_ticket_severity"]
+          situation: string
+          status?: Database["public"]["Enums"]["cs_ticket_status"]
+          updated_at?: string
+        }
+        Update: {
+          action_plan?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          project_id?: string
+          resolved_at?: string | null
+          responsible_user_id?: string | null
+          severity?: Database["public"]["Enums"]["cs_ticket_severity"]
+          situation?: string
+          status?: Database["public"]["Enums"]["cs_ticket_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_tickets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "cs_tickets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documentos_colaborador: {
         Row: {
           colaborador_id: string
@@ -6072,6 +6132,8 @@ export type Database = {
         | "bloqueada"
         | "concluida"
       auditoria_acao: "create" | "update" | "delete"
+      cs_ticket_severity: "baixa" | "media" | "alta" | "critica"
+      cs_ticket_status: "aberto" | "em_andamento" | "concluido"
       entidade_tipo: "obra" | "atividade" | "marco" | "cronograma"
       evidence_link_kind:
         | "meeting_recording"
@@ -6327,6 +6389,8 @@ export const Constants = {
         "concluida",
       ],
       auditoria_acao: ["create", "update", "delete"],
+      cs_ticket_severity: ["baixa", "media", "alta", "critica"],
+      cs_ticket_status: ["aberto", "em_andamento", "concluido"],
       entidade_tipo: ["obra", "atividade", "marco", "cronograma"],
       evidence_link_kind: [
         "meeting_recording",
