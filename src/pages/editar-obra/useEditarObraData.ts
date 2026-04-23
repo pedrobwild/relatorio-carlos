@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
+import { invalidateActivityQueries } from '@/lib/queryKeys';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
 
@@ -273,6 +274,7 @@ export function useEditarObraData(projectId: string | undefined) {
         .single();
       if (error) throw error;
       setActivities([...activities, data]);
+      if (projectId) invalidateActivityQueries(projectId);
       toast({ title: 'Atividade adicionada!' });
       return true;
     } catch (err: unknown) {
@@ -292,11 +294,12 @@ export function useEditarObraData(projectId: string | undefined) {
       const { error } = await supabase.from('project_activities').update({ [field]: value }).eq('id', id);
       if (error) throw error;
       setActivities(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+      if (projectId) invalidateActivityQueries(projectId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro';
       toast({ title: 'Erro ao atualizar', description: message, variant: 'destructive' });
     }
-  }, [toast]);
+  }, [toast, projectId]);
 
   // BUG-B: Debounced version for text fields
   const debouncedUpdateActivity = useCallback(
@@ -330,6 +333,7 @@ export function useEditarObraData(projectId: string | undefined) {
       const { error } = await supabase.from('project_activities').delete().eq('id', id);
       if (error) throw error;
       setActivities(activities.filter(a => a.id !== id));
+      if (projectId) invalidateActivityQueries(projectId);
       toast({ title: 'Atividade removida' });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro';
@@ -380,6 +384,7 @@ export function useEditarObraData(projectId: string | undefined) {
         if (failed?.error) throw failed.error;
       }
 
+      if (projectId) invalidateActivityQueries(projectId);
       toast({ title: 'Ordem das atividades atualizada' });
     } catch (err: unknown) {
       setActivities(previousActivities);
