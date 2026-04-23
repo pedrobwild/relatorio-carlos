@@ -3653,6 +3653,142 @@ export type Database = {
           },
         ]
       }
+      project_daily_log_services: {
+        Row: {
+          created_at: string
+          daily_log_id: string
+          description: string
+          id: string
+          observations: string | null
+          position: number
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          daily_log_id: string
+          description: string
+          id?: string
+          observations?: string | null
+          position?: number
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          daily_log_id?: string
+          description?: string
+          id?: string
+          observations?: string | null
+          position?: number
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_daily_log_services_daily_log_id_fkey"
+            columns: ["daily_log_id"]
+            isOneToOne: false
+            referencedRelation: "project_daily_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_daily_log_workers: {
+        Row: {
+          created_at: string
+          daily_log_id: string
+          id: string
+          name: string
+          notes: string | null
+          period_end: string | null
+          period_start: string | null
+          position: number
+          role: string | null
+          shift_end: string | null
+          shift_start: string | null
+        }
+        Insert: {
+          created_at?: string
+          daily_log_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          position?: number
+          role?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
+        }
+        Update: {
+          created_at?: string
+          daily_log_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          position?: number
+          role?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_daily_log_workers_daily_log_id_fkey"
+            columns: ["daily_log_id"]
+            isOneToOne: false
+            referencedRelation: "project_daily_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_daily_logs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          log_date: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          log_date?: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          log_date?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_daily_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_daily_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_document_comments: {
         Row: {
           comment: string
