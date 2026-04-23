@@ -19,6 +19,8 @@ import {
   ChevronRight,
   Search,
   LayoutGrid,
+  Headset,
+  ArrowRight,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
@@ -446,6 +448,26 @@ export default function PainelObras() {
           <KpiCard label="Em dia" value={summary.emDia} accent="success" />
           <KpiCard label="Atrasadas" value={summary.atrasadas} accent="destructive" />
           <KpiCard label="Paralisadas" value={summary.paralisadas} accent="muted" />
+        </div>
+
+        {/* Atalhos rápidos — módulos auxiliares */}
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          <button
+            type="button"
+            onClick={() => navigate('/gestao/cs')}
+            className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 text-left transition-all hover:border-primary/40 hover:bg-accent/30 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary shrink-0 group-hover:bg-primary/15 transition-colors">
+              <Headset className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-semibold text-foreground">Customer Success</span>
+              <span className="text-xs text-muted-foreground truncate">
+                Tickets de atendimento e plano de ação
+              </span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+          </button>
         </div>
 
         {/* Toolbar — busca + filtros agrupados */}
