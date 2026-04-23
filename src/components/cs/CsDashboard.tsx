@@ -36,6 +36,7 @@ import {
   type CsTicket,
   type CsTicketSeverity,
   type CsTicketStatus,
+  useTouchCsTicket,
 } from '@/hooks/useCsTickets';
 import { cn } from '@/lib/utils';
 
