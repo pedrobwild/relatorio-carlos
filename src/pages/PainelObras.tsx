@@ -681,11 +681,20 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
 
   return (
     <>
-    <TableRow className={cn('group hover:bg-accent/40', expanded && 'bg-accent/20')}>
+    <TableRow
+      className={cn(
+        'group transition-colors hover:bg-accent/40',
+        expanded && 'bg-accent/25 hover:bg-accent/30',
+      )}
+    >
       {/* === Única coluna fixa === */}
       {/* Cliente / Obra (unificada com hierarquia tipográfica) */}
       <TableCell
-        className={cn('sticky left-0 z-10 border-r-2 border-border', stickyBase)}
+        className={cn(
+          'sticky left-0 z-10 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]',
+          stickyBase,
+          expanded && 'bg-accent/25 group-hover:bg-accent/30',
+        )}
       >
         <div className="flex items-start gap-1.5">
           <Button
@@ -695,23 +704,23 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
             onClick={onToggleExpanded}
             aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
             aria-expanded={expanded}
-            className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-[hsl(var(--primary))] hover:bg-transparent"
+            className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent"
           >
             <ChevronRight
               className={cn(
                 'h-4 w-4 transition-transform duration-200',
-                expanded && 'rotate-90',
+                expanded && 'rotate-90 text-primary',
               )}
             />
           </Button>
           <button
             type="button"
             onClick={onOpen}
-            className="text-left flex flex-col gap-0.5 flex-1 min-w-0 group/link"
+            className="text-left flex flex-col gap-0.5 flex-1 min-w-0 group/link focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-0.5"
             title="Abrir obra"
           >
             <span className="flex items-center gap-1.5">
-              <span className="font-semibold text-sm truncate group-hover/link:text-[hsl(var(--primary))] transition-colors">
+              <span className="font-semibold text-sm truncate group-hover/link:text-primary transition-colors">
                 {obra.customer_name ?? 'Sem cliente'}
               </span>
               <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
