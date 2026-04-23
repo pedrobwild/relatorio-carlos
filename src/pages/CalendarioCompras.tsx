@@ -159,6 +159,20 @@ export default function CalendarioCompras() {
     staleTime: 60_000,
   });
 
+  // Fetch paid payments across all projects (used for "available budget" KPI)
+  const { data: allPayments = [] } = useQuery({
+    queryKey: ['all-payments-calendar'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_payments')
+        .select('id, project_id, amount, paid_at')
+        .not('paid_at', 'is', null);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
+
   // Mutation: update actual_cost inline
   const updateActualCost = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: number | null }) => {
