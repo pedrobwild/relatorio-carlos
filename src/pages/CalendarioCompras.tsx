@@ -700,21 +700,24 @@ export default function CalendarioCompras() {
                       >
                         <span className={cn('font-medium', isToday && 'text-primary')}>{format(day, 'd')}</span>
                         <div className="mt-1 space-y-0.5">
-                          {dayPurchases.slice(0, 3).map(p => (
-                            <div
-                              key={p.id}
-                              className={cn(
-                                'text-[10px] leading-tight rounded px-1 py-0.5 truncate cursor-default',
-                                p.status === 'pending' && 'bg-amber-100 text-amber-800',
-                                p.status === 'ordered' && 'bg-blue-100 text-blue-800',
-                                p.status === 'delivered' && 'bg-green-100 text-green-800',
-                                p.status === 'in_transit' && 'bg-purple-100 text-purple-800',
-                              )}
-                              title={`${p.project_name} — ${p.item_name}`}
-                            >
-                              {p.item_name}
-                            </div>
-                          ))}
+                          {dayPurchases.slice(0, 3).map(p => {
+                            const cs = toCalendarStatus(p.status);
+                            return (
+                              <div
+                                key={p.id}
+                                className={cn(
+                                  'text-[10px] leading-tight rounded px-1 py-0.5 truncate cursor-default',
+                                  cs === 'pending' && 'bg-amber-100 text-amber-800',
+                                  cs === 'approved' && 'bg-blue-100 text-blue-800',
+                                  cs === 'delivered' && 'bg-green-100 text-green-800',
+                                  cs === 'delayed' && 'bg-red-100 text-red-800',
+                                )}
+                                title={`${p.project_name} — ${p.item_name}`}
+                              >
+                                {p.item_name}
+                              </div>
+                            );
+                          })}
                           {dayPurchases.length > 3 && (
                             <span className="text-[10px] text-muted-foreground">+{dayPurchases.length - 3}</span>
                           )}
