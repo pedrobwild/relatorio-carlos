@@ -28,6 +28,7 @@ import {
 import { format, parseISO, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Collapsible,
@@ -502,9 +503,15 @@ function SectionCard({
   children,
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const hasCount = typeof count === 'number';
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-shadow hover:shadow-md">
+      <div
+        className={cn(
+          'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all',
+          open ? 'shadow-md' : 'hover:shadow-md',
+        )}
+      >
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -517,10 +524,13 @@ function SectionCard({
           >
             {icon}
             <span className="text-sm font-semibold text-foreground">{title}</span>
-            {typeof count === 'number' && count > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tabular-nums">
+            {hasCount && (
+              <Badge
+                variant={count! > 0 ? 'secondary' : 'outline'}
+                className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums"
+              >
                 {count}
-              </span>
+              </Badge>
             )}
             <ChevronDown
               aria-hidden
@@ -532,7 +542,9 @@ function SectionCard({
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="px-3 pb-3 pt-2 border-t border-border/60 bg-muted/10">{children}</div>
+          <div className="px-3 pb-3 pt-2 border-t border-border/60 bg-muted/10">
+            {children}
+          </div>
         </CollapsibleContent>
       </div>
     </Collapsible>
