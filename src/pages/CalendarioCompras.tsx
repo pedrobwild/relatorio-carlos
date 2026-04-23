@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, Check, X, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon, FilterX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -124,6 +127,10 @@ export default function CalendarioCompras() {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProject, setFilterProject] = useState<string>('all');
+  const [filterSupplier, setFilterSupplier] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
   // Fetch all purchases across all projects with project names
   const { data: allPurchases = [], isLoading } = useQuery({
@@ -174,16 +181,63 @@ export default function CalendarioCompras() {
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach(p => map.set(p.project_id, p.project_name));
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [allPurchases]);
+
+  const suppliers = useMemo(() => {
+    const set = new Set<string>();
+    allPurchases.forEach(p => {
+      if (p.supplier_name && p.supplier_name.trim()) set.add(p.supplier_name.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allPurchases]);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    allPurchases.forEach(p => {
+      if (p.category && p.category.trim()) set.add(p.category.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allPurchases]);
+
+  const dateFromStr = dateFrom ? format(dateFrom, 'yyyy-MM-dd') : null;
+  const dateToStr = dateTo ? format(dateTo, 'yyyy-MM-dd') : null;
 
   const filtered = useMemo(() => {
     return allPurchases.filter(p => {
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
+      if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
+      if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
+      // Period filter applies only to items with a planned_purchase_date.
+      // Items without date are excluded when a period is active.
+      if (dateFromStr || dateToStr) {
+        if (!p.planned_purchase_date) return false;
+        if (dateFromStr && p.planned_purchase_date < dateFromStr) return false;
+        if (dateToStr && p.planned_purchase_date > dateToStr) return false;
+      }
       return true;
     });
-  }, [allPurchases, filterStatus, filterProject]);
+  }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, dateFromStr, dateToStr]);
+
+  const activeFilterCount =
+    (filterStatus !== 'all' ? 1 : 0) +
+    (filterProject !== 'all' ? 1 : 0) +
+    (filterSupplier !== 'all' ? 1 : 0) +
+    (filterCategory !== 'all' ? 1 : 0) +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0);
+
+  const clearFilters = () => {
+    setFilterStatus('all');
+    setFilterProject('all');
+    setFilterSupplier('all');
+    setFilterCategory('all');
+    setDateFrom(undefined);
+    setDateTo(undefined);
+  };
 
   const purchasesByDate = useMemo(() => {
     const map = new Map<string, PurchaseWithProject[]>();
@@ -298,28 +352,135 @@ export default function CalendarioCompras() {
 
           {/* Filters & View Toggle */}
           <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap items-center gap-4">
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="ordered">Pedido</SelectItem>
-                    <SelectItem value="in_transit">Em Trânsito</SelectItem>
-                    <SelectItem value="delivered">Concluído</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterProject} onValueChange={setFilterProject}>
-                  <SelectTrigger className="w-56"><SelectValue placeholder="Obra" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as obras</SelectItem>
-                    {projects.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="ml-auto flex gap-1">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex flex-wrap items-end gap-3">
+                {/* Period: From */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">De</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          'w-36 justify-start text-left font-normal',
+                          !dateFrom && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                        {dateFrom ? format(dateFrom, 'dd/MM/yyyy') : 'Início'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarPicker
+                        mode="single"
+                        selected={dateFrom}
+                        onSelect={setDateFrom}
+                        locale={ptBR}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Period: To */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Até</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          'w-36 justify-start text-left font-normal',
+                          !dateTo && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                        {dateTo ? format(dateTo, 'dd/MM/yyyy') : 'Fim'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarPicker
+                        mode="single"
+                        selected={dateTo}
+                        onSelect={setDateTo}
+                        locale={ptBR}
+                        disabled={(date) => (dateFrom ? date < dateFrom : false)}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Status */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Status</Label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="ordered">Pedido</SelectItem>
+                      <SelectItem value="in_transit">Em Trânsito</SelectItem>
+                      <SelectItem value="delivered">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Project */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Obra</Label>
+                  <Select value={filterProject} onValueChange={setFilterProject}>
+                    <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Obra" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as obras</SelectItem>
+                      {projects.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Supplier */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Fornecedor</Label>
+                  <Select value={filterSupplier} onValueChange={setFilterSupplier}>
+                    <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos fornecedores</SelectItem>
+                      {suppliers.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Categoria</Label>
+                  <Select value={filterCategory} onValueChange={setFilterCategory}>
+                    <SelectTrigger className="w-48 h-9"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas categorias</SelectItem>
+                      {categories.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Clear filters */}
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-muted-foreground">
+                    <FilterX className="h-3.5 w-3.5 mr-1" />
+                    Limpar ({activeFilterCount})
+                  </Button>
+                )}
+
+                <div className="ml-auto flex gap-1 self-end">
                   <Button
                     variant={viewMode === 'list' ? 'default' : 'outline'}
                     size="sm"
