@@ -10,7 +10,7 @@
  * Toda a leitura usa os tickets já carregados pelo hook `useCsTickets`,
  * portanto não há custo extra de rede.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Headset,
@@ -22,8 +22,9 @@ import {
   Hourglass,
   Ghost,
   ArrowRight,
+  CalendarRange,
 } from 'lucide-react';
-import { differenceInDays, formatDistanceToNow, parseISO } from 'date-fns';
+import { differenceInDays, formatDistanceToNow, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import {
