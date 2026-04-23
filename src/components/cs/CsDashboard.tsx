@@ -228,14 +228,6 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
     [scopedTickets],
   );
 
-  const paradosHa7d = useMemo(() => {
-    const now = new Date();
-    return scopedTickets
-      .filter((t) => t.status !== 'concluido' && differenceInDays(now, parseISO(t.updated_at)) >= 7)
-      .sort((a, b) => parseISO(a.updated_at).getTime() - parseISO(b.updated_at).getTime())
-      .slice(0, 5);
-  }, [scopedTickets]);
-
   // Tickets ativos sem responsável (mais antigos primeiro)
   const semResponsavelLista = useMemo(
     () =>
