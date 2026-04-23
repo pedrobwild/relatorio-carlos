@@ -126,19 +126,65 @@ export default function CsTickets() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [severityFilter, setSeverityFilter] = useState<string>(ALL);
+  const [projectFilter, setProjectFilter] = useState<string>(ALL);
+  const [responsibleFilter, setResponsibleFilter] = useState<string>(ALL);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<CsTicket | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CsTicket | null>(null);
 
+  // Opções dinâmicas derivadas dos tickets
+  const projectOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    tickets.forEach((t) => {
+      const label = t.project_name
+        ? t.customer_name
+          ? `${t.project_name} — ${t.customer_name}`
+          : t.project_name
+        : t.customer_name ?? 'Obra sem nome';
+      map.set(t.project_id, label);
+    });
+    return Array.from(map.entries())
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+  }, [tickets]);
+
+  const responsibleOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    let hasUnassigned = false;
+    tickets.forEach((t) => {
+      if (t.responsible_user_id && t.responsible_name) {
+        map.set(t.responsible_user_id, t.responsible_name);
+      } else {
+        hasUnassigned = true;
+      }
+    });
+    const opts = Array.from(map.entries())
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+    return { opts, hasUnassigned };
+  }, [tickets]);
+
   const hasActiveFilters =
-    search.trim().length > 0 || statusFilter !== ALL || severityFilter !== ALL;
+    search.trim().length > 0 ||
+    statusFilter !== ALL ||
+    severityFilter !== ALL ||
+    projectFilter !== ALL ||
+    responsibleFilter !== ALL;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tickets.filter((t) => {
       if (statusFilter !== ALL && t.status !== statusFilter) return false;
       if (severityFilter !== ALL && t.severity !== severityFilter) return false;
+      if (projectFilter !== ALL && t.project_id !== projectFilter) return false;
+      if (responsibleFilter !== ALL) {
+        if (responsibleFilter === '__unassigned__') {
+          if (t.responsible_user_id) return false;
+        } else if (t.responsible_user_id !== responsibleFilter) {
+          return false;
+        }
+      }
       if (q) {
         const hay = [
           t.situation,
@@ -154,7 +200,7 @@ export default function CsTickets() {
       }
       return true;
     });
-  }, [tickets, search, statusFilter, severityFilter]);
+  }, [tickets, search, statusFilter, severityFilter, projectFilter, responsibleFilter]);
 
   const handleDashboardFilter = ({
     status,
@@ -172,6 +218,8 @@ export default function CsTickets() {
     setSearch('');
     setStatusFilter(ALL);
     setSeverityFilter(ALL);
+    setProjectFilter(ALL);
+    setResponsibleFilter(ALL);
   };
 
   const openNew = () => {
@@ -266,6 +314,35 @@ export default function CsTickets() {
                   {CS_SEVERITY_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={projectFilter} onValueChange={setProjectFilter}>
+                <SelectTrigger className="h-9 w-[200px] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-72">
+                  <SelectItem value={ALL}>Todas as obras</SelectItem>
+                  {projectOptions.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
+                <SelectTrigger className="h-9 w-[180px] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-72">
+                  <SelectItem value={ALL}>Todos os responsáveis</SelectItem>
+                  {responsibleOptions.hasUnassigned && (
+                    <SelectItem value="__unassigned__">Não atribuído</SelectItem>
+                  )}
+                  {responsibleOptions.opts.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
