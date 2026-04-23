@@ -253,6 +253,7 @@ export default function CalendarioCompras() {
     setFilterProject('all');
     setFilterSupplier('all');
     setFilterCategory('all');
+    setFilterActualCost('all');
     setDateFrom(undefined);
     setDateTo(undefined);
   };
