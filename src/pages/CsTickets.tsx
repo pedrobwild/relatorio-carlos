@@ -339,17 +339,9 @@ export default function CsTickets() {
                 : 'Ajuste os filtros ou limpe a busca para ver mais resultados.'
             }
             action={
-              tickets.length === 0 ? (
-                <Button onClick={openNew}>
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Novo ticket
-                </Button>
-              ) : (
-                <Button variant="outline" onClick={clearFilters}>
-                  <X className="h-4 w-4 mr-1.5" />
-                  Limpar filtros
-                </Button>
-              )
+              tickets.length === 0
+                ? { label: 'Novo ticket', onClick: openNew, icon: Plus }
+                : { label: 'Limpar filtros', onClick: clearFilters, icon: X }
             }
           />
         ) : (
