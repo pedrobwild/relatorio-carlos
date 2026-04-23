@@ -218,6 +218,8 @@ export default function CsTickets() {
     setSearch('');
     setStatusFilter(ALL);
     setSeverityFilter(ALL);
+    setProjectFilter(ALL);
+    setResponsibleFilter(ALL);
   };
 
   const openNew = () => {
