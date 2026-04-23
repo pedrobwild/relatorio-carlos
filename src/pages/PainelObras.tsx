@@ -942,31 +942,37 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
         </Tooltip>
       </TableCell>
 
-      {/* Ações: abrir obra */}
-      <TableCell>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Ações: abrir obra (sticky à direita para sempre acessível) */}
+      <TableCell
+        className={cn(
+          'sticky right-0 z-10 border-l border-border',
+          stickyBase,
+          expanded && 'bg-accent/25 group-hover:bg-accent/30',
+        )}
+      >
+        <div className="flex items-center justify-center">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 text-muted-foreground hover:text-[hsl(var(--primary))]"
+                className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
                 onClick={onOpen}
                 aria-label="Abrir obra"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="top">Abrir obra</TooltipContent>
+            <TooltipContent side="left">Abrir obra</TooltipContent>
           </Tooltip>
         </div>
       </TableCell>
     </TableRow>
     {expanded && (
-      <TableRow className="bg-accent/10 hover:bg-accent/10">
+      <TableRow className="bg-accent/15 hover:bg-accent/15">
         <TableCell
           colSpan={PAINEL_COLUMN_COUNT}
-          className="p-0 border-t border-b border-border"
+          className="p-0 border-t border-b-2 border-primary/20"
         >
           <DailyLogInline projectId={obra.id} />
         </TableCell>
