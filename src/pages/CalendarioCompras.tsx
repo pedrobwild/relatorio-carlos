@@ -791,12 +791,10 @@ export default function CalendarioCompras() {
                               {diff == null ? '—' : fmtDiff(diff)}
                             </TableCell>
                             <TableCell className="whitespace-nowrap">
-                              {config && StatusIcon && (
-                                <Badge className={cn('gap-1 text-[10px] py-0 px-1.5', config.color)}>
-                                  <StatusIcon className="h-2.5 w-2.5" />
-                                  {config.label}
-                                </Badge>
-                              )}
+                              <StatusCell
+                                purchase={p}
+                                onSave={(id, value) => updateStatus.mutate({ id, value })}
+                              />
                             </TableCell>
                           </TableRow>
                         );
