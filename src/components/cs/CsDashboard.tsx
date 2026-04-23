@@ -23,6 +23,8 @@ import {
   Ghost,
   ArrowRight,
   CalendarRange,
+  UserX,
+  UserCheck,
 } from 'lucide-react';
 import { differenceInDays, formatDistanceToNow, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
