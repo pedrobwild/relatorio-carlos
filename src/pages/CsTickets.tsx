@@ -126,19 +126,65 @@ export default function CsTickets() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [severityFilter, setSeverityFilter] = useState<string>(ALL);
+  const [projectFilter, setProjectFilter] = useState<string>(ALL);
+  const [responsibleFilter, setResponsibleFilter] = useState<string>(ALL);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<CsTicket | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CsTicket | null>(null);
 
+  // Opções dinâmicas derivadas dos tickets
+  const projectOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    tickets.forEach((t) => {
+      const label = t.project_name
+        ? t.customer_name
+          ? `${t.project_name} — ${t.customer_name}`
+          : t.project_name
+        : t.customer_name ?? 'Obra sem nome';
+      map.set(t.project_id, label);
+    });
+    return Array.from(map.entries())
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+  }, [tickets]);
+
+  const responsibleOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    let hasUnassigned = false;
+    tickets.forEach((t) => {
+      if (t.responsible_user_id && t.responsible_name) {
+        map.set(t.responsible_user_id, t.responsible_name);
+      } else {
+        hasUnassigned = true;
+      }
+    });
+    const opts = Array.from(map.entries())
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+    return { opts, hasUnassigned };
+  }, [tickets]);
+
   const hasActiveFilters =
-    search.trim().length > 0 || statusFilter !== ALL || severityFilter !== ALL;
+    search.trim().length > 0 ||
+    statusFilter !== ALL ||
+    severityFilter !== ALL ||
+    projectFilter !== ALL ||
+    responsibleFilter !== ALL;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return tickets.filter((t) => {
       if (statusFilter !== ALL && t.status !== statusFilter) return false;
       if (severityFilter !== ALL && t.severity !== severityFilter) return false;
+      if (projectFilter !== ALL && t.project_id !== projectFilter) return false;
+      if (responsibleFilter !== ALL) {
+        if (responsibleFilter === '__unassigned__') {
+          if (t.responsible_user_id) return false;
+        } else if (t.responsible_user_id !== responsibleFilter) {
+          return false;
+        }
+      }
       if (q) {
         const hay = [
           t.situation,
@@ -154,7 +200,7 @@ export default function CsTickets() {
       }
       return true;
     });
-  }, [tickets, search, statusFilter, severityFilter]);
+  }, [tickets, search, statusFilter, severityFilter, projectFilter, responsibleFilter]);
 
   const handleDashboardFilter = ({
     status,
