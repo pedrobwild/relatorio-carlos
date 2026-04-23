@@ -295,7 +295,7 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       </div>
 
       {/* Linha 1: KPIs principais */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
         <KpiTile
           icon={Headset}
           label="Total"
@@ -334,11 +334,18 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
           onClick={() => onFilter?.({ severity: 'critica' })}
         />
         <KpiTile
-          icon={AlertTriangle}
+          icon={UserX}
           label="Sem responsável"
           value={stats.semResponsavel}
           accent={stats.semResponsavel > 0 ? 'warning' : 'default'}
           hint="Ativos sem dono"
+        />
+        <KpiTile
+          icon={UserCheck}
+          label="Atrasados c/ dono"
+          value={stats.atrasadosComDono}
+          accent={stats.atrasadosComDono > 0 ? 'warning' : 'default'}
+          hint="Sem update 7d+"
         />
       </div>
 
