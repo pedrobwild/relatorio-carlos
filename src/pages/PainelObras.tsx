@@ -428,7 +428,7 @@ export default function PainelObras() {
         <header className="flex flex-col gap-1 pt-6 pb-4 border-b border-border/60">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <LayoutGrid className="h-4.5 w-4.5" strokeWidth={2} />
+              <LayoutGrid className="h-[18px] w-[18px]" strokeWidth={2} />
             </div>
             <div>
               <h1 className="text-h2 font-bold tracking-tight leading-tight">Painel de Obras</h1>
