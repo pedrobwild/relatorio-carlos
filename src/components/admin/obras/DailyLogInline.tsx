@@ -281,6 +281,22 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <MiniField
+                      label="Início"
+                      type="date"
+                      value={svc.start_date ?? ''}
+                      onChange={(v) => updateService(i, { start_date: v || null })}
+                      disabled={isSaving}
+                    />
+                    <MiniField
+                      label="Fim"
+                      type="date"
+                      value={svc.end_date ?? ''}
+                      onChange={(v) => updateService(i, { end_date: v || null })}
+                      disabled={isSaving}
+                    />
+                  </div>
                   <Textarea
                     value={svc.observations ?? ''}
                     placeholder="Observações (opcional)"
