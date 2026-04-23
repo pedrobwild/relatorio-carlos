@@ -119,9 +119,9 @@ const computeDisplayStatus = (obra: {
 const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
     case 'Aguardando':
-      return 'bg-sky-500';
+      return 'bg-info';
     case 'Em dia':
-      return 'bg-emerald-500';
+      return 'bg-success';
     case 'Atrasado':
       return 'bg-destructive';
     case 'Paralisada':
@@ -134,11 +134,11 @@ const statusDotClass = (s: PainelStatus | null): string => {
 const statusPillClass = (s: PainelStatus | null): string => {
   switch (s) {
     case 'Aguardando':
-      return 'bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30';
+      return 'bg-info/10 text-info border border-info/25';
     case 'Em dia':
-      return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30';
+      return 'bg-success/10 text-success border border-success/25';
     case 'Atrasado':
-      return 'bg-destructive/15 text-destructive border border-destructive/30';
+      return 'bg-destructive/10 text-destructive border border-destructive/25';
     case 'Paralisada':
       return 'bg-muted text-muted-foreground border border-border';
     default:
@@ -149,13 +149,13 @@ const statusPillClass = (s: PainelStatus | null): string => {
 const relacionamentoPillClass = (r: PainelRelacionamento | null): string => {
   switch (r) {
     case 'Normal':
-      return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30';
+      return 'bg-success/10 text-success border border-success/25';
     case 'Atrito':
-      return 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30';
+      return 'bg-warning/10 text-warning border border-warning/25';
     case 'Insatisfeito':
-      return 'bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30';
+      return 'bg-warning/15 text-warning border border-warning/30';
     case 'Crítico':
-      return 'bg-destructive/15 text-destructive border border-destructive/30';
+      return 'bg-destructive/10 text-destructive border border-destructive/25';
     default:
       return 'bg-muted/40 text-muted-foreground border border-dashed border-border';
   }
@@ -163,7 +163,7 @@ const relacionamentoPillClass = (r: PainelRelacionamento | null): string => {
 
 // Affordance comum a toda célula editável: hover sutil + ring no foco.
 const editableCell =
-  'group/cell w-full h-full text-left px-2 py-1 rounded text-sm transition-colors ' +
+  'group/cell w-full h-full text-left px-2 py-1 rounded-md text-sm transition-colors ' +
   'hover:bg-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 // ----- inline date cell -----
