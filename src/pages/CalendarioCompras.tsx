@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Check, X, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,8 +26,100 @@ interface PurchaseWithProject extends ProjectPurchase {
 const fmt = (v: number | null) =>
   v != null ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—';
 
+// Compact format used inside table cells (R$ 1.500)
+const fmtCompact = (v: number | null) =>
+  v != null
+    ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+    : '—';
+
+// Signed compact format for differences ("+R$ 200" / "-R$ 150")
+const fmtDiff = (v: number) => {
+  const sign = v > 0 ? '+' : v < 0 ? '-' : '';
+  const abs = Math.abs(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  return `${sign}${abs}`;
+};
+
+// Editable currency cell — uses raw number input, commits on blur/Enter.
+function ActualCostCell({
+  purchase,
+  onSave,
+}: {
+  purchase: PurchaseWithProject;
+  onSave: (id: string, value: number | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState<string>(
+    purchase.actual_cost != null ? String(purchase.actual_cost) : '',
+  );
+
+  useEffect(() => {
+    setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
+  }, [purchase.actual_cost]);
+
+  const commit = () => {
+    const trimmed = value.trim().replace(',', '.');
+    const num = trimmed === '' ? null : Number(trimmed);
+    if (trimmed !== '' && (isNaN(num as number) || (num as number) < 0)) {
+      toast.error('Valor inválido');
+      setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
+      setEditing(false);
+      return;
+    }
+    if (num !== purchase.actual_cost) onSave(purchase.id, num);
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1">
+        <Input
+          autoFocus
+          type="number"
+          step="0.01"
+          min="0"
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') cancel();
+          }}
+          onBlur={commit}
+          className="h-7 w-24 text-xs px-2"
+        />
+        <Button size="icon" variant="ghost" className="h-6 w-6" onMouseDown={(e) => e.preventDefault()} onClick={commit}>
+          <Check className="h-3 w-3" />
+        </Button>
+        <Button size="icon" variant="ghost" className="h-6 w-6" onMouseDown={(e) => e.preventDefault()} onClick={cancel}>
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="group inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs hover:bg-muted whitespace-nowrap"
+      title="Clique para editar"
+    >
+      <span className={cn(purchase.actual_cost == null && 'text-muted-foreground italic')}>
+        {purchase.actual_cost != null ? fmtCompact(purchase.actual_cost) : 'Adicionar'}
+      </span>
+      <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+    </button>
+  );
+}
+
 export default function CalendarioCompras() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -42,7 +136,6 @@ export default function CalendarioCompras() {
 
       if (error) throw error;
 
-      // Fetch project names
       const projectIds = [...new Set((purchases || []).map(p => p.project_id))];
       const { data: projects } = await supabase
         .from('projects')
@@ -59,14 +152,31 @@ export default function CalendarioCompras() {
     staleTime: 60_000,
   });
 
-  // Get unique projects for filter
+  // Mutation: update actual_cost inline
+  const updateActualCost = useMutation({
+    mutationFn: async ({ id, value }: { id: string; value: number | null }) => {
+      const { error } = await supabase
+        .from('project_purchases')
+        .update({ actual_cost: value })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      toast.success('Custo real atualizado');
+    },
+    onError: (e) => {
+      console.error(e);
+      toast.error('Erro ao atualizar custo real');
+    },
+  });
+
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach(p => map.set(p.project_id, p.project_name));
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [allPurchases]);
 
-  // Filter purchases
   const filtered = useMemo(() => {
     return allPurchases.filter(p => {
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
@@ -75,7 +185,6 @@ export default function CalendarioCompras() {
     });
   }, [allPurchases, filterStatus, filterProject]);
 
-  // Group by date for calendar view
   const purchasesByDate = useMemo(() => {
     const map = new Map<string, PurchaseWithProject[]>();
     filtered.forEach(p => {
@@ -87,7 +196,6 @@ export default function CalendarioCompras() {
     return map;
   }, [filtered]);
 
-  // Sort for list view by planned_purchase_date
   const sortedForList = useMemo(() => {
     return [...filtered]
       .filter(p => p.planned_purchase_date)
@@ -96,7 +204,6 @@ export default function CalendarioCompras() {
 
   const withoutDate = useMemo(() => filtered.filter(p => !p.planned_purchase_date), [filtered]);
 
-  // Calendar days
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -109,6 +216,13 @@ export default function CalendarioCompras() {
     return isSameMonth(parseISO(p.planned_purchase_date), currentMonth);
   }).length;
   const totalEstimated = filtered.reduce((s, p) => s + (p.estimated_cost || 0), 0);
+  // Difference summary considers only items with both values informed
+  const itemsWithBoth = filtered.filter(p => p.estimated_cost != null && p.actual_cost != null);
+  const totalEstimatedWithBoth = itemsWithBoth.reduce((s, p) => s + (p.estimated_cost || 0), 0);
+  const totalActualWithBoth = itemsWithBoth.reduce((s, p) => s + (p.actual_cost || 0), 0);
+  // Positive = saved money (estimated > actual)
+  const totalDiff = totalEstimatedWithBoth - totalActualWithBoth;
+  const diffPositive = totalDiff >= 0;
 
   if (isLoading) {
     return (
@@ -139,7 +253,7 @@ export default function CalendarioCompras() {
       <div className="py-6">
         <PageContainer maxWidth="full" className="space-y-6">
           {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">Total de Itens</p>
@@ -162,6 +276,22 @@ export default function CalendarioCompras() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground">Total Estimado</p>
                 <p className="text-xl font-bold">{fmt(totalEstimated)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm text-muted-foreground">
+                  Diferença{' '}
+                  <span className="text-[10px]">({itemsWithBoth.length} itens)</span>
+                </p>
+                <p
+                  className={cn(
+                    'text-xl font-bold',
+                    diffPositive ? 'text-emerald-600' : 'text-red-600',
+                  )}
+                >
+                  {itemsWithBoth.length === 0 ? '—' : fmtDiff(totalDiff)}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -231,7 +361,6 @@ export default function CalendarioCompras() {
                       {d}
                     </div>
                   ))}
-                  {/* Empty cells for days before month start */}
                   {Array.from({ length: (monthStart.getDay() + 6) % 7 }).map((_, i) => (
                     <div key={`empty-${i}`} className="bg-background p-2 min-h-[80px]" />
                   ))}
@@ -284,45 +413,68 @@ export default function CalendarioCompras() {
                   <CardTitle className="text-base">Compras Agendadas ({sortedForList.length})</CardTitle>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
-                  <Table>
+                  <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Data Compra</TableHead>
-                        <TableHead>Obra</TableHead>
-                        <TableHead>Categoria</TableHead>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Fornecedor</TableHead>
-                        <TableHead>Custo Previsto</TableHead>
-                        <TableHead>Custo Real</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead className="whitespace-nowrap">Data</TableHead>
+                        <TableHead className="whitespace-nowrap">Obra</TableHead>
+                        <TableHead className="whitespace-nowrap">Categoria</TableHead>
+                        <TableHead className="whitespace-nowrap">Item</TableHead>
+                        <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
+                        <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
+                        <TableHead className="whitespace-nowrap text-right">Real</TableHead>
+                        <TableHead className="whitespace-nowrap text-right">Diferença</TableHead>
+                        <TableHead className="whitespace-nowrap">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {sortedForList.map(p => {
                         const config = statusConfig[p.status as PurchaseStatus];
                         const StatusIcon = config?.icon;
+                        const hasBoth = p.estimated_cost != null && p.actual_cost != null;
+                        const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
                         return (
                           <TableRow key={p.id}>
-                            <TableCell className="font-medium text-sm whitespace-nowrap">
-                              {p.planned_purchase_date ? format(parseISO(p.planned_purchase_date), 'dd/MM/yyyy') : '—'}
+                            <TableCell className="font-medium whitespace-nowrap">
+                              {p.planned_purchase_date ? format(parseISO(p.planned_purchase_date), 'dd/MM/yy') : '—'}
                             </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-xs whitespace-nowrap">
+                            <TableCell className="whitespace-nowrap max-w-[140px]">
+                              <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
                                 {p.project_name}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{p.category || '—'}</TableCell>
-                            <TableCell>
-                              <p className="text-sm font-medium">{p.item_name}</p>
-                              {p.description && <p className="text-xs text-muted-foreground truncate max-w-40">{p.description}</p>}
+                            <TableCell className="text-muted-foreground whitespace-nowrap max-w-[120px] truncate">
+                              {p.category || '—'}
                             </TableCell>
-                            <TableCell className="text-sm">{p.supplier_name || '—'}</TableCell>
-                            <TableCell className="text-sm">{fmt(p.estimated_cost)}</TableCell>
-                            <TableCell className="text-sm">{fmt(p.actual_cost)}</TableCell>
-                            <TableCell>
+                            <TableCell className="whitespace-nowrap max-w-[180px]">
+                              <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap max-w-[120px] truncate" title={p.supplier_name || ''}>
+                              {p.supplier_name || '—'}
+                            </TableCell>
+                            <TableCell className="text-right whitespace-nowrap tabular-nums">
+                              {fmtCompact(p.estimated_cost)}
+                            </TableCell>
+                            <TableCell className="text-right whitespace-nowrap tabular-nums">
+                              <ActualCostCell
+                                purchase={p}
+                                onSave={(id, value) => updateActualCost.mutate({ id, value })}
+                              />
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                'text-right whitespace-nowrap tabular-nums font-medium',
+                                diff == null && 'text-muted-foreground',
+                                diff != null && diff >= 0 && 'text-emerald-600',
+                                diff != null && diff < 0 && 'text-red-600',
+                              )}
+                            >
+                              {diff == null ? '—' : fmtDiff(diff)}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap">
                               {config && StatusIcon && (
-                                <Badge className={cn('gap-1', config.color)}>
-                                  <StatusIcon className="h-3 w-3" />
+                                <Badge className={cn('gap-1 text-[10px] py-0 px-1.5', config.color)}>
+                                  <StatusIcon className="h-2.5 w-2.5" />
                                   {config.label}
                                 </Badge>
                               )}
@@ -332,7 +484,7 @@ export default function CalendarioCompras() {
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
@@ -350,34 +502,64 @@ export default function CalendarioCompras() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
-                    <Table>
+                    <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Obra</TableHead>
-                          <TableHead>Categoria</TableHead>
-                          <TableHead>Item</TableHead>
-                          <TableHead>Fornecedor</TableHead>
-                          <TableHead>Custo Previsto</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead className="whitespace-nowrap">Obra</TableHead>
+                          <TableHead className="whitespace-nowrap">Categoria</TableHead>
+                          <TableHead className="whitespace-nowrap">Item</TableHead>
+                          <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
+                          <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
+                          <TableHead className="whitespace-nowrap text-right">Real</TableHead>
+                          <TableHead className="whitespace-nowrap text-right">Diferença</TableHead>
+                          <TableHead className="whitespace-nowrap">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {withoutDate.map(p => {
                           const config = statusConfig[p.status as PurchaseStatus];
                           const StatusIcon = config?.icon;
+                          const hasBoth = p.estimated_cost != null && p.actual_cost != null;
+                          const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
                           return (
                             <TableRow key={p.id}>
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs">{p.project_name}</Badge>
+                              <TableCell className="whitespace-nowrap max-w-[140px]">
+                                <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
+                                  {p.project_name}
+                                </Badge>
                               </TableCell>
-                              <TableCell className="text-sm text-muted-foreground">{p.category || '—'}</TableCell>
-                              <TableCell className="text-sm font-medium">{p.item_name}</TableCell>
-                              <TableCell className="text-sm">{p.supplier_name || '—'}</TableCell>
-                              <TableCell className="text-sm">{fmt(p.estimated_cost)}</TableCell>
-                              <TableCell>
+                              <TableCell className="text-muted-foreground whitespace-nowrap max-w-[120px] truncate">
+                                {p.category || '—'}
+                              </TableCell>
+                              <TableCell className="font-medium whitespace-nowrap max-w-[180px] truncate" title={p.item_name}>
+                                {p.item_name}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap max-w-[120px] truncate" title={p.supplier_name || ''}>
+                                {p.supplier_name || '—'}
+                              </TableCell>
+                              <TableCell className="text-right whitespace-nowrap tabular-nums">
+                                {fmtCompact(p.estimated_cost)}
+                              </TableCell>
+                              <TableCell className="text-right whitespace-nowrap tabular-nums">
+                                <ActualCostCell
+                                  purchase={p}
+                                  onSave={(id, value) => updateActualCost.mutate({ id, value })}
+                                />
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  'text-right whitespace-nowrap tabular-nums font-medium',
+                                  diff == null && 'text-muted-foreground',
+                                  diff != null && diff >= 0 && 'text-emerald-600',
+                                  diff != null && diff < 0 && 'text-red-600',
+                                )}
+                              >
+                                {diff == null ? '—' : fmtDiff(diff)}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap">
                                 {config && StatusIcon && (
-                                  <Badge className={cn('gap-1', config.color)}>
-                                    <StatusIcon className="h-3 w-3" />
+                                  <Badge className={cn('gap-1 text-[10px] py-0 px-1.5', config.color)}>
+                                    <StatusIcon className="h-2.5 w-2.5" />
                                     {config.label}
                                   </Badge>
                                 )}
