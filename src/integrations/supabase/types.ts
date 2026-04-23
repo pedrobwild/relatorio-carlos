@@ -3658,27 +3658,33 @@ export type Database = {
           created_at: string
           daily_log_id: string
           description: string
+          end_date: string | null
           id: string
           observations: string | null
           position: number
+          start_date: string | null
           status: string | null
         }
         Insert: {
           created_at?: string
           daily_log_id: string
           description: string
+          end_date?: string | null
           id?: string
           observations?: string | null
           position?: number
+          start_date?: string | null
           status?: string | null
         }
         Update: {
           created_at?: string
           daily_log_id?: string
           description?: string
+          end_date?: string | null
           id?: string
           observations?: string | null
           position?: number
+          start_date?: string | null
           status?: string | null
         }
         Relationships: [
