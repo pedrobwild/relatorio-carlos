@@ -765,10 +765,8 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
             className={cn(
               'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1',
               !obra.etapa && 'text-muted-foreground italic',
-              obra.etapa === 'Finalizada' &&
-                'text-emerald-700 dark:text-emerald-400 font-medium',
-              obra.etapa === 'Vistoria reprovada' &&
-                'text-destructive font-medium',
+              obra.etapa === 'Finalizada' && 'text-success font-medium',
+              obra.etapa === 'Vistoria reprovada' && 'text-destructive font-medium',
             )}
           >
             <SelectValue placeholder="Definir…" />
@@ -779,7 +777,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
               <SelectItem key={e} value={e}>
                 <span
                   className={cn(
-                    e === 'Finalizada' && 'text-emerald-700 dark:text-emerald-400 font-medium',
+                    e === 'Finalizada' && 'text-success font-medium',
                     e === 'Vistoria reprovada' && 'text-destructive font-medium',
                   )}
                 >
@@ -806,7 +804,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
               <div
                 className={cn(
                   'h-full transition-all',
-                  obra.progress_percentage >= 100 ? 'bg-emerald-500' : 'bg-primary',
+                  obra.progress_percentage >= 100 ? 'bg-success' : 'bg-primary',
                 )}
                 style={{ width: `${Math.min(100, obra.progress_percentage)}%` }}
               />
@@ -814,7 +812,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
             <span
               className={cn(
                 'text-xs tabular-nums w-9 text-right',
-                obra.progress_percentage >= 100 && 'text-emerald-600 dark:text-emerald-400 font-semibold',
+                obra.progress_percentage >= 100 && 'text-success font-semibold',
               )}
             >
               {obra.progress_percentage}%
