@@ -553,16 +553,19 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
             ) : (
               <ul className="space-y-1.5">
                 {followUpAtrasado.map((t) => (
-                  <li key={t.id}>
+                  <li
+                    key={t.id}
+                    className="rounded-md hover:bg-card transition-colors group flex items-stretch gap-1"
+                  >
                     <button
                       type="button"
                       onClick={() => navigate(`/gestao/cs/${t.id}`)}
-                      className="w-full text-left rounded-md px-2 py-1.5 hover:bg-card transition-colors group"
+                      className="flex-1 min-w-0 text-left px-2 py-1.5"
                     >
                       <p className="text-xs font-medium text-foreground line-clamp-1">
                         {t.situation}
                       </p>
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5 gap-x-1.5">
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-x-1.5 mt-0.5">
                         <span className="truncate">
                           {t.responsible_name ?? 'Responsável'} · {t.project_name ?? 'Obra'}
                         </span>
@@ -573,6 +576,25 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
                           })}
                         </span>
                       </p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        touchTicket.mutate(t.id);
+                      }}
+                      disabled={touchTicket.isPending}
+                      title="Marcar como tratado (atualiza o follow-up)"
+                      aria-label="Marcar como tratado"
+                      className={cn(
+                        'shrink-0 self-center mr-1 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium',
+                        'bg-info/10 text-info border border-info/30 hover:bg-info/20 transition-all',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
+                      )}
+                    >
+                      <Check className="h-3 w-3" />
+                      <span className="hidden sm:inline">Tratado</span>
                     </button>
                   </li>
                 ))}
