@@ -162,6 +162,27 @@ export function useUpdateCsTicket() {
   });
 }
 
+// ----- touch (marca como tratado: apenas atualiza updated_at) -----
+export function useTouchCsTicket() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('cs_tickets')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: csTicketKeys.all });
+      toast.success('Ticket marcado como tratado.');
+    },
+    onError: (err: any) => {
+      toast.error('Erro ao atualizar ticket', { description: err?.message });
+    },
+  });
+}
+
 // ----- delete -----
 export function useDeleteCsTicket() {
   const qc = useQueryClient();
