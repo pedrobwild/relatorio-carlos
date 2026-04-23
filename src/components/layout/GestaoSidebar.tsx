@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   ClipboardList,
   Table2,
+  Headset,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -68,6 +69,11 @@ export function GestaoSidebar() {
           label: "Atividades",
           icon: ClipboardList,
           path: "/gestao/atividades",
+        },
+        {
+          label: "Customer Success",
+          icon: Headset,
+          path: "/gestao/cs",
         },
         {
           label: "Não Conformidades",
