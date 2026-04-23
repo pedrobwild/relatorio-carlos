@@ -145,8 +145,25 @@ export function useProjectPortal() {
 
   const reportData: ReportData | null = useMemo(() => {
     if (project) {
-      // Prefer actual project dates over planned dates (with planned as fallback)
-      const effectiveStartDate = project.actual_start_date || project.planned_start_date || '';
+      // Determine the earliest real start across activities (actual_start when present, else planned_start)
+      // so the weekly timeline reflects the full schedule even when project.actual_start_date was
+      // set later than the actual on-site start of the first activities.
+      const earliestActivityStart = formattedActivities.reduce<string | null>((min, a) => {
+        const candidate = a.actualStart || a.plannedStart;
+        if (!candidate) return min;
+        if (!min || candidate < min) return candidate;
+        return min;
+      }, null);
+
+      // Pick the earliest non-empty among: project actual start, project planned start, earliest activity start.
+      const startCandidates = [
+        project.actual_start_date,
+        project.planned_start_date,
+        earliestActivityStart,
+      ].filter((d): d is string => !!d);
+      const effectiveStartDate = startCandidates.length > 0
+        ? startCandidates.reduce((earliest, d) => (d < earliest ? d : earliest), startCandidates[0])
+        : '';
       const effectiveEndDate = project.actual_end_date || project.planned_end_date || '';
 
       // Ensure endDate is never before the latest activity to avoid clipping the chart
