@@ -129,6 +129,7 @@ export default function CalendarioCompras() {
   const [filterProject, setFilterProject] = useState<string>('all');
   const [filterSupplier, setFilterSupplier] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterActualCost, setFilterActualCost] = useState<'all' | 'informed' | 'pending'>('all');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
@@ -225,6 +226,8 @@ export default function CalendarioCompras() {
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
       if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
+      if (filterActualCost === 'informed' && (p.actual_cost == null)) return false;
+      if (filterActualCost === 'pending' && (p.actual_cost != null)) return false;
       // Period filter applies only to items with a planned_purchase_date.
       // Items without date are excluded when a period is active.
       if (dateFromStr || dateToStr) {
@@ -234,13 +237,14 @@ export default function CalendarioCompras() {
       }
       return true;
     });
-  }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, dateFromStr, dateToStr]);
+  }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, filterActualCost, dateFromStr, dateToStr]);
 
   const activeFilterCount =
     (filterStatus !== 'all' ? 1 : 0) +
     (filterProject !== 'all' ? 1 : 0) +
     (filterSupplier !== 'all' ? 1 : 0) +
     (filterCategory !== 'all' ? 1 : 0) +
+    (filterActualCost !== 'all' ? 1 : 0) +
     (dateFrom ? 1 : 0) +
     (dateTo ? 1 : 0);
 
@@ -249,6 +253,7 @@ export default function CalendarioCompras() {
     setFilterProject('all');
     setFilterSupplier('all');
     setFilterCategory('all');
+    setFilterActualCost('all');
     setDateFrom(undefined);
     setDateTo(undefined);
   };
@@ -533,6 +538,22 @@ export default function CalendarioCompras() {
                       {categories.map(c => (
                         <SelectItem key={c} value={c}>{c}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Custo Real status */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Custo Real</Label>
+                  <Select
+                    value={filterActualCost}
+                    onValueChange={(v) => setFilterActualCost(v as 'all' | 'informed' | 'pending')}
+                  >
+                    <SelectTrigger className="w-44 h-9"><SelectValue placeholder="Custo Real" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="informed">Informado</SelectItem>
+                      <SelectItem value="pending">Não informado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
