@@ -156,15 +156,17 @@ export default function CsTickets() {
     });
   }, [tickets, search, statusFilter, severityFilter]);
 
-  const kpis = useMemo(() => {
-    return {
-      total: tickets.length,
-      abertos: tickets.filter((t) => t.status === 'aberto').length,
-      em_andamento: tickets.filter((t) => t.status === 'em_andamento').length,
-      concluidos: tickets.filter((t) => t.status === 'concluido').length,
-      criticos: tickets.filter((t) => t.severity === 'critica' && t.status !== 'concluido').length,
-    };
-  }, [tickets]);
+  const handleDashboardFilter = ({
+    status,
+    severity,
+  }: {
+    status?: CsTicketStatus | null;
+    severity?: CsTicketSeverity | null;
+  }) => {
+    if (status !== undefined) setStatusFilter(status ?? ALL);
+    if (severity !== undefined) setSeverityFilter(severity ?? ALL);
+    if (status === null && severity === null) setSearch('');
+  };
 
   const clearFilters = () => {
     setSearch('');
@@ -221,14 +223,8 @@ export default function CsTickets() {
           </Button>
         </div>
 
-        {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
-          <KpiCard label="Total" value={kpis.total} />
-          <KpiCard label="Abertos" value={kpis.abertos} accent="info" />
-          <KpiCard label="Em andamento" value={kpis.em_andamento} accent="warning" />
-          <KpiCard label="Concluídos" value={kpis.concluidos} accent="success" />
-          <KpiCard label="Críticos ativos" value={kpis.criticos} accent="destructive" />
-        </div>
+        {/* Dashboard executivo */}
+        <CsDashboard tickets={tickets} onFilter={handleDashboardFilter} />
 
         {/* Toolbar de filtros */}
         <div className="rounded-lg border border-border bg-card p-3 mb-4">
