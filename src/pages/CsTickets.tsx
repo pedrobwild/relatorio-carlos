@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Loader2,
   ExternalLink,
+  Eye,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -397,9 +398,13 @@ export default function CsTickets() {
                     {/* Situação + descrição preview */}
                     <TableCell className="py-3 max-w-[320px]">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground line-clamp-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/gestao/cs/${t.id}`)}
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-2 text-left"
+                        >
                           {t.situation}
-                        </span>
+                        </button>
                         {t.description && (
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -487,6 +492,19 @@ export default function CsTickets() {
                     {/* Ações */}
                     <TableCell className="py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => navigate(`/gestao/cs/${t.id}`)}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Ver detalhes</TooltipContent>
+                        </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
