@@ -226,6 +226,38 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
 
   return (
     <div className="space-y-4 mb-5">
+      {/* Seletor de período */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <CalendarRange className="h-3.5 w-3.5" />
+          <span className="font-medium uppercase tracking-wider">Período</span>
+        </div>
+        <div
+          role="radiogroup"
+          aria-label="Período do dashboard"
+          className="inline-flex items-center rounded-lg border border-border bg-muted/30 p-0.5"
+        >
+          {PERIOD_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              role="radio"
+              aria-checked={period === opt.key}
+              onClick={() => setPeriod(opt.key)}
+              className={cn(
+                'px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                period === opt.key
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Linha 1: KPIs principais */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <KpiTile
