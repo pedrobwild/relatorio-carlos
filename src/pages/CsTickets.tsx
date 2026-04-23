@@ -75,6 +75,7 @@ import {
   useUpdateCsTicket,
 } from '@/hooks/useCsTickets';
 import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
+import { CsDashboard } from '@/components/cs/CsDashboard';
 
 const ALL = '__all__';
 
@@ -112,42 +113,6 @@ const statusLabel = (s: CsTicketStatus): string =>
 
 const fmtDateTime = (iso: string | null) =>
   iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '—';
-
-// ----- KPI helpers -----
-type KpiAccent = 'default' | 'info' | 'warning' | 'success' | 'destructive';
-
-const kpiAccentMap: Record<KpiAccent, { dot: string; value: string }> = {
-  default: { dot: 'bg-muted-foreground', value: 'text-foreground' },
-  info: { dot: 'bg-info', value: 'text-info' },
-  warning: { dot: 'bg-warning', value: 'text-warning' },
-  success: { dot: 'bg-success', value: 'text-success' },
-  destructive: { dot: 'bg-destructive', value: 'text-destructive' },
-};
-
-function KpiCard({
-  label,
-  value,
-  accent = 'default',
-}: {
-  label: string;
-  value: number | string;
-  accent?: KpiAccent;
-}) {
-  const cfg = kpiAccentMap[accent];
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:bg-accent/30">
-      <span className={cn('h-2 w-2 rounded-full shrink-0', cfg.dot)} />
-      <div className="flex flex-col min-w-0 leading-tight">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium truncate">
-          {label}
-        </span>
-        <span className={cn('text-xl font-bold tabular-nums leading-none mt-0.5', cfg.value)}>
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 // ============================================================
 // Página
