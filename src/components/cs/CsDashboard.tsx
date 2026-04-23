@@ -23,6 +23,8 @@ import {
   Ghost,
   ArrowRight,
   CalendarRange,
+  UserX,
+  UserCheck,
 } from 'lucide-react';
 import { differenceInDays, formatDistanceToNow, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -190,6 +192,15 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       (t) => !t.responsible_user_id && t.status !== 'concluido',
     ).length;
 
+    // Tickets com responsável mas sem update há 7d+ (follow-up necessário)
+    const now = new Date();
+    const atrasadosComDono = scopedTickets.filter(
+      (t) =>
+        t.responsible_user_id &&
+        t.status !== 'concluido' &&
+        differenceInDays(now, parseISO(t.updated_at)) >= 7,
+    ).length;
+
     // Resolução: % concluídos
     const taxaConclusao = total > 0 ? Math.round((byStatus.concluido / total) * 100) : 0;
 
@@ -202,6 +213,7 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       criticosAtivos,
       altosAtivos,
       semResponsavel,
+      atrasadosComDono,
       taxaConclusao,
     };
   }, [scopedTickets]);
@@ -216,10 +228,26 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
     [scopedTickets],
   );
 
-  const paradosHa7d = useMemo(() => {
+  // Tickets ativos sem responsável (mais antigos primeiro)
+  const semResponsavelLista = useMemo(
+    () =>
+      scopedTickets
+        .filter((t) => !t.responsible_user_id && t.status !== 'concluido')
+        .sort((a, b) => parseISO(a.created_at).getTime() - parseISO(b.created_at).getTime())
+        .slice(0, 5),
+    [scopedTickets],
+  );
+
+  // Tickets com responsável mas sem update há 7d+ (follow-up)
+  const followUpAtrasado = useMemo(() => {
     const now = new Date();
     return scopedTickets
-      .filter((t) => t.status !== 'concluido' && differenceInDays(now, parseISO(t.updated_at)) >= 7)
+      .filter(
+        (t) =>
+          t.responsible_user_id &&
+          t.status !== 'concluido' &&
+          differenceInDays(now, parseISO(t.updated_at)) >= 7,
+      )
       .sort((a, b) => parseISO(a.updated_at).getTime() - parseISO(b.updated_at).getTime())
       .slice(0, 5);
   }, [scopedTickets]);
@@ -259,7 +287,7 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
       </div>
 
       {/* Linha 1: KPIs principais */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
         <KpiTile
           icon={Headset}
           label="Total"
@@ -298,11 +326,18 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
           onClick={() => onFilter?.({ severity: 'critica' })}
         />
         <KpiTile
-          icon={AlertTriangle}
+          icon={UserX}
           label="Sem responsável"
           value={stats.semResponsavel}
           accent={stats.semResponsavel > 0 ? 'warning' : 'default'}
           hint="Ativos sem dono"
+        />
+        <KpiTile
+          icon={UserCheck}
+          label="Atrasados c/ dono"
+          value={stats.atrasadosComDono}
+          accent={stats.atrasadosComDono > 0 ? 'warning' : 'default'}
+          hint="Sem update 7d+"
         />
       </div>
 
@@ -457,22 +492,22 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
             )}
           </div>
 
-          {/* Parados há 7+ dias */}
+          {/* Sem responsável (ativos) */}
           <div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
             <header className="flex items-center gap-2 mb-2.5">
-              <Ghost className="h-4 w-4 text-warning" />
-              <h3 className="text-sm font-semibold text-warning">Sem update 7d+</h3>
+              <UserX className="h-4 w-4 text-warning" />
+              <h3 className="text-sm font-semibold text-warning">Sem responsável</h3>
               <span className="ml-auto text-xs font-bold text-warning tabular-nums">
-                {paradosHa7d.length}
+                {stats.semResponsavel}
               </span>
             </header>
-            {paradosHa7d.length === 0 ? (
+            {semResponsavelLista.length === 0 ? (
               <p className="text-xs italic text-muted-foreground py-2">
-                Todos os tickets ativos estão com updates recentes.
+                Todos os tickets ativos têm dono. ✅
               </p>
             ) : (
               <ul className="space-y-1.5">
-                {paradosHa7d.map((t) => (
+                {semResponsavelLista.map((t) => (
                   <li key={t.id}>
                     <button
                       type="button"
@@ -484,6 +519,50 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
                       </p>
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                         <span className="truncate">{t.project_name ?? 'Obra'}</span>
+                        <span className="ml-auto shrink-0">
+                          aberto{' '}
+                          {formatDistanceToNow(parseISO(t.created_at), {
+                            locale: ptBR,
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Follow-up atrasado: tem dono mas sem update 7d+ */}
+          <div className="rounded-lg border border-info/30 bg-info/5 p-4">
+            <header className="flex items-center gap-2 mb-2.5">
+              <Ghost className="h-4 w-4 text-info" />
+              <h3 className="text-sm font-semibold text-info">Follow-up atrasado</h3>
+              <span className="ml-auto text-xs font-bold text-info tabular-nums">
+                {stats.atrasadosComDono}
+              </span>
+            </header>
+            {followUpAtrasado.length === 0 ? (
+              <p className="text-xs italic text-muted-foreground py-2">
+                Tickets com dono estão com updates em dia.
+              </p>
+            ) : (
+              <ul className="space-y-1.5">
+                {followUpAtrasado.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/gestao/cs/${t.id}`)}
+                      className="w-full text-left rounded-md px-2 py-1.5 hover:bg-card transition-colors group"
+                    >
+                      <p className="text-xs font-medium text-foreground line-clamp-1">
+                        {t.situation}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5 gap-x-1.5">
+                        <span className="truncate">
+                          {t.responsible_name ?? 'Responsável'} · {t.project_name ?? 'Obra'}
+                        </span>
                         <span className="ml-auto shrink-0">
                           {formatDistanceToNow(parseISO(t.updated_at), {
                             locale: ptBR,
