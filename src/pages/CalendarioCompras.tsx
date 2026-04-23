@@ -181,16 +181,63 @@ export default function CalendarioCompras() {
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach(p => map.set(p.project_id, p.project_name));
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [allPurchases]);
+
+  const suppliers = useMemo(() => {
+    const set = new Set<string>();
+    allPurchases.forEach(p => {
+      if (p.supplier_name && p.supplier_name.trim()) set.add(p.supplier_name.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allPurchases]);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    allPurchases.forEach(p => {
+      if (p.category && p.category.trim()) set.add(p.category.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allPurchases]);
+
+  const dateFromStr = dateFrom ? format(dateFrom, 'yyyy-MM-dd') : null;
+  const dateToStr = dateTo ? format(dateTo, 'yyyy-MM-dd') : null;
 
   const filtered = useMemo(() => {
     return allPurchases.filter(p => {
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
+      if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
+      if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
+      // Period filter applies only to items with a planned_purchase_date.
+      // Items without date are excluded when a period is active.
+      if (dateFromStr || dateToStr) {
+        if (!p.planned_purchase_date) return false;
+        if (dateFromStr && p.planned_purchase_date < dateFromStr) return false;
+        if (dateToStr && p.planned_purchase_date > dateToStr) return false;
+      }
       return true;
     });
-  }, [allPurchases, filterStatus, filterProject]);
+  }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, dateFromStr, dateToStr]);
+
+  const activeFilterCount =
+    (filterStatus !== 'all' ? 1 : 0) +
+    (filterProject !== 'all' ? 1 : 0) +
+    (filterSupplier !== 'all' ? 1 : 0) +
+    (filterCategory !== 'all' ? 1 : 0) +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0);
+
+  const clearFilters = () => {
+    setFilterStatus('all');
+    setFilterProject('all');
+    setFilterSupplier('all');
+    setFilterCategory('all');
+    setDateFrom(undefined);
+    setDateTo(undefined);
+  };
 
   const purchasesByDate = useMemo(() => {
     const map = new Map<string, PurchaseWithProject[]>();
