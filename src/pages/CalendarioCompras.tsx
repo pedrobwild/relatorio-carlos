@@ -21,9 +21,62 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import type { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { statusConfig } from '@/pages/compras/types';
+import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface PurchaseWithProject extends ProjectPurchase {
   project_name: string;
+}
+
+// Simplified status set requested for the calendar view.
+// "delayed" is a UI-managed status (string stored in the same column).
+type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'delayed';
+
+const calendarStatusConfig: Record<CalendarStatus, { label: string; color: string; icon: React.ElementType }> = {
+  pending:   { label: 'Pendente',  color: 'bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30', icon: Clock },
+  approved:  { label: 'Aprovado',  color: 'bg-blue-500/20 text-blue-600 border-blue-500/30', icon: ThumbsUp },
+  delivered: { label: 'Concluído', color: 'bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border-[hsl(var(--success))]/30', icon: CheckCircle2 },
+  delayed:   { label: 'Atrasado',  color: 'bg-red-500/20 text-red-600 border-red-500/30', icon: AlertTriangle },
+};
+
+const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'delayed'];
+
+/** Map any DB status to one of the 4 calendar buckets for display */
+function toCalendarStatus(s: string | null | undefined): CalendarStatus {
+  if (s === 'approved' || s === 'awaiting_approval' || s === 'purchased' || s === 'ordered' || s === 'in_transit') return 'approved';
+  if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
+  if (s === 'delayed') return 'delayed';
+  return 'pending';
+}
+
+function StatusCell({
+  purchase,
+  onSave,
+}: {
+  purchase: PurchaseWithProject;
+  onSave: (id: string, value: CalendarStatus) => void;
+}) {
+  const current = toCalendarStatus(purchase.status);
+  return (
+    <Select value={current} onValueChange={(v) => onSave(purchase.id, v as CalendarStatus)}>
+      <SelectTrigger className="h-7 w-[120px] text-[10px] px-2 py-0 gap-1">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {CALENDAR_STATUS_OPTIONS.map((s) => {
+          const cfg = calendarStatusConfig[s];
+          const Icon = cfg.icon;
+          return (
+            <SelectItem key={s} value={s} className="text-xs">
+              <span className="inline-flex items-center gap-1.5">
+                <Icon className="h-3 w-3" />
+                {cfg.label}
+              </span>
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
+  );
 }
 
 const fmt = (v: number | null) =>
