@@ -318,6 +318,35 @@ export default function CsTickets() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={projectFilter} onValueChange={setProjectFilter}>
+                <SelectTrigger className="h-9 w-[200px] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-72">
+                  <SelectItem value={ALL}>Todas as obras</SelectItem>
+                  {projectOptions.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
+                <SelectTrigger className="h-9 w-[180px] text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" className="max-h-72">
+                  <SelectItem value={ALL}>Todos os responsáveis</SelectItem>
+                  {responsibleOptions.hasUnassigned && (
+                    <SelectItem value="__unassigned__">Não atribuído</SelectItem>
+                  )}
+                  {responsibleOptions.opts.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
                   <X className="h-3.5 w-3.5 mr-1" />
