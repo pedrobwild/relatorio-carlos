@@ -4,7 +4,7 @@ import { Resend } from "https://esm.sh/resend@4.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const logoUrl = "https://fvblcyzdcqkiihyhfrrw.supabase.co/storage/v1/object/public/email-assets/bwild-logo.png?v=1";
-const portalUrl = "https://portal-bwild.lovable.app";
+const portalUrl = Deno.env.get("PORTAL_URL") || "https://bwildworkflow.com";
 
 interface UnreadNotification {
   id: string;

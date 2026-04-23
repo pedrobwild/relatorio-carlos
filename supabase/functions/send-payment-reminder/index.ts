@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 const logoUrl = "https://fvblcyzdcqkiihyhfrrw.supabase.co/storage/v1/object/public/email-assets/bwild-logo.png?v=1";
+const portalUrl = Deno.env.get("PORTAL_URL") || "https://bwildworkflow.com";
 
 serve(async (req: Request) => {
   // Handle CORS preflight
@@ -167,7 +168,7 @@ serve(async (req: Request) => {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center">
-                    <a href="https://portal-bwild.lovable.app/obra/${payment.project_id}/financeiro" 
+                    <a href="${portalUrl}/obra/${payment.project_id}/financeiro" 
                        target="_blank"
                        style="display: inline-block; background: linear-gradient(135deg, #6B21A8 0%, #7C3AED 100%); color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 8px; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);">
                       Acessar Portal e Baixar Boleto
