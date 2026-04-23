@@ -342,44 +342,74 @@ export default function CalendarioCompras() {
       <div className="py-6">
         <PageContainer maxWidth="full" className="space-y-6">
           {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground">Total de Itens</p>
-                <p className="text-2xl font-bold">{totalItems}</p>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Total de Itens</p>
+                <p className="text-2xl font-bold tabular-nums">{totalItems}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground">Pendentes</p>
-                <p className="text-2xl font-bold text-amber-600">{pendingItems}</p>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Pendentes</p>
+                <p className="text-2xl font-bold tabular-nums text-amber-600">{pendingItems}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground">Este Mês</p>
-                <p className="text-2xl font-bold">{thisMonthItems}</p>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Este Mês</p>
+                <p className="text-2xl font-bold tabular-nums">{thisMonthItems}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground">Total Estimado</p>
-                <p className="text-xl font-bold">{fmt(totalEstimated)}</p>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Total Estimado</p>
+                <p className="text-xl font-bold tabular-nums whitespace-nowrap">{fmt(totalEstimated)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground">
-                  Diferença{' '}
-                  <span className="text-[10px]">({itemsWithBoth.length} itens)</span>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                  Diferença <span className="text-[10px]">({itemsWithBoth.length})</span>
                 </p>
                 <p
                   className={cn(
-                    'text-xl font-bold',
+                    'text-xl font-bold tabular-nums whitespace-nowrap',
                     diffPositive ? 'text-emerald-600' : 'text-red-600',
                   )}
                 >
                   {itemsWithBoth.length === 0 ? '—' : fmtDiff(totalDiff)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p
+                  className="text-xs text-muted-foreground whitespace-nowrap"
+                  title="Soma dos pagamentos recebidos dos clientes das obras filtradas (no período, se selecionado)"
+                >
+                  Orçamento Disponível
+                </p>
+                <p className="text-xl font-bold tabular-nums whitespace-nowrap text-emerald-600">
+                  {fmt(availableBudget)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p
+                  className="text-xs text-muted-foreground whitespace-nowrap"
+                  title="Disponível − Total Estimado"
+                >
+                  Saldo
+                </p>
+                <p
+                  className={cn(
+                    'text-xl font-bold tabular-nums whitespace-nowrap',
+                    balancePositive ? 'text-emerald-600' : 'text-red-600',
+                  )}
+                >
+                  {fmtDiff(budgetBalance)}
                 </p>
               </CardContent>
             </Card>
