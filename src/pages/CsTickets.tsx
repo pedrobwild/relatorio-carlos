@@ -398,9 +398,13 @@ export default function CsTickets() {
                     {/* Situação + descrição preview */}
                     <TableCell className="py-3 max-w-[320px]">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground line-clamp-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/gestao/cs/${t.id}`)}
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-2 text-left"
+                        >
                           {t.situation}
-                        </span>
+                        </button>
                         {t.description && (
                           <Tooltip>
                             <TooltipTrigger asChild>
