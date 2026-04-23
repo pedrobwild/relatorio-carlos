@@ -146,6 +146,7 @@ const PERIOD_OPTIONS: { key: PeriodKey; label: string; days: number | null }[] =
 export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
   const navigate = useNavigate();
   const [period, setPeriod] = useState<PeriodKey>('30d');
+  const touchTicket = useTouchCsTicket();
 
   // Tickets dentro do período (por data de criação). 'all' não aplica filtro.
   const scopedTickets = useMemo(() => {
