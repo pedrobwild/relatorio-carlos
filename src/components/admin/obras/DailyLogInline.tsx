@@ -186,12 +186,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
   };
 
   return (
-    <div className="bg-muted/30 p-4 space-y-4">
+    <div className="bg-muted/20 border-l-2 border-l-primary px-5 py-4 space-y-4">
       {/* Cabeçalho: data + última atualização */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
         <div className="flex items-center gap-2">
-          <CalendarRange className="h-4 w-4 text-[hsl(var(--primary))]" />
-          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
+            <CalendarRange className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Semana de
           </Label>
           <Input
@@ -199,12 +201,12 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             type="date"
             value={logDate}
             onChange={(e) => setLogDate(e.target.value)}
-            className="h-8 w-auto text-sm"
+            className="h-8 w-auto text-sm bg-card"
             disabled={isSaving}
           />
         </div>
         {data?.updated_at && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground tabular-nums">
             Atualizado em{' '}
             {format(parseISO(data.updated_at), "dd/MM/yyyy 'às' HH:mm", {
               locale: ptBR,
@@ -223,7 +225,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Serviços em execução */}
           <SectionCard
-            icon={<ClipboardList className="h-4 w-4 text-[hsl(var(--primary))]" />}
+            icon={<ClipboardList className="h-4 w-4 text-primary" />}
             title="Serviços em execução"
             count={services.length}
             defaultOpen
@@ -326,7 +328,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
 
           {/* Prestadores no local */}
           <SectionCard
-            icon={<HardHat className="h-4 w-4 text-[hsl(var(--primary))]" />}
+            icon={<HardHat className="h-4 w-4 text-primary" />}
             title="Prestadores no local"
             count={workers.length}
             defaultOpen
@@ -435,7 +437,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
 
           {/* Planejamento da semana */}
           <SectionCard
-            icon={<CalendarRange className="h-4 w-4 text-[hsl(var(--primary))]" />}
+            icon={<CalendarRange className="h-4 w-4 text-primary" />}
             title="Planejamento da semana"
             defaultOpen={!!planning}
           >
@@ -450,7 +452,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
 
           {/* Observações */}
           <SectionCard
-            icon={<MessageSquareText className="h-4 w-4 text-[hsl(var(--primary))]" />}
+            icon={<MessageSquareText className="h-4 w-4 text-primary" />}
             title="Observações gerais"
             defaultOpen={!!notes}
           >
@@ -465,7 +467,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-2 border-t border-border/60">
         <Button
           type="button"
           onClick={handleSave}
@@ -502,22 +504,22 @@ function SectionCard({
   const [open, setOpen] = useState(defaultOpen);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="rounded-md border border-border bg-card overflow-hidden">
+      <div className="rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-shadow hover:shadow-md">
         <CollapsibleTrigger asChild>
           <button
             type="button"
             aria-expanded={open}
             aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-2 text-left',
-              'hover:bg-accent/40 transition-colors',
+              'w-full flex items-center gap-2 px-3 py-2.5 text-left',
+              'hover:bg-accent/30 transition-colors',
             )}
           >
             {icon}
-            <span className="text-sm font-medium">{title}</span>
+            <span className="text-sm font-semibold text-foreground">{title}</span>
             {typeof count === 'number' && count > 0 && (
-              <span className="text-xs text-muted-foreground tabular-nums ml-1">
-                ({count})
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tabular-nums">
+                {count}
               </span>
             )}
             <ChevronDown
@@ -530,7 +532,7 @@ function SectionCard({
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="px-3 pb-3 pt-1 border-t border-border">{children}</div>
+          <div className="px-3 pb-3 pt-2 border-t border-border/60 bg-muted/10">{children}</div>
         </CollapsibleContent>
       </div>
     </Collapsible>
