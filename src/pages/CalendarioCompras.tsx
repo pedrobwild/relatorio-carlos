@@ -352,28 +352,135 @@ export default function CalendarioCompras() {
 
           {/* Filters & View Toggle */}
           <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap items-center gap-4">
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="ordered">Pedido</SelectItem>
-                    <SelectItem value="in_transit">Em Trânsito</SelectItem>
-                    <SelectItem value="delivered">Concluído</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterProject} onValueChange={setFilterProject}>
-                  <SelectTrigger className="w-56"><SelectValue placeholder="Obra" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as obras</SelectItem>
-                    {projects.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="ml-auto flex gap-1">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex flex-wrap items-end gap-3">
+                {/* Period: From */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">De</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          'w-36 justify-start text-left font-normal',
+                          !dateFrom && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                        {dateFrom ? format(dateFrom, 'dd/MM/yyyy') : 'Início'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarPicker
+                        mode="single"
+                        selected={dateFrom}
+                        onSelect={setDateFrom}
+                        locale={ptBR}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Period: To */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Até</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          'w-36 justify-start text-left font-normal',
+                          !dateTo && 'text-muted-foreground',
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                        {dateTo ? format(dateTo, 'dd/MM/yyyy') : 'Fim'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarPicker
+                        mode="single"
+                        selected={dateTo}
+                        onSelect={setDateTo}
+                        locale={ptBR}
+                        disabled={(date) => (dateFrom ? date < dateFrom : false)}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Status */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Status</Label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="ordered">Pedido</SelectItem>
+                      <SelectItem value="in_transit">Em Trânsito</SelectItem>
+                      <SelectItem value="delivered">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Project */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Obra</Label>
+                  <Select value={filterProject} onValueChange={setFilterProject}>
+                    <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Obra" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as obras</SelectItem>
+                      {projects.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Supplier */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Fornecedor</Label>
+                  <Select value={filterSupplier} onValueChange={setFilterSupplier}>
+                    <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos fornecedores</SelectItem>
+                      {suppliers.map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Categoria</Label>
+                  <Select value={filterCategory} onValueChange={setFilterCategory}>
+                    <SelectTrigger className="w-48 h-9"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas categorias</SelectItem>
+                      {categories.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Clear filters */}
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-muted-foreground">
+                    <FilterX className="h-3.5 w-3.5 mr-1" />
+                    Limpar ({activeFilterCount})
+                  </Button>
+                )}
+
+                <div className="ml-auto flex gap-1 self-end">
                   <Button
                     variant={viewMode === 'list' ? 'default' : 'outline'}
                     size="sm"
