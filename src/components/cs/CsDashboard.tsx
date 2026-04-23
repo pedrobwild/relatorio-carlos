@@ -126,14 +126,33 @@ function KpiTile({ icon: Icon, label, value, hint, accent = 'default', onClick }
   );
 }
 
+// ---------- período ----------
+type PeriodKey = '7d' | '30d' | '90d' | 'all';
+
+const PERIOD_OPTIONS: { key: PeriodKey; label: string; days: number | null }[] = [
+  { key: '7d', label: '7 dias', days: 7 },
+  { key: '30d', label: '30 dias', days: 30 },
+  { key: '90d', label: '90 dias', days: 90 },
+  { key: 'all', label: 'Tudo', days: null },
+];
+
 // ============================================================
 // Componente
 // ============================================================
 export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
   const navigate = useNavigate();
+  const [period, setPeriod] = useState<PeriodKey>('30d');
+
+  // Tickets dentro do período (por data de criação). 'all' não aplica filtro.
+  const scopedTickets = useMemo(() => {
+    const cfg = PERIOD_OPTIONS.find((o) => o.key === period);
+    if (!cfg || cfg.days === null) return tickets;
+    const cutoff = subDays(new Date(), cfg.days);
+    return tickets.filter((t) => parseISO(t.created_at) >= cutoff);
+  }, [tickets, period]);
 
   const stats = useMemo(() => {
-    const total = tickets.length;
+    const total = scopedTickets.length;
     const byStatus: Record<CsTicketStatus, number> = {
       aberto: 0,
       em_andamento: 0,
