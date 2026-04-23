@@ -835,8 +835,6 @@ export default function CalendarioCompras() {
                       </TableHeader>
                       <TableBody>
                         {withoutDate.map(p => {
-                          const config = statusConfig[p.status as PurchaseStatus];
-                          const StatusIcon = config?.icon;
                           const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                           const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
                           return (
