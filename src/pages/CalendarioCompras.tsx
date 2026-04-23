@@ -294,7 +294,7 @@ export default function CalendarioCompras() {
 
   const filtered = useMemo(() => {
     return allPurchases.filter(p => {
-      if (filterStatus !== 'all' && p.status !== filterStatus) return false;
+      if (filterStatus !== 'all' && toCalendarStatus(p.status) !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
       if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
