@@ -83,6 +83,36 @@ const fmtDateTime = (iso: string) =>
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 
+/**
+ * Status exibido no painel.
+ *
+ * Regra derivada (apenas visual, não persiste no banco):
+ *   - Se a Entrega Oficial (`entrega_oficial`) já passou e a Entrega Real
+ *     (`entrega_real`) não foi preenchida, o status exibido é `Atrasado`.
+ *   - Caso contrário, mantém o valor armazenado (`obra.status`).
+ *
+ * Projetado para:
+ *   - reverter automaticamente quando a Entrega Real é preenchida ou a
+ *     Entrega Oficial é adiada (sem precisar editar o Status manualmente);
+ *   - não afetar `INSERT`/`UPDATE` — é sempre derivado no front.
+ *
+ * Observação sobre `Finalizada`: decisão do produto é que a etapa
+ * `Finalizada` **não** isenta o atraso enquanto não houver Entrega Real —
+ * isso força o registro da data para fechar a obra corretamente.
+ */
+const computeDisplayStatus = (obra: {
+  status: PainelStatus | null;
+  entrega_oficial: string | null;
+  entrega_real: string | null;
+}): PainelStatus | null => {
+  const { status, entrega_oficial, entrega_real } = obra;
+  if (!entrega_oficial || entrega_real) return status;
+  // Compara como ISO (YYYY-MM-DD) — 'hoje' no fuso local do navegador.
+  const hojeIso = format(new Date(), 'yyyy-MM-dd');
+  if (entrega_oficial < hojeIso) return 'Atrasado';
+  return status;
+};
+
 /** Cor sólida para o "dot" e badge tipo Monday (sem hover ruidoso). */
 const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
@@ -285,7 +315,13 @@ export default function PainelObras() {
     if (filterEtapa !== ALL)
       rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));
     if (filterStatus !== ALL)
-      rows = rows.filter((o) => (filterStatus === NONE ? !o.status : o.status === filterStatus));
+      rows = rows.filter((o) => {
+        // Filtramos pelo status *exibido* para que a regra automática de
+        // 'Atrasado' (entrega_oficial vencida sem entrega_real) seja
+        // coerente com o que aparece na coluna Status.
+        const display = computeDisplayStatus(o);
+        return filterStatus === NONE ? !display : display === filterStatus;
+      });
     if (filterRelacionamento !== ALL)
       rows = rows.filter((o) =>
         filterRelacionamento === NONE
@@ -329,12 +365,15 @@ export default function PainelObras() {
     filterRelacionamento !== ALL;
 
   // Resumo executivo no topo (densidade de informação)
+  // Usa o status *exibido* — o mesmo que aparece em cada linha — para
+  // manter os KPIs consistentes com a coluna Status.
   const summary = useMemo(() => {
+    const displayed = obras.map((o) => computeDisplayStatus(o));
     const total = obras.length;
-    const aguardando = obras.filter((o) => o.status === 'Aguardando').length;
-    const emDia = obras.filter((o) => o.status === 'Em dia').length;
-    const atrasadas = obras.filter((o) => o.status === 'Atrasado').length;
-    const paralisadas = obras.filter((o) => o.status === 'Paralisada').length;
+    const aguardando = displayed.filter((s) => s === 'Aguardando').length;
+    const emDia = displayed.filter((s) => s === 'Em dia').length;
+    const atrasadas = displayed.filter((s) => s === 'Atrasado').length;
+    const paralisadas = displayed.filter((s) => s === 'Paralisada').length;
     return { total, aguardando, emDia, atrasadas, paralisadas };
   }, [obras]);
 
@@ -642,34 +681,76 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
         </div>
       </TableCell>
 
-      {/* Status */}
+      {/* Status — exibe valor derivado quando a regra de atraso automático
+          aplica (entrega_oficial vencida sem entrega_real). O valor salvo
+          no banco permanece em obra.status e volta à vista quando a
+          condição deixa de ser verdadeira. */}
       <TableCell className="min-w-[120px]">
-        <Select
-          value={obra.status ?? NONE}
-          onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}
-        >
-          <SelectTrigger
-            className={cn(
-              'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5',
-              'rounded-md',
-              statusPillClass(obra.status),
-            )}
-          >
-            <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(obra.status))} />
-            <span className="font-medium truncate">{obra.status ?? 'Definir'}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={NONE}>(nenhum)</SelectItem>
-            {STATUS_OPTIONS.map((s) => (
-              <SelectItem key={s} value={s}>
-                <span className="flex items-center gap-2">
-                  <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))} />
-                  {s}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {(() => {
+          const displayStatus = computeDisplayStatus(obra);
+          const isAuto =
+            displayStatus === 'Atrasado' && obra.status !== 'Atrasado';
+          const autoHint =
+            'Atraso automático: Entrega Oficial vencida sem Entrega Real preenchida. ' +
+            (obra.status
+              ? `Valor salvo: “${obra.status}”.`
+              : 'Nenhum status salvo.');
+          return (
+            <Select
+              value={obra.status ?? NONE}
+              onValueChange={(v) =>
+                onUpdate({ status: v === NONE ? null : (v as PainelStatus) })
+              }
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SelectTrigger
+                    className={cn(
+                      'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5',
+                      'rounded-md',
+                      statusPillClass(displayStatus),
+                    )}
+                    aria-label={isAuto ? autoHint : undefined}
+                  >
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full shrink-0',
+                        statusDotClass(displayStatus),
+                      )}
+                    />
+                    <span className="font-medium truncate">
+                      {displayStatus ?? 'Definir'}
+                    </span>
+                    {isAuto && (
+                      <AlertTriangle
+                        className="h-3 w-3 opacity-70 shrink-0"
+                        aria-hidden
+                      />
+                    )}
+                  </SelectTrigger>
+                </TooltipTrigger>
+                {isAuto && (
+                  <TooltipContent side="top" className="max-w-[280px] text-xs">
+                    {autoHint}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+              <SelectContent>
+                <SelectItem value={NONE}>(nenhum)</SelectItem>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))}
+                      />
+                      {s}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        })()}
       </TableCell>
 
       {/* Etapa */}
