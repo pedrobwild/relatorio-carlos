@@ -18,6 +18,7 @@ interface PrestadorEntry {
   start_date: string;
   end_date: string;
   status: string;
+  created_at: string;
 }
 
 // Color palette for different projects
@@ -51,7 +52,7 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_purchases')
-        .select('id, fornecedor_id, supplier_name, project_id, item_name, start_date, end_date, status, projects!inner(name), fornecedores(nome)')
+        .select('id, fornecedor_id, supplier_name, project_id, item_name, start_date, end_date, status, created_at, projects!inner(name), fornecedores(nome)')
         .eq('purchase_type', 'prestador')
         .neq('status', 'cancelled')
         .not('start_date', 'is', null)
@@ -71,6 +72,7 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
         start_date: d.start_date,
         end_date: d.end_date,
         status: d.status,
+        created_at: d.created_at,
       })) as PrestadorEntry[];
     },
   });
@@ -256,6 +258,9 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
                             <p className="text-muted-foreground">{e.project_name}</p>
                             <p className="text-muted-foreground">
                               {format(parseISO(e.start_date), 'dd/MM')} – {format(parseISO(e.end_date), 'dd/MM')}
+                            </p>
+                            <p className="text-muted-foreground/80 text-[10px] mt-0.5">
+                              Solicitado em {format(parseISO(e.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                             </p>
                             {activeEntries.length > 1 && i === 0 && (
                               <p className="text-[hsl(var(--warning))] font-medium mt-0.5">
