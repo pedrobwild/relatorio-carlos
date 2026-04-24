@@ -271,10 +271,9 @@ function ProjectCard({
           {overdueCount > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
-                  <AlertTriangle className="h-3 w-3" />
+                <StatusBadge tone="danger" size="sm" icon={<AlertTriangle />} showDot={false}>
                   {overdueCount} atraso{overdueCount > 1 ? 's' : ''}
-                </Badge>
+                </StatusBadge>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">{overdueCount} atividade(s) em atraso</TooltipContent>
             </Tooltip>
@@ -282,10 +281,9 @@ function ProjectCard({
           {unsignedFormalizations > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
-                  <FileSignature className="h-3 w-3" />
+                <StatusBadge tone="warning" size="sm" icon={<FileSignature />} showDot={false}>
                   {unsignedFormalizations} assinatura{unsignedFormalizations > 1 ? 's' : ''}
-                </Badge>
+                </StatusBadge>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">{unsignedFormalizations} formalização(ões) aguardando assinatura</TooltipContent>
             </Tooltip>
@@ -293,10 +291,9 @@ function ProjectCard({
           {pendingDocuments > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
-                  <FileText className="h-3 w-3" />
+                <StatusBadge tone="info" size="sm" icon={<FileText />} showDot={false}>
                   {pendingDocuments} doc{pendingDocuments > 1 ? 's' : ''}
-                </Badge>
+                </StatusBadge>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">{pendingDocuments} documento(s) pendente(s)</TooltipContent>
             </Tooltip>
