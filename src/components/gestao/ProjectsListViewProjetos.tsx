@@ -3,29 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ExternalLink, Clock, AlertTriangle } from 'lucide-react';
 import { useJourneyStagesSummary } from '@/hooks/useJourneyStagesSummary';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { StatusBadge, type StatusTone } from '@/components/ui-premium';
+import { PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, getLabel, getTone } from '@/lib/statusTones';
 import type { ProjectWithCustomer } from '@/infra/repositories';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-slate-500/10 text-slate-600 border-slate-400/20',
-  active: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20',
-  completed: 'bg-primary/10 text-primary border-primary/20',
-  paused: 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20',
-  cancelled: 'bg-destructive/10 text-destructive border-destructive/20',
-};
-
-const statusLabels: Record<string, string> = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  completed: 'Concluída',
-  paused: 'Pausada',
-  cancelled: 'Cancelada',
-};
 
 const stageStatusLabels: Record<string, string> = {
   pending: 'Pendente',
@@ -34,11 +19,11 @@ const stageStatusLabels: Record<string, string> = {
   completed: 'Concluída',
 };
 
-const stageStatusColors: Record<string, string> = {
-  pending: 'text-muted-foreground',
-  in_progress: 'text-primary',
-  waiting_action: 'text-[hsl(var(--warning))]',
-  completed: 'text-[hsl(var(--success))]',
+const stageStatusTones: Record<string, StatusTone> = {
+  pending: 'neutral',
+  in_progress: 'info',
+  waiting_action: 'warning',
+  completed: 'success',
 };
 
 interface Props {
