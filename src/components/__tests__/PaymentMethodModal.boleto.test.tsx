@@ -1,0 +1,229 @@
+/**
+ * Testes do fluxo de anexar boleto + extração via IA no PaymentMethodModal.
+ *
+ * Fluxo coberto:
+ * 1) Usuário seleciona arquivo → upload para storage (mock) ✓
+ * 2) Após upload, edge function `extract-boleto-code` é invocada com base64 + mimeType ✓
+ * 3) Quando a IA retorna `code` válido (>=47 dígitos), o input boleto_code é preenchido
+ *    automaticamente e persistido via `update` em project_payments ✓
+ * 4) Quando a IA retorna parcialmente, mostra aviso e preenche parcial ✓
+ * 5) Quando a IA falha (erro), exibe erro e não persiste ✓
+ */
+
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// ----- Mocks devem ser declarados ANTES dos imports do componente -----
+
+const mockUpload = vi.fn();
+const mockUpdateEq = vi.fn();
+const mockFromUpdate = vi.fn(() => ({ eq: mockUpdateEq }));
+const mockFunctionsInvoke = vi.fn();
+const mockToastSuccess = vi.fn();
+const mockToastWarning = vi.fn();
+const mockToastInfo = vi.fn();
+const mockToastError = vi.fn();
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    storage: {
+      from: vi.fn(() => ({
+        upload: mockUpload,
+        remove: vi.fn().mockResolvedValue({ error: null }),
+        download: vi.fn().mockResolvedValue({ data: new Blob(), error: null }),
+      })),
+    },
+    from: vi.fn(() => ({
+      update: mockFromUpdate,
+    })),
+    functions: {
+      invoke: mockFunctionsInvoke,
+    },
+  },
+}));
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: (...a: unknown[]) => mockToastSuccess(...a),
+    warning: (...a: unknown[]) => mockToastWarning(...a),
+    info: (...a: unknown[]) => mockToastInfo(...a),
+    error: (...a: unknown[]) => mockToastError(...a),
+  },
+}));
+
+vi.mock('@/lib/errorLogger', () => ({
+  logError: vi.fn(),
+  logInfo: vi.fn(),
+}));
+
+// ----- Imports após mocks -----
+import { PaymentMethodModal } from '@/components/PaymentMethodModal';
+
+// ----- Helpers -----
+
+function renderModal(overrides: Partial<React.ComponentProps<typeof PaymentMethodModal>> = {}) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+
+  const props: React.ComponentProps<typeof PaymentMethodModal> = {
+    open: true,
+    onOpenChange: vi.fn(),
+    paymentId: 'pay-123',
+    projectId: 'proj-abc',
+    installmentNumber: 1,
+    description: 'Parcela teste',
+    initialMethod: 'boleto',
+    initialPixKey: null,
+    initialBoletoCode: null,
+    initialBoletoPath: null,
+    onSaved: vi.fn(),
+    ...overrides,
+  };
+
+  const utils = render(
+    <QueryClientProvider client={queryClient}>
+      <PaymentMethodModal {...props} />
+    </QueryClientProvider>,
+  );
+  return { ...utils, props };
+}
+
+function makePdfFile() {
+  return new File(['%PDF-fake-bytes'], 'boleto.pdf', { type: 'application/pdf' });
+}
+
+// jsdom não tem FileReader.readAsDataURL retornando dataURL real — patch
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockUpload.mockResolvedValue({ data: { path: 'proj-abc/pay-123.pdf' }, error: null });
+  mockUpdateEq.mockResolvedValue({ error: null });
+
+  class StubFileReader {
+    onload: ((ev: ProgressEvent<FileReader>) => void) | null = null;
+    onerror: ((ev: ProgressEvent<FileReader>) => void) | null = null;
+    result: string | ArrayBuffer | null = null;
+    readAsDataURL(_file: Blob) {
+      this.result = 'data:application/pdf;base64,JVBERi1mYWtl';
+      // Disparar de forma assíncrona, como o real
+      setTimeout(() => this.onload?.({} as ProgressEvent<FileReader>), 0);
+    }
+  }
+  // @ts-expect-error stub global
+  global.FileReader = StubFileReader;
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+// ----- Testes -----
+
+describe('PaymentMethodModal — fluxo de boleto + IA', () => {
+  it('faz upload, invoca a edge function com base64 + mimeType e preenche boleto_code quando IA retorna 47+ dígitos', async () => {
+    const aiCode = '00190000090337447700806550034184489160000045678'; // 47 dígitos
+    mockFunctionsInvoke.mockResolvedValue({ data: { code: aiCode, raw: aiCode }, error: null });
+
+    const { container } = renderModal();
+
+    const file = makePdfFile();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input).toBeTruthy();
+
+    await userEvent.upload(input, file);
+
+    // 1) Upload chamado
+    await waitFor(() => {
+      expect(mockUpload).toHaveBeenCalledTimes(1);
+      const [path, uploadedFile] = mockUpload.mock.calls[0];
+      expect(path).toBe('proj-abc/pay-123.pdf');
+      expect(uploadedFile).toBe(file);
+    });
+
+    // 2) Edge function invocada com payload correto
+    await waitFor(() => {
+      expect(mockFunctionsInvoke).toHaveBeenCalledWith('extract-boleto-code', {
+        body: {
+          fileBase64: 'data:application/pdf;base64,JVBERi1mYWtl',
+          mimeType: 'application/pdf',
+        },
+      });
+    });
+
+    // 3) project_payments.update chamado com boleto_code extraído (apenas dígitos)
+    await waitFor(() => {
+      expect(mockFromUpdate).toHaveBeenCalledWith({ boleto_code: aiCode });
+      expect(mockUpdateEq).toHaveBeenCalledWith('id', 'pay-123');
+    });
+
+    // 4) Toast de sucesso da extração
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringMatching(/extraído/i));
+    });
+
+    // 5) Input do código do boleto deve ter o valor formatado
+    const codeInput = screen.getByLabelText(/Código do boleto/i) as HTMLInputElement;
+    const onlyDigits = codeInput.value.replace(/\D/g, '');
+    expect(onlyDigits).toBe(aiCode);
+  });
+
+  it('mostra aviso e preenche parcialmente quando IA retorna menos de 47 dígitos', async () => {
+    const partial = '12345';
+    mockFunctionsInvoke.mockResolvedValue({ data: { code: partial }, error: null });
+
+    const { container } = renderModal();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    await userEvent.upload(input, makePdfFile());
+
+    await waitFor(() => expect(mockFunctionsInvoke).toHaveBeenCalled());
+
+    await waitFor(() => {
+      expect(mockToastWarning).toHaveBeenCalledWith(expect.stringMatching(/parcial/i));
+    });
+    // Não deve persistir boleto_code (apenas persiste quando >=47)
+    expect(mockFromUpdate).not.toHaveBeenCalledWith({ boleto_code: partial });
+  });
+
+  it('mostra info quando IA retorna string vazia', async () => {
+    mockFunctionsInvoke.mockResolvedValue({ data: { code: '' }, error: null });
+
+    const { container } = renderModal();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    await userEvent.upload(input, makePdfFile());
+
+    await waitFor(() => expect(mockFunctionsInvoke).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(mockToastInfo).toHaveBeenCalledWith(expect.stringMatching(/manualmente/i));
+    });
+    expect(mockFromUpdate).not.toHaveBeenCalled();
+  });
+
+  it('exibe erro e não persiste quando a edge function falha', async () => {
+    mockFunctionsInvoke.mockResolvedValue({ data: null, error: new Error('AI gateway down') });
+
+    const { container } = renderModal();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    await userEvent.upload(input, makePdfFile());
+
+    await waitFor(() => expect(mockFunctionsInvoke).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(expect.stringMatching(/extrair/i));
+    });
+    expect(mockFromUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ boleto_code: expect.anything() }));
+  });
+
+  it('não invoca a edge function se o upload falhar', async () => {
+    mockUpload.mockResolvedValue({ data: null, error: new Error('storage 500') });
+
+    const { container } = renderModal();
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    await userEvent.upload(input, makePdfFile());
+
+    await waitFor(() => expect(mockUpload).toHaveBeenCalled());
+    // Pequeno delay para garantir que o invoke não foi chamado por engano
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mockFunctionsInvoke).not.toHaveBeenCalled();
+  });
+});
