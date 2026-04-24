@@ -24,6 +24,7 @@ import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface PurchaseWithProject extends ProjectPurchase {
   project_name: string;
+  payment_due_date?: string | null;
 }
 
 // Simplified status set requested for the calendar view.
@@ -45,6 +46,68 @@ function toCalendarStatus(s: string | null | undefined): CalendarStatus {
   if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
   if (s === 'delayed') return 'delayed';
   return 'pending';
+}
+
+// Editable date cell — opens a calendar popover, commits on selection or clear.
+function DateCell({
+  value,
+  onSave,
+  placeholder = 'Definir',
+}: {
+  value: string | null | undefined;
+  onSave: (value: string | null) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? parseISO(value) : undefined;
+
+  const handleSelect = (date: Date | undefined) => {
+    if (!date) return;
+    const iso = format(date, 'yyyy-MM-dd');
+    if (iso !== value) onSave(iso);
+    setOpen(false);
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (value) onSave(null);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'group inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs hover:bg-muted whitespace-nowrap',
+            !value && 'text-muted-foreground italic',
+          )}
+          title="Clique para editar"
+        >
+          {value ? format(parseISO(value), 'dd/MM/yy') : placeholder}
+          {value ? (
+            <X
+              className="h-3 w-3 opacity-0 group-hover:opacity-60 hover:text-destructive transition-opacity"
+              onClick={handleClear}
+            />
+          ) : (
+            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 z-[200]" align="start">
+        <CalendarPicker
+          mode="single"
+          selected={selected}
+          onSelect={handleSelect}
+          locale={ptBR}
+          initialFocus
+          className="p-3 pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function StatusCell({
@@ -261,6 +324,37 @@ export default function CalendarioCompras() {
     onError: (e) => {
       console.error(e);
       toast.error('Erro ao atualizar status');
+    },
+  });
+
+  // Mutation: update planned_purchase_date / payment_due_date inline
+  const updateDateField = useMutation({
+    mutationFn: async ({
+      id,
+      field,
+      value,
+    }: {
+      id: string;
+      field: 'planned_purchase_date' | 'payment_due_date';
+      value: string | null;
+    }) => {
+      const { error } = await supabase
+        .from('project_purchases')
+        .update({ [field]: value })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      toast.success(
+        vars.field === 'planned_purchase_date'
+          ? 'Data da compra atualizada'
+          : 'Data de pagamento atualizada',
+      );
+    },
+    onError: (e) => {
+      console.error(e);
+      toast.error('Erro ao atualizar data');
     },
   });
 
@@ -737,7 +831,8 @@ export default function CalendarioCompras() {
                   <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="whitespace-nowrap">Data</TableHead>
+                        <TableHead className="whitespace-nowrap">Compra</TableHead>
+                        <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Categoria</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
@@ -755,7 +850,20 @@ export default function CalendarioCompras() {
                         return (
                           <TableRow key={p.id}>
                             <TableCell className="font-medium whitespace-nowrap">
-                              {p.planned_purchase_date ? format(parseISO(p.planned_purchase_date), 'dd/MM/yy') : '—'}
+                              <DateCell
+                                value={p.planned_purchase_date}
+                                onSave={(value) =>
+                                  updateDateField.mutate({ id: p.id, field: 'planned_purchase_date', value })
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium whitespace-nowrap">
+                              <DateCell
+                                value={p.payment_due_date}
+                                onSave={(value) =>
+                                  updateDateField.mutate({ id: p.id, field: 'payment_due_date', value })
+                                }
+                              />
                             </TableCell>
                             <TableCell className="whitespace-nowrap max-w-[140px]">
                               <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
@@ -801,7 +909,7 @@ export default function CalendarioCompras() {
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
@@ -822,6 +930,7 @@ export default function CalendarioCompras() {
                     <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                           <TableHead className="whitespace-nowrap">Obra</TableHead>
                           <TableHead className="whitespace-nowrap">Categoria</TableHead>
                           <TableHead className="whitespace-nowrap">Item</TableHead>
@@ -838,6 +947,14 @@ export default function CalendarioCompras() {
                           const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
                           return (
                             <TableRow key={p.id}>
+                              <TableCell className="font-medium whitespace-nowrap">
+                                <DateCell
+                                  value={p.payment_due_date}
+                                  onSave={(value) =>
+                                    updateDateField.mutate({ id: p.id, field: 'payment_due_date', value })
+                                  }
+                                />
+                              </TableCell>
                               <TableCell className="whitespace-nowrap max-w-[140px]">
                                 <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
                                   {p.project_name}
