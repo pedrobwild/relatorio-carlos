@@ -238,6 +238,8 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       } else if (input.purchase_type === 'prestador' && paymentInstallments.length === 0 && editingPurchase) {
         await supabase.from('purchase_payment_schedule').delete().eq('purchase_id', editingPurchase.id);
       }
+      // Successful save → clear any persisted draft
+      clearDraft();
       setIsDialogOpen(false);
     } catch {
       // Error toast already handled by mutation onError
