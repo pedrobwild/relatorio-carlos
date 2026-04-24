@@ -314,8 +314,12 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <Badge className={`${status.className} text-xs`}>{status.label}</Badge>
-          <Badge variant="outline" className={`${prio.className} text-xs`}>{prio.label}</Badge>
+          <StatusBadge tone={getTone(BUDGET_STATUS_TONE, budget.internal_status, 'neutral')} size="md">
+            {getLabel(BUDGET_STATUS_LABEL, budget.internal_status, status.label)}
+          </StatusBadge>
+          <StatusBadge tone={getTone(PRIORITY_TONE, budget.priority, 'neutral')} size="md" variant="outline" showDot={false}>
+            {getLabel(PRIORITY_LABEL, budget.priority, prio.label)}
+          </StatusBadge>
 
           <Select
             value={budget.internal_status}

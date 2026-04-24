@@ -2,37 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { TableSkeleton, EmptyState } from '@/components/ui-premium';
+import { TableSkeleton, EmptyState, StatusBadge } from '@/components/ui-premium';
+import {
+  BUDGET_STATUS_LABEL, BUDGET_STATUS_TONE,
+  PRIORITY_LABEL, PRIORITY_TONE,
+  getLabel, getTone,
+} from '@/lib/statusTones';
 import { Search, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
-import { formatBRL } from '@/lib/formatBRL';
-
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  requested: { label: 'Solicitado', className: 'bg-muted text-muted-foreground' },
-  in_progress: { label: 'Em Produção', className: 'bg-primary/10 text-primary border-primary/20' },
-  review: { label: 'Revisão', className: 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20' },
-  waiting_info: { label: 'Aguardando Info', className: 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20' },
-  blocked: { label: 'Bloqueado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  ready: { label: 'Pronto', className: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20' },
-  sent_to_client: { label: 'Enviado ao Cliente', className: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20' },
-  approved: { label: 'Aprovado', className: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20' },
-  rejected: { label: 'Recusado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  cancelled: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
-};
-
-const PRIORITY_CONFIG: Record<string, { label: string; className: string }> = {
-  low: { label: 'Baixa', className: 'text-muted-foreground' },
-  normal: { label: 'Normal', className: 'text-foreground' },
-  high: { label: 'Alta', className: 'text-[hsl(var(--warning))]' },
-  urgent: { label: 'Urgente', className: 'text-destructive' },
-};
 
 export default function Orcamentos() {
   const navigate = useNavigate();
@@ -112,8 +94,6 @@ export default function Orcamentos() {
             </TableHeader>
             <TableBody>
               {filtered.map((orc) => {
-                const status = STATUS_CONFIG[orc.internal_status] || STATUS_CONFIG.requested;
-                const prio = PRIORITY_CONFIG[orc.priority] || PRIORITY_CONFIG.normal;
                 return (
                   <TableRow
                     key={orc.id}
@@ -132,12 +112,14 @@ export default function Orcamentos() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className={`${status.className} text-[10px] whitespace-nowrap`}>
-                        {status.label}
-                      </Badge>
+                      <StatusBadge tone={getTone(BUDGET_STATUS_TONE, orc.internal_status, 'neutral')} size="sm">
+                        {getLabel(BUDGET_STATUS_LABEL, orc.internal_status, 'Solicitado')}
+                      </StatusBadge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={`text-xs font-medium ${prio.className}`}>{prio.label}</span>
+                      <StatusBadge tone={getTone(PRIORITY_TONE, orc.priority, 'neutral')} size="sm" variant="outline" showDot={false}>
+                        {getLabel(PRIORITY_LABEL, orc.priority, 'Normal')}
+                      </StatusBadge>
                     </TableCell>
                     <TableCell>
                       <span className="text-xs text-muted-foreground truncate block max-w-[100px]">

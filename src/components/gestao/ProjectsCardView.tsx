@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -17,24 +16,10 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import { getTemporalStatusLabel } from '@/lib/temporalStatus';
 import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/ui-premium';
+import { PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, getLabel, getTone } from '@/lib/statusTones';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-slate-500/10 text-slate-600 border-slate-400/20',
-  active: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20',
-  completed: 'bg-primary/10 text-primary border-primary/20',
-  paused: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20',
-  cancelled: 'bg-muted text-muted-foreground border-border',
-};
-
-const statusLabels: Record<string, string> = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  completed: 'Concluída',
-  paused: 'Pausada',
-  cancelled: 'Cancelada',
-};
 
 interface ProjectsCardViewProps {
   projects: ProjectWithCustomer[];
@@ -208,9 +193,13 @@ function ProjectCard({
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant="outline" className={cn('text-[10px] shrink-0', statusColors[project.status])}>
-              {statusLabels[project.status] ?? project.status}
-            </Badge>
+            <StatusBadge
+              tone={getTone(PROJECT_STATUS_TONE, project.status)}
+              size="sm"
+              className="shrink-0"
+            >
+              {getLabel(PROJECT_STATUS_LABEL, project.status)}
+            </StatusBadge>
           </TooltipTrigger>
           <TooltipContent side="left" className="text-xs">
             {getTemporalStatusLabel(project.status, null, project.created_at)}
@@ -259,17 +248,17 @@ function ProjectCard({
             </p>
           </div>
           {isFinished ? (
-            <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20 shrink-0">
-              <CheckCircle className="h-3 w-3" /> Entregue
-            </Badge>
+            <StatusBadge tone="success" size="sm" icon={<CheckCircle />} showDot={false} className="shrink-0">
+              Entregue
+            </StatusBadge>
           ) : isOverdue ? (
-            <Badge variant="outline" className="text-[10px] gap-0.5 bg-destructive/10 text-destructive border-destructive/20 shrink-0 animate-pulse">
-              <CalendarX className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
-            </Badge>
+            <StatusBadge tone="danger" size="sm" icon={<CalendarX />} showDot={false} className="shrink-0 animate-pulse">
+              {Math.abs(daysRemaining!)}d atraso
+            </StatusBadge>
           ) : isApproaching ? (
-            <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20 shrink-0">
-              <Clock className="h-3 w-3" /> {daysRemaining}d
-            </Badge>
+            <StatusBadge tone="warning" size="sm" icon={<Clock />} showDot={false} className="shrink-0">
+              {daysRemaining}d
+            </StatusBadge>
           ) : (
             <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{daysRemaining}d</span>
           )}
@@ -282,10 +271,9 @@ function ProjectCard({
           {overdueCount > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
-                  <AlertTriangle className="h-3 w-3" />
+                <StatusBadge tone="danger" size="sm" icon={<AlertTriangle />} showDot={false}>
                   {overdueCount} atraso{overdueCount > 1 ? 's' : ''}
-                </Badge>
+                </StatusBadge>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">{overdueCount} atividade(s) em atraso</TooltipContent>
             </Tooltip>
@@ -293,10 +281,9 @@ function ProjectCard({
           {unsignedFormalizations > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] gap-1 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20">
-                  <FileSignature className="h-3 w-3" />
+                <StatusBadge tone="warning" size="sm" icon={<FileSignature />} showDot={false}>
                   {unsignedFormalizations} assinatura{unsignedFormalizations > 1 ? 's' : ''}
-                </Badge>
+                </StatusBadge>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">{unsignedFormalizations} formalização(ões) aguardando assinatura</TooltipContent>
             </Tooltip>
@@ -304,10 +291,9 @@ function ProjectCard({
           {pendingDocuments > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20">
-                  <FileText className="h-3 w-3" />
+                <StatusBadge tone="info" size="sm" icon={<FileText />} showDot={false}>
                   {pendingDocuments} doc{pendingDocuments > 1 ? 's' : ''}
-                </Badge>
+                </StatusBadge>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">{pendingDocuments} documento(s) pendente(s)</TooltipContent>
             </Tooltip>
