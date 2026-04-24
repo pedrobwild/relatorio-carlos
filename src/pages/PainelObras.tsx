@@ -454,7 +454,7 @@ export default function PainelObras() {
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           <button
             type="button"
-            onClick={() => navigate('/gestao/cs')}
+            onClick={() => navigate('/gestao/cs/operacional')}
             className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 text-left transition-all hover:border-primary/40 hover:bg-accent/30 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary shrink-0 group-hover:bg-primary/15 transition-colors">
