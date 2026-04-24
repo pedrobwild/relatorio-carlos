@@ -12,7 +12,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // ----- Mocks devem ser declarados ANTES dos imports do componente -----
@@ -137,7 +136,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
     const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
     expect(input).toBeTruthy();
 
-    await userEvent.upload(input, file);
+    fireEvent.change(input, { target: { files: [file] } });
 
     // 1) Upload chamado
     await waitFor(() => {
@@ -180,7 +179,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
 
     const { container } = renderModal();
     const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
-    await userEvent.upload(input, makePdfFile());
+    fireEvent.change(input, { target: { files: [makePdfFile()] } });
 
     await waitFor(() => expect(h.mockFunctionsInvoke).toHaveBeenCalled());
 
@@ -196,7 +195,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
 
     const { container } = renderModal();
     const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
-    await userEvent.upload(input, makePdfFile());
+    fireEvent.change(input, { target: { files: [makePdfFile()] } });
 
     await waitFor(() => expect(h.mockFunctionsInvoke).toHaveBeenCalled());
     await waitFor(() => {
@@ -210,7 +209,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
 
     const { container } = renderModal();
     const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
-    await userEvent.upload(input, makePdfFile());
+    fireEvent.change(input, { target: { files: [makePdfFile()] } });
 
     await waitFor(() => expect(h.mockFunctionsInvoke).toHaveBeenCalled());
     await waitFor(() => {
@@ -224,7 +223,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
 
     const { container } = renderModal();
     const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
-    await userEvent.upload(input, makePdfFile());
+    fireEvent.change(input, { target: { files: [makePdfFile()] } });
 
     await waitFor(() => expect(h.mockUpload).toHaveBeenCalled());
     // Pequeno delay para garantir que o invoke não foi chamado por engano
