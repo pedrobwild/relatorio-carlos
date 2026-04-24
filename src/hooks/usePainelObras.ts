@@ -63,6 +63,7 @@ export interface PainelObra {
   previsao_avanco: string | null;
   status: PainelStatus | null;
   relacionamento: PainelRelacionamento | null;
+  external_budget_id: string | null;
   ultima_atualizacao: string;
 
   // Métricas (do summary)
