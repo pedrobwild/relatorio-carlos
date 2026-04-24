@@ -88,7 +88,7 @@ export function ProtectedRoute({
 // Staff: engineers, managers, and admins - can manage projects
 export function StaffRoute({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['engineer', 'manager', 'admin', 'gestor', 'suprimentos', 'financeiro', 'cs']}>
+    <ProtectedRoute allowedRoles={['engineer', 'manager', 'admin', 'gestor', 'suprimentos', 'financeiro', 'cs', 'arquitetura']}>
       {children}
     </ProtectedRoute>
   );
