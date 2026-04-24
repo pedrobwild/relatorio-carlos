@@ -7,6 +7,7 @@ import { addBusinessDays, isWeekend } from '@/lib/businessDays';
 import type { ProjectTemplate, TemplateActivity } from '@/hooks/useProjectTemplates';
 import type { FormData } from './types';
 import type { ScheduleActivity } from './ScheduleCard';
+import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
 
 /** Collect non-fatal warnings during submit */
 interface SubmitWarning {
@@ -240,11 +241,18 @@ export function useNovaObraSubmit() {
     }
 
     // 8. Create payment installments — explicit radix 10 to avoid surprises with leading-zero strings.
-    if (formData.num_installments && parseInt(formData.num_installments, 10) > 0) {
-      const numInstallments = parseInt(formData.num_installments, 10);
+    const numInstallmentsParsed = safeParseInt(formData.num_installments, {
+      area: 'parcelas',
+      context: 'useNovaObraSubmit',
+      fallback: 0,
+    });
+    if (numInstallmentsParsed > 0) {
+      const numInstallments = numInstallmentsParsed;
       const installmentAmount = formData.installment_value
         ? parseFloat(formData.installment_value)
         : (formData.contract_value ? parseFloat(formData.contract_value) / numInstallments : 0);
+
+      trackBlock1CUsage('parcelas', { count: numInstallments, hasValue: !!formData.installment_value });
 
       const paymentRows = Array.from({ length: numInstallments }, (_, i) => ({
         project_id: projectId,

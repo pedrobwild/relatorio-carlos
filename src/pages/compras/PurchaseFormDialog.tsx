@@ -13,6 +13,7 @@ import { PURCHASE_TYPE_LABELS, purchaseTypeToSupplierType } from './types';
 import { PaymentScheduleSection, type PaymentInstallment } from './PaymentScheduleSection';
 import { FornecedorSelector } from './FornecedorSelector';
 import { QuickCreateFornecedor } from './QuickCreateFornecedor';
+import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -165,7 +166,15 @@ export function PurchaseFormDialog({
                 type="number"
                 min={1}
                 value={formData.lead_time_days || 7}
-                onChange={(e) => onLeadTimeChange(parseInt(e.target.value, 10) || 7)}
+                onChange={(e) => {
+                  const parsed = safeParseInt(e.target.value, {
+                    area: 'lead-time',
+                    context: 'PurchaseFormDialog',
+                    fallback: 7,
+                  });
+                  trackBlock1CUsage('lead-time', { parsed });
+                  onLeadTimeChange(parsed);
+                }}
               />
             </div>
 
