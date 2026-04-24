@@ -20,18 +20,39 @@ const mockedUseUserRole = vi.mocked(useUserRole);
 
 const TestComponent = () => <div data-testid="protected-content">Protected Content</div>;
 
-// Helper to create mock role state
+const STAFF_ROLES: AppRole[] = [
+  'engineer',
+  'manager',
+  'admin',
+  'gestor',
+  'suprimentos',
+  'financeiro',
+  'cs',
+  'arquitetura',
+];
+
+// Helper to create mock role state — espelha a lógica real de useUserRole.ts
 const createMockRoleState = (roles: AppRole[], loading = false) => ({
   roles,
   role: roles[0] || null,
   loading,
-  isStaff: roles.some(r => ['engineer', 'admin', 'manager'].includes(r)),
+  isStaff: roles.some(r => STAFF_ROLES.includes(r)),
   isCustomer: roles.includes('customer'),
   isAdmin: roles.includes('admin'),
   isManager: roles.includes('manager'),
   hasRole: (role: AppRole) => roles.includes(role),
   hasAnyRole: (checkRoles: AppRole[]) => checkRoles.some(r => roles.includes(r)),
 });
+
+const mockAuthed = () => {
+  mockedUseAuth.mockReturnValue({
+    isAuthenticated: true,
+    loading: false,
+    user: { id: 'user-123', email: 'test@example.com' } as any,
+    session: {} as any,
+    signOut: vi.fn(),
+  });
+};
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
