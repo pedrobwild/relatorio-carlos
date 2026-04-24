@@ -12,7 +12,11 @@
 //     authenticated test is skipped (with an explicit log) so the suite
 //     still passes in environments without seeded test users.
 
-import "https://deno.land/std@0.224.0/dotenv/load.ts";
+// NOTE: We intentionally do NOT use `dotenv/load.ts` because the project's
+// .env declares vars without values that the strict loader rejects. Instead
+// we read the few vars we need directly via `Deno.env.get`. The Supabase
+// edge-test runner injects VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY
+// into the test environment automatically.
 import {
   assert,
   assertEquals,
