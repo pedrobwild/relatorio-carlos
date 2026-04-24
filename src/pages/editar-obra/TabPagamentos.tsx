@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Trash2, ChevronRight, Sparkles } from 'lucide-react';
+import { Plus, Trash2, ChevronRight, Sparkles, CreditCard } from 'lucide-react';
+import { EmptyState } from '@/components/ui-premium';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -190,7 +191,13 @@ export function TabPagamentos({ payments, projectId, onAdd, onUpdate, onTogglePa
               </Table>
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">Nenhuma parcela cadastrada. Adicione a primeira acima.</p>
+            <EmptyState
+              icon={CreditCard}
+              title="Nenhuma parcela cadastrada"
+              description="Adicione a primeira parcela acima para começar."
+              size="sm"
+              bare
+            />
           )}
         </CardContent>
       </Card>
