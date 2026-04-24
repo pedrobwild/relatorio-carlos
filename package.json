@@ -63,6 +63,7 @@
     "html2pdf.js": "^0.10.2",
     "input-otp": "^1.4.2",
     "jsdom": "^27.3.0",
+    "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
