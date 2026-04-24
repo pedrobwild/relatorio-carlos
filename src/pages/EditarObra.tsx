@@ -25,6 +25,7 @@ import { TabPagamentos } from './editar-obra/TabPagamentos';
 import { TabEquipe } from './editar-obra/TabEquipe';
 import { TabFichaTecnica } from './editar-obra/TabFichaTecnica';
 import { EditarObraSidebar } from './editar-obra/EditarObraSidebar';
+import { ShiftModeDialog } from './editar-obra/ShiftModeDialog';
 
 export default function EditarObra() {
   const { projectId } = useParams<{ projectId: string }>();
