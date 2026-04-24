@@ -160,6 +160,7 @@ export function usePainelObras() {
         painel_previsao_avanco?: string | null;
         painel_status?: PainelStatus | null;
         painel_relacionamento?: PainelRelacionamento | null;
+        painel_external_budget_id?: string | null;
         painel_ultima_atualizacao?: string;
       };
       return {
@@ -177,6 +178,7 @@ export function usePainelObras() {
         previsao_avanco: raw.painel_previsao_avanco ?? null,
         status: raw.painel_status ?? null,
         relacionamento: raw.painel_relacionamento ?? null,
+        external_budget_id: raw.painel_external_budget_id ?? null,
         ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
         progress_percentage:
           s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
