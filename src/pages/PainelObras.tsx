@@ -674,7 +674,7 @@ export default function PainelObras() {
 // (KpiCard legado removido — substituído por MetricCard/MetricRail premium)
 
 // ----- row component -----
-const PAINEL_COLUMN_COUNT = 12;
+const PAINEL_COLUMN_COUNT = 13;
 
 interface ObraRowProps {
   obra: PainelObra;
