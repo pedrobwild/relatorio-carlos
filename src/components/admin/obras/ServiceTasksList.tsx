@@ -149,6 +149,38 @@ export function ServiceTasksList({ serviceId, serviceSaved }: Props) {
               {completedCount}/{totalCount}
             </Badge>
           )}
+          {(() => {
+            const overdue = tasks.filter(
+              (t) => getDueUrgency(t.due_date, t.status).level === 'overdue',
+            ).length;
+            const today = tasks.filter(
+              (t) => getDueUrgency(t.due_date, t.status).level === 'today',
+            ).length;
+            return (
+              <>
+                {overdue > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1 text-[10px] tabular-nums gap-0.5 bg-destructive/10 text-destructive border-destructive/30"
+                    title={`${overdue} tarefa${overdue > 1 ? 's' : ''} com prazo vencido`}
+                  >
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    {overdue} atrasada{overdue > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {today > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1 text-[10px] tabular-nums gap-0.5 bg-warning/10 text-warning border-warning/30"
+                    title={`${today} tarefa${today > 1 ? 's' : ''} vence${today > 1 ? 'm' : ''} hoje`}
+                  >
+                    <Clock className="h-2.5 w-2.5" />
+                    {today} hoje
+                  </Badge>
+                )}
+              </>
+            );
+          })()}
         </div>
         {totalCount > 0 && (
           <div className="flex items-center gap-1.5 flex-1 max-w-[120px]">
