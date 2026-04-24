@@ -414,13 +414,45 @@
     background: var(--gradient-primary);
   }
 
-  .shadow-card {
-    box-shadow: var(--shadow-md);
+  /* ====== Premium Surfaces & Elevation ======
+   * Use estas utilities em vez de re-declarar bg/border em cada componente.
+   */
+  .surface-canvas {
+    background-color: hsl(var(--background));
+  }
+  .surface-card {
+    background-color: hsl(var(--surface));
+  }
+  .surface-sunken {
+    background-color: hsl(var(--surface-sunken));
   }
 
-  .shadow-card-lg {
-    box-shadow: var(--shadow-lg);
+  .elevation-xs { box-shadow: var(--shadow-xs); }
+  .elevation-sm { box-shadow: var(--shadow-sm); }
+  .elevation-md { box-shadow: var(--shadow-md); }
+  .elevation-lg { box-shadow: var(--shadow-lg); }
+  .elevation-xl { box-shadow: var(--shadow-xl); }
+
+  .ring-premium:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-ring);
   }
+
+  /* Linhas de divisão sutis (use no lugar de border padrão em interiores) */
+  .divide-subtle > * + * {
+    border-top: 1px solid hsl(var(--border-subtle));
+  }
+
+  /* Header / toolbar sticky com blur premium */
+  .surface-glass {
+    background-color: hsl(var(--surface) / 0.85);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+  }
+
+  /* Compat: tokens antigos continuam funcionando */
+  .shadow-card { box-shadow: var(--shadow-sm); }
+  .shadow-card-lg { box-shadow: var(--shadow-md); }
 
   /* Hide scrollbar for horizontal scroll */
   .scrollbar-hide {
