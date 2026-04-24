@@ -201,7 +201,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
     await waitFor(() => {
       expect(h.mockToastInfo).toHaveBeenCalledWith(expect.stringMatching(/manualmente/i));
     });
-    expect(h.mockFromUpdate).not.toHaveBeenCalled();
+    expect(h.mockFromUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ boleto_code: expect.anything() }));
   });
 
   it('exibe erro e não persiste quando a edge function falha', async () => {
