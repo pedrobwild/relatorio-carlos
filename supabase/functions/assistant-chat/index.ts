@@ -19,8 +19,13 @@ const SCHEMA_CATALOG = `
 ## project_payments (parcelas/pagamentos)
 - id uuid, project_id uuid, installment_number int
 - description text, amount numeric, due_date date, paid_at timestamptz
-- payment_method text, boleto_code text, pix_key text, pix_type text
-- status text  -- 'pending' | 'paid' | 'overdue'
+- payment_method text, boleto_code text, boleto_path text, pix_key text
+- payment_proof_path text, notification_sent_at timestamptz
+- IMPORTANTE: NÃO existe coluna 'status'. Derive o status assim:
+    * 'paid' quando paid_at IS NOT NULL
+    * 'overdue' quando paid_at IS NULL AND due_date < CURRENT_DATE
+    * 'pending' quando paid_at IS NULL AND due_date >= CURRENT_DATE
+  Exemplo: CASE WHEN paid_at IS NOT NULL THEN 'paid' WHEN due_date < CURRENT_DATE THEN 'overdue' ELSE 'pending' END AS status
 
 ## project_purchases (compras de produtos e prestadores)
 - id uuid, project_id uuid, item_name text, description text
