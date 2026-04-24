@@ -324,6 +324,7 @@ export function useEditarObraData(projectId: string | undefined) {
         startChanged,
         endChanged,
         activityCount: activities.length,
+        mode: 'save',
       });
       return;
     }
@@ -331,14 +332,113 @@ export function useEditarObraData(projectId: string | undefined) {
     await performSave(null);
   };
 
+  /**
+   * Force a schedule recalculation without saving other project fields.
+   * Uses current schedule bounds as "old" and the project's planned dates as "new".
+   */
+  const recalculateSchedule = () => {
+    if (!project || activities.length === 0) return;
+    const valid = activities.filter(a => a.planned_start && a.planned_end);
+    if (valid.length === 0) {
+      toast({ title: 'Cronograma vazio', description: 'Não há atividades para recalcular.' });
+      return;
+    }
+    const newStart = project.planned_start_date || null;
+    const newEnd = project.planned_end_date || null;
+    if (!newStart && !newEnd) {
+      toast({
+        title: 'Datas do projeto não definidas',
+        description: 'Defina o início ou término previsto antes de recalcular.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const starts = valid.map(a => new Date(a.planned_start).getTime());
+    const ends = valid.map(a => new Date(a.planned_end).getTime());
+    const scheduleStart = new Date(Math.min(...starts)).toISOString().slice(0, 10);
+    const scheduleEnd = new Date(Math.max(...ends)).toISOString().slice(0, 10);
+    const startChanged = !!newStart && newStart !== scheduleStart;
+    const endChanged = !!newEnd && newEnd !== scheduleEnd;
+    if (!startChanged && !endChanged) {
+      toast({ title: 'Já sincronizado', description: 'O cronograma já está alinhado com as datas do projeto.' });
+      return;
+    }
+    setShiftDialogState({
+      open: true,
+      startChanged,
+      endChanged,
+      activityCount: valid.length,
+      mode: 'recalc-only',
+    });
+  };
+
+  const performRecalcOnly = async (shiftMode: ShiftMode) => {
+    if (!project || activities.length === 0) return;
+    const valid = activities.filter(a => a.planned_start && a.planned_end);
+    if (valid.length === 0) return;
+    const starts = valid.map(a => new Date(a.planned_start).getTime());
+    const ends = valid.map(a => new Date(a.planned_end).getTime());
+    const scheduleStart = new Date(Math.min(...starts)).toISOString().slice(0, 10);
+    const scheduleEnd = new Date(Math.max(...ends)).toISOString().slice(0, 10);
+    const newStart = project.planned_start_date || null;
+    const newEnd = project.planned_end_date || null;
+
+    setSaving(true);
+    try {
+      const { activities: shifted, changedIds } = shiftActivityDates(
+        activities,
+        scheduleStart,
+        scheduleEnd,
+        newStart,
+        newEnd,
+        shiftMode,
+      );
+      if (changedIds.length === 0) {
+        toast({ title: 'Nada a recalcular', description: 'Nenhuma atividade precisou ser ajustada.' });
+        return;
+      }
+      const updates = shifted
+        .filter(a => changedIds.includes(a.id))
+        .map(a =>
+          supabase
+            .from('project_activities')
+            .update({ planned_start: a.planned_start, planned_end: a.planned_end })
+            .eq('id', a.id)
+        );
+      const results = await Promise.all(updates);
+      const failed = results.find(r => r.error);
+      if (failed?.error) throw failed.error;
+      setActivities(shifted);
+      if (projectId) invalidateActivityQueries(projectId);
+      const modeLabel = shiftMode === 'preserve-duration' ? 'duração mantida' : 'proporcional';
+      toast({
+        title: 'Cronograma recalculado',
+        description: `${changedIds.length} atividade(s) realinhada(s) (${modeLabel}).`,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      console.error('Error recalculating:', err);
+      toast({ title: 'Erro ao recalcular', description: message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleShiftDialogConfirm = async (mode: ShiftMode | null) => {
+    const dialogMode = shiftDialogState.mode;
     setShiftDialogState(s => ({ ...s, open: false }));
-    await performSave(mode);
+    if (mode === null) return;
+    if (dialogMode === 'recalc-only') {
+      await performRecalcOnly(mode);
+    } else {
+      await performSave(mode);
+    }
   };
 
   const setShiftDialogOpen = (open: boolean) => {
     setShiftDialogState(s => ({ ...s, open }));
   };
+
 
   // Activities
   const addActivity = async (newActivity: { description: string; planned_start: string; planned_end: string; weight: string; etapa?: string; detailed_description?: string }) => {
