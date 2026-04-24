@@ -74,6 +74,7 @@ import {
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
+import { ExternalBudgetCell } from '@/components/admin/painel/ExternalBudgetCell';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
 
@@ -624,6 +625,7 @@ export default function PainelObras() {
                     <SortableHeader label="Entrega Real" sortKey="entrega_real" />
                   </TableHead>
                   <TableHead className="min-w-[140px]">Relacionamento</TableHead>
+                  <TableHead className="min-w-[150px]">Orçamento público</TableHead>
                   <TableHead className="min-w-[110px]">
                     <SortableHeader label="Atualizado" sortKey="ultima_atualizacao" />
                   </TableHead>
@@ -672,7 +674,7 @@ export default function PainelObras() {
 // (KpiCard legado removido — substituído por MetricCard/MetricRail premium)
 
 // ----- row component -----
-const PAINEL_COLUMN_COUNT = 12;
+const PAINEL_COLUMN_COUNT = 13;
 
 interface ObraRowProps {
   obra: PainelObra;
@@ -935,6 +937,14 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
             ))}
           </SelectContent>
         </Select>
+      </TableCell>
+
+      {/* Orçamento público (link externo bwildengine.com) */}
+      <TableCell>
+        <ExternalBudgetCell
+          value={obra.external_budget_id}
+          onChange={(id) => onUpdate({ external_budget_id: id })}
+        />
       </TableCell>
 
       {/* Última atualização */}

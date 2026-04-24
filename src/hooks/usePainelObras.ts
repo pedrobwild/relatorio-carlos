@@ -63,6 +63,7 @@ export interface PainelObra {
   previsao_avanco: string | null;
   status: PainelStatus | null;
   relacionamento: PainelRelacionamento | null;
+  external_budget_id: string | null;
   ultima_atualizacao: string;
 
   // Métricas (do summary)
@@ -111,6 +112,7 @@ export type PainelObraPatch = Partial<{
   previsao_avanco: string | null;
   status: PainelStatus | null;
   relacionamento: PainelRelacionamento | null;
+  external_budget_id: string | null;
   inicio_oficial: string | null;
   entrega_oficial: string | null;
   inicio_real: string | null;
@@ -126,6 +128,8 @@ function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
   if ('previsao_avanco' in patch) out.painel_previsao_avanco = patch.previsao_avanco;
   if ('status' in patch) out.painel_status = patch.status;
   if ('relacionamento' in patch) out.painel_relacionamento = patch.relacionamento;
+  if ('external_budget_id' in patch)
+    out.painel_external_budget_id = patch.external_budget_id;
   if ('inicio_oficial' in patch) out.planned_start_date = patch.inicio_oficial;
   if ('entrega_oficial' in patch) out.planned_end_date = patch.entrega_oficial;
   if ('inicio_real' in patch) out.actual_start_date = patch.inicio_real;
@@ -156,6 +160,7 @@ export function usePainelObras() {
         painel_previsao_avanco?: string | null;
         painel_status?: PainelStatus | null;
         painel_relacionamento?: PainelRelacionamento | null;
+        painel_external_budget_id?: string | null;
         painel_ultima_atualizacao?: string;
       };
       return {
@@ -173,6 +178,7 @@ export function usePainelObras() {
         previsao_avanco: raw.painel_previsao_avanco ?? null,
         status: raw.painel_status ?? null,
         relacionamento: raw.painel_relacionamento ?? null,
+        external_budget_id: raw.painel_external_budget_id ?? null,
         ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
         progress_percentage:
           s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
@@ -218,6 +224,8 @@ export function usePainelObras() {
             if ('previsao_avanco' in patch) next.painel_previsao_avanco = patch.previsao_avanco;
             if ('status' in patch) next.painel_status = patch.status;
             if ('relacionamento' in patch) next.painel_relacionamento = patch.relacionamento;
+            if ('external_budget_id' in patch)
+              next.painel_external_budget_id = patch.external_budget_id;
             if ('inicio_oficial' in patch) next.planned_start_date = patch.inicio_oficial;
             if ('entrega_oficial' in patch) next.planned_end_date = patch.entrega_oficial;
             if ('inicio_real' in patch) next.actual_start_date = patch.inicio_real;
