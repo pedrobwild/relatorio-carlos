@@ -7,7 +7,7 @@
  * criadas neste dia (data de cadastro = data selecionada).
  */
 import { useMemo } from 'react';
-import { format, isSameDay, isWithinInterval, parseISO } from 'date-fns';
+import { format, isWithinInterval, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Building2, CalendarDays, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
