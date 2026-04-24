@@ -163,6 +163,8 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={withSuspense(<Auth />)} />
+            <Route path="/recuperar-senha" element={withSuspense(<RecuperarSenha />)} />
+            <Route path="/redefinir-senha" element={withSuspense(<RedefinirSenha />)} />
             <Route path="/verificar/:hash" element={withSuspense(<VerificarAssinatura />)} />
             
             {/* Staff-only routes — wrapped in GestaoShell */}
