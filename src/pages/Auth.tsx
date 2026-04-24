@@ -343,13 +343,13 @@ export default function Auth() {
           </div>
 
           <div className="flex justify-center pt-1">
-            <a
-              href="/recuperar-senha"
+            <Link
+              to="/recuperar-senha"
               className="text-xs text-white/80 hover:text-white hover:underline font-medium"
               tabIndex={0}
             >
               Esqueci minha senha
-            </a>
+            </Link>
           </div>
 
           <Button
