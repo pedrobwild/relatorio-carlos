@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -343,13 +343,13 @@ export default function Auth() {
           </div>
 
           <div className="flex justify-center pt-1">
-            <a
-              href="/recuperar-senha"
+            <Link
+              to="/recuperar-senha"
               className="text-xs text-white/80 hover:text-white hover:underline font-medium"
               tabIndex={0}
             >
               Esqueci minha senha
-            </a>
+            </Link>
           </div>
 
           <Button

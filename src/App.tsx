@@ -28,6 +28,8 @@ const AuthRedirectPage = () => {
 
 // Route-level code splitting: reduz bundle/memória inicial e diminui chance de "tab discard".
 const Auth = lazy(() => import("./pages/Auth"));
+const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
+const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
 const VerificarAssinatura = lazy(() => import("./pages/VerificarAssinatura"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -161,6 +163,8 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/auth" element={withSuspense(<Auth />)} />
+            <Route path="/recuperar-senha" element={withSuspense(<RecuperarSenha />)} />
+            <Route path="/redefinir-senha" element={withSuspense(<RedefinirSenha />)} />
             <Route path="/verificar/:hash" element={withSuspense(<VerificarAssinatura />)} />
             
             {/* Staff-only routes — wrapped in GestaoShell */}
