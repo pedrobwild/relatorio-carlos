@@ -18,9 +18,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, FileBarChart, Search, Sparkles, AlertCircle, Clock, Database } from "lucide-react";
+import { Loader2, FileBarChart, Search, Sparkles, AlertCircle, Clock, Database, Download, FileText, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface LogRow {
   id: string;
