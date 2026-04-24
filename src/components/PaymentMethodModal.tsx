@@ -91,6 +91,10 @@ export function PaymentMethodModal({
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (!file) return;
 
+    // Garante que a seção do Boleto esteja aberta para o feedback aparecer
+    setMethod('boleto');
+    setOpenSection('boleto');
+
     // 1) Upload para storage
     boletoUpload.mutate(
       { paymentId, projectId, file },
@@ -105,18 +109,29 @@ export function PaymentMethodModal({
             });
             if (error) throw error;
             const extracted = (data?.code || '').toString().replace(/\D/g, '');
-            if (extracted.length >= 47) {
-              setBoletoCode(extracted);
+
+            if (extracted.length === 0) {
+              toast.info('Não foi possível extrair o código automaticamente. Preencha manualmente.');
+              return;
+            }
+
+            // Atualiza o estado — o useMemo de boletoValidation revalida na hora
+            setBoletoCode(extracted);
+
+            // Revalida síncronamente para decidir o feedback e a persistência
+            const result = validateBoletoLine(extracted);
+
+            if (result.valid && extracted.length >= 47) {
+              // Persiste apenas se a linha digitável for válida
               await supabase
                 .from('project_payments')
                 .update({ boleto_code: extracted })
                 .eq('id', paymentId);
-              toast.success('Código do boleto extraído pela IA');
-            } else if (extracted.length > 0) {
-              setBoletoCode(extracted);
-              toast.warning('Código parcialmente reconhecido. Confira manualmente.');
+              toast.success('Código extraído e validado pela IA ✓');
+            } else if (extracted.length >= 47 && !result.valid) {
+              toast.warning(`IA leu o código, mas a validação falhou: ${result.error}. Revise antes de salvar.`);
             } else {
-              toast.info('Não foi possível extrair o código automaticamente. Preencha manualmente.');
+              toast.warning(`Código parcialmente reconhecido (${extracted.length}/47 dígitos). Complete manualmente.`);
             }
           } catch (err) {
             console.error('Erro ao extrair código:', err);
