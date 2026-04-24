@@ -22,11 +22,12 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound, CalendarClock } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound, CalendarClock, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
+import type { PurchaseCalendarEvent } from '@/hooks/usePurchasesByCreationRange';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog,
