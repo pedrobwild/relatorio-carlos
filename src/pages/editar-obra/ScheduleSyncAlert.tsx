@@ -27,7 +27,7 @@ function formatDate(value: string | null): string {
  * não coincidem com as bordas das atividades do cronograma.
  * Indica que o usuário deve salvar para recalcular o cronograma (via ShiftModeDialog).
  */
-export function ScheduleSyncAlert({ plannedStart, plannedEnd, activities }: ScheduleSyncAlertProps) {
+export function ScheduleSyncAlert({ plannedStart, plannedEnd, activities, onRecalculate, isBusy }: ScheduleSyncAlertProps) {
   const valid = activities.filter(a => a.planned_start && a.planned_end);
   if (valid.length === 0) return null;
   if (!plannedStart && !plannedEnd) return null;
@@ -45,11 +45,11 @@ export function ScheduleSyncAlert({ plannedStart, plannedEnd, activities }: Sche
     <Alert className="border-warning/40 bg-warning/5 text-warning-foreground">
       <AlertTriangle className="h-4 w-4 text-warning" />
       <AlertTitle className="text-warning">Cronograma desconectado das datas do projeto</AlertTitle>
-      <AlertDescription className="space-y-2 mt-1">
+      <AlertDescription className="space-y-3 mt-1">
         <p className="text-sm text-foreground/90">
           As datas planejadas em "Dados Gerais" não correspondem às bordas atuais do cronograma.
-          Salve para recalcular as atividades — você poderá escolher entre manter a duração de cada atividade ou
-          encaixar tudo proporcionalmente na nova janela.
+          Você pode recalcular agora ou ao salvar — em ambos os casos poderá escolher entre manter a duração
+          de cada atividade ou encaixar tudo proporcionalmente na nova janela.
         </p>
         <ul className="text-xs space-y-1">
           {startMismatch && (
@@ -67,6 +67,21 @@ export function ScheduleSyncAlert({ plannedStart, plannedEnd, activities }: Sche
             </li>
           )}
         </ul>
+        {onRecalculate && (
+          <div className="flex">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onRecalculate}
+              disabled={isBusy}
+              className="gap-1.5 border-warning/50 text-warning hover:bg-warning/10 hover:text-warning"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isBusy ? 'animate-spin' : ''}`} />
+              Recalcular cronograma
+            </Button>
+          </div>
+        )}
       </AlertDescription>
     </Alert>
   );
