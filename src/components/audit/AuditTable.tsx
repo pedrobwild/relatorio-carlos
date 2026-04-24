@@ -7,6 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { AuditDetailModal, getActionConfig } from './AuditDetailModal';
+import { EmptyState } from '@/components/ui-premium';
 import type { AuditoriaWithUser } from '@/infra/repositories/auditoria.repository';
 
 function TableLoading() {
@@ -80,16 +81,15 @@ export function AuditTable({
                 ) : audits.length === 0 ? (
                   <TableBody>
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center">
-                        <div className="flex flex-col items-center gap-2">
-                          <History className="h-8 w-8 text-muted-foreground/30" />
-                          <p className="text-muted-foreground">Nenhum registro encontrado</p>
-                          {hasActiveFilters && (
-                            <Button variant="link" size="sm" onClick={onResetFilters}>
-                              Limpar filtros
-                            </Button>
-                          )}
-                        </div>
+                      <TableCell colSpan={6} className="p-0">
+                        <EmptyState
+                          icon={History}
+                          title="Nenhum registro encontrado"
+                          description={hasActiveFilters ? "Ajuste ou limpe os filtros para ampliar os resultados." : "Não há eventos de auditoria registrados ainda."}
+                          action={hasActiveFilters ? { label: "Limpar filtros", onClick: onResetFilters, variant: "outline" } : undefined}
+                          bare
+                          size="sm"
+                        />
                       </TableCell>
                     </TableRow>
                   </TableBody>
