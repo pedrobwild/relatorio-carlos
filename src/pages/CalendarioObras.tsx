@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
 import { useProjectsWithOverduePrevious } from '@/hooks/useProjectsWithOverduePrevious';
+import { usePurchasesByCreationRange } from '@/hooks/usePurchasesByCreationRange';
 import { useUserRole } from '@/hooks/useUserRole';
 import { EmptyState } from '@/components/ui/states';
 import { ActivityDetailDialog } from '@/components/calendar/ActivityDetailDialog';
