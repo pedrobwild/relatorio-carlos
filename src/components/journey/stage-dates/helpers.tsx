@@ -1,4 +1,5 @@
 import { parseISO } from 'date-fns';
+import { combineDateAndTimeISO } from '@/lib/dates';
 import { CheckCircle2, Clock, CalendarIcon, AlertTriangle } from 'lucide-react';
 import { journeyCopy } from '@/constants/journeyCopy';
 import type { StageDate } from '@/hooks/useStageDates';
@@ -34,10 +35,7 @@ export const statusConfig: Record<DateStatus, { label: string; badgeClass: strin
 export const typeLabels = journeyCopy.dates.types;
 
 export function buildISO(date: Date, time: string): string {
-  const [h, m] = time.split(':').map(Number);
-  const d = new Date(date);
-  d.setHours(h || 0, m || 0, 0, 0);
-  return d.toISOString();
+  return combineDateAndTimeISO(date, time);
 }
 
 // ─── Divergence Warning ───

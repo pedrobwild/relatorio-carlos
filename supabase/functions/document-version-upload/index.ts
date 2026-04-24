@@ -5,6 +5,32 @@ import { logSystemError } from "../_shared/errorLogger.ts";
 
 const FUNCTION_NAME = 'document-version-upload';
 
+// Magic byte signatures for server-side MIME validation.
+// Mirrors document-upload — keep in sync.
+const MAGIC_BYTES: Record<string, number[][]> = {
+  'application/pdf': [[0x25, 0x50, 0x44, 0x46]],
+  'image/png': [[0x89, 0x50, 0x4E, 0x47]],
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+  'image/gif': [[0x47, 0x49, 0x46, 0x38]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]],
+  'application/zip': [[0x50, 0x4B, 0x03, 0x04]],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [[0x50, 0x4B, 0x03, 0x04]],
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [[0x50, 0x4B, 0x03, 0x04]],
+  'application/msword': [[0xD0, 0xCF, 0x11, 0xE0]],
+  'application/vnd.ms-excel': [[0xD0, 0xCF, 0x11, 0xE0]],
+};
+
+function validateMagicBytes(buffer: ArrayBuffer): boolean {
+  const bytes = new Uint8Array(buffer).slice(0, 8);
+  if (bytes.length < 3) return false;
+  for (const signatures of Object.values(MAGIC_BYTES)) {
+    for (const sig of signatures) {
+      if (sig.every((b, i) => bytes[i] === b)) return true;
+    }
+  }
+  return false;
+}
+
 async function computeSHA256(data: ArrayBuffer): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -81,6 +107,16 @@ serve(async (req) => {
 
     // Read file and compute checksum
     const fileBuffer = await file.arrayBuffer();
+
+    // Server-side MIME validation via magic bytes — never trust the client.
+    if (!validateMagicBytes(fileBuffer)) {
+      console.warn(`[${requestId}] Magic byte validation failed for ${file.name} (claimed: ${file.type})`);
+      return jsonResponse({
+        error: 'Tipo de arquivo não reconhecido. O conteúdo não corresponde a um formato permitido.',
+        requestId,
+      }, 400);
+    }
+
     const checksum = await computeSHA256(fileBuffer);
 
     console.log(`[${requestId}] Version upload - File: ${file.name}, Size: ${file.size}, Checksum: ${checksum}, Version: ${nextVersion}`);
