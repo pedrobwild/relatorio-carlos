@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import { invalidateActivityQueries } from '@/lib/queryKeys';
-import { shiftActivityDates } from '@/lib/shiftActivityDates';
+import { shiftActivityDates, type ShiftMode } from '@/lib/shiftActivityDates';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
 
@@ -183,7 +183,15 @@ export function useEditarObraData(projectId: string | undefined) {
     setStudioInfo(prev => ({ ...prev, [field]: value }));
   };
 
-  const saveProject = async () => {
+  // Shift dialog state
+  const [shiftDialogState, setShiftDialogState] = useState<{
+    open: boolean;
+    startChanged: boolean;
+    endChanged: boolean;
+    activityCount: number;
+  }>({ open: false, startChanged: false, endChanged: false, activityCount: 0 });
+
+  const performSave = async (shiftMode: ShiftMode | null) => {
     if (!project) return;
     setSaving(true);
     try {
@@ -214,24 +222,22 @@ export function useEditarObraData(projectId: string | undefined) {
         .eq('id', project.id);
       if (error) throw error;
 
-      // Detect change in planned project dates and shift schedule accordingly
       const oldStart = persistedProjectDatesRef.current.start;
       const oldEnd = persistedProjectDatesRef.current.end;
       const newStart = project.planned_start_date || null;
       const newEnd = project.planned_end_date || null;
-      const datesChanged = oldStart !== newStart || oldEnd !== newEnd;
 
       let shiftedCount = 0;
-      if (datesChanged && activities.length > 0) {
+      if (shiftMode && activities.length > 0) {
         const { activities: shifted, changedIds } = shiftActivityDates(
           activities,
           oldStart,
           oldEnd,
           newStart,
           newEnd,
+          shiftMode,
         );
         if (changedIds.length > 0) {
-          // Persist each changed activity
           const updates = shifted
             .filter(a => changedIds.includes(a.id))
             .map(a =>
@@ -284,8 +290,9 @@ export function useEditarObraData(projectId: string | undefined) {
         cancelled: 'Cancelada',
       };
       const statusLabel = statusLabels[project.status] || project.status;
+      const modeLabel = shiftMode === 'preserve-duration' ? 'duração mantida' : 'proporcional';
       const description = shiftedCount > 0
-        ? `Obra atualizada · Status: ${statusLabel} · ${shiftedCount} atividade(s) realinhada(s)`
+        ? `Obra atualizada · Status: ${statusLabel} · ${shiftedCount} atividade(s) realinhada(s) (${modeLabel})`
         : `Obra atualizada · Status: ${statusLabel}`;
       toast({ title: 'Salvo!', description });
     } catch (err: unknown) {
@@ -295,6 +302,40 @@ export function useEditarObraData(projectId: string | undefined) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveProject = async () => {
+    if (!project) return;
+
+    const oldStart = persistedProjectDatesRef.current.start;
+    const oldEnd = persistedProjectDatesRef.current.end;
+    const newStart = project.planned_start_date || null;
+    const newEnd = project.planned_end_date || null;
+    const startChanged = !!newStart && newStart !== oldStart;
+    const endChanged = !!newEnd && newEnd !== oldEnd;
+    const datesChanged = startChanged || endChanged;
+
+    // If planned project dates changed and there are activities, ask the user how to recalc
+    if (datesChanged && activities.length > 0) {
+      setShiftDialogState({
+        open: true,
+        startChanged,
+        endChanged,
+        activityCount: activities.length,
+      });
+      return;
+    }
+
+    await performSave(null);
+  };
+
+  const handleShiftDialogConfirm = async (mode: ShiftMode | null) => {
+    setShiftDialogState(s => ({ ...s, open: false }));
+    await performSave(mode);
+  };
+
+  const setShiftDialogOpen = (open: boolean) => {
+    setShiftDialogState(s => ({ ...s, open }));
   };
 
   // Activities
@@ -567,5 +608,9 @@ export function useEditarObraData(projectId: string | undefined) {
     handleAddMember,
     handleRemoveMember,
     handleUpdateRole,
+    // Shift dialog
+    shiftDialogState,
+    setShiftDialogOpen,
+    handleShiftDialogConfirm,
   };
 }
