@@ -340,6 +340,10 @@ export function useEditarObraData(projectId: string | undefined) {
         endChanged,
         activityCount: activities.length,
         mode: 'save',
+        oldStart,
+        oldEnd,
+        newStart,
+        newEnd,
       });
       return;
     }
