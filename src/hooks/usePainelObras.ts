@@ -112,6 +112,7 @@ export type PainelObraPatch = Partial<{
   previsao_avanco: string | null;
   status: PainelStatus | null;
   relacionamento: PainelRelacionamento | null;
+  external_budget_id: string | null;
   inicio_oficial: string | null;
   entrega_oficial: string | null;
   inicio_real: string | null;
