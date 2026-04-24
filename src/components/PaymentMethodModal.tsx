@@ -213,17 +213,58 @@ export function PaymentMethodModal({
                 <ChevronDown className={cn('h-4 w-4 transition-transform', openSection === 'pix' && 'rotate-180')} />
               </button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="px-4 py-3 space-y-2 border border-t-0 rounded-b-lg">
-              <Label htmlFor="pix-key" className="text-xs">Chave PIX</Label>
-              <Input
-                id="pix-key"
-                placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
-                value={pixKey}
-                onChange={(e) => setPixKey(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                A chave será exibida ao cliente no momento do pagamento.
-              </p>
+            <CollapsibleContent className="px-4 py-3 space-y-3 border border-t-0 rounded-b-lg">
+              <div className="rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">Tipos aceitos:</p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>CPF (11 dígitos) ou CNPJ (14 dígitos)</li>
+                  <li>E-mail (até 77 caracteres)</li>
+                  <li>Telefone no formato <code className="font-mono">+55DDDNNNNNNNNN</code></li>
+                  <li>Chave aleatória (UUID)</li>
+                  <li>Copia e Cola (BR Code/EMV completo)</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pix-key" className="text-xs">Chave PIX ou Copia e Cola</Label>
+                {pixKey.length > 80 ? (
+                  <Textarea
+                    id="pix-key"
+                    placeholder="Cole aqui a chave ou o código Copia e Cola"
+                    value={pixKey}
+                    onChange={(e) => setPixKey(e.target.value.slice(0, PIX_MAX_LENGTH))}
+                    rows={4}
+                    className="font-mono text-xs"
+                    maxLength={PIX_MAX_LENGTH}
+                  />
+                ) : (
+                  <Input
+                    id="pix-key"
+                    placeholder="CPF, CNPJ, e-mail, +55…, UUID ou Copia e Cola"
+                    value={pixKey}
+                    onChange={(e) => setPixKey(e.target.value.slice(0, PIX_MAX_LENGTH))}
+                    maxLength={PIX_MAX_LENGTH}
+                  />
+                )}
+                <div className="flex items-center justify-between text-xs">
+                  {pixValidation ? (
+                    pixValidation.valid ? (
+                      <span className="flex items-center gap-1 text-success">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        {getPixTypeLabel(pixValidation.type)} válido
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-destructive">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        {pixValidation.error}
+                      </span>
+                    )
+                  ) : (
+                    <span className="text-muted-foreground">A chave será exibida ao cliente no pagamento.</span>
+                  )}
+                  <span className="text-muted-foreground tabular-nums">{pixKey.length}/{PIX_MAX_LENGTH}</span>
+                </div>
+              </div>
             </CollapsibleContent>
           </Collapsible>
 
