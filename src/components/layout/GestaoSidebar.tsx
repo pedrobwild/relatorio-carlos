@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Table2,
   Headset,
+  BarChart3,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -71,9 +72,15 @@ export function GestaoSidebar() {
           path: "/gestao/atividades",
         },
         {
-          label: "Customer Success",
+          label: "CS — Operacional",
           icon: Headset,
-          path: "/gestao/cs",
+          path: "/gestao/cs/operacional",
+          matchPaths: ["/gestao/cs/operacional", "/gestao/cs/"],
+        },
+        {
+          label: "CS — Analytics",
+          icon: BarChart3,
+          path: "/gestao/cs/analytics",
         },
         {
           label: "Não Conformidades",

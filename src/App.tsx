@@ -48,7 +48,8 @@ const Fornecedores = lazy(() => import("./pages/gestao/Fornecedores"));
 const FornecedorDetalhe = lazy(() => import("./pages/gestao/FornecedorDetalhe"));
 const FornecedoresAdmin = lazy(() => import("./pages/gestao/FornecedoresAdmin"));
 const Orcamentos = lazy(() => import("./pages/gestao/Orcamentos"));
-const CsTickets = lazy(() => import("./pages/CsTickets"));
+const CsOperacional = lazy(() => import("./pages/CsOperacional"));
+const CsAnalytics = lazy(() => import("./pages/CsAnalytics"));
 const CsTicketDetalhe = lazy(() => import("./pages/CsTicketDetalhe"));
 const OrcamentoDetalhe = lazy(() => import("./pages/gestao/OrcamentoDetalhe"));
 const NaoConformidadesGlobal = lazy(() => import("./pages/gestao/NaoConformidadesGlobal"));
@@ -176,7 +177,9 @@ const App = () => (
             <Route path="/gestao/nao-conformidades" element={<StaffRoute><GestaoShell>{withSuspense(<NaoConformidadesGlobal />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/atividades" element={<StaffRoute><GestaoShell>{withSuspense(<GestaoAtividades />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/painel-obras" element={<StaffRoute><GestaoShell>{withSuspense(<PainelObras />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/cs" element={<StaffRoute><GestaoShell>{withSuspense(<CsTickets />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/cs" element={<Navigate to="/gestao/cs/operacional" replace />} />
+            <Route path="/gestao/cs/operacional" element={<StaffRoute><GestaoShell>{withSuspense(<CsOperacional />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/cs/analytics" element={<StaffRoute><GestaoShell>{withSuspense(<CsAnalytics />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/cs/:ticketId" element={<StaffRoute><GestaoShell>{withSuspense(<CsTicketDetalhe />)}</GestaoShell></StaffRoute>} />
             <Route path="/arquivos" element={<ProtectedRoute>{withSuspense(<Arquivos />)}</ProtectedRoute>} />
             
