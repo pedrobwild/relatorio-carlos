@@ -130,6 +130,7 @@ export default function FornecedorDetalhe() {
       queryClient.invalidateQueries({ queryKey: ["fornecedor", id] });
       queryClient.invalidateQueries({ queryKey: ["fornecedores"] });
       toast({ title: "Fornecedor atualizado" });
+      clearDraft();
       setEditing(false);
     },
     onError: (err: Error) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
