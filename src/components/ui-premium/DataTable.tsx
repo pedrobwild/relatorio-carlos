@@ -187,6 +187,17 @@ export function DataTable<T>({
                     <button
                       type="button"
                       onClick={() => handleSort(col)}
+                      aria-label={
+                        typeof col.header === 'string'
+                          ? `Ordenar por ${col.header}${
+                              isSorted
+                                ? sort.direction === 'asc'
+                                  ? ' (crescente)'
+                                  : ' (decrescente)'
+                                : ''
+                            }`
+                          : undefined
+                      }
                       className={cn(
                         'inline-flex items-center gap-1 transition-colors hover:text-foreground rounded',
                         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
@@ -196,6 +207,7 @@ export function DataTable<T>({
                       <span>{col.header}</span>
                       {Icon && (
                         <Icon
+                          aria-hidden="true"
                           className={cn(
                             'h-3 w-3 shrink-0',
                             isSorted ? 'opacity-100 text-foreground' : 'opacity-40',
