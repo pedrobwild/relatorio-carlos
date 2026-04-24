@@ -274,6 +274,41 @@ describe('StaffRoute', () => {
   });
 });
 
+describe('CustomerRoute', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthed();
+  });
+
+  it('permite o papel customer', () => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
+
+    const { getByTestId } = render(
+      <MemoryRouter>
+        <CustomerRoute>
+          <TestComponent />
+        </CustomerRoute>
+      </MemoryRouter>,
+    );
+
+    expect(getByTestId('protected-content')).toBeInTheDocument();
+  });
+
+  it('bloqueia papéis staff (ex.: arquitetura)', () => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['arquitetura']));
+
+    const { queryByTestId } = render(
+      <MemoryRouter>
+        <CustomerRoute>
+          <TestComponent />
+        </CustomerRoute>
+      </MemoryRouter>,
+    );
+
+    expect(queryByTestId('protected-content')).not.toBeInTheDocument();
+  });
+});
+
 describe('StaffRoute — cobertura completa de papéis', () => {
   beforeEach(() => {
     vi.clearAllMocks();
