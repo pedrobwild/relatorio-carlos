@@ -867,6 +867,7 @@ export function useEditarObraData(projectId: string | undefined) {
     updatePayment,
     togglePaymentPaid,
     deletePayment,
+    refetchAll: fetchAllData,
     handleAddMember,
     handleRemoveMember,
     handleUpdateRole,

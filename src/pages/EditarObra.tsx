@@ -196,7 +196,15 @@ export default function EditarObra() {
               </TabsContent>
 
               <TabsContent value="pagamentos">
-                <TabPagamentos payments={data.payments} onAdd={data.addPayment} onUpdate={data.updatePayment} onTogglePaid={data.togglePaymentPaid} onDelete={data.deletePayment} />
+                <TabPagamentos
+                  payments={data.payments}
+                  projectId={projectId!}
+                  onAdd={data.addPayment}
+                  onUpdate={data.updatePayment}
+                  onTogglePaid={data.togglePaymentPaid}
+                  onDelete={data.deletePayment}
+                  onRefresh={data.refetchAll}
+                />
               </TabsContent>
 
               <TabsContent value="equipe">
