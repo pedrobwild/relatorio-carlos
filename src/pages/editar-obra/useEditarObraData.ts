@@ -280,7 +280,7 @@ export function useEditarObraData(projectId: string | undefined) {
         ToastAction,
         { altText: 'Desfazer sincronização', onClick: handler },
         'Desfazer'
-      ) as ToastActionElement,
+      ) as unknown as ToastActionElement,
     []
   );
 
