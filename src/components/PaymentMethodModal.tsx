@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, CheckCircle2, ChevronDown, Loader2, Sparkles, Upload, Trash2, FileText, Download } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronDown, Copy, Loader2, Sparkles, Upload, Trash2, FileText, Download, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -353,6 +353,83 @@ export function PaymentMethodModal({
                 <p className="text-xs text-muted-foreground">
                   {boletoCode.replace(/\D/g, '').length}/47 dígitos
                 </p>
+
+                {boletoCode.replace(/\D/g, '').length >= 47 && (
+                  <div className="rounded-lg border border-success/30 bg-success/5 p-3 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-success">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Linha digitável reconhecida
+                    </div>
+                    <p
+                      className="font-mono text-xs leading-relaxed break-all select-all bg-background rounded px-2 py-1.5 border"
+                      aria-label="Linha digitável formatada"
+                    >
+                      {formatBoletoLine(boletoCode)}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs flex-1"
+                        onClick={async () => {
+                          const formatted = formatBoletoLine(boletoCode);
+                          try {
+                            await navigator.clipboard.writeText(formatted);
+                            toast.success('Linha digitável copiada');
+                          } catch {
+                            toast.error('Não foi possível copiar');
+                          }
+                        }}
+                      >
+                        <Copy className="h-3.5 w-3.5 mr-1" />
+                        Copiar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs flex-1"
+                        onClick={async () => {
+                          const digits = boletoCode.replace(/\D/g, '');
+                          try {
+                            await navigator.clipboard.writeText(digits);
+                            toast.success('Apenas dígitos copiados');
+                          } catch {
+                            toast.error('Não foi possível copiar');
+                          }
+                        }}
+                      >
+                        <Copy className="h-3.5 w-3.5 mr-1" />
+                        Só dígitos
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs flex-1"
+                        onClick={() => {
+                          const formatted = formatBoletoLine(boletoCode);
+                          const digits = boletoCode.replace(/\D/g, '');
+                          const content = `Boleto - Parcela #${installmentNumber}\n${description}\n\nLinha digitável:\n${formatted}\n\nApenas dígitos:\n${digits}\n`;
+                          const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `boleto-parcela-${installmentNumber}.txt`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                          toast.success('Arquivo .txt baixado');
+                        }}
+                      >
+                        <FileDown className="h-3.5 w-3.5 mr-1" />
+                        .txt
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CollapsibleContent>
           </Collapsible>
