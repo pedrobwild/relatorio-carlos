@@ -193,9 +193,13 @@ function ProjectCard({
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant="outline" className={cn('text-[10px] shrink-0', statusColors[project.status])}>
-              {statusLabels[project.status] ?? project.status}
-            </Badge>
+            <StatusBadge
+              tone={getTone(PROJECT_STATUS_TONE, project.status)}
+              size="sm"
+              className="shrink-0"
+            >
+              {getLabel(PROJECT_STATUS_LABEL, project.status)}
+            </StatusBadge>
           </TooltipTrigger>
           <TooltipContent side="left" className="text-xs">
             {getTemporalStatusLabel(project.status, null, project.created_at)}
