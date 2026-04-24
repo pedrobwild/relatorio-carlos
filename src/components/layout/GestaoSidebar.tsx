@@ -75,7 +75,6 @@ export function GestaoSidebar() {
           label: "CS — Operacional",
           icon: Headset,
           path: "/gestao/cs/operacional",
-          matchPaths: ["/gestao/cs/operacional", "/gestao/cs/"],
         },
         {
           label: "CS — Analytics",
@@ -141,6 +140,17 @@ export function GestaoSidebar() {
         currentPath === "/gestao" ||
         currentPath.startsWith("/gestao/obra/")
       );
+    }
+    // CS Operacional também ativa para a rota de detalhe do ticket (/gestao/cs/:id)
+    if (item.path === "/gestao/cs/operacional") {
+      if (currentPath === "/gestao/cs/operacional") return true;
+      if (
+        currentPath.startsWith("/gestao/cs/") &&
+        currentPath !== "/gestao/cs/analytics"
+      ) {
+        return true;
+      }
+      return false;
     }
     if (currentPath === item.path) return true;
     if (item.matchPaths?.some((p) => currentPath.startsWith(p))) return true;
