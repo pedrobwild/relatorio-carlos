@@ -3,8 +3,8 @@
  * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
  * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, lazy, Suspense } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -74,6 +74,11 @@ import {
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
+
+// Lazy: a aba Fornecedores carrega o módulo completo só quando ativada.
+const Fornecedores = lazy(() => import('@/pages/gestao/Fornecedores'));
 
 // ----- helpers -----
 const ALL = '__all__';
@@ -276,6 +281,17 @@ export default function PainelObras() {
   const { isStaff, loading: roleLoading } = useUserRole();
   const { obras, isLoading, updateObra } = usePainelObras();
 
+  // Aba ativa sincronizada com a URL (?tab=obras|fornecedores)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab = tabParam === 'fornecedores' ? 'fornecedores' : 'obras';
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === 'obras') next.delete('tab');
+    else next.set('tab', value);
+    setSearchParams(next, { replace: true });
+  };
+
   // Filtros
   const [search, setSearch] = useState('');
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
@@ -455,8 +471,19 @@ export default function PainelObras() {
           flush
         />
 
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-6">
+          <TabsList className="bg-surface-sunken border border-border-subtle">
+            <TabsTrigger value="obras" className="text-xs data-[state=active]:bg-card">
+              Obras
+            </TabsTrigger>
+            <TabsTrigger value="fornecedores" className="text-xs data-[state=active]:bg-card">
+              Fornecedores
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="obras" className="mt-4 focus-visible:outline-none">
         {/* KPI Rail premium — superfície única dividida, não cards soltos */}
-        <div className="mt-6">
+        <div>
           <MetricRail>
             <MetricCard label="Total" value={summary.total} />
             <MetricCard label="Aguardando" value={summary.aguardando} accent="info" />
@@ -620,6 +647,22 @@ export default function PainelObras() {
           </SectionCard>
         )}
         </div>
+          </TabsContent>
+
+          <TabsContent value="fornecedores" className="mt-4 focus-visible:outline-none">
+            <Suspense
+              fallback={
+                <div className="space-y-3 p-4" aria-busy="true" aria-label="Carregando fornecedores">
+                  <PageSkeleton className="h-10 w-64" />
+                  <PageSkeleton className="h-32 w-full" />
+                  <PageSkeleton className="h-96 w-full" />
+                </div>
+              }
+            >
+              <Fornecedores />
+            </Suspense>
+          </TabsContent>
+        </Tabs>
 
       </PageContainer>
     </TooltipProvider>
