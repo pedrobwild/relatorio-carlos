@@ -119,6 +119,7 @@ export function CalendarMonthGrid({
   onActivityClick,
   projectsWithOverduePrevious,
   onReplanSchedule,
+  purchasesByDay,
 }: Props) {
   const monthStart = startOfMonth(refDate);
   const monthEnd = endOfMonth(refDate);
@@ -170,6 +171,7 @@ export function CalendarMonthGrid({
               onActivityClick={onActivityClick}
               projectsWithOverduePrevious={projectsWithOverduePrevious}
               onRequestReplan={handleRequestReplan}
+              purchasesByDay={purchasesByDay}
             />
           ))}
         </div>
