@@ -219,6 +219,7 @@ function WeekRow({
   onActivityClick,
   projectsWithOverduePrevious,
   onRequestReplan,
+  purchasesByDay,
 }: {
   week: Date[];
   monthStart: Date;
@@ -231,6 +232,7 @@ function WeekRow({
   };
   /** Pede confirmação ao usuário antes de navegar para o cronograma. */
   onRequestReplan?: (projectId: string, projectName: string) => void;
+  purchasesByDay?: Map<string, PurchaseCalendarEvent[]>;
 }) {
   // Inline expansion: when true, render every lane (no cap) for this row.
   const [expanded, setExpanded] = useState(false);
