@@ -53,6 +53,9 @@ export interface Payment {
   due_date: string | null;
   paid_at: string | null;
   payment_method: string | null;
+  pix_key: string | null;
+  boleto_code: string | null;
+  boleto_path: string | null;
 }
 
 export interface Engineer {
