@@ -70,6 +70,48 @@ const statusBadgeClass = (s: ServiceTaskStatus): string => {
   }
 };
 
+// ----- urgência de prazo -----
+
+type DueUrgency = 'overdue' | 'today' | 'soon' | 'normal' | 'none';
+
+/** Avalia o prazo da tarefa. Tarefas concluídas/canceladas nunca alertam. */
+function getDueUrgency(
+  dueDate: string | null,
+  status: ServiceTaskStatus,
+): { level: DueUrgency; daysDiff: number | null; label: string } {
+  if (!dueDate || status === 'concluido' || status === 'cancelado') {
+    return { level: 'none', daysDiff: null, label: '' };
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = parseISO(dueDate);
+  const diff = differenceInCalendarDays(due, today);
+  if (diff < 0) {
+    return {
+      level: 'overdue',
+      daysDiff: diff,
+      label: `Atrasado ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`,
+    };
+  }
+  if (diff === 0) return { level: 'today', daysDiff: 0, label: 'Vence hoje' };
+  if (diff <= 2)
+    return { level: 'soon', daysDiff: diff, label: `Vence em ${diff} ${diff === 1 ? 'dia' : 'dias'}` };
+  return { level: 'normal', daysDiff: diff, label: `Vence em ${diff} dias` };
+}
+
+const dueInputClass = (level: DueUrgency): string => {
+  switch (level) {
+    case 'overdue':
+      return 'border-destructive bg-destructive/10 text-destructive font-medium';
+    case 'today':
+      return 'border-warning bg-warning/10 text-warning font-medium';
+    case 'soon':
+      return 'border-warning/50 bg-warning/5 text-warning';
+    default:
+      return '';
+  }
+};
+
 interface Props {
   serviceId: string | null | undefined;
   serviceSaved: boolean;
