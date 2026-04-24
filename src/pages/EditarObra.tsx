@@ -237,6 +237,11 @@ export default function EditarObra() {
       endChanged={data.shiftDialogState.endChanged}
       activityCount={data.shiftDialogState.activityCount}
       onConfirm={data.handleShiftDialogConfirm}
+      activities={data.activities}
+      oldStart={data.shiftDialogState.oldStart}
+      oldEnd={data.shiftDialogState.oldEnd}
+      newStart={data.shiftDialogState.newStart}
+      newEnd={data.shiftDialogState.newEnd}
     />
     </TooltipProvider>
   );
