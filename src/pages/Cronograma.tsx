@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2, GripVertical, ChevronDown, FileText } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, AlertCircle, Upload, Bookmark, ShoppingCart, Wand2, GripVertical, ChevronDown, FileText, ListChecks } from 'lucide-react';
 import { isHoliday } from '@/lib/businessDays';
 import { AIScheduleGenerator } from '@/components/schedule/AIScheduleGenerator';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import { ImportScheduleModal } from '@/components/ImportScheduleModal';
 import { CronogramaMobileView } from '@/components/cronograma/CronogramaMobileView';
+import { ActivityChecklistAndPhotos } from '@/components/cronograma/ActivityChecklistAndPhotos';
+import { useUserRole } from '@/hooks/useUserRole';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { cn } from '@/lib/utils';
 
@@ -186,6 +188,15 @@ const Cronograma = () => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [openDetails, setOpenDetails] = useState<Record<string, boolean>>({});
+  const [openExtras, setOpenExtras] = useState<Record<string, boolean>>({});
+  const { isStaff } = useUserRole();
+
+  // IDs de atividades já persistidas no banco (vs criadas localmente).
+  // Só atividades persistidas podem ter checklist e fotos vinculados.
+  const persistedActivityIds = useMemo(
+    () => new Set(existingActivities.map((a) => a.id)),
+    [existingActivities],
+  );
 
   const clearDragState = useCallback(() => {
     setDraggedIndex(null);
@@ -665,6 +676,24 @@ const Cronograma = () => {
                                 {hasDetail ? 'Descrição da etapa' : 'Fechar descrição'}
                               </button>
                             )}
+                            <button
+                              type="button"
+                              className={cn(
+                                'text-[11px] flex items-center gap-1 transition-colors font-medium',
+                                openExtras[activity.id]
+                                  ? 'text-primary hover:text-primary/80'
+                                  : 'text-muted-foreground/60 hover:text-primary',
+                              )}
+                              onClick={() =>
+                                setOpenExtras((prev) => ({
+                                  ...prev,
+                                  [activity.id]: !prev[activity.id],
+                                }))
+                              }
+                            >
+                              <ListChecks className="h-3 w-3" />
+                              Checklist & fotos
+                            </button>
                           </div>
                         </div>
 
@@ -722,6 +751,19 @@ const Cronograma = () => {
                             placeholder="Descreva o escopo, objetivos e entregas desta etapa do cronograma..."
                             rows={3}
                             className="text-sm resize-none"
+                          />
+                        </div>
+                      )}
+                      {openExtras[activity.id] && projectId && (
+                        <div
+                          className="border-b border-border/30 bg-muted/10 px-4 py-3"
+                          style={{ paddingLeft: 'calc(44px + 56px + 8px)' }}
+                        >
+                          <ActivityChecklistAndPhotos
+                            activityId={activity.id}
+                            projectId={projectId}
+                            isPersisted={persistedActivityIds.has(activity.id)}
+                            canEdit={isStaff}
                           />
                         </div>
                       )}
@@ -813,6 +855,36 @@ const Cronograma = () => {
                       rows={2}
                       className="text-xs resize-none"
                     />
+                  </div>
+                  <div className="pl-8">
+                    <button
+                      type="button"
+                      className={cn(
+                        'text-[11px] flex items-center gap-1 transition-colors font-medium',
+                        openExtras[activity.id]
+                          ? 'text-primary hover:text-primary/80'
+                          : 'text-muted-foreground/60 hover:text-primary',
+                      )}
+                      onClick={() =>
+                        setOpenExtras((prev) => ({
+                          ...prev,
+                          [activity.id]: !prev[activity.id],
+                        }))
+                      }
+                    >
+                      <ListChecks className="h-3 w-3" />
+                      Checklist & fotos
+                    </button>
+                    {openExtras[activity.id] && projectId && (
+                      <div className="mt-2">
+                        <ActivityChecklistAndPhotos
+                          activityId={activity.id}
+                          projectId={projectId}
+                          isPersisted={persistedActivityIds.has(activity.id)}
+                          canEdit={isStaff}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               );
