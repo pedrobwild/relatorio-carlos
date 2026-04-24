@@ -5,6 +5,7 @@ import { GestaoBottomNav } from "@/components/mobile/GestaoBottomNav";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { GlobalSearchDialog } from "@/components/search/GlobalSearchDialog";
+import { AssistantFab } from "@/components/assistant/AssistantFab";
 
 interface GestaoShellProps {
   children: ReactNode;
@@ -33,6 +34,7 @@ export function GestaoShell({ children }: GestaoShellProps) {
         </div>
       </div>
       <GestaoBottomNav />
+      <AssistantFab />
     </SidebarProvider>
   );
 }

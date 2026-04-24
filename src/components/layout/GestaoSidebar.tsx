@@ -11,6 +11,7 @@ import {
   Table2,
   Headset,
   BarChart3,
+  Sparkles,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -67,6 +68,11 @@ export function GestaoSidebar() {
       label: "Ferramentas",
       items: [
         {
+          label: "Assistente IA",
+          icon: Sparkles,
+          path: "/gestao/assistente",
+        },
+        {
           label: "Atividades",
           icon: ClipboardList,
           path: "/gestao/atividades",
@@ -116,6 +122,12 @@ export function GestaoSidebar() {
     {
       label: "Administração",
       items: [
+        {
+          label: "Logs do Assistente",
+          icon: BarChart3,
+          path: "/gestao/assistente/logs",
+          adminOnly: true,
+        },
         {
           label: "Config. Fornecedores",
           icon: Truck,
