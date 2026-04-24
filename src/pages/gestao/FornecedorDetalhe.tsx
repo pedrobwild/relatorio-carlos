@@ -25,6 +25,8 @@ import { invokeFunction } from "@/infra/edgeFunctions";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
 import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
+import { PageSkeleton, EmptyState } from "@/components/ui-premium";
+import { Building2 } from "lucide-react";
 import {
   SUPPLIER_TYPE_LABELS,
   type SupplierType,
@@ -200,19 +202,25 @@ export default function FornecedorDetalhe() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="p-6">
+        <PageSkeleton metrics={false} content="cards" />
       </div>
     );
   }
 
   if (!supplier) {
     return (
-      <div className="p-6 text-center text-muted-foreground">
-        Fornecedor não encontrado.
-        <Button variant="link" onClick={() => navigate("/gestao/fornecedores")}>Voltar</Button>
+      <div className="p-6">
+        <EmptyState
+          icon={Building2}
+          title="Fornecedor não encontrado"
+          description="O cadastro solicitado não existe ou foi removido."
+          action={{ label: "Voltar para fornecedores", onClick: () => navigate("/gestao/fornecedores"), icon: ArrowLeft, variant: "outline" }}
+          size="md"
+        />
       </div>
     );
+  }
   }
 
   const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
