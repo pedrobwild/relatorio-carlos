@@ -15,7 +15,6 @@ import {
   Headset,
   Plus,
   Search,
-  Filter,
   X,
   Pencil,
   Trash2,
@@ -29,9 +28,18 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { PageContainer } from '@/components/layout/PageContainer';
+import {
+  PageHeader,
+  PageToolbar,
+  DataTable,
+  type DataTableColumn,
+  EmptyState,
+  TableSkeleton,
+  StatusBadge,
+  type StatusTone,
+} from '@/components/ui-premium';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -39,14 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,7 +63,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { EmptyState } from '@/components/ui/states';
 import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -81,32 +80,31 @@ import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
 
 const ALL = '__all__';
 
-// ----- helpers visuais -----
-
-const severityClass = (s: CsTicketSeverity): string => {
+// ----- mapeamento semântico para StatusBadge -----
+const severityTone = (s: CsTicketSeverity): StatusTone => {
   switch (s) {
     case 'baixa':
-      return 'bg-muted text-muted-foreground border border-border';
+      return 'muted';
     case 'media':
-      return 'bg-info/10 text-info border border-info/25';
+      return 'info';
     case 'alta':
-      return 'bg-warning/10 text-warning border border-warning/30';
+      return 'warning';
     case 'critica':
-      return 'bg-destructive/10 text-destructive border border-destructive/25';
+      return 'danger';
   }
 };
 
 const severityLabel = (s: CsTicketSeverity): string =>
   CS_SEVERITY_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
-const statusClass = (s: CsTicketStatus): string => {
+const statusTone = (s: CsTicketStatus): StatusTone => {
   switch (s) {
     case 'aberto':
-      return 'bg-info/10 text-info border border-info/25';
+      return 'info';
     case 'em_andamento':
-      return 'bg-warning/10 text-warning border border-warning/30';
+      return 'warning';
     case 'concluido':
-      return 'bg-success/10 text-success border border-success/25';
+      return 'success';
   }
 };
 
@@ -115,6 +113,38 @@ const statusLabel = (s: CsTicketStatus): string =>
 
 const fmtDateTime = (iso: string | null) =>
   iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '—';
+
+// Trigger pílula (mantém affordance de edição, visual semelhante ao StatusBadge)
+const pillTriggerClass = (extra?: string) =>
+  cn(
+    'h-7 w-fit max-w-[160px] text-xs font-medium border-0 px-2 py-0 rounded-md gap-1.5',
+    '[&>svg]:hidden focus:ring-2 focus:ring-ring',
+    extra,
+  );
+
+const severityPillBg = (s: CsTicketSeverity): string => {
+  switch (s) {
+    case 'baixa':
+      return 'bg-muted text-muted-foreground hover:bg-muted/80';
+    case 'media':
+      return 'bg-info/10 text-info hover:bg-info/15';
+    case 'alta':
+      return 'bg-warning/12 text-warning hover:bg-warning/20';
+    case 'critica':
+      return 'bg-destructive/10 text-destructive hover:bg-destructive/15';
+  }
+};
+
+const statusPillBg = (s: CsTicketStatus): string => {
+  switch (s) {
+    case 'aberto':
+      return 'bg-info/10 text-info hover:bg-info/15';
+    case 'em_andamento':
+      return 'bg-warning/12 text-warning hover:bg-warning/20';
+    case 'concluido':
+      return 'bg-success/10 text-success hover:bg-success/15';
+  }
+};
 
 // ============================================================
 // Página
@@ -247,59 +277,269 @@ export default function CsOperacional() {
     setDeleteTarget(null);
   };
 
+  // ----- columns -----
+  const columns: DataTableColumn<CsTicket>[] = useMemo(
+    () => [
+      {
+        id: 'project',
+        header: 'Obra / Cliente',
+        width: 'minmax(220px, 1.4fr)',
+        cell: (t) => (
+          <div className="flex flex-col min-w-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/gestao/obra/${t.project_id}`);
+              }}
+              className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate text-left flex items-center gap-1 group/link"
+            >
+              <span className="truncate">{t.project_name ?? '—'}</span>
+              <ExternalLink className="h-3 w-3 opacity-0 group-hover/link:opacity-100 shrink-0" />
+            </button>
+            {t.customer_name && (
+              <span className="text-xs text-muted-foreground truncate">{t.customer_name}</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: 'situation',
+        header: 'Situação',
+        width: 'minmax(240px, 2fr)',
+        cell: (t) => (
+          <div className="flex flex-col">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/gestao/cs/${t.id}`);
+              }}
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-2 text-left"
+            >
+              {t.situation}
+            </button>
+            {t.description && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5 cursor-help">
+                    {t.description}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-md">
+                  <p className="whitespace-pre-wrap text-xs">{t.description}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: 'severity',
+        header: 'Severidade',
+        width: '140px',
+        cell: (t) => (
+          <Select
+            value={t.severity}
+            onValueChange={(v) => handleSeverityChange(t, v as CsTicketSeverity)}
+          >
+            <SelectTrigger
+              className={pillTriggerClass(severityPillBg(t.severity))}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Severidade: ${severityLabel(t.severity)}`}
+            >
+              <SelectValue>
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className={cn('h-1.5 w-1.5 rounded-full', `bg-${severityTone(t.severity) === 'muted' ? 'muted-foreground' : severityTone(t.severity) === 'danger' ? 'destructive' : severityTone(t.severity)}`)}
+                  />
+                  {severityLabel(t.severity)}
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {CS_SEVERITY_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        width: '160px',
+        cell: (t) => (
+          <Select
+            value={t.status}
+            onValueChange={(v) => handleStatusChange(t, v as CsTicketStatus)}
+          >
+            <SelectTrigger
+              className={pillTriggerClass(statusPillBg(t.status))}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Status: ${statusLabel(t.status)}`}
+            >
+              <SelectValue>
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className={cn('h-1.5 w-1.5 rounded-full', `bg-${statusTone(t.status) === 'danger' ? 'destructive' : statusTone(t.status)}`)}
+                  />
+                  {statusLabel(t.status)}
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {CS_STATUS_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
+      },
+      {
+        id: 'responsible',
+        header: 'Responsável',
+        width: 'minmax(140px, 1fr)',
+        cell: (t) => (
+          <span className="text-sm text-foreground truncate">
+            {t.responsible_name ?? (
+              <span className="text-muted-foreground italic">Não atribuído</span>
+            )}
+          </span>
+        ),
+      },
+      {
+        id: 'updated_at',
+        header: 'Atualizado',
+        width: '160px',
+        cell: (t) => (
+          <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+            {fmtDateTime(t.updated_at)}
+          </span>
+        ),
+      },
+      {
+        id: 'actions',
+        header: 'Ações',
+        width: '120px',
+        align: 'right',
+        cell: (t) => (
+          <div className="flex items-center justify-end gap-0.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/gestao/cs/${t.id}`);
+                  }}
+                  aria-label="Abrir detalhes"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Abrir detalhes</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEdit(t);
+                  }}
+                  aria-label="Editar ticket"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Editar ticket</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget(t);
+                  }}
+                  aria-label="Excluir ticket"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Excluir ticket</TooltipContent>
+            </Tooltip>
+          </div>
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [navigate],
+  );
+
   return (
     <PageContainer>
       <TooltipProvider delayDuration={150}>
-        {/* Cabeçalho */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-              <Headset className="h-5 w-5 text-primary" />
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight">CS — Operacional</h1>
-              <p className="text-sm text-muted-foreground max-w-xl">
-                Gestão diária de tickets vinculados às obras: registre situações, severidade,
-                plano de ação e responsável.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" onClick={() => navigate('/gestao/cs/analytics')}>
-              <BarChart3 className="h-4 w-4 mr-1.5" />
-              Ver analytics
-            </Button>
-            <Button onClick={openNew}>
-              <Plus className="h-4 w-4 mr-1.5" />
-              Novo ticket
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow="Customer Success"
+          title="CS — Operacional"
+          description="Gestão diária de tickets vinculados às obras: registre situações, severidade, plano de ação e responsável."
+          actions={
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/gestao/cs/analytics')}
+                className="h-9"
+              >
+                <BarChart3 className="h-4 w-4 mr-1.5" />
+                Ver analytics
+              </Button>
+              <Button onClick={openNew} size="sm" className="h-9">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Novo ticket
+              </Button>
+            </>
+          }
+          flush
+        />
 
-        {/* Toolbar de filtros */}
-        <div className="rounded-lg border border-border bg-card p-3 mb-4">
-          <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        {/* Toolbar premium — busca + filtros + contador */}
+        <PageToolbar
+          className="mt-2"
+          sticky={false}
+          search={
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar por obra, cliente, situação, responsável…"
-                className="pl-9 h-9"
+                className="h-9 pl-8 text-sm bg-surface border-border-subtle"
               />
             </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Filter className="h-3.5 w-3.5" />
-                Filtros:
-              </div>
+          }
+          filters={
+            <>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-9 w-[150px] text-sm">
-                  <SelectValue />
+                <SelectTrigger className="h-8 w-[140px] text-xs border-border-subtle bg-surface">
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  <SelectItem value={ALL}>Todos os status</SelectItem>
+                  <SelectItem value={ALL}>Todos status</SelectItem>
                   {CS_STATUS_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
@@ -308,11 +548,11 @@ export default function CsOperacional() {
                 </SelectContent>
               </Select>
               <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                <SelectTrigger className="h-9 w-[160px] text-sm">
-                  <SelectValue />
+                <SelectTrigger className="h-8 w-[150px] text-xs border-border-subtle bg-surface">
+                  <SelectValue placeholder="Severidade" />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  <SelectItem value={ALL}>Todas as severidades</SelectItem>
+                  <SelectItem value={ALL}>Todas severidades</SelectItem>
                   {CS_SEVERITY_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
@@ -321,8 +561,8 @@ export default function CsOperacional() {
                 </SelectContent>
               </Select>
               <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="h-9 w-[200px] text-sm">
-                  <SelectValue />
+                <SelectTrigger className="h-8 w-[180px] text-xs border-border-subtle bg-surface">
+                  <SelectValue placeholder="Obra" />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-72">
                   <SelectItem value={ALL}>Todas as obras</SelectItem>
@@ -334,11 +574,11 @@ export default function CsOperacional() {
                 </SelectContent>
               </Select>
               <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
-                <SelectTrigger className="h-9 w-[180px] text-sm">
-                  <SelectValue />
+                <SelectTrigger className="h-8 w-[170px] text-xs border-border-subtle bg-surface">
+                  <SelectValue placeholder="Responsável" />
                 </SelectTrigger>
                 <SelectContent position="popper" className="max-h-72">
-                  <SelectItem value={ALL}>Todos os responsáveis</SelectItem>
+                  <SelectItem value={ALL}>Todos responsáveis</SelectItem>
                   {responsibleOptions.hasUnassigned && (
                     <SelectItem value="__unassigned__">Não atribuído</SelectItem>
                   )}
@@ -350,235 +590,58 @@ export default function CsOperacional() {
                 </SelectContent>
               </Select>
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-8 px-2 text-xs text-muted-foreground"
+                >
                   <X className="h-3.5 w-3.5 mr-1" />
                   Limpar
                 </Button>
               )}
-              <span className="text-xs text-muted-foreground tabular-nums ml-auto">
-                {filtered.length} de {tickets.length}
-              </span>
-            </div>
-          </div>
+            </>
+          }
+          meta={
+            <span className="text-xs text-muted-foreground tabular-nums">
+              <span className="font-semibold text-foreground">{filtered.length}</span>
+              <span className="opacity-60"> / {tickets.length} tickets</span>
+            </span>
+          }
+        />
+
+        {/* Conteúdo */}
+        <div className="mt-4">
+          {isLoading ? (
+            <TableSkeleton rows={6} columns={7} />
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={Headset}
+              title={tickets.length === 0 ? 'Nenhum ticket ainda' : 'Sem resultados'}
+              description={
+                tickets.length === 0
+                  ? 'Crie o primeiro ticket de atendimento da equipe de CS.'
+                  : 'Ajuste os filtros ou limpe a busca para ver mais resultados.'
+              }
+              action={
+                tickets.length === 0
+                  ? { label: 'Novo ticket', onClick: openNew, icon: Plus }
+                  : { label: 'Limpar filtros', onClick: clearFilters, icon: X, variant: 'outline' }
+              }
+            />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={filtered}
+              rowKey={(t) => t.id}
+              density="comfortable"
+              ariaLabel="Tickets de Customer Success"
+            />
+          )}
         </div>
 
-        {/* Tabela */}
-        {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={Headset}
-            title={tickets.length === 0 ? 'Nenhum ticket ainda' : 'Sem resultados'}
-            description={
-              tickets.length === 0
-                ? 'Crie o primeiro ticket de atendimento da equipe de CS.'
-                : 'Ajuste os filtros ou limpe a busca para ver mais resultados.'
-            }
-            action={
-              tickets.length === 0
-                ? { label: 'Novo ticket', onClick: openNew, icon: Plus }
-                : { label: 'Limpar filtros', onClick: clearFilters, icon: X }
-            }
-          />
-        ) : (
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-xs uppercase tracking-wider font-semibold">
-                    Obra / Cliente
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider font-semibold">
-                    Situação
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider font-semibold w-[140px]">
-                    Severidade
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider font-semibold w-[160px]">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider font-semibold">
-                    Responsável
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider font-semibold w-[160px]">
-                    Atualizado
-                  </TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider font-semibold w-[120px] text-right">
-                    Ações
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((t) => (
-                  <TableRow key={t.id} className="align-top">
-                    {/* Obra / Cliente */}
-                    <TableCell className="py-3">
-                      <div className="flex flex-col min-w-0">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/gestao/obra/${t.project_id}`)}
-                          className="text-sm font-semibold text-foreground hover:text-primary transition-colors truncate text-left flex items-center gap-1 group"
-                        >
-                          <span className="truncate">{t.project_name ?? '—'}</span>
-                          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 shrink-0" />
-                        </button>
-                        {t.customer_name && (
-                          <span className="text-xs text-muted-foreground truncate">
-                            {t.customer_name}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    {/* Situação + descrição preview */}
-                    <TableCell className="py-3 max-w-[320px]">
-                      <div className="flex flex-col">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/gestao/cs/${t.id}`)}
-                          className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-2 text-left"
-                        >
-                          {t.situation}
-                        </button>
-                        {t.description && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5 cursor-help">
-                                {t.description}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-md">
-                              <p className="whitespace-pre-wrap text-xs">{t.description}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    {/* Severidade — editável */}
-                    <TableCell className="py-3">
-                      <Select
-                        value={t.severity}
-                        onValueChange={(v) => handleSeverityChange(t, v as CsTicketSeverity)}
-                      >
-                        <SelectTrigger
-                          className={cn(
-                            'h-7 w-[120px] text-xs font-medium border-0 px-2 rounded-md',
-                            severityClass(t.severity),
-                          )}
-                        >
-                          <SelectValue>{severityLabel(t.severity)}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent position="popper">
-                          {CS_SEVERITY_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>
-                              {o.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Status — editável */}
-                    <TableCell className="py-3">
-                      <Select
-                        value={t.status}
-                        onValueChange={(v) => handleStatusChange(t, v as CsTicketStatus)}
-                      >
-                        <SelectTrigger
-                          className={cn(
-                            'h-7 w-[140px] text-xs font-medium border-0 px-2 rounded-md',
-                            statusClass(t.status),
-                          )}
-                        >
-                          <SelectValue>{statusLabel(t.status)}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent position="popper">
-                          {CS_STATUS_OPTIONS.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>
-                              {o.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Responsável */}
-                    <TableCell className="py-3">
-                      <span className="text-sm text-foreground">
-                        {t.responsible_name ?? (
-                          <span className="text-muted-foreground italic">Não atribuído</span>
-                        )}
-                      </span>
-                    </TableCell>
-
-                    {/* Atualizado */}
-                    <TableCell className="py-3 text-xs text-muted-foreground tabular-nums">
-                      {fmtDateTime(t.updated_at)}
-                    </TableCell>
-
-                    {/* Ações */}
-                    <TableCell className="py-3">
-                      <div className="flex items-center justify-end gap-0.5">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => navigate(`/gestao/cs/${t.id}`)}
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Abrir detalhes</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openEdit(t)}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Editar ticket</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteTarget(t)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Excluir ticket</TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
         {/* Dialog de criação/edição */}
-        <CsTicketDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          ticket={editingTicket}
-        />
+        <CsTicketDialog open={dialogOpen} onOpenChange={setDialogOpen} ticket={editingTicket} />
 
         {/* Confirmação de exclusão */}
         <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
