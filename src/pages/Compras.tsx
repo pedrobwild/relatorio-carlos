@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageSkeleton } from '@/components/ui-premium';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,11 +111,8 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
 
   if (state.isLoading) {
     return (
-      <div className="space-y-6 py-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
-        </div>
-        <Skeleton className="h-96" />
+      <div className="py-4">
+        <PageSkeleton metrics content="table" />
       </div>
     );
   }
