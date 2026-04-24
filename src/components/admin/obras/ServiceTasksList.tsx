@@ -7,16 +7,18 @@
  */
 import { useState } from 'react';
 import {
+  AlertTriangle,
   CheckCircle2,
   Circle,
   CircleDashed,
+  Clock,
   ListTodo,
   Loader2,
   Plus,
   Trash2,
   XCircle,
 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { differenceInCalendarDays, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
