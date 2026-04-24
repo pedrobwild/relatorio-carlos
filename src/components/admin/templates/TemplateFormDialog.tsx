@@ -172,7 +172,7 @@ export function TemplateFormDialog({
                             <Input
                               type="number"
                               value={act.durationDays}
-                              onChange={(e) => onUpdateActivity(i, 'durationDays', parseInt(e.target.value) || 1)}
+                              onChange={(e) => onUpdateActivity(i, 'durationDays', parseInt(e.target.value, 10) || 1)}
                               className="h-8 text-sm w-16"
                               min={1}
                             />
@@ -181,7 +181,7 @@ export function TemplateFormDialog({
                             <Input
                               type="number"
                               value={act.weight}
-                              onChange={(e) => onUpdateActivity(i, 'weight', parseInt(e.target.value) || 0)}
+                              onChange={(e) => onUpdateActivity(i, 'weight', parseInt(e.target.value, 10) || 0)}
                               className="h-8 text-sm w-16"
                               min={0}
                               max={100}
