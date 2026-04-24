@@ -3,8 +3,8 @@
  * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
  * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, lazy, Suspense } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
