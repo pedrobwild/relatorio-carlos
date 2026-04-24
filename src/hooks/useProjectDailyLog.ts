@@ -156,19 +156,32 @@ export function useSaveProjectDailyLog() {
       if (upsertErr) throw upsertErr;
       const logId = logRow.id;
 
-      // 2) replace-all dos filhos: simples e previs\u00edvel
-      // 2a) servi\u00e7os
-      const { error: delSvcErr } = await supabase
-        .from('project_daily_log_services')
-        .delete()
-        .eq('daily_log_id', logId);
-      if (delSvcErr) throw delSvcErr;
+      // 2) Sincronização dos filhos:
+      // 2a) Serviços — usamos UPSERT preservando IDs existentes (porque
+      // existem tarefas vinculadas via FK que seriam perdidas com delete-all).
+      // Removemos apenas os que sumiram do payload.
+      const incomingIds = payload.services.map((s) => s.id).filter(Boolean) as string[];
+      if (incomingIds.length > 0) {
+        const { error: delSvcErr } = await supabase
+          .from('project_daily_log_services')
+          .delete()
+          .eq('daily_log_id', logId)
+          .not('id', 'in', `(${incomingIds.join(',')})`);
+        if (delSvcErr) throw delSvcErr;
+      } else {
+        const { error: delSvcErr } = await supabase
+          .from('project_daily_log_services')
+          .delete()
+          .eq('daily_log_id', logId);
+        if (delSvcErr) throw delSvcErr;
+      }
 
       if (payload.services.length > 0) {
-        const { error: insSvcErr } = await supabase
+        const { error: upSvcErr } = await supabase
           .from('project_daily_log_services')
-          .insert(
+          .upsert(
             payload.services.map((s, idx) => ({
+              ...(s.id ? { id: s.id } : {}),
               daily_log_id: logId,
               description: s.description,
               status: s.status,
@@ -177,8 +190,9 @@ export function useSaveProjectDailyLog() {
               end_date: s.end_date,
               position: idx,
             })),
+            { onConflict: 'id' },
           );
-        if (insSvcErr) throw insSvcErr;
+        if (upSvcErr) throw upSvcErr;
       }
 
       // 2b) prestadores
