@@ -7,6 +7,7 @@ import { addBusinessDays, isWeekend } from '@/lib/businessDays';
 import type { ProjectTemplate, TemplateActivity } from '@/hooks/useProjectTemplates';
 import type { FormData } from './types';
 import type { ScheduleActivity } from './ScheduleCard';
+import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
 
 /** Collect non-fatal warnings during submit */
 interface SubmitWarning {
