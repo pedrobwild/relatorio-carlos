@@ -24,6 +24,7 @@ import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface PurchaseWithProject extends ProjectPurchase {
   project_name: string;
+  payment_due_date?: string | null;
 }
 
 // Simplified status set requested for the calendar view.
