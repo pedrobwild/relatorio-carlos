@@ -170,7 +170,15 @@ export default function EditarObra() {
               </TabsList>
 
               <TabsContent value="geral">
-                <TabGeral project={data.project} customer={data.customer} activities={data.activities} onProjectChange={data.handleProjectChange} onCustomerChange={data.handleCustomerChange} />
+                <TabGeral
+                  project={data.project}
+                  customer={data.customer}
+                  activities={data.activities}
+                  onProjectChange={data.handleProjectChange}
+                  onCustomerChange={data.handleCustomerChange}
+                  onRecalculateSchedule={canEdit ? data.recalculateSchedule : undefined}
+                  isSaving={data.saving}
+                />
               </TabsContent>
 
               <TabsContent value="ficha">
