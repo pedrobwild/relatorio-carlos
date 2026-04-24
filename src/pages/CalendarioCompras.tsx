@@ -850,7 +850,20 @@ export default function CalendarioCompras() {
                         return (
                           <TableRow key={p.id}>
                             <TableCell className="font-medium whitespace-nowrap">
-                              {p.planned_purchase_date ? format(parseISO(p.planned_purchase_date), 'dd/MM/yy') : '—'}
+                              <DateCell
+                                value={p.planned_purchase_date}
+                                onSave={(value) =>
+                                  updateDateField.mutate({ id: p.id, field: 'planned_purchase_date', value })
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium whitespace-nowrap">
+                              <DateCell
+                                value={p.payment_due_date}
+                                onSave={(value) =>
+                                  updateDateField.mutate({ id: p.id, field: 'payment_due_date', value })
+                                }
+                              />
                             </TableCell>
                             <TableCell className="whitespace-nowrap max-w-[140px]">
                               <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
