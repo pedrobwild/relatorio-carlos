@@ -18,9 +18,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, FileBarChart, Search, Sparkles, AlertCircle, Clock, Database } from "lucide-react";
+import { Loader2, FileBarChart, Search, Sparkles, AlertCircle, Clock, Database, Download, FileText, FileSpreadsheet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface LogRow {
   id: string;
@@ -114,16 +125,176 @@ export default function AssistenteLogs() {
     return { total, success, errors, avgLatency, totalTokens };
   }, [logs]);
 
+  const exportToCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("Nenhum log para exportar");
+      return;
+    }
+    const headers = [
+      "Data/Hora",
+      "Usuário",
+      "Pergunta",
+      "Resposta (resumo)",
+      "Domínio",
+      "Status",
+      "Linhas retornadas",
+      "Latência (ms)",
+      "Tokens entrada",
+      "Tokens saída",
+      "Tokens total",
+      "Modelo",
+      "Erro",
+      "SQL gerado",
+    ];
+    const escape = (v: unknown) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+    const rows = filtered.map((l) => [
+      new Date(l.created_at).toLocaleString("pt-BR"),
+      userMap[l.user_id] ?? l.user_id,
+      l.question,
+      l.answer_summary ?? "",
+      l.domain ?? "",
+      STATUS_LABELS[l.status]?.label ?? l.status,
+      l.rows_returned ?? "",
+      l.latency_ms ?? "",
+      l.tokens_input ?? "",
+      l.tokens_output ?? "",
+      (l.tokens_input ?? 0) + (l.tokens_output ?? 0),
+      l.model ?? "",
+      l.error_message ?? "",
+      l.generated_sql ?? "",
+    ].map(escape).join(","));
+    const csv = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.href = url;
+    a.download = `assistente-logs-${ts}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`${filtered.length} logs exportados em CSV`);
+  };
+
+  const exportToPDF = () => {
+    if (filtered.length === 0) {
+      toast.error("Nenhum log para exportar");
+      return;
+    }
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const generatedAt = new Date().toLocaleString("pt-BR");
+
+    // Cabeçalho
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Relatório de Auditoria — Assistente IA", 40, 40);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    doc.text(`Gerado em: ${generatedAt}`, 40, 56);
+    doc.text(
+      `${filtered.length} registro(s) · Sucesso: ${stats.success} · Erros: ${stats.errors} · Latência média: ${stats.avgLatency}ms · Tokens: ${stats.totalTokens.toLocaleString("pt-BR")}`,
+      40,
+      70,
+    );
+    doc.setTextColor(0);
+
+    autoTable(doc, {
+      startY: 88,
+      head: [[
+        "Data/Hora",
+        "Usuário",
+        "Pergunta",
+        "Domínio",
+        "Status",
+        "Linhas",
+        "Latência",
+        "Tokens",
+      ]],
+      body: filtered.map((l) => [
+        new Date(l.created_at).toLocaleString("pt-BR"),
+        userMap[l.user_id] ?? l.user_id.slice(0, 8),
+        l.question,
+        l.domain ?? "—",
+        STATUS_LABELS[l.status]?.label ?? l.status,
+        String(l.rows_returned ?? "—"),
+        l.latency_ms ? `${l.latency_ms}ms` : "—",
+        ((l.tokens_input ?? 0) + (l.tokens_output ?? 0)).toLocaleString("pt-BR"),
+      ]),
+      styles: { fontSize: 8, cellPadding: 4, overflow: "linebreak", valign: "top" },
+      headStyles: { fillColor: [31, 41, 55], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: 90 },
+        2: { cellWidth: 260 },
+        3: { cellWidth: 70 },
+        4: { cellWidth: 70 },
+        5: { cellWidth: 45, halign: "right" },
+        6: { cellWidth: 55, halign: "right" },
+        7: { cellWidth: 55, halign: "right" },
+      },
+      didDrawPage: (data) => {
+        const pageCount = doc.getNumberOfPages();
+        const pageNum = data.pageNumber;
+        doc.setFontSize(8);
+        doc.setTextColor(120);
+        doc.text(
+          `BWild · Auditoria do Assistente IA · Página ${pageNum} de ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 16,
+          { align: "center" },
+        );
+        doc.setTextColor(0);
+      },
+      margin: { top: 88, left: 40, right: 40, bottom: 30 },
+    });
+
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    doc.save(`assistente-logs-${ts}.pdf`);
+    toast.success(`${filtered.length} logs exportados em PDF`);
+  };
+
   return (
     <div className="container max-w-7xl py-6 space-y-6">
-      <header>
-        <div className="flex items-center gap-2 mb-1">
-          <FileBarChart className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Logs do Assistente IA</h1>
+      <header className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <FileBarChart className="h-5 w-5 text-primary" />
+            <h1 className="text-2xl font-bold">Logs do Assistente IA</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Histórico técnico de todas as perguntas feitas ao assistente. Apenas equipe interna tem acesso.
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Histórico técnico de todas as perguntas feitas ao assistente. Apenas equipe interna tem acesso.
-        </p>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2" disabled={loading || filtered.length === 0}>
+              <Download className="h-4 w-4" />
+              Exportar
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              Exportar {filtered.length} registro(s)
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={exportToCSV} className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              Baixar CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToPDF} className="gap-2">
+              <FileText className="h-4 w-4" />
+              Baixar PDF (auditoria)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       {/* Stats */}
