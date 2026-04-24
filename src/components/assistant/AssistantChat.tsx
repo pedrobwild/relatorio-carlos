@@ -30,6 +30,8 @@ export interface AssistantMessage {
     sql?: string;
     domain?: string;
     status?: string;
+    phase?: string;
+    statusMessage?: string;
   } | null;
   pending?: boolean;
 }
