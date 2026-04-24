@@ -10,7 +10,7 @@ import { NcManagementPanel } from '@/components/vistorias/NcManagementPanel';
 import { NcKanbanView } from '@/components/vistorias/NcKanbanView';
 import { NcDetailDialog } from '@/components/vistorias/NcDetailDialog';
 import { CreateNcDialog } from '@/components/vistorias/CreateNcDialog';
-import { NcPageSkeleton } from '@/components/skeletons/NcPageSkeleton';
+import { PageSkeleton } from '@/components/ui-premium';
 import { useCan } from '@/hooks/useCan';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +31,7 @@ export default function NaoConformidades() {
     return (
       <div className="py-6">
         <PageContainer maxWidth="full">
-          <NcPageSkeleton />
+          <PageSkeleton metrics={false} content="cards" />
         </PageContainer>
       </div>
     );
