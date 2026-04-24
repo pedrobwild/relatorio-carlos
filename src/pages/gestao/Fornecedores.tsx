@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
+import { TableSkeleton, EmptyState as PremiumEmptyState } from "@/components/ui-premium";
 import {
   SUPPLIER_TYPE_LABELS,
   SUPPLIER_TYPES,
@@ -391,17 +392,18 @@ export default function Fornecedores() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12 text-muted-foreground">
-              Carregando...
+            <div className="p-4">
+              <TableSkeleton rows={6} columns={6} />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
-              <Building2 className="h-10 w-10" />
-              <p>Nenhum fornecedor encontrado</p>
-              <Button variant="outline" size="sm" onClick={openNew}>
-                Cadastrar primeiro fornecedor
-              </Button>
-            </div>
+            <PremiumEmptyState
+              icon={Building2}
+              title="Nenhum fornecedor encontrado"
+              description="Cadastre o primeiro fornecedor ou ajuste os filtros para ver resultados."
+              action={{ label: "Cadastrar fornecedor", onClick: openNew, icon: Plus }}
+              bare
+              size="md"
+            />
           ) : (
             <Table>
               <TableHeader>
