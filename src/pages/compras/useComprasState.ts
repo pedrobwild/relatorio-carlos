@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { format, differenceInDays, parseISO, subDays } from 'date-fns';
 import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { emptyPurchase } from './types';
 import type { PurchaseType } from '@/hooks/useProjectPurchases';
 import type { PaymentInstallment } from './PaymentScheduleSection';
+import { useDialogDraft } from '@/hooks/useDialogDraft';
+import { toast } from 'sonner';
 
 export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   const { projectId } = useParams<{ projectId: string }>();
@@ -26,6 +28,38 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<PurchaseInput>>(emptyPurchase);
   const [paymentInstallments, setPaymentInstallments] = useState<PaymentInstallment[]>([]);
+
+  // Autosave draft for new purchases (per project + type). Editing existing purchases
+  // is not drafted — those are full server-backed records.
+  const draftKey = `compras-${projectId || 'no-project'}-${purchaseTypeFilter || 'all'}`;
+  const draftEnabled = isDialogOpen && !editingPurchase;
+  const { restored: draftRestored, clearDraft, lastSavedAt: draftLastSavedAt } = useDialogDraft<{
+    formData: Partial<PurchaseInput>;
+    paymentInstallments: PaymentInstallment[];
+  }>({
+    key: draftKey,
+    enabled: draftEnabled,
+    values: { formData, paymentInstallments },
+    isDirty: ({ formData: f }) =>
+      !!(f.item_name?.trim() || f.description?.trim() || f.supplier_name?.trim() || f.notes?.trim() || f.estimated_cost),
+    onRestore: (draft) => {
+      if (draft.formData) {
+        setFormData((prev) => ({ ...prev, ...draft.formData }));
+      }
+      if (draft.paymentInstallments && Array.isArray(draft.paymentInstallments)) {
+        setPaymentInstallments(draft.paymentInstallments);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (draftRestored) {
+      toast.info('Rascunho restaurado', {
+        description: 'Recuperamos os dados que você havia preenchido.',
+        duration: 4000,
+      });
+    }
+  }, [draftRestored]);
 
   const handleCategoryFilterChange = (value: string) => {
     setFilterCategory(value);
@@ -204,6 +238,8 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
       } else if (input.purchase_type === 'prestador' && paymentInstallments.length === 0 && editingPurchase) {
         await supabase.from('purchase_payment_schedule').delete().eq('purchase_id', editingPurchase.id);
       }
+      // Successful save → clear any persisted draft
+      clearDraft();
       setIsDialogOpen(false);
     } catch {
       // Error toast already handled by mutation onError
@@ -305,5 +341,6 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
     getDaysUntilRequired,
     addPurchase,
     updatePurchase,
+    draftLastSavedAt,
   };
 }

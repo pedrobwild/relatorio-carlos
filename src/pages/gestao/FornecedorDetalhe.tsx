@@ -31,6 +31,9 @@ import {
   SUPPLIER_TYPE_LABELS,
   type SupplierType,
 } from "@/constants/supplierCategories";
+import { useDialogDraft } from "@/hooks/useDialogDraft";
+import { AutosaveIndicator } from "@/components/ui/AutosaveIndicator";
+import { toast as sonnerToast } from "sonner";
 
 type LegacySupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
 
@@ -97,6 +100,27 @@ export default function FornecedorDetalhe() {
     }
   }, [supplier, editing]);
 
+  // Autosave the in-progress edits to localStorage so the user doesn't lose data
+  // if the tab is closed/refreshed mid-edit. Only active while in edit mode.
+  const { restored: draftRestored, clearDraft, lastSavedAt: draftLastSavedAt } = useDialogDraft<Partial<Supplier>>({
+    key: `fornecedor-edit-${id || 'new'}`,
+    enabled: editing,
+    values: form,
+    isDirty: () => editing, // any edit-mode value is worth persisting
+    onRestore: (draft) => {
+      setForm((prev) => ({ ...prev, ...draft }));
+    },
+  });
+
+  useEffect(() => {
+    if (draftRestored) {
+      sonnerToast.info('Rascunho restaurado', {
+        description: 'Recuperamos as edições que você havia feito neste fornecedor.',
+        duration: 4000,
+      });
+    }
+  }, [draftRestored]);
+
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<Supplier>) => {
       const { error } = await supabase.from("fornecedores").update(data as any).eq("id", id!);
@@ -106,6 +130,7 @@ export default function FornecedorDetalhe() {
       queryClient.invalidateQueries({ queryKey: ["fornecedor", id] });
       queryClient.invalidateQueries({ queryKey: ["fornecedores"] });
       toast({ title: "Fornecedor atualizado" });
+      clearDraft();
       setEditing(false);
     },
     onError: (err: Error) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
@@ -157,6 +182,7 @@ export default function FornecedorDetalhe() {
         ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
       });
     }
+    clearDraft();
     setEditing(false);
   };
 
@@ -273,9 +299,10 @@ export default function FornecedorDetalhe() {
             <p className="text-sm text-muted-foreground mt-0.5">{supplier.razao_social}</p>
           )}
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {editing ? (
             <>
+              <AutosaveIndicator lastSavedAt={draftLastSavedAt} className="hidden sm:inline-flex mr-2" />
               <Button variant="outline" size="sm" className="gap-1.5" onClick={cancelEdit}>
                 <X className="h-4 w-4" /> Cancelar
               </Button>

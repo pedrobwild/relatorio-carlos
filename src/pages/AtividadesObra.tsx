@@ -120,6 +120,7 @@ export default function AtividadesObra() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           onSubmit={handleCreate}
+          draftScope={projectId}
         />
       </PageContainer>
     );
@@ -232,6 +233,7 @@ export default function AtividadesObra() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSubmit={handleCreate}
+        draftScope={projectId}
       />
     </PageContainer>
   );

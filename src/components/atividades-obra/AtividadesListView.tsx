@@ -222,6 +222,7 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
           }
         }}
         initialData={editTask}
+        draftScope={projectId}
       />
 
       <DeleteTaskDialog

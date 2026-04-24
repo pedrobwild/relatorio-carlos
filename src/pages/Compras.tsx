@@ -227,6 +227,7 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         paymentInstallments={state.paymentInstallments}
         onPaymentInstallmentsChange={state.setPaymentInstallments}
         editingPurchaseId={state.editingPurchase?.id}
+        draftLastSavedAt={state.draftLastSavedAt}
       />
 
       <DeletePurchaseDialog

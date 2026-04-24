@@ -117,6 +117,7 @@ export function AtividadesMobileListView({ tasks, isLoading, onUpdateStatus, onD
           }
         }}
         initialData={editTask}
+        draftScope={projectId}
       />
 
       <DeleteTaskDialog

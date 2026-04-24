@@ -14,6 +14,7 @@ import { PaymentScheduleSection, type PaymentInstallment } from './PaymentSchedu
 import { FornecedorSelector } from './FornecedorSelector';
 import { QuickCreateFornecedor } from './QuickCreateFornecedor';
 import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
+import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -38,12 +39,15 @@ interface PurchaseFormDialogProps {
   paymentInstallments: PaymentInstallment[];
   onPaymentInstallmentsChange: (installments: PaymentInstallment[]) => void;
   editingPurchaseId?: string;
+  /** When the form was last autosaved as a draft (only applies to new purchases). */
+  draftLastSavedAt?: Date | null;
 }
 
 export function PurchaseFormDialog({
   open, onOpenChange, isEditing, formData, setFormData,
   activities, onActivityChange, onLeadTimeChange, onSubmit, isSubmitting,
   paymentInstallments, onPaymentInstallmentsChange, editingPurchaseId,
+  draftLastSavedAt,
 }: PurchaseFormDialogProps) {
   const purchaseType = formData.purchase_type || 'produto';
   const isPrestador = purchaseType === 'prestador';
@@ -431,15 +435,20 @@ export function PurchaseFormDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" className="min-h-[44px]" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button
-            className="min-h-[44px]"
-            onClick={onSubmit}
-            disabled={!formData.item_name || !formData.required_by_date || isSubmitting}
-          >
-            {isEditing ? 'Salvar' : 'Adicionar'}
-          </Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {!isEditing ? (
+            <AutosaveIndicator lastSavedAt={draftLastSavedAt ?? null} className="self-center" />
+          ) : <span />}
+          <div className="flex gap-2">
+            <Button variant="outline" className="min-h-[44px]" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button
+              className="min-h-[44px]"
+              onClick={onSubmit}
+              disabled={!formData.item_name || !formData.required_by_date || isSubmitting}
+            >
+              {isEditing ? 'Salvar' : 'Adicionar'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
