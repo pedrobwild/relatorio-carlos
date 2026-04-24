@@ -87,6 +87,11 @@ interface Props {
   };
   /** Callback para navegar até a edição do cronograma daquela obra. */
   onReplanSchedule?: (projectId: string) => void;
+  /**
+   * Mapa YYYY-MM-DD → solicitações de compra criadas naquele dia.
+   * Renderizado como badge no canto superior direito de cada célula do mês.
+   */
+  purchasesByDay?: Map<string, PurchaseCalendarEvent[]>;
 }
 
 // Layout tokens (px). Keeping these fixed guarantees lanes never overlap and
