@@ -736,12 +736,25 @@ export default function CalendarioObras() {
           onActivityClick={setSelectedActivity}
           projectsWithOverduePrevious={projectsWithOverduePrev}
           onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
+          purchasesByDay={
+            projectFilter === 'all'
+              ? purchasesByDay
+              : new Map(
+                  Array.from(purchasesByDay.entries()).map(([k, v]) => [
+                    k,
+                    v.filter((p) => p.project_id === projectFilter),
+                  ]),
+                )
+          }
         />
       ) : view === 'day' ? (
         <CalendarDayAgenda
           day={refDate}
           activities={filteredActivities}
           onActivityClick={setSelectedActivity}
+          dayPurchases={(
+            purchasesByDay.get(format(refDate, 'yyyy-MM-dd')) ?? []
+          ).filter((p) => projectFilter === 'all' || p.project_id === projectFilter)}
         />
       ) : view === 'range' ? (
         <CalendarRangeTimeline
