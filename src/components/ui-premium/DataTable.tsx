@@ -17,7 +17,7 @@
  * Visibilidade de colunas: controlada externamente via `visibleColumnIds`,
  * permitindo persistência via localStorage no consumidor.
  */
-import { type ReactNode, useMemo } from 'react';
+import { Fragment, type KeyboardEvent, type ReactNode, useMemo } from 'react';
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -187,6 +187,17 @@ export function DataTable<T>({
                     <button
                       type="button"
                       onClick={() => handleSort(col)}
+                      aria-label={
+                        typeof col.header === 'string'
+                          ? `Ordenar por ${col.header}${
+                              isSorted
+                                ? sort.direction === 'asc'
+                                  ? ' (crescente)'
+                                  : ' (decrescente)'
+                                : ''
+                            }`
+                          : undefined
+                      }
                       className={cn(
                         'inline-flex items-center gap-1 transition-colors hover:text-foreground rounded',
                         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
@@ -196,6 +207,7 @@ export function DataTable<T>({
                       <span>{col.header}</span>
                       {Icon && (
                         <Icon
+                          aria-hidden="true"
                           className={cn(
                             'h-3 w-3 shrink-0',
                             isSorted ? 'opacity-100 text-foreground' : 'opacity-40',
@@ -216,18 +228,29 @@ export function DataTable<T>({
             const key = rowKey(row, idx);
             const expanded = isRowExpanded?.(row, idx) ?? false;
             const interactive = !!onRowClick;
+            const handleKey = interactive
+              ? (e: KeyboardEvent<HTMLTableRowElement>) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onRowClick?.(row, idx);
+                  }
+                }
+              : undefined;
             return (
-              <>
+              <Fragment key={key}>
                 <tr
-                  key={key}
                   onClick={interactive ? () => onRowClick?.(row, idx) : undefined}
+                  onKeyDown={handleKey}
+                  tabIndex={interactive ? 0 : undefined}
+                  role={interactive ? 'button' : undefined}
+                  aria-expanded={expandedContent ? expanded : undefined}
                   className={cn(
                     densityRow[density],
                     'border-b border-border-subtle transition-colors',
                     'last:border-b-0',
                     zebra && idx % 2 === 1 && 'bg-surface-sunken/40',
                     interactive &&
-                      'cursor-pointer hover:bg-accent/50 focus-within:bg-accent/40',
+                      'cursor-pointer hover:bg-accent/50 focus:outline-none focus-visible:bg-accent/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                   )}
                 >
                   {visibleColumns.map((col) => (
@@ -246,13 +269,13 @@ export function DataTable<T>({
                   ))}
                 </tr>
                 {expanded && expandedContent && (
-                  <tr key={`${key}-expanded`} className="border-b border-border-subtle bg-surface-sunken/40">
+                  <tr className="border-b border-border-subtle bg-surface-sunken/40">
                     <td colSpan={visibleColumns.length} className="px-0 py-0">
                       {expandedContent(row, idx)}
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>

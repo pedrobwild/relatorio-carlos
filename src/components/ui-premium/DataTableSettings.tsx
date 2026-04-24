@@ -163,7 +163,6 @@ export function DataTableSettings<T>({
                             checked={checked}
                             disabled={disabled}
                             onCheckedChange={() => prefs.toggleColumn(col.id)}
-                            aria-label={`Mostrar coluna ${getColumnLabel(col)}`}
                           />
                           <span className="flex-1 truncate">{getColumnLabel(col)}</span>
                           {disabled && (
