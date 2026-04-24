@@ -56,6 +56,7 @@ const NaoConformidadesGlobal = lazy(() => import("./pages/gestao/NaoConformidade
 const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/PainelObras"));
 const Assistente = lazy(() => import("./pages/Assistente"));
+const AssistenteConsultas = lazy(() => import("./pages/AssistenteConsultas"));
 const AssistenteLogs = lazy(() => import("./pages/AssistenteLogs"));
 
 const MinhasObras = lazy(() => import("./pages/MinhasObras"));
@@ -179,6 +180,7 @@ const App = () => (
             <Route path="/gestao/nao-conformidades" element={<StaffRoute><GestaoShell>{withSuspense(<NaoConformidadesGlobal />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/atividades" element={<StaffRoute><GestaoShell>{withSuspense(<GestaoAtividades />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/assistente" element={<StaffRoute><GestaoShell>{withSuspense(<Assistente />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/assistente/consultas" element={<StaffRoute><GestaoShell>{withSuspense(<AssistenteConsultas />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/assistente/logs" element={<AdminRoute><GestaoShell>{withSuspense(<AssistenteLogs />)}</GestaoShell></AdminRoute>} />
             <Route path="/gestao/painel-obras" element={<StaffRoute><GestaoShell>{withSuspense(<PainelObras />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/cs" element={<Navigate to="/gestao/cs/operacional" replace />} />

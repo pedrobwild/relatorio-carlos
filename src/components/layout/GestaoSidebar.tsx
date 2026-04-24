@@ -12,6 +12,7 @@ import {
   Headset,
   BarChart3,
   Sparkles,
+  Search,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -71,6 +72,11 @@ export function GestaoSidebar() {
           label: "Assistente IA",
           icon: Sparkles,
           path: "/gestao/assistente",
+        },
+        {
+          label: "Consultas do Assistente",
+          icon: Search,
+          path: "/gestao/assistente/consultas",
         },
         {
           label: "Atividades",
