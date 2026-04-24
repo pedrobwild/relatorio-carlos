@@ -7,16 +7,18 @@
  */
 import { useState } from 'react';
 import {
+  AlertTriangle,
   CheckCircle2,
   Circle,
   CircleDashed,
+  Clock,
   ListTodo,
   Loader2,
   Plus,
   Trash2,
   XCircle,
 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { differenceInCalendarDays, format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
@@ -68,6 +70,48 @@ const statusBadgeClass = (s: ServiceTaskStatus): string => {
   }
 };
 
+// ----- urgência de prazo -----
+
+type DueUrgency = 'overdue' | 'today' | 'soon' | 'normal' | 'none';
+
+/** Avalia o prazo da tarefa. Tarefas concluídas/canceladas nunca alertam. */
+function getDueUrgency(
+  dueDate: string | null,
+  status: ServiceTaskStatus,
+): { level: DueUrgency; daysDiff: number | null; label: string } {
+  if (!dueDate || status === 'concluido' || status === 'cancelado') {
+    return { level: 'none', daysDiff: null, label: '' };
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = parseISO(dueDate);
+  const diff = differenceInCalendarDays(due, today);
+  if (diff < 0) {
+    return {
+      level: 'overdue',
+      daysDiff: diff,
+      label: `Atrasado ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'dia' : 'dias'}`,
+    };
+  }
+  if (diff === 0) return { level: 'today', daysDiff: 0, label: 'Vence hoje' };
+  if (diff <= 2)
+    return { level: 'soon', daysDiff: diff, label: `Vence em ${diff} ${diff === 1 ? 'dia' : 'dias'}` };
+  return { level: 'normal', daysDiff: diff, label: `Vence em ${diff} dias` };
+}
+
+const dueInputClass = (level: DueUrgency): string => {
+  switch (level) {
+    case 'overdue':
+      return 'border-destructive bg-destructive/10 text-destructive font-medium';
+    case 'today':
+      return 'border-warning bg-warning/10 text-warning font-medium';
+    case 'soon':
+      return 'border-warning/50 bg-warning/5 text-warning';
+    default:
+      return '';
+  }
+};
+
 interface Props {
   serviceId: string | null | undefined;
   serviceSaved: boolean;
@@ -105,6 +149,38 @@ export function ServiceTasksList({ serviceId, serviceSaved }: Props) {
               {completedCount}/{totalCount}
             </Badge>
           )}
+          {(() => {
+            const overdue = tasks.filter(
+              (t) => getDueUrgency(t.due_date, t.status).level === 'overdue',
+            ).length;
+            const today = tasks.filter(
+              (t) => getDueUrgency(t.due_date, t.status).level === 'today',
+            ).length;
+            return (
+              <>
+                {overdue > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1 text-[10px] tabular-nums gap-0.5 bg-destructive/10 text-destructive border-destructive/30"
+                    title={`${overdue} tarefa${overdue > 1 ? 's' : ''} com prazo vencido`}
+                  >
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    {overdue} atrasada{overdue > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {today > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1 text-[10px] tabular-nums gap-0.5 bg-warning/10 text-warning border-warning/30"
+                    title={`${today} tarefa${today > 1 ? 's' : ''} vence${today > 1 ? 'm' : ''} hoje`}
+                  >
+                    <Clock className="h-2.5 w-2.5" />
+                    {today} hoje
+                  </Badge>
+                )}
+              </>
+            );
+          })()}
         </div>
         {totalCount > 0 && (
           <div className="flex items-center gap-1.5 flex-1 max-w-[120px]">
@@ -256,14 +332,39 @@ function TaskRow({ task, staffUsers, onUpdate, onDelete }: TaskRowProps) {
         </SelectContent>
       </Select>
 
-      {/* Prazo */}
-      <Input
-        type="date"
-        value={task.due_date ?? ''}
-        onChange={(e) => onUpdate({ due_date: e.target.value || null })}
-        className="h-6 w-[110px] text-[11px] px-1.5 shrink-0 tabular-nums"
-        title={task.due_date ? format(parseISO(task.due_date), 'dd/MM/yyyy', { locale: ptBR }) : 'Sem prazo'}
-      />
+      {/* Prazo (com indicador de urgência) */}
+      {(() => {
+        const urgency = getDueUrgency(task.due_date, task.status);
+        const showAlert = urgency.level === 'overdue' || urgency.level === 'today';
+        const dateLabel = task.due_date
+          ? format(parseISO(task.due_date), 'dd/MM/yyyy', { locale: ptBR })
+          : 'Sem prazo';
+        const fullTitle = urgency.label ? `${dateLabel} — ${urgency.label}` : dateLabel;
+        return (
+          <div className="relative shrink-0" title={fullTitle}>
+            {showAlert && (
+              <AlertTriangle
+                className={cn(
+                  'absolute -left-1 -top-1 h-3 w-3 z-10 pointer-events-none',
+                  urgency.level === 'overdue' ? 'text-destructive' : 'text-warning',
+                  urgency.level === 'overdue' && 'animate-pulse',
+                )}
+                aria-label={urgency.label}
+              />
+            )}
+            <Input
+              type="date"
+              value={task.due_date ?? ''}
+              onChange={(e) => onUpdate({ due_date: e.target.value || null })}
+              className={cn(
+                'h-6 w-[110px] text-[11px] px-1.5 tabular-nums transition-colors',
+                dueInputClass(urgency.level),
+              )}
+              aria-label={fullTitle}
+            />
+          </div>
+        );
+      })()}
 
       {/* Status */}
       <Select
