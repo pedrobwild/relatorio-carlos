@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import type { Project, Customer } from './types';
+import type { Project, Customer, Activity } from './types';
+import { ScheduleSyncAlert } from './ScheduleSyncAlert';
 
 const STATUS_DESCRIPTIONS: Record<string, string> = {
   active: 'A obra está em execução. O cliente pode acompanhar atualizações pelo portal.',
@@ -19,11 +20,12 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
 interface TabGeralProps {
   project: Project;
   customer: Customer | null;
+  activities?: Activity[];
   onProjectChange: (field: keyof Project, value: string | number | boolean | null) => void;
   onCustomerChange: (field: keyof Customer, value: string | null) => void;
 }
 
-export function TabGeral({ project, customer, onProjectChange, onCustomerChange }: TabGeralProps) {
+export function TabGeral({ project, customer, activities = [], onProjectChange, onCustomerChange }: TabGeralProps) {
   return (
     <div className="space-y-6">
       {/* Project Info */}
@@ -124,6 +126,11 @@ export function TabGeral({ project, customer, onProjectChange, onCustomerChange 
           )}
         </CardHeader>
         <CardContent className="space-y-4">
+          <ScheduleSyncAlert
+            plannedStart={project.planned_start_date}
+            plannedEnd={project.planned_end_date}
+            activities={activities}
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <DateFieldWithPending label="Início Previsto" required={!project.is_project_phase} showPending={project.is_project_phase} value={project.planned_start_date} onChange={(v) => onProjectChange('planned_start_date', v)} id="start" />
             <DateFieldWithPending label="Término Previsto" required={!project.is_project_phase} showPending={project.is_project_phase} value={project.planned_end_date} onChange={(v) => onProjectChange('planned_end_date', v)} id="end" />
