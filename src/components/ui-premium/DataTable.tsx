@@ -17,7 +17,7 @@
  * Visibilidade de colunas: controlada externamente via `visibleColumnIds`,
  * permitindo persistência via localStorage no consumidor.
  */
-import { type ReactNode, useMemo } from 'react';
+import { Fragment, type KeyboardEvent, type ReactNode, useMemo } from 'react';
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
