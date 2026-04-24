@@ -608,5 +608,9 @@ export function useEditarObraData(projectId: string | undefined) {
     handleAddMember,
     handleRemoveMember,
     handleUpdateRole,
+    // Shift dialog
+    shiftDialogState,
+    setShiftDialogOpen,
+    handleShiftDialogConfirm,
   };
 }
