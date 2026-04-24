@@ -435,15 +435,20 @@ export function PurchaseFormDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" className="min-h-[44px]" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button
-            className="min-h-[44px]"
-            onClick={onSubmit}
-            disabled={!formData.item_name || !formData.required_by_date || isSubmitting}
-          >
-            {isEditing ? 'Salvar' : 'Adicionar'}
-          </Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {!isEditing ? (
+            <AutosaveIndicator lastSavedAt={draftLastSavedAt ?? null} className="self-center" />
+          ) : <span />}
+          <div className="flex gap-2">
+            <Button variant="outline" className="min-h-[44px]" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button
+              className="min-h-[44px]"
+              onClick={onSubmit}
+              disabled={!formData.item_name || !formData.required_by_date || isSubmitting}
+            >
+              {isEditing ? 'Salvar' : 'Adicionar'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
