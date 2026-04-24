@@ -60,11 +60,11 @@ export function TabPagamentos({ payments, projectId, onAdd, onUpdate, onTogglePa
         </Card>
         <Card className="p-4">
           <p className="text-tiny text-muted-foreground">Pago</p>
-          <p className="text-h3 font-bold text-green-600">{currencyFmt.format(paidPayments)}</p>
+          <p className="text-h3 font-bold text-emerald-600 dark:text-emerald-400">{currencyFmt.format(paidPayments)}</p>
         </Card>
         <Card className="p-4">
           <p className="text-tiny text-muted-foreground">A Receber</p>
-          <p className="text-h3 font-bold text-amber-600">{currencyFmt.format(totalPayments - paidPayments)}</p>
+          <p className="text-h3 font-bold text-amber-600 dark:text-amber-400">{currencyFmt.format(totalPayments - paidPayments)}</p>
         </Card>
       </div>
 
