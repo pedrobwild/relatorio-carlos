@@ -68,6 +68,136 @@ export type Database = {
           },
         ]
       }
+      assistant_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      assistant_logs: {
+        Row: {
+          answer_summary: string | null
+          conversation_id: string | null
+          created_at: string
+          domain: string | null
+          error_message: string | null
+          generated_sql: string | null
+          id: string
+          latency_ms: number | null
+          model: string | null
+          question: string
+          rows_returned: number | null
+          status: string
+          tokens_input: number | null
+          tokens_output: number | null
+          user_id: string
+        }
+        Insert: {
+          answer_summary?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          domain?: string | null
+          error_message?: string | null
+          generated_sql?: string | null
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          question: string
+          rows_returned?: number | null
+          status?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id: string
+        }
+        Update: {
+          answer_summary?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          domain?: string | null
+          error_message?: string | null
+          generated_sql?: string | null
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          question?: string
+          rows_returned?: number | null
+          status?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          log_id: string | null
+          result_data: Json | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          log_id?: string | null
+          result_data?: Json | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          log_id?: string | null
+          result_data?: Json | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       atividades: {
         Row: {
           created_at: string
@@ -5991,6 +6121,7 @@ export type Database = {
         }
         Returns: string
       }
+      execute_assistant_query: { Args: { p_sql: string }; Returns: Json }
       find_duplicate_file: {
         Args: { p_checksum: string; p_owner_id?: string; p_project_id?: string }
         Returns: {
