@@ -472,6 +472,15 @@ export default function CalendarioObras() {
               <Badge className={statusBadge.overdue.className}>Atrasadas: {counts.overdue}</Badge>
               <Badge className={statusBadge.pending.className}>Pendentes: {counts.pending}</Badge>
               <Badge className={statusBadge.completed.className}>Concluídas: {counts.completed}</Badge>
+              {purchases.length > 0 && (
+                <Badge
+                  className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                  title="Solicitações de compra criadas no período visível"
+                >
+                  <ShoppingCart className="h-3 w-3 mr-1" />
+                  Compras: {purchases.length}
+                </Badge>
+              )}
             </div>
           </div>
 
