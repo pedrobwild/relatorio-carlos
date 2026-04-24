@@ -74,6 +74,11 @@ import {
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
+
+// Lazy: a aba Fornecedores carrega o módulo completo só quando ativada.
+const Fornecedores = lazy(() => import('@/pages/gestao/Fornecedores'));
 
 // ----- helpers -----
 const ALL = '__all__';
