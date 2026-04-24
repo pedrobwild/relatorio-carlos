@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import { useUserRole } from "@/hooks/useUserRole";
+import { cn } from "@/lib/utils";
 
 interface NavItem {
   label: string;
@@ -176,8 +177,8 @@ export function GestaoSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarContent className="pt-2">
+    <Sidebar collapsible="icon" className="border-r border-border-subtle">
+      <SidebarContent className="pt-3 px-1 gap-1">
         {groups.map((group) => {
           const visibleItems = group.items.filter(
             (item) => !item.adminOnly || isAdmin
@@ -185,24 +186,30 @@ export function GestaoSidebar() {
           if (visibleItems.length === 0) return null;
 
           return (
-            <SidebarGroup key={group.label}>
-              <SidebarGroupLabel className="text-sidebar-foreground/60 text-xs font-semibold uppercase tracking-wider">
-                {group.label}
-              </SidebarGroupLabel>
+            <SidebarGroup key={group.label} className="px-1">
+              {!collapsed && (
+                <SidebarGroupLabel className="text-sidebar-foreground/55 text-[10px] font-semibold uppercase tracking-[0.08em] px-2 mb-1">
+                  {group.label}
+                </SidebarGroupLabel>
+              )}
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {visibleItems.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item);
                     return (
                       <SidebarMenuItem key={item.path}>
-                        <SidebarMenuButton asChild isActive={active}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active}
+                          className="h-8 rounded-md text-[13px] data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-primary data-[active=true]:font-semibold"
+                        >
                           <NavLink
                             to={item.path}
-                            className="flex items-center gap-2 w-full"
+                            className="flex items-center gap-2.5 w-full"
                             activeClassName=""
                           >
-                            <Icon className="h-4 w-4 shrink-0" />
+                            <Icon className={cn("h-[15px] w-[15px] shrink-0", active ? "text-sidebar-primary" : "text-sidebar-foreground/70")} />
                             {!collapsed && (
                               <span className="truncate">{item.label}</span>
                             )}

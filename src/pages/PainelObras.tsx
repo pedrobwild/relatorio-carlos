@@ -9,7 +9,6 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon,
-  Filter,
   X,
   AlertTriangle,
   Table2,
@@ -18,11 +17,12 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
-  LayoutGrid,
   Headset,
   ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -426,156 +426,156 @@ export default function PainelObras() {
   return (
     <TooltipProvider delayDuration={200}>
       <PageContainer maxWidth="full">
-        {/* Header */}
-        <header className="flex flex-col gap-1 pt-6 pb-4 border-b border-border/60">
-          <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <LayoutGrid className="h-[18px] w-[18px]" strokeWidth={2} />
-            </div>
-            <div>
-              <h1 className="text-h2 font-bold tracking-tight leading-tight">Painel de Obras</h1>
-              <p className="text-sm text-muted-foreground leading-snug">
-                Visão executiva unificada de todas as obras
-              </p>
-            </div>
-          </div>
-        </header>
+        <PageHeader
+          eyebrow="Operações"
+          title="Painel de Obras"
+          description="Cockpit operacional unificado — monitore status, prazos e relacionamento de todas as obras em execução."
+          actions={
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/gestao/cs/operacional')}
+                className="h-9 gap-2"
+              >
+                <Headset className="h-4 w-4" />
+                <span className="hidden sm:inline">Customer Success</span>
+                <ArrowRight className="h-3.5 w-3.5 opacity-60" />
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate('/gestao/nova-obra')}
+                className="h-9 gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Nova obra
+              </Button>
+            </>
+          }
+          flush
+        />
 
-        {/* KPI Cards — semantic grid, coerente com o restante do sistema */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-4">
-          <KpiCard label="Total" value={summary.total} />
-          <KpiCard label="Aguardando" value={summary.aguardando} accent="info" />
-          <KpiCard label="Em dia" value={summary.emDia} accent="success" />
-          <KpiCard label="Atrasadas" value={summary.atrasadas} accent="destructive" />
-          <KpiCard label="Paralisadas" value={summary.paralisadas} accent="muted" />
+        {/* KPI Rail premium — superfície única dividida, não cards soltos */}
+        <div className="mt-6">
+          <MetricRail>
+            <MetricCard label="Total" value={summary.total} />
+            <MetricCard label="Aguardando" value={summary.aguardando} accent="info" />
+            <MetricCard label="Em dia" value={summary.emDia} accent="success" />
+            <MetricCard label="Atrasadas" value={summary.atrasadas} accent="destructive" />
+            <MetricCard label="Paralisadas" value={summary.paralisadas} accent="muted" />
+          </MetricRail>
         </div>
 
-        {/* Atalhos rápidos — módulos auxiliares */}
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-          <button
-            type="button"
-            onClick={() => navigate('/gestao/cs/operacional')}
-            className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 text-left transition-all hover:border-primary/40 hover:bg-accent/30 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary shrink-0 group-hover:bg-primary/15 transition-colors">
-              <Headset className="h-4 w-4" />
+        {/* Toolbar premium — busca dominante, filtros enxutos, ações à direita */}
+        <PageToolbar
+          className="mt-6"
+          sticky={false}
+          search={
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar obra, cliente ou responsável…"
+                className="h-9 pl-8 text-sm bg-surface border-border-subtle"
+              />
             </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-semibold text-foreground">Customer Success</span>
-              <span className="text-xs text-muted-foreground truncate">
-                Tickets de atendimento e plano de ação
-              </span>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-          </button>
-        </div>
+          }
+          filters={
+            <>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="h-8 w-[140px] text-xs border-border-subtle bg-surface">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos status</SelectItem>
+                  <SelectItem value={NONE}>(sem status)</SelectItem>
+                  {STATUS_OPTIONS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      <span className="flex items-center gap-2">
+                        <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))} />
+                        {s}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        {/* Toolbar — busca + filtros agrupados */}
-        <div className="mt-4 rounded-lg border border-border bg-card p-2.5 flex items-center gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[240px] max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar obra, cliente ou responsável…"
-              className="h-9 pl-8 text-sm"
-            />
-          </div>
+              <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+                <SelectTrigger className="h-8 w-[150px] text-xs border-border-subtle bg-surface">
+                  <SelectValue placeholder="Etapa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todas etapas</SelectItem>
+                  <SelectItem value={NONE}>(sem etapa)</SelectItem>
+                  {ETAPA_OPTIONS.map((e) => (
+                    <SelectItem key={e} value={e}>
+                      {e}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <div className="hidden md:flex items-center gap-1 text-xs text-muted-foreground border-l border-border/60 pl-2 ml-1">
-            <Filter className="h-3.5 w-3.5" />
-            <span className="font-medium">Filtrar</span>
-          </div>
+              <Select value={filterRelacionamento} onValueChange={setFilterRelacionamento}>
+                <SelectTrigger className="h-8 w-[160px] text-xs border-border-subtle bg-surface">
+                  <SelectValue placeholder="Relacionamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
+                  <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
+                  {RELACIONAMENTO_OPTIONS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Select value={filterEtapa} onValueChange={setFilterEtapa}>
-            <SelectTrigger className="h-9 w-[160px] text-sm">
-              <SelectValue placeholder="Etapa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todas etapas</SelectItem>
-              <SelectItem value={NONE}>(sem etapa)</SelectItem>
-              {ETAPA_OPTIONS.map((e) => (
-                <SelectItem key={e} value={e}>
-                  {e}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              {hasFilters && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  Limpar
+                </Button>
+              )}
+            </>
+          }
+          meta={
+            <span className="text-xs text-muted-foreground tabular-nums">
+              <span className="font-semibold text-foreground">{filtered.length}</span>
+              <span className="opacity-60"> / {obras.length} obras</span>
+            </span>
+          }
+        />
 
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="h-9 w-[140px] text-sm">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos status</SelectItem>
-              <SelectItem value={NONE}>(sem status)</SelectItem>
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>
-                  <span className="flex items-center gap-2">
-                    <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(s))} />
-                    {s}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterRelacionamento} onValueChange={setFilterRelacionamento}>
-            <SelectTrigger className="h-9 w-[170px] text-sm">
-              <SelectValue placeholder="Relacionamento" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
-              <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
-              {RELACIONAMENTO_OPTIONS.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {hasFilters && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={clearFilters}
-              className="h-9 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5 mr-1" />
-              Limpar
-            </Button>
-          )}
-
-          <span className="text-xs text-muted-foreground ml-auto tabular-nums px-1">
-            <span className="font-semibold text-foreground">{filtered.length}</span>
-            <span className="opacity-60"> / {obras.length} obras</span>
-          </span>
-        </div>
-
-        {/* Tabela densa */}
+        {/* Tabela premium — confortável, dividers sutis, sem header pesado */}
         <div className="mt-4">
         {isLoading ? (
-          <Skeleton className="h-96 w-full rounded-lg" />
+          <Skeleton className="h-96 w-full rounded-xl" />
         ) : filtered.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card p-8">
+          <SectionCard>
             <EmptyState
               icon={Table2}
               title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
               description={
                 obras.length === 0
-                  ? 'Crie uma nova obra a partir do menu lateral.'
+                  ? 'Crie uma nova obra a partir do botão acima.'
                   : 'Tente ajustar ou limpar os filtros.'
               }
             />
-          </div>
+          </SectionCard>
         ) : (
-          <div className="rounded-lg border border-border overflow-x-auto bg-card shadow-sm">
-            <Table className="text-sm [&_th]:h-10 [&_td]:py-2 [&_td]:px-2.5 [&_th]:px-2.5 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-muted/60 [&_th]:uppercase [&_th]:tracking-wider [&_tr]:border-border">
+          <SectionCard flush>
+            <div className="overflow-x-auto">
+            <Table className="text-sm [&_th]:h-11 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
+                <TableRow className="hover:bg-transparent border-b border-border-subtle">
                   {/* === Única coluna fixa === */}
-                  <TableHead className="min-w-[260px] sticky left-0 z-20 bg-muted/60 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]">
+                  <TableHead className="min-w-[260px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">
                     Cliente / Obra
                   </TableHead>
 
@@ -600,7 +600,7 @@ export default function PainelObras() {
                   <TableHead className="min-w-[110px]">
                     <SortableHeader label="Atualizado" sortKey="ultima_atualizacao" />
                   </TableHead>
-                  <TableHead className="w-16 sticky right-0 bg-muted/60 border-l border-border"></TableHead>
+                  <TableHead className="w-16 sticky right-0 bg-surface-sunken border-l border-border-subtle"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -616,7 +616,8 @@ export default function PainelObras() {
                 ))}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </SectionCard>
         )}
         </div>
 
@@ -625,66 +626,7 @@ export default function PainelObras() {
   );
 }
 
-// ----- KPI Card (semantic, coerente com PortfolioKpiStrip) -----
-type KpiAccent = 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'muted';
-
-const kpiAccentMap: Record<KpiAccent, { dot: string; value: string; ring: string }> = {
-  default: {
-    dot: 'bg-primary',
-    value: 'text-foreground',
-    ring: '',
-  },
-  info: {
-    dot: 'bg-info',
-    value: 'text-info',
-    ring: '',
-  },
-  success: {
-    dot: 'bg-success',
-    value: 'text-success',
-    ring: '',
-  },
-  warning: {
-    dot: 'bg-warning',
-    value: 'text-warning',
-    ring: '',
-  },
-  destructive: {
-    dot: 'bg-destructive',
-    value: 'text-destructive',
-    ring: '',
-  },
-  muted: {
-    dot: 'bg-muted-foreground',
-    value: 'text-muted-foreground',
-    ring: '',
-  },
-};
-
-function KpiCard({
-  label,
-  value,
-  accent = 'default',
-}: {
-  label: string;
-  value: number;
-  accent?: KpiAccent;
-}) {
-  const cfg = kpiAccentMap[accent];
-  return (
-    <div className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:bg-accent/30">
-      <span className={cn('h-2 w-2 rounded-full shrink-0', cfg.dot)} aria-hidden />
-      <div className="flex flex-col min-w-0 leading-tight">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium truncate">
-          {label}
-        </span>
-        <span className={cn('text-xl font-bold tabular-nums leading-none mt-0.5', cfg.value)}>
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
+// (KpiCard legado removido — substituído por MetricCard/MetricRail premium)
 
 // ----- row component -----
 const PAINEL_COLUMN_COUNT = 12;
