@@ -507,7 +507,15 @@ export function PaymentMethodModal({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={saving || !method}>
+          <Button
+            onClick={handleSave}
+            disabled={
+              saving ||
+              !method ||
+              (method === 'boleto' && boletoDigits.length > 0 && boletoValidation?.valid === false) ||
+              (method === 'pix' && pixKey.trim().length > 0 && pixValidation?.valid === false)
+            }
+          >
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Salvar
           </Button>
