@@ -4499,6 +4499,7 @@ export type Database = {
       project_payments: {
         Row: {
           amount: number
+          boleto_code: string | null
           boleto_path: string | null
           created_at: string
           description: string
@@ -4509,10 +4510,12 @@ export type Database = {
           paid_at: string | null
           payment_method: string | null
           payment_proof_path: string | null
+          pix_key: string | null
           project_id: string
         }
         Insert: {
           amount: number
+          boleto_code?: string | null
           boleto_path?: string | null
           created_at?: string
           description: string
@@ -4523,10 +4526,12 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           payment_proof_path?: string | null
+          pix_key?: string | null
           project_id: string
         }
         Update: {
           amount?: number
+          boleto_code?: string | null
           boleto_path?: string | null
           created_at?: string
           description?: string
@@ -4537,6 +4542,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           payment_proof_path?: string | null
+          pix_key?: string | null
           project_id?: string
         }
         Relationships: [
