@@ -76,9 +76,9 @@ export function ProjectsListViewProjetos({ projects }: Props) {
 
                   {/* Status */}
                   <TableCell className="text-center">
-                    <Badge variant="outline" className={`${statusColors[project.status]} text-[10px] whitespace-nowrap`}>
-                      {statusLabels[project.status]}
-                    </Badge>
+                    <StatusBadge tone={getTone(PROJECT_STATUS_TONE, project.status)} size="sm">
+                      {getLabel(PROJECT_STATUS_LABEL, project.status)}
+                    </StatusBadge>
                   </TableCell>
 
                   {/* Current Stage Name */}
@@ -93,9 +93,13 @@ export function ProjectsListViewProjetos({ projects }: Props) {
                   {/* Stage Status */}
                   <TableCell className="text-center">
                     {stage ? (
-                      <span className={`text-xs font-medium ${stageStatusColors[stage.currentStageStatus] || 'text-muted-foreground'}`}>
+                      <StatusBadge
+                        tone={stageStatusTones[stage.currentStageStatus] ?? 'neutral'}
+                        size="sm"
+                        variant="outline"
+                      >
                         {stageStatusLabels[stage.currentStageStatus] || stage.currentStageStatus}
-                      </span>
+                      </StatusBadge>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
