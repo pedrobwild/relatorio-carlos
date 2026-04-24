@@ -342,7 +342,9 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
   }
 
   const status = message.result_data?.status;
-  const isError = status && status !== "success";
+  const isStreaming = status === "streaming";
+  const isError = status && status !== "success" && status !== "streaming";
+  const phaseMessage = message.result_data?.statusMessage;
 
   return (
     <div className="flex justify-start">
@@ -371,13 +373,16 @@ function MessageBubble({ message }: { message: AssistantMessage }) {
           {message.pending ? (
             <div className="flex items-center gap-2 text-muted-foreground py-1">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-xs">Consultando dados...</span>
+              <span className="text-xs">{phaseMessage ?? "Consultando dados..."}</span>
             </div>
           ) : (
             <div className="prose prose-sm max-w-none dark:prose-invert prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-headings:mt-2 prose-headings:mb-1 prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0.5">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {message.content || "_Sem resposta_"}
               </ReactMarkdown>
+              {isStreaming && (
+                <span className="inline-block w-1.5 h-4 -mb-0.5 ml-0.5 bg-primary/70 animate-pulse rounded-sm align-middle" />
+              )}
             </div>
           )}
 
