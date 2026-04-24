@@ -119,7 +119,19 @@ export function createQueryPersister(): Persister | null {
   return {
     persistClient: async (client: PersistedClient) => {
       try {
-        const serialized = JSON.stringify(client);
+        // Strip queries opted out via `meta: { persist: false }`.
+        // Used for queries holding short-lived data (signed URLs, tokens)
+        // where restoring from localStorage would resurrect expired values.
+        const filteredClient: PersistedClient = {
+          ...client,
+          clientState: {
+            ...client.clientState,
+            queries: client.clientState.queries.filter(
+              (q) => (q.meta as { persist?: boolean } | undefined)?.persist !== false,
+            ),
+          },
+        };
+        const serialized = JSON.stringify(filteredClient);
         safeStorage.setItem(STORAGE_KEY, serialized);
       } catch (error) {
         console.warn('[QueryPersist] Failed to persist client:', error);
