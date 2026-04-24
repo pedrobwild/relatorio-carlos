@@ -183,13 +183,15 @@ export function useEditarObraData(projectId: string | undefined) {
     setStudioInfo(prev => ({ ...prev, [field]: value }));
   };
 
-  // Shift dialog state
+  // Shift dialog state. `mode = 'save'` runs the full save flow (default).
+  // `mode = 'recalc-only'` only realigns the schedule without saving project fields.
   const [shiftDialogState, setShiftDialogState] = useState<{
     open: boolean;
     startChanged: boolean;
     endChanged: boolean;
     activityCount: number;
-  }>({ open: false, startChanged: false, endChanged: false, activityCount: 0 });
+    mode: 'save' | 'recalc-only';
+  }>({ open: false, startChanged: false, endChanged: false, activityCount: 0, mode: 'save' });
 
   const performSave = async (shiftMode: ShiftMode | null) => {
     if (!project) return;
