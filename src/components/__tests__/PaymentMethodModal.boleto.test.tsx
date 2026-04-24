@@ -134,7 +134,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
     const { container } = renderModal();
 
     const file = makePdfFile();
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
     expect(input).toBeTruthy();
 
     await userEvent.upload(input, file);
@@ -179,7 +179,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
     h.mockFunctionsInvoke.mockResolvedValue({ data: { code: partial }, error: null });
 
     const { container } = renderModal();
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
     await userEvent.upload(input, makePdfFile());
 
     await waitFor(() => expect(h.mockFunctionsInvoke).toHaveBeenCalled());
@@ -195,7 +195,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
     h.mockFunctionsInvoke.mockResolvedValue({ data: { code: '' }, error: null });
 
     const { container } = renderModal();
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
     await userEvent.upload(input, makePdfFile());
 
     await waitFor(() => expect(h.mockFunctionsInvoke).toHaveBeenCalled());
@@ -209,7 +209,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
     h.mockFunctionsInvoke.mockResolvedValue({ data: null, error: new Error('AI gateway down') });
 
     const { container } = renderModal();
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
     await userEvent.upload(input, makePdfFile());
 
     await waitFor(() => expect(h.mockFunctionsInvoke).toHaveBeenCalled());
@@ -223,7 +223,7 @@ describe('PaymentMethodModal — fluxo de boleto + IA', () => {
     h.mockUpload.mockResolvedValue({ data: null, error: new Error('storage 500') });
 
     const { container } = renderModal();
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = document.body.querySelector('input[type="file"]') as HTMLInputElement;
     await userEvent.upload(input, makePdfFile());
 
     await waitFor(() => expect(h.mockUpload).toHaveBeenCalled());
