@@ -29,6 +29,38 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
   const [formData, setFormData] = useState<Partial<PurchaseInput>>(emptyPurchase);
   const [paymentInstallments, setPaymentInstallments] = useState<PaymentInstallment[]>([]);
 
+  // Autosave draft for new purchases (per project + type). Editing existing purchases
+  // is not drafted — those are full server-backed records.
+  const draftKey = `compras-${projectId || 'no-project'}-${purchaseTypeFilter || 'all'}`;
+  const draftEnabled = isDialogOpen && !editingPurchase;
+  const { restored: draftRestored, clearDraft, lastSavedAt: draftLastSavedAt } = useDialogDraft<{
+    formData: Partial<PurchaseInput>;
+    paymentInstallments: PaymentInstallment[];
+  }>({
+    key: draftKey,
+    enabled: draftEnabled,
+    values: { formData, paymentInstallments },
+    isDirty: ({ formData: f }) =>
+      !!(f.item_name?.trim() || f.description?.trim() || f.supplier_name?.trim() || f.notes?.trim() || f.estimated_cost),
+    onRestore: (draft) => {
+      if (draft.formData) {
+        setFormData((prev) => ({ ...prev, ...draft.formData }));
+      }
+      if (draft.paymentInstallments && Array.isArray(draft.paymentInstallments)) {
+        setPaymentInstallments(draft.paymentInstallments);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (draftRestored) {
+      toast.info('Rascunho restaurado', {
+        description: 'Recuperamos os dados que você havia preenchido.',
+        duration: 4000,
+      });
+    }
+  }, [draftRestored]);
+
   const handleCategoryFilterChange = (value: string) => {
     setFilterCategory(value);
     // Reset subcategory when category changes
