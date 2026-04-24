@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -17,24 +16,10 @@ import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import { getTemporalStatusLabel } from '@/lib/temporalStatus';
 import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/ui-premium';
+import { PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, getLabel, getTone } from '@/lib/statusTones';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-slate-500/10 text-slate-600 border-slate-400/20',
-  active: 'bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20',
-  completed: 'bg-primary/10 text-primary border-primary/20',
-  paused: 'bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20',
-  cancelled: 'bg-muted text-muted-foreground border-border',
-};
-
-const statusLabels: Record<string, string> = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  completed: 'Concluída',
-  paused: 'Pausada',
-  cancelled: 'Cancelada',
-};
 
 interface ProjectsCardViewProps {
   projects: ProjectWithCustomer[];
