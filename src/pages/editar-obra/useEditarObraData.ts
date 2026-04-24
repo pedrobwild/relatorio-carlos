@@ -9,6 +9,16 @@ import { shiftActivityDates, type ShiftMode } from '@/lib/shiftActivityDates';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
 import React from 'react';
+import { ToastAction } from '@/components/ui/toast';
+import type { ToastActionElement } from '@/components/ui/toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
+import { invalidateActivityQueries } from '@/lib/queryKeys';
+import { shiftActivityDates, type ShiftMode } from '@/lib/shiftActivityDates';
+import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
+import type { StudioInfo } from './TabFichaTecnica';
 
 /**
  * Snapshot used to undo the last schedule shift.
@@ -18,7 +28,7 @@ import React from 'react';
 type ShiftUndoSnapshot = {
   /** 'save' = both project + activity dates were saved; 'recalc-only' = only activities changed. */
   origin: 'save' | 'recalc-only';
-  activities: Array<{ id: string; planned_start: string | null; planned_end: string | null }>;
+  activities: Array<{ id: string; planned_start: string; planned_end: string }>;
   /** Previous persisted project dates — only meaningful when origin === 'save'. */
   projectStart: string | null;
   projectEnd: string | null;
