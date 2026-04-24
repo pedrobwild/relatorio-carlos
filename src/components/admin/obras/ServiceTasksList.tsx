@@ -332,14 +332,39 @@ function TaskRow({ task, staffUsers, onUpdate, onDelete }: TaskRowProps) {
         </SelectContent>
       </Select>
 
-      {/* Prazo */}
-      <Input
-        type="date"
-        value={task.due_date ?? ''}
-        onChange={(e) => onUpdate({ due_date: e.target.value || null })}
-        className="h-6 w-[110px] text-[11px] px-1.5 shrink-0 tabular-nums"
-        title={task.due_date ? format(parseISO(task.due_date), 'dd/MM/yyyy', { locale: ptBR }) : 'Sem prazo'}
-      />
+      {/* Prazo (com indicador de urgência) */}
+      {(() => {
+        const urgency = getDueUrgency(task.due_date, task.status);
+        const showAlert = urgency.level === 'overdue' || urgency.level === 'today';
+        const dateLabel = task.due_date
+          ? format(parseISO(task.due_date), 'dd/MM/yyyy', { locale: ptBR })
+          : 'Sem prazo';
+        const fullTitle = urgency.label ? `${dateLabel} — ${urgency.label}` : dateLabel;
+        return (
+          <div className="relative shrink-0" title={fullTitle}>
+            {showAlert && (
+              <AlertTriangle
+                className={cn(
+                  'absolute -left-1 -top-1 h-3 w-3 z-10 pointer-events-none',
+                  urgency.level === 'overdue' ? 'text-destructive' : 'text-warning',
+                  urgency.level === 'overdue' && 'animate-pulse',
+                )}
+                aria-label={urgency.label}
+              />
+            )}
+            <Input
+              type="date"
+              value={task.due_date ?? ''}
+              onChange={(e) => onUpdate({ due_date: e.target.value || null })}
+              className={cn(
+                'h-6 w-[110px] text-[11px] px-1.5 tabular-nums transition-colors',
+                dueInputClass(urgency.level),
+              )}
+              aria-label={fullTitle}
+            />
+          </div>
+        );
+      })()}
 
       {/* Status */}
       <Select
