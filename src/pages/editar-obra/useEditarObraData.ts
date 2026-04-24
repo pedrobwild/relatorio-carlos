@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import { invalidateActivityQueries } from '@/lib/queryKeys';
+import { shiftActivityDates } from '@/lib/shiftActivityDates';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
 
@@ -44,6 +45,8 @@ export function useEditarObraData(projectId: string | undefined) {
   });
 
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Snapshot of project planned dates as last persisted (used to detect shift on save)
+  const persistedProjectDatesRef = useRef<{ start: string | null; end: string | null }>({ start: null, end: null });
 
   // Cleanup debounce timers on unmount
   useEffect(() => {
@@ -70,6 +73,10 @@ export function useEditarObraData(projectId: string | undefined) {
         .single();
       if (projectError) throw projectError;
       setProject(projectData);
+      persistedProjectDatesRef.current = {
+        start: projectData?.planned_start_date ?? null,
+        end: projectData?.planned_end_date ?? null,
+      };
 
       const { data: customerData } = await supabase
         .from('project_customers')
@@ -207,6 +214,44 @@ export function useEditarObraData(projectId: string | undefined) {
         .eq('id', project.id);
       if (error) throw error;
 
+      // Detect change in planned project dates and shift schedule accordingly
+      const oldStart = persistedProjectDatesRef.current.start;
+      const oldEnd = persistedProjectDatesRef.current.end;
+      const newStart = project.planned_start_date || null;
+      const newEnd = project.planned_end_date || null;
+      const datesChanged = oldStart !== newStart || oldEnd !== newEnd;
+
+      let shiftedCount = 0;
+      if (datesChanged && activities.length > 0) {
+        const { activities: shifted, changedIds } = shiftActivityDates(
+          activities,
+          oldStart,
+          oldEnd,
+          newStart,
+          newEnd,
+        );
+        if (changedIds.length > 0) {
+          // Persist each changed activity
+          const updates = shifted
+            .filter(a => changedIds.includes(a.id))
+            .map(a =>
+              supabase
+                .from('project_activities')
+                .update({ planned_start: a.planned_start, planned_end: a.planned_end })
+                .eq('id', a.id)
+            );
+          const results = await Promise.all(updates);
+          const failed = results.find(r => r.error);
+          if (failed?.error) throw failed.error;
+          setActivities(shifted);
+          shiftedCount = changedIds.length;
+          if (projectId) invalidateActivityQueries(projectId);
+        }
+      }
+
+      // Update snapshot to reflect newly persisted state
+      persistedProjectDatesRef.current = { start: newStart, end: newEnd };
+
       if (customer) {
         const { error: customerError } = await supabase
           .from('project_customers')
@@ -239,7 +284,10 @@ export function useEditarObraData(projectId: string | undefined) {
         cancelled: 'Cancelada',
       };
       const statusLabel = statusLabels[project.status] || project.status;
-      toast({ title: 'Salvo!', description: `Obra atualizada · Status: ${statusLabel}` });
+      const description = shiftedCount > 0
+        ? `Obra atualizada · Status: ${statusLabel} · ${shiftedCount} atividade(s) realinhada(s)`
+        : `Obra atualizada · Status: ${statusLabel}`;
+      toast({ title: 'Salvo!', description });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       console.error('Error saving:', err);
