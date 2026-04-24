@@ -128,6 +128,8 @@ function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
   if ('previsao_avanco' in patch) out.painel_previsao_avanco = patch.previsao_avanco;
   if ('status' in patch) out.painel_status = patch.status;
   if ('relacionamento' in patch) out.painel_relacionamento = patch.relacionamento;
+  if ('external_budget_id' in patch)
+    out.painel_external_budget_id = patch.external_budget_id;
   if ('inicio_oficial' in patch) out.planned_start_date = patch.inicio_oficial;
   if ('entrega_oficial' in patch) out.planned_end_date = patch.entrega_oficial;
   if ('inicio_real' in patch) out.actual_start_date = patch.inicio_real;
