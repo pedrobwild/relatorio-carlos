@@ -128,12 +128,30 @@ export function PaymentMethodModal({
     );
   };
 
+  const pixValidation = useMemo(() => {
+    if (!pixKey.trim()) return null;
+    return validatePixKey(pixKey);
+  }, [pixKey]);
+
   const handleSave = async () => {
+    // Validação PIX antes de salvar
+    if (method === 'pix') {
+      const result = validatePixKey(pixKey);
+      if (!result.valid) {
+        toast.error(result.error || 'Chave PIX inválida');
+        setOpenSection('pix');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
+      const normalizedPix = method === 'pix' && pixKey.trim()
+        ? validatePixKey(pixKey).normalized
+        : null;
       const updates: { payment_method: string | null; pix_key: string | null; boleto_code: string | null } = {
         payment_method: method || null,
-        pix_key: method === 'pix' ? (pixKey.trim() || null) : null,
+        pix_key: method === 'pix' ? normalizedPix : null,
         boleto_code: method === 'boleto' ? (boletoCode.replace(/\D/g, '') || null) : null,
       };
       const { error } = await supabase.from('project_payments').update(updates).eq('id', paymentId);
