@@ -939,6 +939,14 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen }: ObraRow
         </Select>
       </TableCell>
 
+      {/* Orçamento público (link externo bwildengine.com) */}
+      <TableCell>
+        <ExternalBudgetCell
+          value={obra.external_budget_id}
+          onChange={(id) => onUpdate({ external_budget_id: id })}
+        />
+      </TableCell>
+
       {/* Última atualização */}
       <TableCell>
         <Tooltip>
