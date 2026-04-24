@@ -138,6 +138,9 @@ export function useDocuments(projectId: string | undefined) {
     gcTime: 30 * 60 * 1000, // 30 minutes (signed URLs valid for 1 hour)
     refetchOnWindowFocus: true, // Ensure documents refresh when user switches tabs
     placeholderData: (previousData) => previousData, // Keep previous data while refetching
+    // Signed URLs expire in 1h. Persisting them to localStorage would restore
+    // expired URLs after a reload, breaking previews. Always refetch fresh.
+    meta: { persist: false },
   });
 
   // Approve document mutation with optimistic update
@@ -313,5 +316,7 @@ export function useDocument(documentId: string | undefined) {
     },
     enabled: !!documentId,
     staleTime: 2 * 60 * 1000, // 2 minutes (match list query)
+    // Signed URL expires in 1h — never restore from localStorage.
+    meta: { persist: false },
   });
 }

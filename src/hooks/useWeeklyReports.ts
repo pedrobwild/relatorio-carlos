@@ -100,14 +100,49 @@ export function useWeeklyReports({ projectId }: UseWeeklyReportsOptions) {
       
       reportLogger.end(operationId, { level: 'success', data: { weekNumber } });
     },
+    // Optimistic update: write to cache immediately so the UI doesn't flicker
+    // while the upsert is in flight, especially on slow connections.
+    onMutate: async ({ weekNumber, weekStart, weekEnd, data }) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousReports = queryClient.getQueryData<WeeklyReportRow[]>(queryKey);
+
+      const nowIso = new Date().toISOString();
+      queryClient.setQueryData<WeeklyReportRow[]>(queryKey, (old = []) => {
+        const existingIdx = old.findIndex((r) => r.week_number === weekNumber);
+        const optimisticRow: WeeklyReportRow = {
+          id: existingIdx >= 0 ? old[existingIdx].id : `optimistic-${weekNumber}`,
+          project_id: projectId!,
+          week_number: weekNumber,
+          week_start: weekStart,
+          week_end: weekEnd,
+          available_at: existingIdx >= 0 ? old[existingIdx].available_at : null,
+          data: data as unknown as Json,
+          created_by: existingIdx >= 0 ? old[existingIdx].created_by : null,
+          created_at: existingIdx >= 0 ? old[existingIdx].created_at : nowIso,
+          updated_by: existingIdx >= 0 ? old[existingIdx].updated_by : null,
+          updated_at: nowIso,
+        };
+        if (existingIdx >= 0) {
+          const next = [...old];
+          next[existingIdx] = optimisticRow;
+          return next;
+        }
+        return [...old, optimisticRow].sort((a, b) => a.week_number - b.week_number);
+      });
+
+      return { previousReports };
+    },
     onSuccess: () => {
-      // Only invalidate on success - this refreshes the cache with saved data
+      // Refetch to replace the optimistic row with the canonical server row
+      // (real id, timestamps, etc.).
       queryClient.invalidateQueries({ queryKey });
       toast.success("Relatório salvo com sucesso!");
     },
-    onError: (err) => {
-      // IMPORTANT: Do NOT invalidate queries on error
-      // This prevents stale/empty data from overwriting local edits
+    onError: (_err, _vars, context) => {
+      // Roll back to the snapshot so we don't leave a fake row in the cache.
+      if (context?.previousReports !== undefined) {
+        queryClient.setQueryData(queryKey, context.previousReports);
+      }
       toast.error("Erro ao salvar relatório. Suas alterações foram mantidas, tente novamente.");
     },
     onSettled: () => {
