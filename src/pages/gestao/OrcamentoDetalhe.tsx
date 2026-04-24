@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { formatBRL } from '@/lib/formatBRL';
+import { PageSkeleton, EmptyState } from '@/components/ui-premium';
 
 // Status config
 const STATUSES: Record<string, { label: string; className: string }> = {
