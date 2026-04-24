@@ -1,7 +1,7 @@
-import { format, parseISO, isPast } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { parseISO, isPast } from 'date-fns';
 import { CalendarIcon, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatBR } from '@/lib/dates';
 import { useStageDates, type StageDate } from '@/hooks/useStageDates';
 import { Skeleton } from '@/components/ui/skeleton';
 import { journeyCopy } from '@/constants/journeyCopy';
@@ -69,7 +69,7 @@ export function UpcomingDatesBar({ projectId }: UpcomingDatesBarProps) {
               <span aria-hidden>{emoji}</span>
               <span className="font-medium truncate max-w-[120px]">{sd.title}</span>
               <span className="text-[11px] tabular-nums whitespace-nowrap">
-                {format(parseISO(effDate), "dd/MM", { locale: ptBR })}
+                {formatBR(effDate, 'dd/MM')}
               </span>
               {isConfirmed ? (
                 <CheckCircle2 className="h-3 w-3 shrink-0" />
