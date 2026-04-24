@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectMembers, type ProjectRole } from '@/hooks/useProjectMembers';
 import { invalidateActivityQueries } from '@/lib/queryKeys';
-import { shiftActivityDates } from '@/lib/shiftActivityDates';
+import { shiftActivityDates, type ShiftMode } from '@/lib/shiftActivityDates';
 import type { Project, Customer, Activity, Payment, Engineer, AvailableEngineer } from './types';
 import type { StudioInfo } from './TabFichaTecnica';
 
