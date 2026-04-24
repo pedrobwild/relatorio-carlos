@@ -99,10 +99,16 @@ export function useAuth() {
           isSameSession: newSession?.access_token === lastSessionId.current,
         });
         
-        // CRITICAL: Ignore TOKEN_REFRESHED to prevent re-renders on tab switch
-        // This event fires when the browser refreshes the JWT token in the background
+        // TOKEN_REFRESHED: only sync the cached access token, no re-render needed.
+        // We must NOT skip this entirely — if another tab signed out, the token
+        // here may differ and we need to update lastSessionId to keep tabs in sync.
         if (event === 'TOKEN_REFRESHED') {
-          debugAuth('Ignoring TOKEN_REFRESHED event');
+          if (newSession?.access_token === lastSessionId.current) {
+            debugAuth('Ignoring TOKEN_REFRESHED for same access token');
+            return;
+          }
+          lastSessionId.current = newSession?.access_token ?? null;
+          debugAuth('TOKEN_REFRESHED with new access token, updated ref');
           return;
         }
         
@@ -114,8 +120,10 @@ export function useAuth() {
             return;
           }
 
-          // CRITICAL: Clear query cache on sign out to prevent data leaking between users
+          // CRITICAL: Cancel in-flight queries BEFORE clearing cache to prevent
+          // responses from the previous user landing in the next user's cache.
           if (event === 'SIGNED_OUT') {
+            queryClient.cancelQueries().catch(() => { /* ignore */ });
             queryClient.clear();
             clearPersistedCache();
             clearRoleCache();
@@ -162,7 +170,14 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     debugAuth('signOut called');
     clearRoleCache();
-    // CRITICAL: Clear all query cache to prevent data leaking between users
+    // CRITICAL: Cancel in-flight queries first, then clear the cache.
+    // Without cancelQueries, a fetch already on the wire would settle
+    // AFTER clear() and leak the previous user's data into the new session.
+    try {
+      await queryClient.cancelQueries();
+    } catch {
+      // ignore cancellation errors
+    }
     queryClient.clear();
     clearPersistedCache();
     const authStorageKey = `sb-${import.meta.env.VITE_SUPABASE_PROJECT_ID}-auth-token`;

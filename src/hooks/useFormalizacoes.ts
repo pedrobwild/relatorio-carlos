@@ -124,9 +124,13 @@ export function useCreateFormalizacao() {
 
       return result;
     },
-    onSuccess: () => {
-      // Use centralized query key for consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
+    onSuccess: (result) => {
+      // Scope invalidation to the affected project to avoid refetch storms
+      // across unrelated obras open in other tabs.
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.list({ projectId: result.project_id ?? undefined }),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.lists() });
     },
   });
 }
@@ -182,10 +186,13 @@ export function useUpdateFormalizacao() {
 
       return result;
     },
-    onSuccess: (_, { id }) => {
-      // Use centralized query keys for consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
+    onSuccess: (result, { id }) => {
+      // Detail covers the edited record; lists() refreshes any list view
+      // without nuking the cache of unrelated projects.
       queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(id) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.list({ projectId: result?.project_id ?? undefined }),
+      });
     },
   });
 }
@@ -262,10 +269,11 @@ export function useSendForSignature() {
 
       return result;
     },
-    onSuccess: (_, id) => {
-      // Use centralized query keys for consistency
+    onSuccess: (result, id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formalizacoes.list({ projectId: result?.project_id ?? undefined }),
+      });
     },
   });
 }
@@ -404,7 +412,7 @@ export function useAcknowledge() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.detail(result.formalization_id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.lists() });
       // Invalidate pending items so the Pendências tab updates immediately
       queryClient.invalidateQueries({ queryKey: queryKeys.pendingItems.all });
     },
@@ -448,6 +456,7 @@ export function useDeleteFormalizacao() {
       return { id };
     },
     onSuccess: () => {
+      // Delete is rare and may affect any list view → use the broad key here.
       queryClient.invalidateQueries({ queryKey: queryKeys.formalizacoes.all });
     },
   });
