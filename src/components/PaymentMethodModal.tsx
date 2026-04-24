@@ -12,6 +12,7 @@ import { useBoletoUpload, useBoletoDelete, downloadBoleto } from '@/hooks/useBol
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { validatePixKey, getPixTypeLabel, PIX_MAX_LENGTH } from '@/lib/pixValidation';
+import { validateBoletoLine } from '@/lib/boletoValidation';
 
 type PaymentMethod = 'pix' | 'boleto' | 'cartao' | 'transferencia' | 'cheque' | '';
 
@@ -133,6 +134,12 @@ export function PaymentMethodModal({
     return validatePixKey(pixKey);
   }, [pixKey]);
 
+  const boletoDigits = useMemo(() => boletoCode.replace(/\D/g, ''), [boletoCode]);
+  const boletoValidation = useMemo(() => {
+    if (boletoDigits.length === 0) return null;
+    return validateBoletoLine(boletoDigits);
+  }, [boletoDigits]);
+
   const handleSave = async () => {
     // Validação PIX antes de salvar
     if (method === 'pix') {
@@ -140,6 +147,16 @@ export function PaymentMethodModal({
       if (!result.valid) {
         toast.error(result.error || 'Chave PIX inválida');
         setOpenSection('pix');
+        return;
+      }
+    }
+
+    // Validação da linha digitável do boleto antes de salvar
+    if (method === 'boleto' && boletoDigits.length > 0) {
+      const result = validateBoletoLine(boletoDigits);
+      if (!result.valid) {
+        toast.error(result.error || 'Linha digitável inválida');
+        setOpenSection('boleto');
         return;
       }
     }
@@ -152,7 +169,7 @@ export function PaymentMethodModal({
       const updates: { payment_method: string | null; pix_key: string | null; boleto_code: string | null } = {
         payment_method: method || null,
         pix_key: method === 'pix' ? normalizedPix : null,
-        boleto_code: method === 'boleto' ? (boletoCode.replace(/\D/g, '') || null) : null,
+        boleto_code: method === 'boleto' ? (boletoDigits || null) : null,
       };
       const { error } = await supabase.from('project_payments').update(updates).eq('id', paymentId);
       if (error) throw error;
