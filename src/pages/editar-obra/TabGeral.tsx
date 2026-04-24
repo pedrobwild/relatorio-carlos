@@ -23,9 +23,11 @@ interface TabGeralProps {
   activities?: Activity[];
   onProjectChange: (field: keyof Project, value: string | number | boolean | null) => void;
   onCustomerChange: (field: keyof Customer, value: string | null) => void;
+  onRecalculateSchedule?: () => void;
+  isSaving?: boolean;
 }
 
-export function TabGeral({ project, customer, activities = [], onProjectChange, onCustomerChange }: TabGeralProps) {
+export function TabGeral({ project, customer, activities = [], onProjectChange, onCustomerChange, onRecalculateSchedule, isSaving }: TabGeralProps) {
   return (
     <div className="space-y-6">
       {/* Project Info */}
@@ -130,6 +132,8 @@ export function TabGeral({ project, customer, activities = [], onProjectChange, 
             plannedStart={project.planned_start_date}
             plannedEnd={project.planned_end_date}
             activities={activities}
+            onRecalculate={onRecalculateSchedule}
+            isBusy={isSaving}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <DateFieldWithPending label="Início Previsto" required={!project.is_project_phase} showPending={project.is_project_phase} value={project.planned_start_date} onChange={(v) => onProjectChange('planned_start_date', v)} id="start" />
