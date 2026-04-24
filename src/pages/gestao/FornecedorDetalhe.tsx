@@ -221,7 +221,6 @@ export default function FornecedorDetalhe() {
       </div>
     );
   }
-  }
 
   const InfoItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
     return (
