@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Table2,
   Headset,
+  BarChart3,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -71,9 +72,14 @@ export function GestaoSidebar() {
           path: "/gestao/atividades",
         },
         {
-          label: "Customer Success",
+          label: "CS — Operacional",
           icon: Headset,
-          path: "/gestao/cs",
+          path: "/gestao/cs/operacional",
+        },
+        {
+          label: "CS — Analytics",
+          icon: BarChart3,
+          path: "/gestao/cs/analytics",
         },
         {
           label: "Não Conformidades",
@@ -134,6 +140,17 @@ export function GestaoSidebar() {
         currentPath === "/gestao" ||
         currentPath.startsWith("/gestao/obra/")
       );
+    }
+    // CS Operacional também ativa para a rota de detalhe do ticket (/gestao/cs/:id)
+    if (item.path === "/gestao/cs/operacional") {
+      if (currentPath === "/gestao/cs/operacional") return true;
+      if (
+        currentPath.startsWith("/gestao/cs/") &&
+        currentPath !== "/gestao/cs/analytics"
+      ) {
+        return true;
+      }
+      return false;
     }
     if (currentPath === item.path) return true;
     if (item.matchPaths?.some((p) => currentPath.startsWith(p))) return true;

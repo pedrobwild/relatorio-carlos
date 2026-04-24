@@ -1,5 +1,5 @@
 /**
- * CsTickets — Módulo de Customer Success.
+ * CsOperacional — Módulo operacional de Customer Success.
  *
  * Lista, filtra e gerencia tickets de atendimento da equipe de CS.
  * Cada ticket vincula uma obra/cliente, situação, severidade, status,
@@ -7,8 +7,10 @@
  *
  * Acesso: toda a equipe staff (admin, manager, engineer, gestor, cs,
  * arquitetura, suprimentos, financeiro). Clientes não têm acesso.
+ *
+ * Para a visão executiva agregada, ver `CsAnalytics`.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Headset,
   Plus,
@@ -21,6 +23,7 @@ import {
   Loader2,
   ExternalLink,
   Eye,
+  BarChart3,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -62,7 +65,7 @@ import {
 } from '@/components/ui/tooltip';
 import { EmptyState } from '@/components/ui/states';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
   CS_SEVERITY_OPTIONS,
@@ -75,7 +78,6 @@ import {
   useUpdateCsTicket,
 } from '@/hooks/useCsTickets';
 import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
-import { CsDashboard } from '@/components/cs/CsDashboard';
 
 const ALL = '__all__';
 
@@ -117,17 +119,26 @@ const fmtDateTime = (iso: string | null) =>
 // ============================================================
 // Página
 // ============================================================
-export default function CsTickets() {
+export default function CsOperacional() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: tickets = [], isLoading } = useCsTickets();
   const updateMutation = useUpdateCsTicket();
   const deleteMutation = useDeleteCsTicket();
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>(ALL);
-  const [severityFilter, setSeverityFilter] = useState<string>(ALL);
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') ?? ALL);
+  const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') ?? ALL);
   const [projectFilter, setProjectFilter] = useState<string>(ALL);
   const [responsibleFilter, setResponsibleFilter] = useState<string>(ALL);
+
+  // Limpa querystring após aplicar para não engessar a navegação subsequente
+  useEffect(() => {
+    if (searchParams.get('status') || searchParams.get('severity')) {
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<CsTicket | null>(null);
@@ -202,18 +213,6 @@ export default function CsTickets() {
     });
   }, [tickets, search, statusFilter, severityFilter, projectFilter, responsibleFilter]);
 
-  const handleDashboardFilter = ({
-    status,
-    severity,
-  }: {
-    status?: CsTicketStatus | null;
-    severity?: CsTicketSeverity | null;
-  }) => {
-    if (status !== undefined) setStatusFilter(status ?? ALL);
-    if (severity !== undefined) setSeverityFilter(severity ?? ALL);
-    if (status === null && severity === null) setSearch('');
-  };
-
   const clearFilters = () => {
     setSearch('');
     setStatusFilter(ALL);
@@ -258,21 +257,24 @@ export default function CsTickets() {
               <Headset className="h-5 w-5 text-primary" />
             </div>
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight">Customer Success</h1>
+              <h1 className="text-2xl font-bold tracking-tight">CS — Operacional</h1>
               <p className="text-sm text-muted-foreground max-w-xl">
-                Gerencie tickets de atendimento das obras: registre situações, severidade, plano de
-                ação e responsável.
+                Gestão diária de tickets vinculados às obras: registre situações, severidade,
+                plano de ação e responsável.
               </p>
             </div>
           </div>
-          <Button onClick={openNew} className="shrink-0">
-            <Plus className="h-4 w-4 mr-1.5" />
-            Novo ticket
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" onClick={() => navigate('/gestao/cs/analytics')}>
+              <BarChart3 className="h-4 w-4 mr-1.5" />
+              Ver analytics
+            </Button>
+            <Button onClick={openNew}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Novo ticket
+            </Button>
+          </div>
         </div>
-
-        {/* Dashboard executivo */}
-        <CsDashboard tickets={tickets} onFilter={handleDashboardFilter} />
 
         {/* Toolbar de filtros */}
         <div className="rounded-lg border border-border bg-card p-3 mb-4">
@@ -466,18 +468,11 @@ export default function CsTickets() {
                       >
                         <SelectTrigger
                           className={cn(
-                            'h-8 text-xs font-semibold border-0 px-2.5 rounded-md w-fit min-w-[110px]',
+                            'h-7 w-[120px] text-xs font-medium border-0 px-2 rounded-md',
                             severityClass(t.severity),
                           )}
                         >
-                          <SelectValue>
-                            <span className="flex items-center gap-1.5">
-                              {t.severity === 'critica' && (
-                                <AlertTriangle className="h-3 w-3" />
-                              )}
-                              {severityLabel(t.severity)}
-                            </span>
-                          </SelectValue>
+                          <SelectValue>{severityLabel(t.severity)}</SelectValue>
                         </SelectTrigger>
                         <SelectContent position="popper">
                           {CS_SEVERITY_OPTIONS.map((o) => (
@@ -497,7 +492,7 @@ export default function CsTickets() {
                       >
                         <SelectTrigger
                           className={cn(
-                            'h-8 text-xs font-semibold border-0 px-2.5 rounded-md w-fit min-w-[130px]',
+                            'h-7 w-[140px] text-xs font-medium border-0 px-2 rounded-md',
                             statusClass(t.status),
                           )}
                         >
@@ -517,7 +512,7 @@ export default function CsTickets() {
                     <TableCell className="py-3">
                       <span className="text-sm text-foreground">
                         {t.responsible_name ?? (
-                          <span className="text-xs italic text-muted-foreground">Não atribuído</span>
+                          <span className="text-muted-foreground italic">Não atribuído</span>
                         )}
                       </span>
                     </TableCell>
@@ -528,8 +523,8 @@ export default function CsTickets() {
                     </TableCell>
 
                     {/* Ações */}
-                    <TableCell className="py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <TableCell className="py-3">
+                      <div className="flex items-center justify-end gap-0.5">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -541,7 +536,7 @@ export default function CsTickets() {
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Ver detalhes</TooltipContent>
+                          <TooltipContent>Abrir detalhes</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
