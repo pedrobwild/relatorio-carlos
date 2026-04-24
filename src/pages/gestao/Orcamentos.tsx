@@ -2,37 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { TableSkeleton, EmptyState } from '@/components/ui-premium';
+import { TableSkeleton, EmptyState, StatusBadge } from '@/components/ui-premium';
+import {
+  BUDGET_STATUS_LABEL, BUDGET_STATUS_TONE,
+  PRIORITY_LABEL, PRIORITY_TONE,
+  getLabel, getTone,
+} from '@/lib/statusTones';
 import { Search, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
-import { formatBRL } from '@/lib/formatBRL';
-
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  requested: { label: 'Solicitado', className: 'bg-muted text-muted-foreground' },
-  in_progress: { label: 'Em Produção', className: 'bg-primary/10 text-primary border-primary/20' },
-  review: { label: 'Revisão', className: 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20' },
-  waiting_info: { label: 'Aguardando Info', className: 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20' },
-  blocked: { label: 'Bloqueado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  ready: { label: 'Pronto', className: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20' },
-  sent_to_client: { label: 'Enviado ao Cliente', className: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20' },
-  approved: { label: 'Aprovado', className: 'bg-[hsl(var(--success))]/10 text-[hsl(var(--success))] border-[hsl(var(--success))]/20' },
-  rejected: { label: 'Recusado', className: 'bg-destructive/10 text-destructive border-destructive/20' },
-  cancelled: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
-};
-
-const PRIORITY_CONFIG: Record<string, { label: string; className: string }> = {
-  low: { label: 'Baixa', className: 'text-muted-foreground' },
-  normal: { label: 'Normal', className: 'text-foreground' },
-  high: { label: 'Alta', className: 'text-[hsl(var(--warning))]' },
-  urgent: { label: 'Urgente', className: 'text-destructive' },
-};
 
 export default function Orcamentos() {
   const navigate = useNavigate();
