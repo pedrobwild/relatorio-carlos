@@ -214,6 +214,76 @@ export function useEditarObraData(projectId: string | undefined) {
     newEnd: string | null;
   }>({ open: false, startChanged: false, endChanged: false, activityCount: 0, mode: 'save', oldStart: null, oldEnd: null, newStart: null, newEnd: null });
 
+  // Last shift snapshot — enables the "Desfazer" action after a save/recalc that shifted activities.
+  const [lastShiftUndo, setLastShiftUndo] = useState<ShiftUndoSnapshot | null>(null);
+
+  /**
+   * Reverts the last schedule shift: restores activity planned dates and,
+   * when applicable, the project's persisted planned dates.
+   */
+  const undoLastShift = useCallback(async () => {
+    if (!lastShiftUndo) return;
+    const snapshot = lastShiftUndo;
+    setSaving(true);
+    try {
+      // Restore activity dates
+      const updates = snapshot.activities.map(a =>
+        supabase
+          .from('project_activities')
+          .update({ planned_start: a.planned_start, planned_end: a.planned_end })
+          .eq('id', a.id)
+      );
+      const results = await Promise.all(updates);
+      const failed = results.find(r => r.error);
+      if (failed?.error) throw failed.error;
+
+      // Restore project dates if the shift came from a save flow
+      if (snapshot.origin === 'save' && project) {
+        const { error: projError } = await supabase
+          .from('projects')
+          .update({
+            planned_start_date: snapshot.projectStart,
+            planned_end_date: snapshot.projectEnd,
+          })
+          .eq('id', project.id);
+        if (projError) throw projError;
+        setProject(p => p ? { ...p, planned_start_date: snapshot.projectStart, planned_end_date: snapshot.projectEnd } : p);
+        persistedProjectDatesRef.current = { start: snapshot.projectStart, end: snapshot.projectEnd };
+      }
+
+      // Restore local activities state
+      const restoredMap = new Map(snapshot.activities.map(a => [a.id, a]));
+      setActivities(prev => prev.map(a => {
+        const r = restoredMap.get(a.id);
+        return r ? { ...a, planned_start: r.planned_start, planned_end: r.planned_end } : a;
+      }));
+
+      if (projectId) invalidateActivityQueries(projectId);
+      setLastShiftUndo(null);
+      toast({
+        title: 'Sincronização desfeita',
+        description: `Datas anteriores restauradas (${snapshot.activities.length} atividade(s)).`,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      console.error('Error undoing shift:', err);
+      toast({ title: 'Erro ao desfazer', description: message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }, [lastShiftUndo, project, projectId, toast]);
+
+  /** Helper that builds the Sonner-style action button to attach to the success toast. */
+  const buildUndoAction = useCallback(
+    (handler: () => void) =>
+      React.createElement(
+        ToastAction,
+        { altText: 'Desfazer sincronização', onClick: handler },
+        'Desfazer'
+      ),
+    []
+  );
+
   const performSave = async (shiftMode: ShiftMode | null) => {
     if (!project) return;
     setSaving(true);
@@ -251,7 +321,14 @@ export function useEditarObraData(projectId: string | undefined) {
       const newEnd = project.planned_end_date || null;
 
       let shiftedCount = 0;
+      let undoSnapshot: ShiftUndoSnapshot | null = null;
       if (shiftMode && activities.length > 0) {
+        // Capture pre-shift snapshot for undo
+        const preShiftSnapshot = activities.map(a => ({
+          id: a.id,
+          planned_start: a.planned_start,
+          planned_end: a.planned_end,
+        }));
         const { activities: shifted, changedIds } = shiftActivityDates(
           activities,
           oldStart,
@@ -275,6 +352,14 @@ export function useEditarObraData(projectId: string | undefined) {
           setActivities(shifted);
           shiftedCount = changedIds.length;
           if (projectId) invalidateActivityQueries(projectId);
+          // Only snapshot the activities that actually changed (smaller payload, precise revert)
+          undoSnapshot = {
+            origin: 'save',
+            activities: preShiftSnapshot.filter(s => changedIds.includes(s.id)),
+            projectStart: oldStart,
+            projectEnd: oldEnd,
+            createdAt: Date.now(),
+          };
         }
       }
 
@@ -317,7 +402,23 @@ export function useEditarObraData(projectId: string | undefined) {
       const description = shiftedCount > 0
         ? `Obra atualizada · Status: ${statusLabel} · ${shiftedCount} atividade(s) realinhada(s) (${modeLabel})`
         : `Obra atualizada · Status: ${statusLabel}`;
-      toast({ title: 'Salvo!', description });
+
+      if (undoSnapshot) {
+        setLastShiftUndo(undoSnapshot);
+        const snap = undoSnapshot;
+        toast({
+          title: 'Salvo!',
+          description,
+          duration: 12000,
+          action: buildUndoAction(() => {
+            // Only undo if this snapshot is still the current one
+            setLastShiftUndo(current => current === snap ? snap : current);
+            void undoLastShift();
+          }),
+        });
+      } else {
+        toast({ title: 'Salvo!', description });
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       console.error('Error saving:', err);
