@@ -299,9 +299,10 @@ export default function FornecedorDetalhe() {
             <p className="text-sm text-muted-foreground mt-0.5">{supplier.razao_social}</p>
           )}
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {editing ? (
             <>
+              <AutosaveIndicator lastSavedAt={draftLastSavedAt} className="hidden sm:inline-flex mr-2" />
               <Button variant="outline" size="sm" className="gap-1.5" onClick={cancelEdit}>
                 <X className="h-4 w-4" /> Cancelar
               </Button>
