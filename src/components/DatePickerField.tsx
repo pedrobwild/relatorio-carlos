@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { parseLocalDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -29,7 +30,8 @@ export function DatePickerField({
   disabled,
 }: DatePickerFieldProps) {
   const [open, setOpen] = useState(false);
-  const selectedDate = value ? new Date(value + "T00:00:00") : undefined;
+  // Calendar input arrives as YYYY-MM-DD; parse as local to keep the same calendar day.
+  const selectedDate = value ? parseLocalDate(value) : undefined;
 
   const handleSelect = (date: Date | undefined) => {
     if (date) {
