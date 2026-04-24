@@ -52,7 +52,7 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_purchases')
-        .select('id, fornecedor_id, supplier_name, project_id, item_name, start_date, end_date, status, projects!inner(name), fornecedores(nome)')
+        .select('id, fornecedor_id, supplier_name, project_id, item_name, start_date, end_date, status, created_at, projects!inner(name), fornecedores(nome)')
         .eq('purchase_type', 'prestador')
         .neq('status', 'cancelled')
         .not('start_date', 'is', null)
@@ -72,6 +72,7 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
         start_date: d.start_date,
         end_date: d.end_date,
         status: d.status,
+        created_at: d.created_at,
       })) as PrestadorEntry[];
     },
   });
