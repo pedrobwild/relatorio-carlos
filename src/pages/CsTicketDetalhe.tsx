@@ -267,7 +267,7 @@ export default function CsTicketDetalhe() {
           icon={Headset}
           title="Ticket não encontrado"
           description="O ticket pode ter sido excluído ou você não tem permissão para visualizá-lo."
-          action={{ label: 'Voltar para CS', onClick: () => navigate('/gestao/cs'), icon: ArrowLeft }}
+          action={{ label: 'Voltar para CS', onClick: () => navigate('/gestao/cs/operacional'), icon: ArrowLeft }}
         />
       </PageContainer>
     );
@@ -296,7 +296,7 @@ export default function CsTicketDetalhe() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => navigate('/gestao/cs')}
+        onClick={() => navigate('/gestao/cs/operacional')}
         className="mb-3 -ml-2 h-8 text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4 mr-1.5" />
