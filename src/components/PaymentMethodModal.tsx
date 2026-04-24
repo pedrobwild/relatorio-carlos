@@ -12,6 +12,7 @@ import { useBoletoUpload, useBoletoDelete, downloadBoleto } from '@/hooks/useBol
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { validatePixKey, getPixTypeLabel, PIX_MAX_LENGTH } from '@/lib/pixValidation';
+import { validateBoletoLine } from '@/lib/boletoValidation';
 
 type PaymentMethod = 'pix' | 'boleto' | 'cartao' | 'transferencia' | 'cheque' | '';
 
@@ -133,6 +134,12 @@ export function PaymentMethodModal({
     return validatePixKey(pixKey);
   }, [pixKey]);
 
+  const boletoDigits = useMemo(() => boletoCode.replace(/\D/g, ''), [boletoCode]);
+  const boletoValidation = useMemo(() => {
+    if (boletoDigits.length === 0) return null;
+    return validateBoletoLine(boletoDigits);
+  }, [boletoDigits]);
+
   const handleSave = async () => {
     // Validação PIX antes de salvar
     if (method === 'pix') {
@@ -140,6 +147,16 @@ export function PaymentMethodModal({
       if (!result.valid) {
         toast.error(result.error || 'Chave PIX inválida');
         setOpenSection('pix');
+        return;
+      }
+    }
+
+    // Validação da linha digitável do boleto antes de salvar
+    if (method === 'boleto' && boletoDigits.length > 0) {
+      const result = validateBoletoLine(boletoDigits);
+      if (!result.valid) {
+        toast.error(result.error || 'Linha digitável inválida');
+        setOpenSection('boleto');
         return;
       }
     }
@@ -152,7 +169,7 @@ export function PaymentMethodModal({
       const updates: { payment_method: string | null; pix_key: string | null; boleto_code: string | null } = {
         payment_method: method || null,
         pix_key: method === 'pix' ? normalizedPix : null,
-        boleto_code: method === 'boleto' ? (boletoCode.replace(/\D/g, '') || null) : null,
+        boleto_code: method === 'boleto' ? (boletoDigits || null) : null,
       };
       const { error } = await supabase.from('project_payments').update(updates).eq('id', paymentId);
       if (error) throw error;
@@ -342,19 +359,47 @@ export function PaymentMethodModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="boleto-code" className="text-xs">Código do boleto (linha digitável)</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="boleto-code" className="text-xs">
+                    Código do boleto (linha digitável)
+                  </Label>
+                  <span className="text-[10px] text-muted-foreground">
+                    Editável — recalculado ao salvar
+                  </span>
+                </div>
                 <Input
                   id="boleto-code"
                   placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
                   value={formatBoletoLine(boletoCode)}
                   onChange={(e) => setBoletoCode(e.target.value.replace(/\D/g, '').slice(0, 48))}
-                  className="font-mono text-xs"
+                  className={cn(
+                    'font-mono text-xs',
+                    boletoValidation && !boletoValidation.valid && 'border-destructive focus-visible:ring-destructive',
+                    boletoValidation?.valid && 'border-success/60',
+                  )}
+                  aria-invalid={boletoValidation ? !boletoValidation.valid : undefined}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {boletoCode.replace(/\D/g, '').length}/47 dígitos
-                </p>
+                <div className="flex items-center justify-between text-xs">
+                  {boletoValidation ? (
+                    boletoValidation.valid ? (
+                      <span className="flex items-center gap-1 text-success">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Linha digitável válida
+                        {boletoValidation.type === 'arrecadacao' && ' (arrecadação)'}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-destructive">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        {boletoValidation.error}
+                      </span>
+                    )
+                  ) : (
+                    <span className="text-muted-foreground">Cole, digite ou anexe um arquivo para extração via IA.</span>
+                  )}
+                  <span className="text-muted-foreground tabular-nums">{boletoDigits.length}/47</span>
+                </div>
 
-                {boletoCode.replace(/\D/g, '').length >= 47 && (
+                {boletoValidation?.valid && (
                   <div className="rounded-lg border border-success/30 bg-success/5 p-3 space-y-2">
                     <div className="flex items-center gap-1.5 text-xs font-medium text-success">
                       <CheckCircle2 className="h-3.5 w-3.5" />
@@ -462,7 +507,15 @@ export function PaymentMethodModal({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={saving || !method}>
+          <Button
+            onClick={handleSave}
+            disabled={
+              saving ||
+              !method ||
+              (method === 'boleto' && boletoDigits.length > 0 && boletoValidation?.valid === false) ||
+              (method === 'pix' && pixKey.trim().length > 0 && pixValidation?.valid === false)
+            }
+          >
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Salvar
           </Button>
