@@ -9,11 +9,11 @@
  * Para a operação (CRUD/lista filtrável), ver `CsOperacional`.
  */
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, ListChecks } from 'lucide-react';
+import { ListChecks } from 'lucide-react';
 
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageHeader, PageSkeleton } from '@/components/ui-premium';
 
 import { useCsTickets, type CsTicketSeverity, type CsTicketStatus } from '@/hooks/useCsTickets';
 import { CsDashboard } from '@/components/cs/CsDashboard';
@@ -42,34 +42,29 @@ export default function CsAnalytics() {
 
   return (
     <PageContainer>
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-            <BarChart3 className="h-5 w-5 text-primary" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">CS — Analytics</h1>
-            <p className="text-sm text-muted-foreground max-w-xl">
-              Visão executiva dos tickets de Customer Success por obra: severidade, status,
-              gargalos e tickets parados.
-            </p>
-          </div>
-        </div>
-        <Button variant="outline" onClick={() => navigate('/gestao/cs/operacional')} className="shrink-0">
-          <ListChecks className="h-4 w-4 mr-1.5" />
-          Ir para operacional
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="Customer Success"
+        title="Analytics"
+        description="Visão executiva dos tickets de Customer Success por obra: severidade, status, gargalos e tickets parados."
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/gestao/cs/operacional')}
+          >
+            <ListChecks className="h-4 w-4 mr-1.5" />
+            Ir para operacional
+          </Button>
+        }
+      />
 
-      {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-48 w-full" />
-        </div>
-      ) : (
-        <CsDashboard tickets={tickets} onFilter={handleFilter} />
-      )}
+      <div className="pt-6">
+        {isLoading ? (
+          <PageSkeleton rows={4} />
+        ) : (
+          <CsDashboard tickets={tickets} onFilter={handleFilter} />
+        )}
+      </div>
     </PageContainer>
   );
 }
