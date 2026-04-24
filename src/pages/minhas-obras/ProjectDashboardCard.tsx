@@ -1,16 +1,24 @@
 import { useMemo } from 'react';
-import { ChevronRight, AlertCircle, ClipboardSignature, FileText } from 'lucide-react';
+import { ChevronRight, AlertCircle, ClipboardSignature, FileText, CalendarClock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SCurveSparkline } from '@/components/scurve/SCurveSparkline';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { Activity } from '@/types/report';
+import type { ProjectKPIs } from '@/hooks/useProjectKPIs';
 
 interface ProjectDashboardCardProps {
   project: ProjectSummary;
   onClick: () => void;
   activities?: Activity[];
+  /**
+   * KPIs consolidados da obra — quando fornecidos, substituem o cálculo
+   * local e garantem que "atraso" e "% conclusão" sigam a mesma regra do
+   * Painel de Obras. Quando ausente, o card cai para os campos
+   * básicos do summary (modo legado).
+   */
+  kpis?: ProjectKPIs;
 }
 
 const statusLabels: Record<string, string> = {
@@ -27,12 +35,20 @@ const statusVariants: Record<string, string> = {
   cancelled: 'bg-muted text-muted-foreground border-border',
 };
 
-export function ProjectDashboardCard({ project, onClick, activities }: ProjectDashboardCardProps) {
+export function ProjectDashboardCard({ project, onClick, activities, kpis }: ProjectDashboardCardProps) {
   const isActive = project.status === 'active';
-  const progress = project.progress_percentage || 0;
+  const progress = kpis?.progress ?? project.progress_percentage ?? 0;
+  const daysOverdue = kpis?.daysOverdue ?? 0;
 
   const alerts = useMemo(() => {
     const items: Array<{ icon: React.ElementType; label: string; accent: string }> = [];
+    if (kpis?.isOverdue && daysOverdue > 0) {
+      items.push({
+        icon: CalendarClock,
+        label: `${daysOverdue} dia(s) em atraso`,
+        accent: 'text-destructive',
+      });
+    }
     if (project.pending_count > 0) {
       items.push({ icon: AlertCircle, label: `${project.pending_count} pendência(s)`, accent: 'text-[hsl(var(--warning))]' });
     }
@@ -43,7 +59,7 @@ export function ProjectDashboardCard({ project, onClick, activities }: ProjectDa
       items.push({ icon: FileText, label: `${project.pending_documents} doc(s)`, accent: 'text-primary' });
     }
     return items;
-  }, [project]);
+  }, [project, kpis, daysOverdue]);
 
   return (
     <Card

@@ -18,7 +18,7 @@ import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 export default function MinhasObras() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { projects, stats, upcomingPayments, isLoading, error } = useClientDashboard();
+  const { projects, stats, upcomingPayments, kpisById, isLoading, error } = useClientDashboard();
   const displayName = user?.user_metadata?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
   const activeIds = useMemo(() => projects.filter(p => p.status === 'active').map(p => p.id), [projects]);
   const { data: activitiesMap } = useDashboardActivities(activeIds);
@@ -113,6 +113,7 @@ export default function MinhasObras() {
                         project={project}
                         onClick={() => handleProjectClick(project)}
                         activities={getProjectActivities(project.id)}
+                        kpis={kpisById.get(project.id)}
                       />
                     </ErrorBoundary>
                   ))}
