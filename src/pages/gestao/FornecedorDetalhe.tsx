@@ -100,6 +100,27 @@ export default function FornecedorDetalhe() {
     }
   }, [supplier, editing]);
 
+  // Autosave the in-progress edits to localStorage so the user doesn't lose data
+  // if the tab is closed/refreshed mid-edit. Only active while in edit mode.
+  const { restored: draftRestored, clearDraft, lastSavedAt: draftLastSavedAt } = useDialogDraft<Partial<Supplier>>({
+    key: `fornecedor-edit-${id || 'new'}`,
+    enabled: editing,
+    values: form,
+    isDirty: () => editing, // any edit-mode value is worth persisting
+    onRestore: (draft) => {
+      setForm((prev) => ({ ...prev, ...draft }));
+    },
+  });
+
+  useEffect(() => {
+    if (draftRestored) {
+      sonnerToast.info('Rascunho restaurado', {
+        description: 'Recuperamos as edições que você havia feito neste fornecedor.',
+        duration: 4000,
+      });
+    }
+  }, [draftRestored]);
+
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<Supplier>) => {
       const { error } = await supabase.from("fornecedores").update(data as any).eq("id", id!);
