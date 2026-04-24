@@ -248,17 +248,17 @@ function ProjectCard({
             </p>
           </div>
           {isFinished ? (
-            <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--success-light))] text-[hsl(var(--success))] border-[hsl(var(--success))]/20 shrink-0">
-              <CheckCircle className="h-3 w-3" /> Entregue
-            </Badge>
+            <StatusBadge tone="success" size="sm" icon={<CheckCircle />} showDot={false} className="shrink-0">
+              Entregue
+            </StatusBadge>
           ) : isOverdue ? (
-            <Badge variant="outline" className="text-[10px] gap-0.5 bg-destructive/10 text-destructive border-destructive/20 shrink-0 animate-pulse">
-              <CalendarX className="h-3 w-3" /> {Math.abs(daysRemaining!)}d atraso
-            </Badge>
+            <StatusBadge tone="danger" size="sm" icon={<CalendarX />} showDot={false} className="shrink-0 animate-pulse">
+              {Math.abs(daysRemaining!)}d atraso
+            </StatusBadge>
           ) : isApproaching ? (
-            <Badge variant="outline" className="text-[10px] gap-0.5 bg-[hsl(var(--warning-light))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/20 shrink-0">
-              <Clock className="h-3 w-3" /> {daysRemaining}d
-            </Badge>
+            <StatusBadge tone="warning" size="sm" icon={<Clock />} showDot={false} className="shrink-0">
+              {daysRemaining}d
+            </StatusBadge>
           ) : (
             <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{daysRemaining}d</span>
           )}
