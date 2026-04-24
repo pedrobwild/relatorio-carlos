@@ -222,6 +222,14 @@ export default function EditarObra() {
         </div>
       </main>
     </div>
+    <ShiftModeDialog
+      open={data.shiftDialogState.open}
+      onOpenChange={data.setShiftDialogOpen}
+      startChanged={data.shiftDialogState.startChanged}
+      endChanged={data.shiftDialogState.endChanged}
+      activityCount={data.shiftDialogState.activityCount}
+      onConfirm={data.handleShiftDialogConfirm}
+    />
     </TooltipProvider>
   );
 }
