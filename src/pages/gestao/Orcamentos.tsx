@@ -94,8 +94,6 @@ export default function Orcamentos() {
             </TableHeader>
             <TableBody>
               {filtered.map((orc) => {
-                const status = STATUS_CONFIG[orc.internal_status] || STATUS_CONFIG.requested;
-                const prio = PRIORITY_CONFIG[orc.priority] || PRIORITY_CONFIG.normal;
                 return (
                   <TableRow
                     key={orc.id}
@@ -114,12 +112,14 @@ export default function Orcamentos() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className={`${status.className} text-[10px] whitespace-nowrap`}>
-                        {status.label}
-                      </Badge>
+                      <StatusBadge tone={getTone(BUDGET_STATUS_TONE, orc.internal_status, 'neutral')} size="sm">
+                        {getLabel(BUDGET_STATUS_LABEL, orc.internal_status, 'Solicitado')}
+                      </StatusBadge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={`text-xs font-medium ${prio.className}`}>{prio.label}</span>
+                      <StatusBadge tone={getTone(PRIORITY_TONE, orc.priority, 'neutral')} size="sm" variant="outline" showDot={false}>
+                        {getLabel(PRIORITY_LABEL, orc.priority, 'Normal')}
+                      </StatusBadge>
                     </TableCell>
                     <TableCell>
                       <span className="text-xs text-muted-foreground truncate block max-w-[100px]">
