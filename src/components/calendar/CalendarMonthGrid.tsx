@@ -22,11 +22,12 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound, CalendarClock } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, CalendarDays, CheckCircle2, PlayCircle, Clock, AlertTriangle, UserRound, CalendarClock, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
+import type { PurchaseCalendarEvent } from '@/hooks/usePurchasesByCreationRange';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog,
@@ -86,6 +87,11 @@ interface Props {
   };
   /** Callback para navegar até a edição do cronograma daquela obra. */
   onReplanSchedule?: (projectId: string) => void;
+  /**
+   * Mapa YYYY-MM-DD → solicitações de compra criadas naquele dia.
+   * Renderizado como badge no canto superior direito de cada célula do mês.
+   */
+  purchasesByDay?: Map<string, PurchaseCalendarEvent[]>;
 }
 
 // Layout tokens (px). Keeping these fixed guarantees lanes never overlap and
@@ -113,6 +119,7 @@ export function CalendarMonthGrid({
   onActivityClick,
   projectsWithOverduePrevious,
   onReplanSchedule,
+  purchasesByDay,
 }: Props) {
   const monthStart = startOfMonth(refDate);
   const monthEnd = endOfMonth(refDate);
@@ -164,6 +171,7 @@ export function CalendarMonthGrid({
               onActivityClick={onActivityClick}
               projectsWithOverduePrevious={projectsWithOverduePrevious}
               onRequestReplan={handleRequestReplan}
+              purchasesByDay={purchasesByDay}
             />
           ))}
         </div>
@@ -211,6 +219,7 @@ function WeekRow({
   onActivityClick,
   projectsWithOverduePrevious,
   onRequestReplan,
+  purchasesByDay,
 }: {
   week: Date[];
   monthStart: Date;
@@ -223,6 +232,7 @@ function WeekRow({
   };
   /** Pede confirmação ao usuário antes de navegar para o cronograma. */
   onRequestReplan?: (projectId: string, projectName: string) => void;
+  purchasesByDay?: Map<string, PurchaseCalendarEvent[]>;
 }) {
   // Inline expansion: when true, render every lane (no cap) for this row.
   const [expanded, setExpanded] = useState(false);
@@ -316,10 +326,12 @@ function WeekRow({
 
   return (
     <div className="relative grid grid-cols-7" style={{ minHeight: finalHeight }}>
-      {/* Day cells (background + day number) */}
+      {/* Day cells (background + day number + purchase badge) */}
       {week.map((day, di) => {
         const inMonth = isSameMonth(day, monthStart);
         const isToday = isSameDay(day, today);
+        const dayKey = format(day, 'yyyy-MM-dd');
+        const dayPurchases = purchasesByDay?.get(dayKey) ?? [];
         return (
           <div
             key={di}
@@ -328,14 +340,63 @@ function WeekRow({
               !inMonth && 'bg-muted/20 text-muted-foreground/60',
             )}
           >
-            <div
-              className={cn(
-                'inline-flex items-center justify-center h-6 min-w-6 text-xs rounded-full',
-                isToday && 'bg-primary text-primary-foreground font-semibold px-1.5',
-                !isToday && 'font-medium',
+            <div className="flex items-center justify-between gap-1">
+              <div
+                className={cn(
+                  'inline-flex items-center justify-center h-6 min-w-6 text-xs rounded-full',
+                  isToday && 'bg-primary text-primary-foreground font-semibold px-1.5',
+                  !isToday && 'font-medium',
+                )}
+              >
+                {format(day, 'd')}
+              </div>
+              {dayPurchases.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 px-1.5 h-5 text-[10px] font-semibold leading-none hover:bg-amber-500/25 transition-colors pointer-events-auto"
+                      aria-label={`${dayPurchases.length} solicitação(ões) de compra criada(s) neste dia`}
+                    >
+                      <ShoppingCart className="h-2.5 w-2.5" />
+                      {dayPurchases.length}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    align="end"
+                    sideOffset={6}
+                    collisionPadding={12}
+                    className="w-[min(320px,calc(100vw-24px))] p-0 overflow-hidden shadow-xl"
+                  >
+                    <div className="px-3 py-2 border-b bg-amber-500/10">
+                      <div className="text-[11px] font-semibold flex items-center gap-1.5">
+                        <ShoppingCart className="h-3 w-3" />
+                        {dayPurchases.length} compra(s) solicitada(s)
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {format(day, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
+                      </div>
+                    </div>
+                    <div className="max-h-[260px] overflow-y-auto divide-y">
+                      {dayPurchases.slice(0, 8).map((p) => (
+                        <div key={p.id} className="px-3 py-2 text-[11px]">
+                          <div className="font-medium truncate">{p.item_name}</div>
+                          <div className="text-[10px] text-muted-foreground truncate">
+                            {p.project_name}
+                            {p.supplier_name && <span> · {p.supplier_name}</span>}
+                          </div>
+                        </div>
+                      ))}
+                      {dayPurchases.length > 8 && (
+                        <div className="px-3 py-1.5 text-[10px] text-muted-foreground italic">
+                          +{dayPurchases.length - 8} outra(s)…
+                        </div>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               )}
-            >
-              {format(day, 'd')}
             </div>
           </div>
         );

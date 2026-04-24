@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Filter,
   X,
+  ShoppingCart,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import { useWeekActivities, type WeekActivity } from '@/hooks/useWeekActivities';
 import { useProjectsWithOverduePrevious } from '@/hooks/useProjectsWithOverduePrevious';
+import { usePurchasesByCreationRange } from '@/hooks/usePurchasesByCreationRange';
 import { useUserRole } from '@/hooks/useUserRole';
 import { EmptyState } from '@/components/ui/states';
 import { ActivityDetailDialog } from '@/components/calendar/ActivityDetailDialog';
@@ -242,6 +244,9 @@ export default function CalendarioObras() {
   // antes do início do recorte visível. Usado para sugerir "Replanejar
   // cronograma" no tooltip do calendário mensal.
   const { data: projectsWithOverduePrev } = useProjectsWithOverduePrevious(fetchStartStr);
+
+  // Solicitações de compra criadas no período visível (data de criação).
+  const { purchases, purchasesByDay } = usePurchasesByCreationRange(fetchStartStr, fetchEndStr);
 
   // Dialog: gerenciamento de dias não úteis (feriados específicos / folgas).
   // Restrito a Admin/Engineer (mesma regra de quebrar atividades).
@@ -467,6 +472,15 @@ export default function CalendarioObras() {
               <Badge className={statusBadge.overdue.className}>Atrasadas: {counts.overdue}</Badge>
               <Badge className={statusBadge.pending.className}>Pendentes: {counts.pending}</Badge>
               <Badge className={statusBadge.completed.className}>Concluídas: {counts.completed}</Badge>
+              {purchases.length > 0 && (
+                <Badge
+                  className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                  title="Solicitações de compra criadas no período visível"
+                >
+                  <ShoppingCart className="h-3 w-3 mr-1" />
+                  Compras: {purchases.length}
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -722,12 +736,25 @@ export default function CalendarioObras() {
           onActivityClick={setSelectedActivity}
           projectsWithOverduePrevious={projectsWithOverduePrev}
           onReplanSchedule={(pid) => navigate(`/obra/${pid}/cronograma`)}
+          purchasesByDay={
+            projectFilter === 'all'
+              ? purchasesByDay
+              : new Map(
+                  Array.from(purchasesByDay.entries()).map(([k, v]) => [
+                    k,
+                    v.filter((p) => p.project_id === projectFilter),
+                  ]),
+                )
+          }
         />
       ) : view === 'day' ? (
         <CalendarDayAgenda
           day={refDate}
           activities={filteredActivities}
           onActivityClick={setSelectedActivity}
+          dayPurchases={(
+            purchasesByDay.get(format(refDate, 'yyyy-MM-dd')) ?? []
+          ).filter((p) => projectFilter === 'all' || p.project_id === projectFilter)}
         />
       ) : view === 'range' ? (
         <CalendarRangeTimeline
