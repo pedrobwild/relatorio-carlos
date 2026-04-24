@@ -18,6 +18,7 @@ interface PrestadorEntry {
   start_date: string;
   end_date: string;
   status: string;
+  created_at: string;
 }
 
 // Color palette for different projects
