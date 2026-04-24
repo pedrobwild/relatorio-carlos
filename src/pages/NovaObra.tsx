@@ -22,6 +22,7 @@ import { FormStepper, type Step } from '@/components/FormStepper';
 import { StickySummary } from './nova-obra/StickySummary';
 import { MobileSummarySheet } from './nova-obra/MobileSummarySheet';
 import { cn } from '@/lib/utils';
+import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
 
 const STEPS: Step[] = [
   { label: 'Cadastro Base', description: 'Obra, imóvel e contratante (~3 min)' },
@@ -188,8 +189,13 @@ export default function NovaObra() {
   }, [selectedTemplate]);
 
   const autoCalculateEndDate = (startDateStr: string, durationStr?: string) => {
-    const duration = parseInt(durationStr || formData.business_days_duration, 10);
-    if (!startDateStr || isNaN(duration) || duration <= 0) return;
+    const duration = safeParseInt(durationStr || formData.business_days_duration, {
+      area: 'duracao',
+      context: 'NovaObra.autoCalc',
+      fallback: 0,
+    });
+    if (!startDateStr || duration <= 0) return;
+    trackBlock1CUsage('duracao', { duration, source: 'NovaObra' });
     const start = new Date(startDateStr + 'T00:00:00');
     const end = addBusinessDays(start, duration - 1);
     setFormData(prev => ({ ...prev, planned_end_date: end.toISOString().split('T')[0] }));

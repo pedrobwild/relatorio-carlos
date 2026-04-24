@@ -25,6 +25,7 @@ import { FormStepper, type Step } from '@/components/FormStepper';
 import { StickySummary } from './nova-obra/StickySummary';
 import { MobileSummarySheet } from './nova-obra/MobileSummarySheet';
 import { cn } from '@/lib/utils';
+import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
 
 const STEPS: Step[] = [
   { label: 'Cadastro Base', description: 'Obra, imóvel e contratante' },
@@ -81,8 +82,13 @@ export default function EditarObraWizard() {
     userEditedFieldsRef.current.add(field);
 
     if (field === 'planned_start_date' && typeof value === 'string' && value) {
-      const duration = parseInt(formData.business_days_duration, 10);
-      if (!isNaN(duration) && duration > 0) {
+      const duration = safeParseInt(formData.business_days_duration, {
+        area: 'duracao',
+        context: 'EditarObraWizard.autoCalc',
+        fallback: 0,
+      });
+      if (duration > 0) {
+        trackBlock1CUsage('duracao', { duration, source: 'EditarObraWizard' });
         const start = new Date(value + 'T00:00:00');
         const end = addBusinessDays(start, duration - 1);
         setFormData(prev => ({ ...prev, planned_end_date: end.toISOString().split('T')[0] }));
