@@ -100,7 +100,7 @@ export const ActivitiesSection = ({ activities, setActivities }: ActivitiesSecti
                       max={100}
                       placeholder="Peso"
                       value={activity.weight || ''}
-                      onChange={(e) => updateActivity(index, 'weight', parseInt(e.target.value) || 0)}
+                      onChange={(e) => updateActivity(index, 'weight', parseInt(e.target.value, 10) || 0)}
                       className="text-sm pr-6"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-tiny text-muted-foreground">%</span>

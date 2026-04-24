@@ -165,7 +165,7 @@ export function PurchaseFormDialog({
                 type="number"
                 min={1}
                 value={formData.lead_time_days || 7}
-                onChange={(e) => onLeadTimeChange(parseInt(e.target.value) || 7)}
+                onChange={(e) => onLeadTimeChange(parseInt(e.target.value, 10) || 7)}
               />
             </div>
 

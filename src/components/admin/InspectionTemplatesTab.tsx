@@ -216,7 +216,7 @@ export function InspectionTemplatesTab() {
               <Input
                 type="number"
                 value={form.sort_order}
-                onChange={(e) => setForm(p => ({ ...p, sort_order: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setForm(p => ({ ...p, sort_order: parseInt(e.target.value, 10) || 0 }))}
               />
             </div>
             <div className="flex items-center gap-2">

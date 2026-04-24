@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Loader2, Copy, Check, Globe, Globe2, Layers, ExternalLink, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,12 +57,22 @@ export default function AdminResearch() {
     }
   }, [query, searchFocus]);
 
+  const copyResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear any pending "copied" reset on unmount so we don't update state after teardown.
+  useEffect(() => {
+    return () => {
+      if (copyResetTimerRef.current) clearTimeout(copyResetTimerRef.current);
+    };
+  }, []);
+
   const handleCopy = useCallback(() => {
     if (!result) return;
     navigator.clipboard.writeText(result.content);
     setCopied(true);
     toast.success('Copiado!');
-    setTimeout(() => setCopied(false), 2000);
+    if (copyResetTimerRef.current) clearTimeout(copyResetTimerRef.current);
+    copyResetTimerRef.current = setTimeout(() => setCopied(false), 2000);
   }, [result]);
 
   return (
