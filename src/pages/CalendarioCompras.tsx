@@ -831,7 +831,8 @@ export default function CalendarioCompras() {
                   <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="whitespace-nowrap">Data</TableHead>
+                        <TableHead className="whitespace-nowrap">Compra</TableHead>
+                        <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Categoria</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
