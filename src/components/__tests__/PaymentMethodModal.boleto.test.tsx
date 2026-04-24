@@ -16,40 +16,43 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // ----- Mocks devem ser declarados ANTES dos imports do componente -----
+// Usamos vi.hoisted para que as referências fiquem disponíveis dentro das factories.
 
-const mockUpload = vi.fn();
-const mockUpdateEq = vi.fn();
-const mockFromUpdate = vi.fn(() => ({ eq: mockUpdateEq }));
-const mockFunctionsInvoke = vi.fn();
-const mockToastSuccess = vi.fn();
-const mockToastWarning = vi.fn();
-const mockToastInfo = vi.fn();
-const mockToastError = vi.fn();
+const h = vi.hoisted(() => ({
+  mockUpload: vi.fn(),
+  mockUpdateEq: vi.fn(),
+  mockFromUpdate: vi.fn(),
+  mockFunctionsInvoke: vi.fn(),
+  mockToastSuccess: vi.fn(),
+  mockToastWarning: vi.fn(),
+  mockToastInfo: vi.fn(),
+  mockToastError: vi.fn(),
+}));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     storage: {
       from: vi.fn(() => ({
-        upload: mockUpload,
+        upload: h.mockUpload,
         remove: vi.fn().mockResolvedValue({ error: null }),
         download: vi.fn().mockResolvedValue({ data: new Blob(), error: null }),
       })),
     },
     from: vi.fn(() => ({
-      update: mockFromUpdate,
+      update: h.mockFromUpdate,
     })),
     functions: {
-      invoke: mockFunctionsInvoke,
+      invoke: h.mockFunctionsInvoke,
     },
   },
 }));
 
 vi.mock('sonner', () => ({
   toast: {
-    success: (...a: unknown[]) => mockToastSuccess(...a),
-    warning: (...a: unknown[]) => mockToastWarning(...a),
-    info: (...a: unknown[]) => mockToastInfo(...a),
-    error: (...a: unknown[]) => mockToastError(...a),
+    success: (...a: unknown[]) => h.mockToastSuccess(...a),
+    warning: (...a: unknown[]) => h.mockToastWarning(...a),
+    info: (...a: unknown[]) => h.mockToastInfo(...a),
+    error: (...a: unknown[]) => h.mockToastError(...a),
   },
 }));
 
