@@ -1,10 +1,11 @@
 import { useState, useCallback, useMemo, memo } from "react";
-import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, ChevronRight, Trash2 } from "lucide-react";
+import { Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, ChevronRight, Trash2, Hammer, Barcode, BadgeCheck, Camera, File, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +33,11 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
   garantia: <Shield className="w-5 h-5" />,
   as_built: <Building className="w-5 h-5" />,
   termo_entrega: <CheckSquare className="w-5 h-5" />,
+  marcenaria: <Hammer className="w-5 h-5" />,
+  boleto: <Barcode className="w-5 h-5" />,
+  comprovante: <BadgeCheck className="w-5 h-5" />,
+  foto_obra: <Camera className="w-5 h-5" />,
+  outro: <File className="w-5 h-5" />,
 };
 
 const DocumentCard = ({ 
@@ -214,6 +220,8 @@ const DocumentosContent = () => {
   const deleteDocMutation = useDeleteDocumentMutation();
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [historyDocId, setHistoryDocId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [categoryFilters, setCategoryFilters] = useState<DocumentCategory[]>([]);
 
   const canUpload = can('documents:upload');
   const canDelete = can('documents:delete');
@@ -235,12 +243,45 @@ const DocumentosContent = () => {
 
   const historyDocs = historyDocId ? getVersionHistory(historyDocId) : [];
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filterDocsBySearch = useCallback(
+    (docs: ProjectDocument[]) => {
+      if (!normalizedQuery) return docs;
+      return docs.filter(
+        d =>
+          d.name.toLowerCase().includes(normalizedQuery) ||
+          (d.description?.toLowerCase().includes(normalizedQuery) ?? false)
+      );
+    },
+    [normalizedQuery]
+  );
+
+  const toggleCategoryFilter = (cat: DocumentCategory) => {
+    setCategoryFilters(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCategoryFilters([]);
+  };
+
   if (projectLoading || loading) {
     return <ContentSkeleton variant="cards" rows={6} />;
   }
 
   const categories = Object.keys(DOCUMENT_CATEGORIES) as DocumentCategory[];
   const categoriesWithDocs = categories.filter(cat => getLatestByCategoryMerged(cat).length > 0);
+
+  // Se há filtros multi-categoria ativos, intersectamos com categorias que têm docs
+  const effectiveCategories: DocumentCategory[] =
+    categoryFilters.length > 0
+      ? categoryFilters.filter(cat => categoriesWithDocs.includes(cat))
+      : categoriesWithDocs;
+
+  const hasActiveFilters = normalizedQuery.length > 0 || categoryFilters.length > 0;
 
   return (
     <div>
@@ -265,6 +306,64 @@ const DocumentosContent = () => {
           {canUpload && projectId && <DocumentUpload projectId={projectId} onSuccess={refetch} />}
         </EmptyState>
       ) : (
+        <>
+        {/* Barra de busca + chips de categoria */}
+        <div className="space-y-3 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder="Buscar documentos por nome ou descrição..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9 h-11"
+              aria-label="Buscar documentos"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-muted text-muted-foreground"
+                aria-label="Limpar busca"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {categoriesWithDocs.length > 1 && (
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-xs text-muted-foreground mr-1">Filtrar por categoria:</span>
+              {categoriesWithDocs.map(cat => {
+                const active = categoryFilters.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => toggleCategoryFilter(cat)}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors min-h-[32px] ${
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border hover:bg-muted"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    {DOCUMENT_CATEGORIES[cat].label}
+                  </button>
+                );
+              })}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 ml-1"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <TabsList className="w-full overflow-x-auto flex-nowrap justify-start h-auto min-h-[44px] p-1 bg-muted/50 scrollbar-none">
             <TabsTrigger value="all" className="shrink-0 whitespace-nowrap min-h-[36px]">Todos ({documents.length})</TabsTrigger>
@@ -274,22 +373,50 @@ const DocumentosContent = () => {
           </TabsList>
 
           <TabsContent value="all" className="space-y-8 mt-6">
-            {categoriesWithDocs.map(cat => (
-              <CategorySection key={cat} category={cat} documents={getLatestByCategoryMerged(cat)}
-                onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
-            ))}
+            {effectiveCategories.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Nenhum documento corresponde aos filtros atuais.
+              </div>
+            ) : (
+              effectiveCategories.map(cat => {
+                const docs = filterDocsBySearch(getLatestByCategoryMerged(cat));
+                if (docs.length === 0) return null;
+                return (
+                  <CategorySection key={cat} category={cat} documents={docs}
+                    onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
+                );
+              })
+            )}
+            {effectiveCategories.length > 0 &&
+              effectiveCategories.every(cat => filterDocsBySearch(getLatestByCategoryMerged(cat)).length === 0) && (
+                <div className="text-center py-12 text-muted-foreground text-sm">
+                  Nenhum documento corresponde à busca &quot;{searchQuery}&quot;.
+                </div>
+              )}
           </TabsContent>
 
-          {categoriesWithDocs.map(cat => (
-            <TabsContent key={cat} value={cat} className="mt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {getLatestByCategoryMerged(cat).map(doc => (
-                  <DocumentCard key={doc.id} doc={doc} onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
-                ))}
-              </div>
-            </TabsContent>
-          ))}
+          {categoriesWithDocs.map(cat => {
+            const docs = filterDocsBySearch(getLatestByCategoryMerged(cat));
+            return (
+              <TabsContent key={cat} value={cat} className="mt-6">
+                {docs.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground text-sm">
+                    {normalizedQuery
+                      ? `Nenhum documento corresponde à busca "${searchQuery}".`
+                      : "Nenhum documento nesta categoria."}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {docs.map(doc => (
+                      <DocumentCard key={doc.id} doc={doc} onViewHistory={setHistoryDocId} onVersionUploaded={refetch} isStaff={isStaff} canDelete={canDelete} onRequestDelete={handleRequestDelete} />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            );
+          })}
         </Tabs>
+        </>
       )}
 
       {/* Version History Dialog */}

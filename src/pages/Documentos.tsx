@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, memo } from "react";
-import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, MessageSquare, ChevronRight, Share2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download, FileText, Box, Ruler, Award, ClipboardList, Receipt, Shield, Building, CheckSquare, FilePlus, Loader2, History, ShieldCheck, Plus, MessageSquare, ChevronRight, Share2, ExternalLink, Hammer, Barcode, BadgeCheck, Camera, File } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
@@ -40,6 +40,11 @@ const categoryIcons: Record<DocumentCategory, React.ReactNode> = {
   garantia: <Shield className="w-5 h-5" />,
   as_built: <Building className="w-5 h-5" />,
   termo_entrega: <CheckSquare className="w-5 h-5" />,
+  marcenaria: <Hammer className="w-5 h-5" />,
+  boleto: <Barcode className="w-5 h-5" />,
+  comprovante: <BadgeCheck className="w-5 h-5" />,
+  foto_obra: <Camera className="w-5 h-5" />,
+  outro: <File className="w-5 h-5" />,
 };
 
 const DocumentCard = ({ 

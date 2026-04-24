@@ -22,6 +22,12 @@ export const DOCUMENT_CATEGORIES = {
   garantia: { label: 'Garantias', icon: 'Shield' },
   as_built: { label: 'As Built', icon: 'Building' },
   termo_entrega: { label: 'Termo de Entrega', icon: 'CheckSquare' },
+  // Categorias adicionadas no repositório único de documentos
+  marcenaria: { label: 'Marcenaria', icon: 'Hammer' },
+  boleto: { label: 'Boletos', icon: 'Barcode' },
+  comprovante: { label: 'Comprovantes', icon: 'BadgeCheck' },
+  foto_obra: { label: 'Fotos da Obra', icon: 'Camera' },
+  outro: { label: 'Outros', icon: 'File' },
 } as const;
 
 export type DocumentCategory = keyof typeof DOCUMENT_CATEGORIES;
