@@ -699,6 +699,7 @@ export function useEditarObraData(projectId: string | undefined) {
     handleCustomerChange,
     handleStudioInfoChange,
     saveProject,
+    recalculateSchedule,
     addActivity,
     updateActivity: smartUpdateActivity,
     deleteActivity,

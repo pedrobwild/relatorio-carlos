@@ -1,5 +1,6 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Activity } from './types';
@@ -8,6 +9,8 @@ interface ScheduleSyncAlertProps {
   plannedStart: string | null;
   plannedEnd: string | null;
   activities: Activity[];
+  onRecalculate?: () => void;
+  isBusy?: boolean;
 }
 
 function formatDate(value: string | null): string {
