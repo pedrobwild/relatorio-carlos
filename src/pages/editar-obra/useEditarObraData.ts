@@ -273,14 +273,14 @@ export function useEditarObraData(projectId: string | undefined) {
     }
   }, [lastShiftUndo, project, projectId, toast]);
 
-  /** Helper that builds the Sonner-style action button to attach to the success toast. */
+  /** Helper that builds the action button to attach to the success toast. */
   const buildUndoAction = useCallback(
-    (handler: () => void) =>
+    (handler: () => void): ToastActionElement =>
       React.createElement(
         ToastAction,
         { altText: 'Desfazer sincronização', onClick: handler },
         'Desfazer'
-      ),
+      ) as ToastActionElement,
     []
   );
 
