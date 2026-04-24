@@ -101,8 +101,10 @@ function makePdfFile() {
 // jsdom não tem FileReader.readAsDataURL retornando dataURL real — patch
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUpload.mockResolvedValue({ data: { path: 'proj-abc/pay-123.pdf' }, error: null });
-  mockUpdateEq.mockResolvedValue({ error: null });
+  // Reconfigurar a chain do `update(...).eq(...)` após cada clearAllMocks
+  h.mockFromUpdate.mockImplementation(() => ({ eq: h.mockUpdateEq }));
+  h.mockUpload.mockResolvedValue({ data: { path: 'proj-abc/pay-123.pdf' }, error: null });
+  h.mockUpdateEq.mockResolvedValue({ error: null });
 
   class StubFileReader {
     onload: ((ev: ProgressEvent<FileReader>) => void) | null = null;
