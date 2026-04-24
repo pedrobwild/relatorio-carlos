@@ -20,18 +20,39 @@ const mockedUseUserRole = vi.mocked(useUserRole);
 
 const TestComponent = () => <div data-testid="protected-content">Protected Content</div>;
 
-// Helper to create mock role state
+const STAFF_ROLES: AppRole[] = [
+  'engineer',
+  'manager',
+  'admin',
+  'gestor',
+  'suprimentos',
+  'financeiro',
+  'cs',
+  'arquitetura',
+];
+
+// Helper to create mock role state — espelha a lógica real de useUserRole.ts
 const createMockRoleState = (roles: AppRole[], loading = false) => ({
   roles,
   role: roles[0] || null,
   loading,
-  isStaff: roles.some(r => ['engineer', 'admin', 'manager'].includes(r)),
+  isStaff: roles.some(r => STAFF_ROLES.includes(r)),
   isCustomer: roles.includes('customer'),
   isAdmin: roles.includes('admin'),
   isManager: roles.includes('manager'),
   hasRole: (role: AppRole) => roles.includes(role),
   hasAnyRole: (checkRoles: AppRole[]) => checkRoles.some(r => roles.includes(r)),
 });
+
+const mockAuthed = () => {
+  mockedUseAuth.mockReturnValue({
+    isAuthenticated: true,
+    loading: false,
+    user: { id: 'user-123', email: 'test@example.com' } as any,
+    session: {} as any,
+    signOut: vi.fn(),
+  });
+};
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
@@ -254,14 +275,12 @@ describe('StaffRoute', () => {
 });
 
 describe('CustomerRoute', () => {
-  it('should allow customers access', () => {
-    mockedUseAuth.mockReturnValue({
-      isAuthenticated: true,
-      loading: false,
-      user: { id: 'user-123', email: 'test@example.com' } as any,
-      session: {} as any,
-      signOut: vi.fn(),
-    });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthed();
+  });
+
+  it('permite o papel customer', () => {
     mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
 
     const { getByTestId } = render(
@@ -269,28 +288,70 @@ describe('CustomerRoute', () => {
         <CustomerRoute>
           <TestComponent />
         </CustomerRoute>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(getByTestId('protected-content')).toBeInTheDocument();
   });
 
-  it('should deny staff access', () => {
-    mockedUseAuth.mockReturnValue({
-      isAuthenticated: true,
-      loading: false,
-      user: { id: 'user-123', email: 'test@example.com' } as any,
-      session: {} as any,
-      signOut: vi.fn(),
-    });
-    mockedUseUserRole.mockReturnValue(createMockRoleState(['engineer']));
+  it('bloqueia papéis staff (ex.: arquitetura)', () => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['arquitetura']));
 
     const { queryByTestId } = render(
       <MemoryRouter>
         <CustomerRoute>
           <TestComponent />
         </CustomerRoute>
-      </MemoryRouter>
+      </MemoryRouter>,
+    );
+
+    expect(queryByTestId('protected-content')).not.toBeInTheDocument();
+  });
+});
+
+describe('StaffRoute — cobertura completa de papéis', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthed();
+  });
+
+  it.each(STAFF_ROLES)('permite acesso para o papel staff "%s"', (role) => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState([role]));
+
+    const { getByTestId } = render(
+      <MemoryRouter>
+        <StaffRoute>
+          <TestComponent />
+        </StaffRoute>
+      </MemoryRouter>,
+    );
+
+    expect(getByTestId('protected-content')).toBeInTheDocument();
+  });
+
+  it('bloqueia o papel "customer" no StaffRoute', () => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
+
+    const { queryByTestId } = render(
+      <MemoryRouter>
+        <StaffRoute>
+          <TestComponent />
+        </StaffRoute>
+      </MemoryRouter>,
+    );
+
+    expect(queryByTestId('protected-content')).not.toBeInTheDocument();
+  });
+
+  it('bloqueia usuários sem nenhum papel', () => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState([]));
+
+    const { queryByTestId } = render(
+      <MemoryRouter>
+        <StaffRoute>
+          <TestComponent />
+        </StaffRoute>
+      </MemoryRouter>,
     );
 
     expect(queryByTestId('protected-content')).not.toBeInTheDocument();
