@@ -390,6 +390,15 @@ function PurchaseRow({
                   {fmtDate(purchase.start_date)} → {fmtDate(purchase.end_date)}
                 </span>
               )}
+              {purchase.created_at && (
+                <span
+                  className="flex items-center gap-0.5 shrink-0 text-muted-foreground/70"
+                  title={`Solicitação cadastrada em ${fmtDate(purchase.created_at)}`}
+                >
+                  <Clock className="h-3 w-3" />
+                  Solicitado em {fmtDate(purchase.created_at)}
+                </span>
+              )}
             </div>
           </div>
 
