@@ -526,6 +526,12 @@ export function useEditarObraData(projectId: string | undefined) {
 
     setSaving(true);
     try {
+      // Capture pre-shift snapshot for undo
+      const preShiftSnapshot = activities.map(a => ({
+        id: a.id,
+        planned_start: a.planned_start,
+        planned_end: a.planned_end,
+      }));
       const { activities: shifted, changedIds } = shiftActivityDates(
         activities,
         scheduleStart,
@@ -551,10 +557,22 @@ export function useEditarObraData(projectId: string | undefined) {
       if (failed?.error) throw failed.error;
       setActivities(shifted);
       if (projectId) invalidateActivityQueries(projectId);
+
+      const undoSnapshot: ShiftUndoSnapshot = {
+        origin: 'recalc-only',
+        activities: preShiftSnapshot.filter(s => changedIds.includes(s.id)),
+        projectStart: null,
+        projectEnd: null,
+        createdAt: Date.now(),
+      };
+      setLastShiftUndo(undoSnapshot);
+
       const modeLabel = shiftMode === 'preserve-duration' ? 'duração mantida' : 'proporcional';
       toast({
         title: 'Cronograma recalculado',
         description: `${changedIds.length} atividade(s) realinhada(s) (${modeLabel}).`,
+        duration: 12000,
+        action: buildUndoAction(() => { void undoLastShift(); }),
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
