@@ -19,14 +19,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // Usamos vi.hoisted para que as referências fiquem disponíveis dentro das factories.
 
 const h = vi.hoisted(() => ({
-  h.mockUpload: vi.fn(),
-  h.mockUpdateEq: vi.fn(),
-  h.mockFromUpdate: vi.fn(),
-  h.mockFunctionsInvoke: vi.fn(),
-  h.mockToastSuccess: vi.fn(),
-  h.mockToastWarning: vi.fn(),
-  h.mockToastInfo: vi.fn(),
-  h.mockToastError: vi.fn(),
+  mockUpload: vi.fn(),
+  mockUpdateEq: vi.fn(),
+  mockFromUpdate: vi.fn(),
+  mockFunctionsInvoke: vi.fn(),
+  mockToastSuccess: vi.fn(),
+  mockToastWarning: vi.fn(),
+  mockToastInfo: vi.fn(),
+  mockToastError: vi.fn(),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
