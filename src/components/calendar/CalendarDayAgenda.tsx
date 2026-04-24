@@ -2,14 +2,18 @@
  * CalendarDayAgenda — single-day list of activities scheduled (planned interval
  * intersects the chosen day). Grouped by project, with quick visibility of
  * status and a click to open the detail dialog.
+ *
+ * Também exibe, em uma seção separada no topo, as solicitações de compra
+ * criadas neste dia (data de cadastro = data selecionada).
  */
 import { useMemo } from 'react';
 import { format, isSameDay, isWithinInterval, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Building2, CalendarDays } from 'lucide-react';
+import { Building2, CalendarDays, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
+import type { PurchaseCalendarEvent } from '@/hooks/usePurchasesByCreationRange';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/states';
@@ -32,6 +36,8 @@ interface Props {
   day: Date;
   activities: WeekActivity[];
   onActivityClick: (a: WeekActivity) => void;
+  /** Solicitações de compra criadas neste dia. */
+  dayPurchases?: PurchaseCalendarEvent[];
 }
 
 export function CalendarDayAgenda({ day, activities, onActivityClick }: Props) {
