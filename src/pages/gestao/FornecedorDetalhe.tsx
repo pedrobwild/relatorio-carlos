@@ -31,6 +31,9 @@ import {
   SUPPLIER_TYPE_LABELS,
   type SupplierType,
 } from "@/constants/supplierCategories";
+import { useDialogDraft } from "@/hooks/useDialogDraft";
+import { AutosaveIndicator } from "@/components/ui/AutosaveIndicator";
+import { toast as sonnerToast } from "sonner";
 
 type LegacySupplierCategory = "materiais" | "mao_de_obra" | "servicos" | "equipamentos" | "outros";
 
