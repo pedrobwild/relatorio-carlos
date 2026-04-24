@@ -9,7 +9,6 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CalendarIcon,
-  Filter,
   X,
   AlertTriangle,
   Table2,
@@ -18,11 +17,12 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
-  LayoutGrid,
   Headset,
   ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
