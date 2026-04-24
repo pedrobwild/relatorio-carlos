@@ -313,6 +313,17 @@ export function useEditarObraData(projectId: string | undefined) {
     const oldEnd = persistedProjectDatesRef.current.end;
     const newStart = project.planned_start_date || null;
     const newEnd = project.planned_end_date || null;
+
+    // Validation: end date must not be before start date
+    if (newStart && newEnd && newEnd < newStart) {
+      toast({
+        title: 'Datas inválidas',
+        description: 'A data de término prevista não pode ser anterior à data de início prevista. Corrija antes de salvar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const startChanged = !!newStart && newStart !== oldStart;
     const endChanged = !!newEnd && newEnd !== oldEnd;
     const datesChanged = startChanged || endChanged;
