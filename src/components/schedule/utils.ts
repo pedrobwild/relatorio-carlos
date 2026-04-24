@@ -1,9 +1,11 @@
 import { Activity } from "@/types/report";
 import { Status } from "./types";
+import { parseLocalDate } from "@/lib/dates";
 
 export const formatDate = (dateStr: string, baseYear?: number): string => {
   if (!dateStr) return "—";
-  const date = new Date(dateStr + "T00:00:00");
+  // Calendar date — parse as local to avoid UTC midnight shifting back one day in pt-BR.
+  const date = parseLocalDate(dateStr);
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear();
@@ -23,7 +25,7 @@ export const toISODate = (date: Date): string => {
 
 export const parseDate = (dateStr: string): Date | null => {
   if (!dateStr) return null;
-  return new Date(dateStr + "T00:00:00");
+  return parseLocalDate(dateStr);
 };
 
 export const getActivityStatus = (activity: Activity): Status => {
