@@ -217,6 +217,7 @@ export function AtividadesKanbanView({ tasks, isLoading, onUpdateStatus, onDelet
           }
         }}
         initialData={editTask}
+        draftScope={projectId}
       />
 
       <DeleteTaskDialog
