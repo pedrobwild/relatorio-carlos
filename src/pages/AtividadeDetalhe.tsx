@@ -699,6 +699,7 @@ export default function AtividadeDetalhe() {
           setEditOpen(false);
         }}
         initialData={task}
+        draftScope={projectId}
       />
 
       <DeleteTaskDialog
