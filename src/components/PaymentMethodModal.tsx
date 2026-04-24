@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, Loader2, Sparkles, Upload, Trash2, FileText, Download } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, ChevronDown, Loader2, Sparkles, Upload, Trash2, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -10,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBoletoUpload, useBoletoDelete, downloadBoleto } from '@/hooks/useBoletoUpload';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { validatePixKey, getPixTypeLabel, PIX_MAX_LENGTH } from '@/lib/pixValidation';
 
 type PaymentMethod = 'pix' | 'boleto' | 'cartao' | 'transferencia' | 'cheque' | '';
 
