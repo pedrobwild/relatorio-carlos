@@ -5099,6 +5099,7 @@ export type Database = {
           notes: string | null
           org_id: string | null
           painel_etapa: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          painel_external_budget_id: string | null
           painel_inicio_etapa: string | null
           painel_prazo: string | null
           painel_previsao_avanco: string | null
@@ -5152,6 +5153,7 @@ export type Database = {
           notes?: string | null
           org_id?: string | null
           painel_etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          painel_external_budget_id?: string | null
           painel_inicio_etapa?: string | null
           painel_prazo?: string | null
           painel_previsao_avanco?: string | null
@@ -5205,6 +5207,7 @@ export type Database = {
           notes?: string | null
           org_id?: string | null
           painel_etapa?: Database["public"]["Enums"]["painel_etapa_enum"] | null
+          painel_external_budget_id?: string | null
           painel_inicio_etapa?: string | null
           painel_prazo?: string | null
           painel_previsao_avanco?: string | null
