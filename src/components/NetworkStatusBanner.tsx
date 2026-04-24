@@ -13,11 +13,12 @@ export function NetworkStatusBanner() {
   const [wasOffline, setWasOffline] = useState(false);
 
   useEffect(() => {
+    let backOnlineTimer: ReturnType<typeof setTimeout> | null = null;
     const goOffline = () => { setIsOffline(true); setWasOffline(true); };
     const goOnline = () => {
       setIsOffline(false);
-      // Show "back online" briefly
-      setTimeout(() => setWasOffline(false), 3000);
+      // Show "back online" briefly — track the timer so we can cancel it on unmount.
+      backOnlineTimer = setTimeout(() => setWasOffline(false), 3000);
     };
 
     window.addEventListener('online', goOnline);
@@ -25,6 +26,7 @@ export function NetworkStatusBanner() {
     return () => {
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
+      if (backOnlineTimer) clearTimeout(backOnlineTimer);
     };
   }, []);
 

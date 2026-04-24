@@ -239,9 +239,9 @@ export function useNovaObraSubmit() {
       }
     }
 
-    // 8. Create payment installments
-    if (formData.num_installments && parseInt(formData.num_installments) > 0) {
-      const numInstallments = parseInt(formData.num_installments);
+    // 8. Create payment installments — explicit radix 10 to avoid surprises with leading-zero strings.
+    if (formData.num_installments && parseInt(formData.num_installments, 10) > 0) {
+      const numInstallments = parseInt(formData.num_installments, 10);
       const installmentAmount = formData.installment_value
         ? parseFloat(formData.installment_value)
         : (formData.contract_value ? parseFloat(formData.contract_value) / numInstallments : 0);

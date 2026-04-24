@@ -188,7 +188,7 @@ export default function NovaObra() {
   }, [selectedTemplate]);
 
   const autoCalculateEndDate = (startDateStr: string, durationStr?: string) => {
-    const duration = parseInt(durationStr || formData.business_days_duration);
+    const duration = parseInt(durationStr || formData.business_days_duration, 10);
     if (!startDateStr || isNaN(duration) || duration <= 0) return;
     const start = new Date(startDateStr + 'T00:00:00');
     const end = addBusinessDays(start, duration - 1);

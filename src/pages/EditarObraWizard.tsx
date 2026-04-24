@@ -81,7 +81,7 @@ export default function EditarObraWizard() {
     userEditedFieldsRef.current.add(field);
 
     if (field === 'planned_start_date' && typeof value === 'string' && value) {
-      const duration = parseInt(formData.business_days_duration);
+      const duration = parseInt(formData.business_days_duration, 10);
       if (!isNaN(duration) && duration > 0) {
         const start = new Date(value + 'T00:00:00');
         const end = addBusinessDays(start, duration - 1);
