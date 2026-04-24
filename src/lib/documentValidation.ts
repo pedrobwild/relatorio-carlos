@@ -1,6 +1,11 @@
 /**
  * CPF and RG validation and formatting utilities.
+ *
+ * Bloco 1C: instrumentado com `trackBlock1CUsage` para acompanhar volume
+ * de validação em produção e detectar regressões silenciosas.
  */
+
+import { trackBlock1CUsage } from './block1cMonitor';
 
 /** Apply CPF mask: 000.000.000-00 */
 export function formatCpf(value: string): string {
@@ -14,24 +19,37 @@ export function formatCpf(value: string): string {
 /** Validate CPF using check-digit algorithm. Accepts formatted or raw. */
 export function isValidCpf(cpf: string): boolean {
   const digits = cpf.replace(/\D/g, '');
-  if (digits.length !== 11) return false;
+  if (digits.length !== 11) {
+    trackBlock1CUsage('cpf-cnpj', { result: 'invalid_length', length: digits.length });
+    return false;
+  }
   // Reject known invalid sequences (all same digit)
-  if (/^(\d)\1{10}$/.test(digits)) return false;
+  if (/^(\d)\1{10}$/.test(digits)) {
+    trackBlock1CUsage('cpf-cnpj', { result: 'invalid_sequence' });
+    return false;
+  }
 
   // First check digit — explicit radix 10 to avoid octal interpretation of leading-zero digits.
   let sum = 0;
   for (let i = 0; i < 9; i++) sum += parseInt(digits[i], 10) * (10 - i);
   let remainder = (sum * 10) % 11;
   if (remainder === 10) remainder = 0;
-  if (remainder !== parseInt(digits[9], 10)) return false;
+  if (remainder !== parseInt(digits[9], 10)) {
+    trackBlock1CUsage('cpf-cnpj', { result: 'invalid_check_digit_1' });
+    return false;
+  }
 
   // Second check digit
   sum = 0;
   for (let i = 0; i < 10; i++) sum += parseInt(digits[i], 10) * (11 - i);
   remainder = (sum * 10) % 11;
   if (remainder === 10) remainder = 0;
-  if (remainder !== parseInt(digits[10], 10)) return false;
+  if (remainder !== parseInt(digits[10], 10)) {
+    trackBlock1CUsage('cpf-cnpj', { result: 'invalid_check_digit_2' });
+    return false;
+  }
 
+  trackBlock1CUsage('cpf-cnpj', { result: 'valid' });
   return true;
 }
 
