@@ -245,6 +245,9 @@ export default function CalendarioObras() {
   // cronograma" no tooltip do calendário mensal.
   const { data: projectsWithOverduePrev } = useProjectsWithOverduePrevious(fetchStartStr);
 
+  // Solicitações de compra criadas no período visível (data de criação).
+  const { purchases, purchasesByDay } = usePurchasesByCreationRange(fetchStartStr, fetchEndStr);
+
   // Dialog: gerenciamento de dias não úteis (feriados específicos / folgas).
   // Restrito a Admin/Engineer (mesma regra de quebrar atividades).
   const [nonWorkingOpen, setNonWorkingOpen] = useState(false);
