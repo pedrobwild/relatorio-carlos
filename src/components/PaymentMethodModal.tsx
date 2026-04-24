@@ -390,18 +390,19 @@ export function PaymentMethodModal({
                         variant="outline"
                         size="sm"
                         className="h-7 px-2 text-xs flex-1"
+                        title="Copia apenas os 47 dígitos, sem pontos nem espaços. Útil para colar em internet banking e ERPs."
                         onClick={async () => {
                           const digits = boletoCode.replace(/\D/g, '');
                           try {
                             await navigator.clipboard.writeText(digits);
-                            toast.success('Apenas dígitos copiados');
+                            toast.success('Linha digitável copiada (texto puro, sem máscara)');
                           } catch {
                             toast.error('Não foi possível copiar');
                           }
                         }}
                       >
                         <Copy className="h-3.5 w-3.5 mr-1" />
-                        Só dígitos
+                        Texto puro
                       </Button>
                       <Button
                         type="button"
