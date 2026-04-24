@@ -203,7 +203,8 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: var(--gradient-background);
+    /* Premium: canvas sólido neutro frio (sem gradiente) */
+    background-color: hsl(var(--background));
     min-height: 100vh;
     min-height: 100dvh; /* Dynamic viewport height for mobile */
     overflow-x: hidden;
@@ -211,6 +212,10 @@
     line-height: 1.5; /* Readable line-height for body */
     /* CRITICAL: Prevent nested elements from capturing page scroll */
     overscroll-behavior-x: none;
+    /* Tipografia premium: tracking levemente apertado em telas grandes */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
   }
 
   /* CRITICAL FIX: Allow page scroll over charts
