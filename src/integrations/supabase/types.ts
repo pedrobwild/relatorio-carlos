@@ -4580,6 +4580,7 @@ export type Database = {
           notes: string | null
           orcamento_item_id: string | null
           order_date: string | null
+          payment_due_date: string | null
           planned_purchase_date: string | null
           project_id: string
           purchase_type: string | null
@@ -4618,6 +4619,7 @@ export type Database = {
           notes?: string | null
           orcamento_item_id?: string | null
           order_date?: string | null
+          payment_due_date?: string | null
           planned_purchase_date?: string | null
           project_id: string
           purchase_type?: string | null
@@ -4656,6 +4658,7 @@ export type Database = {
           notes?: string | null
           orcamento_item_id?: string | null
           order_date?: string | null
+          payment_due_date?: string | null
           planned_purchase_date?: string | null
           project_id?: string
           purchase_type?: string | null
