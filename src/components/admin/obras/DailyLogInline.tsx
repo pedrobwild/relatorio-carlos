@@ -55,6 +55,7 @@ import {
   type DailyLogServiceStatus,
   type DailyLogWorker,
 } from '@/hooks/useProjectDailyLog';
+import { ServiceTasksList } from './ServiceTasksList';
 
 // ----- props -----
 
@@ -311,6 +312,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     className="min-h-[56px] text-sm"
                     disabled={isSaving}
                   />
+                  <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
                 </div>
               ))}
               <Button
