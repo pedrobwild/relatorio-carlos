@@ -10,7 +10,7 @@
  *
  * Para a visão executiva agregada, ver `CsAnalytics`.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Headset,
   Plus,
@@ -65,7 +65,7 @@ import {
 } from '@/components/ui/tooltip';
 import { EmptyState } from '@/components/ui/states';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
   CS_SEVERITY_OPTIONS,
@@ -121,15 +121,24 @@ const fmtDateTime = (iso: string | null) =>
 // ============================================================
 export default function CsOperacional() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: tickets = [], isLoading } = useCsTickets();
   const updateMutation = useUpdateCsTicket();
   const deleteMutation = useDeleteCsTicket();
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>(ALL);
-  const [severityFilter, setSeverityFilter] = useState<string>(ALL);
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') ?? ALL);
+  const [severityFilter, setSeverityFilter] = useState<string>(searchParams.get('severity') ?? ALL);
   const [projectFilter, setProjectFilter] = useState<string>(ALL);
   const [responsibleFilter, setResponsibleFilter] = useState<string>(ALL);
+
+  // Limpa querystring após aplicar para não engessar a navegação subsequente
+  useEffect(() => {
+    if (searchParams.get('status') || searchParams.get('severity')) {
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<CsTicket | null>(null);
