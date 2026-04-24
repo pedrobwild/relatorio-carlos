@@ -60,7 +60,7 @@ export default function CsAnalytics() {
 
       <div className="pt-6">
         {isLoading ? (
-          <PageSkeleton rows={4} />
+          <PageSkeleton metrics content="cards" />
         ) : (
           <CsDashboard tickets={tickets} onFilter={handleFilter} />
         )}
