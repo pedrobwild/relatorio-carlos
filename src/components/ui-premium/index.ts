@@ -23,6 +23,13 @@ export {
   type ColumnAlign,
   type TableDensity,
 } from './DataTable';
+export {
+  useTablePreferences,
+  type TablePreferencesState,
+  type UseTablePreferencesOptions,
+  type UseTablePreferencesReturn,
+} from './useTablePreferences';
+export { DataTableSettings } from './DataTableSettings';
 export { EmptyState } from './EmptyState';
 export {
   SkeletonBlock,
