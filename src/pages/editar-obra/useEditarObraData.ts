@@ -45,6 +45,8 @@ export function useEditarObraData(projectId: string | undefined) {
   });
 
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Snapshot of project planned dates as last persisted (used to detect shift on save)
+  const persistedProjectDatesRef = useRef<{ start: string | null; end: string | null }>({ start: null, end: null });
 
   // Cleanup debounce timers on unmount
   useEffect(() => {
