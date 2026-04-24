@@ -12,14 +12,16 @@ export interface ShiftResult<T extends ShiftableActivity> {
 }
 
 /**
+ * Modo de recálculo:
+ * - 'proportional': mantém a sequência relativa, escala durações para encaixar
+ *   no novo intervalo (início + fim do projeto).
+ * - 'preserve-duration': desloca todas as atividades pelo mesmo número de dias
+ *   a partir do novo início, mantendo a duração original de cada uma. Ignora o novo fim.
+ */
+export type ShiftMode = 'proportional' | 'preserve-duration';
+
+/**
  * Recalcula as datas das atividades quando o início/fim do projeto muda.
- *
- * Estratégia:
- * - Se apenas o início mudou: desloca todas as atividades pelo mesmo número de dias.
- * - Se apenas o fim mudou: redimensiona proporcionalmente em torno do início atual.
- * - Se ambos mudaram: aplica o shift no início e depois escala proporcionalmente
- *   para encaixar no novo intervalo total.
- *
  * Atividades sem datas válidas são ignoradas.
  */
 export function shiftActivityDates<T extends ShiftableActivity>(
@@ -28,6 +30,7 @@ export function shiftActivityDates<T extends ShiftableActivity>(
   oldProjectEnd: string | null,
   newProjectStart: string | null,
   newProjectEnd: string | null,
+  mode: ShiftMode = 'proportional',
 ): ShiftResult<T> {
   const startChanged = !!newProjectStart && newProjectStart !== oldProjectStart;
   const endChanged = !!newProjectEnd && newProjectEnd !== oldProjectEnd;
@@ -52,19 +55,18 @@ export function shiftActivityDates<T extends ShiftableActivity>(
   const referenceOldEnd = oldProjectEnd ? parseISO(oldProjectEnd) : oldActivityEnd;
 
   // Step 1: shift (translate) so that the earliest activity matches the new project start.
-  // If start didn't change, shiftDays = 0.
   const shiftDays = startChanged && newProjectStart
     ? differenceInCalendarDays(parseISO(newProjectStart), referenceOldStart)
     : 0;
 
-  // Step 2: compute scale factor if end changed.
+  // Step 2: compute scale factor if end changed (only in proportional mode).
   const newProjectStartDate = newProjectStart ? parseISO(newProjectStart) : referenceOldStart;
   const newProjectEndDate = newProjectEnd ? parseISO(newProjectEnd) : referenceOldEnd;
   const oldSpan = differenceInCalendarDays(referenceOldEnd, referenceOldStart);
   const newSpan = differenceInCalendarDays(newProjectEndDate, newProjectStartDate);
 
-  // Avoid divide-by-zero or absurd scales
-  const scale = endChanged && oldSpan > 0 && newSpan > 0
+  // In preserve-duration mode we never scale.
+  const scale = mode === 'proportional' && endChanged && oldSpan > 0 && newSpan > 0
     ? newSpan / oldSpan
     : 1;
 
