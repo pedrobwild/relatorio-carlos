@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Filter,
   X,
+  ShoppingCart,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
