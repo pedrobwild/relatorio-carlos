@@ -14,6 +14,7 @@ import { PaymentScheduleSection, type PaymentInstallment } from './PaymentSchedu
 import { FornecedorSelector } from './FornecedorSelector';
 import { QuickCreateFornecedor } from './QuickCreateFornecedor';
 import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
+import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -38,12 +39,15 @@ interface PurchaseFormDialogProps {
   paymentInstallments: PaymentInstallment[];
   onPaymentInstallmentsChange: (installments: PaymentInstallment[]) => void;
   editingPurchaseId?: string;
+  /** When the form was last autosaved as a draft (only applies to new purchases). */
+  draftLastSavedAt?: Date | null;
 }
 
 export function PurchaseFormDialog({
   open, onOpenChange, isEditing, formData, setFormData,
   activities, onActivityChange, onLeadTimeChange, onSubmit, isSubmitting,
   paymentInstallments, onPaymentInstallmentsChange, editingPurchaseId,
+  draftLastSavedAt,
 }: PurchaseFormDialogProps) {
   const purchaseType = formData.purchase_type || 'produto';
   const isPrestador = purchaseType === 'prestador';
