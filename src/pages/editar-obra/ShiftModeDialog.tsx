@@ -10,8 +10,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import type { ShiftMode } from '@/lib/shiftActivityDates';
+import { useMemo, useState } from 'react';
+import { ArrowRight, CalendarRange, Maximize2 } from 'lucide-react';
+import { shiftActivityDates, type ShiftMode, type ShiftableActivity } from '@/lib/shiftActivityDates';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
 
 interface ShiftModeDialogProps {
   open: boolean;
@@ -20,6 +22,25 @@ interface ShiftModeDialogProps {
   endChanged: boolean;
   activityCount: number;
   onConfirm: (mode: ShiftMode | null) => void;
+  // New: preview inputs
+  activities?: ShiftableActivity[];
+  oldStart?: string | null;
+  oldEnd?: string | null;
+  newStart?: string | null;
+  newEnd?: string | null;
+}
+
+function formatShiftDays(days: number): string {
+  if (days === 0) return 'sem deslocamento';
+  const abs = Math.abs(days);
+  const dir = days > 0 ? 'adiante' : 'para trás';
+  return `${abs} dia${abs === 1 ? '' : 's'} ${dir}`;
+}
+
+function formatScale(scale: number): string {
+  if (Math.abs(scale - 1) < 0.001) return 'sem escala (durações mantidas)';
+  const pct = Math.round(scale * 100);
+  return scale > 1 ? `expansão para ${pct}%` : `compressão para ${pct}%`;
 }
 
 export function ShiftModeDialog({
@@ -29,6 +50,11 @@ export function ShiftModeDialog({
   endChanged,
   activityCount,
   onConfirm,
+  activities = [],
+  oldStart = null,
+  oldEnd = null,
+  newStart = null,
+  newEnd = null,
 }: ShiftModeDialogProps) {
   const [mode, setMode] = useState<ShiftMode>('proportional');
 
@@ -39,6 +65,44 @@ export function ShiftModeDialog({
 
   // If only the start changed, both modes produce the same result. Suggest preserve-duration.
   const onlyStart = startChanged && !endChanged;
+
+  // Compute preview metrics for the selected mode
+  const preview = useMemo(() => {
+    if (!open || activities.length === 0) return null;
+
+    const valid = activities.filter(a => a.planned_start && a.planned_end);
+    if (valid.length === 0) return null;
+
+    const starts = valid.map(a => parseISO(a.planned_start as string).getTime());
+    const ends = valid.map(a => parseISO(a.planned_end as string).getTime());
+    const oldActivityStart = new Date(Math.min(...starts));
+    const oldActivityEnd = new Date(Math.max(...ends));
+
+    const refOldStart = oldStart ? parseISO(oldStart) : oldActivityStart;
+    const refOldEnd = oldEnd ? parseISO(oldEnd) : oldActivityEnd;
+
+    const shiftDays = startChanged && newStart
+      ? differenceInCalendarDays(parseISO(newStart), refOldStart)
+      : 0;
+
+    const newProjStart = newStart ? parseISO(newStart) : refOldStart;
+    const newProjEnd = newEnd ? parseISO(newEnd) : refOldEnd;
+    const oldSpan = differenceInCalendarDays(refOldEnd, refOldStart);
+    const newSpan = differenceInCalendarDays(newProjEnd, newProjStart);
+    const scale = mode === 'proportional' && endChanged && oldSpan > 0 && newSpan > 0
+      ? newSpan / oldSpan
+      : 1;
+
+    // Run real shift to get exact changed count
+    const { changedIds } = shiftActivityDates(activities, oldStart, oldEnd, newStart, newEnd, mode);
+
+    return {
+      shiftDays,
+      scale,
+      changedCount: changedIds.length,
+      total: activities.length,
+    };
+  }, [open, mode, activities, oldStart, oldEnd, newStart, newEnd, startChanged, endChanged]);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -76,6 +140,36 @@ export function ShiftModeDialog({
             </div>
           </div>
         </RadioGroup>
+
+        {preview && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+            <p className="text-tiny font-semibold uppercase tracking-wide text-primary flex items-center gap-1.5">
+              <ArrowRight className="h-3 w-3" />
+              Prévia do recálculo
+            </p>
+            <div className="grid gap-1.5 text-sm">
+              <div className="flex items-start gap-2">
+                <CalendarRange className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium">Deslocamento:</span>{' '}
+                  <span className="text-foreground">{formatShiftDays(preview.shiftDays)}</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Maximize2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="font-medium">Escala:</span>{' '}
+                  <span className="text-foreground">{formatScale(preview.scale)}</span>
+                </div>
+              </div>
+              <div className="text-tiny text-muted-foreground pt-1 border-t border-border/50">
+                {preview.changedCount === 0
+                  ? 'Nenhuma atividade será alterada com essa configuração.'
+                  : `${preview.changedCount} de ${preview.total} atividade(s) terão suas datas atualizadas.`}
+              </div>
+            </div>
+          </div>
+        )}
 
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => handleConfirm(null)}>

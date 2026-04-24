@@ -191,7 +191,11 @@ export function useEditarObraData(projectId: string | undefined) {
     endChanged: boolean;
     activityCount: number;
     mode: 'save' | 'recalc-only';
-  }>({ open: false, startChanged: false, endChanged: false, activityCount: 0, mode: 'save' });
+    oldStart: string | null;
+    oldEnd: string | null;
+    newStart: string | null;
+    newEnd: string | null;
+  }>({ open: false, startChanged: false, endChanged: false, activityCount: 0, mode: 'save', oldStart: null, oldEnd: null, newStart: null, newEnd: null });
 
   const performSave = async (shiftMode: ShiftMode | null) => {
     if (!project) return;
@@ -336,6 +340,10 @@ export function useEditarObraData(projectId: string | undefined) {
         endChanged,
         activityCount: activities.length,
         mode: 'save',
+        oldStart,
+        oldEnd,
+        newStart,
+        newEnd,
       });
       return;
     }
@@ -380,6 +388,10 @@ export function useEditarObraData(projectId: string | undefined) {
       endChanged,
       activityCount: valid.length,
       mode: 'recalc-only',
+      oldStart: scheduleStart,
+      oldEnd: scheduleEnd,
+      newStart,
+      newEnd,
     });
   };
 
