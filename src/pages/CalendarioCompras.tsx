@@ -326,6 +326,37 @@ export default function CalendarioCompras() {
     },
   });
 
+  // Mutation: update planned_purchase_date / payment_due_date inline
+  const updateDateField = useMutation({
+    mutationFn: async ({
+      id,
+      field,
+      value,
+    }: {
+      id: string;
+      field: 'planned_purchase_date' | 'payment_due_date';
+      value: string | null;
+    }) => {
+      const { error } = await supabase
+        .from('project_purchases')
+        .update({ [field]: value })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      toast.success(
+        vars.field === 'planned_purchase_date'
+          ? 'Data da compra atualizada'
+          : 'Data de pagamento atualizada',
+      );
+    },
+    onError: (e) => {
+      console.error(e);
+      toast.error('Erro ao atualizar data');
+    },
+  });
+
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach(p => map.set(p.project_id, p.project_name));
