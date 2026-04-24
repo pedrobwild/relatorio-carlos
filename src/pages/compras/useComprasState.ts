@@ -341,5 +341,6 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
     getDaysUntilRequired,
     addPurchase,
     updatePurchase,
+    draftLastSavedAt,
   };
 }
