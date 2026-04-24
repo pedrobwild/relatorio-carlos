@@ -80,6 +80,19 @@ export function AssistantChat({
     });
   }, [messages.length, isLoading]);
 
+  const updateLastAssistant = (updater: (m: AssistantMessage) => AssistantMessage) => {
+    setMessages((prev) => {
+      const next = [...prev];
+      for (let i = next.length - 1; i >= 0; i--) {
+        if (next[i].role === "assistant") {
+          next[i] = updater(next[i]);
+          break;
+        }
+      }
+      return next;
+    });
+  };
+
   const send = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isLoading || !user) return;
@@ -87,63 +100,153 @@ export function AssistantChat({
     setMessages((prev) => [
       ...prev,
       { role: "user", content: trimmed },
-      { role: "assistant", content: "", pending: true },
+      { role: "assistant", content: "", pending: true, result_data: { status: "streaming" } },
     ]);
     setInput("");
     setIsLoading(true);
 
+    let localConvId = convId;
+    let accumulated = "";
+    let finalRows: unknown[] | undefined;
+    let rowsReturned: number | undefined;
+    let sqlText: string | undefined;
+    let domainText: string | undefined;
+    let finalStatus: string | undefined;
+
     try {
-      const { data, error } = await supabase.functions.invoke("assistant-chat", {
-        body: { question: trimmed, conversation_id: convId },
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error("Sessão expirada");
+
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assistant-chat`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Accept: "text/event-stream",
+        },
+        body: JSON.stringify({
+          question: trimmed,
+          conversation_id: localConvId,
+          stream: true,
+        }),
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      const newConvId = data.conversation_id;
-      if (newConvId && newConvId !== convId) {
-        setConvId(newConvId);
-        onConversationChange?.(newConvId);
+      if (!resp.ok || !resp.body) {
+        const txt = await resp.text().catch(() => "");
+        throw new Error(`Falha (${resp.status}): ${txt.slice(0, 200) || "sem corpo"}`);
       }
 
-      setMessages((prev) => {
-        const next = [...prev];
-        // Replace last pending assistant
-        for (let i = next.length - 1; i >= 0; i--) {
-          if (next[i].role === "assistant" && next[i].pending) {
-            next[i] = {
-              role: "assistant",
-              content: data.answer,
-              result_data: {
-                rows: data.rows,
-                rows_returned: data.rows_returned,
-                sql: data.sql,
-                domain: data.domain,
-                status: data.status,
-              },
-            };
-            break;
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE messages separated by blank line
+        const blocks = buffer.split("\n\n");
+        buffer = blocks.pop() ?? "";
+
+        for (const block of blocks) {
+          const lines = block.split("\n");
+          let ev = "message";
+          let dataStr = "";
+          for (const line of lines) {
+            if (line.startsWith("event:")) ev = line.slice(6).trim();
+            else if (line.startsWith("data:")) dataStr += line.slice(5).trim();
+          }
+          if (!dataStr) continue;
+          let payload: Record<string, unknown>;
+          try {
+            payload = JSON.parse(dataStr);
+          } catch {
+            continue;
+          }
+
+          switch (ev) {
+            case "conversation": {
+              const id = payload.conversation_id as string | undefined;
+              if (id && id !== localConvId) {
+                localConvId = id;
+                setConvId(id);
+                onConversationChange?.(id);
+              }
+              break;
+            }
+            case "status": {
+              const message = (payload.message as string) ?? "Processando...";
+              updateLastAssistant((m) => ({
+                ...m,
+                pending: !accumulated,
+                content: accumulated,
+                result_data: { ...(m.result_data ?? {}), status: "streaming", phase: payload.phase as string, statusMessage: message },
+              }));
+              break;
+            }
+            case "sql": {
+              sqlText = payload.sql as string;
+              domainText = payload.domain as string;
+              updateLastAssistant((m) => ({
+                ...m,
+                result_data: { ...(m.result_data ?? {}), sql: sqlText, domain: domainText },
+              }));
+              break;
+            }
+            case "rows": {
+              rowsReturned = payload.rows_returned as number;
+              finalRows = payload.preview as unknown[];
+              updateLastAssistant((m) => ({
+                ...m,
+                result_data: { ...(m.result_data ?? {}), rows: finalRows, rows_returned: rowsReturned },
+              }));
+              break;
+            }
+            case "delta": {
+              const chunk = (payload.content as string) ?? "";
+              if (chunk) {
+                accumulated += chunk;
+                updateLastAssistant((m) => ({ ...m, pending: false, content: accumulated }));
+              }
+              break;
+            }
+            case "done": {
+              finalStatus = payload.status as string;
+              updateLastAssistant((m) => ({
+                ...m,
+                pending: false,
+                content: (payload.answer as string) ?? accumulated,
+                result_data: {
+                  rows: payload.rows as unknown[],
+                  rows_returned: payload.rows_returned as number,
+                  sql: payload.sql as string,
+                  domain: payload.domain as string,
+                  status: finalStatus,
+                },
+              }));
+              break;
+            }
+            case "error": {
+              const msg = (payload.message as string) ?? "Erro";
+              throw new Error(msg);
+            }
           }
         }
-        return next;
-      });
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro inesperado";
       toast.error(msg);
-      setMessages((prev) => {
-        const next = [...prev];
-        for (let i = next.length - 1; i >= 0; i--) {
-          if (next[i].role === "assistant" && next[i].pending) {
-            next[i] = {
-              role: "assistant",
-              content: `⚠️ ${msg}`,
-              result_data: { status: "other" },
-            };
-            break;
-          }
-        }
-        return next;
-      });
+      updateLastAssistant((m) => ({
+        ...m,
+        pending: false,
+        content: accumulated || `⚠️ ${msg}`,
+        result_data: { ...(m.result_data ?? {}), status: "other" },
+      }));
     } finally {
       setIsLoading(false);
     }
