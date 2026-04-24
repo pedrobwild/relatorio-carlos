@@ -626,66 +626,7 @@ export default function PainelObras() {
   );
 }
 
-// ----- KPI Card (semantic, coerente com PortfolioKpiStrip) -----
-type KpiAccent = 'default' | 'info' | 'success' | 'warning' | 'destructive' | 'muted';
-
-const kpiAccentMap: Record<KpiAccent, { dot: string; value: string; ring: string }> = {
-  default: {
-    dot: 'bg-primary',
-    value: 'text-foreground',
-    ring: '',
-  },
-  info: {
-    dot: 'bg-info',
-    value: 'text-info',
-    ring: '',
-  },
-  success: {
-    dot: 'bg-success',
-    value: 'text-success',
-    ring: '',
-  },
-  warning: {
-    dot: 'bg-warning',
-    value: 'text-warning',
-    ring: '',
-  },
-  destructive: {
-    dot: 'bg-destructive',
-    value: 'text-destructive',
-    ring: '',
-  },
-  muted: {
-    dot: 'bg-muted-foreground',
-    value: 'text-muted-foreground',
-    ring: '',
-  },
-};
-
-function KpiCard({
-  label,
-  value,
-  accent = 'default',
-}: {
-  label: string;
-  value: number;
-  accent?: KpiAccent;
-}) {
-  const cfg = kpiAccentMap[accent];
-  return (
-    <div className="group flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:bg-accent/30">
-      <span className={cn('h-2 w-2 rounded-full shrink-0', cfg.dot)} aria-hidden />
-      <div className="flex flex-col min-w-0 leading-tight">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium truncate">
-          {label}
-        </span>
-        <span className={cn('text-xl font-bold tabular-nums leading-none mt-0.5', cfg.value)}>
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
+// (KpiCard legado removido — substituído por MetricCard/MetricRail premium)
 
 // ----- row component -----
 const PAINEL_COLUMN_COUNT = 12;
