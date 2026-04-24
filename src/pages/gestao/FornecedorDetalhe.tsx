@@ -182,6 +182,7 @@ export default function FornecedorDetalhe() {
         ...normalizeSupplierTaxonomy(supplier.supplier_type, supplier.supplier_subcategory),
       });
     }
+    clearDraft();
     setEditing(false);
   };
 
