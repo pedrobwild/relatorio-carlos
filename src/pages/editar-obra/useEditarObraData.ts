@@ -874,5 +874,8 @@ export function useEditarObraData(projectId: string | undefined) {
     shiftDialogState,
     setShiftDialogOpen,
     handleShiftDialogConfirm,
+    // Undo last shift
+    canUndoShift: lastShiftUndo !== null,
+    undoLastShift,
   };
 }
