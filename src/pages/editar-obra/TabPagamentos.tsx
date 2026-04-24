@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import type { Payment } from './types';
+import { PaymentMethodModal } from '@/components/PaymentMethodModal';
 
 const PAYMENT_METHODS = [
   { value: 'boleto', label: 'Boleto' },
@@ -18,18 +20,25 @@ const PAYMENT_METHODS = [
   { value: 'cheque', label: 'Cheque' },
 ];
 
+const METHOD_LABEL: Record<string, string> = Object.fromEntries(
+  PAYMENT_METHODS.map(m => [m.value, m.label])
+);
+
 const currencyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 interface TabPagamentosProps {
   payments: Payment[];
+  projectId: string;
   onAdd: (p: { description: string; amount: string; due_date: string; dueDatePending: boolean; payment_method: string }) => Promise<boolean>;
   onUpdate: (id: string, field: string, value: string | number | null) => Promise<void>;
   onTogglePaid: (p: Payment) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onRefresh?: () => void | Promise<void>;
 }
 
-export function TabPagamentos({ payments, onAdd, onUpdate, onTogglePaid, onDelete }: TabPagamentosProps) {
+export function TabPagamentos({ payments, projectId, onAdd, onUpdate, onTogglePaid, onDelete, onRefresh }: TabPagamentosProps) {
   const [newPayment, setNewPayment] = useState({ description: '', amount: '', due_date: '', dueDatePending: false, payment_method: '' });
+  const [methodModal, setMethodModal] = useState<{ open: boolean; payment: Payment | null }>({ open: false, payment: null });
 
   const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
   const paidPayments = payments.filter(p => p.paid_at).reduce((sum, p) => sum + p.amount, 0);
@@ -38,6 +47,8 @@ export function TabPagamentos({ payments, onAdd, onUpdate, onTogglePaid, onDelet
     const ok = await onAdd(newPayment);
     if (ok) setNewPayment({ description: '', amount: '', due_date: '', dueDatePending: false, payment_method: '' });
   };
+
+  const openMethodModal = (p: Payment) => setMethodModal({ open: true, payment: p });
 
   return (
     <div className="space-y-6">
@@ -113,52 +124,68 @@ export function TabPagamentos({ payments, onAdd, onUpdate, onTogglePaid, onDelet
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium whitespace-nowrap">#{p.installment_number}</TableCell>
-                      <TableCell><Input value={p.description} onChange={(e) => onUpdate(p.id, 'description', e.target.value)} className="h-8 min-w-[160px]" /></TableCell>
-                      <TableCell><Input type="number" step="0.01" value={p.amount} onChange={(e) => onUpdate(p.id, 'amount', parseFloat(e.target.value))} className="h-8 w-28" /></TableCell>
-                      <TableCell>
-                        <Select value={p.payment_method || ''} onValueChange={(v) => onUpdate(p.id, 'payment_method', v || null)}>
-                          <SelectTrigger className="h-8 w-32"><SelectValue placeholder="—" /></SelectTrigger>
-                          <SelectContent>
-                            {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <Input type="date" value={p.due_date || ''} onChange={(e) => onUpdate(p.id, 'due_date', e.target.value || null)} className="h-8 w-36" disabled={!p.due_date && p.due_date !== ''} />
-                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
-                            <input type="checkbox" checked={p.due_date === null} onChange={(e) => { onUpdate(p.id, 'due_date', e.target.checked ? null : format(new Date(), 'yyyy-MM-dd')); }} className="rounded" />
-                            Em definição
-                          </label>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant={p.paid_at ? 'default' : 'outline'} size="sm" onClick={() => onTogglePaid(p)} className={`whitespace-nowrap ${p.paid_at ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
-                          {p.paid_at ? 'Pago' : 'Marcar pago'}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remover parcela?</AlertDialogTitle>
-                              <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => onDelete(p.id)}>Remover</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {payments.map((p) => {
+                    const hasMethodDetails =
+                      (p.payment_method === 'pix' && p.pix_key) ||
+                      (p.payment_method === 'boleto' && (p.boleto_code || p.boleto_path));
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell className="font-medium whitespace-nowrap">#{p.installment_number}</TableCell>
+                        <TableCell><Input value={p.description} onChange={(e) => onUpdate(p.id, 'description', e.target.value)} className="h-8 min-w-[160px]" /></TableCell>
+                        <TableCell><Input type="number" step="0.01" value={p.amount} onChange={(e) => onUpdate(p.id, 'amount', parseFloat(e.target.value))} className="h-8 w-28" /></TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 justify-between gap-2 min-w-[140px]"
+                            onClick={() => openMethodModal(p)}
+                          >
+                            <span className="flex items-center gap-1.5 truncate">
+                              {p.payment_method ? METHOD_LABEL[p.payment_method] || p.payment_method : <span className="text-muted-foreground">Definir</span>}
+                              {hasMethodDetails && (
+                                <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                                  <Sparkles className="h-2.5 w-2.5 mr-0.5" />ok
+                                </Badge>
+                              )}
+                            </span>
+                            <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <Input type="date" value={p.due_date || ''} onChange={(e) => onUpdate(p.id, 'due_date', e.target.value || null)} className="h-8 w-36" disabled={!p.due_date && p.due_date !== ''} />
+                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+                              <input type="checkbox" checked={p.due_date === null} onChange={(e) => { onUpdate(p.id, 'due_date', e.target.checked ? null : format(new Date(), 'yyyy-MM-dd')); }} className="rounded" />
+                              Em definição
+                            </label>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant={p.paid_at ? 'default' : 'outline'} size="sm" onClick={() => onTogglePaid(p)} className={`whitespace-nowrap ${p.paid_at ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
+                            {p.paid_at ? 'Pago' : 'Marcar pago'}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remover parcela?</AlertDialogTitle>
+                                <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(p.id)}>Remover</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -167,6 +194,22 @@ export function TabPagamentos({ payments, onAdd, onUpdate, onTogglePaid, onDelet
           )}
         </CardContent>
       </Card>
+
+      {methodModal.payment && (
+        <PaymentMethodModal
+          open={methodModal.open}
+          onOpenChange={(open) => setMethodModal((s) => ({ ...s, open }))}
+          paymentId={methodModal.payment.id}
+          projectId={projectId}
+          installmentNumber={methodModal.payment.installment_number}
+          description={methodModal.payment.description}
+          initialMethod={(methodModal.payment.payment_method || '') as 'pix' | 'boleto' | 'cartao' | 'transferencia' | 'cheque' | ''}
+          initialPixKey={methodModal.payment.pix_key}
+          initialBoletoCode={methodModal.payment.boleto_code}
+          initialBoletoPath={methodModal.payment.boleto_path}
+          onSaved={() => { onRefresh?.(); }}
+        />
+      )}
     </div>
   );
 }
