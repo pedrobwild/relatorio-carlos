@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { ContentSkeleton } from '@/components/ContentSkeleton';
+import { TableSkeleton, EmptyState } from '@/components/ui-premium';
 import { Search, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatBRL } from '@/lib/formatBRL';
@@ -88,16 +88,14 @@ export default function Orcamentos() {
       </div>
 
       {isLoading ? (
-        <ContentSkeleton variant="table" rows={5} />
+        <TableSkeleton rows={6} columns={7} />
       ) : filtered.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 flex flex-col items-center text-center">
-            <FileText className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">
-              {search ? 'Nenhum orçamento encontrado para esta busca.' : 'Nenhum orçamento cadastrado ainda.'}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={FileText}
+          title={search ? 'Nenhum orçamento para esta busca' : 'Nenhum orçamento cadastrado'}
+          description={search ? 'Tente outro termo de busca ou limpe o filtro.' : 'Os orçamentos recebidos do Envision aparecerão aqui.'}
+          size="md"
+        />
       ) : (
         <div className="rounded-md border bg-card overflow-x-auto">
           <Table>
