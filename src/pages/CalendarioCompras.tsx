@@ -909,7 +909,7 @@ export default function CalendarioCompras() {
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
@@ -930,6 +930,7 @@ export default function CalendarioCompras() {
                     <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                           <TableHead className="whitespace-nowrap">Obra</TableHead>
                           <TableHead className="whitespace-nowrap">Categoria</TableHead>
                           <TableHead className="whitespace-nowrap">Item</TableHead>
@@ -946,6 +947,14 @@ export default function CalendarioCompras() {
                           const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
                           return (
                             <TableRow key={p.id}>
+                              <TableCell className="font-medium whitespace-nowrap">
+                                <DateCell
+                                  value={p.payment_due_date}
+                                  onSave={(value) =>
+                                    updateDateField.mutate({ id: p.id, field: 'payment_due_date', value })
+                                  }
+                                />
+                              </TableCell>
                               <TableCell className="whitespace-nowrap max-w-[140px]">
                                 <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
                                   {p.project_name}
