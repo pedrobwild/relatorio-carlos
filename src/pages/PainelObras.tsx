@@ -471,8 +471,19 @@ export default function PainelObras() {
           flush
         />
 
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-6">
+          <TabsList className="bg-surface-sunken border border-border-subtle">
+            <TabsTrigger value="obras" className="text-xs data-[state=active]:bg-card">
+              Obras
+            </TabsTrigger>
+            <TabsTrigger value="fornecedores" className="text-xs data-[state=active]:bg-card">
+              Fornecedores
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="obras" className="mt-4 focus-visible:outline-none">
         {/* KPI Rail premium — superfície única dividida, não cards soltos */}
-        <div className="mt-6">
+        <div>
           <MetricRail>
             <MetricCard label="Total" value={summary.total} />
             <MetricCard label="Aguardando" value={summary.aguardando} accent="info" />
