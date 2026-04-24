@@ -274,44 +274,49 @@ describe('StaffRoute', () => {
   });
 });
 
-describe('CustomerRoute', () => {
-  it('should allow customers access', () => {
-    mockedUseAuth.mockReturnValue({
-      isAuthenticated: true,
-      loading: false,
-      user: { id: 'user-123', email: 'test@example.com' } as any,
-      session: {} as any,
-      signOut: vi.fn(),
-    });
-    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
+describe('StaffRoute — cobertura completa de papéis', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthed();
+  });
+
+  it.each(STAFF_ROLES)('permite acesso para o papel staff "%s"', (role) => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState([role]));
 
     const { getByTestId } = render(
       <MemoryRouter>
-        <CustomerRoute>
+        <StaffRoute>
           <TestComponent />
-        </CustomerRoute>
-      </MemoryRouter>
+        </StaffRoute>
+      </MemoryRouter>,
     );
 
     expect(getByTestId('protected-content')).toBeInTheDocument();
   });
 
-  it('should deny staff access', () => {
-    mockedUseAuth.mockReturnValue({
-      isAuthenticated: true,
-      loading: false,
-      user: { id: 'user-123', email: 'test@example.com' } as any,
-      session: {} as any,
-      signOut: vi.fn(),
-    });
-    mockedUseUserRole.mockReturnValue(createMockRoleState(['engineer']));
+  it('bloqueia o papel "customer" no StaffRoute', () => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState(['customer']));
 
     const { queryByTestId } = render(
       <MemoryRouter>
-        <CustomerRoute>
+        <StaffRoute>
           <TestComponent />
-        </CustomerRoute>
-      </MemoryRouter>
+        </StaffRoute>
+      </MemoryRouter>,
+    );
+
+    expect(queryByTestId('protected-content')).not.toBeInTheDocument();
+  });
+
+  it('bloqueia usuários sem nenhum papel', () => {
+    mockedUseUserRole.mockReturnValue(createMockRoleState([]));
+
+    const { queryByTestId } = render(
+      <MemoryRouter>
+        <StaffRoute>
+          <TestComponent />
+        </StaffRoute>
+      </MemoryRouter>,
     );
 
     expect(queryByTestId('protected-content')).not.toBeInTheDocument();
