@@ -388,6 +388,10 @@ export function useEditarObraData(projectId: string | undefined) {
       endChanged,
       activityCount: valid.length,
       mode: 'recalc-only',
+      oldStart: scheduleStart,
+      oldEnd: scheduleEnd,
+      newStart,
+      newEnd,
     });
   };
 
