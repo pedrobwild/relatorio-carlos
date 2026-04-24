@@ -259,6 +259,9 @@ export function PrestadorCalendar({ onNew }: { onNew?: () => void } = {}) {
                             <p className="text-muted-foreground">
                               {format(parseISO(e.start_date), 'dd/MM')} – {format(parseISO(e.end_date), 'dd/MM')}
                             </p>
+                            <p className="text-muted-foreground/80 text-[10px] mt-0.5">
+                              Solicitado em {format(parseISO(e.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                            </p>
                             {activeEntries.length > 1 && i === 0 && (
                               <p className="text-[hsl(var(--warning))] font-medium mt-0.5">
                                 ⚠ Conflito de agenda
