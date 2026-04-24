@@ -281,6 +281,17 @@ export default function PainelObras() {
   const { isStaff, loading: roleLoading } = useUserRole();
   const { obras, isLoading, updateObra } = usePainelObras();
 
+  // Aba ativa sincronizada com a URL (?tab=obras|fornecedores)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab = tabParam === 'fornecedores' ? 'fornecedores' : 'obras';
+  const handleTabChange = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === 'obras') next.delete('tab');
+    else next.set('tab', value);
+    setSearchParams(next, { replace: true });
+  };
+
   // Filtros
   const [search, setSearch] = useState('');
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
