@@ -1,0 +1,18 @@
+/**
+ * ui-premium — Design System refinado (Linear/Stripe/Notion-inspired).
+ *
+ * Não substitui o shadcn (ui/), complementa com primitives de mais alto
+ * nível para páginas internas e dashboards. Todos os tokens vêm de
+ * src/index.css — nada hardcoded.
+ */
+export { PageHeader } from './PageHeader';
+export { PageToolbar } from './PageToolbar';
+export { MetricCard, MetricRail, type MetricAccent } from './MetricCard';
+export { SectionCard } from './SectionCard';
+export {
+  StatusBadge,
+  type StatusTone,
+  type StatusVariant,
+  type StatusSize,
+} from './StatusBadge';
+export { FilterPill } from './FilterPill';
