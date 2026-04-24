@@ -625,6 +625,7 @@ export default function PainelObras() {
                     <SortableHeader label="Entrega Real" sortKey="entrega_real" />
                   </TableHead>
                   <TableHead className="min-w-[140px]">Relacionamento</TableHead>
+                  <TableHead className="min-w-[150px]">Orçamento público</TableHead>
                   <TableHead className="min-w-[110px]">
                     <SortableHeader label="Atualizado" sortKey="ultima_atualizacao" />
                   </TableHead>
