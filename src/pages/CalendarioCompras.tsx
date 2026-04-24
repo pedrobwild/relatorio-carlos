@@ -47,6 +47,68 @@ function toCalendarStatus(s: string | null | undefined): CalendarStatus {
   return 'pending';
 }
 
+// Editable date cell — opens a calendar popover, commits on selection or clear.
+function DateCell({
+  value,
+  onSave,
+  placeholder = 'Definir',
+}: {
+  value: string | null | undefined;
+  onSave: (value: string | null) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? parseISO(value) : undefined;
+
+  const handleSelect = (date: Date | undefined) => {
+    if (!date) return;
+    const iso = format(date, 'yyyy-MM-dd');
+    if (iso !== value) onSave(iso);
+    setOpen(false);
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (value) onSave(null);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'group inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs hover:bg-muted whitespace-nowrap',
+            !value && 'text-muted-foreground italic',
+          )}
+          title="Clique para editar"
+        >
+          {value ? format(parseISO(value), 'dd/MM/yy') : placeholder}
+          {value ? (
+            <X
+              className="h-3 w-3 opacity-0 group-hover:opacity-60 hover:text-destructive transition-opacity"
+              onClick={handleClear}
+            />
+          ) : (
+            <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 z-[200]" align="start">
+        <CalendarPicker
+          mode="single"
+          selected={selected}
+          onSelect={handleSelect}
+          locale={ptBR}
+          initialFocus
+          className="p-3 pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function StatusCell({
   purchase,
   onSave,
