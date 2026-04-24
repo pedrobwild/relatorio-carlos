@@ -51,7 +51,8 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
         icon={TrendingUp}
         label="Progresso Médio"
         value={`${stats.avgProgress}%`}
-        accent="success"
+        accent={stats.overdueProjects > 0 ? 'warning' : 'success'}
+        subtitle={stats.overdueProjects > 0 ? `${stats.overdueProjects} em atraso` : undefined}
       />
       <StatCard
         icon={AlertTriangle}

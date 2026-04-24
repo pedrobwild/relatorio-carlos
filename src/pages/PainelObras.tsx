@@ -72,6 +72,7 @@ import {
   type PainelRelacionamento,
   type PainelStatus,
 } from '@/hooks/usePainelObras';
+import { deriveDisplayStatus } from '@/lib/projectKpis';
 import { EmptyState } from '@/components/ui/states';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 
@@ -108,14 +109,12 @@ const computeDisplayStatus = (obra: {
   status: PainelStatus | null;
   entrega_oficial: string | null;
   entrega_real: string | null;
-}): PainelStatus | null => {
-  const { status, entrega_oficial, entrega_real } = obra;
-  if (!entrega_oficial || entrega_real) return status;
-  // Compara como ISO (YYYY-MM-DD) — 'hoje' no fuso local do navegador.
-  const hojeIso = format(new Date(), 'yyyy-MM-dd');
-  if (entrega_oficial < hojeIso) return 'Atrasado';
-  return status;
-};
+}): PainelStatus | null =>
+  deriveDisplayStatus({
+    status: obra.status,
+    entregaOficial: obra.entrega_oficial,
+    entregaReal: obra.entrega_real,
+  });
 
 /** Cor sólida para o "dot" e badge tipo Monday (sem hover ruidoso). */
 const statusDotClass = (s: PainelStatus | null): string => {

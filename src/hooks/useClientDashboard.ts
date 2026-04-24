@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useProjectSummaryQuery } from './useProjectsQuery';
-import { queryKeys } from '@/lib/queryKeys';
+import { useAllProjectsKPIs, type ProjectKPIs } from './useProjectKPIs';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 export interface UpcomingPayment {
@@ -29,23 +29,39 @@ export interface DashboardStats {
   activeProjects: number;
   totalPending: number;
   totalOverdue: number;
+  /** Número de obras com entrega oficial vencida (derivado via useProjectKPIs). */
+  overdueProjects: number;
   unsignedFormalizations: number;
   totalContractValue: number;
   avgProgress: number;
 }
 
-function computeStats(projects: ProjectSummary[]): DashboardStats {
-  const active = projects.filter(p => p.status === 'active');
+/**
+ * Agrega estatísticas do dashboard a partir dos KPIs unificados.
+ * Fonte única: `useProjectKPIs` — garante que "atrasado" aqui use a
+ * mesma regra do Painel e do card individual (entrega oficial vencida
+ * sem entrega real, não apenas contagem de atividades).
+ */
+function computeStats(
+  projects: ProjectSummary[],
+  kpisById: Map<string, ProjectKPIs>,
+): DashboardStats {
+  const active = projects.filter((p) => p.status === 'active');
+  const activeKpis = active
+    .map((p) => kpisById.get(p.id))
+    .filter((k): k is ProjectKPIs => !!k);
   return {
     totalProjects: projects.length,
     activeProjects: active.length,
     totalPending: active.reduce((s, p) => s + (p.pending_count || 0), 0),
     totalOverdue: active.reduce((s, p) => s + (p.overdue_count || 0), 0),
+    overdueProjects: activeKpis.filter((k) => k.isOverdue).length,
     unsignedFormalizations: active.reduce((s, p) => s + (p.unsigned_formalizations || 0), 0),
     totalContractValue: active.reduce((s, p) => s + (p.contract_value || 0), 0),
-    avgProgress: active.length > 0
-      ? Math.round(active.reduce((s, p) => s + (p.progress_percentage || 0), 0) / active.length)
-      : 0,
+    avgProgress:
+      active.length > 0
+        ? Math.round(active.reduce((s, p) => s + (p.progress_percentage || 0), 0) / active.length)
+        : 0,
   };
 }
 
@@ -87,13 +103,15 @@ export function useClientDashboard() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const stats = computeStats(projects as ProjectSummary[]);
+  const { kpisById, isLoading: kpisLoading } = useAllProjectsKPIs();
+  const stats = computeStats(projects as ProjectSummary[], kpisById);
 
   return {
     projects: projects as ProjectSummary[],
+    kpisById,
     stats,
     upcomingPayments,
-    isLoading: projectsLoading,
+    isLoading: projectsLoading || kpisLoading,
     error: projectsError,
   };
 }
