@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 import { PageContainer } from '@/components/layout/PageContainer';
-import { VistoriasPageSkeleton } from '@/components/skeletons/VistoriasPageSkeleton';
+import { PageSkeleton } from '@/components/ui-premium';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { useInspections, type Inspection } from '@/hooks/useInspections';
@@ -41,7 +41,7 @@ export default function Vistorias() {
     return (
       <div className="py-6">
         <PageContainer maxWidth="full">
-          <VistoriasPageSkeleton />
+          <PageSkeleton metrics={false} content="cards" />
         </PageContainer>
       </div>
     );

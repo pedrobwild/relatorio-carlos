@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageSkeleton } from '@/components/ui-premium';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
@@ -485,13 +485,17 @@ export default function CalendarioCompras() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <Skeleton className="h-8 w-64" />
-          <div className="grid grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
-          </div>
-          <Skeleton className="h-96" />
+      <div className="min-h-screen bg-background">
+        <PageHeader
+          title="Calendário de Compras"
+          backTo="/gestao"
+          maxWidth="full"
+          showLogo={false}
+        />
+        <div className="py-6">
+          <PageContainer maxWidth="full">
+            <PageSkeleton metrics content="table" />
+          </PageContainer>
         </div>
       </div>
     );

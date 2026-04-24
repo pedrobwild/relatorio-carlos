@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { formatBRL } from '@/lib/formatBRL';
+import { PageSkeleton, EmptyState } from '@/components/ui-premium';
 
 // Status config
 const STATUSES: Record<string, { label: string; className: string }> = {
@@ -230,17 +231,22 @@ export default function OrcamentoDetalhe({ embeddedOrcamentoId }: { embeddedOrca
 
   if (isLoading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="p-6">
+        <PageSkeleton metrics={false} content="cards" />
       </div>
     );
   }
 
   if (!budget) {
     return (
-      <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">Orçamento não encontrado.</p>
-        <Button variant="outline" onClick={() => navigate(-1)}>Voltar</Button>
+      <div className="p-6">
+        <EmptyState
+          icon={FileText}
+          title="Orçamento não encontrado"
+          description="O orçamento solicitado não existe ou foi removido."
+          action={{ label: "Voltar", onClick: () => navigate(-1), icon: ArrowLeft, variant: "outline" }}
+          size="md"
+        />
       </div>
     );
   }

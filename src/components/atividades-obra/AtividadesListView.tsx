@@ -5,14 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Pencil, Trash2, Calendar, ChevronUp, ChevronDown } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Calendar, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TASK_STATUSES, type ObraTask, type ObraTaskStatus, type ObraTaskInput } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { AtividadeFormDialog } from './AtividadeFormDialog';
 import { DeleteTaskDialog } from './DeleteTaskDialog';
-import { Skeleton } from '@/components/ui/skeleton';
+import { TableSkeleton, EmptyState } from '@/components/ui-premium';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { cn } from '@/lib/utils';
 import { getMemberName, isTaskOverdue, priorityConfig, statusVariant } from '@/lib/taskUtils';
@@ -84,19 +84,17 @@ export function AtividadesListView({ tasks, isLoading, onUpdateStatus, onDelete,
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
-      </div>
-    );
+    return <TableSkeleton rows={6} columns={6} />;
   }
 
   if (!tasks.length) {
     return (
-      <div className="text-center py-16 text-muted-foreground">
-        <p className="text-lg font-medium">Nenhuma atividade cadastrada</p>
-        <p className="text-sm mt-1">Crie a primeira atividade para começar a gerenciar as tarefas internas.</p>
-      </div>
+      <EmptyState
+        icon={ListChecks}
+        title="Nenhuma atividade cadastrada"
+        description="Crie a primeira atividade para começar a gerenciar as tarefas internas da equipe."
+        size="md"
+      />
     );
   }
 
