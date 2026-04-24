@@ -59,9 +59,13 @@ export function AuditTable({
       </CardHeader>
       <CardContent>
         {error ? (
-          <div className="text-center py-8">
-            <p className="text-destructive">Erro ao carregar dados de auditoria.</p>
-          </div>
+          <EmptyState
+            icon={History}
+            title="Erro ao carregar auditoria"
+            description="Ocorreu um problema ao buscar os registros. Tente atualizar a página."
+            bare
+            size="sm"
+          />
         ) : (
           <>
             <div className="rounded-md border overflow-hidden">
