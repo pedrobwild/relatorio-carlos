@@ -73,6 +73,10 @@ export function useEditarObraData(projectId: string | undefined) {
         .single();
       if (projectError) throw projectError;
       setProject(projectData);
+      persistedProjectDatesRef.current = {
+        start: projectData?.planned_start_date ?? null,
+        end: projectData?.planned_end_date ?? null,
+      };
 
       const { data: customerData } = await supabase
         .from('project_customers')
