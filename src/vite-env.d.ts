@@ -12,6 +12,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_VERSION?: string;
   // Error monitoring
   readonly VITE_SENTRY_PROJECT_URL?: string;
+  // Amplitude Analytics
+  readonly VITE_AMPLITUDE_API_KEY?: string;
 }
 
 interface ImportMeta {
