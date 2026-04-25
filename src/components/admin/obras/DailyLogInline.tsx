@@ -588,13 +588,13 @@ interface MiniFieldProps {
 
 function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 min-w-0">
       <Label className="text-[11px] text-muted-foreground">{label}</Label>
       <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 text-xs"
+        className="h-10 sm:h-9 text-sm w-full"
         disabled={disabled}
       />
     </div>
