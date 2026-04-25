@@ -489,12 +489,12 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         </div>
       )}
 
-      <div className="flex justify-end pt-2 border-t border-border/60">
+      <div className="flex justify-stretch sm:justify-end pt-2 border-t border-border/60">
         <Button
           type="button"
           onClick={handleSave}
           disabled={isSaving || !hasContent}
-          size="sm"
+          className="w-full sm:w-auto h-11 sm:h-9"
         >
           {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Salvar registro da semana
