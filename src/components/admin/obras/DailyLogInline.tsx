@@ -539,8 +539,8 @@ function SectionCard({
             aria-expanded={open}
             aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-2.5 text-left',
-              'hover:bg-accent/30 transition-colors',
+              'w-full flex items-center gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
+              'hover:bg-accent/30 active:bg-accent/40 transition-colors',
             )}
           >
             {icon}
