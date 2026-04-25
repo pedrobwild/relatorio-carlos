@@ -22,6 +22,7 @@ import {
   ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X, RefreshCw,
 } from "lucide-react";
 import { invokeFunction } from "@/infra/edgeFunctions";
+import { trackAmplitude } from "@/lib/amplitude";
 import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
 import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
@@ -125,11 +126,18 @@ export default function FornecedorDetalhe() {
     mutationFn: async (data: Partial<Supplier>) => {
       const { error } = await supabase.from("fornecedores").update(data as any).eq("id", id!);
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["fornecedor", id] });
       queryClient.invalidateQueries({ queryKey: ["fornecedores"] });
       toast({ title: "Fornecedor atualizado" });
+      trackAmplitude("Supplier Saved", {
+        mode: "update",
+        supplier_id: id ?? null,
+        supplier_type: data?.supplier_type ?? null,
+        supplier_subcategory: data?.supplier_subcategory ?? null,
+      });
       clearDraft();
       setEditing(false);
     },

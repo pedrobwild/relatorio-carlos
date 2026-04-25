@@ -10,6 +10,7 @@ import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useDialogDraft } from '@/hooks/useDialogDraft';
 import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
 import { toast } from 'sonner';
+import { trackAmplitude } from '@/lib/amplitude';
 
 interface Props {
   open: boolean;
@@ -82,6 +83,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    const isEdit = !!initialData?.id;
     onSubmit({
       title: title.trim(),
       description: description || null,
@@ -90,6 +92,14 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
       start_date: startDate || null,
       cost: cost ? parseFloat(cost) : null,
       priority,
+    });
+    trackAmplitude('Activity Saved', {
+      mode: isEdit ? 'update' : 'create',
+      activity_id: initialData?.id ?? null,
+      project_scope: draftScope ?? null,
+      priority,
+      has_responsible: !!(responsibleUserId && responsibleUserId !== 'none'),
+      has_due_date: !!dueDate,
     });
     clearDraft();
     resetForm();
