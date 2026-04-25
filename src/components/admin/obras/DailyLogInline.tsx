@@ -188,14 +188,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
   };
 
   return (
-    <div className="bg-muted/20 border-l-2 border-l-primary px-5 py-4 space-y-4">
+    <div className="bg-muted/20 border-l-2 border-l-primary px-3 sm:px-5 py-4 space-y-4">
       {/* Cabeçalho: data + última atualização */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-3 border-b border-border/60">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 shrink-0">
             <CalendarRange className="h-3.5 w-3.5 text-primary" />
           </div>
-          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0">
             Semana de
           </Label>
           <Input
@@ -203,12 +203,12 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             type="date"
             value={logDate}
             onChange={(e) => setLogDate(e.target.value)}
-            className="h-8 w-auto text-sm bg-card"
+            className="h-9 flex-1 min-w-0 max-w-[180px] text-sm bg-card"
             disabled={isSaving}
           />
         </div>
         {data?.updated_at && (
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="text-[11px] sm:text-xs text-muted-foreground tabular-nums w-full sm:w-auto">
             Atualizado em{' '}
             {format(parseISO(data.updated_at), "dd/MM/yyyy 'às' HH:mm", {
               locale: ptBR,
@@ -239,52 +239,59 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
               {services.map((svc, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-border bg-card p-3 flex flex-col gap-2 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-3 sm:p-3 flex flex-col gap-3 shadow-sm"
                 >
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2">
-                      <Input
-                        value={svc.description}
-                        placeholder="Ex.: Instalação elétrica – quarto 2"
-                        onChange={(e) =>
-                          updateService(i, { description: e.target.value })
-                        }
-                        className="h-8 text-sm"
-                        disabled={isSaving}
-                      />
-                      <Select
-                        value={svc.status ?? ''}
-                        onValueChange={(v) =>
-                          updateService(i, {
-                            status: (v || null) as DailyLogServiceStatus,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SERVICE_STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt} value={opt}>
-                              {opt}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  {/* Header da linha: índice + remover (mobile-friendly) */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                      Serviço #{i + 1}
+                    </span>
                     <Button
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeService(i)}
                       disabled={isSaving}
                       title="Remover serviço"
                       aria-label="Remover serviço"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+
+                  {/* Descrição + status: empilha no mobile, lado a lado no sm+ */}
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2">
+                    <Input
+                      value={svc.description}
+                      placeholder="Ex.: Instalação elétrica – quarto 2"
+                      onChange={(e) =>
+                        updateService(i, { description: e.target.value })
+                      }
+                      className="h-10 sm:h-9 text-sm"
+                      disabled={isSaving}
+                    />
+                    <Select
+                      value={svc.status ?? ''}
+                      onValueChange={(v) =>
+                        updateService(i, {
+                          status: (v || null) as DailyLogServiceStatus,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="h-10 sm:h-9 text-sm">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SERVICE_STATUS_OPTIONS.map((opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <MiniField
                       label="Início"
@@ -309,7 +316,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                         observations: e.target.value || null,
                       })
                     }
-                    className="min-h-[56px] text-sm"
+                    className="min-h-[64px] text-sm"
                     disabled={isSaving}
                   />
                   <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
@@ -320,10 +327,10 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addService}
-                className="self-start h-8 text-xs"
+                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
                 disabled={isSaving}
               >
-                <Plus className="h-3.5 w-3.5 mr-1" />
+                <Plus className="h-4 w-4 mr-1.5" />
                 Adicionar serviço
               </Button>
             </div>
@@ -343,43 +350,51 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
               {workers.map((wk, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-border bg-card p-3 flex flex-col gap-2 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-3 flex flex-col gap-3 shadow-sm"
                 >
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Input
-                        value={wk.name}
-                        placeholder="Nome do prestador"
-                        onChange={(e) =>
-                          updateWorker(i, { name: e.target.value })
-                        }
-                        className="h-8 text-sm"
-                        disabled={isSaving}
-                      />
-                      <Input
-                        value={wk.role ?? ''}
-                        placeholder="Função / empresa"
-                        onChange={(e) =>
-                          updateWorker(i, { role: e.target.value || null })
-                        }
-                        className="h-8 text-sm"
-                        disabled={isSaving}
-                      />
-                    </div>
+                  {/* Header da linha: índice + remover */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                      Prestador #{i + 1}
+                    </span>
                     <Button
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeWorker(i)}
                       disabled={isSaving}
                       title="Remover prestador"
                       aria-label="Remover prestador"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+
+                  {/* Nome + função: empilha no mobile */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input
+                      value={wk.name}
+                      placeholder="Nome do prestador"
+                      onChange={(e) =>
+                        updateWorker(i, { name: e.target.value })
+                      }
+                      className="h-10 sm:h-9 text-sm"
+                      disabled={isSaving}
+                    />
+                    <Input
+                      value={wk.role ?? ''}
+                      placeholder="Função / empresa"
+                      onChange={(e) =>
+                        updateWorker(i, { role: e.target.value || null })
+                      }
+                      className="h-10 sm:h-9 text-sm"
+                      disabled={isSaving}
+                    />
+                  </div>
+
+                  {/* Período (datas) — sempre 2 colunas */}
+                  <div className="grid grid-cols-2 gap-2">
                     <MiniField
                       label="Período de"
                       type="date"
@@ -396,6 +411,10 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       onChange={(v) => updateWorker(i, { period_end: v || null })}
                       disabled={isSaving}
                     />
+                  </div>
+
+                  {/* Horário — 2 colunas no mobile (ao invés de 4 esmagadas) */}
+                  <div className="grid grid-cols-2 gap-2">
                     <MiniField
                       label="Entrada"
                       type="time"
@@ -419,7 +438,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     onChange={(e) =>
                       updateWorker(i, { notes: e.target.value || null })
                     }
-                    className="min-h-[44px] text-sm"
+                    className="min-h-[56px] text-sm"
                     disabled={isSaving}
                   />
                 </div>
@@ -429,10 +448,10 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addWorker}
-                className="self-start h-8 text-xs"
+                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
                 disabled={isSaving}
               >
-                <Plus className="h-3.5 w-3.5 mr-1" />
+                <Plus className="h-4 w-4 mr-1.5" />
                 Adicionar prestador
               </Button>
             </div>
@@ -470,12 +489,12 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         </div>
       )}
 
-      <div className="flex justify-end pt-2 border-t border-border/60">
+      <div className="flex justify-stretch sm:justify-end pt-2 border-t border-border/60">
         <Button
           type="button"
           onClick={handleSave}
           disabled={isSaving || !hasContent}
-          size="sm"
+          className="w-full sm:w-auto h-11 sm:h-9"
         >
           {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Salvar registro da semana
@@ -520,8 +539,8 @@ function SectionCard({
             aria-expanded={open}
             aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-2.5 text-left',
-              'hover:bg-accent/30 transition-colors',
+              'w-full flex items-center gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
+              'hover:bg-accent/30 active:bg-accent/40 transition-colors',
             )}
           >
             {icon}
@@ -569,13 +588,13 @@ interface MiniFieldProps {
 
 function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 min-w-0">
       <Label className="text-[11px] text-muted-foreground">{label}</Label>
       <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 text-xs"
+        className="h-10 sm:h-9 text-sm w-full"
         disabled={disabled}
       />
     </div>
