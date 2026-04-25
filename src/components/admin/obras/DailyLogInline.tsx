@@ -188,14 +188,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
   };
 
   return (
-    <div className="bg-muted/20 border-l-2 border-l-primary px-5 py-4 space-y-4">
+    <div className="bg-muted/20 border-l-2 border-l-primary px-3 sm:px-5 py-4 space-y-4">
       {/* Cabeçalho: data + última atualização */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-3 border-b border-border/60">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 shrink-0">
             <CalendarRange className="h-3.5 w-3.5 text-primary" />
           </div>
-          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0">
             Semana de
           </Label>
           <Input
@@ -203,12 +203,12 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             type="date"
             value={logDate}
             onChange={(e) => setLogDate(e.target.value)}
-            className="h-8 w-auto text-sm bg-card"
+            className="h-9 flex-1 min-w-0 max-w-[180px] text-sm bg-card"
             disabled={isSaving}
           />
         </div>
         {data?.updated_at && (
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="text-[11px] sm:text-xs text-muted-foreground tabular-nums w-full sm:w-auto">
             Atualizado em{' '}
             {format(parseISO(data.updated_at), "dd/MM/yyyy 'às' HH:mm", {
               locale: ptBR,
