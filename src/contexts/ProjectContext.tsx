@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { projectsRepo, type ProjectWithCustomer } from '@/infra/repositories';
+import { trackAmplitude } from '@/lib/amplitude';
 
 // Re-export for backwards compatibility
 export type Project = ProjectWithCustomer;
@@ -49,6 +50,11 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
           setProject(null);
         } else {
           setProject(data);
+          trackAmplitude('Project Opened', {
+            project_id: data.id,
+            project_name: data.name,
+            status: data.status ?? null,
+          });
         }
       } catch (err: unknown) {
         console.error('Error fetching project:', err);
