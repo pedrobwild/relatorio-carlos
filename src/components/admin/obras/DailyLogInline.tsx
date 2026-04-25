@@ -239,52 +239,59 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
               {services.map((svc, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-border bg-card p-3 flex flex-col gap-2 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-3 sm:p-3 flex flex-col gap-3 shadow-sm"
                 >
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2">
-                      <Input
-                        value={svc.description}
-                        placeholder="Ex.: Instalação elétrica – quarto 2"
-                        onChange={(e) =>
-                          updateService(i, { description: e.target.value })
-                        }
-                        className="h-8 text-sm"
-                        disabled={isSaving}
-                      />
-                      <Select
-                        value={svc.status ?? ''}
-                        onValueChange={(v) =>
-                          updateService(i, {
-                            status: (v || null) as DailyLogServiceStatus,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SERVICE_STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt} value={opt}>
-                              {opt}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  {/* Header da linha: índice + remover (mobile-friendly) */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                      Serviço #{i + 1}
+                    </span>
                     <Button
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeService(i)}
                       disabled={isSaving}
                       title="Remover serviço"
                       aria-label="Remover serviço"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+
+                  {/* Descrição + status: empilha no mobile, lado a lado no sm+ */}
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2">
+                    <Input
+                      value={svc.description}
+                      placeholder="Ex.: Instalação elétrica – quarto 2"
+                      onChange={(e) =>
+                        updateService(i, { description: e.target.value })
+                      }
+                      className="h-10 sm:h-9 text-sm"
+                      disabled={isSaving}
+                    />
+                    <Select
+                      value={svc.status ?? ''}
+                      onValueChange={(v) =>
+                        updateService(i, {
+                          status: (v || null) as DailyLogServiceStatus,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="h-10 sm:h-9 text-sm">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SERVICE_STATUS_OPTIONS.map((opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <MiniField
                       label="Início"
@@ -309,7 +316,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                         observations: e.target.value || null,
                       })
                     }
-                    className="min-h-[56px] text-sm"
+                    className="min-h-[64px] text-sm"
                     disabled={isSaving}
                   />
                   <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
@@ -320,10 +327,10 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addService}
-                className="self-start h-8 text-xs"
+                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
                 disabled={isSaving}
               >
-                <Plus className="h-3.5 w-3.5 mr-1" />
+                <Plus className="h-4 w-4 mr-1.5" />
                 Adicionar serviço
               </Button>
             </div>
