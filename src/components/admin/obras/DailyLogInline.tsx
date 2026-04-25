@@ -350,43 +350,51 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
               {workers.map((wk, i) => (
                 <div
                   key={i}
-                  className="rounded-md border border-border bg-card p-3 flex flex-col gap-2 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-3 flex flex-col gap-3 shadow-sm"
                 >
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Input
-                        value={wk.name}
-                        placeholder="Nome do prestador"
-                        onChange={(e) =>
-                          updateWorker(i, { name: e.target.value })
-                        }
-                        className="h-8 text-sm"
-                        disabled={isSaving}
-                      />
-                      <Input
-                        value={wk.role ?? ''}
-                        placeholder="Função / empresa"
-                        onChange={(e) =>
-                          updateWorker(i, { role: e.target.value || null })
-                        }
-                        className="h-8 text-sm"
-                        disabled={isSaving}
-                      />
-                    </div>
+                  {/* Header da linha: índice + remover */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                      Prestador #{i + 1}
+                    </span>
                     <Button
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeWorker(i)}
                       disabled={isSaving}
                       title="Remover prestador"
                       aria-label="Remover prestador"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+
+                  {/* Nome + função: empilha no mobile */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input
+                      value={wk.name}
+                      placeholder="Nome do prestador"
+                      onChange={(e) =>
+                        updateWorker(i, { name: e.target.value })
+                      }
+                      className="h-10 sm:h-9 text-sm"
+                      disabled={isSaving}
+                    />
+                    <Input
+                      value={wk.role ?? ''}
+                      placeholder="Função / empresa"
+                      onChange={(e) =>
+                        updateWorker(i, { role: e.target.value || null })
+                      }
+                      className="h-10 sm:h-9 text-sm"
+                      disabled={isSaving}
+                    />
+                  </div>
+
+                  {/* Período (datas) — sempre 2 colunas */}
+                  <div className="grid grid-cols-2 gap-2">
                     <MiniField
                       label="Período de"
                       type="date"
@@ -403,6 +411,10 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       onChange={(v) => updateWorker(i, { period_end: v || null })}
                       disabled={isSaving}
                     />
+                  </div>
+
+                  {/* Horário — 2 colunas no mobile (ao invés de 4 esmagadas) */}
+                  <div className="grid grid-cols-2 gap-2">
                     <MiniField
                       label="Entrada"
                       type="time"
@@ -426,7 +438,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     onChange={(e) =>
                       updateWorker(i, { notes: e.target.value || null })
                     }
-                    className="min-h-[44px] text-sm"
+                    className="min-h-[56px] text-sm"
                     disabled={isSaving}
                   />
                 </div>
@@ -436,10 +448,10 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addWorker}
-                className="self-start h-8 text-xs"
+                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
                 disabled={isSaving}
               >
-                <Plus className="h-3.5 w-3.5 mr-1" />
+                <Plus className="h-4 w-4 mr-1.5" />
                 Adicionar prestador
               </Button>
             </div>
