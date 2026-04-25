@@ -15,6 +15,7 @@ import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import { AuthRedirect } from "@/components/AuthRedirect";
 import { ProjectShell } from "@/components/layout/ProjectShell";
 import { GestaoShell } from "@/components/layout/GestaoShell";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
 
 /** Thin wrapper: shows AuthRedirect (which navigates away) + a spinner while it resolves. */
 const AuthRedirectPage = () => {
@@ -159,6 +160,7 @@ const App = () => (
         <TabDiscardDetector />
         <BrowserRouter>
           <NetworkStatusBanner />
+          <ConsentBanner />
           <a href="#main-content" className="skip-to-content">Pular para o conteúdo</a>
           <Routes>
             {/* Public routes */}
