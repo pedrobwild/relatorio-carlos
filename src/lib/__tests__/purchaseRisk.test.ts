@@ -15,6 +15,7 @@ describe('getLeadTimeRisk', () => {
     expect(info.risk).toBe('safe');
     expect(info.tone).toBe('success');
     expect(info.slackDays).toBeGreaterThan(3);
+    expect(info.shortLabel).toBe('No prazo');
   });
 
   it('returns "approaching" warning when slack is 3 days or less', () => {

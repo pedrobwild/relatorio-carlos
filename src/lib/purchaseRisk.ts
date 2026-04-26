@@ -19,6 +19,8 @@ export type LeadTimeRisk = 'safe' | 'approaching' | 'critical' | 'overdue' | 'cl
 export interface LeadTimeRiskInfo {
   risk: LeadTimeRisk;
   tone: StatusTone;
+  /** Rótulo curto para exibição compacta (ex: badge em card kanban) */
+  shortLabel: string;
   /** Mensagem curta para tooltip / texto de badge */
   message: string;
   /** Última data em que a compra ainda chegaria a tempo (today + lead_time = required) */
@@ -28,6 +30,14 @@ export interface LeadTimeRiskInfo {
   /** Dias de folga após considerar lead time (positivo = sobra, negativo = vai atrasar) */
   slackDays: number;
 }
+
+export const LEAD_TIME_RISK_SHORT_LABEL: Record<LeadTimeRisk, string> = {
+  safe: 'No prazo',
+  approaching: 'Atenção',
+  critical: 'Crítico',
+  overdue: 'Atrasado',
+  closed: 'Encerrado',
+};
 
 interface PurchaseLike {
   status: PurchaseStatus;
@@ -81,6 +91,7 @@ export function getLeadTimeRisk(
     return {
       risk: 'closed',
       tone: 'muted',
+      shortLabel: LEAD_TIME_RISK_SHORT_LABEL.closed,
       message: 'Compra encerrada — risco de prazo não se aplica',
       orderByDate: null,
       daysUntilRequired,
@@ -103,6 +114,7 @@ export function getLeadTimeRisk(
     return {
       risk: 'overdue',
       tone: 'danger',
+      shortLabel: LEAD_TIME_RISK_SHORT_LABEL.overdue,
       message: `Prazo final venceu há ${Math.abs(daysUntilRequired)} dia(s)`,
       orderByDate,
       daysUntilRequired,
@@ -114,6 +126,7 @@ export function getLeadTimeRisk(
     return {
       risk: 'critical',
       tone: 'danger',
+      shortLabel: LEAD_TIME_RISK_SHORT_LABEL.critical,
       message: `Lead time estoura o prazo. Deveria ter sido comprado em ${formatBR(orderByDate)}`,
       orderByDate,
       daysUntilRequired,
@@ -125,6 +138,7 @@ export function getLeadTimeRisk(
     return {
       risk: 'approaching',
       tone: 'warning',
+      shortLabel: LEAD_TIME_RISK_SHORT_LABEL.approaching,
       message: `Comprar até ${formatBR(orderByDate)} para chegar a tempo`,
       orderByDate,
       daysUntilRequired,
@@ -135,6 +149,7 @@ export function getLeadTimeRisk(
   return {
     risk: 'safe',
     tone: 'success',
+    shortLabel: LEAD_TIME_RISK_SHORT_LABEL.safe,
     message: `Folga de ${slackDays} dia(s) antes do limite (${formatBR(orderByDate)})`,
     orderByDate,
     daysUntilRequired,

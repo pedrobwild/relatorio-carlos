@@ -1,4 +1,4 @@
-import { Plus, Search, Package, Wrench, RefreshCw } from 'lucide-react';
+import { Plus, Search, Package, Wrench, RefreshCw, List, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,16 +17,29 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { useComprasState } from './compras/useComprasState';
 import { ComprasKPICards } from './compras/ComprasKPICards';
 import { PurchasesTable } from './compras/PurchasesTable';
+import { PurchasesKanban } from './compras/PurchasesKanban';
+import { OrderedConfirmDialog } from './compras/OrderedConfirmDialog';
+import { useOrderedConfirm } from './compras/useOrderedConfirm';
 import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
 import { PrestadorCalendar } from './compras/PrestadorCalendar';
 import { getSubcategoriesByType } from '@/constants/supplierCategories';
 import type { PurchaseType } from '@/hooks/useProjectPurchases';
 
+type ComprasView = 'lista' | 'kanban';
+
 function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const state = useComprasState(purchaseType);
   const [searchQuery, setSearchQuery] = useState('');
   const [syncing, setSyncing] = useState(false);
+  const [view, setView] = useState<ComprasView>('lista');
   const queryClient = useQueryClient();
+
+  // Intercepta transições para "ordered" sem `activity_id` vinculada e pede
+  // confirmação explícita (evita compras antes da definição final da etapa).
+  const { guardedStatusChange, dialogProps: orderedDialogProps } = useOrderedConfirm(
+    state.filteredPurchases,
+    state.handleStatusChange,
+  );
 
   const isProduto = purchaseType === 'produto';
   const label = isProduto ? 'Produto' : 'Prestador';
@@ -200,18 +213,42 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         </div>
       </div>
 
-      <PurchasesTable
-        purchases={searchFilteredPurchases}
-        getActivityName={state.getActivityName}
-        getDaysUntilRequired={state.getDaysUntilRequired}
-        onEdit={(p) => state.handleOpenDialog(p)}
-        onDelete={(id) => state.setDeleteId(id)}
-        onStatusChange={state.handleStatusChange}
-        onAddFirst={() => state.handleOpenDialog()}
-        onUpdateActualCost={state.handleUpdateActualCost}
-        onUpdateNotes={state.handleUpdateNotes}
-        onUpdateField={state.handleUpdateField}
-      />
+      <Tabs value={view} onValueChange={(v) => setView(v as ComprasView)}>
+        <TabsList className="mb-3">
+          <TabsTrigger value="lista" className="gap-1.5 text-xs">
+            <List className="h-3.5 w-3.5" />
+            Lista
+          </TabsTrigger>
+          <TabsTrigger value="kanban" className="gap-1.5 text-xs">
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Kanban
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="lista" className="mt-0">
+          <PurchasesTable
+            purchases={searchFilteredPurchases}
+            getActivityName={state.getActivityName}
+            getDaysUntilRequired={state.getDaysUntilRequired}
+            onEdit={(p) => state.handleOpenDialog(p)}
+            onDelete={(id) => state.setDeleteId(id)}
+            onStatusChange={guardedStatusChange}
+            onAddFirst={() => state.handleOpenDialog()}
+            onUpdateActualCost={state.handleUpdateActualCost}
+            onUpdateNotes={state.handleUpdateNotes}
+            onUpdateField={state.handleUpdateField}
+          />
+        </TabsContent>
+        <TabsContent value="kanban" className="mt-0">
+          <PurchasesKanban
+            purchases={searchFilteredPurchases}
+            getActivityName={state.getActivityName}
+            onStatusChange={guardedStatusChange}
+            onEdit={(p) => state.handleOpenDialog(p)}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <OrderedConfirmDialog {...orderedDialogProps} />
 
       <PurchaseFormDialog
         open={state.isDialogOpen}

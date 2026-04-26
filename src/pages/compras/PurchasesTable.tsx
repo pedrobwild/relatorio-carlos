@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { StatusBadge as RiskBadge } from '@/components/ui-premium';
 import { cn } from '@/lib/utils';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
+import { getLeadTimeRisk } from '@/lib/purchaseRisk';
 import { statusConfig, PURCHASE_TYPE_LABELS, PURCHASE_TYPE_ICONS } from './types';
 import { ObservationsModal } from './ObservationsModal';
 import { PaymentFlowModal } from './PaymentFlowModal';
@@ -289,6 +292,28 @@ function StockTrackingSection({ purchase, onUpdateField }: {
   );
 }
 
+/* ─── Lead time risk badge (compacto, com tooltip explicativo) ─── */
+function LeadTimeRiskBadge({ purchase }: { purchase: ProjectPurchase }) {
+  const info = getLeadTimeRisk(purchase);
+  if (info.risk === 'closed') return null;
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <RiskBadge tone={info.tone} size="sm">
+              {info.shortLabel}
+            </RiskBadge>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs">
+          {info.message}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 /* ─── Status Badge ─── */
 function StatusBadge({ status }: { status: PurchaseStatus }) {
   const config = statusConfig[status];
@@ -456,8 +481,9 @@ function PurchaseRow({
             )}
           </div>
 
-          {/* Status */}
-          <div className="flex justify-end">
+          {/* Status + risco de lead time */}
+          <div className="flex justify-end items-center gap-1.5">
+            <LeadTimeRiskBadge purchase={purchase} />
             <StatusBadge status={purchase.status} />
           </div>
 
