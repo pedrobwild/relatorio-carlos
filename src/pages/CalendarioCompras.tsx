@@ -1117,7 +1117,10 @@ export default function CalendarioCompras() {
                                   <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block font-normal">{p.project_name}</Badge>
                                 </TableCell>
                                 <TableCell className="max-w-[200px]"><p className="font-medium truncate" title={p.item_name}>{p.item_name}</p></TableCell>
-                                <TableCell className="text-muted-foreground whitespace-nowrap text-xs tabular-nums">
+                                <TableCell className={cn(
+                                  'text-muted-foreground whitespace-nowrap text-xs tabular-nums',
+                                  !p.created_at && 'italic',
+                                )}>
                                   {fmtRequestedDate(p.created_at)}
                                 </TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
