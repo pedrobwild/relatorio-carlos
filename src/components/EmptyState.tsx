@@ -3,7 +3,7 @@ import { LucideIcon, FileX, FolderOpen, Calendar, ClipboardList, ShoppingCart, C
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export type EmptyStateVariant = 
+export type EmptyStateVariant =
   | 'documents'
   | 'formalizations'
   | 'schedule'
@@ -11,6 +11,12 @@ export type EmptyStateVariant =
   | 'payments'
   | 'generic';
 
+/**
+ * @deprecated Use `EmptyState` de `@/components/ui-premium` (Bloco 6, issue #23).
+ * Esta versão legacy permanece apenas para migração incremental — não use em
+ * código novo. Migrar gradualmente: imports legacy → premium, removendo este
+ * arquivo quando todos os usos forem migrados. Veja `docs/UX_STATES.md`.
+ */
 interface EmptyStateProps {
   /** Variant determines the icon and default messaging */
   variant?: EmptyStateVariant;
@@ -55,6 +61,9 @@ const variantIcons: Record<EmptyStateVariant, LucideIcon> = {
   generic: FolderOpen,
 };
 
+/**
+ * @deprecated Use `EmptyState` de `@/components/ui-premium`. Veja `docs/UX_STATES.md`.
+ */
 export function EmptyState({
   variant = 'generic',
   icon,

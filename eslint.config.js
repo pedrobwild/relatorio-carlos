@@ -71,5 +71,34 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    /**
+     * TOAST GUARD — em `pages/`, proíbe importar `toast` direto de
+     * `sonner`. Use `notify` de `@/lib/notify` para garantir durações
+     * consistentes, no máximo 1 toast simultâneo e mensagens em pt-BR.
+     *
+     * A própria implementação de `notify` (`src/lib/notify.ts`) e a
+     * configuração do Toaster (`src/components/ui/sonner.tsx`) ficam
+     * de fora — elas precisam do import bruto.
+     */
+    files: ["src/pages/**/*.{ts,tsx}"],
+    rules: {
+      // `warn` durante a migração incremental (issue #23). Após todos os
+      // imports diretos de `toast` saírem de `pages/`, promover para `error`.
+      "no-restricted-imports": [
+        "warn",
+        {
+          paths: [
+            {
+              name: "sonner",
+              importNames: ["toast"],
+              message:
+                "Use `notify` de '@/lib/notify' em vez de `toast` direto de 'sonner'. Garante padrão de durações, no máximo 1 toast simultâneo e mensagens humanas em pt-BR.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );
 

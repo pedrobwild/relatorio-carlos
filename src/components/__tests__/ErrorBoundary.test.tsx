@@ -43,8 +43,9 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
+    // Title for unknown errors is "Algo deu errado"; description comes from mapError().
     expect(getByText('Algo deu errado')).toBeInTheDocument();
-    expect(getByText(/Ocorreu um erro inesperado/)).toBeInTheDocument();
+    expect(getByText(/algo não saiu como esperado/i)).toBeInTheDocument();
   });
 
   it('displays correlation ID in error state', () => {

@@ -31,6 +31,7 @@ export {
 } from './useTablePreferences';
 export { DataTableSettings } from './DataTableSettings';
 export { EmptyState } from './EmptyState';
+export { ErrorView, type ErrorViewKind } from './ErrorView';
 export {
   SkeletonBlock,
   TableSkeleton,

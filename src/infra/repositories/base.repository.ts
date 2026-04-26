@@ -1,12 +1,13 @@
 /**
  * Base Repository
- * 
+ *
  * Provides common patterns for data access with error handling,
  * pagination, and type safety.
  */
 
 import { supabase } from '@/infra/supabase';
 import type { PostgrestError } from '@supabase/supabase-js';
+import { mapError, type UserError } from '@/lib/errorMapping';
 
 export interface PaginationParams {
   page?: number;
@@ -24,32 +25,51 @@ export interface PaginatedResult<T> {
 export interface RepositoryResult<T> {
   data: T | null;
   error: PostgrestError | null;
+  /**
+   * Erro humanizado pronto para exibir ao usuário (`mapError`).
+   * Opcional por compatibilidade — `executeQuery` sempre popula quando há `error`.
+   * Para erros construídos manualmente, considere passar pelo `mapError`.
+   */
+  userError?: UserError | null;
 }
 
 export interface RepositoryListResult<T> {
   data: T[];
   error: PostgrestError | null;
+  userError?: UserError | null;
+}
+
+function buildUnknownPgError(err: unknown): PostgrestError {
+  return {
+    message: err instanceof Error ? err.message : 'Unknown error',
+    details: '',
+    hint: '',
+    code: 'UNKNOWN',
+  } as PostgrestError;
 }
 
 /**
- * Wraps a Supabase query with consistent error handling
+ * Wraps a Supabase query with consistent error handling.
+ * Anexa `userError` (humanizado) sempre que houver falha, para que a UI
+ * NUNCA precise mostrar `error.message` cru ao usuário.
  */
 export async function executeQuery<T>(
   queryFn: () => Promise<{ data: T | null; error: PostgrestError | null }>
 ): Promise<RepositoryResult<T>> {
   try {
     const { data, error } = await queryFn();
-    return { data, error };
+    return {
+      data,
+      error,
+      userError: error ? mapError(error) : null,
+    };
   } catch (err) {
     console.error('Repository query error:', err);
-    return { 
-      data: null, 
-      error: {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        details: '',
-        hint: '',
-        code: 'UNKNOWN',
-      } as PostgrestError
+    const pgError = buildUnknownPgError(err);
+    return {
+      data: null,
+      error: pgError,
+      userError: mapError(err),
     };
   }
 }
@@ -62,17 +82,18 @@ export async function executeListQuery<T>(
 ): Promise<RepositoryListResult<T>> {
   try {
     const { data, error } = await queryFn();
-    return { data: data ?? [], error };
+    return {
+      data: data ?? [],
+      error,
+      userError: error ? mapError(error) : null,
+    };
   } catch (err) {
     console.error('Repository list query error:', err);
-    return { 
-      data: [], 
-      error: {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        details: '',
-        hint: '',
-        code: 'UNKNOWN',
-      } as PostgrestError
+    const pgError = buildUnknownPgError(err);
+    return {
+      data: [],
+      error: pgError,
+      userError: mapError(err),
     };
   }
 }

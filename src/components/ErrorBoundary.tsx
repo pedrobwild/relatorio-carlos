@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logError, generateCorrelationId } from '@/lib/errorLogger';
 import { captureError } from '@/lib/errorMonitoring';
+import { mapError } from '@/lib/errorMapping';
 
 interface Props {
   children: ReactNode;
@@ -91,6 +92,20 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      const ue = this.state.error ? mapError(this.state.error) : null;
+      const friendlyTitle =
+        ue?.kind === 'auth'
+          ? 'Sua sessão expirou'
+          : ue?.kind === 'forbidden'
+          ? 'Sem permissão para ver isso'
+          : ue?.kind === 'network'
+          ? 'Sem conexão'
+          : ue?.kind === 'server'
+          ? 'Tivemos um problema no servidor'
+          : 'Algo deu errado';
+      const friendlyDescription =
+        ue?.userMessage ?? 'Ocorreu um erro inesperado. Por favor, tente novamente.';
+
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <div className="max-w-md w-full text-center space-y-6">
@@ -99,14 +114,10 @@ export class ErrorBoundary extends Component<Props, State> {
                 <AlertTriangle className="h-12 w-12 text-destructive" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-foreground">
-                Algo deu errado
-              </h1>
-              <p className="text-muted-foreground">
-                Ocorreu um erro inesperado. Por favor, tente novamente.
-              </p>
+              <h1 className="text-2xl font-bold text-foreground">{friendlyTitle}</h1>
+              <p className="text-muted-foreground">{friendlyDescription}</p>
               {this.state.errorId && (
                 <p className="text-xs text-muted-foreground/60 font-mono">
                   ID: {this.state.errorId}
