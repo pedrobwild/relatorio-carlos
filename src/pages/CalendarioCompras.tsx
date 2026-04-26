@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { Fragment, useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -64,11 +64,18 @@ interface PurchaseWithProject extends Omit<ProjectPurchase, 'created_at'> {
 
 type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'delayed';
 
+/**
+ * Tons das badges de status — usam variantes claras + escuras com `dark:` para
+ * manter contraste AA tanto em light quanto em dark mode. Usar tokens semânticos
+ * resolveria de forma mais limpa, mas mantemos a paleta cromática (amber/blue/
+ * emerald/red) para preservar o reconhecimento visual já consolidado em outras
+ * telas (Compras, Painel de Obras).
+ */
 const calendarStatusConfig: Record<CalendarStatus, { label: string; color: string; icon: React.ElementType }> = {
-  pending:   { label: 'Pendente',  color: 'bg-amber-500/15 text-amber-700 border-amber-500/30',  icon: Clock },
-  approved:  { label: 'Aprovado',  color: 'bg-blue-500/15 text-blue-700 border-blue-500/30',     icon: ThumbsUp },
-  delivered: { label: 'Entregue',  color: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30', icon: CheckCircle2 },
-  delayed:   { label: 'Atrasado',  color: 'bg-red-500/15 text-red-700 border-red-500/30',        icon: AlertTriangle },
+  pending:   { label: 'Pendente',  color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40',           icon: Clock },
+  approved:  { label: 'Aprovado',  color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40',                 icon: ThumbsUp },
+  delivered: { label: 'Entregue',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40', icon: CheckCircle2 },
+  delayed:   { label: 'Atrasado',  color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',                       icon: AlertTriangle },
 };
 
 const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'delayed'];
@@ -126,8 +133,21 @@ function StatusCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSav
   const Icon = cfg.icon;
   return (
     <Select value={current} onValueChange={(v) => onSave(purchase.id, v as CalendarStatus)}>
-      <SelectTrigger className={cn('h-7 w-[126px] text-[11px] px-2 py-0 gap-1 border rounded-full font-medium', cfg.color)}>
-        <span className="inline-flex items-center gap-1"><Icon className="h-3 w-3" /><SelectValue /></span>
+      <SelectTrigger
+        className={cn(
+          // h-7 + padding fino + cor do status. `[&>span]:line-clamp-none` evita
+          // que o SelectValue corte o label em uma linha muito apertada.
+          'h-7 min-w-[120px] w-auto text-[11px] pl-2 pr-1.5 py-0 gap-1 border rounded-full font-medium',
+          '[&>span]:line-clamp-none [&>span]:flex [&>span]:items-center [&>span]:gap-1',
+          '[&_svg]:opacity-70',
+          cfg.color,
+        )}
+        aria-label={`Status: ${cfg.label}`}
+      >
+        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+          <Icon className="h-3 w-3 shrink-0" aria-hidden />
+          <SelectValue />
+        </span>
       </SelectTrigger>
       <SelectContent>
         {CALENDAR_STATUS_OPTIONS.map((s) => {
@@ -213,12 +233,12 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
 // ─── Expandable row details ───────────────────────────────────────────────────
 function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
   return (
-    // `sticky left-0` mantém o conteúdo do detail ancorado à borda esquerda
-    // mesmo quando o usuário rola a tabela horizontalmente em telas estreitas.
-    // `w-[min(100vw,72rem)]` evita que a div estique junto com a tabela e
-    // crie áreas vazias de difícil leitura.
-    <div className="sticky left-0 w-[min(100vw,72rem)]">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 px-3 py-3 text-xs bg-muted/30 border-t">
+    // O detalhe ocupa naturalmente a largura da célula colSpan. Em telas largas
+    // a tabela já é responsiva (sem scroll-x); em telas estreitas, o scroll
+    // horizontal da própria tabela leva o detail row junto, mantendo alinhamento.
+    // `max-w-screen-2xl` evita expansão visual exagerada quando há poucas colunas.
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-3 px-4 py-3 text-xs bg-muted/30 border-t max-w-screen-2xl">
         {p.category && (
           <div className="min-w-0">
             <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
@@ -237,7 +257,7 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         )}
         {p.quantity && (
           <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1">
+            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
               <Package className="h-3 w-3 shrink-0" /> Qtde / Unidade
             </span>
             <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
@@ -245,7 +265,7 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         )}
         {p.delivery_address && (
           <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1">
+            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
               <Truck className="h-3 w-3 shrink-0" /> Entrega
             </span>
             <p className="font-medium break-words">{p.delivery_address}</p>
@@ -261,7 +281,7 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         )}
         {p.notes && (
           <div className="col-span-full min-w-0">
-            <span className="text-muted-foreground">Observações</span>
+            <span className="text-muted-foreground mb-0.5 block">Observações</span>
             <p className="text-foreground leading-snug break-words">{p.notes}</p>
           </div>
         )}
@@ -775,7 +795,8 @@ export default function CalendarioCompras() {
           </div>
 
           {/* ── Filters + View Toggle + New Button ── */}
-          <Card>
+          {/* sticky para manter filtros e ações de troca de visão sempre visíveis ao rolar listas longas */}
+          <Card className="sticky top-0 z-20 bg-card/95 backdrop-blur-sm shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-wrap items-end gap-3">
                 {/* Period: From */}
@@ -957,12 +978,17 @@ export default function CalendarioCompras() {
                             onClick={toggleRequestedSort}
                             aria-label={`Ordenar por solicitada em${requestedSort ? ` (${requestedSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
                             aria-sort={requestedSort === 'asc' ? 'ascending' : requestedSort === 'desc' ? 'descending' : 'none'}
-                            className="flex w-full items-center gap-1 px-4 py-3 text-left font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                            className={cn(
+                              'flex h-9 w-full items-center gap-1 px-3 text-left font-medium whitespace-nowrap',
+                              'hover:bg-muted/60 hover:text-foreground transition-colors',
+                              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                              requestedSort && 'text-foreground bg-muted/40',
+                            )}
                           >
                             Solicitada em
-                            {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5" aria-hidden />}
-                            {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5" aria-hidden />}
-                            {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-50" aria-hidden />}
+                            {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                            {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                            {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-40" aria-hidden />}
                           </button>
                         </TableHead>
                         <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
@@ -979,8 +1005,8 @@ export default function CalendarioCompras() {
                         const expanded = expandedRows.has(p.id);
                         const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
                         return (
-                          <>
-                            <TableRow key={p.id} className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
+                          <Fragment key={p.id}>
+                            <TableRow className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
                               {/* expand */}
                               <TableCell className="w-8 text-center">
                                 {hasDetails ? (
@@ -1039,13 +1065,13 @@ export default function CalendarioCompras() {
 
                             {/* Expanded detail row */}
                             {expanded && hasDetails && (
-                              <TableRow key={`${p.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
+                              <TableRow className="bg-muted/10 hover:bg-muted/10">
                                 <TableCell colSpan={10} className="p-0">
                                   <PurchaseRowDetail p={p} />
                                 </TableCell>
                               </TableRow>
                             )}
-                          </>
+                          </Fragment>
                         );
                       })}
                       {sortedForList.length === 0 && (
@@ -1081,12 +1107,17 @@ export default function CalendarioCompras() {
                               onClick={toggleRequestedSort}
                               aria-label={`Ordenar por solicitada em${requestedSort ? ` (${requestedSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
                               aria-sort={requestedSort === 'asc' ? 'ascending' : requestedSort === 'desc' ? 'descending' : 'none'}
-                              className="flex w-full items-center gap-1 px-4 py-3 text-left font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                              className={cn(
+                                'flex h-9 w-full items-center gap-1 px-3 text-left font-medium whitespace-nowrap',
+                                'hover:bg-muted/60 hover:text-foreground transition-colors',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                requestedSort && 'text-foreground bg-muted/40',
+                              )}
                             >
                               Solicitada em
-                              {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5" aria-hidden />}
-                              {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5" aria-hidden />}
-                              {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-50" aria-hidden />}
+                              {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                              {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                              {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-40" aria-hidden />}
                             </button>
                           </TableHead>
                           <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
@@ -1103,8 +1134,8 @@ export default function CalendarioCompras() {
                           const expanded = expandedRows.has(p.id);
                           const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
                           return (
-                            <>
-                              <TableRow key={p.id} className={cn('hover:bg-muted/30', expanded && 'bg-muted/20')}>
+                            <Fragment key={p.id}>
+                              <TableRow className={cn('hover:bg-muted/30', expanded && 'bg-muted/20')}>
                                 <TableCell className="w-8 text-center">
                                   {hasDetails ? (
                                     <button type="button" onClick={() => toggleRow(p.id)}
@@ -1141,13 +1172,13 @@ export default function CalendarioCompras() {
                                 </TableCell>
                               </TableRow>
                               {expanded && hasDetails && (
-                                <TableRow key={`${p.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
+                                <TableRow className="bg-muted/10 hover:bg-muted/10">
                                   <TableCell colSpan={9} className="p-0">
                                     <PurchaseRowDetail p={p} />
                                   </TableCell>
                                 </TableRow>
                               )}
-                            </>
+                            </Fragment>
                           );
                         })}
                       </TableBody>
