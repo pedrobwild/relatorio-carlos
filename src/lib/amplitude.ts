@@ -20,7 +20,10 @@ export type AmplitudeEvent =
   | "Activity Updated"
   // Fornecedores
   | "Supplier Saved"
-  | "Supplier Updated";
+  | "Supplier Updated"
+  // Cockpit "Próxima ação" (Issue #18)
+  | "next_action_displayed"
+  | "next_action_clicked";
 
 export type AmplitudeProps = Record<string, string | number | boolean | null | undefined>;
 

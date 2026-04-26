@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { ChevronRight, AlertCircle, ClipboardSignature, FileText } from 'lucide-react';
+import { ChevronRight, AlertCircle, ClipboardSignature, FileText, ArrowRight, Clock, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { SCurveSparkline } from '@/components/scurve/SCurveSparkline';
+import { StatusBadge } from '@/components/ui-premium';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { Activity } from '@/types/report';
 
@@ -44,6 +45,42 @@ export function ProjectDashboardCard({ project, onClick, activities }: ProjectDa
     }
     return items;
   }, [project]);
+
+  // "Próxima ação" derivada dos contadores do summary (Issue #18).
+  // Microcopy diferente quando a bola está com o cliente vs. com a BWild.
+  const nextAction = useMemo(() => {
+    if (project.status === 'completed') {
+      return { owner: 'bwild' as const, tone: 'success' as const, icon: CheckCircle2, text: 'Obra concluída — nenhuma ação pendente.' };
+    }
+    if (project.overdue_count > 0) {
+      return {
+        owner: 'client' as const,
+        tone: 'danger' as const,
+        icon: AlertCircle,
+        text: `Resolver ${project.overdue_count} pendência(s) atrasada(s) — ação sua`,
+      };
+    }
+    if (project.unsigned_formalizations > 0) {
+      return {
+        owner: 'client' as const,
+        tone: 'warning' as const,
+        icon: ClipboardSignature,
+        text: `Assinar ${project.unsigned_formalizations} formalização(ões) — ação sua`,
+      };
+    }
+    if (project.pending_count > 0) {
+      return {
+        owner: 'client' as const,
+        tone: 'warning' as const,
+        icon: AlertCircle,
+        text: `${project.pending_count} pendência(s) aguardando você — ação sua`,
+      };
+    }
+    if (project.status === 'paused') {
+      return { owner: 'bwild' as const, tone: 'muted' as const, icon: Clock, text: 'Obra pausada — aguardando retomada' };
+    }
+    return { owner: 'bwild' as const, tone: 'info' as const, icon: ArrowRight, text: 'Equipe BWild executando — sem ação sua agora' };
+  }, [project.status, project.overdue_count, project.unsigned_formalizations, project.pending_count]);
 
   return (
     <Card
@@ -97,7 +134,15 @@ export function ProjectDashboardCard({ project, onClick, activities }: ProjectDa
           </div>
         )}
 
-        {/* Row 3: Alerts / Action Items */}
+        {/* Row 3: Próxima ação (sempre presente) — Issue #18 */}
+        <div className="flex items-center gap-2 text-caption pt-1">
+          <StatusBadge tone={nextAction.tone} size="sm" showDot icon={<nextAction.icon />}>
+            {nextAction.owner === 'client' ? 'Sua vez' : 'Bola BWild'}
+          </StatusBadge>
+          <span className="text-muted-foreground truncate min-w-0 flex-1">{nextAction.text}</span>
+        </div>
+
+        {/* Row 4: Alerts / Action Items (resumo numérico) */}
         {alerts.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {alerts.map((alert, i) => (

@@ -9,30 +9,74 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useDocuments, type ProjectDocument } from "@/hooks/useDocuments";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useExecutivoVersions } from "@/hooks/useExecutivoVersions";
+import { useEntityEvents } from "@/hooks/useDomainEvents";
 import { ExecutivoVersionsModal } from "@/components/executivo/ExecutivoVersionsModal";
 import { RelatedDocPDFModal } from "@/components/executivo/RelatedDocPDFModal";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+// Event type emitted when an executive document transitions to "approved"
+// because the contractual deadline elapsed without a client response.
+// (See Issue #18 — backend cron/edge function will write this event.)
+const EVENT_TACIT_APPROVAL = "EXECUTIVE_TACIT_APPROVAL";
+
+interface TacitApprovalEventPayload {
+  document_id?: string;
+  document_hash?: string;
+  deadline_iso?: string;
+  days_silent?: number;
+  registered_at?: string;
+}
+
 // ── Tacit Approval Banner ──────────────────────────────────────────────
-function TacitApprovalNotice({ formalizacoesPath }: { formalizacoesPath: string }) {
+//
+// Issue #18: traceable version. Tries to load the real domain event
+// (`EXECUTIVE_TACIT_APPROVAL`) emitted when the deadline elapsed without
+// client response, and shows a humanized timestamp + days_silent + hash
+// of the approved PDF. Falls back to a static notice when the event is
+// not (yet) available.
+function TacitApprovalNotice({
+  formalizacoesPath,
+  documentId,
+}: {
+  formalizacoesPath: string;
+  documentId: string | undefined;
+}) {
+  const { events } = useEntityEvents("document", documentId);
+  const tacitEvent = events.find((e) => e.event_type === EVENT_TACIT_APPROVAL);
+  const payload = (tacitEvent?.payload ?? {}) as TacitApprovalEventPayload;
+
+  const registeredAtIso = payload.registered_at ?? tacitEvent?.created_at ?? null;
+  const registeredAt = registeredAtIso ? safeParseISO(registeredAtIso) : null;
+  const daysSilent = payload.days_silent;
+  const documentHash = payload.document_hash;
+
+  const humanText = registeredAt
+    ? `Aprovação automática registrada em ${format(registeredAt, "dd/MM 'às' HH:mm", { locale: ptBR })}` +
+      (daysSilent != null
+        ? ` porque o prazo contratual de ${daysSilent} dias venceu sem manifestação.`
+        : ' porque o prazo contratual venceu sem manifestação.')
+    : 'Este projeto executivo foi considerado aprovado tacitamente, pois não houve manifestação do cliente dentro do prazo estipulado em contrato.';
+
   return (
-    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4">
+    <div className="bg-warning-light border border-warning/30 rounded-lg p-3 sm:p-4">
       <div className="flex items-start gap-3">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 shrink-0 mt-0.5">
-          <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-warning/15 shrink-0 mt-0.5">
+          <CheckCircle2 className="w-4 h-4 text-warning" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-h3 text-amber-800 dark:text-amber-200 mb-1">Aprovação Tácita</h3>
-          <p className="text-caption text-amber-700 dark:text-amber-300">
-            Este projeto executivo foi considerado <strong>aprovado tacitamente</strong>,
-            pois não houve manifestação do cliente dentro do prazo estipulado em contrato.
-          </p>
+          <h3 className="text-h3 text-warning mb-1">Aprovação Tácita</h3>
+          <p className="text-caption text-foreground/85">{humanText}</p>
+          {documentHash && (
+            <p className="text-tiny text-muted-foreground mt-1.5 font-mono break-all">
+              Hash do PDF aprovado: {documentHash.slice(0, 16)}…
+            </p>
+          )}
           <Link
             to={formalizacoesPath}
-            className="inline-flex items-center gap-1.5 mt-2 text-caption text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2"
+            className="inline-flex items-center gap-1.5 mt-2 text-caption text-warning hover:text-warning/80 underline underline-offset-2"
           >
             <FileText className="w-3.5 h-3.5" />
             Ver formalização completa
@@ -41,6 +85,15 @@ function TacitApprovalNotice({ formalizacoesPath }: { formalizacoesPath: string 
       </div>
     </div>
   );
+}
+
+function safeParseISO(iso: string): Date | null {
+  try {
+    const d = parseISO(iso);
+    return Number.isNaN(d.getTime()) ? null : d;
+  } catch {
+    return null;
+  }
 }
 
 // ── Related Document Card (mobile) ─────────────────────────────────────
@@ -274,7 +327,7 @@ const Executivo = () => {
             <div className="hidden lg:grid lg:grid-cols-[1fr_340px] lg:gap-6">
               <div className="space-y-4">
                 {executivoDoc.status === 'approved' && (
-                  <TacitApprovalNotice formalizacoesPath={paths.formalizacoes} />
+                  <TacitApprovalNotice formalizacoesPath={paths.formalizacoes} documentId={executivoDoc.id} />
                 )}
                 <div className="h-[calc(100vh-260px)]">
                   <PDFViewer url={executivoDoc.url!} title="Projeto Executivo" />
@@ -306,7 +359,7 @@ const Executivo = () => {
             {/* Mobile/Tablet: Stack layout */}
             <div className="lg:hidden flex flex-col gap-3">
               {executivoDoc.status === 'approved' && (
-                <TacitApprovalNotice formalizacoesPath={paths.formalizacoes} />
+                <TacitApprovalNotice formalizacoesPath={paths.formalizacoes} documentId={executivoDoc.id} />
               )}
               <div>
                 <PDFViewer url={executivoDoc.url!} title="Projeto Executivo" />

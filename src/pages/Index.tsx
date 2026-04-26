@@ -23,6 +23,8 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { format } from "date-fns";
 import { useProjectPortal } from "@/hooks/useProjectPortal";
+import { NextActionsBlock } from "@/components/cockpit/NextActionsBlock";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Lazy load heavy components
 const GanttChart = lazy(() => import("@/components/GanttChart"));
@@ -201,6 +203,14 @@ const Index = () => {
       <div className="px-4 md:p-4 lg:p-6 xl:p-8">
         <div className="max-w-[1600px] mx-auto">
           <div ref={reportRef}>
+            {/* Cockpit "Ação necessária" — Bloco 1 (Issue #18). Apenas cliente. */}
+            {!isStaff && projectId && (
+              <div className="mb-4 opacity-0 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+                <ErrorBoundary name="NextActionsBlock" feature="general" fallback={null}>
+                  <NextActionsBlock projectId={projectId} surface="project_portal" />
+                </ErrorBoundary>
+              </div>
+            )}
             <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
               {!hasShell && (
                 <ReportHeader

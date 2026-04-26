@@ -117,6 +117,51 @@ const computeDisplayStatus = (obra: {
   return status;
 };
 
+// Sinal semântico (Issue #18): primeiro indicador visual da linha + razão.
+// Tone semântico — sem cores literais.
+type SignalTone = 'destructive' | 'warning' | 'info' | 'success' | 'muted';
+interface RowSignal { tone: SignalTone; reason: string }
+
+const computeSignal = (obra: PainelObra): RowSignal => {
+  const display = computeDisplayStatus(obra);
+  if (display === 'Atrasado') {
+    return { tone: 'destructive', reason: 'Entrega oficial vencida sem entrega real preenchida.' };
+  }
+  if ((obra.overdue_count ?? 0) > 0) {
+    return {
+      tone: 'destructive',
+      reason: `${obra.overdue_count} pendência(s) atrasada(s) — risco de bloqueio.`,
+    };
+  }
+  if (obra.relacionamento === 'Crítico') {
+    return { tone: 'destructive', reason: 'Relacionamento marcado como Crítico.' };
+  }
+  if (obra.relacionamento === 'Insatisfeito' || obra.relacionamento === 'Atrito') {
+    return { tone: 'warning', reason: `Relacionamento: ${obra.relacionamento}. Atenção necessária.` };
+  }
+  if ((obra.pending_count ?? 0) > 0) {
+    return { tone: 'warning', reason: `${obra.pending_count} pendência(s) abertas.` };
+  }
+  if (display === 'Paralisada') {
+    return { tone: 'muted', reason: 'Obra paralisada — sem progresso.' };
+  }
+  if (display === 'Aguardando') {
+    return { tone: 'info', reason: 'Aguardando início ou liberação.' };
+  }
+  if (display === 'Em dia') {
+    return { tone: 'success', reason: 'Obra em dia — nenhum risco identificado.' };
+  }
+  return { tone: 'muted', reason: 'Sem sinal — status não definido.' };
+};
+
+const signalDotClass: Record<SignalTone, string> = {
+  destructive: 'bg-destructive',
+  warning: 'bg-warning',
+  info: 'bg-info',
+  success: 'bg-success',
+  muted: 'bg-muted-foreground/40',
+};
+
 const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
     case 'Aguardando': return 'bg-info';
@@ -252,10 +297,22 @@ export default function PainelObras() {
     setSearchParams(next, { replace: true });
   };
 
+  // Filtro de status sincronizado com a URL (`?status=Atrasado`) para que
+  // os MetricCards sejam clicáveis e o estado fique linkável.
+  const statusFromUrl = searchParams.get('status');
   const [search, setSearch] = useState('');
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
-  const [filterStatus, setFilterStatus] = useState<string>(ALL);
+  const filterStatus = statusFromUrl ?? ALL;
+  const setFilterStatus = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === ALL) next.delete('status');
+    else next.set('status', value);
+    setSearchParams(next, { replace: true });
+  };
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
+  const toggleStatusFilter = (value: PainelStatus) => {
+    setFilterStatus(filterStatus === value ? ALL : value);
+  };
 
   type SortKey =
     | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
@@ -448,11 +505,40 @@ export default function PainelObras() {
           <TabsContent value="obras" className="mt-4 focus-visible:outline-none">
             <div>
               <MetricRail>
-                <MetricCard label="Total" value={summary.total} />
-                <MetricCard label="Aguardando" value={summary.aguardando} accent="info" />
-                <MetricCard label="Em dia" value={summary.emDia} accent="success" />
-                <MetricCard label="Atrasadas" value={summary.atrasadas} accent="destructive" />
-                <MetricCard label="Paralisadas" value={summary.paralisadas} accent="muted" />
+                <MetricCard
+                  label="Total"
+                  value={summary.total}
+                  hint={filterStatus !== ALL ? 'Limpar filtro' : undefined}
+                  onClick={() => setFilterStatus(ALL)}
+                />
+                <MetricCard
+                  label="Aguardando"
+                  value={summary.aguardando}
+                  accent="info"
+                  hint={filterStatus === 'Aguardando' ? 'Filtrado' : undefined}
+                  onClick={() => toggleStatusFilter('Aguardando')}
+                />
+                <MetricCard
+                  label="Em dia"
+                  value={summary.emDia}
+                  accent="success"
+                  hint={filterStatus === 'Em dia' ? 'Filtrado' : undefined}
+                  onClick={() => toggleStatusFilter('Em dia')}
+                />
+                <MetricCard
+                  label="Atrasadas"
+                  value={summary.atrasadas}
+                  accent="destructive"
+                  hint={filterStatus === 'Atrasado' ? 'Filtrado' : undefined}
+                  onClick={() => toggleStatusFilter('Atrasado')}
+                />
+                <MetricCard
+                  label="Paralisadas"
+                  value={summary.paralisadas}
+                  accent="muted"
+                  hint={filterStatus === 'Paralisada' ? 'Filtrado' : undefined}
+                  onClick={() => toggleStatusFilter('Paralisada')}
+                />
               </MetricRail>
             </div>
 
@@ -539,7 +625,12 @@ export default function PainelObras() {
                     <Table className="text-sm [&_th]:h-11 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
-                          <TableHead className="min-w-[260px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
+                          <TableHead className="min-w-[260px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
+                              <span>Sinal · Cliente / Obra</span>
+                            </span>
+                          </TableHead>
                           <TableHead className="min-w-[130px]">Status</TableHead>
                           <TableHead className="min-w-[150px]">Etapa</TableHead>
                           <TableHead className="min-w-[130px]">Responsável</TableHead>
@@ -605,13 +696,30 @@ interface ObraRowProps {
 
 function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
+  const signal = computeSignal(obra);
 
   return (
     <>
       <TableRow className={cn('group transition-colors hover:bg-accent/40', expanded && 'bg-accent/25 hover:bg-accent/30')}>
-        {/* Cliente / Obra — sticky left */}
+        {/* Sinal + Cliente / Obra — sticky left */}
         <TableCell className={cn('sticky left-0 z-10 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
           <div className="flex items-start gap-1.5">
+            {/* Sinal: dot semântico + tooltip explicando o motivo (Issue #18). */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`Sinal: ${signal.reason}`}
+                  className="shrink-0 mt-1.5 inline-flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+                >
+                  <span
+                    aria-hidden
+                    className={cn('h-2 w-2 rounded-full', signalDotClass[signal.tone])}
+                  />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-[260px] text-xs">{signal.reason}</TooltipContent>
+            </Tooltip>
             <Button type="button" size="icon" variant="ghost" onClick={onToggleExpanded}
               aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'} aria-expanded={expanded}
               className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent">

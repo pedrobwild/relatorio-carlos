@@ -12,6 +12,7 @@ import { useDashboardActivities } from '@/hooks/useDashboardActivities';
 import { DashboardStatsCards } from '@/pages/minhas-obras/DashboardStatsCards';
 import { UpcomingPaymentsCard } from '@/pages/minhas-obras/UpcomingPaymentsCard';
 import { ProjectDashboardCard } from '@/pages/minhas-obras/ProjectDashboardCard';
+import { NextActionsBlock } from '@/components/cockpit/NextActionsBlock';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -93,6 +94,12 @@ export default function MinhasObras() {
             />
           ) : (
             <div className="space-y-6">
+              {/* Cockpit "Ação necessária" — Bloco 1 (Issue #18). Sempre visível;
+                  estado vazio mostra "Tudo em dia". */}
+              <ErrorBoundary name="NextActionsBlock" feature="general" fallback={null}>
+                <NextActionsBlock surface="minhas_obras" />
+              </ErrorBoundary>
+
               {/* Stats Cards - only show if multiple projects for a richer overview */}
               {hasMultipleProjects && <DashboardStatsCards stats={stats} />}
 
