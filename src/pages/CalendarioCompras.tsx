@@ -963,7 +963,7 @@ export default function CalendarioCompras() {
                           const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                           const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
                           const expanded = expandedRows.has(p.id);
-                          const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes);
+                          const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
                           return (
                             <>
                               <TableRow key={p.id} className={cn('hover:bg-muted/30', expanded && 'bg-muted/20')}>
