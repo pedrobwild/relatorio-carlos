@@ -46,15 +46,16 @@ export default tseslint.config(
   },
   {
     /**
-     * Z-INDEX GUARD — proíbe overrides arbitrários de z-index
-     * (ex.: `z-[9999]`, `z-[200]`, `z-50`) em componentes overlay
+     * Z-INDEX GUARD — proíbe sobrescrever `z-*` em componentes overlay
      * (Dialog, Sheet, Drawer, Select, Popover, Dropdown, ContextMenu,
-     * HoverCard, Tooltip, Menubar, AlertDialog, Toast).
+     * HoverCard, Tooltip, Menubar, AlertDialog).
      *
      * A escala vive em `tailwind.config.ts` como tokens semânticos
-     * (`z-modal`, `z-popover`, `z-alert`, ...). Use SEMPRE os tokens.
+     * (`z-modal`, `z-popover`, `z-alert`, ...). Esses componentes já
+     * carregam o token correto internamente — sobrescrever quebra a
+     * hierarquia e causa bugs como "popup atrás do modal".
      *
-     * Esta regra NÃO se aplica a `src/components/ui/*` (definição base).
+     * Não se aplica a `src/components/ui/*` (definição base da escala).
      */
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/components/ui/**"],
@@ -63,15 +64,9 @@ export default tseslint.config(
         "error",
         {
           selector:
-            "JSXAttribute[name.name='className'] Literal[value=/\\bz-(?:\\[|0\\b|10\\b|20\\b|30\\b|40\\b|50\\b)/]",
+            "JSXOpeningElement[name.name=/^(Dialog|Sheet|Drawer|Popover|Select|DropdownMenu|ContextMenu|HoverCard|Tooltip|Menubar|AlertDialog)Content$/] JSXAttribute[name.name='className'] Literal[value=/\\bz-/]",
           message:
-            "Não use z-index numérico em consumidores. Use os tokens semânticos da escala (z-modal, z-popover, z-alert, etc.) definidos em tailwind.config.ts. Veja docs/SECURITY_PATTERNS.md ou o cabeçalho de src/index.css.",
-        },
-        {
-          selector:
-            "JSXAttribute[name.name='className'] TemplateElement[value.raw=/\\bz-(?:\\[|0\\b|10\\b|20\\b|30\\b|40\\b|50\\b)/]",
-          message:
-            "Não use z-index numérico em consumidores. Use os tokens semânticos da escala (z-modal, z-popover, z-alert, etc.) definidos em tailwind.config.ts.",
+            "Não sobrescreva z-index em componentes overlay. Use os tokens semânticos da escala (z-modal, z-popover, z-alert) definidos em tailwind.config.ts. Se precisar de um nível novo, adicione um token na escala.",
         },
       ],
     },
