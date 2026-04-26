@@ -536,7 +536,7 @@ export default function PainelObras() {
                     <Table className="w-full text-sm [&_th]:h-11 [&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
-                          <TableHead className="min-w-[240px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
+                          <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
                           <TableHead className="min-w-[120px]">Status</TableHead>
                           <TableHead className="min-w-[140px]">Etapa</TableHead>
                           <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
