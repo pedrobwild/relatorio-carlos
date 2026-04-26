@@ -608,8 +608,14 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
     <>
       <TableRow className={cn('group transition-colors hover:bg-accent/40', expanded && 'bg-accent/25 hover:bg-accent/30')}>
         {/* Cliente / Obra — sticky left */}
-        <TableCell className={cn('sticky left-0 z-10 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
-          <div className="flex items-start gap-1.5">
+        <TableCell
+          className={cn(
+            'sticky left-0 z-10 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
+            stickyBase,
+            expanded && 'bg-accent/25 group-hover:bg-accent/30',
+          )}
+        >
+          <div className="flex items-start gap-1.5 min-w-0">
             <Button type="button" size="icon" variant="ghost" onClick={onToggleExpanded}
               aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'} aria-expanded={expanded}
               className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent">
@@ -617,13 +623,13 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
             </Button>
             <button type="button" onClick={onOpen}
               className="text-left flex flex-col gap-0.5 flex-1 min-w-0 group/link focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-0.5" title="Abrir obra">
-              <span className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm truncate group-hover/link:text-primary transition-colors">
+              <span className="flex items-center gap-1.5 min-w-0 w-full">
+                <span className="font-semibold text-sm truncate group-hover/link:text-primary transition-colors min-w-0 flex-1">
                   {obra.customer_name ?? 'Sem cliente'}
                 </span>
                 <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
               </span>
-              <span className="text-xs text-muted-foreground truncate">{obra.nome}</span>
+              <span className="text-xs text-muted-foreground truncate w-full">{obra.nome}</span>
             </button>
           </div>
         </TableCell>
