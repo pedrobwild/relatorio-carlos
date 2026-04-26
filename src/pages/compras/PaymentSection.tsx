@@ -222,39 +222,72 @@ function BoletoUploadAndExtract({ purchase, onUpdateField }: PaymentSectionProps
             <span className="text-[10px] text-muted-foreground ml-1">extraindo…</span>
           )}
         </label>
-        <div className="flex items-center gap-1">
-          <Input
-            key={purchase.boleto_code ?? ''}
-            type="text"
-            inputMode="numeric"
-            placeholder={
-              purchase.boleto_file_path
-                ? 'Será preenchida automaticamente após anexar'
-                : 'Anexe um boleto para extrair automaticamente'
-            }
-            defaultValue={purchase.boleto_code ?? ''}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              onUpdateField(purchase.id, 'boleto_code', v || null);
-            }}
-            className="h-8 text-sm font-mono"
-          />
-          {purchase.boleto_code && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={handleCopy}
-              title="Copiar"
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </Button>
+        <BoletoCodeInput
+          purchase={purchase}
+          onUpdateField={onUpdateField}
+          onCopy={handleCopy}
+          copied={copied}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─── Linha digitável do boleto, com autosave padronizado ─── */
+function BoletoCodeInput({
+  purchase,
+  onUpdateField,
+  onCopy,
+  copied,
+}: PaymentSectionProps & { onCopy: () => void; copied: boolean }) {
+  const { saveState, runSave } = useFieldAutosave(purchase.boleto_code);
+
+  return (
+    <div className="flex items-center gap-1">
+      <div className="relative flex-1">
+        <Input
+          key={purchase.boleto_code ?? ''}
+          type="text"
+          inputMode="numeric"
+          placeholder={
+            purchase.boleto_file_path
+              ? 'Será preenchida automaticamente após anexar'
+              : 'Anexe um boleto para extrair automaticamente'
+          }
+          defaultValue={purchase.boleto_code ?? ''}
+          onBlur={(e) =>
+            runSave(e.target.value.trim(), (v) =>
+              onUpdateField(purchase.id, 'boleto_code', v || null),
+            )
+          }
+          className={cn(
+            'h-8 text-sm font-mono',
+            saveState !== 'idle' && 'pr-7',
           )}
-        </div>
+        />
+        <AutosaveStatusIcon
+          state={saveState}
+          className="absolute right-2 top-1/2 -translate-y-1/2"
+        />
+      </div>
+      {purchase.boleto_code && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          onClick={onCopy}
+          title="Copiar"
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      )}
+    </div>
+  );
+}
       </div>
     </div>
   );
