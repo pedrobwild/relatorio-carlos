@@ -979,8 +979,11 @@ export default function CalendarioCompras() {
                                   <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block font-normal">{p.project_name}</Badge>
                                 </TableCell>
                                 <TableCell className="max-w-[200px]"><p className="font-medium truncate" title={p.item_name}>{p.item_name}</p></TableCell>
-                                <TableCell className="text-muted-foreground whitespace-nowrap">{p.category || <span className="italic opacity-50">—</span>}</TableCell>
-                                <TableCell className="whitespace-nowrap max-w-[130px] truncate">{p.supplier_name || <span className="italic opacity-50">—</span>}</TableCell>
+                                <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
+                                  {p.created_at
+                                    ? format(parseISO(p.created_at), "dd/MM/yyyy", { locale: ptBR })
+                                    : <span className="italic opacity-50">—</span>}
+                                </TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">
                                   <ActualCostCell purchase={p} onSave={(id, v) => updateActualCost.mutate({ id, value: v })} />
