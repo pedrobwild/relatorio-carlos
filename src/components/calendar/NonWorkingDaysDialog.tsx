@@ -109,7 +109,7 @@ export function NonWorkingDaysDialog({ open, onOpenChange, projects }: Props) {
                     {day ? format(day, 'dd/MM/yyyy') : 'Selecionar'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-50" align="start">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={day}
@@ -128,7 +128,7 @@ export function NonWorkingDaysDialog({ open, onOpenChange, projects }: Props) {
                 <SelectTrigger className="mt-1 h-9">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-50 max-h-72">
+                <SelectContent position="popper" className="max-h-72">
                   <SelectItem value="__global__">
                     <span className="inline-flex items-center gap-2">
                       <Globe2 className="h-3.5 w-3.5" />

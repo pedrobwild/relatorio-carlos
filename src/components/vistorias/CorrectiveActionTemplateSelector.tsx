@@ -73,7 +73,7 @@ export function CorrectiveActionTemplateSelector({ category, currentText, onSele
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-80 p-0 z-[9999]"
+          className="w-80 p-0"
           align="start"
           sideOffset={4}
         >

@@ -113,7 +113,7 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a obra" />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-[200]">
+              <SelectContent position="popper">
                 {projects.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}

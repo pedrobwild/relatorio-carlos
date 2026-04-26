@@ -497,7 +497,7 @@ export default function CalendarioObras() {
                       {periodLabelCap}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={refDate}
@@ -553,7 +553,7 @@ export default function CalendarioObras() {
                         Início: <strong className="ml-1">{format(draftRangeStart, 'dd/MM/yyyy')}</strong>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={draftRangeStart}
@@ -575,7 +575,7 @@ export default function CalendarioObras() {
                         Fim: <strong className="ml-1">{format(draftRangeEnd, 'dd/MM/yyyy')}</strong>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={draftRangeEnd}
@@ -648,7 +648,7 @@ export default function CalendarioObras() {
             <SelectTrigger className="h-9 w-full sm:w-[320px]">
               <SelectValue placeholder="Todas as obras" />
             </SelectTrigger>
-            <SelectContent position="popper" className="z-50 max-h-72">
+            <SelectContent position="popper" className="max-h-72">
               <SelectItem value="all">Todas as obras ({visibleByProject.length})</SelectItem>
               {projectOptions.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
@@ -678,7 +678,7 @@ export default function CalendarioObras() {
             <SelectTrigger className="h-9 w-full sm:w-[220px]">
               <SelectValue placeholder="Todas as etapas" />
             </SelectTrigger>
-            <SelectContent position="popper" className="z-50 max-h-72">
+            <SelectContent position="popper" className="max-h-72">
               <SelectItem value="all">
                 Todas as etapas ({etapaOptions.list.length + (etapaOptions.hasEmpty ? 1 : 0)})
               </SelectItem>

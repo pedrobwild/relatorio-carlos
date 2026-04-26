@@ -538,7 +538,7 @@ export function CreateNcDialog({
                 <SelectTrigger className="h-11">
                   <SelectValue placeholder="Selecionar..." />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                <SelectContent position="popper"  sideOffset={4}>
                   {NC_CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat} className="min-h-[44px]">
                       {cat}
@@ -556,7 +556,7 @@ export function CreateNcDialog({
                 <SelectTrigger className="h-11">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                <SelectContent position="popper"  sideOffset={4}>
                   {severityOptions.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value} className="min-h-[44px]">
                       {opt.label}
@@ -574,7 +574,7 @@ export function CreateNcDialog({
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Selecionar responsável..." />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+              <SelectContent position="popper"  sideOffset={4}>
                 {allResponsibleOptions.map((opt) => (
                   <SelectItem key={opt.id} value={opt.id} className="min-h-[44px]">
                     {opt.name}
@@ -613,7 +613,7 @@ export function CreateNcDialog({
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-[9999]" align="start" sideOffset={4}>
+                <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
                   <Calendar
                     mode="single"
                     selected={deadline}

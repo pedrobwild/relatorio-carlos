@@ -131,7 +131,7 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
                 <SelectTrigger className="h-11 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                <SelectContent position="popper"  sideOffset={4}>
                   {INSPECTION_TYPES.map(t => (
                     <SelectItem key={t.value} value={t.value} className="min-h-[44px]">
                       {t.emoji} {t.label}
@@ -157,7 +157,7 @@ export function DuplicateInspectionDialog({ projectId, open, onOpenChange, dupli
                 <SelectTrigger className="h-11 sm:h-10">
                   <SelectValue placeholder="Selecione uma atividade" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                <SelectContent position="popper"  sideOffset={4}>
                   <SelectItem value="none">Nenhuma</SelectItem>
                   {activities.map(a => (
                     <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>

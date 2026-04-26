@@ -305,7 +305,7 @@ export function DocumentUpload({ projectId, onSuccess }: DocumentUploadProps) {
               <SelectTrigger id="category" className={errors.document_type ? "border-destructive" : ""} data-testid="document-category-select">
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-[9999]">
+              <SelectContent position="popper" >
                 {(Object.keys(DOCUMENT_CATEGORIES) as DocumentCategory[]).map((key) => (
                   <SelectItem key={key} value={key}>
                     {DOCUMENT_CATEGORIES[key].label}

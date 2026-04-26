@@ -268,7 +268,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                   <SelectTrigger className="h-10">
                     <SelectValue placeholder="Selecionar..." />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                  <SelectContent position="popper"  sideOffset={4}>
                     {NC_CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
@@ -281,7 +281,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                   <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                  <SelectContent position="popper"  sideOffset={4}>
                     {severityOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}
@@ -299,7 +299,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                       {editDeadline ? format(editDeadline, "dd/MM/yyyy", { locale: ptBR }) : 'Sem prazo'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar mode="single" selected={editDeadline} onSelect={setEditDeadline} initialFocus className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
@@ -322,7 +322,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="Selecionar responsável..." />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                <SelectContent position="popper"  sideOffset={4}>
                   {staffUsers.map((u) => (
                     <SelectItem key={u.id} value={u.id}>{u.nome || u.email}</SelectItem>
                   ))}
@@ -629,7 +629,7 @@ export function NcDetailDialog({ nc, open, onOpenChange }: Props) {
                           <SelectTrigger className="h-11">
                             <SelectValue placeholder="Selecionar causa raiz..." />
                           </SelectTrigger>
-                          <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                          <SelectContent position="popper"  sideOffset={4}>
                             {ROOT_CAUSES.map((cause) => (
                               <SelectItem key={cause} value={cause} className="min-h-[44px]">
                                 {cause}
