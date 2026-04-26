@@ -555,7 +555,7 @@ function SectionCard({
     <Collapsible open={open} onOpenChange={setOpen}>
       <div
         className={cn(
-          'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all',
+          'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all min-w-0',
           open ? 'shadow-md' : 'hover:shadow-md',
         )}
       >
