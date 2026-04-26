@@ -5,21 +5,24 @@
 @tailwind utilities;
 
 /* ============================================================
- * Z-INDEX SCALE — única fonte de verdade
- * Editar SOMENTE em src/components/ui/* respeitando a escala.
+ * Z-INDEX SCALE — tokens semânticos (Tailwind config).
+ * Use SEMPRE as utilities `z-<layer>` em vez de números arbitrários.
+ * Editar a escala SOMENTE em tailwind.config.ts.
  * NUNCA sobrescrever em consumidores (Pages/Components).
  * ------------------------------------------------------------
- *  z-10..30   conteúdo sticky (tabelas, timelines, decorações)
- *  z-40       FAB, sticky toolbars, headers de shell mobile
- *  z-50       page headers sticky
- *  z-[100]    Sheet/Dialog overlay, Drawer overlay
- *  z-[101]    Sheet/Dialog content, Drawer content
- *  z-[200]    Select, Popover, Dropdown, Context, Hover, Tooltip,
- *             Menubar  ← ficam acima de Dialog/Sheet/Drawer
- *  z-[250]    Toast (acima de modais comuns, abaixo de AlertDialog)
- *  z-[300]    AlertDialog overlay (confirmação destrutiva)
- *  z-[301]    AlertDialog content
+ *  z-base / z-sticky / z-raised / z-docked   conteúdo de fluxo
+ *  z-shell                FAB, headers de shell mobile, toolbars
+ *  z-header               page headers sticky
+ *  z-modal                Sheet / Dialog / Drawer overlay
+ *  z-modal-content        Sheet / Dialog / Drawer content
+ *  z-popover              Select, Popover, Dropdown, Context,
+ *                         Hover, Tooltip, Menubar
+ *                         ← sempre acima de modais
+ *  z-toast                Toaster
+ *  z-alert / z-alert-content   AlertDialog (confirmação destrutiva)
+ *  z-max                  fallback de emergência (não usar)
  * ============================================================ */
+
 
 
 @layer base {
