@@ -147,7 +147,13 @@ const relacionamentoPillClass = (r: PainelRelacionamento | null): string => {
 
 const editableCell =
   'group/cell w-full h-full text-left px-2 py-1 rounded-md text-sm transition-colors ' +
-  'hover:bg-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'hover:bg-accent/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0';
+
+// Ring contido (ring-inset + offset-0) usado em SelectTrigger inline em
+// pills da tabela — evita que o halo de foco vaze para fora da célula
+// (especialmente sobre a coluna sticky "Cliente / Obra").
+const inlinePillTrigger =
+  'focus:ring-0 focus:ring-offset-0 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0';
 
 // ----- inline date cell -----
 interface DateCellProps {
