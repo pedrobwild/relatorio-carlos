@@ -100,8 +100,6 @@ const NONE = '__none__';
 const fmtDate = (iso: string | null) =>
   iso ? format(parseISO(iso), 'dd/MM/yy', { locale: ptBR }) : '—';
 
-const fmtDateTime = (iso: string) =>
-  format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 
