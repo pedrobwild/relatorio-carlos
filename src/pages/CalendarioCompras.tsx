@@ -175,11 +175,21 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
 // ─── Expandable row details ───────────────────────────────────────────────────
 function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-2 px-3 py-3 text-xs bg-muted/30 border-t">
-      {p.description && (
-        <div className="col-span-full">
-          <span className="text-muted-foreground flex items-center gap-1 mb-0.5"><FileText className="h-3 w-3" /> Descrição</span>
-          <p className="text-foreground leading-snug">{p.description}</p>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-3 px-3 py-3 text-xs bg-muted/30 border-t">
+      {p.category && (
+        <div>
+          <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+            <Package className="h-3 w-3" /> Categoria
+          </span>
+          <p className="font-medium">{p.category}</p>
+        </div>
+      )}
+      {p.supplier_name && (
+        <div>
+          <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+            <Truck className="h-3 w-3" /> Fornecedor
+          </span>
+          <p className="font-medium">{p.supplier_name}</p>
         </div>
       )}
       {p.quantity && (
@@ -192,6 +202,12 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         <div>
           <span className="text-muted-foreground flex items-center gap-1"><Truck className="h-3 w-3" /> Entrega</span>
           <p className="font-medium">{p.delivery_address}</p>
+        </div>
+      )}
+      {p.description && (
+        <div className="col-span-full">
+          <span className="text-muted-foreground flex items-center gap-1 mb-0.5"><FileText className="h-3 w-3" /> Descrição</span>
+          <p className="text-foreground leading-snug">{p.description}</p>
         </div>
       )}
       {p.notes && (
