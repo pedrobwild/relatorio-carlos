@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
+import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface PurchaseWithProject extends ProjectPurchase {
@@ -241,6 +242,7 @@ function NewPurchaseDialog({
   projects: { id: string; name: string }[];
   onCreated: () => void;
 }) {
+  const { user } = useAuth();
   const [form, setForm] = useState<NewPurchaseForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
@@ -253,19 +255,23 @@ function NewPurchaseDialog({
   const handleSubmit = async () => {
     if (!form.project_id) { toast.error('Selecione a obra'); return; }
     if (!form.item_name.trim()) { toast.error('Informe o nome do item'); return; }
+    if (!user?.id) { toast.error('Usuário não autenticado'); return; }
     setSaving(true);
     try {
+      const plannedDate = form.planned_purchase_date
+        ? format(form.planned_purchase_date, 'yyyy-MM-dd')
+        : null;
       const { error } = await supabase.from('project_purchases').insert({
         project_id: form.project_id,
+        created_by: user.id,
         item_name: form.item_name.trim(),
         category: form.category.trim() || null,
         supplier_name: form.supplier_name.trim() || null,
         estimated_cost: form.estimated_cost ? Number(form.estimated_cost.replace(',', '.')) : null,
-        planned_purchase_date: form.planned_purchase_date
-          ? format(form.planned_purchase_date, 'yyyy-MM-dd')
-          : null,
-        quantity: form.quantity ? Number(form.quantity) : null,
-        unit: form.unit.trim() || null,
+        planned_purchase_date: plannedDate,
+        required_by_date: plannedDate ?? format(new Date(), 'yyyy-MM-dd'),
+        quantity: form.quantity ? Number(form.quantity) : 1,
+        unit: form.unit.trim() || 'un',
         description: form.description.trim() || null,
         notes: form.notes.trim() || null,
         status: 'pending',
