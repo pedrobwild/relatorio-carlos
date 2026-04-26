@@ -8,6 +8,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUrlParam, useNullableUrlParam } from '@/hooks/useUrlParam';
 import { applyKpiFilter, type KpiFilterKey, type ProjectFinancial } from '../PortfolioKpiStrip';
 import { type AdvancedFilters, emptyFilters, isFiltersEmpty } from '../filters/types';
 import { applyAdvancedFilters } from '../filters/applyFilters';
@@ -18,6 +19,22 @@ export type PortfolioPreset = 'all' | 'mine' | 'critical' | 'stale' | 'due-soon'
 export type ViewMode = 'cards' | 'list';
 export type ScopeFilter = 'all' | 'obras' | 'projetos';
 
+const PORTFOLIO_PRESETS: readonly PortfolioPreset[] = [
+  'all', 'mine', 'critical', 'stale', 'due-soon', 'completed',
+] as const;
+const SCOPE_FILTERS: readonly ScopeFilter[] = ['all', 'obras', 'projetos'] as const;
+const KPI_FILTER_KEYS: readonly KpiFilterKey[] = [
+  'active', 'draft', 'critical', 'blocked', 'overdue', 'approaching-deadline',
+  'stale-7d', 'cost-at-risk', 'critical-purchase', 'completed',
+] as const;
+
+const isPreset = (v: string): v is PortfolioPreset =>
+  (PORTFOLIO_PRESETS as readonly string[]).includes(v);
+const isScope = (v: string): v is ScopeFilter =>
+  (SCOPE_FILTERS as readonly string[]).includes(v);
+const isKpiKey = (v: string): v is KpiFilterKey =>
+  (KPI_FILTER_KEYS as readonly string[]).includes(v);
+
 export function usePortfolioFilters(
   projects: ProjectWithCustomer[],
   summaries: ProjectSummary[],
@@ -26,23 +43,19 @@ export function usePortfolioFilters(
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // ── Search ──────────────────────────────────────────────────────────────
+  // ── URL-backed filters ──────────────────────────────────────────────────
+  // All filters that should survive a refresh / shared link live in the URL
+  // query (issue #16 — "Sincronizar estado dos filtros com URL query params").
+  // The setters omit the param when set to its default to keep links short.
   const search = searchParams.get('q') || '';
   const setSearch = useCallback((v: string) => {
     setSearchParams(prev => { if (v) { prev.set('q', v); } else { prev.delete('q'); } return prev; }, { replace: true });
   }, [setSearchParams]);
 
-  // ── Preset ──────────────────────────────────────────────────────────────
-  const [activePreset, setActivePreset] = useState<PortfolioPreset>('all');
-
-  // ── Scope (obras vs projetos) ──────────────────────────────────────────
-  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('all');
-
-  // ── Engineer filter ──────────────────────────────────────────────────────
-  const [selectedEngineer, setSelectedEngineer] = useState<string | null>(null);
-
-  // ── KPI filter ──────────────────────────────────────────────────────────
-  const [kpiFilter, setKpiFilter] = useState<KpiFilterKey | null>(null);
+  const [activePreset, setActivePresetParam] = useUrlParam<PortfolioPreset>('preset', 'all', isPreset);
+  const [scopeFilter, setScopeFilter] = useUrlParam<ScopeFilter>('scope', 'all', isScope);
+  const [selectedEngineer, setSelectedEngineer] = useNullableUrlParam<string>('eng');
+  const [kpiFilter, setKpiFilterParam] = useNullableUrlParam<KpiFilterKey>('kpi', isKpiKey);
 
   // ── Advanced filters ────────────────────────────────────────────────────
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(emptyFilters);
@@ -172,19 +185,27 @@ export function usePortfolioFilters(
   }, [projects, scopeFilter, selectedEngineer, search, activePreset, user?.id, kpiFilter, summaries, advancedFilters, financials]);
 
   // ── Actions ─────────────────────────────────────────────────────────────
+  // Public setters preserve the previous API so call-sites in
+  // PortfolioPage / PortfolioCommandBar don't need to change. Internally we
+  // route through the URL-backed setters so the query string always reflects
+  // the current selection.
+  const setKpiFilter = useCallback((next: KpiFilterKey | null) => {
+    setKpiFilterParam(next);
+  }, [setKpiFilterParam]);
+
   const handlePresetChange = useCallback((p: PortfolioPreset) => {
-    setActivePreset(p);
-    setKpiFilter(null);
-  }, []);
+    setActivePresetParam(p);
+    setKpiFilterParam(null);
+  }, [setActivePresetParam, setKpiFilterParam]);
 
   const handleClearAll = useCallback(() => {
     setSearch('');
-    setActivePreset('all');
+    setActivePresetParam('all');
     setScopeFilter('all');
-    setKpiFilter(null);
+    setKpiFilterParam(null);
     setAdvancedFilters(emptyFilters);
     setSelectedEngineer(null);
-  }, [setSearch]);
+  }, [setSearch, setActivePresetParam, setScopeFilter, setKpiFilterParam, setSelectedEngineer]);
 
   return {
     // State
