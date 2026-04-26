@@ -35,8 +35,20 @@ import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
+
+/**
+ * Payload tipado para INSERT em `project_purchases`.
+ * Deriva diretamente do schema gerado pelo Supabase, garantindo que qualquer
+ * mudança de coluna (NOT NULL, novo campo, etc.) seja refletida em tempo de build.
+ *
+ * Uso:
+ *   const payload: ProjectPurchaseInsert = { project_id, item_name, created_by, required_by_date, ... };
+ *   await supabase.from('project_purchases').insert(payload);
+ */
+export type ProjectPurchaseInsert = TablesInsert<'project_purchases'>;
 
 interface PurchaseWithProject extends ProjectPurchase {
   project_name: string;
