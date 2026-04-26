@@ -20,8 +20,8 @@ export function useProjectNavigation() {
       obrasIndex: '/gestao/painel-obras',
       // Staff activities. Used by STAFF_NAV's "Atividades".
       gestaoAtividades: '/gestao/atividades',
-      // The Hub da Obra (C2). Until C2 ships, it points to /relatorio so the tab is not broken.
-      obraHub: getProjectPath('/relatorio'),
+      // The Hub da Obra — landing page that aggregates next-action + section status.
+      obraHub: getProjectPath('/hub'),
       // Project-scoped paths
       relatorio: getProjectPath('/relatorio'),
       contrato: getProjectPath('/contrato'),

@@ -66,6 +66,7 @@ const MinhasObras = lazy(() => import("./pages/MinhasObras"));
 
 
 const Index = lazy(() => import("./pages/Index"));
+const ObraHub = lazy(() => import("./pages/obra/ObraHub"));
 const Contrato = lazy(() => import("./pages/Contrato"));
 const Projeto3D = lazy(() => import("./pages/Projeto3D"));
 const Executivo = lazy(() => import("./pages/Executivo"));
@@ -211,7 +212,15 @@ const App = () => (
               path="/obra/:projectId"
               element={
                 <ProtectedRoute>
-                  <ProjectPage>{withSuspense(<Index />)}</ProjectPage>
+                  <ProjectPage>{withSuspense(<ObraHub />)}</ProjectPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/obra/:projectId/hub"
+              element={
+                <ProtectedRoute>
+                  <ProjectPage>{withSuspense(<ObraHub />)}</ProjectPage>
                 </ProtectedRoute>
               }
             />

@@ -120,7 +120,7 @@ export function MobileObraHeader() {
         otherProjects={otherProjects}
         onProjectSwitch={(id) => {
           setSwitcherOpen(false);
-          navigate(`/obra/${id}/relatorio`);
+          navigate(`/obra/${id}/hub`);
         }}
       />
 
