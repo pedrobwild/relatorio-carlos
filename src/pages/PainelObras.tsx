@@ -83,7 +83,7 @@ import {
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
-import { ExternalBudgetCell } from '@/components/admin/painel/ExternalBudgetCell';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -100,8 +100,6 @@ const NONE = '__none__';
 const fmtDate = (iso: string | null) =>
   iso ? format(parseISO(iso), 'dd/MM/yy', { locale: ptBR }) : '—';
 
-const fmtDateTime = (iso: string) =>
-  format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
 const toIsoDate = (d: Date | undefined) => (d ? format(d, 'yyyy-MM-dd') : null);
 
@@ -541,16 +539,13 @@ export default function PainelObras() {
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead className="min-w-[260px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
                           <TableHead className="min-w-[130px]">Status</TableHead>
-                          <TableHead className="min-w-[150px]">Etapa</TableHead>
-                          <TableHead className="min-w-[130px]">Responsável</TableHead>
-                          <TableHead className="min-w-[110px] text-right">Progresso</TableHead>
+                         <TableHead className="min-w-[150px]">Etapa</TableHead>
+                         <TableHead className="min-w-[110px] text-right">Progresso</TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Início Of." sortKey="inicio_oficial" /></TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Entrega Of." sortKey="entrega_oficial" /></TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
-                          <TableHead className="min-w-[140px]">Relacionamento</TableHead>
-                          <TableHead className="min-w-[150px]">Orçamento público</TableHead>
-                          <TableHead className="min-w-[110px]"><SortableHeader label="Atualizado" sortKey="ultima_atualizacao" /></TableHead>
+                         <TableHead className="min-w-[140px]">Relacionamento</TableHead>
                           <TableHead className="w-16 sticky right-0 bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
@@ -592,7 +587,7 @@ export default function PainelObras() {
 }
 
 // ----- row component -----
-const PAINEL_COLUMN_COUNT = 13;
+const PAINEL_COLUMN_COUNT = 10;
 
 interface ObraRowProps {
   obra: PainelObra;
@@ -689,11 +684,6 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           </Select>
         </TableCell>
 
-        {/* Responsável */}
-        <TableCell className="text-muted-foreground">
-          <span className="truncate block">{obra.engineer_name ?? <span className="italic">—</span>}</span>
-        </TableCell>
-
         {/* Progresso */}
         <TableCell className="text-right">
           {obra.progress_percentage != null ? (
@@ -728,21 +718,6 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
               {RELACIONAMENTO_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
             </SelectContent>
           </Select>
-        </TableCell>
-
-        {/* Orçamento público */}
-        <TableCell>
-          <ExternalBudgetCell value={obra.external_budget_id} onChange={(id) => onUpdate({ external_budget_id: id })} />
-        </TableCell>
-
-        {/* Última atualização */}
-        <TableCell>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-xs text-muted-foreground cursor-default tabular-nums">{fmtDate(obra.ultima_atualizacao)}</span>
-            </TooltipTrigger>
-            <TooltipContent>{fmtDateTime(obra.ultima_atualizacao)}</TooltipContent>
-          </Tooltip>
         </TableCell>
 
         {/* Ações — sticky right */}
