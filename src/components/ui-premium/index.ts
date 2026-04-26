@@ -16,6 +16,8 @@ export {
   type StatusSize,
 } from './StatusBadge';
 export { FilterPill } from './FilterPill';
+export { SummaryChips, type SummaryChip } from './SummaryChips';
+export { FiltersSheet } from './FiltersSheet';
 export {
   DataTable,
   type DataTableColumn,
