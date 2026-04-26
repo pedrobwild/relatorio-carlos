@@ -837,11 +837,61 @@ function PurchaseRow({
           {/* Payment details: due date, method, pix key, boleto + IA */}
           <PaymentSection purchase={purchase} onUpdateField={onUpdateField} />
 
-          {purchase.description && (
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <p className="text-sm text-muted-foreground">{purchase.description}</p>
+          {/* Item details — quantity, unit, invoice number, supplier contact, description */}
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Detalhes do item
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Quantidade</label>
+                <InlineField
+                  type="number"
+                  value={purchase.quantity}
+                  placeholder="1"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'quantity', v || null)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Unidade</label>
+                <InlineField
+                  value={purchase.unit}
+                  placeholder="un, m², kg…"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'unit', v.trim() || 'un')}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Nº Nota Fiscal</label>
+                <InlineField
+                  value={purchase.invoice_number}
+                  placeholder="—"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'invoice_number', v.trim() || null)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Contato fornecedor</label>
+                <InlineField
+                  value={purchase.supplier_contact}
+                  placeholder="Telefone / e-mail"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'supplier_contact', v.trim() || null)}
+                />
+              </div>
             </div>
-          )}
+
+            <div className="mt-3">
+              <label className="text-xs text-muted-foreground block mb-1">Descrição / observações do item</label>
+              <InlineTextarea
+                value={purchase.description}
+                placeholder="Detalhes técnicos, especificações, observações…"
+                rows={2}
+                onSave={(v) => onUpdateField(purchase.id, 'description', v.trim() || null)}
+              />
+            </div>
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>
