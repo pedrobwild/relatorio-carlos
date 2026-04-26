@@ -621,8 +621,11 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
             // overflow-hidden na própria célula impede que halo/ring de
             // foco interno (botões, links) vaze para fora da coluna sticky.
             'overflow-hidden',
+            // Fundo SEMPRE opaco (bg-card) — nunca aplicar tonalidades
+            // translúcidas (`bg-accent/25`) aqui, porque elas permitem que
+            // badges/conteúdo de colunas não-sticky apareçam por baixo
+            // durante o scroll horizontal ou linha expandida.
             stickyBase,
-            expanded && 'bg-accent/25 group-hover:bg-accent/30',
           )}
         >
           <div className="flex items-start gap-1.5 min-w-0 max-w-full">
@@ -747,7 +750,14 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         </TableCell>
 
         {/* Ações — sticky right */}
-        <TableCell className={cn('sticky right-0 z-20 border-l border-border', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
+        <TableCell className={cn(
+          'sticky right-0 z-20 border-l border-border',
+          // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
+          // garantir que conteúdo de colunas não-sticky (badges de Status/
+          // Etapa/Relacionamento) não apareça por baixo desta coluna durante
+          // scroll horizontal ou quando a linha está expandida.
+          stickyBase,
+        )}>
           <div className="flex items-center justify-center gap-0.5">
             {/* Abrir obra */}
             <Tooltip>
