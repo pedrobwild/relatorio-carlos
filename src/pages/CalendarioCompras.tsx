@@ -833,15 +833,14 @@ export default function CalendarioCompras() {
                 </CardHeader>
                 <CardContent className="overflow-x-auto p-0">
                   <Table className="text-xs [&_th]:px-3 [&_td]:px-3 [&_th]:h-9 [&_td]:py-2">
-                    <TableHeader>
+                  <TableHeader>
                       <TableRow className="bg-muted/50">
                         {/* expand toggle col */}
                         <TableHead className="w-8" />
                         <TableHead className="whitespace-nowrap">Data Compra</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
-                        <TableHead className="whitespace-nowrap">Categoria</TableHead>
-                        <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
+                        <TableHead className="whitespace-nowrap">Solicitada em</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Real</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
@@ -854,7 +853,7 @@ export default function CalendarioCompras() {
                         const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                         const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
                         const expanded = expandedRows.has(p.id);
-                        const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes);
+                        const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
                         return (
                           <>
                             <TableRow key={p.id} className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
