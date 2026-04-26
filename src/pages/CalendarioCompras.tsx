@@ -925,7 +925,7 @@ export default function CalendarioCompras() {
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
+                          <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
