@@ -475,9 +475,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
           <SectionCard
             icon={<CalendarRange className="h-4 w-4 text-primary" />}
             title="Planejamento da semana"
-            defaultOpen={!!planning}
+            defaultOpen={!isLoading && !!planning}
+            isLoading={isLoading}
+            loadingSkeleton={<TextareaSkeleton />}
             previewWhenClosed={
-              planning.trim()
+              isLoading
+                ? 'Carregando planejamento…'
+                : planning.trim()
                 ? truncate(planning, 80)
                 : 'Sem planejamento — toque para preencher'
             }
@@ -495,9 +499,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
           <SectionCard
             icon={<MessageSquareText className="h-4 w-4 text-primary" />}
             title="Observações gerais"
-            defaultOpen={!!notes}
+            defaultOpen={!isLoading && !!notes}
+            isLoading={isLoading}
+            loadingSkeleton={<TextareaSkeleton />}
             previewWhenClosed={
-              notes.trim()
+              isLoading
+                ? 'Carregando observações…'
+                : notes.trim()
                 ? truncate(notes, 80)
                 : 'Sem observações — toque para adicionar'
             }
@@ -511,7 +519,6 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             />
           </SectionCard>
         </div>
-      )}
 
       <div className="flex justify-stretch sm:justify-end pt-2 border-t border-border/60">
         <Button
