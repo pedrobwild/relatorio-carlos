@@ -288,10 +288,7 @@ function BoletoCodeInput({
     </div>
   );
 }
-      </div>
-    </div>
-  );
-}
+
 
 /* ─── Main payment section ─── */
 export function PaymentSection({ purchase, onUpdateField }: PaymentSectionProps) {
