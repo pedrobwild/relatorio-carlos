@@ -34,6 +34,12 @@ interface ProjectSwitcherSheetProps {
   clientName?: string;
   otherProjects: ProjectWithCustomer[];
   onProjectSwitch: (id: string) => void;
+  /**
+   * Optional controlled open state. When provided, the built-in SheetTrigger
+   * button is hidden — callers are expected to render their own trigger.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ProjectSwitcherSheet({
@@ -42,8 +48,16 @@ export function ProjectSwitcherSheet({
   clientName,
   otherProjects,
   onProjectSwitch,
+  open: openProp,
+  onOpenChange,
 }: ProjectSwitcherSheetProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProjects = useMemo(() => {
@@ -66,7 +80,7 @@ export function ProjectSwitcherSheet({
     return groups;
   }, [filteredProjects]);
 
-  if (otherProjects.length === 0) {
+  if (otherProjects.length === 0 && !isControlled) {
     return (
       <div className="min-w-0">
         <h1 className="text-[15px] font-bold leading-tight text-foreground truncate">
@@ -79,17 +93,19 @@ export function ProjectSwitcherSheet({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-lg px-2 py-1.5 -ml-2 transition-colors group min-w-0 w-full">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-[15px] font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
-              {currentProjectName} – {unitName}
-            </h1>
-            {clientName && <p className="text-caption mt-0.5">Cliente: {clientName}</p>}
-          </div>
-          <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-        </button>
-      </SheetTrigger>
+      {!isControlled && (
+        <SheetTrigger asChild>
+          <button className="flex items-center gap-1.5 text-left hover:bg-accent rounded-lg px-2 py-1.5 -ml-2 transition-colors group min-w-0 w-full">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-[15px] font-bold leading-tight text-foreground group-hover:text-primary transition-colors truncate">
+                {currentProjectName} – {unitName}
+              </h1>
+              {clientName && <p className="text-caption mt-0.5">Cliente: {clientName}</p>}
+            </div>
+            <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+          </button>
+        </SheetTrigger>
+      )}
       <SheetContent side="bottom" className="rounded-t-2xl pb-safe max-h-[70dvh] flex flex-col">
         <SheetHeader className="pb-2 shrink-0">
           <SheetTitle className="text-base flex items-center gap-2">

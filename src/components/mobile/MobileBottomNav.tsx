@@ -1,121 +1,162 @@
-import { useMemo, useState } from "react";
-import { NavLink } from "react-router-dom";
-import { Map, DollarSign, AlertCircle, Bell, GanttChartSquare, CheckSquare } from "lucide-react";
-import { useProjectNavigation } from "@/hooks/useProjectNavigation";
-import { usePendencias } from "@/hooks/usePendencias";
-import { useNotifications } from "@/hooks/useNotifications";
-import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
-import { useUserRole } from "@/hooks/useUserRole";
-import { cn } from "@/lib/utils";
-import { MobileMoreSheet } from "./MobileMoreSheet";
-import { MobileNotificationsSheet } from "./MobileNotificationsSheet";
+import { useMemo, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { usePendencias } from '@/hooks/usePendencias';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useUserRole } from '@/hooks/useUserRole';
+import { cn } from '@/lib/utils';
+import {
+  CLIENT_NAV,
+  STAFF_NAV,
+  PROFILE_SLOT,
+  type MobileNavSlot,
+} from '@/config/mobileNav';
+import { MobileProfileSheet } from './MobileProfileSheet';
+import { MobileNotificationsSheet } from './MobileNotificationsSheet';
 
 /**
- * MobileBottomNav — fixed bottom navigation for mobile users.
- * Shows role-appropriate tabs:
- * - Client: Jornada, Financeiro, Pendências, Avisos
- * - Staff: Pendências, Cronograma, Atividades, Financeiro, + Mais (full tool sheet)
- * Only rendered on mobile viewports.
+ * MobileBottomNav — universal mobile bottom navigation. Renders 4 role-aware
+ * tabs plus a Profile slot. Used in both ProjectShell (client + project-scoped
+ * staff) and GestaoShell (staff out-of-project).
  */
 export function MobileBottomNav() {
   const { paths, projectId } = useProjectNavigation();
   const { stats } = usePendencias({ projectId });
   const { unreadCount } = useNotifications();
   const { isStaff } = useUserRole();
+  const location = useLocation();
+
+  const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
+  const navItems = isStaff ? STAFF_NAV : CLIENT_NAV;
   const criticalPendencias = stats.overdueCount + stats.urgentCount;
 
-  const navItems = useMemo(() => {
-    if (isStaff) {
-      return [
-        { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
-        { label: "Cronograma", icon: GanttChartSquare, to: paths.cronograma, badge: 0 },
-        { label: "Atividades", icon: CheckSquare, to: paths.atividades, badge: 0 },
-        { label: "Financeiro", icon: DollarSign, to: paths.financeiro, badge: 0 },
-      ];
-    }
-    return [
-      { label: "Jornada", icon: Map, to: paths.jornada, badge: 0 },
-      { label: "Financeiro", icon: DollarSign, to: paths.financeiro, badge: 0 },
-      { label: "Pendências", icon: AlertCircle, to: paths.pendencias, badge: criticalPendencias },
-    ];
-  }, [isStaff, paths, criticalPendencias]);
-
-  // Enable swipe between the navigable tabs
-  const swipeRoutes = useMemo(
-    () => navItems.map((i) => i.to),
-    [navItems]
+  const resolvedItems = useMemo(
+    () =>
+      navItems.map((item) => ({
+        ...item,
+        href: item.to(paths),
+        badgeCount: resolveBadge(item, criticalPendencias, unreadCount),
+      })),
+    [navItems, paths, criticalPendencias, unreadCount]
   );
-
-  useSwipeNavigation(swipeRoutes);
 
   return (
     <>
       <nav
-        className="fixed bottom-0 inset-x-0 z-50 border-t border-border/60 bg-card/95 backdrop-blur-xl backdrop-saturate-150 pb-safe md:hidden"
+        className="fixed bottom-0 inset-x-0 z-40 border-t border-border/60 bg-card/95 backdrop-blur-xl backdrop-saturate-150 pb-safe md:hidden"
         aria-label="Navegação principal"
       >
         <div className="flex items-stretch justify-around h-16">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 text-[10px] font-medium transition-colors",
-                  "active:scale-[0.95]",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                )
-              }
-            >
-              <span className="relative">
-                <item.icon className="h-5 w-5" />
-                {item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center" aria-label={`${item.badge} pendências`}>
-                    {item.badge > 99 ? "99+" : item.badge}
-                  </span>
-                )}
-              </span>
-              <span className="truncate">{item.label}</span>
-            </NavLink>
+          {resolvedItems.map((item) => (
+            <NavTab
+              key={item.id}
+              item={item}
+              isActive={isPathActive(location.pathname, item.href)}
+            />
           ))}
 
-          {/* Client: Notifications button */}
-          {!isStaff && (
-            <button
-              onClick={() => setNotificationsOpen(true)}
-              className={cn(
-                "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 text-[10px] font-medium transition-colors active:scale-[0.95]",
-                notificationsOpen ? "text-primary" : "text-muted-foreground"
+          <button
+            type="button"
+            onClick={() => setProfileOpen(true)}
+            className={cn(
+              'relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 min-h-[48px] text-[11px] font-medium transition-colors',
+              'active:scale-[0.95]',
+              profileOpen ? 'text-primary' : 'text-muted-foreground'
+            )}
+            aria-label={PROFILE_SLOT.label}
+            aria-expanded={profileOpen}
+          >
+            <span className="relative">
+              <PROFILE_SLOT.icon className="h-5 w-5" aria-hidden="true" />
+              {!isStaff && unreadCount > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center"
+                  aria-label={`${unreadCount} notificações não lidas`}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
               )}
-            >
-              <span className="relative">
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center" aria-label={`${unreadCount} notificações não lidas`}>
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </span>
-              <span className="truncate">Avisos</span>
-            </button>
-          )}
-
-          {/* Staff: More sheet with ALL tools */}
-          {isStaff && <MobileMoreSheet />}
+            </span>
+            <span className="truncate">{PROFILE_SLOT.label}</span>
+          </button>
         </div>
       </nav>
 
-      {/* Notifications sheet (client only) */}
-      {!isStaff && (
-        <MobileNotificationsSheet
-          open={notificationsOpen}
-          onOpenChange={setNotificationsOpen}
-        />
-      )}
+      <MobileProfileSheet
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        onOpenNotifications={() => setNotificationsOpen(true)}
+      />
+
+      <MobileNotificationsSheet
+        open={notificationsOpen}
+        onOpenChange={setNotificationsOpen}
+      />
     </>
   );
+}
+
+interface NavTabProps {
+  item: MobileNavSlot & { href: string; badgeCount: number };
+  isActive: boolean;
+}
+
+function NavTab({ item, isActive }: NavTabProps) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      to={item.href}
+      end={item.id === 'inicio'}
+      aria-label={item.label}
+      className={() =>
+        cn(
+          'relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 min-h-[48px] text-[11px] font-medium transition-colors',
+          'active:scale-[0.95]',
+          isActive ? 'text-primary' : 'text-muted-foreground'
+        )
+      }
+    >
+      {isActive && (
+        <span
+          className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-primary"
+          aria-hidden="true"
+        />
+      )}
+      <span className="relative">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+        {item.badgeCount > 0 && (
+          <span
+            className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center"
+            aria-label={`${item.badgeCount} pendências`}
+          >
+            {item.badgeCount > 99 ? '99+' : item.badgeCount}
+          </span>
+        )}
+      </span>
+      <span className="truncate">{item.label}</span>
+    </NavLink>
+  );
+}
+
+function resolveBadge(
+  item: MobileNavSlot,
+  criticalPendencias: number,
+  unreadCount: number
+): number {
+  switch (item.badge) {
+    case 'criticalPendencias':
+      return criticalPendencias;
+    case 'unreadNotifications':
+      return unreadCount;
+    case 'none':
+    default:
+      return 0;
+  }
+}
+
+function isPathActive(currentPath: string, target: string): boolean {
+  if (target === '/' || target === '/gestao') return currentPath === target;
+  return currentPath === target || currentPath.startsWith(target + '/');
 }
