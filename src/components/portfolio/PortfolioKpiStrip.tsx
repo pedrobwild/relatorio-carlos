@@ -4,6 +4,7 @@ import {
   CalendarX, CalendarClock, DollarSign, Package, FileEdit,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getProjectStaleInfo } from '@/lib/projectHealth';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
@@ -109,7 +110,7 @@ function computeKpiValues(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
+  const nowDate = new Date(now);
   const MS_14D = 14 * 24 * 60 * 60 * 1000;
 
   let activeCount = 0, draftCount = 0, criticalCount = 0, blockedCount = 0;
@@ -130,11 +131,7 @@ function computeKpiValues(
       else if (daysLeft <= MS_14D) approachingCount++;
     }
 
-    if (p.status === 'active') {
-      const ref = s?.last_activity_at ?? p.created_at;
-      const refTime = ref ? new Date(ref).getTime() : 0;
-      if (refTime > 0 && now - refTime > MS_STALE) stale7d++;
-    }
+    if (getProjectStaleInfo(p, s, nowDate).isStale) stale7d++;
 
     // Cost at risk: deviation > 15%
     if (p.status === 'active' && financials) {
@@ -237,7 +234,7 @@ export function applyKpiFilter(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
+  const nowDate = new Date(now);
   const MS_14D = 14 * 24 * 60 * 60 * 1000;
 
   switch (filter) {
@@ -266,13 +263,7 @@ export function applyKpiFilter(
     case 'blocked':
       return projects.filter(p => p.status === 'paused');
     case 'stale-7d':
-      return projects.filter(p => {
-        if (p.status !== 'active') return false;
-        const s = summaryMap.get(p.id);
-        const ref = s?.last_activity_at ?? p.created_at;
-        const refTime = ref ? new Date(ref).getTime() : 0;
-        return refTime > 0 && now - refTime > MS_STALE;
-      });
+      return projects.filter(p => getProjectStaleInfo(p, summaryMap.get(p.id), nowDate).isStale);
     case 'cost-at-risk':
       return projects.filter(p => {
         const fin = financials?.get(p.id);

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Ghost, ArrowRight, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getProjectStaleInfo } from '@/lib/projectHealth';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -32,28 +33,20 @@ function getStaleProjects(
   const summaryMap = new Map<string, ProjectSummary>();
   for (const s of summaries) summaryMap.set(s.id, s);
 
-  const now = Date.now();
-  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
+  const nowDate = new Date();
   const result: StaleProject[] = [];
 
   for (const p of projects) {
-    if (p.status !== 'active') continue;
-    const s = summaryMap.get(p.id);
-    const ref = s?.last_activity_at ?? p.created_at;
-    const refTime = ref ? new Date(ref).getTime() : 0;
-    const isStale = refTime > 0 && now - refTime > MS_STALE;
+    const stale = getProjectStaleInfo(p, summaryMap.get(p.id), nowDate);
+    if (!stale.isStale || stale.days === null) continue;
 
-    if (isStale) {
-      const staleDays = Math.floor((now - refTime) / (1000 * 60 * 60 * 24));
-
-      result.push({
-        id: p.id,
-        name: p.name,
-        customer: p.customer_name ?? null,
-        engineer: p.engineer_name ?? null,
-        staleDays,
-      });
-    }
+    result.push({
+      id: p.id,
+      name: p.name,
+      customer: p.customer_name ?? null,
+      engineer: p.engineer_name ?? null,
+      staleDays: stale.days,
+    });
   }
 
   result.sort((a, b) => (b.staleDays ?? 999) - (a.staleDays ?? 999));

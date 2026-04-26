@@ -14,7 +14,7 @@
  * timezone offset, `parseISO` from `date-fns` is safe.
  */
 
-import { format as formatFn, parse as parseFn, parseISO } from 'date-fns';
+import { format as formatFn, formatDistanceToNow, parse as parseFn, parseISO } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 import { ptBR } from 'date-fns/locale';
 
@@ -68,6 +68,29 @@ export function combineDateAndTimeISO(date: Date, time: string): string {
   const out = new Date(date);
   out.setHours(h, m, 0, 0);
   return out.toISOString();
+}
+
+/**
+ * Format a timestamp as a short pt-BR relative-time string.
+ *
+ * Examples (assuming "now" is 2025-04-23 14:00):
+ *   formatRelativeTime('2025-04-23T13:30:00Z') → 'há 30 minutos'
+ *   formatRelativeTime('2025-04-22T14:00:00Z') → 'há 1 dia'
+ *
+ * Returns the provided `fallback` (default `'—'`) for null/undefined/invalid
+ * inputs so callers can render the result without conditional wrappers.
+ *
+ * Centralizes what was previously duplicated as inline `formatDistanceToNow`
+ * calls across notifications, timeline, project cards and CS dashboard.
+ */
+export function formatRelativeTime(
+  value: Date | string | null | undefined,
+  fallback = '—',
+): string {
+  if (!value) return fallback;
+  const date = typeof value === 'string' ? parseISO(value) : value;
+  if (Number.isNaN(date.getTime())) return fallback;
+  return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
 }
 
 /** Re-export for convenience so callers don't need a second import. */

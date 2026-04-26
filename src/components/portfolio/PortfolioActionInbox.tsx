@@ -6,6 +6,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getProjectStaleInfo } from '@/lib/projectHealth';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -61,7 +62,7 @@ function buildActionItems(
   for (const s of summaries) summaryMap.set(s.id, s);
 
   const now = Date.now();
-  const MS_STALE = 7 * 24 * 60 * 60 * 1000;
+  const nowDate = new Date(now);
   const items: ActionItem[] = [];
 
   for (const p of projects) {
@@ -117,23 +118,19 @@ function buildActionItems(
       }
     }
 
-    if (p.status === 'active') {
-      const ref = s?.last_activity_at ?? p.created_at;
-      const refTime = ref ? new Date(ref).getTime() : 0;
-      const staleDays = refTime ? Math.floor((now - refTime) / (1000 * 60 * 60 * 24)) : null;
-      if (refTime && now - refTime > MS_STALE) {
-        items.push({
-          id: `stale-${p.id}`,
-          projectName: p.name,
-          projectId: `stale-${p.id}`,
-          reason: `Parada há ${staleDays} dias — verifique se há bloqueio`,
-          responsible: p.engineer_name ?? null,
-          urgency: (staleDays ?? 8) >= 14 ? 'high' : 'medium',
-          deadline: null,
-          icon: <ClipboardX className="h-3.5 w-3.5" />,
-          cta: 'Ver',
-        });
-      }
+    const stale = getProjectStaleInfo(p, s, nowDate);
+    if (stale.isStale && stale.days !== null) {
+      items.push({
+        id: `stale-${p.id}`,
+        projectName: p.name,
+        projectId: `stale-${p.id}`,
+        reason: `Parada há ${stale.days} dias — verifique se há bloqueio`,
+        responsible: p.engineer_name ?? null,
+        urgency: stale.days >= 14 ? 'high' : 'medium',
+        deadline: null,
+        icon: <ClipboardX className="h-3.5 w-3.5" />,
+        cta: 'Ver',
+      });
     }
 
     if (s && p.status === 'active' && s.overdue_count > 0) {

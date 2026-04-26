@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { LastUpdateInfo } from '@/components/portfolio/LastUpdateInfo';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
@@ -75,15 +76,6 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
   }
   if (project.status === 'paused') {
     blockers.push({ icon: <AlertTriangle className="h-3.5 w-3.5" />, label: 'Obra pausada — aguardando desbloqueio', accent: 'text-destructive' });
-  }
-
-  let lastActivity: string | null = null;
-  if (summary?.last_activity_at) {
-    try {
-      lastActivity = format(new Date(summary.last_activity_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    } catch {
-      lastActivity = null;
-    }
   }
 
   return (
@@ -220,7 +212,11 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
           {/* Last activity */}
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/20">
             <span>Última atualização</span>
-            <span className="font-medium tabular-nums">{lastActivity ?? 'Sem registro'}</span>
+            <LastUpdateInfo
+              value={summary?.last_activity_at}
+              hideIcon
+              className="font-medium tabular-nums"
+            />
           </div>
         </div>
 
