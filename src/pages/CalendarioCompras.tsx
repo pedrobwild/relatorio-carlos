@@ -705,6 +705,14 @@ export default function CalendarioCompras() {
     return base.sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || ''));
   }, [filtered, requestedSort]);
 
+  const withoutDate = useMemo(() => {
+    const base = filtered.filter((p) => !p.planned_purchase_date);
+    if (requestedSort) {
+      return [...base].sort((a, b) => compareByCreatedAt(a, b, requestedSort));
+    }
+    return base;
+  }, [filtered, requestedSort]);
+
   // Mobile window filtering: drives SummaryChips and the mobile card list.
   const todayIso = format(new Date(), 'yyyy-MM-dd');
   const sevenDaysIso = format(addDays(new Date(), 7), 'yyyy-MM-dd');
@@ -733,7 +741,9 @@ export default function CalendarioCompras() {
   );
 
   const mobilePurchases = useMemo(() => {
-    if (mobileWindow === 'all') return sortedForList;
+    // "Todas" mirrors the desktop's two sections (with-date list + "Sem data
+    // definida") so undated requests don't disappear on mobile.
+    if (mobileWindow === 'all') return [...sortedForList, ...withoutDate];
     const limit = mobileWindow === 'week' ? sevenDaysIso : twentyEightDaysIso;
     return sortedForList.filter(
       (p) =>
@@ -741,15 +751,9 @@ export default function CalendarioCompras() {
         p.planned_purchase_date >= todayIso &&
         p.planned_purchase_date <= limit
     );
-  }, [sortedForList, mobileWindow, todayIso, sevenDaysIso, twentyEightDaysIso]);
+  }, [sortedForList, withoutDate, mobileWindow, todayIso, sevenDaysIso, twentyEightDaysIso]);
 
-  const withoutDate = useMemo(() => {
-    const base = filtered.filter((p) => !p.planned_purchase_date);
-    if (requestedSort) {
-      return [...base].sort((a, b) => compareByCreatedAt(a, b, requestedSort));
-    }
-    return base;
-  }, [filtered, requestedSort]);
+  const mobileAllCount = sortedForList.length + withoutDate.length;
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -845,7 +849,7 @@ export default function CalendarioCompras() {
               chips={[
                 { id: 'week', label: 'Esta semana', count: weekWindowCount, accent: 'warning' },
                 { id: '4weeks', label: 'Próximas 4 semanas', count: fourWeeksWindowCount, accent: 'primary' },
-                { id: 'all', label: 'Todas', count: filtered.length, accent: 'muted' },
+                { id: 'all', label: 'Todas', count: mobileAllCount, accent: 'muted' },
               ] as SummaryChip[]}
               activeId={mobileWindow}
               onChange={(id) => setMobileWindow((id as 'week' | '4weeks' | 'all') ?? 'all')}

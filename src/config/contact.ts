@@ -1,10 +1,10 @@
 /**
  * Centralized contact info for support entry points.
- * The WhatsApp number is intentionally kept as a constant (not env) — it is the
- * public BWild support channel and is the same across environments.
+ * Source of truth for the WhatsApp phone number — Auth and the mobile profile
+ * sheet both consume it so the user always lands in the same chat.
  */
 export const BWILD_SUPPORT = {
-  whatsappNumber: '5547999999999',
+  whatsappNumber: '5521989362122',
   whatsappMessage: 'Olá! Preciso de ajuda com minha obra no Portal BWild.',
 } as const;
 

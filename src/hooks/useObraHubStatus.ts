@@ -86,10 +86,12 @@ export function useObraHubStatus(projectId: string | undefined): ObraHubStatus {
       isUrgent: pendingFormalizations > 0,
     };
 
-    // Financeiro — earliest unpaid installment
+    // Financeiro — earliest unpaid installment.
+    // Compare with day granularity so an installment due today only flips to
+    // overdue tomorrow, regardless of the current time of day.
     const unpaid = payments.filter((p) => !p.paid_at);
     const overduePayments = unpaid.filter(
-      (p) => p.due_date && parseISO(p.due_date) < today
+      (p) => p.due_date && differenceInCalendarDays(parseISO(p.due_date), today) < 0
     );
     const nextDue = unpaid
       .filter((p): p is typeof p & { due_date: string } => p.due_date !== null)
