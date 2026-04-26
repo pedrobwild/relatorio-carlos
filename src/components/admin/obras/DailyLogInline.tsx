@@ -631,12 +631,14 @@ interface MiniFieldProps {
 function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <Label className="text-[11px] text-muted-foreground">{label}</Label>
+      <Label className="text-[11px] text-muted-foreground truncate">{label}</Label>
       <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 sm:h-9 text-sm w-full"
+        // min-w-0 + w-full evitam que o picker nativo (iOS/Android)
+        // imponha largura mínima e estoure o card no mobile.
+        className="h-9 px-2 text-sm w-full min-w-0"
         disabled={disabled}
       />
     </div>
