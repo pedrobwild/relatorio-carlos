@@ -722,10 +722,13 @@ const LIST_ROW_SKELETON = (
   </div>
 );
 
+// Alturas mínimas pré-calculadas para cada bloco — reservam o espaço
+// vertical exato (aprox.) do conteúdo final, evitando layout shift quando
+// os dados chegam e a seção troca o skeleton pelo formulário real.
 const ServicesSkeleton = memo(function ServicesSkeleton() {
   return (
     <div
-      className={SKELETON_WRAPPER_CLASS}
+      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[260px]')}
       role="status"
       aria-busy="true"
       aria-label="Carregando serviços em execução"
@@ -739,7 +742,7 @@ const ServicesSkeleton = memo(function ServicesSkeleton() {
 const WorkersSkeleton = memo(function WorkersSkeleton() {
   return (
     <div
-      className={SKELETON_WRAPPER_CLASS}
+      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[260px]')}
       role="status"
       aria-busy="true"
       aria-label="Carregando prestadores no local"
@@ -753,7 +756,7 @@ const WorkersSkeleton = memo(function WorkersSkeleton() {
 const TextareaSkeleton = memo(function TextareaSkeleton() {
   return (
     <div
-      className={SKELETON_WRAPPER_CLASS}
+      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[88px]')}
       role="status"
       aria-busy="true"
       aria-label="Carregando conteúdo"
