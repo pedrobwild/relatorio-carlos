@@ -221,11 +221,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-14 w-full" />
-        </div>
+        <DailyLogSkeleton />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
           {/* Serviços em execução */}
@@ -641,6 +637,37 @@ function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
         className="h-9 px-2 text-sm w-full min-w-0"
         disabled={disabled}
       />
+    </div>
+  );
+}
+
+/**
+ * DailyLogSkeleton — placeholder estruturado que mimetiza o layout das
+ * 4 seções colapsáveis. Aparece instantaneamente ao abrir o expansível,
+ * suavizando a transição até o `useProjectDailyLog` resolver. Mantém a
+ * mesma altura aproximada do conteúdo real para evitar layout shift.
+ */
+function DailyLogSkeleton() {
+  return (
+    <div
+      className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3"
+      role="status"
+      aria-busy="true"
+      aria-label="Carregando registro da semana"
+    >
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-lg border border-border bg-card overflow-hidden shadow-sm"
+        >
+          {/* header da seção (mimetiza SectionCard fechado) */}
+          <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px]">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-3.5 w-32 rounded" />
+            <Skeleton className="ml-auto h-4 w-4 rounded" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
