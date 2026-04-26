@@ -776,8 +776,11 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
       </TableRow>
 
       {expanded && (
-        <TableRow className="bg-accent/15 hover:bg-accent/15">
-          <TableCell colSpan={PAINEL_COLUMN_COUNT} className="p-0 border-t border-b-2 border-primary/20">
+        <TableRow data-testid="painel-obras-row-expanded" className="bg-accent/15 hover:bg-accent/15">
+          <TableCell
+            colSpan={PAINEL_COLUMN_COUNT}
+            className="p-0 border-t border-b-2 border-primary/20 align-top"
+          >
             <ExpandedRowContent projectId={obra.id} />
           </TableCell>
         </TableRow>
@@ -787,10 +790,18 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
 }
 
 /**
- * ExpandedRowContent — fixa o conteúdo expandido na largura visível do
- * container scrollável da tabela (e não em 100vw). Isso evita overflow
- * horizontal quando há sidebar aberta no desktop ou padding lateral no
- * mobile, garantindo que o formulário caiba exatamente no viewport útil.
+ * ExpandedRowContent — renderiza o conteúdo expandido alinhado às colunas
+ * da linha pai. Usa um wrapper interno `position: sticky; left: 0` que
+ * acompanha o scroll horizontal da tabela e fica preso à largura visível
+ * do container scrollável, evitando que o formulário "vaze" para fora do
+ * viewport útil ou cresça o bloco horizontalmente.
+ *
+ * Estratégia:
+ *  - O <td colSpan> ocupa naturalmente toda a largura da tabela (somatório
+ *    das colunas), mantendo o alinhamento visual com a linha pai.
+ *  - O conteúdo interno usa `sticky left-0` + largura medida do scroller
+ *    horizontal (overflow-x-auto), garantindo que o formulário caiba
+ *    exatamente na área visível, sem provocar scroll vertical extra.
  */
 function ExpandedRowContent({ projectId }: { projectId: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -799,8 +810,6 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
-    // Sobe até encontrar o ancestral com scroll horizontal (overflow-x-auto)
-    // ou cai no body como fallback.
     let scroller: HTMLElement | null = node.parentElement;
     while (scroller && scroller !== document.body) {
       const style = window.getComputedStyle(scroller);
@@ -822,10 +831,13 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
   return (
     <div
       ref={ref}
-      className="sticky left-0 max-w-full"
+      className="sticky left-0 max-w-full overflow-hidden"
       style={width ? { width: `${width}px` } : undefined}
     >
-      <DailyLogInline projectId={projectId} />
+      <div className="min-w-0 w-full px-3 sm:px-4 py-3 sm:py-4">
+        <DailyLogInline projectId={projectId} />
+      </div>
     </div>
   );
 }
+
