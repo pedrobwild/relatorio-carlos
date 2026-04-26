@@ -23,7 +23,12 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { PageSkeleton } from '@/components/ui-premium';
+import {
+  PageSkeleton,
+  SummaryChips,
+  FiltersSheet,
+  type SummaryChip,
+} from '@/components/ui-premium';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -534,6 +539,7 @@ export default function CalendarioCompras() {
   const [filterActualCost, setFilterActualCost] = useState<'all' | 'informed' | 'pending'>('all');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [mobileWindow, setMobileWindow] = useState<'week' | '4weeks' | 'all'>('4weeks');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [newDialogOpen, setNewDialogOpen] = useState(false);
   // Ordenação por "Solicitada em" (created_at). null = ordem padrão (planned_purchase_date asc).
@@ -699,6 +705,44 @@ export default function CalendarioCompras() {
     return base.sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || ''));
   }, [filtered, requestedSort]);
 
+  // Mobile window filtering: drives SummaryChips and the mobile card list.
+  const todayIso = format(new Date(), 'yyyy-MM-dd');
+  const sevenDaysIso = format(addDays(new Date(), 7), 'yyyy-MM-dd');
+  const twentyEightDaysIso = format(addDays(new Date(), 28), 'yyyy-MM-dd');
+
+  const weekWindowCount = useMemo(
+    () =>
+      sortedForList.filter(
+        (p) =>
+          p.planned_purchase_date &&
+          p.planned_purchase_date >= todayIso &&
+          p.planned_purchase_date <= sevenDaysIso
+      ).length,
+    [sortedForList, todayIso, sevenDaysIso]
+  );
+
+  const fourWeeksWindowCount = useMemo(
+    () =>
+      sortedForList.filter(
+        (p) =>
+          p.planned_purchase_date &&
+          p.planned_purchase_date >= todayIso &&
+          p.planned_purchase_date <= twentyEightDaysIso
+      ).length,
+    [sortedForList, todayIso, twentyEightDaysIso]
+  );
+
+  const mobilePurchases = useMemo(() => {
+    if (mobileWindow === 'all') return sortedForList;
+    const limit = mobileWindow === 'week' ? sevenDaysIso : twentyEightDaysIso;
+    return sortedForList.filter(
+      (p) =>
+        p.planned_purchase_date &&
+        p.planned_purchase_date >= todayIso &&
+        p.planned_purchase_date <= limit
+    );
+  }, [sortedForList, mobileWindow, todayIso, sevenDaysIso, twentyEightDaysIso]);
+
   const withoutDate = useMemo(() => {
     const base = filtered.filter((p) => !p.planned_purchase_date);
     if (requestedSort) {
@@ -766,8 +810,8 @@ export default function CalendarioCompras() {
       <div className="py-6">
         <PageContainer maxWidth="full" className="space-y-6">
 
-          {/* ── KPIs ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          {/* ── KPIs (desktop only) ── */}
+          <div className="hidden md:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
               { label: 'Total de Itens', value: totalItems, cls: '' },
               { label: 'Pendentes', value: pendingItems, cls: 'text-amber-600' },
@@ -794,9 +838,113 @@ export default function CalendarioCompras() {
             ))}
           </div>
 
-          {/* ── Filters + View Toggle + New Button ── */}
+          {/* ── Mobile chrome: SummaryChips + Filters sheet ── */}
+          <div className="md:hidden space-y-3">
+            <SummaryChips
+              ariaLabel="Filtrar compras por janela"
+              chips={[
+                { id: 'week', label: 'Esta semana', count: weekWindowCount, accent: 'warning' },
+                { id: '4weeks', label: 'Próximas 4 semanas', count: fourWeeksWindowCount, accent: 'primary' },
+                { id: 'all', label: 'Todas', count: filtered.length, accent: 'muted' },
+              ] as SummaryChip[]}
+              activeId={mobileWindow}
+              onChange={(id) => setMobileWindow((id as 'week' | '4weeks' | 'all') ?? 'all')}
+            />
+            <div className="flex items-center gap-2">
+              <FiltersSheet
+                activeCount={activeFilterCount}
+                onClear={clearFilters}
+                title="Filtros de compras"
+              >
+                <div>
+                  <Label className="block text-xs font-semibold text-muted-foreground mb-1.5">Status</Label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger><SelectValue placeholder="Todos os status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      {CALENDAR_STATUS_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>{calendarStatusConfig[s].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="block text-xs font-semibold text-muted-foreground mb-1.5">Obra</Label>
+                  <Select value={filterProject} onValueChange={setFilterProject}>
+                    <SelectTrigger><SelectValue placeholder="Todas as obras" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as obras</SelectItem>
+                      {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {suppliers.length > 0 && (
+                  <div>
+                    <Label className="block text-xs font-semibold text-muted-foreground mb-1.5">Fornecedor</Label>
+                    <Select value={filterSupplier} onValueChange={setFilterSupplier}>
+                      <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos fornecedores</SelectItem>
+                        {suppliers.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {categories.length > 0 && (
+                  <div>
+                    <Label className="block text-xs font-semibold text-muted-foreground mb-1.5">Categoria</Label>
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas categorias</SelectItem>
+                        {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </FiltersSheet>
+              <span className="text-xs text-muted-foreground tabular-nums ml-auto">
+                {mobilePurchases.length} {mobilePurchases.length === 1 ? 'compra' : 'compras'}
+              </span>
+            </div>
+          </div>
+
+          {/* ── Mobile card list ── */}
+          <div className="md:hidden space-y-2">
+            {mobilePurchases.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-sm font-medium">Sem compras nesta janela</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Tente outra janela ou limpe os filtros.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              mobilePurchases.map((p) => (
+                <CompraMobileCard key={p.id} purchase={p} />
+              ))
+            )}
+          </div>
+
+          {/* Mobile FAB — Nova solicitação */}
+          <div
+            className="fixed right-4 md:hidden z-30"
+            style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 16px)' }}
+          >
+            <Button
+              size="lg"
+              onClick={() => setNewDialogOpen(true)}
+              className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow p-0"
+              aria-label="Nova solicitação"
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+          </div>
+
+          {/* ── Filters + View Toggle + New Button (desktop only) ── */}
           {/* sticky para manter filtros e ações de troca de visão sempre visíveis ao rolar listas longas */}
-          <Card className="sticky top-0 z-20 bg-card/95 backdrop-blur-sm shadow-sm">
+          <Card className="hidden md:block sticky top-0 z-20 bg-card/95 backdrop-blur-sm shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-wrap items-end gap-3">
                 {/* Period: From */}
@@ -905,7 +1053,8 @@ export default function CalendarioCompras() {
             </CardContent>
           </Card>
 
-          {/* ── Calendar view ── */}
+          {/* ── Calendar / list view (desktop only) ── */}
+          <div className="hidden md:block space-y-6">
           {viewMode === 'calendar' ? (
             <Card>
               <CardHeader className="pb-2">
@@ -1188,8 +1337,59 @@ export default function CalendarioCompras() {
               )}
             </>
           )}
+          </div>
         </PageContainer>
       </div>
     </div>
+  );
+}
+
+/**
+ * Mobile-only card for the Calendário de Compras list. Read-only — taps the
+ * desktop's "Editar" sheet by reusing PurchaseFormDialog from the parent (not
+ * needed at this level: the user resolves edits via the obra page).
+ */
+function CompraMobileCard({ purchase }: { purchase: PurchaseWithProject }) {
+  const status = toCalendarStatus(purchase.status);
+  const cfg = calendarStatusConfig[status];
+  const dateLabel = purchase.planned_purchase_date
+    ? format(parseISO(purchase.planned_purchase_date), 'dd/MM')
+    : '—';
+
+  return (
+    <Card className="border-border-subtle">
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {purchase.item_name}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {purchase.project_name}
+              {purchase.supplier_name ? ` · ${purchase.supplier_name}` : ''}
+            </p>
+          </div>
+          <span
+            className={cn(
+              'shrink-0 inline-flex items-center gap-1.5 px-2 h-6 rounded-full text-[11px] font-medium border',
+              cfg.color
+            )}
+          >
+            {cfg.label}
+          </span>
+        </div>
+        <div className="mt-2 flex items-center justify-between text-[11px]">
+          <span className="text-muted-foreground">
+            <span className="font-medium tabular-nums text-foreground">{dateLabel}</span>
+            {purchase.category ? ` · ${purchase.category}` : ''}
+          </span>
+          {purchase.estimated_cost != null && (
+            <span className="tabular-nums font-semibold">
+              {fmt(purchase.estimated_cost)}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

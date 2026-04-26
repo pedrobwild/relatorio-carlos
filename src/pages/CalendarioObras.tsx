@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   addDays,
   addMonths,
@@ -79,6 +80,7 @@ export default function CalendarioObras() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin, hasRole } = useUserRole();
+  const isMobile = useIsMobile();
   // Apenas Admin e Engenheiro podem criar/ver micro-etapas internas no Calendário.
   const canBreak = isAdmin || hasRole('engineer');
   const today = useMemo(() => new Date(), []);
@@ -109,6 +111,15 @@ export default function CalendarioObras() {
   const initialRangeEnd = parseDateParam(searchParams.get('to'), addDays(today, 13));
 
   const [view, setView] = useState<ViewMode>(initialView);
+
+  // Mobile: month grid (7 cols) and week-timeline (Gantt) require horizontal
+  // scroll on small viewports. Force the week-list view, which is already a
+  // vertical list per project.
+  useEffect(() => {
+    if (isMobile && (view === 'month' || view === 'week-timeline')) {
+      setView('week-list');
+    }
+  }, [isMobile, view]);
   const [refDate, setRefDate] = useState<Date>(initialRefDate);
   const [rangeStartDate, setRangeStartDate] = useState<Date>(initialRangeStart);
   const [rangeEndDate, setRangeEndDate] = useState<Date>(initialRangeEnd);
@@ -454,11 +465,15 @@ export default function CalendarioObras() {
           <div className="flex flex-wrap items-center gap-2">
             <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
               <TabsList className="flex-wrap h-auto">
-                <TabsTrigger value="month">Mês</TabsTrigger>
+                <TabsTrigger value="month" className="hidden md:inline-flex">Mês</TabsTrigger>
                 <TabsTrigger value="week-list" title="Semana em formato de lista agrupada por obra">
                   Semana · Lista
                 </TabsTrigger>
-                <TabsTrigger value="week-timeline" title="Semana em formato de linha do tempo (Gantt)">
+                <TabsTrigger
+                  value="week-timeline"
+                  title="Semana em formato de linha do tempo (Gantt)"
+                  className="hidden md:inline-flex"
+                >
                   Semana · Timeline
                 </TabsTrigger>
                 <TabsTrigger value="day">Dia</TabsTrigger>

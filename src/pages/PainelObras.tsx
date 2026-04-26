@@ -24,7 +24,17 @@ import {
   Trash2,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
+import {
+  PageHeader,
+  PageToolbar,
+  MetricCard,
+  MetricRail,
+  SectionCard,
+  FilterPill,
+  SummaryChips,
+  FiltersSheet,
+  type SummaryChip,
+} from '@/components/ui-premium';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -443,7 +453,7 @@ export default function PainelObras() {
           </TabsList>
 
           <TabsContent value="obras" className="mt-4 focus-visible:outline-none">
-            <div>
+            <div className="hidden md:block">
               <MetricRail>
                 <MetricCard label="Total" value={summary.total} />
                 <MetricCard label="Aguardando" value={summary.aguardando} accent="info" />
@@ -453,8 +463,69 @@ export default function PainelObras() {
               </MetricRail>
             </div>
 
+            {/* Mobile: SummaryChips drive filterStatus, search + Filters sheet
+                replace the desktop toolbar. */}
+            <div className="md:hidden space-y-3">
+              <SummaryChips
+                ariaLabel="Filtrar obras por status"
+                chips={[
+                  { id: ALL, label: 'Total', count: summary.total, accent: 'muted' },
+                  { id: 'Aguardando', label: 'Aguardando', count: summary.aguardando, accent: 'primary' },
+                  { id: 'Em dia', label: 'Em dia', count: summary.emDia, accent: 'success' },
+                  { id: 'Atrasado', label: 'Atrasadas', count: summary.atrasadas, accent: 'destructive' },
+                  { id: 'Paralisada', label: 'Paralisadas', count: summary.paralisadas, accent: 'muted' },
+                ] as SummaryChip[]}
+                activeId={filterStatus}
+                onChange={(id) => setFilterStatus(id ?? ALL)}
+              />
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar obra ou cliente…"
+                    className="h-10 pl-8 text-sm"
+                  />
+                </div>
+                <FiltersSheet
+                  activeCount={
+                    (filterEtapa !== ALL ? 1 : 0) + (filterRelacionamento !== ALL ? 1 : 0)
+                  }
+                  onClear={() => {
+                    setFilterEtapa(ALL);
+                    setFilterRelacionamento(ALL);
+                  }}
+                  title="Filtros de obras"
+                >
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Etapa</label>
+                    <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+                      <SelectTrigger><SelectValue placeholder="Todas etapas" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>Todas etapas</SelectItem>
+                        <SelectItem value={NONE}>(sem etapa)</SelectItem>
+                        {ETAPA_OPTIONS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Relacionamento</label>
+                    <Select value={filterRelacionamento} onValueChange={setFilterRelacionamento}>
+                      <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>Todos relacionamentos</SelectItem>
+                        <SelectItem value={NONE}>(sem relacionamento)</SelectItem>
+                        {RELACIONAMENTO_OPTIONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </FiltersSheet>
+              </div>
+            </div>
+
             <PageToolbar
-              className="mt-6"
+              className="mt-6 hidden md:block"
               sticky={false}
               search={
                 <div className="relative">
@@ -532,7 +603,7 @@ export default function PainelObras() {
                 </SectionCard>
               ) : (
                 <SectionCard flush>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto hidden md:block">
                     <Table className="w-full text-sm [&_th]:h-11 [&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
@@ -562,6 +633,18 @@ export default function PainelObras() {
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
+
+                  {/* Mobile: vertical card list — no horizontal scroll, no
+                      inline editing (tap a card to open the obra details). */}
+                  <div className="md:hidden divide-y divide-border-subtle">
+                    {filtered.map((o) => (
+                      <PainelObrasMobileCard
+                        key={o.id}
+                        obra={o}
+                        onOpen={() => navigate(`/obra/${o.id}`)}
+                      />
+                    ))}
                   </div>
                 </SectionCard>
               )}
@@ -785,6 +868,75 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
  * horizontal quando há sidebar aberta no desktop ou padding lateral no
  * mobile, garantindo que o formulário caiba exatamente no viewport útil.
  */
+
+/**
+ * Mobile-only card for the Painel de Obras list. Read-only on purpose —
+ * inline editing happens on desktop via dropdowns / popovers; on mobile the
+ * user opens the full obra page (sheet of detail) to edit.
+ */
+function PainelObrasMobileCard({
+  obra,
+  onOpen,
+}: {
+  obra: PainelObra;
+  onOpen: () => void;
+}) {
+  const displayStatus = computeDisplayStatus(obra);
+  const progress = obra.progress_percentage ?? 0;
+  const formatDate = (iso: string | null) => (iso ? format(new Date(iso + 'T00:00:00'), 'dd/MM') : '—');
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="w-full text-left px-3 py-3 active:bg-accent/40 transition-colors"
+      aria-label={`Abrir obra ${obra.customer_name ?? obra.nome}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {obra.customer_name ?? 'Sem cliente'}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">{obra.nome}</p>
+        </div>
+        <span
+          className={cn(
+            'shrink-0 inline-flex items-center gap-1.5 px-2 h-6 rounded-full text-[11px] font-medium',
+            statusPillClass(displayStatus)
+          )}
+        >
+          <span className={cn('h-1.5 w-1.5 rounded-full', statusDotClass(displayStatus))} />
+          {displayStatus ?? 'Definir'}
+        </span>
+      </div>
+
+      <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+        {obra.etapa && <span className="truncate">{obra.etapa}</span>}
+        {obra.etapa && <span aria-hidden="true">·</span>}
+        <span className="tabular-nums">{progress}%</span>
+        <div className="flex-1 h-1 rounded-full bg-secondary overflow-hidden ml-1">
+          <div
+            className="h-full bg-primary/70"
+            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+        <div>
+          <span className="block text-muted-foreground">Início Of.</span>
+          <span className="tabular-nums font-medium">{formatDate(obra.inicio_oficial)}</span>
+        </div>
+        <div>
+          <span className="block text-muted-foreground">Entrega Of.</span>
+          <span className="tabular-nums font-medium">{formatDate(obra.entrega_oficial)}</span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function ExpandedRowContent({ projectId }: { projectId: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState<number | null>(null);
