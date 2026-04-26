@@ -230,7 +230,12 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             icon={<ClipboardList className="h-4 w-4 text-primary" />}
             title="Serviços em execução"
             count={services.length}
-            defaultOpen
+            defaultOpen={services.length > 0}
+            previewWhenClosed={
+              services.length === 0
+                ? 'Nenhum serviço — toque para adicionar'
+                : `${services.length} ${services.length === 1 ? 'serviço' : 'serviços'} registrado${services.length === 1 ? '' : 's'}`
+            }
           >
             <div className="flex flex-col gap-3">
               {services.length === 0 && (
