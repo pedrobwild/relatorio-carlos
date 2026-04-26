@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval,
-  isSameDay, isSameMonth, addMonths, subMonths, isWeekend,
+  isSameDay, isSameMonth, addMonths, subMonths, isWeekend, addDays, isValid,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -258,9 +258,15 @@ function NewPurchaseDialog({
     if (!user?.id) { toast.error('Usuário não autenticado'); return; }
     setSaving(true);
     try {
-      const plannedDate = form.planned_purchase_date
-        ? format(form.planned_purchase_date, 'yyyy-MM-dd')
-        : null;
+      // planned_purchase_date é opcional. required_by_date é NOT NULL no banco:
+      // se o usuário informou uma data válida, usamos ela; caso contrário, default = hoje + 7 dias.
+      const planned = form.planned_purchase_date;
+      const plannedValid = planned instanceof Date && isValid(planned);
+      const plannedDate = plannedValid ? format(planned, 'yyyy-MM-dd') : null;
+      const requiredDate = plannedValid
+        ? format(planned, 'yyyy-MM-dd')
+        : format(addDays(new Date(), 7), 'yyyy-MM-dd');
+
       const { error } = await supabase.from('project_purchases').insert({
         project_id: form.project_id,
         created_by: user.id,
@@ -269,7 +275,7 @@ function NewPurchaseDialog({
         supplier_name: form.supplier_name.trim() || null,
         estimated_cost: form.estimated_cost ? Number(form.estimated_cost.replace(',', '.')) : null,
         planned_purchase_date: plannedDate,
-        required_by_date: plannedDate ?? format(new Date(), 'yyyy-MM-dd'),
+        required_by_date: requiredDate,
         quantity: form.quantity ? Number(form.quantity) : 1,
         unit: form.unit.trim() || 'un',
         description: form.description.trim() || null,
