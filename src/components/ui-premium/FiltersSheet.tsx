@@ -3,6 +3,7 @@ import { Filter } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -67,6 +68,9 @@ export function FiltersSheet({
       >
         <SheetHeader className="text-left shrink-0">
           <SheetTitle className="text-base">{title}</SheetTitle>
+          <SheetDescription className="sr-only">
+            Ajuste os filtros e toque em Aplicar para atualizar a lista.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-2 space-y-4">{children}</div>

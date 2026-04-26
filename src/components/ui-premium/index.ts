@@ -18,6 +18,7 @@ export {
 export { FilterPill } from './FilterPill';
 export { SummaryChips, type SummaryChip } from './SummaryChips';
 export { FiltersSheet } from './FiltersSheet';
+export { ResponsiveTable } from './ResponsiveTable';
 export {
   DataTable,
   type DataTableColumn,
