@@ -287,20 +287,16 @@ export function PaymentSection({ purchase, onUpdateField }: PaymentSectionProps)
         {/* Forma de pagamento */}
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Forma de pagamento</label>
-          <Select
-            value={method || 'none'}
-            onValueChange={(v) => onUpdateField(purchase.id, 'payment_method', v === 'none' ? null : v)}
+          <InlineSelect
+            value={purchase.payment_method}
+            placeholder="Selecione…"
+            onSave={(v) => onUpdateField(purchase.id, 'payment_method', v)}
           >
-            <SelectTrigger className="h-8 text-sm">
-              <SelectValue placeholder="Selecione…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">—</SelectItem>
-              {PAYMENT_METHODS.map((m) => (
-                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <SelectItem value="none">—</SelectItem>
+            {PAYMENT_METHODS.map((m) => (
+              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+            ))}
+          </InlineSelect>
         </div>
       </div>
 
