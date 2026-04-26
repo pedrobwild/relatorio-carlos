@@ -151,7 +151,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="z-[9999]">
+                <SelectContent position="popper" >
                   <SelectItem value="none">Sem responsável</SelectItem>
                   {staffUsers.map((u) => (
                     <SelectItem key={u.id} value={u.id}>

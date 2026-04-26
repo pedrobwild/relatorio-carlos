@@ -170,7 +170,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+              <SelectContent position="popper"  sideOffset={4}>
                 {INSPECTION_TYPES.map(t => (
                   <SelectItem key={t.value} value={t.value} className="min-h-[44px]">
                     {t.emoji} {t.label}
@@ -198,7 +198,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Selecione o vistoriador" />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+              <SelectContent position="popper"  sideOffset={4}>
                 {staffUsers.map(u => (
                   <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
                 ))}
@@ -213,7 +213,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Selecione uma atividade" />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+              <SelectContent position="popper"  sideOffset={4}>
                 <SelectItem value="none">Nenhuma</SelectItem>
                 {activities.map(a => (
                   <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>
@@ -263,7 +263,7 @@ export function CreateInspectionDialog({ projectId, open, onOpenChange }: Props)
               <SelectTrigger className="h-11 sm:h-10">
                 <SelectValue placeholder="Adicionar checklist padrão..." />
               </SelectTrigger>
-              <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+              <SelectContent position="popper"  sideOffset={4}>
                 {categories.map(cat => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}

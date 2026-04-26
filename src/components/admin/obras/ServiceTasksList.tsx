@@ -322,7 +322,7 @@ function TaskRow({ task, staffUsers, onUpdate, onDelete }: TaskRowProps) {
         <SelectTrigger className="h-6 w-[100px] text-[11px] px-1.5 shrink-0">
           <SelectValue placeholder="—" />
         </SelectTrigger>
-        <SelectContent position="popper" className="z-[9999]">
+        <SelectContent position="popper" >
           <SelectItem value={NONE}>Sem responsável</SelectItem>
           {staffUsers.map((u) => (
             <SelectItem key={u.id} value={u.id}>
@@ -379,7 +379,7 @@ function TaskRow({ task, staffUsers, onUpdate, onDelete }: TaskRowProps) {
         >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent position="popper" className="z-[9999]">
+        <SelectContent position="popper" >
           {SERVICE_TASK_STATUS_OPTIONS.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
