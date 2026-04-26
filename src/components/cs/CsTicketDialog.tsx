@@ -79,6 +79,15 @@ export function CsTicketDialog({
   const [status, setStatus] = useState<CsTicketStatus>('aberto');
   const [actionPlan, setActionPlan] = useState('');
   const [responsible, setResponsible] = useState<string>(NONE);
+  const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+
+  const selectedProject = useMemo(
+    () => (projects as any[]).find((p) => p.id === projectId) ?? null,
+    [projects, projectId],
+  );
+
+  const projectLabel = (p: any) =>
+    `${p?.name ?? ''}${p?.customer_name ? ` — ${p.customer_name}` : ''}`.trim();
 
   // Reset / hidrata estado ao abrir
   useEffect(() => {
