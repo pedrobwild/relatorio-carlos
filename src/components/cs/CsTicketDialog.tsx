@@ -81,6 +81,8 @@ export function CsTicketDialog({
   const [actionPlan, setActionPlan] = useState('');
   const [responsible, setResponsible] = useState<string>(NONE);
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+  // Modo de busca: 'tokens' (todas as palavras, em qualquer ordem) ou 'substring' (qualquer parte contígua)
+  const [projectSearchMode, setProjectSearchMode] = useState<'tokens' | 'substring'>('tokens');
 
   const selectedProject = useMemo(
     () => (projects as any[]).find((p) => p.id === projectId) ?? null,
