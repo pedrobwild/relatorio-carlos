@@ -220,18 +220,19 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         )}
       </div>
 
-      {isLoading ? (
-        <DailyLogSkeleton />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none">
           {/* Serviços em execução */}
           <SectionCard
             icon={<ClipboardList className="h-4 w-4 text-primary" />}
             title="Serviços em execução"
-            count={services.length}
-            defaultOpen={services.length > 0}
+            count={isLoading ? undefined : services.length}
+            defaultOpen={!isLoading && services.length > 0}
+            isLoading={isLoading}
+            loadingSkeleton={<ServicesSkeleton />}
             previewWhenClosed={
-              services.length === 0
+              isLoading
+                ? 'Carregando serviços…'
+                : services.length === 0
                 ? 'Nenhum serviço — toque para adicionar'
                 : `${services.length} ${services.length === 1 ? 'serviço' : 'serviços'} registrado${services.length === 1 ? '' : 's'}`
             }
@@ -344,10 +345,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
           <SectionCard
             icon={<HardHat className="h-4 w-4 text-primary" />}
             title="Prestadores no local"
-            count={workers.length}
-            defaultOpen={workers.length > 0}
+            count={isLoading ? undefined : workers.length}
+            defaultOpen={!isLoading && workers.length > 0}
+            isLoading={isLoading}
+            loadingSkeleton={<WorkersSkeleton />}
             previewWhenClosed={
-              workers.length === 0
+              isLoading
+                ? 'Carregando prestadores…'
+                : workers.length === 0
                 ? 'Nenhum prestador — toque para adicionar'
                 : `${workers.length} ${workers.length === 1 ? 'prestador' : 'prestadores'} registrado${workers.length === 1 ? '' : 's'}`
             }
@@ -470,9 +475,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
           <SectionCard
             icon={<CalendarRange className="h-4 w-4 text-primary" />}
             title="Planejamento da semana"
-            defaultOpen={!!planning}
+            defaultOpen={!isLoading && !!planning}
+            isLoading={isLoading}
+            loadingSkeleton={<TextareaSkeleton />}
             previewWhenClosed={
-              planning.trim()
+              isLoading
+                ? 'Carregando planejamento…'
+                : planning.trim()
                 ? truncate(planning, 80)
                 : 'Sem planejamento — toque para preencher'
             }
@@ -490,9 +499,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
           <SectionCard
             icon={<MessageSquareText className="h-4 w-4 text-primary" />}
             title="Observações gerais"
-            defaultOpen={!!notes}
+            defaultOpen={!isLoading && !!notes}
+            isLoading={isLoading}
+            loadingSkeleton={<TextareaSkeleton />}
             previewWhenClosed={
-              notes.trim()
+              isLoading
+                ? 'Carregando observações…'
+                : notes.trim()
                 ? truncate(notes, 80)
                 : 'Sem observações — toque para adicionar'
             }
@@ -506,7 +519,6 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             />
           </SectionCard>
         </div>
-      )}
 
       <div className="flex justify-stretch sm:justify-end pt-2 border-t border-border/60">
         <Button
@@ -534,6 +546,10 @@ interface SectionCardProps {
   defaultOpen?: boolean;
   /** Texto resumido exibido no header quando a seção está fechada. */
   previewWhenClosed?: string;
+  /** Quando true, renderiza `loadingSkeleton` no lugar de `children`. */
+  isLoading?: boolean;
+  /** Skeleton específico desta seção (renderizado dentro do conteúdo aberto). */
+  loadingSkeleton?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -543,6 +559,8 @@ function SectionCard({
   count,
   defaultOpen = true,
   previewWhenClosed,
+  isLoading = false,
+  loadingSkeleton,
   children,
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -559,6 +577,7 @@ function SectionCard({
           <button
             type="button"
             aria-expanded={open}
+            aria-busy={isLoading || undefined}
             aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
             className={cn(
               'w-full flex items-start gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
@@ -571,13 +590,20 @@ function SectionCard({
                 <span className="text-sm font-semibold text-foreground truncate">
                   {title}
                 </span>
-                {hasCount && (
-                  <Badge
-                    variant={count! > 0 ? 'secondary' : 'outline'}
-                    className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums shrink-0"
-                  >
-                    {count}
-                  </Badge>
+                {isLoading ? (
+                  <span
+                    className={cn(SHIMMER_CLASS, 'h-4 w-6 rounded-full shrink-0')}
+                    aria-hidden
+                  />
+                ) : (
+                  hasCount && (
+                    <Badge
+                      variant={count! > 0 ? 'secondary' : 'outline'}
+                      className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums shrink-0"
+                    >
+                      {count}
+                    </Badge>
+                  )
                 )}
               </span>
               {!open && previewWhenClosed && (
@@ -597,7 +623,7 @@ function SectionCard({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="px-2 sm:px-3 pb-2.5 sm:pb-3 pt-2 border-t border-border/60 bg-muted/10 min-w-0">
-            {children}
+            {isLoading && loadingSkeleton ? loadingSkeleton : children}
           </div>
         </CollapsibleContent>
       </div>
@@ -642,20 +668,23 @@ function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
 }
 
 // ============================================================
-// Skeleton de carregamento
+// Skeletons por seção
 // ============================================================
 //
-// Otimizações para abrir/fechar rápido (sobretudo no mobile):
-// - Markup pré-renderizado uma única vez (constante de módulo); React
-//   reaproveita o mesmo elemento em cada mount sem recriar children.
-// - `React.memo` no componente — sem props, nunca re-renderiza.
-// - Classes shimmer congeladas em strings constantes (evita execuções
-//   repetidas de `cn(...)`).
-// - `contain: paint` + `will-change: background-position` no shimmer
-//   isolam a pintura do gradiente em camada própria, reduzindo custo
-//   de repaint e mantendo a UI responsiva durante toggles rápidos.
-// - Mostramos apenas 2 cards no mobile e 4 no desktop (via grid lg:),
-//   reduzindo nodes/animações na tela pequena.
+// Cada seção do registro semanal renderiza seu próprio skeleton dentro
+// do CollapsibleContent — assim o usuário já vê os 4 cabeçalhos reais
+// (com ícone, título e badge shimmer) e cada bloco interno aparece
+// independentemente quando seus dados terminam de carregar. Isso reduz
+// a percepção de espera quando comparado a um skeleton único.
+//
+// Otimizações:
+// - Markup pré-renderizado em constantes de módulo: o React reaproveita
+//   o mesmo elemento em cada mount, sem recriar children.
+// - `React.memo` em cada wrapper — sem props, nunca re-renderizam.
+// - Classes shimmer congeladas em string única (sem `cn(...)` repetido).
+// - `contain: paint` + `will-change: background-position` isolam a
+//   pintura do gradiente em camada própria.
+// - Renderização reduzida no mobile (1 linha por seção vs. 2 no desktop).
 
 const SHIMMER_CLASS =
   'rounded-md bg-muted/70 overflow-hidden ' +
@@ -664,32 +693,65 @@ const SHIMMER_CLASS =
   'motion-reduce:animate-none motion-reduce:bg-muted ' +
   '[contain:paint] [will-change:background-position]';
 
-// JSX de uma única seção placeholder. Criado uma vez no escopo do módulo.
-const SKELETON_CARD = (
-  <div className="rounded-lg border border-border bg-card overflow-hidden shadow-sm">
-    <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px]">
-      <span className={cn(SHIMMER_CLASS, 'h-4 w-4 rounded shrink-0')} />
-      <span className={cn(SHIMMER_CLASS, 'h-3.5 w-32 max-w-[40%]')} />
-      <span className={cn(SHIMMER_CLASS, 'h-4 w-4 rounded shrink-0 ml-auto')} />
+const SKELETON_WRAPPER_CLASS =
+  'flex flex-col gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none [contain:layout_paint]';
+
+// ---- Linha (item) com header + dois inputs + textarea (Serviço/Prestador) ----
+const LIST_ROW_SKELETON = (
+  <div className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 shadow-sm min-w-0">
+    <div className="flex items-center justify-between gap-2">
+      <span className={cn(SHIMMER_CLASS, 'h-3 w-20')} />
+      <span className={cn(SHIMMER_CLASS, 'h-7 w-7 rounded-md')} />
     </div>
+    <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2 min-w-0">
+      <span className={cn(SHIMMER_CLASS, 'h-9')} />
+      <span className={cn(SHIMMER_CLASS, 'h-9')} />
+    </div>
+    <div className="grid grid-cols-2 gap-2 min-w-0">
+      <span className={cn(SHIMMER_CLASS, 'h-9')} />
+      <span className={cn(SHIMMER_CLASS, 'h-9')} />
+    </div>
+    <span className={cn(SHIMMER_CLASS, 'h-14 w-full')} />
   </div>
 );
 
-const DailyLogSkeleton = memo(function DailyLogSkeleton() {
+const ServicesSkeleton = memo(function ServicesSkeleton() {
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none [contain:layout_paint]"
+      className={SKELETON_WRAPPER_CLASS}
       role="status"
       aria-busy="true"
-      aria-label="Carregando registro da semana"
+      aria-label="Carregando serviços em execução"
     >
-      {/* Mobile: 2 cards. Desktop: 4 cards. */}
-      {SKELETON_CARD}
-      {SKELETON_CARD}
-      <div className="hidden sm:contents">
-        {SKELETON_CARD}
-        {SKELETON_CARD}
-      </div>
+      {LIST_ROW_SKELETON}
+      <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
+    </div>
+  );
+});
+
+const WorkersSkeleton = memo(function WorkersSkeleton() {
+  return (
+    <div
+      className={SKELETON_WRAPPER_CLASS}
+      role="status"
+      aria-busy="true"
+      aria-label="Carregando prestadores no local"
+    >
+      {LIST_ROW_SKELETON}
+      <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
+    </div>
+  );
+});
+
+const TextareaSkeleton = memo(function TextareaSkeleton() {
+  return (
+    <div
+      className={SKELETON_WRAPPER_CLASS}
+      role="status"
+      aria-busy="true"
+      aria-label="Carregando conteúdo"
+    >
+      <span className={cn(SHIMMER_CLASS, 'h-[88px] w-full')} />
     </div>
   );
 });
