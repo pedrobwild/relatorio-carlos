@@ -617,7 +617,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell
           data-testid="painel-obras-cell-cliente"
           className={cn(
-            'sticky left-0 z-20 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
+            'sticky left-0 z-sticky-left border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
             // overflow-hidden na própria célula impede que halo/ring de
             // foco interno (botões, links) vaze para fora da coluna sticky.
             'overflow-hidden',
