@@ -600,7 +600,7 @@ function SectionCard({
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="px-3 pb-3 pt-2 border-t border-border/60 bg-muted/10">
+          <div className="px-2 sm:px-3 pb-2.5 sm:pb-3 pt-2 border-t border-border/60 bg-muted/10 min-w-0">
             {children}
           </div>
         </CollapsibleContent>
