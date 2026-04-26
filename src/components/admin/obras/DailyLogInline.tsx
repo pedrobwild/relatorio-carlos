@@ -335,7 +335,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addService}
-                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
+                className="w-full sm:w-auto sm:self-start h-9 text-sm"
                 disabled={isSaving}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
