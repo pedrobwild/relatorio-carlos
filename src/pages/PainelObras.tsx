@@ -751,7 +751,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
 
         {/* Ações — sticky right */}
         <TableCell className={cn(
-          'sticky right-0 z-20 border-l border-border',
+          'sticky right-0 z-sticky-right border-l border-border',
           // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
           // garantir que conteúdo de colunas não-sticky (badges de Status/
           // Etapa/Relacionamento) não apareça por baixo desta coluna durante
