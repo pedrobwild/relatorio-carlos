@@ -188,14 +188,17 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
   };
 
   return (
-    <div className="bg-muted/20 border-l-2 border-l-primary px-3 sm:px-5 py-4 space-y-4">
+    <div className="bg-muted/20 border-l-2 border-l-primary px-2 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-4">
       {/* Cabeçalho: data + última atualização */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-3 border-b border-border/60">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 sm:pb-3 border-b border-border/60">
+        <div className="flex items-center gap-2 min-w-0">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 shrink-0">
             <CalendarRange className="h-3.5 w-3.5 text-primary" />
           </div>
-          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0">
+          <Label
+            htmlFor={`daily-log-date-${projectId}`}
+            className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0"
+          >
             Semana de
           </Label>
           <Input
@@ -208,7 +211,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
           />
         </div>
         {data?.updated_at && (
-          <span className="text-[11px] sm:text-xs text-muted-foreground tabular-nums w-full sm:w-auto">
+          <span className="text-[11px] sm:text-xs text-muted-foreground tabular-nums truncate">
             Atualizado em{' '}
             {format(parseISO(data.updated_at), "dd/MM/yyyy 'às' HH:mm", {
               locale: ptBR,
@@ -218,13 +221,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-16 w-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-14 w-full" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
           {/* Serviços em execução */}
           <SectionCard
             icon={<ClipboardList className="h-4 w-4 text-primary" />}
@@ -237,14 +240,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 : `${services.length} ${services.length === 1 ? 'serviço' : 'serviços'} registrado${services.length === 1 ? '' : 's'}`
             }
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:gap-3">
               {services.length === 0 && (
                 <EmptyLine text="Nenhum serviço adicionado." />
               )}
               {services.map((svc, i) => (
                 <div
                   key={i}
-                  className="rounded-lg border border-border bg-card p-3 sm:p-3 flex flex-col gap-3 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover (mobile-friendly) */}
                   <div className="flex items-center justify-between gap-2">
@@ -255,7 +258,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeService(i)}
                       disabled={isSaving}
                       title="Remover serviço"
@@ -266,14 +269,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   </div>
 
                   {/* Descrição + status: empilha no mobile, lado a lado no sm+ */}
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2 min-w-0">
                     <Input
                       value={svc.description}
-                      placeholder="Ex.: Instalação elétrica – quarto 2"
+                      placeholder="Ex.: Instalação elétrica"
                       onChange={(e) =>
                         updateService(i, { description: e.target.value })
                       }
-                      className="h-10 sm:h-9 text-sm"
+                      className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
                     />
                     <Select
@@ -284,7 +287,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                         })
                       }
                     >
-                      <SelectTrigger className="h-10 sm:h-9 text-sm">
+                      <SelectTrigger className="h-9 text-sm w-full min-w-0">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -297,7 +300,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 min-w-0">
                     <MiniField
                       label="Início"
                       type="date"
@@ -321,7 +324,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                         observations: e.target.value || null,
                       })
                     }
-                    className="min-h-[64px] text-sm"
+                    className="min-h-[56px] text-sm w-full"
                     disabled={isSaving}
                   />
                   <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
@@ -332,7 +335,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addService}
-                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
+                className="w-full sm:w-auto sm:self-start h-9 text-sm"
                 disabled={isSaving}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
@@ -353,14 +356,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 : `${workers.length} ${workers.length === 1 ? 'prestador' : 'prestadores'} registrado${workers.length === 1 ? '' : 's'}`
             }
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:gap-3">
               {workers.length === 0 && (
                 <EmptyLine text="Nenhum prestador adicionado." />
               )}
               {workers.map((wk, i) => (
                 <div
                   key={i}
-                  className="rounded-lg border border-border bg-card p-3 flex flex-col gap-3 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover */}
                   <div className="flex items-center justify-between gap-2">
@@ -371,7 +374,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeWorker(i)}
                       disabled={isSaving}
                       title="Remover prestador"
@@ -382,14 +385,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   </div>
 
                   {/* Nome + função: empilha no mobile */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
                     <Input
                       value={wk.name}
                       placeholder="Nome do prestador"
                       onChange={(e) =>
                         updateWorker(i, { name: e.target.value })
                       }
-                      className="h-10 sm:h-9 text-sm"
+                      className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
                     />
                     <Input
@@ -398,13 +401,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       onChange={(e) =>
                         updateWorker(i, { role: e.target.value || null })
                       }
-                      className="h-10 sm:h-9 text-sm"
+                      className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
                     />
                   </div>
 
                   {/* Período (datas) — sempre 2 colunas */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 min-w-0">
                     <MiniField
                       label="Período de"
                       type="date"
@@ -424,7 +427,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   </div>
 
                   {/* Horário — 2 colunas no mobile (ao invés de 4 esmagadas) */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 min-w-0">
                     <MiniField
                       label="Entrada"
                       type="time"
@@ -448,7 +451,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     onChange={(e) =>
                       updateWorker(i, { notes: e.target.value || null })
                     }
-                    className="min-h-[56px] text-sm"
+                    className="min-h-[56px] text-sm w-full"
                     disabled={isSaving}
                   />
                 </div>
@@ -458,7 +461,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addWorker}
-                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
+                className="w-full sm:w-auto sm:self-start h-9 text-sm"
                 disabled={isSaving}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
@@ -552,7 +555,7 @@ function SectionCard({
     <Collapsible open={open} onOpenChange={setOpen}>
       <div
         className={cn(
-          'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all',
+          'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all min-w-0',
           open ? 'shadow-md' : 'hover:shadow-md',
         )}
       >
@@ -597,7 +600,7 @@ function SectionCard({
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="px-3 pb-3 pt-2 border-t border-border/60 bg-muted/10">
+          <div className="px-2 sm:px-3 pb-2.5 sm:pb-3 pt-2 border-t border-border/60 bg-muted/10 min-w-0">
             {children}
           </div>
         </CollapsibleContent>
@@ -628,12 +631,14 @@ interface MiniFieldProps {
 function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <Label className="text-[11px] text-muted-foreground">{label}</Label>
+      <Label className="text-[11px] text-muted-foreground truncate">{label}</Label>
       <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 sm:h-9 text-sm w-full"
+        // min-w-0 + w-full evitam que o picker nativo (iOS/Android)
+        // imponha largura mínima e estoure o card no mobile.
+        className="h-9 px-2 text-sm w-full min-w-0"
         disabled={disabled}
       />
     </div>
