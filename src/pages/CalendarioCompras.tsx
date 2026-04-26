@@ -52,7 +52,6 @@ export type ProjectPurchaseInsert = TablesInsert<'project_purchases'>;
 
 interface PurchaseWithProject extends Omit<ProjectPurchase, 'created_at'> {
   project_name: string;
-  payment_due_date?: string | null;
   /**
    * Override defensivo: embora a coluna `created_at` seja NOT NULL no banco,
    * registros antigos sincronizados ou casos de borda podem chegar sem o campo.
