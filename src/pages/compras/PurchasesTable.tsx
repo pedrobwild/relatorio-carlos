@@ -407,7 +407,16 @@ function PurchaseRow({
         <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto_auto] md:grid-cols-[1fr_120px_120px_120px_auto] items-center gap-3">
           {/* Name + supplier */}
           <div className="min-w-0">
-            <p className="font-medium text-sm truncate">{purchase.item_name}</p>
+            <InlineField
+              value={purchase.item_name}
+              placeholder="Nome do item"
+              onSave={(v) => {
+                const trimmed = v.trim();
+                if (!trimmed) return;
+                onUpdateField(purchase.id, 'item_name', trimmed);
+              }}
+              inputClassName="font-medium text-sm h-7 px-1 -mx-1"
+            />
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {purchase.supplier_name && (
                 <span className="truncate">{purchase.supplier_name}</span>
