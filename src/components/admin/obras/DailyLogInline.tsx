@@ -188,14 +188,17 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
   };
 
   return (
-    <div className="bg-muted/20 border-l-2 border-l-primary px-3 sm:px-5 py-4 space-y-4">
+    <div className="bg-muted/20 border-l-2 border-l-primary px-2 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-4">
       {/* Cabeçalho: data + última atualização */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-3 border-b border-border/60">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 sm:pb-3 border-b border-border/60">
+        <div className="flex items-center gap-2 min-w-0">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 shrink-0">
             <CalendarRange className="h-3.5 w-3.5 text-primary" />
           </div>
-          <Label htmlFor={`daily-log-date-${projectId}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0">
+          <Label
+            htmlFor={`daily-log-date-${projectId}`}
+            className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider shrink-0"
+          >
             Semana de
           </Label>
           <Input
@@ -208,7 +211,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
           />
         </div>
         {data?.updated_at && (
-          <span className="text-[11px] sm:text-xs text-muted-foreground tabular-nums w-full sm:w-auto">
+          <span className="text-[11px] sm:text-xs text-muted-foreground tabular-nums truncate">
             Atualizado em{' '}
             {format(parseISO(data.updated_at), "dd/MM/yyyy 'às' HH:mm", {
               locale: ptBR,
@@ -218,13 +221,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-16 w-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-14 w-full" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
           {/* Serviços em execução */}
           <SectionCard
             icon={<ClipboardList className="h-4 w-4 text-primary" />}
