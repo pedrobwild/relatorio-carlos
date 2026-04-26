@@ -139,7 +139,7 @@ export function CronogramaMobileView({
   const statusOrder: ActivityStatus[] = ['overdue', 'in_progress', 'upcoming', 'pending', 'completed'];
 
   return (
-    <div className="space-y-4 pb-bottom-nav">
+    <div data-no-swipe="" className="space-y-4 pb-bottom-nav">
       {/* Progress summary card */}
       <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">

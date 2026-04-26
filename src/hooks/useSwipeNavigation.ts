@@ -4,11 +4,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const SWIPE_THRESHOLD = 60;
 const SWIPE_MAX_Y = 80;
 
+let warned = false;
+
 /**
+ * @deprecated Global swipe between top-level routes causes accidental navigation
+ * (PDFs, charts, sliders, iOS edge-swipe). Use `useScopedSwipe` from
+ * `src/hooks/useScopedSwipe.ts` on a specific element ref instead.
+ *
  * Detects horizontal swipe gestures and navigates between ordered routes.
- * Only active on mobile viewports (< 768px).
  */
 export function useSwipeNavigation(routes: string[]) {
+  if (process.env.NODE_ENV !== 'production' && !warned) {
+    warned = true;
+    console.warn(
+      '[useSwipeNavigation] is deprecated. Use useScopedSwipe on a scoped ref instead.'
+    );
+  }
   const navigate = useNavigate();
   const location = useLocation();
   const touchStart = useRef<{ x: number; y: number } | null>(null);
