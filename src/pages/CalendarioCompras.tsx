@@ -253,9 +253,40 @@ function NewPurchaseDialog({
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async () => {
-    if (!form.project_id) { toast.error('Selecione a obra'); return; }
-    if (!form.item_name.trim()) { toast.error('Informe o nome do item'); return; }
-    if (!user?.id) { toast.error('Usuário não autenticado'); return; }
+    // Validações de campos obrigatórios — mensagens específicas para cada caso
+    const missing: string[] = [];
+    if (!form.project_id) missing.push('Obra');
+    if (!form.item_name.trim()) missing.push('Nome do item');
+
+    if (missing.length > 1) {
+      toast.error('Campos obrigatórios não preenchidos', {
+        description: `Preencha: ${missing.join(', ')}.`,
+      });
+      return;
+    }
+    if (missing.length === 1) {
+      const map: Record<string, { title: string; desc: string }> = {
+        'Obra': {
+          title: 'Selecione uma obra',
+          desc: 'Escolha a obra para a qual esta compra será solicitada.',
+        },
+        'Nome do item': {
+          title: 'Informe o nome do item',
+          desc: 'Descreva brevemente o que está sendo solicitado (ex: Cimento CP-II 50kg).',
+        },
+      };
+      const m = map[missing[0]];
+      toast.error(m.title, { description: m.desc });
+      return;
+    }
+
+    if (!user?.id) {
+      toast.error('Sessão expirada', {
+        description: 'Não foi possível identificar seu usuário. Faça login novamente para continuar.',
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       // planned_purchase_date é opcional. required_by_date é NOT NULL no banco:
@@ -283,12 +314,17 @@ function NewPurchaseDialog({
         status: 'pending',
       });
       if (error) throw error;
-      toast.success('Solicitação criada com sucesso!');
+      toast.success('Solicitação criada com sucesso!', {
+        description: `${form.item_name.trim()} foi adicionada ao calendário de compras.`,
+      });
       onCreated();
       onClose();
     } catch (e) {
-      console.error(e);
-      toast.error('Erro ao criar solicitação');
+      console.error('[CalendarioCompras] insert error:', e);
+      const message = e instanceof Error ? e.message : 'Erro desconhecido';
+      toast.error('Não foi possível criar a solicitação', {
+        description: `${message}. Tente novamente em alguns instantes.`,
+      });
     } finally {
       setSaving(false);
     }
