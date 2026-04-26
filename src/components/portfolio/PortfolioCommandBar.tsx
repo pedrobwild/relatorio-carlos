@@ -10,18 +10,18 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { PRESET_LABEL } from './portfolioLabels';
 import type { PortfolioPreset, ViewMode, ScopeFilter } from './hooks/usePortfolioFilters';
 
 export type { PortfolioPreset, ViewMode, ScopeFilter };
 
-const presets: { key: PortfolioPreset; label: string }[] = [
-  { key: 'all', label: 'Todas' },
-  { key: 'mine', label: 'Minhas' },
-  { key: 'critical', label: 'Críticas' },
-  { key: 'stale', label: 'Sem update' },
-  { key: 'due-soon', label: 'Vencendo' },
-  { key: 'completed', label: 'Concluídas' },
-];
+// Order is significant (renders the preset tabs); labels come from
+// portfolioLabels so chips, command bar and KPI strip never drift apart.
+const PRESET_ORDER: PortfolioPreset[] = ['all', 'mine', 'critical', 'stale', 'due-soon', 'completed'];
+const presets: { key: PortfolioPreset; label: string }[] = PRESET_ORDER.map(key => ({
+  key,
+  label: PRESET_LABEL[key],
+}));
 
 interface PortfolioCommandBarProps {
   search: string;

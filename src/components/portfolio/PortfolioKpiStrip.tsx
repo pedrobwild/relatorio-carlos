@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectStaleInfo } from '@/lib/projectHealth';
+import { KPI_FILTER_LABEL } from './portfolioLabels';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
@@ -31,6 +32,7 @@ export interface ProjectFinancial {
 
 export interface KpiDefinition {
   key: KpiFilterKey;
+  /** Localized text comes from `KPI_FILTER_LABEL` in `portfolioLabels.ts`. */
   label: string;
   description: string;
   icon: React.ReactNode;
@@ -48,15 +50,15 @@ interface PortfolioKpiStripProps {
 // ─── Definitions ─────────────────────────────────────────────────────────────
 
 const kpiDefinitions: KpiDefinition[] = [
-  { key: 'active', label: 'Ativas', description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
-  { key: 'draft', label: 'Rascunhos', description: 'Obras em rascunho aguardando finalização do cadastro', icon: <FileEdit className="h-4 w-4" />, accent: 'muted' },
-  { key: 'completed', label: 'Concluídas', description: 'Obras finalizadas', icon: <CheckCircle2 className="h-4 w-4" />, accent: 'default' },
-  { key: 'overdue', label: 'Prazo estourado', description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'approaching-deadline', label: 'Entrega próxima', description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
-  { key: 'blocked', label: 'Bloqueadas', description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'stale-7d', label: 'Sem update', description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
-  { key: 'cost-at-risk', label: 'Custo em risco', description: 'Obras com desvio de custo acima de 15%', icon: <DollarSign className="h-4 w-4" />, accent: 'destructive' },
-  { key: 'critical-purchase', label: 'Compra crítica', description: 'Obras com compra crítica pendente', icon: <Package className="h-4 w-4" />, accent: 'warning' },
+  { key: 'active', label: KPI_FILTER_LABEL.active, description: 'Obras ativas em execução', icon: <HardHat className="h-4 w-4" />, accent: 'success' },
+  { key: 'draft', label: KPI_FILTER_LABEL.draft, description: 'Obras em rascunho aguardando finalização do cadastro', icon: <FileEdit className="h-4 w-4" />, accent: 'muted' },
+  { key: 'completed', label: KPI_FILTER_LABEL.completed, description: 'Obras finalizadas', icon: <CheckCircle2 className="h-4 w-4" />, accent: 'default' },
+  { key: 'overdue', label: KPI_FILTER_LABEL.overdue, description: 'Obras com data de entrega ultrapassada', icon: <CalendarX className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'approaching-deadline', label: KPI_FILTER_LABEL['approaching-deadline'], description: 'Entrega nos próximos 14 dias', icon: <CalendarClock className="h-4 w-4" />, accent: 'warning' },
+  { key: 'blocked', label: KPI_FILTER_LABEL.blocked, description: 'Pausadas ou com impedimento', icon: <Ban className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'stale-7d', label: KPI_FILTER_LABEL['stale-7d'], description: 'Sem atividade há mais de 7 dias', icon: <Ghost className="h-4 w-4" />, accent: 'warning' },
+  { key: 'cost-at-risk', label: KPI_FILTER_LABEL['cost-at-risk'], description: 'Obras com desvio de custo acima de 15%', icon: <DollarSign className="h-4 w-4" />, accent: 'destructive' },
+  { key: 'critical-purchase', label: KPI_FILTER_LABEL['critical-purchase'], description: 'Obras com compra crítica pendente', icon: <Package className="h-4 w-4" />, accent: 'warning' },
 ];
 
 // ─── Accent styles ───────────────────────────────────────────────────────────

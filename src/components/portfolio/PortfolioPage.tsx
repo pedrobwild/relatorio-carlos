@@ -174,28 +174,24 @@ export default function PortfolioPage() {
           onExport={handleExportCSV}
         />
 
-        {/* Active filter chips */}
+        {/* Active filter chips — single visual surface for every active
+            filter (search/preset/KPI/engineer + advanced) per issue #16. */}
         <ActiveFilterChips
           filters={filters.advancedFilters}
           onFiltersChange={filters.setAdvancedFilters}
+          search={filters.search}
+          onSearchClear={() => filters.setSearch('')}
+          preset={filters.activePreset}
+          onPresetClear={() => filters.handlePresetChange('all')}
+          kpi={filters.kpiFilter}
+          onKpiClear={() => filters.setKpiFilter(null)}
+          engineerName={
+            filters.uniqueEngineers.find(e => e.id === filters.selectedEngineer)?.name ?? null
+          }
+          onEngineerClear={() => filters.setSelectedEngineer(null)}
+          onClearAll={filters.handleClearAll}
+          resultsCount={filters.hasAnyFilter ? displayedProjects.length : undefined}
         />
-
-        {/* Filter results indicator */}
-        {filters.hasAnyFilter && displayedProjects.length > 0 && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-medium tabular-nums">
-              {displayedProjects.length} obra{displayedProjects.length !== 1 ? 's' : ''} encontrada{displayedProjects.length !== 1 ? 's' : ''}
-            </span>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={filters.handleClearAll}
-              className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded px-1"
-            >
-              Limpar filtros
-            </button>
-          </div>
-        )}
 
         {/* KPI Strip */}
         {summariesLoading && summaries.length === 0 ? (
