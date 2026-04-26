@@ -533,6 +533,8 @@ interface SectionCardProps {
   title: string;
   count?: number;
   defaultOpen?: boolean;
+  /** Texto resumido exibido no header quando a seção está fechada. */
+  previewWhenClosed?: string;
   children: React.ReactNode;
 }
 
@@ -541,6 +543,7 @@ function SectionCard({
   title,
   count,
   defaultOpen = true,
+  previewWhenClosed,
   children,
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -559,24 +562,35 @@ function SectionCard({
             aria-expanded={open}
             aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
+              'w-full flex items-start gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
               'hover:bg-accent/30 active:bg-accent/40 transition-colors',
             )}
           >
-            {icon}
-            <span className="text-sm font-semibold text-foreground">{title}</span>
-            {hasCount && (
-              <Badge
-                variant={count! > 0 ? 'secondary' : 'outline'}
-                className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums"
-              >
-                {count}
-              </Badge>
-            )}
+            <span className="mt-0.5 shrink-0">{icon}</span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground truncate">
+                  {title}
+                </span>
+                {hasCount && (
+                  <Badge
+                    variant={count! > 0 ? 'secondary' : 'outline'}
+                    className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums shrink-0"
+                  >
+                    {count}
+                  </Badge>
+                )}
+              </span>
+              {!open && previewWhenClosed && (
+                <span className="text-[11px] text-muted-foreground truncate mt-0.5">
+                  {previewWhenClosed}
+                </span>
+              )}
+            </div>
             <ChevronDown
               aria-hidden
               className={cn(
-                'h-4 w-4 text-muted-foreground ml-auto shrink-0 transition-transform',
+                'h-4 w-4 text-muted-foreground shrink-0 mt-1 transition-transform',
                 open && 'rotate-180',
               )}
             />
@@ -590,6 +604,11 @@ function SectionCard({
       </div>
     </Collapsible>
   );
+}
+
+function truncate(text: string, max: number): string {
+  const t = text.trim().replace(/\s+/g, ' ');
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 }
 
 function EmptyLine({ text }: { text: string }) {
