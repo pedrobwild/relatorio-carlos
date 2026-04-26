@@ -14,7 +14,7 @@
  * project_daily_logs + filhos). A data default é a segunda-feira da
  * semana corrente ("registro da semana") — pode ser ajustada.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import {
   CalendarRange,
   ChevronDown,
@@ -45,7 +45,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+
 import { cn } from '@/lib/utils';
 
 import {
@@ -641,53 +641,55 @@ function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
   );
 }
 
-/**
- * Bloco com efeito shimmer (gradiente animado horizontal). Substitui o
- * `animate-pulse` simples para uma sensação de carregamento mais fluida.
- * Respeita prefers-reduced-motion via `motion-reduce:animate-none`.
- */
-function ShimmerBlock({ className }: { className?: string }) {
-  return (
-    <div
-      aria-hidden
-      className={cn(
-        'rounded-md bg-muted/70 overflow-hidden relative',
-        // Gradiente sutil que se move através do bloco.
-        'bg-[linear-gradient(90deg,hsl(var(--muted))_0%,hsl(var(--muted-foreground)/0.12)_50%,hsl(var(--muted))_100%)]',
-        'bg-[length:200%_100%] animate-shimmer motion-reduce:animate-none motion-reduce:bg-muted',
-        className,
-      )}
-    />
-  );
-}
+// ============================================================
+// Skeleton de carregamento
+// ============================================================
+//
+// Otimizações para abrir/fechar rápido (sobretudo no mobile):
+// - Markup pré-renderizado uma única vez (constante de módulo); React
+//   reaproveita o mesmo elemento em cada mount sem recriar children.
+// - `React.memo` no componente — sem props, nunca re-renderiza.
+// - Classes shimmer congeladas em strings constantes (evita execuções
+//   repetidas de `cn(...)`).
+// - `contain: paint` + `will-change: background-position` no shimmer
+//   isolam a pintura do gradiente em camada própria, reduzindo custo
+//   de repaint e mantendo a UI responsiva durante toggles rápidos.
+// - Mostramos apenas 2 cards no mobile e 4 no desktop (via grid lg:),
+//   reduzindo nodes/animações na tela pequena.
 
-/**
- * DailyLogSkeleton — placeholder estruturado que mimetiza o layout das
- * 4 seções colapsáveis. Aparece com fade curto e usa shimmer nos blocos
- * para suavizar a transição até o `useProjectDailyLog` resolver.
- * Mantém a mesma altura aproximada do estado fechado para evitar
- * layout shift quando o conteúdo real renderiza.
- */
-function DailyLogSkeleton() {
+const SHIMMER_CLASS =
+  'rounded-md bg-muted/70 overflow-hidden ' +
+  'bg-[linear-gradient(90deg,hsl(var(--muted))_0%,hsl(var(--muted-foreground)/0.12)_50%,hsl(var(--muted))_100%)] ' +
+  'bg-[length:200%_100%] animate-shimmer ' +
+  'motion-reduce:animate-none motion-reduce:bg-muted ' +
+  '[contain:paint] [will-change:background-position]';
+
+// JSX de uma única seção placeholder. Criado uma vez no escopo do módulo.
+const SKELETON_CARD = (
+  <div className="rounded-lg border border-border bg-card overflow-hidden shadow-sm">
+    <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px]">
+      <span className={cn(SHIMMER_CLASS, 'h-4 w-4 rounded shrink-0')} />
+      <span className={cn(SHIMMER_CLASS, 'h-3.5 w-32 max-w-[40%]')} />
+      <span className={cn(SHIMMER_CLASS, 'h-4 w-4 rounded shrink-0 ml-auto')} />
+    </div>
+  </div>
+);
+
+const DailyLogSkeleton = memo(function DailyLogSkeleton() {
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none"
+      className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none [contain:layout_paint]"
       role="status"
       aria-busy="true"
       aria-label="Carregando registro da semana"
     >
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-lg border border-border bg-card overflow-hidden shadow-sm"
-        >
-          <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px]">
-            <ShimmerBlock className="h-4 w-4 rounded" />
-            <ShimmerBlock className="h-3.5 w-32" />
-            <ShimmerBlock className="ml-auto h-4 w-4 rounded" />
-          </div>
-        </div>
-      ))}
+      {/* Mobile: 2 cards. Desktop: 4 cards. */}
+      {SKELETON_CARD}
+      {SKELETON_CARD}
+      <div className="hidden sm:contents">
+        {SKELETON_CARD}
+        {SKELETON_CARD}
+      </div>
     </div>
   );
-}
+});
