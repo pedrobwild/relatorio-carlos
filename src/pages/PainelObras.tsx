@@ -216,7 +216,7 @@ function DateCell({ value, onChange, confirmEdit, confirmTitle, disabled }: Date
             <span className="truncate">{fmtDate(value)}</span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 z-[200]" align="start">
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
             selected={value ? parseISO(value) : undefined}

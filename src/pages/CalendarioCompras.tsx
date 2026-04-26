@@ -96,7 +96,7 @@ function DateCell({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 z-[200]" align="start">
+      <PopoverContent className="w-auto p-0" align="start">
         <CalendarPicker
           mode="single"
           selected={selected}

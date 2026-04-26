@@ -179,7 +179,7 @@ function MilestonePopoverContent({
   onClose: () => void;
 }) {
   return (
-    <PopoverContent className="w-auto p-0 z-[200]" align="start" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+    <PopoverContent className="w-auto p-0" align="start" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
       <div className="p-2 border-b border-border flex items-center justify-between gap-2">
         <span className="text-xs font-semibold text-foreground">Marco: {milestone.label}</span>
         <div className="flex items-center gap-1">

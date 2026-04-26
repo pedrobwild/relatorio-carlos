@@ -50,7 +50,7 @@ export function SupplierTaxonomyFields({
           <SelectTrigger aria-label="Categoria do fornecedor">
             <SelectValue placeholder="Selecione..." />
           </SelectTrigger>
-          <SelectContent position="popper" className="z-[200]">
+          <SelectContent position="popper">>
             {SUPPLIER_TYPES.map((type) => (
               <SelectItem key={type} value={type}>
                 {SUPPLIER_TYPE_LABELS[type]}
@@ -71,7 +71,7 @@ export function SupplierTaxonomyFields({
           <SelectTrigger aria-label="Subcategoria do fornecedor">
             <SelectValue placeholder={resolvedType ? "Selecione..." : "Escolha a categoria primeiro"} />
           </SelectTrigger>
-          <SelectContent position="popper" className="z-[200]">
+          <SelectContent position="popper">>
             {availableSubcategories.map((sub) => (
               <SelectItem key={sub} value={sub}>
                 {sub}
