@@ -148,6 +148,25 @@ const fmtDiff = (v: number) => {
   return `${sign}${abs}`;
 };
 
+/**
+ * Formata `created_at` (ISO UTC vindo do Supabase, ex: "2025-04-26T03:10:00+00:00")
+ * sempre como `dd/MM/yyyy` no fuso horário LOCAL do navegador.
+ *
+ * - `parseISO` interpreta corretamente o offset `Z`/`+00:00`, evitando o bug clássico
+ *   de `new Date("2025-04-26")` que assumiria UTC e poderia exibir 25/04 em -03:00.
+ * - Retorna "—" para null/undefined/string inválida (defensivo contra dados antigos).
+ */
+const fmtRequestedDate = (iso: string | null | undefined): string => {
+  if (!iso) return '—';
+  try {
+    const d = parseISO(iso);
+    if (!isValid(d)) return '—';
+    return format(d, 'dd/MM/yyyy', { locale: ptBR });
+  } catch {
+    return '—';
+  }
+};
+
 function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSave: (id: string, v: number | null) => void }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
