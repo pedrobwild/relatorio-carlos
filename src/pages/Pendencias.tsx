@@ -1,21 +1,65 @@
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 import { AlertTriangle, Clock, CheckCircle2, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { usePendencias } from "@/hooks/usePendencias";
+import { usePendencias, type PendingItem } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
-import { PageSkeleton } from "@/components/ui-premium";
+import { PageSkeleton, SummaryChips, type SummaryChip } from "@/components/ui-premium";
 import { EmptyState } from "@/components/EmptyState";
 import { PendenciaItemCard } from "@/components/tabs/PendenciaItemCard";
+
+type ChipId = "atrasadas" | "hoje" | "semana" | "todas";
+
+function classifyByDueDate(item: PendingItem, today: Date): ChipId | null {
+  if (!item.dueDate) return null;
+  const due = parseISO(item.dueDate);
+  if (Number.isNaN(due.getTime())) return null;
+  const diff = differenceInCalendarDays(due, today);
+  if (diff < 0) return "atrasadas";
+  if (diff === 0) return "hoje";
+  if (diff <= 7) return "semana";
+  return null;
+}
 
 const Pendencias = () => {
   const { projectId } = useParams();
   const { sortedItems, stats, isLoading } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
+  const [activeChip, setActiveChip] = useState<ChipId>("todas");
 
-  const getActionUrl = (item: typeof sortedItems[0]) => {
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const { todayCount, weekCount } = useMemo(() => {
+    let todayC = 0;
+    let weekC = 0;
+    for (const item of sortedItems) {
+      const bucket = classifyByDueDate(item, today);
+      if (bucket === "hoje") todayC += 1;
+      if (bucket === "hoje" || bucket === "semana") weekC += 1;
+    }
+    return { todayCount: todayC, weekCount: weekC };
+  }, [sortedItems, today]);
+
+  const filteredItems = useMemo(() => {
+    if (activeChip === "todas") return sortedItems;
+    return sortedItems.filter((item) => {
+      const bucket = classifyByDueDate(item, today);
+      if (activeChip === "atrasadas") return bucket === "atrasadas";
+      if (activeChip === "hoje") return bucket === "hoje";
+      if (activeChip === "semana") return bucket === "hoje" || bucket === "semana";
+      return false;
+    });
+  }, [sortedItems, activeChip, today]);
+
+  const getActionUrl = (item: PendingItem) => {
     if (item.actionUrl) return item.actionUrl;
     switch (item.type) {
       case "invoice": return paths.financeiro;
@@ -49,7 +93,7 @@ const Pendencias = () => {
     );
   }
 
-  const summaryCards = (
+  const summaryCardsDesktop = (
     <>
       <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 md:p-4">
         <div className="flex items-center justify-between">
@@ -72,7 +116,7 @@ const Pendencias = () => {
     </>
   );
 
-  const infoBanner = (
+  const infoBannerDesktop = (
     <Alert className="border-primary/20 bg-primary/5">
       <Info className="h-4 w-4 text-primary" />
       <AlertDescription className="text-caption text-foreground/80">
@@ -81,9 +125,9 @@ const Pendencias = () => {
     </Alert>
   );
 
-  const itemsList = (compact: boolean) => (
+  const itemsList = (compact: boolean, items: PendingItem[]) => (
     <div className={compact ? "space-y-2" : "space-y-3"}>
-      {sortedItems.map((item, index) => (
+      {items.map((item, index) => (
         <PendenciaItemCard
           key={item.id}
           item={item}
@@ -92,17 +136,28 @@ const Pendencias = () => {
           compact={compact}
         />
       ))}
-      {sortedItems.length === 0 && (
+      {items.length === 0 && (
         <div className="bg-card rounded-lg border border-border">
           <EmptyState
             icon={CheckCircle2}
-            title="Tudo em dia!"
-            description="Não há pendências no momento."
+            title={activeChip === "todas" ? "Tudo em dia" : "Nenhuma pendência neste filtro"}
+            description={
+              activeChip === "todas"
+                ? "Não há pendências no momento."
+                : "Tente outro recorte ou volte para Todas."
+            }
           />
         </div>
       )}
     </div>
   );
+
+  const mobileChips: SummaryChip[] = [
+    { id: "atrasadas", label: "Atrasadas", count: stats.overdueCount, accent: "destructive" },
+    { id: "hoje", label: "Hoje", count: todayCount, accent: "warning" },
+    { id: "semana", label: "Esta semana", count: weekCount, accent: "warning" },
+    { id: "todas", label: "Todas", count: stats.total, accent: "primary" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,11 +175,11 @@ const Pendencias = () => {
 
       <main className="py-6">
         <PageContainer maxWidth="xl">
-          {/* Desktop: Two-column layout */}
+          {/* Desktop: Two-column layout (info banner kept here) */}
           <div className="hidden lg:grid lg:grid-cols-[280px_1fr] lg:gap-6">
             <div className="space-y-4 sticky top-20 h-fit">
               <div className="space-y-2">
-                {summaryCards}
+                {summaryCardsDesktop}
                 <div className="bg-secondary border border-border rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -135,18 +190,21 @@ const Pendencias = () => {
                   </div>
                 </div>
               </div>
-              {infoBanner}
+              {infoBannerDesktop}
             </div>
-            {itemsList(false)}
+            {itemsList(false, sortedItems)}
           </div>
 
-          {/* Mobile Layout */}
-          <div className="lg:hidden">
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {summaryCards}
-            </div>
-            <div className="mb-4">{infoBanner}</div>
-            {itemsList(true)}
+          {/* Mobile: SummaryChips + filtered list. Decorative info banner
+              dropped on mobile to put the first item within one scroll. */}
+          <div className="lg:hidden space-y-3">
+            <SummaryChips
+              ariaLabel="Filtrar pendências"
+              chips={mobileChips}
+              activeId={activeChip}
+              onChange={(id) => setActiveChip((id as ChipId) ?? "todas")}
+            />
+            {itemsList(true, filteredItems)}
           </div>
         </PageContainer>
       </main>

@@ -3,13 +3,19 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageSkeleton } from '@/components/ui-premium';
+import {
+  PageSkeleton,
+  SummaryChips,
+  FiltersSheet,
+  type SummaryChip,
+} from '@/components/ui-premium';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -22,11 +28,23 @@ import { PrestadorCalendar } from './compras/PrestadorCalendar';
 import { getSubcategoriesByType } from '@/constants/supplierCategories';
 import type { PurchaseType } from '@/hooks/useProjectPurchases';
 
+type MobileBucket = 'open' | 'in_flight' | 'received' | 'all';
+
+const OPEN_STATUSES = new Set(['pending', 'awaiting_approval', 'approved']);
+const IN_FLIGHT_STATUSES = new Set([
+  'purchased',
+  'ordered',
+  'in_transit',
+  'sent_to_site',
+]);
+
 function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const state = useComprasState(purchaseType);
   const [searchQuery, setSearchQuery] = useState('');
   const [syncing, setSyncing] = useState(false);
+  const [mobileBucket, setMobileBucket] = useState<MobileBucket>('all');
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const isProduto = purchaseType === 'produto';
   const label = isProduto ? 'Produto' : 'Prestador';
@@ -109,6 +127,43 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const availableSubcategories = getSubcategoriesByType(isProduto ? 'produtos' : 'prestadores');
   const hasAnyFilter = !!searchQuery || state.hasActiveFilters;
 
+  // Mobile-only status buckets — group raw statuses into 4 actionable chips.
+  const bucketCounts = useMemo(() => {
+    const counts = { open: 0, in_flight: 0, received: 0, all: 0 };
+    for (const p of state.filteredPurchases) {
+      if (p.status === 'cancelled') continue;
+      counts.all += 1;
+      if (OPEN_STATUSES.has(p.status)) counts.open += 1;
+      else if (IN_FLIGHT_STATUSES.has(p.status)) counts.in_flight += 1;
+      else if (p.status === 'delivered') counts.received += 1;
+    }
+    return counts;
+  }, [state.filteredPurchases]);
+
+  const displayedPurchases = useMemo(() => {
+    if (!isMobile || mobileBucket === 'all') return searchFilteredPurchases;
+    return searchFilteredPurchases.filter((p) => {
+      if (p.status === 'cancelled') return false;
+      if (mobileBucket === 'open') return OPEN_STATUSES.has(p.status);
+      if (mobileBucket === 'in_flight') return IN_FLIGHT_STATUSES.has(p.status);
+      if (mobileBucket === 'received') return p.status === 'delivered';
+      return true;
+    });
+  }, [isMobile, mobileBucket, searchFilteredPurchases]);
+
+  const mobileChips: SummaryChip[] = [
+    { id: 'open', label: 'Em aberto', count: bucketCounts.open, accent: 'warning' },
+    { id: 'in_flight', label: 'A entregar', count: bucketCounts.in_flight, accent: 'primary' },
+    { id: 'received', label: 'Recebidas', count: bucketCounts.received, accent: 'success' },
+    { id: 'all', label: 'Todas', count: bucketCounts.all, accent: 'muted' },
+  ];
+
+  // Number of inline (non-search) filters active — drives the FiltersSheet badge.
+  const sheetActiveCount =
+    (state.filterStatus !== 'all' ? 1 : 0) +
+    (state.filterActivity !== 'all' ? 1 : 0) +
+    (state.filterSubcategory !== 'all' ? 1 : 0);
+
   if (state.isLoading) {
     return (
       <div className="py-4">
@@ -128,80 +183,165 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         onItemClick={(purchase) => state.handleOpenDialog(purchase)}
       />
 
-      <ComprasKPICards
-        pendingCount={pendingCount}
-        orderedCount={orderedCount}
-        deliveredCount={deliveredCount}
-        overdueCount={overdueCount}
-        totalEstimatedCost={totalEstimatedCostFiltered}
-        totalActualCost={totalActualCost}
-        totalItems={totalItems}
-      />
+      {/* Desktop: KPI cards + inline filter row */}
+      <div className="hidden lg:block space-y-5">
+        <ComprasKPICards
+          pendingCount={pendingCount}
+          orderedCount={orderedCount}
+          deliveredCount={deliveredCount}
+          overdueCount={overdueCount}
+          totalEstimatedCost={totalEstimatedCostFiltered}
+          totalActualCost={totalActualCost}
+          totalItems={totalItems}
+        />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={`Buscar ${label.toLowerCase()}, fornecedor, categoria...`}
+              className="pl-9 h-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Select value={state.filterStatus} onValueChange={state.setFilterStatus}>
+            <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              {isProduto && <SelectItem value="awaiting_approval">Solic. Aprovação</SelectItem>}
+              {isProduto && <SelectItem value="approved">Aprovado</SelectItem>}
+              {isProduto && <SelectItem value="purchased">Compra Realizada</SelectItem>}
+              <SelectItem value="ordered">{isProduto ? 'Pedido' : 'Contratado'}</SelectItem>
+              <SelectItem value="in_transit">{isProduto ? 'Em Trânsito' : 'Em Execução'}</SelectItem>
+              <SelectItem value="delivered">{isProduto ? 'Entregue' : 'Concluído'}</SelectItem>
+              {isProduto && <SelectItem value="sent_to_site">Enviado p/ Obra</SelectItem>}
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={state.filterActivity} onValueChange={state.setFilterActivity}>
+            <SelectTrigger className="w-56 h-9"><SelectValue placeholder="Atividade" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as atividades</SelectItem>
+              {state.activities.map(a => <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {availableSubcategories.length > 0 && (
+            <Select value={state.filterSubcategory} onValueChange={state.setFilterSubcategory}>
+              <SelectTrigger className="w-48 h-9"><SelectValue placeholder="Subcategoria" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas subcategorias</SelectItem>
+                {availableSubcategories.map(sub => (
+                  <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {hasAnyFilter && (
+            <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={() => { setSearchQuery(''); state.clearAllFilters(); }}>
+              Limpar filtros
+            </Button>
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            {isProduto && (
+              <Button variant="outline" size="sm" onClick={handleSyncBudget} disabled={syncing}>
+                <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
+                Importar do Orçamento
+              </Button>
+            )}
+            <Button onClick={() => state.handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo {label}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile: SummaryChips + Filters sheet. KPI cards and inline filter
+          row are dropped to put the first row of the list within one scroll. */}
+      <div className="lg:hidden space-y-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={`Buscar ${label.toLowerCase()}, fornecedor, categoria...`}
-            className="pl-9 h-9"
+            placeholder={`Buscar ${label.toLowerCase()}…`}
+            className="pl-9 h-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Select value={state.filterStatus} onValueChange={state.setFilterStatus}>
-          <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="pending">Pendente</SelectItem>
-            {isProduto && <SelectItem value="awaiting_approval">Solic. Aprovação</SelectItem>}
-            {isProduto && <SelectItem value="approved">Aprovado</SelectItem>}
-            {isProduto && <SelectItem value="purchased">Compra Realizada</SelectItem>}
-            <SelectItem value="ordered">{isProduto ? 'Pedido' : 'Contratado'}</SelectItem>
-            <SelectItem value="in_transit">{isProduto ? 'Em Trânsito' : 'Em Execução'}</SelectItem>
-            <SelectItem value="delivered">{isProduto ? 'Entregue' : 'Concluído'}</SelectItem>
-            {isProduto && <SelectItem value="sent_to_site">Enviado p/ Obra</SelectItem>}
-            <SelectItem value="cancelled">Cancelado</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={state.filterActivity} onValueChange={state.setFilterActivity}>
-          <SelectTrigger className="w-56 h-9"><SelectValue placeholder="Atividade" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as atividades</SelectItem>
-            {state.activities.map(a => <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        {availableSubcategories.length > 0 && (
-          <Select value={state.filterSubcategory} onValueChange={state.setFilterSubcategory}>
-            <SelectTrigger className="w-48 h-9"><SelectValue placeholder="Subcategoria" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas subcategorias</SelectItem>
-              {availableSubcategories.map(sub => (
-                <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        {hasAnyFilter && (
-          <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={() => { setSearchQuery(''); state.clearAllFilters(); }}>
-            Limpar filtros
-          </Button>
-        )}
-        <div className="ml-auto flex items-center gap-2">
-          {isProduto && (
-            <Button variant="outline" size="sm" onClick={handleSyncBudget} disabled={syncing}>
-              <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
-              Importar do Orçamento
-            </Button>
-          )}
-          <Button onClick={() => state.handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo {label}
-          </Button>
+        <SummaryChips
+          ariaLabel="Filtrar compras"
+          chips={mobileChips}
+          activeId={mobileBucket}
+          onChange={(id) => setMobileBucket((id as MobileBucket) ?? 'all')}
+        />
+        <div className="flex items-center justify-between gap-2">
+          <FiltersSheet
+            activeCount={sheetActiveCount}
+            onClear={state.clearAllFilters}
+            title="Filtros"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                Status
+              </label>
+              <Select value={state.filterStatus} onValueChange={state.setFilterStatus}>
+                <SelectTrigger><SelectValue placeholder="Todos os status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  {isProduto && <SelectItem value="awaiting_approval">Solic. Aprovação</SelectItem>}
+                  {isProduto && <SelectItem value="approved">Aprovado</SelectItem>}
+                  {isProduto && <SelectItem value="purchased">Compra Realizada</SelectItem>}
+                  <SelectItem value="ordered">{isProduto ? 'Pedido' : 'Contratado'}</SelectItem>
+                  <SelectItem value="in_transit">{isProduto ? 'Em Trânsito' : 'Em Execução'}</SelectItem>
+                  <SelectItem value="delivered">{isProduto ? 'Entregue' : 'Concluído'}</SelectItem>
+                  {isProduto && <SelectItem value="sent_to_site">Enviado p/ Obra</SelectItem>}
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                Atividade
+              </label>
+              <Select value={state.filterActivity} onValueChange={state.setFilterActivity}>
+                <SelectTrigger><SelectValue placeholder="Todas as atividades" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as atividades</SelectItem>
+                  {state.activities.map(a => <SelectItem key={a.id} value={a.id}>{a.description}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {availableSubcategories.length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Subcategoria
+                </label>
+                <Select value={state.filterSubcategory} onValueChange={state.setFilterSubcategory}>
+                  <SelectTrigger><SelectValue placeholder="Todas subcategorias" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas subcategorias</SelectItem>
+                    {availableSubcategories.map(sub => (
+                      <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {isProduto && (
+              <Button variant="outline" size="sm" onClick={handleSyncBudget} disabled={syncing} className="w-full">
+                <RefreshCw className={cn('h-4 w-4 mr-2', syncing && 'animate-spin')} />
+                Importar do Orçamento
+              </Button>
+            )}
+          </FiltersSheet>
         </div>
       </div>
 
       <PurchasesTable
-        purchases={searchFilteredPurchases}
+        purchases={displayedPurchases}
         getActivityName={state.getActivityName}
         getDaysUntilRequired={state.getDaysUntilRequired}
         onEdit={(p) => state.handleOpenDialog(p)}
@@ -212,6 +352,21 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         onUpdateNotes={state.handleUpdateNotes}
         onUpdateField={state.handleUpdateField}
       />
+
+      {/* Mobile FAB — single CTA, sits above the bottom-nav. */}
+      <div
+        className="fixed right-4 lg:hidden z-30"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 16px)' }}
+      >
+        <Button
+          size="lg"
+          onClick={() => state.handleOpenDialog()}
+          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow p-0"
+          aria-label={`Novo ${label}`}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
 
       <PurchaseFormDialog
         open={state.isDialogOpen}

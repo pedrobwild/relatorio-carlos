@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Sparkles, FileText } from 'lucide-react';
+import { Plus, Search, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useFormalizacoes } from '@/hooks/useFormalizacoes';
-import { useUserRole } from '@/hooks/useUserRole';
 import { useCan } from '@/hooks/useCan';
 import { EmptyState } from '@/components/EmptyState';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
@@ -19,7 +18,6 @@ import { Card } from '@/components/ui/card';
 export default function Formalizacoes() {
   const navigate = useNavigate();
   const { paths, projectId } = useProjectNavigation();
-  const { isAdmin } = useUserRole();
   const { can } = useCan();
   const [activeTab, setActiveTab] = useState('pendentes');
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,11 +54,10 @@ export default function Formalizacoes() {
             size="sm"
             onClick={() => navigate(paths.formalizacoesNova)}
             aria-label="Criar nova formalização"
-            className="shrink-0 gap-1.5 shadow-sm hover:shadow-md transition-all"
+            className="shrink-0 gap-1.5 shadow-sm hover:shadow-md transition-all hidden lg:inline-flex"
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Nova Formalização</span>
-            <span className="sm:hidden">Nova</span>
+            Nova Formalização
           </Button>
         )}
       </PageHeader>
@@ -140,15 +137,15 @@ export default function Formalizacoes() {
             pendingCount={pendingCount}
             signedCount={signedCount}
             basePath={paths.formalizacoes}
-            onCreateNew={() => navigate(paths.formalizacoesNova)}
-            canCreate={canCreate}
-            isStaff={isAdmin}
           />
         </PageContainer>
       </main>
 
-      {isAdmin && (
-        <div className="fixed bottom-6 right-6 lg:hidden">
+      {canCreate && (
+        <div
+          className="fixed right-4 lg:hidden z-30"
+          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom) + 16px)' }}
+        >
           <Button
             size="lg"
             onClick={() => navigate(paths.formalizacoesNova)}
