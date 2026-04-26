@@ -20,13 +20,13 @@ import {
   PackageCheck,
   TrendingUp,
   ClipboardList,
+  type LucideIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-import type { LucideIcon } from "lucide-react";
 
 interface SuggestionCategory {
   label: string;

@@ -24,7 +24,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
+import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard } from '@/components/ui-premium';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -85,7 +85,6 @@ import { EmptyState } from '@/components/ui/states';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 import { ExternalBudgetCell } from '@/components/admin/painel/ExternalBudgetCell';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -551,7 +550,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[140px]">Relacionamento</TableHead>
                           <TableHead className="min-w-[150px]">Orçamento público</TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Atualizado" sortKey="ultima_atualizacao" /></TableHead>
-                          <TableHead className="w-16 sticky right-0 bg-surface-sunken border-l border-border-subtle" />
+                          <TableHead className="w-20 sticky right-0 bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -577,9 +576,9 @@ export default function PainelObras() {
           <TabsContent value="fornecedores" className="mt-4 focus-visible:outline-none">
             <Suspense fallback={
               <div className="space-y-3 p-4" aria-busy="true" aria-label="Carregando fornecedores">
-                <PageSkeleton className="h-10 w-64" />
-                <PageSkeleton className="h-32 w-full" />
-                <PageSkeleton className="h-96 w-full" />
+                <Skeleton className="h-10 w-64" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-96 w-full" />
               </div>
             }>
               <Fornecedores />
@@ -604,11 +603,11 @@ interface ObraRowProps {
 }
 
 function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
-  const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
+  const stickyBase = 'bg-background group-hover:bg-accent/40 transition-colors';
 
   return (
     <>
-      <TableRow className={cn('group transition-colors hover:bg-accent/40', expanded && 'bg-accent/25 hover:bg-accent/30')}>
+      <TableRow key={obra.id} className={cn('group transition-colors hover:bg-accent/40', expanded && 'bg-accent/25 hover:bg-accent/30')}>
         {/* Cliente / Obra — sticky left */}
         <TableCell className={cn('sticky left-0 z-10 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
           <div className="flex items-start gap-1.5">
@@ -641,18 +640,14 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
             return (
               <Select value={obra.status ?? NONE}
                 onValueChange={(v) => onUpdate({ status: v === NONE ? null : (v as PainelStatus) })}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SelectTrigger
-                      className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md', statusPillClass(displayStatus))}
-                      aria-label={isAuto ? autoHint : undefined}>
-                      <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(displayStatus))} />
-                      <span className="font-medium truncate">{displayStatus ?? 'Definir'}</span>
-                      {isAuto && <AlertTriangle className="h-3 w-3 opacity-70 shrink-0" aria-hidden />}
-                    </SelectTrigger>
-                  </TooltipTrigger>
-                  {isAuto && <TooltipContent side="top" className="max-w-[280px] text-xs">{autoHint}</TooltipContent>}
-                </Tooltip>
+                <SelectTrigger
+                  className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md', statusPillClass(displayStatus))}
+                  aria-label={isAuto ? autoHint : undefined}
+                  title={isAuto ? autoHint : undefined}>
+                  <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(displayStatus))} />
+                  <span className="font-medium truncate">{displayStatus ?? 'Definir'}</span>
+                  {isAuto && <AlertTriangle className="h-3 w-3 opacity-70 shrink-0" aria-hidden />}
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>(nenhum)</SelectItem>
                   {STATUS_OPTIONS.map((s) => (
@@ -762,18 +757,13 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
 
             {/* Quick actions menu */}
             <DropdownMenu>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent/60"
-                      aria-label="Mais ações">
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="left">Mais ações</TooltipContent>
-              </Tooltip>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="ghost"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent/60"
+                  aria-label="Mais ações">
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem onClick={onOpen} className="text-xs gap-2">
                   <ExternalLink className="h-3.5 w-3.5" />Abrir obra
@@ -791,7 +781,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
       </TableRow>
 
       {expanded && (
-        <TableRow className="bg-accent/15 hover:bg-accent/15">
+        <TableRow key={`${obra.id}-expanded`} className="bg-accent/15 hover:bg-accent/15">
           <TableCell colSpan={PAINEL_COLUMN_COUNT} className="p-0 border-t border-b-2 border-primary/20">
             <DailyLogInline projectId={obra.id} />
           </TableCell>
