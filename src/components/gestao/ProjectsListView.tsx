@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -22,28 +21,16 @@ import { ObraExpandedRow } from '@/components/admin/obras/ObraExpandedRow';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
-import { getTemporalStatusLabel } from '@/lib/temporalStatus';
+import { ProjectStatusBadge } from '@/components/portfolio/ProjectStatusBadge';
 import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
 
 
-const statusColors: Record<string, string> = {
-  draft: 'bg-slate-500/10 text-slate-600 border-slate-300/50 dark:text-slate-400 dark:border-slate-500/20',
-  active: 'bg-emerald-500/10 text-emerald-700 border-emerald-300/50 dark:text-emerald-400 dark:border-emerald-500/20',
-  completed: 'bg-blue-500/10 text-blue-700 border-blue-300/50 dark:text-blue-400 dark:border-blue-500/20',
-  paused: 'bg-amber-500/10 text-amber-700 border-amber-300/50 dark:text-amber-400 dark:border-amber-500/20',
-  cancelled: 'bg-muted text-muted-foreground border-border',
-};
-
-const statusLabels: Record<string, string> = {
-  draft: 'Rascunho',
-  active: 'Ativa',
-  completed: 'Concluída',
-  paused: 'Pausada',
-  cancelled: 'Cancelada',
-};
+// Mapeamentos status→label/cor agora vivem em lib/statusTones.ts e são
+// renderizados via ProjectStatusBadge — mantemos só o que é específico
+// dessa tela (delete dialog, comparar mudanças de status, …).
 
 interface ProjectsListViewProps {
   projects: ProjectWithCustomer[];
@@ -435,16 +422,7 @@ function ProjectRow({
           )}
         </TableCell>
         <TableCell className="text-center py-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="outline" className={cn(statusColors[project.status], 'text-[9px] font-semibold px-1.5 py-0 h-[18px] whitespace-nowrap')}>
-                {statusLabels[project.status]}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              {getTemporalStatusLabel(project.status, null, project.created_at)}
-            </TooltipContent>
-          </Tooltip>
+          <ProjectStatusBadge project={project} size="sm" />
         </TableCell>
 
         {/* Atualizado */}

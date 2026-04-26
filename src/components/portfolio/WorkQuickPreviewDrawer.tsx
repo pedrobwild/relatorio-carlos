@@ -7,24 +7,14 @@ import {
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import { LastUpdateInfo } from '@/components/portfolio/LastUpdateInfo';
+import { ProjectStatusBadge } from '@/components/portfolio/ProjectStatusBadge';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
-
-// ─── Status config ───────────────────────────────────────────────────────────
-
-const statusConfig: Record<string, { label: string; icon: string; color: string }> = {
-  draft:     { label: 'Rascunho',      icon: '✎', color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20' },
-  active:    { label: 'Em andamento', icon: '●', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
-  completed: { label: 'Concluída',    icon: '✓', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
-  paused:    { label: 'Pausada',      icon: '‖', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
-  cancelled: { label: 'Cancelada',    icon: '✕', color: 'bg-destructive/10 text-destructive border-destructive/20' },
-};
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -52,8 +42,6 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
     );
   }
 
-  const status = statusConfig[project.status] ?? statusConfig.active;
-  
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 
@@ -91,10 +79,12 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
               <SheetTitle className="text-base font-bold leading-snug pr-4 sm:text-lg">
                 {project.name}
               </SheetTitle>
-              <Badge variant="outline" className={cn('shrink-0 text-[11px] gap-1', status.color)}>
-                <span aria-hidden="true">{status.icon}</span>
-                {status.label}
-              </Badge>
+              <ProjectStatusBadge
+                project={project}
+                statusChangedAt={summary?.last_activity_at ?? null}
+                size="md"
+                className="shrink-0"
+              />
             </div>
             {project.is_project_phase && (
               <span className="inline-block text-[11px] font-medium text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">
