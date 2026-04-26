@@ -53,6 +53,12 @@ export type ProjectPurchaseInsert = TablesInsert<'project_purchases'>;
 interface PurchaseWithProject extends ProjectPurchase {
   project_name: string;
   payment_due_date?: string | null;
+  /**
+   * Override defensivo: embora a coluna `created_at` seja NOT NULL no banco,
+   * registros antigos sincronizados ou casos de borda podem chegar sem o campo.
+   * Tratamos como opcional/nulo para forçar o uso do helper `fmtRequestedDate`.
+   */
+  created_at?: string | null;
 }
 
 type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'delayed';
