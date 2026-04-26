@@ -4,6 +4,31 @@ import tailwindAnimate from "tailwindcss-animate";
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  /**
+   * SAFELIST — tokens semânticos sempre incluídos no build.
+   *
+   * Todos os tokens de z-index do design system entram aqui para evitar que
+   * sejam removidos quando consumidos via composição dinâmica
+   * (ex.: `` `z-${layer}` ``, `cn(condicional && 'z-popover')` em arquivos
+   * fora do `content`, ou strings construídas em runtime).
+   *
+   * Mantenha sincronizado com `theme.extend.zIndex` abaixo.
+   */
+  safelist: [
+    "z-base",
+    "z-sticky",
+    "z-raised",
+    "z-docked",
+    "z-shell",
+    "z-header",
+    "z-modal",
+    "z-modal-content",
+    "z-popover",
+    "z-toast",
+    "z-alert",
+    "z-alert-content",
+    "z-max",
+  ],
   prefix: "",
   theme: {
     container: {
