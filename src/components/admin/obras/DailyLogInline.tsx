@@ -546,6 +546,10 @@ interface SectionCardProps {
   defaultOpen?: boolean;
   /** Texto resumido exibido no header quando a seção está fechada. */
   previewWhenClosed?: string;
+  /** Quando true, renderiza `loadingSkeleton` no lugar de `children`. */
+  isLoading?: boolean;
+  /** Skeleton específico desta seção (renderizado dentro do conteúdo aberto). */
+  loadingSkeleton?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -555,6 +559,8 @@ function SectionCard({
   count,
   defaultOpen = true,
   previewWhenClosed,
+  isLoading = false,
+  loadingSkeleton,
   children,
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -571,6 +577,7 @@ function SectionCard({
           <button
             type="button"
             aria-expanded={open}
+            aria-busy={isLoading || undefined}
             aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
             className={cn(
               'w-full flex items-start gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
@@ -583,13 +590,20 @@ function SectionCard({
                 <span className="text-sm font-semibold text-foreground truncate">
                   {title}
                 </span>
-                {hasCount && (
-                  <Badge
-                    variant={count! > 0 ? 'secondary' : 'outline'}
-                    className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums shrink-0"
-                  >
-                    {count}
-                  </Badge>
+                {isLoading ? (
+                  <span
+                    className={cn(SHIMMER_CLASS, 'h-4 w-6 rounded-full shrink-0')}
+                    aria-hidden
+                  />
+                ) : (
+                  hasCount && (
+                    <Badge
+                      variant={count! > 0 ? 'secondary' : 'outline'}
+                      className="h-5 min-w-[20px] justify-center px-1.5 text-[10px] tabular-nums shrink-0"
+                    >
+                      {count}
+                    </Badge>
+                  )
                 )}
               </span>
               {!open && previewWhenClosed && (
@@ -609,7 +623,7 @@ function SectionCard({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="px-2 sm:px-3 pb-2.5 sm:pb-3 pt-2 border-t border-border/60 bg-muted/10 min-w-0">
-            {children}
+            {isLoading && loadingSkeleton ? loadingSkeleton : children}
           </div>
         </CollapsibleContent>
       </div>
