@@ -795,7 +795,8 @@ export default function CalendarioCompras() {
           </div>
 
           {/* ── Filters + View Toggle + New Button ── */}
-          <Card>
+          {/* sticky para manter filtros e ações de troca de visão sempre visíveis ao rolar listas longas */}
+          <Card className="sticky top-0 z-20 bg-card/95 backdrop-blur-sm shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-wrap items-end gap-3">
                 {/* Period: From */}
