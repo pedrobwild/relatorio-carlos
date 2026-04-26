@@ -3,11 +3,13 @@ import {
   MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign,
   ClipboardList, ChevronDown, ChevronRight, MoreHorizontal, Trash2,
   Pencil, MapPin, Calendar, Warehouse, Building2, TruckIcon, History,
+  Loader2, Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { statusConfig, PURCHASE_TYPE_LABELS, PURCHASE_TYPE_ICONS } from './types';
@@ -302,22 +304,41 @@ function StatusBadge({ status }: { status: PurchaseStatus }) {
   );
 }
 
-/* ─── Inline Editable Field ─── */
+/* ─── Inline Editable Field (with autosave feedback) ─── */
 function InlineField({
   type = 'text', value, placeholder, onSave, className, prefix,
+  inputClassName,
 }: {
   type?: 'text' | 'number' | 'date';
   value: string | number | null;
   placeholder?: string;
-  onSave: (val: string) => void;
+  onSave: (val: string) => void | Promise<void>;
   className?: string;
   prefix?: string;
+  inputClassName?: string;
 }) {
   // Use key to force re-mount when value changes externally,
   // ensuring defaultValue stays in sync after saves.
   const stableKey = `${value ?? ''}`;
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    const oldVal = value == null ? '' : String(value);
+    if (newVal === oldVal) return; // no change → no save
+
+    setSaveState('saving');
+    try {
+      await onSave(newVal);
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 1200);
+    } catch {
+      setSaveState('idle');
+    }
+  };
+
   return (
-    <div className="relative">
+    <div className={cn('relative', className)}>
       {prefix && (
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
           {prefix}
@@ -329,12 +350,69 @@ function InlineField({
         className={cn(
           'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
           prefix && 'pl-7',
-          className,
+          saveState !== 'idle' && 'pr-7',
+          inputClassName,
         )}
         placeholder={placeholder}
         defaultValue={value ?? ''}
-        onBlur={(e) => onSave(e.target.value)}
+        onBlur={handleBlur}
       />
+      {saveState === 'saving' && (
+        <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 animate-spin text-muted-foreground pointer-events-none" />
+      )}
+      {saveState === 'saved' && (
+        <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[hsl(var(--success))] pointer-events-none" />
+      )}
+    </div>
+  );
+}
+
+/* ─── Inline Editable Textarea (with autosave feedback) ─── */
+function InlineTextarea({
+  value, placeholder, onSave, rows = 2,
+}: {
+  value: string | null;
+  placeholder?: string;
+  onSave: (val: string) => void | Promise<void>;
+  rows?: number;
+}) {
+  const stableKey = `${value ?? ''}`;
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleBlur = async (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    const newVal = e.target.value;
+    const oldVal = value ?? '';
+    if (newVal === oldVal) return;
+
+    setSaveState('saving');
+    try {
+      await onSave(newVal);
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 1200);
+    } catch {
+      setSaveState('idle');
+    }
+  };
+
+  return (
+    <div className="relative">
+      <Textarea
+        key={stableKey}
+        rows={rows}
+        className={cn(
+          'text-sm bg-transparent border-input/40 hover:border-input focus:border-input transition-colors resize-none',
+          saveState !== 'idle' && 'pr-7',
+        )}
+        placeholder={placeholder}
+        defaultValue={value ?? ''}
+        onBlur={handleBlur}
+      />
+      {saveState === 'saving' && (
+        <Loader2 className="absolute right-2 top-2 h-3 w-3 animate-spin text-muted-foreground pointer-events-none" />
+      )}
+      {saveState === 'saved' && (
+        <Check className="absolute right-2 top-2 h-3 w-3 text-[hsl(var(--success))] pointer-events-none" />
+      )}
     </div>
   );
 }
@@ -380,7 +458,16 @@ function PurchaseRow({
         <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_auto_auto] md:grid-cols-[1fr_120px_120px_120px_auto] items-center gap-3">
           {/* Name + supplier */}
           <div className="min-w-0">
-            <p className="font-medium text-sm truncate">{purchase.item_name}</p>
+            <InlineField
+              value={purchase.item_name}
+              placeholder="Nome do item"
+              onSave={(v) => {
+                const trimmed = v.trim();
+                if (!trimmed) return;
+                onUpdateField(purchase.id, 'item_name', trimmed);
+              }}
+              inputClassName="font-medium text-sm h-7 px-1 -mx-1"
+            />
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               {purchase.supplier_name && (
                 <span className="truncate">{purchase.supplier_name}</span>
@@ -750,11 +837,61 @@ function PurchaseRow({
           {/* Payment details: due date, method, pix key, boleto + IA */}
           <PaymentSection purchase={purchase} onUpdateField={onUpdateField} />
 
-          {purchase.description && (
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <p className="text-sm text-muted-foreground">{purchase.description}</p>
+          {/* Item details — quantity, unit, invoice number, supplier contact, description */}
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Detalhes do item
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Quantidade</label>
+                <InlineField
+                  type="number"
+                  value={purchase.quantity}
+                  placeholder="1"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'quantity', v || null)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Unidade</label>
+                <InlineField
+                  value={purchase.unit}
+                  placeholder="un, m², kg…"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'unit', v.trim() || 'un')}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Nº Nota Fiscal</label>
+                <InlineField
+                  value={purchase.invoice_number}
+                  placeholder="—"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'invoice_number', v.trim() || null)}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Contato fornecedor</label>
+                <InlineField
+                  value={purchase.supplier_contact}
+                  placeholder="Telefone / e-mail"
+                  className="w-full"
+                  onSave={(v) => onUpdateField(purchase.id, 'supplier_contact', v.trim() || null)}
+                />
+              </div>
             </div>
-          )}
+
+            <div className="mt-3">
+              <label className="text-xs text-muted-foreground block mb-1">Descrição / observações do item</label>
+              <InlineTextarea
+                value={purchase.description}
+                placeholder="Detalhes técnicos, especificações, observações…"
+                rows={2}
+                onSave={(v) => onUpdateField(purchase.id, 'description', v.trim() || null)}
+              />
+            </div>
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>

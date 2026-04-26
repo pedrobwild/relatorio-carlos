@@ -287,7 +287,7 @@ export function useComprasState(purchaseTypeFilter?: PurchaseType) {
     }
     
     // Ensure date fields get null instead of empty string
-    if (['required_by_date', 'planned_purchase_date', 'order_date', 'expected_delivery_date', 'actual_delivery_date', 'start_date', 'end_date', 'stock_entry_date', 'stock_exit_date'].includes(field)) {
+    if (['required_by_date', 'planned_purchase_date', 'order_date', 'expected_delivery_date', 'actual_delivery_date', 'start_date', 'end_date', 'stock_entry_date', 'stock_exit_date', 'payment_due_date'].includes(field)) {
       updateValue = value && value.trim() ? value : null;
     }
     
