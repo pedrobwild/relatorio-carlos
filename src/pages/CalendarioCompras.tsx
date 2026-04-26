@@ -950,8 +950,7 @@ export default function CalendarioCompras() {
                           <TableHead className="w-8" />
                           <TableHead className="whitespace-nowrap">Obra</TableHead>
                           <TableHead className="whitespace-nowrap">Item</TableHead>
-                          <TableHead className="whitespace-nowrap">Categoria</TableHead>
-                          <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
+                          <TableHead className="whitespace-nowrap">Solicitada em</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Real</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
