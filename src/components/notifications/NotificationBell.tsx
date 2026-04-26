@@ -11,8 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatRelativeTime } from '@/lib/dates';
 import { cn } from '@/lib/utils';
 import { getUrgencyCategory, isBlockingNotification } from '@/constants/notificationUrgency';
 import type { Notification } from '@/infra/repositories/notifications.repository';
@@ -29,11 +28,7 @@ const typeConfig: Record<string, { icon: typeof Bell; className: string; actionV
 };
 
 function formatNotificationTime(createdAt: string): string {
-  const parsedDate = new Date(createdAt);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return 'Agora há pouco';
-  }
-  return formatDistanceToNow(parsedDate, { addSuffix: true, locale: ptBR });
+  return formatRelativeTime(createdAt, 'Agora há pouco');
 }
 
 function NotificationItem({

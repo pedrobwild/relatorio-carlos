@@ -29,8 +29,9 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
-import { format, parseISO, formatDistanceToNow } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatRelativeTime } from '@/lib/dates';
 
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
@@ -98,8 +99,7 @@ const statusLabel = (s: CsTicketStatus) =>
 const fmtDateTime = (iso: string | null | undefined) =>
   iso ? format(parseISO(iso), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '—';
 
-const fmtRelative = (iso: string) =>
-  formatDistanceToNow(parseISO(iso), { locale: ptBR, addSuffix: true });
+const fmtRelative = (iso: string) => formatRelativeTime(iso);
 
 // ----- Linha do tempo: rótulos por evento -----
 

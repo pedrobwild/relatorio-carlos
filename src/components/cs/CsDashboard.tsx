@@ -27,8 +27,8 @@ import {
   UserCheck,
   Check,
 } from 'lucide-react';
-import { differenceInDays, formatDistanceToNow, parseISO, subDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { differenceInDays, parseISO, subDays } from 'date-fns';
+import { formatRelativeTime } from '@/lib/dates';
 
 import {
   CS_SEVERITY_OPTIONS,
@@ -523,11 +523,7 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                         <span className="truncate">{t.project_name ?? 'Obra'}</span>
                         <span className="ml-auto shrink-0">
-                          aberto{' '}
-                          {formatDistanceToNow(parseISO(t.created_at), {
-                            locale: ptBR,
-                            addSuffix: true,
-                          })}
+                          aberto {formatRelativeTime(t.created_at)}
                         </span>
                       </p>
                     </button>
@@ -570,10 +566,7 @@ export function CsDashboard({ tickets, onFilter }: CsDashboardProps) {
                           {t.responsible_name ?? 'Responsável'} · {t.project_name ?? 'Obra'}
                         </span>
                         <span className="ml-auto shrink-0">
-                          {formatDistanceToNow(parseISO(t.updated_at), {
-                            locale: ptBR,
-                            addSuffix: true,
-                          })}
+                          {formatRelativeTime(t.updated_at)}
                         </span>
                       </p>
                     </button>

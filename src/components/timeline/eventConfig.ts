@@ -49,6 +49,12 @@ export function getEventConfig(eventType: string): EventConfig {
   };
 }
 
+/**
+ * Compact relative-date format for the activity timeline (`5min atrás`,
+ * `3h atrás`, `2d atrás`). This is intentionally tighter than the standard
+ * `formatRelativeTime` from `lib/dates` (which renders `há cerca de 5
+ * minutos`) — timelines pack many entries vertically and need short labels.
+ */
 export const formatRelativeDate = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();

@@ -10,8 +10,7 @@ import { useTemplateVersions, type ProjectTemplate } from '@/hooks/useProjectTem
 import { type ActivityItem, totalDays, getCategoryLabel } from './types';
 import { useLongPress } from '@/hooks/useLongPress';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { formatRelativeTime } from '@/lib/dates';
 
 interface TemplateCardProps {
   template: ProjectTemplate;
@@ -77,7 +76,7 @@ export function TemplateCard({ template: t, onPreview, onEdit, onDuplicate, onEx
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      {versionCount} versão(ões) · Última: {latestVersion ? formatDistanceToNow(new Date(latestVersion.created_at), { locale: ptBR, addSuffix: true }) : '—'}
+                      {versionCount} versão(ões) · Última: {latestVersion ? formatRelativeTime(latestVersion.created_at) : '—'}
                     </p>
                   </TooltipContent>
                 </Tooltip>

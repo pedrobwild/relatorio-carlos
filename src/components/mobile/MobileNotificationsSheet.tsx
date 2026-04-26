@@ -23,8 +23,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useNotifications } from "@/hooks/useNotifications";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatRelativeTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { getUrgencyCategory, isBlockingNotification } from "@/constants/notificationUrgency";
 import type { Notification } from "@/infra/repositories/notifications.repository";
@@ -41,9 +40,7 @@ const typeConfig: Record<string, { icon: typeof Bell; className: string; actionV
 };
 
 function formatTime(createdAt: string): string {
-  const d = new Date(createdAt);
-  if (Number.isNaN(d.getTime())) return "Agora";
-  return formatDistanceToNow(d, { addSuffix: true, locale: ptBR });
+  return formatRelativeTime(createdAt, "Agora");
 }
 
 function NotificationRow({

@@ -167,7 +167,13 @@ export function PortfolioKpiStrip({
 
   return (
     <div
-      className="grid grid-cols-3 gap-2 px-0 pb-1 md:flex md:flex-wrap"
+      className={cn(
+        // Mobile: horizontal snap-scroll (matches God-mode UX brief — issue #16).
+        // The negative inline margin lets cards bleed to the screen edges so the
+        // first/last cards don't look "stuck" against the page gutter.
+        'flex gap-2 overflow-x-auto snap-x snap-mandatory pb-1 -mx-4 px-4 scrollbar-hide',
+        'md:mx-0 md:px-0 md:flex-wrap md:overflow-visible md:snap-none',
+      )}
       role="group"
       aria-label="KPIs operacionais — clique para filtrar"
     >
@@ -190,7 +196,12 @@ export function PortfolioKpiStrip({
             aria-pressed={isSelected}
             aria-label={`${kpi.label}: ${val}`}
             className={cn(
-              'relative flex flex-col items-center gap-1 rounded-xl border px-3 py-2.5 min-w-[72px]',
+              // Mobile cards: snap-start so each KPI lands cleanly when scrolled.
+              // shrink-0 + min-w prevents flex from squashing them, basis-[42vw]
+              // shows ~2 full cards + a peek of the third so users discover scroll.
+              'snap-start shrink-0 basis-[42vw] min-w-[128px]',
+              'md:basis-auto md:shrink',
+              'relative flex flex-col items-center gap-1 rounded-xl border px-3 py-2.5',
               'md:flex-row md:gap-2 md:px-3 md:py-2 md:min-w-0',
               'transition-all duration-150 cursor-pointer select-none active:scale-[0.96]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
