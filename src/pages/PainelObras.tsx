@@ -257,7 +257,7 @@ export default function PainelObras() {
 
   type SortKey =
     | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
-    | 'entrega_real'   | 'ultima_atualizacao' | null;
+    | 'entrega_real'   | null;
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -301,8 +301,7 @@ export default function PainelObras() {
       rows = rows.filter(
         (o) =>
           o.nome.toLowerCase().includes(q) ||
-          (o.customer_name ?? '').toLowerCase().includes(q) ||
-          (o.engineer_name ?? '').toLowerCase().includes(q),
+          (o.customer_name ?? '').toLowerCase().includes(q),
       );
     }
     if (filterEtapa !== ALL)
@@ -461,7 +460,7 @@ export default function PainelObras() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                   <Input value={search} onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Buscar obra, cliente ou responsável…"
+                    placeholder="Buscar obra ou cliente…"
                     className="h-9 pl-8 text-sm bg-surface border-border-subtle" />
                 </div>
               }
