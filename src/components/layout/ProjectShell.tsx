@@ -6,6 +6,7 @@ import { ProjectSidebar } from "@/components/layout/ProjectSidebar";
 import { ProjectSlimHeader } from "@/components/layout/ProjectSlimHeader";
 import { ProjectLayoutProvider } from "@/components/layout/ProjectLayoutContext";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { MobileObraHeader } from "@/components/header/MobileObraHeader";
 import { FloatingApprovalBanner } from "@/components/pendencias/FloatingApprovalBanner";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProject } from "@/contexts/ProjectContext";
@@ -57,6 +58,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
     return (
       <ProjectLayoutProvider value={{ hasShell: false }}>
         <div className="relative min-h-[100dvh]">
+          <MobileObraHeader />
           {isSwitching && <ProjectSwitchOverlay />}
           <div className="pb-bottom-nav">{children}</div>
         </div>
@@ -75,6 +77,7 @@ export function ProjectShell({ children }: ProjectShellProps) {
             <ProjectSidebar />
           </TooltipProvider>
           <div className="flex-1 flex flex-col min-w-0 relative">
+            <MobileObraHeader />
             <ProjectSlimHeader />
             {isSwitching && <ProjectSwitchOverlay />}
             <main className="flex-1 overflow-y-auto pb-bottom-nav">{children}</main>

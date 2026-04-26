@@ -1,12 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import bwildLogo from "@/assets/bwild-logo-dark.png";
-import { ArrowLeft, Bell, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ProjectSwitcherSheet } from "@/components/mobile/ProjectSwitcherSheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
 import { formatDateShort, type ProjectMetrics, type MilestoneItem, type MilestoneKey } from "./types";
 import { MilestonesBar } from "./ProjectStateSection";
 import { ProgressSection } from "./ProgressSection";
@@ -43,7 +39,7 @@ interface MobileReportHeaderProps {
 
 export function MobileReportHeader({
   projectName, unitName, clientName, address, bairro, cep,
-  otherProjects, pendenciasStats, pendenciasPath, onGoBack, onProjectSwitch,
+  otherProjects, pendenciasStats: _pendenciasStats, pendenciasPath: _pendenciasPath, onGoBack: _onGoBack, onProjectSwitch,
   showMetrics, metrics, displayStartDate, displayEndDate,
   milestoneItems, canEditMilestones, onMilestoneDateChange,
   isStaff, hasActivities, cronogramaPath, isProjectPhase, activities, startDate, effectiveEndDate,
@@ -58,41 +54,10 @@ export function MobileReportHeader({
   return (
     <div className="md:hidden">
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        {/* Top Bar — always visible */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={onGoBack} className="h-8 w-8 rounded-full" aria-label="Voltar">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <img src={bwildLogo} alt="Bwild" className="h-7 w-auto" />
-          </div>
-          <Link
-            to={pendenciasPath}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all border active:scale-[0.97]",
-              pendenciasStats.overdueCount > 0
-                ? 'bg-destructive/10 text-destructive border-destructive/20'
-                : pendenciasStats.urgentCount > 0
-                  ? 'bg-warning/10 text-warning border-warning/20'
-                  : 'bg-secondary text-foreground border-border'
-            )}
-            aria-label={`${pendenciasStats.total} pendências`}
-          >
-            <Bell className="w-3.5 h-3.5" />
-            <span className="text-xs font-semibold">Pendências</span>
-            <Badge
-              variant={pendenciasStats.overdueCount > 0 ? "destructive" : "secondary"}
-              className={cn(
-                "min-w-4 h-4 px-1 text-[10px] font-bold",
-                pendenciasStats.overdueCount > 0 ? '' : pendenciasStats.urgentCount > 0 ? 'bg-warning text-warning-foreground' : 'bg-muted-foreground text-white'
-              )}
-            >
-              {pendenciasStats.total}
-            </Badge>
-          </Link>
-        </div>
-
-        {/* Project name + compact progress — always visible */}
+        {/* Project name + compact progress.
+         * Back button, BWild logo and Pendências bell now live in the slim
+         * `MobileObraHeader` rendered by ProjectShell — kept off this card to
+         * avoid duplication. */}
         <div className="p-3">
           <div className="mb-2">
             <ProjectSwitcherSheet
