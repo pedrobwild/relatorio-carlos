@@ -10,7 +10,8 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUrlParam, useNullableUrlParam } from '@/hooks/useUrlParam';
 import { applyKpiFilter, type KpiFilterKey, type ProjectFinancial } from '../PortfolioKpiStrip';
-import { type AdvancedFilters, emptyFilters, isFiltersEmpty } from '../filters/types';
+import { isFiltersEmpty, emptyFilters } from '../filters/types';
+import { useAdvancedFiltersUrl } from '../filters/useAdvancedFiltersUrl';
 import { applyAdvancedFilters } from '../filters/applyFilters';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
@@ -58,7 +59,8 @@ export function usePortfolioFilters(
   const [kpiFilter, setKpiFilterParam] = useNullableUrlParam<KpiFilterKey>('kpi', isKpiKey);
 
   // ── Advanced filters ────────────────────────────────────────────────────
-  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(emptyFilters);
+  // URL-backed (issue #16). See useAdvancedFiltersUrl for the URL schema.
+  const [advancedFilters, setAdvancedFilters] = useAdvancedFiltersUrl();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── View mode ───────────────────────────────────────────────────────────
@@ -205,7 +207,10 @@ export function usePortfolioFilters(
     setKpiFilterParam(null);
     setAdvancedFilters(emptyFilters);
     setSelectedEngineer(null);
-  }, [setSearch, setActivePresetParam, setScopeFilter, setKpiFilterParam, setSelectedEngineer]);
+  }, [
+    setSearch, setActivePresetParam, setScopeFilter, setKpiFilterParam,
+    setAdvancedFilters, setSelectedEngineer,
+  ]);
 
   return {
     // State
