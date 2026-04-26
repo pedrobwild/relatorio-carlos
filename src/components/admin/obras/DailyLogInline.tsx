@@ -220,18 +220,19 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         )}
       </div>
 
-      {isLoading ? (
-        <DailyLogSkeleton />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none">
           {/* Serviços em execução */}
           <SectionCard
             icon={<ClipboardList className="h-4 w-4 text-primary" />}
             title="Serviços em execução"
-            count={services.length}
-            defaultOpen={services.length > 0}
+            count={isLoading ? undefined : services.length}
+            defaultOpen={!isLoading && services.length > 0}
+            isLoading={isLoading}
+            loadingSkeleton={<ServicesSkeleton />}
             previewWhenClosed={
-              services.length === 0
+              isLoading
+                ? 'Carregando serviços…'
+                : services.length === 0
                 ? 'Nenhum serviço — toque para adicionar'
                 : `${services.length} ${services.length === 1 ? 'serviço' : 'serviços'} registrado${services.length === 1 ? '' : 's'}`
             }
