@@ -301,8 +301,7 @@ export default function PainelObras() {
       rows = rows.filter(
         (o) =>
           o.nome.toLowerCase().includes(q) ||
-          (o.customer_name ?? '').toLowerCase().includes(q) ||
-          (o.engineer_name ?? '').toLowerCase().includes(q),
+          (o.customer_name ?? '').toLowerCase().includes(q),
       );
     }
     if (filterEtapa !== ALL)
