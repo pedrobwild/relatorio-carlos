@@ -999,8 +999,8 @@ export default function CalendarioCompras() {
                         const expanded = expandedRows.has(p.id);
                         const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
                         return (
-                          <>
-                            <TableRow key={p.id} className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
+                          <Fragment key={p.id}>
+                            <TableRow className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
                               {/* expand */}
                               <TableCell className="w-8 text-center">
                                 {hasDetails ? (
