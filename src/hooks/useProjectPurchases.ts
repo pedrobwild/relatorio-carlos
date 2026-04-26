@@ -43,6 +43,11 @@ export interface ProjectPurchase {
   stock_exit_date: string | null;
   shipping_cost: number | null;
   invoice_file_path: string | null;
+  payment_due_date: string | null;
+  payment_method: string | null;
+  pix_key: string | null;
+  boleto_file_path: string | null;
+  boleto_code: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
