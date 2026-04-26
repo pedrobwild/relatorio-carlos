@@ -20,13 +20,42 @@ import { PurchasesTable } from './compras/PurchasesTable';
 import { PurchaseFormDialog, DeletePurchaseDialog } from './compras/PurchaseFormDialog';
 import { PrestadorCalendar } from './compras/PrestadorCalendar';
 import { getSubcategoriesByType } from '@/constants/supplierCategories';
-import type { PurchaseType } from '@/hooks/useProjectPurchases';
+import type { PurchaseType, PurchaseStatus } from '@/hooks/useProjectPurchases';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
   const state = useComprasState(purchaseType);
   const [searchQuery, setSearchQuery] = useState('');
   const [syncing, setSyncing] = useState(false);
   const queryClient = useQueryClient();
+  const [pendingOrderConfirm, setPendingOrderConfirm] = useState<{ id: string } | null>(null);
+
+  const handleStatusChangeGuarded = (id: string, newStatus: PurchaseStatus) => {
+    if (newStatus === 'ordered') {
+      const purchase = state.filteredPurchases.find((p) => p.id === id);
+      if (purchase && !purchase.activity_id) {
+        setPendingOrderConfirm({ id });
+        return;
+      }
+    }
+    state.handleStatusChange(id, newStatus);
+  };
+
+  const confirmOrderTransition = () => {
+    if (!pendingOrderConfirm) return;
+    const id = pendingOrderConfirm.id;
+    setPendingOrderConfirm(null);
+    state.handleStatusChange(id, 'ordered');
+  };
 
   const isProduto = purchaseType === 'produto';
   const label = isProduto ? 'Produto' : 'Prestador';
@@ -206,7 +235,7 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         getDaysUntilRequired={state.getDaysUntilRequired}
         onEdit={(p) => state.handleOpenDialog(p)}
         onDelete={(id) => state.setDeleteId(id)}
-        onStatusChange={state.handleStatusChange}
+        onStatusChange={handleStatusChangeGuarded}
         onAddFirst={() => state.handleOpenDialog()}
         onUpdateActualCost={state.handleUpdateActualCost}
         onUpdateNotes={state.handleUpdateNotes}
@@ -235,6 +264,28 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
         onOpenChange={() => state.setDeleteId(null)}
         onDelete={state.handleDelete}
       />
+
+      <AlertDialog
+        open={!!pendingOrderConfirm}
+        onOpenChange={(open) => { if (!open) setPendingOrderConfirm(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Compra sem etapa vinculada</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta compra não está vinculada a uma etapa do cronograma. Comprar
+              antes da definição final pode causar retrabalho. Continuar mesmo
+              assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmOrderTransition}>
+              Marcar como Pedido
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

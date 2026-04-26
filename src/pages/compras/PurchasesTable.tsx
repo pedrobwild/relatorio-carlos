@@ -25,6 +25,8 @@ import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getLeadTimeRisk } from '@/lib/purchaseRisk';
 
 interface PurchasesTableProps {
   purchases: ProjectPurchase[];
@@ -301,6 +303,43 @@ function StatusBadge({ status }: { status: PurchaseStatus }) {
   );
 }
 
+/* ─── Lead-time Risk Badge ─── */
+const RISK_CLASS: Record<'tight' | 'late', string> = {
+  tight: 'bg-[hsl(var(--warning))]/15 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/40',
+  late: 'bg-destructive/15 text-destructive border-destructive/40',
+};
+
+function LeadTimeRiskBadge({ purchase }: { purchase: ProjectPurchase }) {
+  const risk = getLeadTimeRisk({
+    required_by_date: purchase.required_by_date,
+    lead_time_days: purchase.lead_time_days,
+    actual_delivery_date: purchase.actual_delivery_date,
+    status: purchase.status,
+  });
+  if (risk.level !== 'tight' && risk.level !== 'late') return null;
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(
+              'gap-1 text-[10px] font-medium border whitespace-nowrap',
+              RISK_CLASS[risk.level],
+            )}
+          >
+            <Clock className="h-3 w-3" />
+            {risk.label}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs">
+          {risk.message}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 /* ─── Inline Editable Field ─── */
 function InlineField({
   type = 'text', value, placeholder, onSave, className, prefix,
@@ -448,9 +487,12 @@ function PurchaseRow({
                     Entregue: {fmtDate(purchase.actual_delivery_date)}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Entrega: {fmtDate(purchase.required_by_date)}
-                  </p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-xs text-muted-foreground">
+                      Entrega: {fmtDate(purchase.required_by_date)}
+                    </p>
+                    <LeadTimeRiskBadge purchase={purchase} />
+                  </div>
                 )}
               </>
             )}
