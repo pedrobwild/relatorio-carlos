@@ -1,8 +1,15 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, isWeekend } from 'date-fns';
+import {
+  format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval,
+  isSameDay, isSameMonth, addMonths, subMonths, isWeekend,
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon, FilterX } from 'lucide-react';
+import {
+  ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon,
+  FilterX, Plus, ChevronDown, ChevronUp, ExternalLink, Package,
+  FileText, Truck,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,12 +17,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { PageSkeleton } from '@/components/ui-premium';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -27,20 +42,17 @@ interface PurchaseWithProject extends ProjectPurchase {
   payment_due_date?: string | null;
 }
 
-// Simplified status set requested for the calendar view.
-// "delayed" is a UI-managed status (string stored in the same column).
 type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'delayed';
 
 const calendarStatusConfig: Record<CalendarStatus, { label: string; color: string; icon: React.ElementType }> = {
-  pending:   { label: 'Pendente',  color: 'bg-[hsl(var(--warning))]/20 text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30', icon: Clock },
-  approved:  { label: 'Aprovado',  color: 'bg-blue-500/20 text-blue-600 border-blue-500/30', icon: ThumbsUp },
-  delivered: { label: 'Concluído', color: 'bg-[hsl(var(--success))]/20 text-[hsl(var(--success))] border-[hsl(var(--success))]/30', icon: CheckCircle2 },
-  delayed:   { label: 'Atrasado',  color: 'bg-red-500/20 text-red-600 border-red-500/30', icon: AlertTriangle },
+  pending:   { label: 'Pendente',  color: 'bg-amber-500/15 text-amber-700 border-amber-500/30',  icon: Clock },
+  approved:  { label: 'Aprovado',  color: 'bg-blue-500/15 text-blue-700 border-blue-500/30',     icon: ThumbsUp },
+  delivered: { label: 'Entregue',  color: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30', icon: CheckCircle2 },
+  delayed:   { label: 'Atrasado',  color: 'bg-red-500/15 text-red-700 border-red-500/30',        icon: AlertTriangle },
 };
 
 const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'delayed'];
 
-/** Map any DB status to one of the 4 calendar buckets for display */
 function toCalendarStatus(s: string | null | undefined): CalendarStatus {
   if (s === 'approved' || s === 'awaiting_approval' || s === 'purchased' || s === 'ordered' || s === 'in_transit') return 'approved';
   if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
@@ -48,32 +60,12 @@ function toCalendarStatus(s: string | null | undefined): CalendarStatus {
   return 'pending';
 }
 
-// Editable date cell — opens a calendar popover, commits on selection or clear.
+// ─── DateCell ────────────────────────────────────────────────────────────────
 function DateCell({
-  value,
-  onSave,
-  placeholder = 'Definir',
-}: {
-  value: string | null | undefined;
-  onSave: (value: string | null) => void;
-  placeholder?: string;
-}) {
+  value, onSave, placeholder = 'Definir',
+}: { value: string | null | undefined; onSave: (v: string | null) => void; placeholder?: string }) {
   const [open, setOpen] = useState(false);
   const selected = value ? parseISO(value) : undefined;
-
-  const handleSelect = (date: Date | undefined) => {
-    if (!date) return;
-    const iso = format(date, 'yyyy-MM-dd');
-    if (iso !== value) onSave(iso);
-    setOpen(false);
-  };
-
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (value) onSave(null);
-    setOpen(false);
-  };
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -83,24 +75,21 @@ function DateCell({
             'group inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs hover:bg-muted whitespace-nowrap',
             !value && 'text-muted-foreground italic',
           )}
-          title="Clique para editar"
         >
           {value ? format(parseISO(value), 'dd/MM/yy') : placeholder}
           {value ? (
-            <X
-              className="h-3 w-3 opacity-0 group-hover:opacity-60 hover:text-destructive transition-opacity"
-              onClick={handleClear}
-            />
+            <X className="h-3 w-3 opacity-0 group-hover:opacity-60 hover:text-destructive transition-opacity"
+              onClick={(e) => { e.stopPropagation(); onSave(null); setOpen(false); }} />
           ) : (
             <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 z-[200]" align="start">
         <CalendarPicker
           mode="single"
           selected={selected}
-          onSelect={handleSelect}
+          onSelect={(d) => { if (d) { onSave(format(d, 'yyyy-MM-dd')); setOpen(false); } }}
           locale={ptBR}
           initialFocus
           className="p-3 pointer-events-auto"
@@ -110,29 +99,23 @@ function DateCell({
   );
 }
 
-function StatusCell({
-  purchase,
-  onSave,
-}: {
-  purchase: PurchaseWithProject;
-  onSave: (id: string, value: CalendarStatus) => void;
-}) {
+// ─── StatusCell ───────────────────────────────────────────────────────────────
+function StatusCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSave: (id: string, v: CalendarStatus) => void }) {
   const current = toCalendarStatus(purchase.status);
+  const cfg = calendarStatusConfig[current];
+  const Icon = cfg.icon;
   return (
     <Select value={current} onValueChange={(v) => onSave(purchase.id, v as CalendarStatus)}>
-      <SelectTrigger className="h-7 w-[120px] text-[10px] px-2 py-0 gap-1">
-        <SelectValue />
+      <SelectTrigger className={cn('h-7 w-[126px] text-[11px] px-2 py-0 gap-1 border rounded-full font-medium', cfg.color)}>
+        <span className="inline-flex items-center gap-1"><Icon className="h-3 w-3" /><SelectValue /></span>
       </SelectTrigger>
       <SelectContent>
         {CALENDAR_STATUS_OPTIONS.map((s) => {
-          const cfg = calendarStatusConfig[s];
-          const Icon = cfg.icon;
+          const c = calendarStatusConfig[s];
+          const I = c.icon;
           return (
             <SelectItem key={s} value={s} className="text-xs">
-              <span className="inline-flex items-center gap-1.5">
-                <Icon className="h-3 w-3" />
-                {cfg.label}
-              </span>
+              <span className="inline-flex items-center gap-1.5"><I className="h-3 w-3" />{c.label}</span>
             </SelectItem>
           );
         })}
@@ -141,102 +124,271 @@ function StatusCell({
   );
 }
 
+// ─── ActualCostCell ───────────────────────────────────────────────────────────
+const fmtCompact = (v: number | null) =>
+  v != null ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) : '—';
 const fmt = (v: number | null) =>
   v != null ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—';
-
-// Compact format used inside table cells (R$ 1.500)
-const fmtCompact = (v: number | null) =>
-  v != null
-    ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-    : '—';
-
-// Signed compact format for differences ("+R$ 200" / "-R$ 150")
 const fmtDiff = (v: number) => {
   const sign = v > 0 ? '+' : v < 0 ? '-' : '';
   const abs = Math.abs(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
   return `${sign}${abs}`;
 };
 
-// Editable currency cell — uses raw number input, commits on blur/Enter.
-function ActualCostCell({
-  purchase,
-  onSave,
-}: {
-  purchase: PurchaseWithProject;
-  onSave: (id: string, value: number | null) => void;
-}) {
+function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSave: (id: string, v: number | null) => void }) {
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState<string>(
-    purchase.actual_cost != null ? String(purchase.actual_cost) : '',
-  );
-
-  useEffect(() => {
-    setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
-  }, [purchase.actual_cost]);
-
+  const [value, setValue] = useState(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
+  useEffect(() => { setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : ''); }, [purchase.actual_cost]);
   const commit = () => {
     const trimmed = value.trim().replace(',', '.');
     const num = trimmed === '' ? null : Number(trimmed);
     if (trimmed !== '' && (isNaN(num as number) || (num as number) < 0)) {
-      toast.error('Valor inválido');
-      setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
-      setEditing(false);
-      return;
+      toast.error('Valor inválido'); setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : ''); setEditing(false); return;
     }
     if (num !== purchase.actual_cost) onSave(purchase.id, num);
     setEditing(false);
   };
-
-  const cancel = () => {
-    setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
-    setEditing(false);
-  };
-
   if (editing) {
     return (
       <div className="flex items-center gap-1">
-        <Input
-          autoFocus
-          type="number"
-          step="0.01"
-          min="0"
-          inputMode="decimal"
-          value={value}
+        <Input autoFocus type="number" step="0.01" min="0" inputMode="decimal" value={value}
           onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') commit();
-            if (e.key === 'Escape') cancel();
-          }}
-          onBlur={commit}
-          className="h-7 w-24 text-xs px-2"
-        />
-        <Button size="icon" variant="ghost" className="h-6 w-6" onMouseDown={(e) => e.preventDefault()} onClick={commit}>
-          <Check className="h-3 w-3" />
-        </Button>
-        <Button size="icon" variant="ghost" className="h-6 w-6" onMouseDown={(e) => e.preventDefault()} onClick={cancel}>
-          <X className="h-3 w-3" />
-        </Button>
+          onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : ''); setEditing(false); } }}
+          onBlur={commit} className="h-7 w-24 text-xs px-2" />
+        <Button size="icon" variant="ghost" className="h-6 w-6" onMouseDown={(e) => e.preventDefault()} onClick={commit}><Check className="h-3 w-3" /></Button>
+        <Button size="icon" variant="ghost" className="h-6 w-6" onMouseDown={(e) => e.preventDefault()} onClick={() => { setValue(purchase.actual_cost != null ? String(purchase.actual_cost) : ''); setEditing(false); }}><X className="h-3 w-3" /></Button>
       </div>
     );
   }
-
   return (
-    <button
-      type="button"
-      onClick={() => setEditing(true)}
-      className="group inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs hover:bg-muted whitespace-nowrap"
-      title="Clique para editar"
-    >
+    <button type="button" onClick={() => setEditing(true)}
+      className="group inline-flex items-center gap-1 rounded px-1 py-0.5 text-xs hover:bg-muted whitespace-nowrap">
       <span className={cn(purchase.actual_cost == null && 'text-muted-foreground italic')}>
-        {purchase.actual_cost != null ? fmtCompact(purchase.actual_cost) : 'Adicionar'}
+        {purchase.actual_cost != null ? fmtCompact(purchase.actual_cost) : 'Informar'}
       </span>
       <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
     </button>
   );
 }
 
+// ─── Expandable row details ───────────────────────────────────────────────────
+function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-2 px-3 py-3 text-xs bg-muted/30 border-t">
+      {p.description && (
+        <div className="col-span-full">
+          <span className="text-muted-foreground flex items-center gap-1 mb-0.5"><FileText className="h-3 w-3" /> Descrição</span>
+          <p className="text-foreground leading-snug">{p.description}</p>
+        </div>
+      )}
+      {p.quantity && (
+        <div>
+          <span className="text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Qtde / Unidade</span>
+          <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
+        </div>
+      )}
+      {p.delivery_address && (
+        <div>
+          <span className="text-muted-foreground flex items-center gap-1"><Truck className="h-3 w-3" /> Entrega</span>
+          <p className="font-medium">{p.delivery_address}</p>
+        </div>
+      )}
+      {p.notes && (
+        <div className="col-span-full">
+          <span className="text-muted-foreground">Observações</span>
+          <p className="text-foreground leading-snug">{p.notes}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── New Purchase Dialog ──────────────────────────────────────────────────────
+interface NewPurchaseForm {
+  project_id: string;
+  item_name: string;
+  category: string;
+  supplier_name: string;
+  estimated_cost: string;
+  planned_purchase_date: Date | undefined;
+  quantity: string;
+  unit: string;
+  description: string;
+  notes: string;
+}
+
+const EMPTY_FORM: NewPurchaseForm = {
+  project_id: '',
+  item_name: '',
+  category: '',
+  supplier_name: '',
+  estimated_cost: '',
+  planned_purchase_date: undefined,
+  quantity: '',
+  unit: '',
+  description: '',
+  notes: '',
+};
+
+function NewPurchaseDialog({
+  open,
+  onClose,
+  projects,
+  onCreated,
+}: {
+  open: boolean;
+  onClose: () => void;
+  projects: { id: string; name: string }[];
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState<NewPurchaseForm>(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+
+  useEffect(() => { if (open) setForm(EMPTY_FORM); }, [open]);
+
+  const set = (field: keyof NewPurchaseForm, value: unknown) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleSubmit = async () => {
+    if (!form.project_id) { toast.error('Selecione a obra'); return; }
+    if (!form.item_name.trim()) { toast.error('Informe o nome do item'); return; }
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('project_purchases').insert({
+        project_id: form.project_id,
+        item_name: form.item_name.trim(),
+        category: form.category.trim() || null,
+        supplier_name: form.supplier_name.trim() || null,
+        estimated_cost: form.estimated_cost ? Number(form.estimated_cost.replace(',', '.')) : null,
+        planned_purchase_date: form.planned_purchase_date
+          ? format(form.planned_purchase_date, 'yyyy-MM-dd')
+          : null,
+        quantity: form.quantity ? Number(form.quantity) : null,
+        unit: form.unit.trim() || null,
+        description: form.description.trim() || null,
+        notes: form.notes.trim() || null,
+        status: 'pending',
+      });
+      if (error) throw error;
+      toast.success('Solicitação criada com sucesso!');
+      onCreated();
+      onClose();
+    } catch (e) {
+      console.error(e);
+      toast.error('Erro ao criar solicitação');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Plus className="h-4 w-4" /> Nova Solicitação de Compra</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-2">
+          {/* Obra — obrigatório */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm font-medium">Obra <span className="text-destructive">*</span></Label>
+            <Select value={form.project_id} onValueChange={(v) => set('project_id', v)}>
+              <SelectTrigger className={cn('h-9', !form.project_id && 'border-destructive/50')}>
+                <SelectValue placeholder="Selecionar obra…" />
+              </SelectTrigger>
+              <SelectContent className="z-[300]">
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Item — obrigatório */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm font-medium">Item / Produto <span className="text-destructive">*</span></Label>
+            <Input placeholder="Ex: Cimento CP-II, Vergalhão 10mm…" value={form.item_name}
+              onChange={(e) => set('item_name', e.target.value)} className="h-9" />
+          </div>
+
+          {/* Categoria + Fornecedor */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label className="text-sm">Categoria</Label>
+              <Input placeholder="Ex: Estrutura, Elétrico…" value={form.category}
+                onChange={(e) => set('category', e.target.value)} className="h-9" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-sm">Fornecedor</Label>
+              <Input placeholder="Nome do fornecedor" value={form.supplier_name}
+                onChange={(e) => set('supplier_name', e.target.value)} className="h-9" />
+            </div>
+          </div>
+
+          {/* Qtde + Unidade + Custo estimado */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="grid gap-1.5">
+              <Label className="text-sm">Quantidade</Label>
+              <Input type="number" min="0" placeholder="0" value={form.quantity}
+                onChange={(e) => set('quantity', e.target.value)} className="h-9" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-sm">Unidade</Label>
+              <Input placeholder="un, kg, m²…" value={form.unit}
+                onChange={(e) => set('unit', e.target.value)} className="h-9" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-sm">Custo Estimado (R$)</Label>
+              <Input type="number" min="0" step="0.01" placeholder="0,00" value={form.estimated_cost}
+                onChange={(e) => set('estimated_cost', e.target.value)} className="h-9" />
+            </div>
+          </div>
+
+          {/* Data planejada */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm">Data Planejada de Compra</Label>
+            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn('w-full h-9 justify-start font-normal text-sm', !form.planned_purchase_date && 'text-muted-foreground')}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {form.planned_purchase_date ? format(form.planned_purchase_date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Selecionar data…'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 z-[300]" align="start">
+                <CalendarPicker mode="single" selected={form.planned_purchase_date}
+                  onSelect={(d) => { set('planned_purchase_date', d); setDateOpen(false); }}
+                  locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Descrição + Observações */}
+          <div className="grid gap-1.5">
+            <Label className="text-sm">Descrição técnica</Label>
+            <Textarea placeholder="Especificações, normas, referências técnicas…" value={form.description}
+              onChange={(e) => set('description', e.target.value)} rows={2} className="text-sm resize-none" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="text-sm">Observações</Label>
+            <Textarea placeholder="Urgência, ponto de entrega, contato do fornecedor…" value={form.notes}
+              onChange={(e) => set('notes', e.target.value)} rows={2} className="text-sm resize-none" />
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="gap-1.5">
+            {saving ? 'Salvando…' : <><Plus className="h-4 w-4" /> Criar Solicitação</>}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function CalendarioCompras() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
@@ -247,8 +399,16 @@ export default function CalendarioCompras() {
   const [filterActualCost, setFilterActualCost] = useState<'all' | 'informed' | 'pending'>('all');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [newDialogOpen, setNewDialogOpen] = useState(false);
 
-  // Fetch all purchases across all projects with project names
+  const toggleRow = (id: string) =>
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
   const { data: allPurchases = [], isLoading } = useQuery({
     queryKey: ['all-purchases-calendar'],
     queryFn: async () => {
@@ -256,18 +416,12 @@ export default function CalendarioCompras() {
         .from('project_purchases')
         .select('*')
         .order('planned_purchase_date', { ascending: true });
-
       if (error) throw error;
-
-      const projectIds = [...new Set((purchases || []).map(p => p.project_id))];
+      const projectIds = [...new Set((purchases || []).map((p) => p.project_id))];
       const { data: projects } = await supabase
-        .from('projects')
-        .select('id, name')
-        .in('id', projectIds);
-
-      const projectMap = new Map((projects || []).map(p => [p.id, p.name]));
-
-      return (purchases || []).map(p => ({
+        .from('projects').select('id, name').in('id', projectIds);
+      const projectMap = new Map((projects || []).map((p) => [p.id, p.name]));
+      return (purchases || []).map((p) => ({
         ...p,
         project_name: projectMap.get(p.project_id) || 'Projeto',
       })) as PurchaseWithProject[];
@@ -275,110 +429,74 @@ export default function CalendarioCompras() {
     staleTime: 60_000,
   });
 
-  // Fetch paid payments across all projects (used for "available budget" KPI)
   const { data: allPayments = [] } = useQuery({
     queryKey: ['all-payments-calendar'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('project_payments')
-        .select('id, project_id, amount, paid_at')
-        .not('paid_at', 'is', null);
+        .from('project_payments').select('id, project_id, amount, paid_at').not('paid_at', 'is', null);
       if (error) throw error;
       return data || [];
     },
     staleTime: 60_000,
   });
 
-  // Mutation: update actual_cost inline
+  // Fetch all projects for the New Purchase dialog (not just the ones with purchases)
+  const { data: allProjects = [] } = useQuery({
+    queryKey: ['all-projects-for-select'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects').select('id, name').order('name');
+      if (error) throw error;
+      return (data || []) as { id: string; name: string }[];
+    },
+    staleTime: 120_000,
+  });
+
   const updateActualCost = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: number | null }) => {
-      const { error } = await supabase
-        .from('project_purchases')
-        .update({ actual_cost: value })
-        .eq('id', id);
+      const { error } = await supabase.from('project_purchases').update({ actual_cost: value }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
-      toast.success('Custo real atualizado');
-    },
-    onError: (e) => {
-      console.error(e);
-      toast.error('Erro ao atualizar custo real');
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] }); toast.success('Custo real atualizado'); },
+    onError: (e) => { console.error(e); toast.error('Erro ao atualizar custo real'); },
   });
 
-  // Mutation: update status inline
   const updateStatus = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: CalendarStatus }) => {
-      const { error } = await supabase
-        .from('project_purchases')
-        .update({ status: value })
-        .eq('id', id);
+      const { error } = await supabase.from('project_purchases').update({ status: value }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
-      toast.success('Status atualizado');
-    },
-    onError: (e) => {
-      console.error(e);
-      toast.error('Erro ao atualizar status');
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] }); toast.success('Status atualizado'); },
+    onError: (e) => { console.error(e); toast.error('Erro ao atualizar status'); },
   });
 
-  // Mutation: update planned_purchase_date / payment_due_date inline
   const updateDateField = useMutation({
-    mutationFn: async ({
-      id,
-      field,
-      value,
-    }: {
-      id: string;
-      field: 'planned_purchase_date' | 'payment_due_date';
-      value: string | null;
-    }) => {
-      const { error } = await supabase
-        .from('project_purchases')
-        .update({ [field]: value })
-        .eq('id', id);
+    mutationFn: async ({ id, field, value }: { id: string; field: 'planned_purchase_date' | 'payment_due_date'; value: string | null }) => {
+      const { error } = await supabase.from('project_purchases').update({ [field]: value }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
-      toast.success(
-        vars.field === 'planned_purchase_date'
-          ? 'Data da compra atualizada'
-          : 'Data de pagamento atualizada',
-      );
+      toast.success(vars.field === 'planned_purchase_date' ? 'Data da compra atualizada' : 'Data de pagamento atualizada');
     },
-    onError: (e) => {
-      console.error(e);
-      toast.error('Erro ao atualizar data');
-    },
+    onError: (e) => { console.error(e); toast.error('Erro ao atualizar data'); },
   });
 
   const projects = useMemo(() => {
     const map = new Map<string, string>();
-    allPurchases.forEach(p => map.set(p.project_id, p.project_name));
-    return Array.from(map.entries())
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    allPurchases.forEach((p) => map.set(p.project_id, p.project_name));
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
   }, [allPurchases]);
 
   const suppliers = useMemo(() => {
     const set = new Set<string>();
-    allPurchases.forEach(p => {
-      if (p.supplier_name && p.supplier_name.trim()) set.add(p.supplier_name.trim());
-    });
+    allPurchases.forEach((p) => { if (p.supplier_name?.trim()) set.add(p.supplier_name.trim()); });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [allPurchases]);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
-    allPurchases.forEach(p => {
-      if (p.category && p.category.trim()) set.add(p.category.trim());
-    });
+    allPurchases.forEach((p) => { if (p.category?.trim()) set.add(p.category.trim()); });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [allPurchases]);
 
@@ -386,15 +504,13 @@ export default function CalendarioCompras() {
   const dateToStr = dateTo ? format(dateTo, 'yyyy-MM-dd') : null;
 
   const filtered = useMemo(() => {
-    return allPurchases.filter(p => {
+    return allPurchases.filter((p) => {
       if (filterStatus !== 'all' && toCalendarStatus(p.status) !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
       if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
-      if (filterActualCost === 'informed' && (p.actual_cost == null)) return false;
-      if (filterActualCost === 'pending' && (p.actual_cost != null)) return false;
-      // Period filter applies only to items with a planned_purchase_date.
-      // Items without date are excluded when a period is active.
+      if (filterActualCost === 'informed' && p.actual_cost == null) return false;
+      if (filterActualCost === 'pending' && p.actual_cost != null) return false;
       if (dateFromStr || dateToStr) {
         if (!p.planned_purchase_date) return false;
         if (dateFromStr && p.planned_purchase_date < dateFromStr) return false;
@@ -405,42 +521,32 @@ export default function CalendarioCompras() {
   }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, filterActualCost, dateFromStr, dateToStr]);
 
   const activeFilterCount =
-    (filterStatus !== 'all' ? 1 : 0) +
-    (filterProject !== 'all' ? 1 : 0) +
-    (filterSupplier !== 'all' ? 1 : 0) +
-    (filterCategory !== 'all' ? 1 : 0) +
-    (filterActualCost !== 'all' ? 1 : 0) +
-    (dateFrom ? 1 : 0) +
-    (dateTo ? 1 : 0);
+    (filterStatus !== 'all' ? 1 : 0) + (filterProject !== 'all' ? 1 : 0) +
+    (filterSupplier !== 'all' ? 1 : 0) + (filterCategory !== 'all' ? 1 : 0) +
+    (filterActualCost !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
 
   const clearFilters = () => {
-    setFilterStatus('all');
-    setFilterProject('all');
-    setFilterSupplier('all');
-    setFilterCategory('all');
-    setFilterActualCost('all');
-    setDateFrom(undefined);
-    setDateTo(undefined);
+    setFilterStatus('all'); setFilterProject('all'); setFilterSupplier('all');
+    setFilterCategory('all'); setFilterActualCost('all');
+    setDateFrom(undefined); setDateTo(undefined);
   };
 
   const purchasesByDate = useMemo(() => {
     const map = new Map<string, PurchaseWithProject[]>();
-    filtered.forEach(p => {
-      const date = p.planned_purchase_date;
-      if (!date) return;
-      if (!map.has(date)) map.set(date, []);
-      map.get(date)!.push(p);
+    filtered.forEach((p) => {
+      if (!p.planned_purchase_date) return;
+      if (!map.has(p.planned_purchase_date)) map.set(p.planned_purchase_date, []);
+      map.get(p.planned_purchase_date)!.push(p);
     });
     return map;
   }, [filtered]);
 
-  const sortedForList = useMemo(() => {
-    return [...filtered]
-      .filter(p => p.planned_purchase_date)
-      .sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || ''));
-  }, [filtered]);
+  const sortedForList = useMemo(() =>
+    [...filtered].filter((p) => p.planned_purchase_date)
+      .sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || '')),
+  [filtered]);
 
-  const withoutDate = useMemo(() => filtered.filter(p => !p.planned_purchase_date), [filtered]);
+  const withoutDate = useMemo(() => filtered.filter((p) => !p.planned_purchase_date), [filtered]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -448,31 +554,19 @@ export default function CalendarioCompras() {
 
   // KPIs
   const totalItems = filtered.length;
-  const pendingItems = filtered.filter(p => toCalendarStatus(p.status) === 'pending').length;
-  const thisMonthItems = filtered.filter(p => {
-    if (!p.planned_purchase_date) return false;
-    return isSameMonth(parseISO(p.planned_purchase_date), currentMonth);
-  }).length;
+  const pendingItems = filtered.filter((p) => toCalendarStatus(p.status) === 'pending').length;
+  const thisMonthItems = filtered.filter((p) => p.planned_purchase_date && isSameMonth(parseISO(p.planned_purchase_date), currentMonth)).length;
   const totalEstimated = filtered.reduce((s, p) => s + (p.estimated_cost || 0), 0);
-  // Difference summary considers only items with both values informed
-  const itemsWithBoth = filtered.filter(p => p.estimated_cost != null && p.actual_cost != null);
-  const totalEstimatedWithBoth = itemsWithBoth.reduce((s, p) => s + (p.estimated_cost || 0), 0);
-  const totalActualWithBoth = itemsWithBoth.reduce((s, p) => s + (p.actual_cost || 0), 0);
-  // Positive = saved money (estimated > actual)
-  const totalDiff = totalEstimatedWithBoth - totalActualWithBoth;
+  const itemsWithBoth = filtered.filter((p) => p.estimated_cost != null && p.actual_cost != null);
+  const totalDiff = itemsWithBoth.reduce((s, p) => s + (p.estimated_cost! - p.actual_cost!), 0);
   const diffPositive = totalDiff >= 0;
 
-  // Available budget: sum of payments received from clients of the projects shown,
-  // restricted to the same period filter (when active). Project filter also applies.
   const availableBudget = useMemo(() => {
-    const projectIdSet = new Set(filtered.map(p => p.project_id));
+    const projectIdSet = new Set(filtered.map((p) => p.project_id));
     return allPayments.reduce((sum, pay) => {
       if (!pay.paid_at) return sum;
-      // Restrict to projects currently in the filtered view
       if (projectIdSet.size > 0 && !projectIdSet.has(pay.project_id)) return sum;
-      // If a single project filter is active but no purchases match, still respect the project
       if (filterProject !== 'all' && pay.project_id !== filterProject) return sum;
-      // Apply period filter to paid_at
       const paidDate = pay.paid_at.slice(0, 10);
       if (dateFromStr && paidDate < dateFromStr) return sum;
       if (dateToStr && paidDate > dateToStr) return sum;
@@ -486,21 +580,13 @@ export default function CalendarioCompras() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <PageHeader
-          title="Calendário de Compras"
-          backTo="/gestao"
-          maxWidth="full"
-          showLogo={false}
-        />
-        <div className="py-6">
-          <PageContainer maxWidth="full">
-            <PageSkeleton metrics content="table" />
-          </PageContainer>
-        </div>
+        <PageHeader title="Calendário de Compras" backTo="/gestao" maxWidth="full" showLogo={false} />
+        <div className="py-6"><PageContainer maxWidth="full"><PageSkeleton metrics content="table" /></PageContainer></div>
       </div>
     );
   }
 
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
@@ -508,151 +594,71 @@ export default function CalendarioCompras() {
         backTo="/gestao"
         maxWidth="full"
         showLogo={false}
-        breadcrumbs={[
-          { label: 'Gestão', href: '/gestao' },
-          { label: 'Calendário de Compras' },
-        ]}
+        breadcrumbs={[{ label: 'Gestão', href: '/gestao' }, { label: 'Calendário de Compras' }]}
       />
+
+      <NewPurchaseDialog
+        open={newDialogOpen}
+        onClose={() => setNewDialogOpen(false)}
+        projects={allProjects}
+        onCreated={() => queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] })}
+      />
+
       <div className="py-6">
         <PageContainer maxWidth="full" className="space-y-6">
-          {/* KPIs */}
+
+          {/* ── KPIs ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Total de Itens</p>
-                <p className="text-2xl font-bold tabular-nums">{totalItems}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Pendentes</p>
-                <p className="text-2xl font-bold tabular-nums text-amber-600">{pendingItems}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Este Mês</p>
-                <p className="text-2xl font-bold tabular-nums">{thisMonthItems}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground whitespace-nowrap">Total Estimado</p>
-                <p className="text-xl font-bold tabular-nums whitespace-nowrap">{fmt(totalEstimated)}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  Diferença <span className="text-[10px]">({itemsWithBoth.length})</span>
-                </p>
-                <p
-                  className={cn(
-                    'text-xl font-bold tabular-nums whitespace-nowrap',
-                    diffPositive ? 'text-emerald-600' : 'text-red-600',
-                  )}
-                >
-                  {itemsWithBoth.length === 0 ? '—' : fmtDiff(totalDiff)}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p
-                  className="text-xs text-muted-foreground whitespace-nowrap"
-                  title="Soma dos pagamentos recebidos dos clientes das obras filtradas (no período, se selecionado)"
-                >
-                  Orçamento Disponível
-                </p>
-                <p className="text-xl font-bold tabular-nums whitespace-nowrap text-emerald-600">
-                  {fmt(availableBudget)}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p
-                  className="text-xs text-muted-foreground whitespace-nowrap"
-                  title="Disponível − Total Estimado"
-                >
-                  Saldo
-                </p>
-                <p
-                  className={cn(
-                    'text-xl font-bold tabular-nums whitespace-nowrap',
-                    balancePositive ? 'text-emerald-600' : 'text-red-600',
-                  )}
-                >
-                  {fmtDiff(budgetBalance)}
-                </p>
-              </CardContent>
-            </Card>
+            {[
+              { label: 'Total de Itens', value: totalItems, cls: '' },
+              { label: 'Pendentes', value: pendingItems, cls: 'text-amber-600' },
+              { label: 'Este Mês', value: thisMonthItems, cls: '' },
+              { label: 'Total Estimado', value: fmt(totalEstimated), cls: 'text-xl' },
+              {
+                label: `Diferença (${itemsWithBoth.length})`,
+                value: itemsWithBoth.length === 0 ? '—' : fmtDiff(totalDiff),
+                cls: cn('text-xl', diffPositive ? 'text-emerald-600' : 'text-red-600'),
+              },
+              { label: 'Orçamento Disponível', value: fmt(availableBudget), cls: 'text-xl text-emerald-600' },
+              {
+                label: 'Saldo',
+                value: fmtDiff(budgetBalance),
+                cls: cn('text-xl', balancePositive ? 'text-emerald-600' : 'text-red-600'),
+              },
+            ].map(({ label, value, cls }) => (
+              <Card key={label}>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">{label}</p>
+                  <p className={cn('font-bold tabular-nums', cls.includes('text-xl') ? 'text-xl whitespace-nowrap' : 'text-2xl')}>{value}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          {/* Filters & View Toggle */}
+          {/* ── Filters + View Toggle + New Button ── */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-wrap items-end gap-3">
                 {/* Period: From */}
-                <div className="flex flex-col gap-1">
-                  <Label className="text-xs text-muted-foreground">De</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                          'w-36 justify-start text-left font-normal',
-                          !dateFrom && 'text-muted-foreground',
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                        {dateFrom ? format(dateFrom, 'dd/MM/yyyy') : 'Início'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarPicker
-                        mode="single"
-                        selected={dateFrom}
-                        onSelect={setDateFrom}
-                        locale={ptBR}
-                        initialFocus
-                        className={cn('p-3 pointer-events-auto')}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Period: To */}
-                <div className="flex flex-col gap-1">
-                  <Label className="text-xs text-muted-foreground">Até</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                          'w-36 justify-start text-left font-normal',
-                          !dateTo && 'text-muted-foreground',
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                        {dateTo ? format(dateTo, 'dd/MM/yyyy') : 'Fim'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarPicker
-                        mode="single"
-                        selected={dateTo}
-                        onSelect={setDateTo}
-                        locale={ptBR}
-                        disabled={(date) => (dateFrom ? date < dateFrom : false)}
-                        initialFocus
-                        className={cn('p-3 pointer-events-auto')}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                {[{ label: 'De', val: dateFrom, set: setDateFrom, placeholder: 'Início' },
+                  { label: 'Até', val: dateTo, set: setDateTo, placeholder: 'Fim' }].map(({ label, val, set: setVal, placeholder }) => (
+                  <div key={label} className="flex flex-col gap-1">
+                    <Label className="text-xs text-muted-foreground">{label}</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className={cn('w-36 justify-start text-left font-normal', !val && 'text-muted-foreground')}>
+                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                          {val ? format(val, 'dd/MM/yyyy') : placeholder}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarPicker mode="single" selected={val} onSelect={setVal as (d: Date | undefined) => void}
+                          locale={ptBR} initialFocus className="p-3 pointer-events-auto"
+                          disabled={label === 'Até' && dateFrom ? (d) => d < dateFrom : undefined} />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                ))}
 
                 {/* Status */}
                 <div className="flex flex-col gap-1">
@@ -661,64 +667,54 @@ export default function CalendarioCompras() {
                     <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos os status</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="approved">Aprovado</SelectItem>
-                      <SelectItem value="delivered">Concluído</SelectItem>
-                      <SelectItem value="delayed">Atrasado</SelectItem>
+                      {CALENDAR_STATUS_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={s}>{calendarStatusConfig[s].label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Project */}
+                {/* Obra */}
                 <div className="flex flex-col gap-1">
                   <Label className="text-xs text-muted-foreground">Obra</Label>
                   <Select value={filterProject} onValueChange={setFilterProject}>
                     <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Obra" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas as obras</SelectItem>
-                      {projects.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
+                      {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Supplier */}
+                {/* Fornecedor */}
                 <div className="flex flex-col gap-1">
                   <Label className="text-xs text-muted-foreground">Fornecedor</Label>
                   <Select value={filterSupplier} onValueChange={setFilterSupplier}>
-                    <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
+                    <SelectTrigger className="w-44 h-9"><SelectValue placeholder="Fornecedor" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos fornecedores</SelectItem>
-                      {suppliers.map(s => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
+                      {suppliers.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Category */}
+                {/* Categoria */}
                 <div className="flex flex-col gap-1">
                   <Label className="text-xs text-muted-foreground">Categoria</Label>
                   <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-48 h-9"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                    <SelectTrigger className="w-44 h-9"><SelectValue placeholder="Categoria" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas categorias</SelectItem>
-                      {categories.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
+                      {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Custo Real status */}
+                {/* Custo Real */}
                 <div className="flex flex-col gap-1">
                   <Label className="text-xs text-muted-foreground">Custo Real</Label>
-                  <Select
-                    value={filterActualCost}
-                    onValueChange={(v) => setFilterActualCost(v as 'all' | 'informed' | 'pending')}
-                  >
-                    <SelectTrigger className="w-44 h-9"><SelectValue placeholder="Custo Real" /></SelectTrigger>
+                  <Select value={filterActualCost} onValueChange={(v) => setFilterActualCost(v as 'all' | 'informed' | 'pending')}>
+                    <SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="informed">Informado</SelectItem>
@@ -727,34 +723,29 @@ export default function CalendarioCompras() {
                   </Select>
                 </div>
 
-                {/* Clear filters */}
                 {activeFilterCount > 0 && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-muted-foreground">
-                    <FilterX className="h-3.5 w-3.5 mr-1" />
-                    Limpar ({activeFilterCount})
+                    <FilterX className="h-3.5 w-3.5 mr-1" />Limpar ({activeFilterCount})
                   </Button>
                 )}
 
-                <div className="ml-auto flex gap-1 self-end">
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                  >
-                    Lista
-                  </Button>
-                  <Button
-                    variant={viewMode === 'calendar' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('calendar')}
-                  >
-                    <Calendar className="h-4 w-4 mr-1" /> Calendário
+                {/* View toggle + Nova Solicitação */}
+                <div className="ml-auto flex items-center gap-2 self-end">
+                  <div className="flex gap-1">
+                    <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>Lista</Button>
+                    <Button variant={viewMode === 'calendar' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('calendar')}>
+                      <Calendar className="h-4 w-4 mr-1" />Calendário
+                    </Button>
+                  </div>
+                  <Button size="sm" className="gap-1.5 shrink-0" onClick={() => setNewDialogOpen(true)}>
+                    <Plus className="h-4 w-4" />Nova Solicitação
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* ── Calendar view ── */}
           {viewMode === 'calendar' ? (
             <Card>
               <CardHeader className="pb-2">
@@ -762,9 +753,7 @@ export default function CalendarioCompras() {
                   <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <CardTitle className="capitalize">
-                    {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-                  </CardTitle>
+                  <CardTitle className="capitalize">{format(currentMonth, 'MMMM yyyy', { locale: ptBR })}</CardTitle>
                   <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -772,52 +761,31 @@ export default function CalendarioCompras() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
-                  {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
-                    <div key={d} className="bg-muted p-2 text-center text-xs font-medium text-muted-foreground">
-                      {d}
-                    </div>
+                  {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((d) => (
+                    <div key={d} className="bg-muted p-2 text-center text-xs font-medium text-muted-foreground">{d}</div>
                   ))}
                   {Array.from({ length: (monthStart.getDay() + 6) % 7 }).map((_, i) => (
                     <div key={`empty-${i}`} className="bg-background p-2 min-h-[80px]" />
                   ))}
-                  {days.map(day => {
+                  {days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
                     const dayPurchases = purchasesByDate.get(dateStr) || [];
                     const isToday = isSameDay(day, new Date());
                     const weekend = isWeekend(day);
-
                     return (
-                      <div
-                        key={dateStr}
-                        className={cn(
-                          'bg-background p-1.5 min-h-[80px] text-xs',
-                          isToday && 'ring-2 ring-primary ring-inset',
-                          weekend && 'bg-muted/50',
-                        )}
-                      >
+                      <div key={dateStr} className={cn('bg-background p-1.5 min-h-[80px] text-xs', isToday && 'ring-2 ring-primary ring-inset', weekend && 'bg-muted/40')}>
                         <span className={cn('font-medium', isToday && 'text-primary')}>{format(day, 'd')}</span>
                         <div className="mt-1 space-y-0.5">
-                          {dayPurchases.slice(0, 3).map(p => {
+                          {dayPurchases.slice(0, 3).map((p) => {
                             const cs = toCalendarStatus(p.status);
+                            const cfg = calendarStatusConfig[cs];
                             return (
-                              <div
-                                key={p.id}
-                                className={cn(
-                                  'text-[10px] leading-tight rounded px-1 py-0.5 truncate cursor-default',
-                                  cs === 'pending' && 'bg-amber-100 text-amber-800',
-                                  cs === 'approved' && 'bg-blue-100 text-blue-800',
-                                  cs === 'delivered' && 'bg-green-100 text-green-800',
-                                  cs === 'delayed' && 'bg-red-100 text-red-800',
-                                )}
-                                title={`${p.project_name} — ${p.item_name}`}
-                              >
+                              <div key={p.id} className={cn('text-[10px] leading-tight rounded-sm px-1 py-0.5 truncate border', cfg.color)} title={`${p.project_name} — ${p.item_name}`}>
                                 {p.item_name}
                               </div>
                             );
                           })}
-                          {dayPurchases.length > 3 && (
-                            <span className="text-[10px] text-muted-foreground">+{dayPurchases.length - 3}</span>
-                          )}
+                          {dayPurchases.length > 3 && <span className="text-[10px] text-muted-foreground">+{dayPurchases.length - 3} mais</span>}
                         </div>
                       </div>
                     );
@@ -827,93 +795,112 @@ export default function CalendarioCompras() {
             </Card>
           ) : (
             <>
+              {/* ── List view: Agendadas ── */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Compras Agendadas ({sortedForList.length})</CardTitle>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Compras Agendadas <span className="text-muted-foreground font-normal text-sm">({sortedForList.length})</span></CardTitle>
+                    <p className="text-xs text-muted-foreground hidden sm:block">Clique em ▸ para ver detalhes • campos editáveis em linha</p>
+                  </div>
                 </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
+                <CardContent className="overflow-x-auto p-0">
+                  <Table className="text-xs [&_th]:px-3 [&_td]:px-3 [&_th]:h-9 [&_td]:py-2">
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="whitespace-nowrap">Compra</TableHead>
-                        <TableHead className="whitespace-nowrap">Pagamento</TableHead>
+                      <TableRow className="bg-muted/50">
+                        {/* expand toggle col */}
+                        <TableHead className="w-8" />
+                        <TableHead className="whitespace-nowrap">Data Compra</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
-                        <TableHead className="whitespace-nowrap">Categoria</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
+                        <TableHead className="whitespace-nowrap">Categoria</TableHead>
                         <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Real</TableHead>
-                        <TableHead className="whitespace-nowrap text-right">Diferença</TableHead>
+                        <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
+                        <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                         <TableHead className="whitespace-nowrap">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedForList.map(p => {
+                      {sortedForList.map((p) => {
                         const hasBoth = p.estimated_cost != null && p.actual_cost != null;
-                        const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
+                        const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
+                        const expanded = expandedRows.has(p.id);
+                        const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes);
                         return (
-                          <TableRow key={p.id}>
-                            <TableCell className="font-medium whitespace-nowrap">
-                              <DateCell
-                                value={p.planned_purchase_date}
-                                onSave={(value) =>
-                                  updateDateField.mutate({ id: p.id, field: 'planned_purchase_date', value })
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium whitespace-nowrap">
-                              <DateCell
-                                value={p.payment_due_date}
-                                onSave={(value) =>
-                                  updateDateField.mutate({ id: p.id, field: 'payment_due_date', value })
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="whitespace-nowrap max-w-[140px]">
-                              <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
-                                {p.project_name}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground whitespace-nowrap max-w-[120px] truncate">
-                              {p.category || '—'}
-                            </TableCell>
-                            <TableCell className="whitespace-nowrap max-w-[180px]">
-                              <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
-                            </TableCell>
-                            <TableCell className="whitespace-nowrap max-w-[120px] truncate" title={p.supplier_name || ''}>
-                              {p.supplier_name || '—'}
-                            </TableCell>
-                            <TableCell className="text-right whitespace-nowrap tabular-nums">
-                              {fmtCompact(p.estimated_cost)}
-                            </TableCell>
-                            <TableCell className="text-right whitespace-nowrap tabular-nums">
-                              <ActualCostCell
-                                purchase={p}
-                                onSave={(id, value) => updateActualCost.mutate({ id, value })}
-                              />
-                            </TableCell>
-                            <TableCell
-                              className={cn(
-                                'text-right whitespace-nowrap tabular-nums font-medium',
+                          <>
+                            <TableRow key={p.id} className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
+                              {/* expand */}
+                              <TableCell className="w-8 text-center">
+                                {hasDetails ? (
+                                  <button type="button" onClick={() => toggleRow(p.id)}
+                                    className="inline-flex items-center justify-center h-5 w-5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                                    {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                  </button>
+                                ) : <span className="inline-block w-5" />}
+                              </TableCell>
+
+                              <TableCell className="font-medium whitespace-nowrap">
+                                <DateCell value={p.planned_purchase_date}
+                                  onSave={(v) => updateDateField.mutate({ id: p.id, field: 'planned_purchase_date', value: v })} />
+                              </TableCell>
+
+                              <TableCell className="whitespace-nowrap max-w-[160px]">
+                                <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block font-normal">
+                                  {p.project_name}
+                                </Badge>
+                              </TableCell>
+
+                              <TableCell className="max-w-[200px]">
+                                <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
+                              </TableCell>
+
+                              <TableCell className="text-muted-foreground whitespace-nowrap max-w-[120px] truncate">
+                                {p.category || <span className="italic opacity-50">—</span>}
+                              </TableCell>
+
+                              <TableCell className="whitespace-nowrap max-w-[130px] truncate" title={p.supplier_name || ''}>
+                                {p.supplier_name || <span className="italic opacity-50">—</span>}
+                              </TableCell>
+
+                              <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
+
+                              <TableCell className="text-right whitespace-nowrap tabular-nums">
+                                <ActualCostCell purchase={p} onSave={(id, v) => updateActualCost.mutate({ id, value: v })} />
+                              </TableCell>
+
+                              <TableCell className={cn('text-right whitespace-nowrap tabular-nums font-medium',
                                 diff == null && 'text-muted-foreground',
                                 diff != null && diff >= 0 && 'text-emerald-600',
                                 diff != null && diff < 0 && 'text-red-600',
-                              )}
-                            >
-                              {diff == null ? '—' : fmtDiff(diff)}
-                            </TableCell>
-                            <TableCell className="whitespace-nowrap">
-                              <StatusCell
-                                purchase={p}
-                                onSave={(id, value) => updateStatus.mutate({ id, value })}
-                              />
-                            </TableCell>
-                          </TableRow>
+                              )}>
+                                {diff == null ? '—' : fmtDiff(diff)}
+                              </TableCell>
+
+                              <TableCell className="whitespace-nowrap">
+                                <DateCell value={p.payment_due_date}
+                                  onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                              </TableCell>
+
+                              <TableCell className="whitespace-nowrap">
+                                <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
+                              </TableCell>
+                            </TableRow>
+
+                            {/* Expanded detail row */}
+                            {expanded && hasDetails && (
+                              <TableRow key={`${p.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
+                                <TableCell colSpan={11} className="p-0">
+                                  <PurchaseRowDetail p={p} />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </>
                         );
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
@@ -923,82 +910,78 @@ export default function CalendarioCompras() {
                 </CardContent>
               </Card>
 
+              {/* ── List view: Sem data ── */}
               {withoutDate.length > 0 && (
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pb-2">
                     <CardTitle className="text-base text-muted-foreground">
-                      Sem Data Definida ({withoutDate.length})
+                      Sem Data Definida <span className="font-normal text-sm">({withoutDate.length})</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="overflow-x-auto">
-                    <Table className="text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:h-9 [&_td]:py-2">
+                  <CardContent className="overflow-x-auto p-0">
+                    <Table className="text-xs [&_th]:px-3 [&_td]:px-3 [&_th]:h-9 [&_td]:py-2">
                       <TableHeader>
-                        <TableRow>
-                          <TableHead className="whitespace-nowrap">Pagamento</TableHead>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="w-8" />
                           <TableHead className="whitespace-nowrap">Obra</TableHead>
-                          <TableHead className="whitespace-nowrap">Categoria</TableHead>
                           <TableHead className="whitespace-nowrap">Item</TableHead>
+                          <TableHead className="whitespace-nowrap">Categoria</TableHead>
                           <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Real</TableHead>
-                          <TableHead className="whitespace-nowrap text-right">Diferença</TableHead>
+                          <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
+                          <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                           <TableHead className="whitespace-nowrap">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {withoutDate.map(p => {
+                        {withoutDate.map((p) => {
                           const hasBoth = p.estimated_cost != null && p.actual_cost != null;
-                          const diff = hasBoth ? (p.estimated_cost! - p.actual_cost!) : null;
+                          const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
+                          const expanded = expandedRows.has(p.id);
+                          const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes);
                           return (
-                            <TableRow key={p.id}>
-                              <TableCell className="font-medium whitespace-nowrap">
-                                <DateCell
-                                  value={p.payment_due_date}
-                                  onSave={(value) =>
-                                    updateDateField.mutate({ id: p.id, field: 'payment_due_date', value })
-                                  }
-                                />
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap max-w-[140px]">
-                                <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block">
-                                  {p.project_name}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-muted-foreground whitespace-nowrap max-w-[120px] truncate">
-                                {p.category || '—'}
-                              </TableCell>
-                              <TableCell className="font-medium whitespace-nowrap max-w-[180px] truncate" title={p.item_name}>
-                                {p.item_name}
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap max-w-[120px] truncate" title={p.supplier_name || ''}>
-                                {p.supplier_name || '—'}
-                              </TableCell>
-                              <TableCell className="text-right whitespace-nowrap tabular-nums">
-                                {fmtCompact(p.estimated_cost)}
-                              </TableCell>
-                              <TableCell className="text-right whitespace-nowrap tabular-nums">
-                                <ActualCostCell
-                                  purchase={p}
-                                  onSave={(id, value) => updateActualCost.mutate({ id, value })}
-                                />
-                              </TableCell>
-                              <TableCell
-                                className={cn(
-                                  'text-right whitespace-nowrap tabular-nums font-medium',
+                            <>
+                              <TableRow key={p.id} className={cn('hover:bg-muted/30', expanded && 'bg-muted/20')}>
+                                <TableCell className="w-8 text-center">
+                                  {hasDetails ? (
+                                    <button type="button" onClick={() => toggleRow(p.id)}
+                                      className="inline-flex items-center justify-center h-5 w-5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                                      {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                    </button>
+                                  ) : <span className="inline-block w-5" />}
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap max-w-[160px]">
+                                  <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block font-normal">{p.project_name}</Badge>
+                                </TableCell>
+                                <TableCell className="max-w-[200px]"><p className="font-medium truncate" title={p.item_name}>{p.item_name}</p></TableCell>
+                                <TableCell className="text-muted-foreground whitespace-nowrap">{p.category || <span className="italic opacity-50">—</span>}</TableCell>
+                                <TableCell className="whitespace-nowrap max-w-[130px] truncate">{p.supplier_name || <span className="italic opacity-50">—</span>}</TableCell>
+                                <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
+                                <TableCell className="text-right whitespace-nowrap tabular-nums">
+                                  <ActualCostCell purchase={p} onSave={(id, v) => updateActualCost.mutate({ id, value: v })} />
+                                </TableCell>
+                                <TableCell className={cn('text-right whitespace-nowrap tabular-nums font-medium',
                                   diff == null && 'text-muted-foreground',
                                   diff != null && diff >= 0 && 'text-emerald-600',
                                   diff != null && diff < 0 && 'text-red-600',
-                                )}
-                              >
-                                {diff == null ? '—' : fmtDiff(diff)}
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap">
-                                <StatusCell
-                                  purchase={p}
-                                  onSave={(id, value) => updateStatus.mutate({ id, value })}
-                                />
-                              </TableCell>
-                            </TableRow>
+                                )}>{diff == null ? '—' : fmtDiff(diff)}</TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  <DateCell value={p.payment_due_date}
+                                    onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
+                                </TableCell>
+                              </TableRow>
+                              {expanded && hasDetails && (
+                                <TableRow key={`${p.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
+                                  <TableCell colSpan={10} className="p-0">
+                                    <PurchaseRowDetail p={p} />
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </>
                           );
                         })}
                       </TableBody>
