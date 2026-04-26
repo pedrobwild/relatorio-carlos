@@ -2,13 +2,14 @@ import { useRef, useState } from 'react';
 import { Upload, FileText, Sparkles, Trash2, Copy, Check, CalendarDays, CreditCard, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
+import {
+  InlineField, InlineSelect, useFieldAutosave, AutosaveStatusIcon,
+} from './InlineAutosave';
 
 interface PaymentSectionProps {
   purchase: ProjectPurchase;
@@ -23,36 +24,6 @@ const PAYMENT_METHODS = [
   { value: 'dinheiro', label: 'Dinheiro' },
   { value: 'outro', label: 'Outro' },
 ];
-
-/* ─── Inline editable input (mirrors PurchasesTable behavior) ─── */
-function InlineField({
-  type = 'text',
-  value,
-  placeholder,
-  onSave,
-  className,
-}: {
-  type?: 'text' | 'date';
-  value: string | null;
-  placeholder?: string;
-  onSave: (val: string) => void;
-  className?: string;
-}) {
-  const stableKey = `${value ?? ''}`;
-  return (
-    <Input
-      key={stableKey}
-      type={type}
-      className={cn(
-        'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
-        className,
-      )}
-      placeholder={placeholder}
-      defaultValue={value ?? ''}
-      onBlur={(e) => onSave(e.target.value)}
-    />
-  );
-}
 
 /* ─── Boleto upload + AI code extraction ─── */
 function BoletoUploadAndExtract({ purchase, onUpdateField }: PaymentSectionProps) {
