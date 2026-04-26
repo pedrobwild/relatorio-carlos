@@ -5,20 +5,26 @@ import {
 } from 'lucide-react';
 import { useProjectSummaryQuery } from '@/hooks/useProjectsQuery';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { differenceInDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
 import { getTemporalStatusLabel } from '@/lib/temporalStatus';
+import { PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, getLabel, getTone } from '@/lib/statusTones';
+import { getProjectDelayInfo } from '@/lib/projectHealth';
+import type { StatusTone } from '@/components/ui-premium';
 import { cn } from '@/lib/utils';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 import type { ProjectSummary } from '@/infra/repositories/projects.repository';
 
-const statusConfig: Record<string, { label: string; dot: string }> = {
-  draft: { label: 'Rascunho', dot: 'bg-violet-500' },
-  active: { label: 'Ativa', dot: 'bg-emerald-500' },
-  completed: { label: 'Concluída', dot: 'bg-blue-500' },
-  paused: { label: 'Pausada', dot: 'bg-amber-500' },
-  cancelled: { label: 'Cancelada', dot: 'bg-muted-foreground' },
+// Mantém só a paleta do "dot" (a lista mobile é densa demais para a pílula
+// completa do ProjectStatusBadge — a regra de tom vem de statusTones).
+const dotByTone: Record<StatusTone, string> = {
+  neutral: 'bg-muted-foreground/60',
+  info: 'bg-info',
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-destructive',
+  muted: 'bg-muted-foreground/40',
 };
 
 interface MobileProjectListProps {
@@ -78,29 +84,34 @@ function MobileProjectRow({
   const overdueCount = summary?.overdue_count ?? 0;
   const unsignedFormalizations = summary?.unsigned_formalizations ?? 0;
   const pendingDocuments = summary?.pending_documents ?? 0;
-  const status = statusConfig[project.status] ?? statusConfig.active;
 
+  const statusLabel = getLabel(PROJECT_STATUS_LABEL, project.status, project.status);
+  const statusTone = getTone(PROJECT_STATUS_TONE, project.status, 'neutral');
+
+  // Display: parse planned_end_date for any project that has one (used to
+  // render "dd/MM" on finished/draft rows too).
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
-  const actualEnd = project.actual_end_date ? parseLocalDate(project.actual_end_date) : null;
-  const isFinished = !!actualEnd;
-  const daysRemaining = plannedEnd && !isFinished ? differenceInDays(plannedEnd, today) : null;
-  const isOverdue = daysRemaining !== null && daysRemaining < 0;
-  const isApproaching = daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 14;
+  const isFinished = !!project.actual_end_date;
+
+  // Delay rule: centralized in getProjectDelayInfo — only active projects
+  // with a planned end and no actual end qualify. Reuses the same
+  // computation as KPI strip, drawer and ProjectStatusBadge.
+  const delay = getProjectDelayInfo(project, today);
 
   return (
     <button
       type="button"
       role="listitem"
       onClick={onClick}
-      aria-label={`${project.name}${overdueCount > 0 ? `, ${overdueCount} atividades atrasadas` : ''}, ${Math.round(progress)}% concluído`}
+      aria-label={`${project.name}${overdueCount > 0 ? `, ${overdueCount} atividades atrasadas` : ''}${delay?.isOverdue ? `, prazo vencido há ${delay.daysOverdue} dias` : ''}, ${Math.round(progress)}% concluído`}
       className={cn(
         'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border bg-card text-left',
         'transition-all active:scale-[0.98] active:bg-muted/50',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         'min-h-[72px]',
-        isOverdue
+        delay?.isOverdue
           ? 'border-destructive/25 bg-destructive/[0.02]'
-          : isApproaching
+          : delay?.isApproaching
           ? 'border-amber-500/25 bg-amber-500/[0.02]'
           : 'border-border/40',
       )}
@@ -112,7 +123,12 @@ function MobileProjectRow({
           <p className="font-semibold text-[13px] text-foreground truncate leading-tight flex-1 min-w-0">
             {project.name}
           </p>
-          <div className={cn('w-2 h-2 rounded-full shrink-0', status.dot)} title={getTemporalStatusLabel(project.status, null, project.created_at)} aria-label={`Status: ${status.label}`} role="img" />
+          <div
+            className={cn('w-2 h-2 rounded-full shrink-0', dotByTone[statusTone])}
+            title={getTemporalStatusLabel(project.status, null, project.created_at)}
+            aria-label={`Status: ${statusLabel}`}
+            role="img"
+          />
         </div>
 
         {/* Row 2: Customer + unit */}
@@ -146,15 +162,15 @@ function MobileProjectRow({
                 <span className="text-[10px] text-[hsl(var(--success))] font-medium flex items-center gap-0.5">
                   <CheckCircle className="h-3 w-3" />
                 </span>
-              ) : isOverdue ? (
+              ) : delay?.isOverdue ? (
                 <span className="text-[10px] text-destructive font-bold flex items-center gap-0.5">
                   <CalendarX className="h-3 w-3" />
-                  {Math.abs(daysRemaining!)}d
+                  {delay.daysOverdue}d
                 </span>
-              ) : isApproaching ? (
+              ) : delay?.isApproaching ? (
                 <span className="text-[10px] text-[hsl(var(--warning))] font-medium flex items-center gap-0.5">
                   <Clock className="h-3 w-3" />
-                  {daysRemaining}d
+                  {delay.daysRemaining}d
                 </span>
               ) : (
                 <span className="text-[10px] text-muted-foreground/60 tabular-nums">
