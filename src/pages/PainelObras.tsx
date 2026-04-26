@@ -750,7 +750,14 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         </TableCell>
 
         {/* Ações — sticky right */}
-        <TableCell className={cn('sticky right-0 z-20 border-l border-border', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
+        <TableCell className={cn(
+          'sticky right-0 z-20 border-l border-border',
+          // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
+          // garantir que conteúdo de colunas não-sticky (badges de Status/
+          // Etapa/Relacionamento) não apareça por baixo desta coluna durante
+          // scroll horizontal ou quando a linha está expandida.
+          stickyBase,
+        )}>
           <div className="flex items-center justify-center gap-0.5">
             {/* Abrir obra */}
             <Tooltip>
