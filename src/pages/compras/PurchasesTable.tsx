@@ -747,6 +747,9 @@ function PurchaseRow({
           {/* Stock tracking for products delivered to estoque */}
           <StockTrackingSection purchase={purchase} onUpdateField={onUpdateField} />
 
+          {/* Payment details: due date, method, pix key, boleto + IA */}
+          <PaymentSection purchase={purchase} onUpdateField={onUpdateField} />
+
           {purchase.description && (
             <div className="mt-3 pt-3 border-t border-border/50">
               <p className="text-sm text-muted-foreground">{purchase.description}</p>
