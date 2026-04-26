@@ -147,7 +147,13 @@ const relacionamentoPillClass = (r: PainelRelacionamento | null): string => {
 
 const editableCell =
   'group/cell w-full h-full text-left px-2 py-1 rounded-md text-sm transition-colors ' +
-  'hover:bg-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'hover:bg-accent/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0';
+
+// Ring contido (ring-inset + offset-0) usado em SelectTrigger inline em
+// pills da tabela — evita que o halo de foco vaze para fora da célula
+// (especialmente sobre a coluna sticky "Cliente / Obra").
+const inlinePillTrigger =
+  'focus:ring-0 focus:ring-offset-0 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0';
 
 // ----- inline date cell -----
 interface DateCellProps {
@@ -612,6 +618,9 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           data-testid="painel-obras-cell-cliente"
           className={cn(
             'sticky left-0 z-20 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
+            // overflow-hidden na própria célula impede que halo/ring de
+            // foco interno (botões, links) vaze para fora da coluna sticky.
+            'overflow-hidden',
             stickyBase,
             expanded && 'bg-accent/25 group-hover:bg-accent/30',
           )}
@@ -619,11 +628,13 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           <div className="flex items-start gap-1.5 min-w-0 max-w-full">
             <Button type="button" size="icon" variant="ghost" onClick={onToggleExpanded}
               aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'} aria-expanded={expanded}
-              className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent">
+              className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0">
               <ChevronRight className={cn('h-4 w-4 transition-transform duration-200', expanded && 'rotate-90 text-primary')} />
             </Button>
             <button type="button" onClick={onOpen}
-              className="text-left flex flex-col gap-0.5 flex-1 min-w-0 max-w-full overflow-hidden group/link focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-0.5"
+              // ring-inset + offset-0 mantém o halo de foco DENTRO do botão,
+              // evitando vazamento visual sobre a borda da célula sticky.
+              className="text-left flex flex-col gap-0.5 flex-1 min-w-0 max-w-full overflow-hidden group/link focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0 rounded-md px-0.5"
               title={`${obra.customer_name ?? 'Sem cliente'} — ${obra.nome ?? ''}`.trim()}
             >
               <span className="flex items-center gap-1.5 min-w-0 max-w-full w-full">
@@ -653,7 +664,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <SelectTrigger
-                      className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md', statusPillClass(displayStatus))}
+                      className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md', inlinePillTrigger, statusPillClass(displayStatus))}
                       aria-label={isAuto ? autoHint : undefined}>
                       <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(displayStatus))} />
                       <span className="font-medium truncate">{displayStatus ?? 'Definir'}</span>
@@ -681,7 +692,8 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell className="min-w-[140px] relative z-0 overflow-hidden">
           <Select value={obra.etapa ?? NONE}
             onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}>
-            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1',
+            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1 rounded-md',
+              inlinePillTrigger,
               !obra.etapa && 'text-muted-foreground italic',
               obra.etapa === 'Finalizada' && 'text-success font-medium',
               obra.etapa === 'Vistoria reprovada' && 'text-destructive font-medium')}>
@@ -724,7 +736,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell className="min-w-[110px] relative z-0 overflow-hidden">
           <Select value={obra.relacionamento ?? NONE}
             onValueChange={(v) => onUpdate({ relacionamento: v === NONE ? null : (v as PainelRelacionamento) })}>
-            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start rounded-md', relacionamentoPillClass(obra.relacionamento))}>
+            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start rounded-md', inlinePillTrigger, relacionamentoPillClass(obra.relacionamento))}>
               <span className="font-medium truncate">{obra.relacionamento ?? 'Definir'}</span>
             </SelectTrigger>
             <SelectContent>
