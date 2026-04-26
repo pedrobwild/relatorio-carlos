@@ -34,27 +34,33 @@ async function loginAs(page: Page, email: string, password: string) {
 }
 
 /**
- * Extended test fixture with authenticated pages
+ * Extended test fixture with authenticated pages.
+ *
+ * Note: Playwright's fixture API uses a `use` callback parameter that ESLint's
+ * `react-hooks/rules-of-hooks` mistakes for the React `use()` hook. The disables
+ * below are intentional and apply to the Playwright fixture pattern.
  */
-// eslint-disable-next-line react-hooks/rules-of-hooks
 export const test = base.extend<TestFixtures>({
-  customerPage: async ({ browser }, use) => { // eslint-disable-line react-hooks/rules-of-hooks
+  customerPage: async ({ browser }, use) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAs(page, TEST_CUSTOMER_EMAIL, TEST_CUSTOMER_PASSWORD);
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture, not React hook
     await use(page);
     await context.close();
   },
-  
-  staffPage: async ({ browser }, use) => { // eslint-disable-line react-hooks/rules-of-hooks
+
+  staffPage: async ({ browser }, use) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAs(page, TEST_STAFF_EMAIL, TEST_STAFF_PASSWORD);
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture, not React hook
     await use(page);
     await context.close();
   },
-  
-  testProjectId: async (_params, use) => { // eslint-disable-line react-hooks/rules-of-hooks
+
+  testProjectId: async (_params, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture, not React hook
     await use(TEST_PROJECT_ID);
   },
 });

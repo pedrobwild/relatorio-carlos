@@ -291,7 +291,7 @@ describe('Supplier Modal — Dependent Reset', () => {
     await user.click(await screen.findByRole('option', { name: SUPPLIER_TYPE_LABELS.prestadores }));
 
     // Select Marcenaria
-    let subTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
+    const subTrigger = within(dialog).getAllByRole('combobox').find(t => t.textContent?.includes('Selecione') && !t.hasAttribute('data-disabled'));
     await user.click(subTrigger!);
     await user.click(await screen.findByRole('option', { name: 'Marcenaria' }));
 

@@ -1,11 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { format, differenceInDays, parseISO, subDays } from 'date-fns';
-import { useProjectPurchases, ProjectPurchase, PurchaseInput, PurchaseStatus } from '@/hooks/useProjectPurchases';
+import { useProjectPurchases, type ProjectPurchase, type PurchaseInput, type PurchaseStatus, type PurchaseType } from '@/hooks/useProjectPurchases';
 import { useProjectActivities } from '@/hooks/useProjectActivities';
 import { supabase } from '@/integrations/supabase/client';
 import { emptyPurchase } from './types';
-import type { PurchaseType } from '@/hooks/useProjectPurchases';
 import type { PaymentInstallment } from './PaymentScheduleSection';
 import { useDialogDraft } from '@/hooks/useDialogDraft';
 import { toast } from 'sonner';

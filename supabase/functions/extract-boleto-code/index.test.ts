@@ -24,12 +24,12 @@ import {
 
 const FUNCTION_PATH = new URL('./index.ts', import.meta.url).href;
 
-let originalFetch: typeof fetch;
+const originalFetch: typeof fetch = globalThis.fetch;
 let fetchCalls: Array<{ url: string; init?: RequestInit }> = [];
 
 function mockGatewayResponse(payload: unknown, init: ResponseInit = { status: 200 }) {
   fetchCalls = [];
-  // @ts-ignore - sobrescrita global durante o teste
+  // @ts-expect-error - sobrescrita global durante o teste
   globalThis.fetch = async (input: string | URL | Request, requestInit?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
     fetchCalls.push({ url, init: requestInit });
@@ -63,7 +63,7 @@ async function importHandler() {
   // Capturar o handler passado para Deno.serve
   let captured: ((req: Request) => Response | Promise<Response>) | null = null;
   const originalServe = Deno.serve;
-  // @ts-ignore monkey-patch
+  // @ts-expect-error monkey-patch
   Deno.serve = (handler: (req: Request) => Response | Promise<Response>) => {
     captured = handler;
     // Retornar um stub mínimo (não usado nos testes)
@@ -87,8 +87,6 @@ function makeRequest(body: unknown, method = 'POST') {
 }
 
 // ---------- Setup global ----------
-
-originalFetch = globalThis.fetch;
 
 function restoreFetch() {
   globalThis.fetch = originalFetch;

@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Pencil, Trash2, Star, Phone, Mail, MapPin, Globe, Clock, CreditCard, Save, X, RefreshCw,
+  Building2,
 } from "lucide-react";
 import { invokeFunction } from "@/infra/edgeFunctions";
 import { trackAmplitude } from "@/lib/amplitude";
@@ -27,7 +28,6 @@ import { SupplierPricesTab } from "@/components/fornecedores/SupplierPricesTab";
 import { SupplierAttachmentsTab } from "@/components/fornecedores/SupplierAttachmentsTab";
 import { SupplierPurchaseHistoryTab } from "@/components/fornecedores/SupplierPurchaseHistoryTab";
 import { PageSkeleton, EmptyState } from "@/components/ui-premium";
-import { Building2 } from "lucide-react";
 import {
   SUPPLIER_TYPE_LABELS,
   type SupplierType,
