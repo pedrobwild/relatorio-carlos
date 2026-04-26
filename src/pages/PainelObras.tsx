@@ -611,7 +611,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell
           data-testid="painel-obras-cell-cliente"
           className={cn(
-            'sticky left-0 z-10 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
+            'sticky left-0 z-20 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
             stickyBase,
             expanded && 'bg-accent/25 group-hover:bg-accent/30',
           )}
@@ -735,7 +735,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         </TableCell>
 
         {/* Ações — sticky right */}
-        <TableCell className={cn('sticky right-0 z-10 border-l border-border', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
+        <TableCell className={cn('sticky right-0 z-20 border-l border-border', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
           <div className="flex items-center justify-center gap-0.5">
             {/* Abrir obra */}
             <Tooltip>
