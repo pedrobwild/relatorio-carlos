@@ -310,7 +310,7 @@ function NewPurchaseDialog({
         ? format(planned, 'yyyy-MM-dd')
         : format(addDays(new Date(), 7), 'yyyy-MM-dd');
 
-      const { error } = await supabase.from('project_purchases').insert({
+      const payload: ProjectPurchaseInsert = {
         project_id: form.project_id,
         created_by: user.id,
         item_name: form.item_name.trim(),
@@ -324,7 +324,8 @@ function NewPurchaseDialog({
         description: form.description.trim() || null,
         notes: form.notes.trim() || null,
         status: 'pending',
-      });
+      };
+      const { error } = await supabase.from('project_purchases').insert(payload);
       if (error) throw error;
       toast.success('Solicitação criada com sucesso!', {
         description: `${form.item_name.trim()} foi adicionada ao calendário de compras.`,
