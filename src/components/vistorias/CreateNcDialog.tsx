@@ -34,13 +34,7 @@ import { NC_CATEGORIES, parseCurrencyInput } from './ncConstants';
 import { useFormDraft } from '@/hooks/useFormDraft';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-
-const severityOptions: { value: NcSeverity; label: string }[] = [
-  { value: 'low', label: 'Baixa' },
-  { value: 'medium', label: 'Média' },
-  { value: 'high', label: 'Alta' },
-  { value: 'critical', label: 'Crítica' },
-];
+import { SeverityField, AssigneeField } from '@/components/field-records';
 
 const ACCEPTED_MEDIA = 'image/*,video/*';
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -548,41 +542,21 @@ export function CreateNcDialog({
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">
-                Severidade <span className="text-destructive">*</span>
-              </Label>
-              <Select value={severity} onValueChange={(v) => updateField('severity', v as NcSeverity)}>
-                <SelectTrigger className="h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent position="popper"  sideOffset={4}>
-                  {severityOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="min-h-[44px]">
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SeverityField
+              value={severity}
+              onChange={(s) => updateField('severity', s as NcSeverity)}
+              label="Severidade"
+              required
+            />
           </div>
 
           {/* Responsável */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Responsável</Label>
-            <Select value={responsibleUserId} onValueChange={(v) => updateField('responsibleUserId', v)}>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="Selecionar responsável..." />
-              </SelectTrigger>
-              <SelectContent position="popper"  sideOffset={4}>
-                {allResponsibleOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id} className="min-h-[44px]">
-                    {opt.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <AssigneeField
+            value={responsibleUserId || null}
+            onChange={(id) => updateField('responsibleUserId', id ?? '')}
+            label="Responsável"
+            users={allResponsibleOptions}
+          />
 
           {/* Prazo + Custo side by side */}
           <div className="grid grid-cols-2 gap-3">
