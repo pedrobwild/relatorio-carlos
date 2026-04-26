@@ -621,8 +621,11 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
             // overflow-hidden na própria célula impede que halo/ring de
             // foco interno (botões, links) vaze para fora da coluna sticky.
             'overflow-hidden',
+            // Fundo SEMPRE opaco (bg-card) — nunca aplicar tonalidades
+            // translúcidas (`bg-accent/25`) aqui, porque elas permitem que
+            // badges/conteúdo de colunas não-sticky apareçam por baixo
+            // durante o scroll horizontal ou linha expandida.
             stickyBase,
-            expanded && 'bg-accent/25 group-hover:bg-accent/30',
           )}
         >
           <div className="flex items-start gap-1.5 min-w-0 max-w-full">
