@@ -664,7 +664,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <SelectTrigger
-                      className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md', statusPillClass(displayStatus))}
+                      className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start gap-1.5 rounded-md', inlinePillTrigger, statusPillClass(displayStatus))}
                       aria-label={isAuto ? autoHint : undefined}>
                       <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', statusDotClass(displayStatus))} />
                       <span className="font-medium truncate">{displayStatus ?? 'Definir'}</span>
