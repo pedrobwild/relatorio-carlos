@@ -589,7 +589,7 @@ export default function PainelObras() {
 }
 
 // ----- row component -----
-const PAINEL_COLUMN_COUNT = 13;
+const PAINEL_COLUMN_COUNT = 10;
 
 interface ObraRowProps {
   obra: PainelObra;
