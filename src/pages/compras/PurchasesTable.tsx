@@ -3,14 +3,12 @@ import {
   MessageSquare, CheckCircle2, Clock, FileText, Upload, DollarSign,
   ClipboardList, ChevronDown, ChevronRight, MoreHorizontal, Trash2,
   Pencil, MapPin, Calendar, Warehouse, Building2, TruckIcon, History,
-  Loader2, Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { InlineField, InlineTextarea } from './InlineAutosave';
 import { ProjectPurchase, PurchaseStatus } from '@/hooks/useProjectPurchases';
 import { statusConfig, PURCHASE_TYPE_LABELS, PURCHASE_TYPE_ICONS } from './types';
 import { ObservationsModal } from './ObservationsModal';
@@ -304,118 +302,7 @@ function StatusBadge({ status }: { status: PurchaseStatus }) {
   );
 }
 
-/* ─── Inline Editable Field (with autosave feedback) ─── */
-function InlineField({
-  type = 'text', value, placeholder, onSave, className, prefix,
-  inputClassName,
-}: {
-  type?: 'text' | 'number' | 'date';
-  value: string | number | null;
-  placeholder?: string;
-  onSave: (val: string) => void | Promise<void>;
-  className?: string;
-  prefix?: string;
-  inputClassName?: string;
-}) {
-  // Use key to force re-mount when value changes externally,
-  // ensuring defaultValue stays in sync after saves.
-  const stableKey = `${value ?? ''}`;
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-
-  const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
-    const newVal = e.target.value;
-    const oldVal = value == null ? '' : String(value);
-    if (newVal === oldVal) return; // no change → no save
-
-    setSaveState('saving');
-    try {
-      await onSave(newVal);
-      setSaveState('saved');
-      setTimeout(() => setSaveState('idle'), 1200);
-    } catch {
-      setSaveState('idle');
-    }
-  };
-
-  return (
-    <div className={cn('relative', className)}>
-      {prefix && (
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-          {prefix}
-        </span>
-      )}
-      <Input
-        key={stableKey}
-        type={type}
-        className={cn(
-          'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
-          prefix && 'pl-7',
-          saveState !== 'idle' && 'pr-7',
-          inputClassName,
-        )}
-        placeholder={placeholder}
-        defaultValue={value ?? ''}
-        onBlur={handleBlur}
-      />
-      {saveState === 'saving' && (
-        <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 animate-spin text-muted-foreground pointer-events-none" />
-      )}
-      {saveState === 'saved' && (
-        <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[hsl(var(--success))] pointer-events-none" />
-      )}
-    </div>
-  );
-}
-
-/* ─── Inline Editable Textarea (with autosave feedback) ─── */
-function InlineTextarea({
-  value, placeholder, onSave, rows = 2,
-}: {
-  value: string | null;
-  placeholder?: string;
-  onSave: (val: string) => void | Promise<void>;
-  rows?: number;
-}) {
-  const stableKey = `${value ?? ''}`;
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-
-  const handleBlur = async (e: React.FocusEvent<HTMLTextAreaElement>) => {
-    const newVal = e.target.value;
-    const oldVal = value ?? '';
-    if (newVal === oldVal) return;
-
-    setSaveState('saving');
-    try {
-      await onSave(newVal);
-      setSaveState('saved');
-      setTimeout(() => setSaveState('idle'), 1200);
-    } catch {
-      setSaveState('idle');
-    }
-  };
-
-  return (
-    <div className="relative">
-      <Textarea
-        key={stableKey}
-        rows={rows}
-        className={cn(
-          'text-sm bg-transparent border-input/40 hover:border-input focus:border-input transition-colors resize-none',
-          saveState !== 'idle' && 'pr-7',
-        )}
-        placeholder={placeholder}
-        defaultValue={value ?? ''}
-        onBlur={handleBlur}
-      />
-      {saveState === 'saving' && (
-        <Loader2 className="absolute right-2 top-2 h-3 w-3 animate-spin text-muted-foreground pointer-events-none" />
-      )}
-      {saveState === 'saved' && (
-        <Check className="absolute right-2 top-2 h-3 w-3 text-[hsl(var(--success))] pointer-events-none" />
-      )}
-    </div>
-  );
-}
+/* InlineField + InlineTextarea com autosave padronizado vivem em ./InlineAutosave */
 
 /* ─── Expandable Purchase Row ─── */
 function PurchaseRow({

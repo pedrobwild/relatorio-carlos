@@ -2,13 +2,14 @@ import { useRef, useState } from 'react';
 import { Upload, FileText, Sparkles, Trash2, Copy, Check, CalendarDays, CreditCard, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { SelectItem } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
+import {
+  InlineField, InlineSelect, useFieldAutosave, AutosaveStatusIcon,
+} from './InlineAutosave';
 
 interface PaymentSectionProps {
   purchase: ProjectPurchase;
@@ -23,36 +24,6 @@ const PAYMENT_METHODS = [
   { value: 'dinheiro', label: 'Dinheiro' },
   { value: 'outro', label: 'Outro' },
 ];
-
-/* ─── Inline editable input (mirrors PurchasesTable behavior) ─── */
-function InlineField({
-  type = 'text',
-  value,
-  placeholder,
-  onSave,
-  className,
-}: {
-  type?: 'text' | 'date';
-  value: string | null;
-  placeholder?: string;
-  onSave: (val: string) => void;
-  className?: string;
-}) {
-  const stableKey = `${value ?? ''}`;
-  return (
-    <Input
-      key={stableKey}
-      type={type}
-      className={cn(
-        'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
-        className,
-      )}
-      placeholder={placeholder}
-      defaultValue={value ?? ''}
-      onBlur={(e) => onSave(e.target.value)}
-    />
-  );
-}
 
 /* ─── Boleto upload + AI code extraction ─── */
 function BoletoUploadAndExtract({ purchase, onUpdateField }: PaymentSectionProps) {
@@ -251,43 +222,73 @@ function BoletoUploadAndExtract({ purchase, onUpdateField }: PaymentSectionProps
             <span className="text-[10px] text-muted-foreground ml-1">extraindo…</span>
           )}
         </label>
-        <div className="flex items-center gap-1">
-          <Input
-            key={purchase.boleto_code ?? ''}
-            type="text"
-            inputMode="numeric"
-            placeholder={
-              purchase.boleto_file_path
-                ? 'Será preenchida automaticamente após anexar'
-                : 'Anexe um boleto para extrair automaticamente'
-            }
-            defaultValue={purchase.boleto_code ?? ''}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              onUpdateField(purchase.id, 'boleto_code', v || null);
-            }}
-            className="h-8 text-sm font-mono"
-          />
-          {purchase.boleto_code && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={handleCopy}
-              title="Copiar"
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </Button>
-          )}
-        </div>
+        <BoletoCodeInput
+          purchase={purchase}
+          onUpdateField={onUpdateField}
+          onCopy={handleCopy}
+          copied={copied}
+        />
       </div>
     </div>
   );
 }
+
+/* ─── Linha digitável do boleto, com autosave padronizado ─── */
+function BoletoCodeInput({
+  purchase,
+  onUpdateField,
+  onCopy,
+  copied,
+}: PaymentSectionProps & { onCopy: () => void; copied: boolean }) {
+  const { saveState, runSave } = useFieldAutosave(purchase.boleto_code);
+
+  return (
+    <div className="flex items-center gap-1">
+      <div className="relative flex-1">
+        <Input
+          key={purchase.boleto_code ?? ''}
+          type="text"
+          inputMode="numeric"
+          placeholder={
+            purchase.boleto_file_path
+              ? 'Será preenchida automaticamente após anexar'
+              : 'Anexe um boleto para extrair automaticamente'
+          }
+          defaultValue={purchase.boleto_code ?? ''}
+          onBlur={(e) =>
+            runSave(e.target.value.trim(), (v) =>
+              onUpdateField(purchase.id, 'boleto_code', v || null),
+            )
+          }
+          className={cn(
+            'h-8 text-sm font-mono',
+            saveState !== 'idle' && 'pr-7',
+          )}
+        />
+        <AutosaveStatusIcon
+          state={saveState}
+          className="absolute right-2 top-1/2 -translate-y-1/2"
+        />
+      </div>
+      {purchase.boleto_code && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          onClick={onCopy}
+          title="Copiar"
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5 text-[hsl(var(--success))]" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 
 /* ─── Main payment section ─── */
 export function PaymentSection({ purchase, onUpdateField }: PaymentSectionProps) {
@@ -316,20 +317,16 @@ export function PaymentSection({ purchase, onUpdateField }: PaymentSectionProps)
         {/* Forma de pagamento */}
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Forma de pagamento</label>
-          <Select
-            value={method || 'none'}
-            onValueChange={(v) => onUpdateField(purchase.id, 'payment_method', v === 'none' ? null : v)}
+          <InlineSelect
+            value={purchase.payment_method}
+            placeholder="Selecione…"
+            onSave={(v) => onUpdateField(purchase.id, 'payment_method', v)}
           >
-            <SelectTrigger className="h-8 text-sm">
-              <SelectValue placeholder="Selecione…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">—</SelectItem>
-              {PAYMENT_METHODS.map((m) => (
-                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <SelectItem value="none">—</SelectItem>
+            {PAYMENT_METHODS.map((m) => (
+              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+            ))}
+          </InlineSelect>
         </div>
       </div>
 
