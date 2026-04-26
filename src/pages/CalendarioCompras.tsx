@@ -661,12 +661,31 @@ export default function CalendarioCompras() {
     return map;
   }, [filtered]);
 
-  const sortedForList = useMemo(() =>
-    [...filtered].filter((p) => p.planned_purchase_date)
-      .sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || '')),
-  [filtered]);
+  // Comparador por created_at — trata nulos sempre por último, qualquer que seja a direção.
+  const compareByCreatedAt = (a: PurchaseWithProject, b: PurchaseWithProject, dir: 'asc' | 'desc') => {
+    const av = a.created_at ?? '';
+    const bv = b.created_at ?? '';
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+    return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  };
 
-  const withoutDate = useMemo(() => filtered.filter((p) => !p.planned_purchase_date), [filtered]);
+  const sortedForList = useMemo(() => {
+    const base = [...filtered].filter((p) => p.planned_purchase_date);
+    if (requestedSort) {
+      return base.sort((a, b) => compareByCreatedAt(a, b, requestedSort));
+    }
+    return base.sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || ''));
+  }, [filtered, requestedSort]);
+
+  const withoutDate = useMemo(() => {
+    const base = filtered.filter((p) => !p.planned_purchase_date);
+    if (requestedSort) {
+      return [...base].sort((a, b) => compareByCreatedAt(a, b, requestedSort));
+    }
+    return base;
+  }, [filtered, requestedSort]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
