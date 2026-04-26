@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval,
-  isSameDay, isSameMonth, addMonths, subMonths, isWeekend,
+  isSameDay, isSameMonth, addMonths, subMonths, isWeekend, addDays, isValid,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
