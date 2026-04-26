@@ -516,6 +516,11 @@ export default function CalendarioCompras() {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  // Ordenação por "Solicitada em" (created_at). null = ordem padrão (planned_purchase_date asc).
+  const [requestedSort, setRequestedSort] = useState<'asc' | 'desc' | null>(null);
+  const toggleRequestedSort = () => {
+    setRequestedSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null));
+  };
 
   const toggleRow = (id: string) =>
     setExpandedRows((prev) => {
