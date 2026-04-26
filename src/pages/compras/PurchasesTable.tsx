@@ -367,6 +367,56 @@ function InlineField({
   );
 }
 
+/* ─── Inline Editable Textarea (with autosave feedback) ─── */
+function InlineTextarea({
+  value, placeholder, onSave, rows = 2,
+}: {
+  value: string | null;
+  placeholder?: string;
+  onSave: (val: string) => void | Promise<void>;
+  rows?: number;
+}) {
+  const stableKey = `${value ?? ''}`;
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleBlur = async (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    const newVal = e.target.value;
+    const oldVal = value ?? '';
+    if (newVal === oldVal) return;
+
+    setSaveState('saving');
+    try {
+      await onSave(newVal);
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 1200);
+    } catch {
+      setSaveState('idle');
+    }
+  };
+
+  return (
+    <div className="relative">
+      <Textarea
+        key={stableKey}
+        rows={rows}
+        className={cn(
+          'text-sm bg-transparent border-input/40 hover:border-input focus:border-input transition-colors resize-none',
+          saveState !== 'idle' && 'pr-7',
+        )}
+        placeholder={placeholder}
+        defaultValue={value ?? ''}
+        onBlur={handleBlur}
+      />
+      {saveState === 'saving' && (
+        <Loader2 className="absolute right-2 top-2 h-3 w-3 animate-spin text-muted-foreground pointer-events-none" />
+      )}
+      {saveState === 'saved' && (
+        <Check className="absolute right-2 top-2 h-3 w-3 text-[hsl(var(--success))] pointer-events-none" />
+      )}
+    </div>
+  );
+}
+
 /* ─── Expandable Purchase Row ─── */
 function PurchaseRow({
   purchase, onEdit, onDelete, onStatusChange,
