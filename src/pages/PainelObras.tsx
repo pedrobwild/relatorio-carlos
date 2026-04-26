@@ -736,7 +736,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell><DateCell value={obra.entrega_real} onChange={(v) => onUpdate({ entrega_real: v })} /></TableCell>
 
         {/* Relacionamento */}
-        <TableCell className="min-w-[110px] relative z-0 overflow-hidden">
+        <TableCell className="min-w-[110px] relative z-table-body overflow-hidden">
           <Select value={obra.relacionamento ?? NONE}
             onValueChange={(v) => onUpdate({ relacionamento: v === NONE ? null : (v as PainelRelacionamento) })}>
             <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start rounded-md', inlinePillTrigger, relacionamentoPillClass(obra.relacionamento))}>
