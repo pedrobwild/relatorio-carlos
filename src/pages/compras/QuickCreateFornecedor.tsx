@@ -79,7 +79,7 @@ export function QuickCreateFornecedor({ supplierType, onCreated, defaultName = '
           Novo
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 z-50" align="end">
+      <PopoverContent className="w-80" align="end">
         <div className="space-y-3">
           <div>
             <p className="text-sm font-semibold">Cadastro rápido</p>

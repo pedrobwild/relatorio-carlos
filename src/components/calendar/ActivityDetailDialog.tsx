@@ -608,7 +608,7 @@ function DateField({ label, value, onChange, onClear }: DateFieldProps) {
               {value ? format(value, "dd 'de' MMM 'de' yyyy", { locale: ptBR }) : 'Selecionar'}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-50" align="start">
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
               selected={value}
