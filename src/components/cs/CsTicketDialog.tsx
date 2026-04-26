@@ -253,7 +253,7 @@ export function CsTicketDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 p-4 sm:p-6 pt-2 border-t border-border bg-background">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             Cancelar
           </Button>
