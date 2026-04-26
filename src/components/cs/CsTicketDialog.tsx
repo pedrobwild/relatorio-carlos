@@ -160,25 +160,70 @@ export function CsTicketDialog({
           {/* Obra */}
           <div className="md:col-span-2 space-y-1.5">
             <Label htmlFor="cs-project">Obra / Cliente *</Label>
-            <Select
-              value={projectId}
-              onValueChange={setProjectId}
-              disabled={isEdit || loadingProjects}
-            >
-              <SelectTrigger id="cs-project">
-                <SelectValue
-                  placeholder={loadingProjects ? 'Carregando obras…' : 'Selecione uma obra'}
-                />
-              </SelectTrigger>
-              <SelectContent position="popper" className="max-h-[300px]">
-                {projects.map((p: any) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                    {p.customer_name ? ` — ${p.customer_name}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={projectPickerOpen} onOpenChange={setProjectPickerOpen} modal>
+              <PopoverTrigger asChild>
+                <Button
+                  id="cs-project"
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={projectPickerOpen}
+                  disabled={isEdit || loadingProjects}
+                  className={cn(
+                    'w-full justify-between font-normal',
+                    !selectedProject && 'text-muted-foreground',
+                  )}
+                >
+                  <span className="truncate text-left">
+                    {loadingProjects
+                      ? 'Carregando obras…'
+                      : selectedProject
+                        ? projectLabel(selectedProject)
+                        : 'Selecione uma obra'}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="p-0 w-[--radix-popover-trigger-width] max-w-[calc(100vw-2rem)]"
+                align="start"
+              >
+                <Command
+                  filter={(value, search) => {
+                    // value contém "name — customer" em lowercase (cmdk lowercases)
+                    return value.includes(search.toLowerCase()) ? 1 : 0;
+                  }}
+                >
+                  <CommandInput placeholder="Buscar obra ou cliente…" />
+                  <CommandList>
+                    <CommandEmpty>Nenhuma obra encontrada.</CommandEmpty>
+                    <CommandGroup>
+                      {(projects as any[]).map((p) => {
+                        const label = projectLabel(p);
+                        return (
+                          <CommandItem
+                            key={p.id}
+                            value={label}
+                            onSelect={() => {
+                              setProjectId(p.id);
+                              setProjectPickerOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                projectId === p.id ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            <span className="truncate">{label}</span>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Situação */}
