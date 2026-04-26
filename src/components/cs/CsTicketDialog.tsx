@@ -17,6 +17,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -80,6 +81,8 @@ export function CsTicketDialog({
   const [actionPlan, setActionPlan] = useState('');
   const [responsible, setResponsible] = useState<string>(NONE);
   const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+  // Modo de busca: 'tokens' (todas as palavras, em qualquer ordem) ou 'substring' (qualquer parte contígua)
+  const [projectSearchMode, setProjectSearchMode] = useState<'tokens' | 'substring'>('tokens');
 
   const selectedProject = useMemo(
     () => (projects as any[]).find((p) => p.id === projectId) ?? null,
@@ -189,19 +192,48 @@ export function CsTicketDialog({
                 align="start"
               >
                 <Command
+                  // Recria o filtro quando o modo muda para reavaliar a lista
+                  key={projectSearchMode}
                   filter={(value, search) => {
-                    // value já vem em lowercase pelo cmdk; normalizamos acentos
-                    // e exigimos que TODAS as palavras da busca apareçam (em qualquer ordem).
                     const normalize = (s: string) =>
                       s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
                     const haystack = normalize(value);
-                    const tokens = normalize(search.toLowerCase())
-                      .split(/\s+/)
-                      .filter(Boolean);
-                    if (tokens.length === 0) return 1;
+                    const needle = normalize(search.toLowerCase()).trim();
+                    if (!needle) return 1;
+
+                    if (projectSearchMode === 'substring') {
+                      // Qualquer parte contígua do texto digitado
+                      return haystack.includes(needle) ? 1 : 0;
+                    }
+                    // tokens: todas as palavras precisam aparecer (qualquer ordem)
+                    const tokens = needle.split(/\s+/).filter(Boolean);
                     return tokens.every((t) => haystack.includes(t)) ? 1 : 0;
                   }}
                 >
+                  <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium">
+                        {projectSearchMode === 'tokens'
+                          ? 'Todas as palavras'
+                          : 'Qualquer parte do texto'}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {projectSearchMode === 'tokens'
+                          ? 'Ex.: "ricardo macedo" casa em qualquer ordem'
+                          : 'Ex.: "ardo mac" casa por substring'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-muted-foreground">Substring</span>
+                      <Switch
+                        checked={projectSearchMode === 'tokens'}
+                        onCheckedChange={(checked) =>
+                          setProjectSearchMode(checked ? 'tokens' : 'substring')
+                        }
+                        aria-label="Alternar entre busca por palavras e por substring"
+                      />
+                    </div>
+                  </div>
                   <CommandInput placeholder="Buscar obra ou cliente…" />
                   <CommandList>
                     <CommandEmpty>Nenhuma obra encontrada.</CommandEmpty>
