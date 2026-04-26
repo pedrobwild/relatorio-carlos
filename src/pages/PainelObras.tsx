@@ -536,8 +536,8 @@ export default function PainelObras() {
                     <Table className="w-full text-sm [&_th]:h-11 [&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
-                          <TableHead className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
-                          <TableHead className="min-w-[120px]">Status</TableHead>
+                          <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
+                          <TableHead data-testid="painel-obras-th-status" className="min-w-[120px]">Status</TableHead>
                           <TableHead className="min-w-[140px]">Etapa</TableHead>
                           <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
                           <TableHead className="min-w-[100px]"><SortableHeader label="Início Of." sortKey="inicio_oficial" /></TableHead>
@@ -606,9 +606,10 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
 
   return (
     <>
-      <TableRow className={cn('group transition-colors hover:bg-accent/40', expanded && 'bg-accent/25 hover:bg-accent/30')}>
+      <TableRow data-testid="painel-obras-row" data-expanded={expanded ? 'true' : 'false'} className={cn('group transition-colors hover:bg-accent/40', expanded && 'bg-accent/25 hover:bg-accent/30')}>
         {/* Cliente / Obra — sticky left */}
         <TableCell
+          data-testid="painel-obras-cell-cliente"
           className={cn(
             'sticky left-0 z-10 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
             stickyBase,
