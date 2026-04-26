@@ -128,8 +128,8 @@ export function CsTicketDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl flex flex-col gap-0 p-0 max-h-[calc(100dvh-4rem)] overflow-hidden">
+        <DialogHeader className="shrink-0 p-4 sm:p-6 pb-2">
           <DialogTitle>{isEdit ? 'Editar ticket' : 'Novo ticket de CS'}</DialogTitle>
           <DialogDescription>
             Registre a situação relatada, severidade e plano de ação. O cliente não tem visibilidade
@@ -137,7 +137,7 @@ export function CsTicketDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-6 py-2 overflow-y-auto flex-1 min-h-0">
           {/* Obra */}
           <div className="md:col-span-2 space-y-1.5">
             <Label htmlFor="cs-project">Obra / Cliente *</Label>
