@@ -93,9 +93,9 @@ export default {
       /**
        * Z-INDEX SCALE — semantic layers (single source of truth).
        *
-       * Use `z-<layer>` tokens (ex.: `z-modal`, `z-popover`) em vez de números
-       * arbitrários (`z-[100]`). Os números abaixo são *internos*: nunca os
-       * referencie diretamente em consumidores.
+       * Use `z-<layer>` tokens (ex.: `z-modal`, `z-popover`) em vez de
+       * números arbitrários (`z-[100]`). Os números abaixo são *internos*:
+       * nunca os referencie diretamente em consumidores.
        *
        *   base       0      conteúdo padrão
        *   sticky     10     conteúdo sticky em tabelas/timelines
@@ -111,6 +111,22 @@ export default {
        *   alert      300    AlertDialog overlay (confirmação destrutiva)
        *   alert-content 301 AlertDialog content
        *   max        2147483647 fallback de emergência (não usar)
+       *
+       * --- Aliases semânticos para tabelas com colunas sticky ---
+       *
+       * Espelham os números das camadas genéricas acima, mas tornam a
+       * intenção explícita no consumidor. Ordem garantida (do menor ao
+       * maior) — qualquer ajuste futuro deve preservar essa ordem:
+       *
+       *   table-body         0   linhas/células comuns do <tbody>
+       *   table-header      10   <thead> sticky-top (cobre o body no scroll
+       *                          vertical)
+       *   badge             20   pills/badges decorativos elevados dentro
+       *                          de uma célula (alias de `raised`)
+       *   sticky-left       20   coluna sticky esquerda no <tbody>
+       *   sticky-right      20   coluna sticky direita no <tbody>
+       *   table-header-corner-left  30  intersecção <thead> × sticky-left
+       *   table-header-corner-right 30  intersecção <thead> × sticky-right
        */
       zIndex: {
         base: "0",
@@ -126,6 +142,14 @@ export default {
         alert: "300",
         "alert-content": "301",
         max: "2147483647",
+        // Aliases semânticos para tabelas — ver bloco de doc acima.
+        "table-body": "0",
+        "table-header": "10",
+        badge: "20",
+        "sticky-left": "20",
+        "sticky-right": "20",
+        "table-header-corner-left": "30",
+        "table-header-corner-right": "30",
       },
       keyframes: {
         "accordion-down": {
