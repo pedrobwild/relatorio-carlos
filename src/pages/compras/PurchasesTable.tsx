@@ -302,22 +302,41 @@ function StatusBadge({ status }: { status: PurchaseStatus }) {
   );
 }
 
-/* ─── Inline Editable Field ─── */
+/* ─── Inline Editable Field (with autosave feedback) ─── */
 function InlineField({
   type = 'text', value, placeholder, onSave, className, prefix,
+  inputClassName,
 }: {
   type?: 'text' | 'number' | 'date';
   value: string | number | null;
   placeholder?: string;
-  onSave: (val: string) => void;
+  onSave: (val: string) => void | Promise<void>;
   className?: string;
   prefix?: string;
+  inputClassName?: string;
 }) {
   // Use key to force re-mount when value changes externally,
   // ensuring defaultValue stays in sync after saves.
   const stableKey = `${value ?? ''}`;
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    const oldVal = value == null ? '' : String(value);
+    if (newVal === oldVal) return; // no change → no save
+
+    setSaveState('saving');
+    try {
+      await onSave(newVal);
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 1200);
+    } catch {
+      setSaveState('idle');
+    }
+  };
+
   return (
-    <div className="relative">
+    <div className={cn('relative', className)}>
       {prefix && (
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
           {prefix}
@@ -329,12 +348,19 @@ function InlineField({
         className={cn(
           'h-8 text-sm bg-transparent border-transparent hover:border-input focus:border-input transition-colors',
           prefix && 'pl-7',
-          className,
+          saveState !== 'idle' && 'pr-7',
+          inputClassName,
         )}
         placeholder={placeholder}
         defaultValue={value ?? ''}
-        onBlur={(e) => onSave(e.target.value)}
+        onBlur={handleBlur}
       />
+      {saveState === 'saving' && (
+        <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 animate-spin text-muted-foreground pointer-events-none" />
+      )}
+      {saveState === 'saved' && (
+        <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[hsl(var(--success))] pointer-events-none" />
+      )}
     </div>
   );
 }
