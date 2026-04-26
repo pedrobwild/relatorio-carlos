@@ -240,14 +240,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 : `${services.length} ${services.length === 1 ? 'serviço' : 'serviços'} registrado${services.length === 1 ? '' : 's'}`
             }
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:gap-3">
               {services.length === 0 && (
                 <EmptyLine text="Nenhum serviço adicionado." />
               )}
               {services.map((svc, i) => (
                 <div
                   key={i}
-                  className="rounded-lg border border-border bg-card p-3 sm:p-3 flex flex-col gap-3 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover (mobile-friendly) */}
                   <div className="flex items-center justify-between gap-2">
@@ -258,7 +258,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeService(i)}
                       disabled={isSaving}
                       title="Remover serviço"
@@ -269,14 +269,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   </div>
 
                   {/* Descrição + status: empilha no mobile, lado a lado no sm+ */}
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-2 min-w-0">
                     <Input
                       value={svc.description}
-                      placeholder="Ex.: Instalação elétrica – quarto 2"
+                      placeholder="Ex.: Instalação elétrica"
                       onChange={(e) =>
                         updateService(i, { description: e.target.value })
                       }
-                      className="h-10 sm:h-9 text-sm"
+                      className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
                     />
                     <Select
@@ -287,7 +287,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                         })
                       }
                     >
-                      <SelectTrigger className="h-10 sm:h-9 text-sm">
+                      <SelectTrigger className="h-9 text-sm w-full min-w-0">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -300,7 +300,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 min-w-0">
                     <MiniField
                       label="Início"
                       type="date"
@@ -324,7 +324,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                         observations: e.target.value || null,
                       })
                     }
-                    className="min-h-[64px] text-sm"
+                    className="min-h-[56px] text-sm w-full"
                     disabled={isSaving}
                   />
                   <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
