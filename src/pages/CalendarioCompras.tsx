@@ -1006,7 +1006,10 @@ export default function CalendarioCompras() {
                                 <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
                               </TableCell>
 
-                              <TableCell className="text-muted-foreground whitespace-nowrap text-xs tabular-nums">
+                              <TableCell className={cn(
+                                'text-muted-foreground whitespace-nowrap text-xs tabular-nums',
+                                !p.created_at && 'italic',
+                              )}>
                                 {fmtRequestedDate(p.created_at)}
                               </TableCell>
 
