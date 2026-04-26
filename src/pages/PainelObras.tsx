@@ -686,11 +686,6 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           </Select>
         </TableCell>
 
-        {/* Responsável */}
-        <TableCell className="text-muted-foreground">
-          <span className="truncate block">{obra.engineer_name ?? <span className="italic">—</span>}</span>
-        </TableCell>
-
         {/* Progresso */}
         <TableCell className="text-right">
           {obra.progress_percentage != null ? (
