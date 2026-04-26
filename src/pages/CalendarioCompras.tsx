@@ -187,11 +187,21 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
 // ─── Expandable row details ───────────────────────────────────────────────────
 function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-2 px-3 py-3 text-xs bg-muted/30 border-t">
-      {p.description && (
-        <div className="col-span-full">
-          <span className="text-muted-foreground flex items-center gap-1 mb-0.5"><FileText className="h-3 w-3" /> Descrição</span>
-          <p className="text-foreground leading-snug">{p.description}</p>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-3 px-3 py-3 text-xs bg-muted/30 border-t">
+      {p.category && (
+        <div>
+          <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+            <Package className="h-3 w-3" /> Categoria
+          </span>
+          <p className="font-medium">{p.category}</p>
+        </div>
+      )}
+      {p.supplier_name && (
+        <div>
+          <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+            <Truck className="h-3 w-3" /> Fornecedor
+          </span>
+          <p className="font-medium">{p.supplier_name}</p>
         </div>
       )}
       {p.quantity && (
@@ -204,6 +214,12 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         <div>
           <span className="text-muted-foreground flex items-center gap-1"><Truck className="h-3 w-3" /> Entrega</span>
           <p className="font-medium">{p.delivery_address}</p>
+        </div>
+      )}
+      {p.description && (
+        <div className="col-span-full">
+          <span className="text-muted-foreground flex items-center gap-1 mb-0.5"><FileText className="h-3 w-3" /> Descrição</span>
+          <p className="text-foreground leading-snug">{p.description}</p>
         </div>
       )}
       {p.notes && (
@@ -866,15 +882,14 @@ export default function CalendarioCompras() {
                 </CardHeader>
                 <CardContent className="overflow-x-auto p-0">
                   <Table className="text-xs [&_th]:px-3 [&_td]:px-3 [&_th]:h-9 [&_td]:py-2">
-                    <TableHeader>
+                  <TableHeader>
                       <TableRow className="bg-muted/50">
                         {/* expand toggle col */}
                         <TableHead className="w-8" />
                         <TableHead className="whitespace-nowrap">Data Compra</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
-                        <TableHead className="whitespace-nowrap">Categoria</TableHead>
-                        <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
+                        <TableHead className="whitespace-nowrap">Solicitada em</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Real</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
@@ -887,7 +902,7 @@ export default function CalendarioCompras() {
                         const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                         const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
                         const expanded = expandedRows.has(p.id);
-                        const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes);
+                        const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
                         return (
                           <>
                             <TableRow key={p.id} className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
@@ -916,12 +931,10 @@ export default function CalendarioCompras() {
                                 <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
                               </TableCell>
 
-                              <TableCell className="text-muted-foreground whitespace-nowrap max-w-[120px] truncate">
-                                {p.category || <span className="italic opacity-50">—</span>}
-                              </TableCell>
-
-                              <TableCell className="whitespace-nowrap max-w-[130px] truncate" title={p.supplier_name || ''}>
-                                {p.supplier_name || <span className="italic opacity-50">—</span>}
+                              <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
+                                {p.created_at
+                                  ? format(parseISO(p.created_at), "dd/MM/yyyy", { locale: ptBR })
+                                  : <span className="italic opacity-50">—</span>}
                               </TableCell>
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
@@ -951,7 +964,7 @@ export default function CalendarioCompras() {
                             {/* Expanded detail row */}
                             {expanded && hasDetails && (
                               <TableRow key={`${p.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
-                                <TableCell colSpan={11} className="p-0">
+                                <TableCell colSpan={10} className="p-0">
                                   <PurchaseRowDetail p={p} />
                                 </TableCell>
                               </TableRow>
@@ -961,7 +974,7 @@ export default function CalendarioCompras() {
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
+                          <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
@@ -986,8 +999,7 @@ export default function CalendarioCompras() {
                           <TableHead className="w-8" />
                           <TableHead className="whitespace-nowrap">Obra</TableHead>
                           <TableHead className="whitespace-nowrap">Item</TableHead>
-                          <TableHead className="whitespace-nowrap">Categoria</TableHead>
-                          <TableHead className="whitespace-nowrap">Fornecedor</TableHead>
+                          <TableHead className="whitespace-nowrap">Solicitada em</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Real</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
@@ -1000,7 +1012,7 @@ export default function CalendarioCompras() {
                           const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                           const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
                           const expanded = expandedRows.has(p.id);
-                          const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes);
+                          const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
                           return (
                             <>
                               <TableRow key={p.id} className={cn('hover:bg-muted/30', expanded && 'bg-muted/20')}>
@@ -1016,8 +1028,11 @@ export default function CalendarioCompras() {
                                   <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block font-normal">{p.project_name}</Badge>
                                 </TableCell>
                                 <TableCell className="max-w-[200px]"><p className="font-medium truncate" title={p.item_name}>{p.item_name}</p></TableCell>
-                                <TableCell className="text-muted-foreground whitespace-nowrap">{p.category || <span className="italic opacity-50">—</span>}</TableCell>
-                                <TableCell className="whitespace-nowrap max-w-[130px] truncate">{p.supplier_name || <span className="italic opacity-50">—</span>}</TableCell>
+                                <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
+                                  {p.created_at
+                                    ? format(parseISO(p.created_at), "dd/MM/yyyy", { locale: ptBR })
+                                    : <span className="italic opacity-50">—</span>}
+                                </TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">
                                   <ActualCostCell purchase={p} onSave={(id, v) => updateActualCost.mutate({ id, value: v })} />
@@ -1037,7 +1052,7 @@ export default function CalendarioCompras() {
                               </TableRow>
                               {expanded && hasDetails && (
                                 <TableRow key={`${p.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
-                                  <TableCell colSpan={10} className="p-0">
+                                  <TableCell colSpan={9} className="p-0">
                                     <PurchaseRowDetail p={p} />
                                   </TableCell>
                                 </TableRow>
