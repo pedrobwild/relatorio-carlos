@@ -217,8 +217,9 @@ describe('supplierCategories — legacy compatibility', () => {
   it('handles null/undefined category gracefully in filter', () => {
     // A purchase with no category should pass "all" filter
     const purchase = { category: null, status: 'pending', activity_id: null };
-    const all = [purchase].filter(p => {
-      if ('all' !== 'all') return false;
+    const filterValue: string = 'all';
+    const all = [purchase].filter(() => {
+      if (filterValue !== 'all') return false;
       return true;
     });
     expect(all).toHaveLength(1);
