@@ -771,7 +771,14 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
       {expanded && (
         <TableRow className="bg-accent/15 hover:bg-accent/15">
           <TableCell colSpan={PAINEL_COLUMN_COUNT} className="p-0 border-t border-b-2 border-primary/20">
-            <DailyLogInline projectId={obra.id} />
+            {/*
+              Sticky left + largura fixa do viewport: garante que o formulário
+              expandido fique visível sem rolar horizontalmente, mesmo quando
+              a tabela tem largura maior que a tela (mobile).
+            */}
+            <div className="sticky left-0 w-screen sm:w-auto max-w-full">
+              <DailyLogInline projectId={obra.id} />
+            </div>
           </TableCell>
         </TableRow>
       )}
