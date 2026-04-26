@@ -148,6 +148,25 @@ const fmtDiff = (v: number) => {
   return `${sign}${abs}`;
 };
 
+/**
+ * Formata `created_at` (ISO UTC vindo do Supabase, ex: "2025-04-26T03:10:00+00:00")
+ * sempre como `dd/MM/yyyy` no fuso horário LOCAL do navegador.
+ *
+ * - `parseISO` interpreta corretamente o offset `Z`/`+00:00`, evitando o bug clássico
+ *   de `new Date("2025-04-26")` que assumiria UTC e poderia exibir 25/04 em -03:00.
+ * - Retorna "—" para null/undefined/string inválida (defensivo contra dados antigos).
+ */
+const fmtRequestedDate = (iso: string | null | undefined): string => {
+  if (!iso) return '—';
+  try {
+    const d = parseISO(iso);
+    if (!isValid(d)) return '—';
+    return format(d, 'dd/MM/yyyy', { locale: ptBR });
+  } catch {
+    return '—';
+  }
+};
+
 function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSave: (id: string, v: number | null) => void }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(purchase.actual_cost != null ? String(purchase.actual_cost) : '');
@@ -931,10 +950,8 @@ export default function CalendarioCompras() {
                                 <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
                               </TableCell>
 
-                              <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
-                                {p.created_at
-                                  ? format(parseISO(p.created_at), "dd/MM/yyyy", { locale: ptBR })
-                                  : <span className="italic opacity-50">—</span>}
+                              <TableCell className="text-muted-foreground whitespace-nowrap text-xs tabular-nums">
+                                {fmtRequestedDate(p.created_at)}
                               </TableCell>
 
                               <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
@@ -1028,10 +1045,8 @@ export default function CalendarioCompras() {
                                   <Badge variant="outline" className="text-[10px] truncate max-w-full inline-block font-normal">{p.project_name}</Badge>
                                 </TableCell>
                                 <TableCell className="max-w-[200px]"><p className="font-medium truncate" title={p.item_name}>{p.item_name}</p></TableCell>
-                                <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
-                                  {p.created_at
-                                    ? format(parseISO(p.created_at), "dd/MM/yyyy", { locale: ptBR })
-                                    : <span className="italic opacity-50">—</span>}
+                                <TableCell className="text-muted-foreground whitespace-nowrap text-xs tabular-nums">
+                                  {fmtRequestedDate(p.created_at)}
                                 </TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">{fmtCompact(p.estimated_cost)}</TableCell>
                                 <TableCell className="text-right whitespace-nowrap tabular-nums">
