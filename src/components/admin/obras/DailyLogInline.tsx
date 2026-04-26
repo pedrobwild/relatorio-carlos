@@ -565,23 +565,30 @@ function SectionCard({
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   const hasCount = typeof count === 'number';
+  // Enquanto está carregando, força a seção aberta para que o skeleton
+  // ocupe a mesma altura aproximada do conteúdo final — evitando layout
+  // shift quando os dados chegam e a seção "abre" sozinha. Após o load,
+  // o estado controlado pelo usuário volta a valer.
+  const effectiveOpen = isLoading ? true : open;
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
+    <Collapsible open={effectiveOpen} onOpenChange={setOpen}>
       <div
         className={cn(
           'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all min-w-0',
-          open ? 'shadow-md' : 'hover:shadow-md',
+          effectiveOpen ? 'shadow-md' : 'hover:shadow-md',
         )}
       >
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            aria-expanded={open}
+            aria-expanded={effectiveOpen}
             aria-busy={isLoading || undefined}
-            aria-label={open ? `Recolher ${title}` : `Expandir ${title}`}
+            aria-label={effectiveOpen ? `Recolher ${title}` : `Expandir ${title}`}
+            disabled={isLoading}
             className={cn(
               'w-full flex items-start gap-2 px-3 py-3 sm:py-2.5 text-left min-h-[44px]',
               'hover:bg-accent/30 active:bg-accent/40 transition-colors',
+              isLoading && 'cursor-default',
             )}
           >
             <span className="mt-0.5 shrink-0">{icon}</span>
@@ -606,7 +613,7 @@ function SectionCard({
                   )
                 )}
               </span>
-              {!open && previewWhenClosed && (
+              {!effectiveOpen && previewWhenClosed && (
                 <span className="text-[11px] text-muted-foreground truncate mt-0.5">
                   {previewWhenClosed}
                 </span>
@@ -616,7 +623,7 @@ function SectionCard({
               aria-hidden
               className={cn(
                 'h-4 w-4 text-muted-foreground shrink-0 mt-1 transition-transform',
-                open && 'rotate-180',
+                effectiveOpen && 'rotate-180',
               )}
             />
           </button>
