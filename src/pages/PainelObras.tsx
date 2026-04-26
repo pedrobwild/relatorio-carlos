@@ -818,7 +818,7 @@ function ExpandedRowContent({ projectId }: { projectId: string }) {
       className="sticky left-0 max-w-full"
       style={width ? { width: `${width}px` } : undefined}
     >
-      <DailyLogInline key={projectId} projectId={projectId} />
+      <DailyLogInline projectId={projectId} />
     </div>
   );
 }

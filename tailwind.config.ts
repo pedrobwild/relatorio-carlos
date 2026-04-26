@@ -164,6 +164,12 @@ export default {
           from: { opacity: "0", transform: "translateX(-100%)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
+        // Shimmer: gradiente horizontal contínuo para skeletons.
+        // Usar com bg-[length:200%_100%] no elemento alvo.
+        shimmer: {
+          "0%": { backgroundPosition: "200% 0" },
+          "100%": { backgroundPosition: "-200% 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -175,6 +181,7 @@ export default {
         "slide-in-left": "slide-in-left 0.4s ease-out forwards",
         "slide-in-from-right": "slide-in-from-right 0.25s ease-out forwards",
         "slide-in-from-left": "slide-in-from-left 0.25s ease-out forwards",
+        shimmer: "shimmer 1.6s linear infinite",
       },
     },
   },
