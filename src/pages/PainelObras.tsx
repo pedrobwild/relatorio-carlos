@@ -616,21 +616,25 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
             expanded && 'bg-accent/25 group-hover:bg-accent/30',
           )}
         >
-          <div className="flex items-start gap-1.5 min-w-0">
+          <div className="flex items-start gap-1.5 min-w-0 max-w-full">
             <Button type="button" size="icon" variant="ghost" onClick={onToggleExpanded}
               aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'} aria-expanded={expanded}
               className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent">
               <ChevronRight className={cn('h-4 w-4 transition-transform duration-200', expanded && 'rotate-90 text-primary')} />
             </Button>
             <button type="button" onClick={onOpen}
-              className="text-left flex flex-col gap-0.5 flex-1 min-w-0 group/link focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-0.5" title="Abrir obra">
-              <span className="flex items-center gap-1.5 min-w-0 w-full">
-                <span className="font-semibold text-sm truncate group-hover/link:text-primary transition-colors min-w-0 flex-1">
+              className="text-left flex flex-col gap-0.5 flex-1 min-w-0 max-w-full overflow-hidden group/link focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-0.5"
+              title={`${obra.customer_name ?? 'Sem cliente'} — ${obra.nome ?? ''}`.trim()}
+            >
+              <span className="flex items-center gap-1.5 min-w-0 max-w-full w-full">
+                <span className="font-semibold text-sm truncate [overflow-wrap:anywhere] group-hover/link:text-primary transition-colors min-w-0 flex-1">
                   {obra.customer_name ?? 'Sem cliente'}
                 </span>
-                <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+                <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity shrink-0" aria-hidden="true" />
               </span>
-              <span className="text-xs text-muted-foreground truncate w-full">{obra.nome}</span>
+              <span className="block text-xs text-muted-foreground truncate [overflow-wrap:anywhere] min-w-0 max-w-full w-full">
+                {obra.nome ?? '—'}
+              </span>
             </button>
           </div>
         </TableCell>
