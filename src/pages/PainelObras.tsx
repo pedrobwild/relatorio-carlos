@@ -3,7 +3,7 @@
  * UX densa tipo planilha (Airtable/Monday): cabeçalho leve, linhas compactas,
  * colunas prioritárias fixas à esquerda, edição inline com affordance visual.
  */
-import { useMemo, useState, lazy, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -771,17 +771,54 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
       {expanded && (
         <TableRow className="bg-accent/15 hover:bg-accent/15">
           <TableCell colSpan={PAINEL_COLUMN_COUNT} className="p-0 border-t border-b-2 border-primary/20">
-            {/*
-              Sticky left + largura fixa do viewport: garante que o formulário
-              expandido fique visível sem rolar horizontalmente, mesmo quando
-              a tabela tem largura maior que a tela (mobile).
-            */}
-            <div className="sticky left-0 w-screen sm:w-auto max-w-full">
-              <DailyLogInline projectId={obra.id} />
-            </div>
+            <ExpandedRowContent projectId={obra.id} />
           </TableCell>
         </TableRow>
       )}
     </>
+  );
+}
+
+/**
+ * ExpandedRowContent — fixa o conteúdo expandido na largura visível do
+ * container scrollável da tabela (e não em 100vw). Isso evita overflow
+ * horizontal quando há sidebar aberta no desktop ou padding lateral no
+ * mobile, garantindo que o formulário caiba exatamente no viewport útil.
+ */
+function ExpandedRowContent({ projectId }: { projectId: string }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    // Sobe até encontrar o ancestral com scroll horizontal (overflow-x-auto)
+    // ou cai no body como fallback.
+    let scroller: HTMLElement | null = node.parentElement;
+    while (scroller && scroller !== document.body) {
+      const style = window.getComputedStyle(scroller);
+      if (/(auto|scroll)/.test(style.overflowX)) break;
+      scroller = scroller.parentElement;
+    }
+    const target = scroller ?? document.documentElement;
+    const update = () => setWidth(target.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(target);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="sticky left-0 max-w-full"
+      style={width ? { width: `${width}px` } : undefined}
+    >
+      <DailyLogInline projectId={projectId} />
+    </div>
   );
 }
