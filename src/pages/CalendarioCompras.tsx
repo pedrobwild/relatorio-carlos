@@ -233,12 +233,12 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
 // ─── Expandable row details ───────────────────────────────────────────────────
 function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
   return (
-    // `sticky left-0` mantém o conteúdo do detail ancorado à borda esquerda
-    // mesmo quando o usuário rola a tabela horizontalmente em telas estreitas.
-    // `w-[min(100vw,72rem)]` evita que a div estique junto com a tabela e
-    // crie áreas vazias de difícil leitura.
-    <div className="sticky left-0 w-[min(100vw,72rem)]">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 px-3 py-3 text-xs bg-muted/30 border-t">
+    // O detalhe ocupa naturalmente a largura da célula colSpan. Em telas largas
+    // a tabela já é responsiva (sem scroll-x); em telas estreitas, o scroll
+    // horizontal da própria tabela leva o detail row junto, mantendo alinhamento.
+    // `max-w-screen-2xl` evita expansão visual exagerada quando há poucas colunas.
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-3 px-4 py-3 text-xs bg-muted/30 border-t max-w-screen-2xl">
         {p.category && (
           <div className="min-w-0">
             <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
@@ -257,7 +257,7 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         )}
         {p.quantity && (
           <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1">
+            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
               <Package className="h-3 w-3 shrink-0" /> Qtde / Unidade
             </span>
             <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
@@ -265,7 +265,7 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         )}
         {p.delivery_address && (
           <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1">
+            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
               <Truck className="h-3 w-3 shrink-0" /> Entrega
             </span>
             <p className="font-medium break-words">{p.delivery_address}</p>
@@ -281,7 +281,7 @@ function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
         )}
         {p.notes && (
           <div className="col-span-full min-w-0">
-            <span className="text-muted-foreground">Observações</span>
+            <span className="text-muted-foreground mb-0.5 block">Observações</span>
             <p className="text-foreground leading-snug break-words">{p.notes}</p>
           </div>
         )}
