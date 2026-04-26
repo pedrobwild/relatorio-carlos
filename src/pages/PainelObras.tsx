@@ -722,21 +722,6 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           </Select>
         </TableCell>
 
-        {/* Orçamento público */}
-        <TableCell>
-          <ExternalBudgetCell value={obra.external_budget_id} onChange={(id) => onUpdate({ external_budget_id: id })} />
-        </TableCell>
-
-        {/* Última atualização */}
-        <TableCell>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-xs text-muted-foreground cursor-default tabular-nums">{fmtDate(obra.ultima_atualizacao)}</span>
-            </TooltipTrigger>
-            <TooltipContent>{fmtDateTime(obra.ultima_atualizacao)}</TooltipContent>
-          </Tooltip>
-        </TableCell>
-
         {/* Ações — sticky right */}
         <TableCell className={cn('sticky right-0 z-10 border-l border-border', stickyBase, expanded && 'bg-accent/25 group-hover:bg-accent/30')}>
           <div className="flex items-center justify-center gap-0.5">
