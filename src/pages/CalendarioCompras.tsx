@@ -133,8 +133,21 @@ function StatusCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSav
   const Icon = cfg.icon;
   return (
     <Select value={current} onValueChange={(v) => onSave(purchase.id, v as CalendarStatus)}>
-      <SelectTrigger className={cn('h-7 w-[126px] text-[11px] px-2 py-0 gap-1 border rounded-full font-medium', cfg.color)}>
-        <span className="inline-flex items-center gap-1"><Icon className="h-3 w-3" /><SelectValue /></span>
+      <SelectTrigger
+        className={cn(
+          // h-7 + padding fino + cor do status. `[&>span]:line-clamp-none` evita
+          // que o SelectValue corte o label em uma linha muito apertada.
+          'h-7 min-w-[120px] w-auto text-[11px] pl-2 pr-1.5 py-0 gap-1 border rounded-full font-medium',
+          '[&>span]:line-clamp-none [&>span]:flex [&>span]:items-center [&>span]:gap-1',
+          '[&_svg]:opacity-70',
+          cfg.color,
+        )}
+        aria-label={`Status: ${cfg.label}`}
+      >
+        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+          <Icon className="h-3 w-3 shrink-0" aria-hidden />
+          <SelectValue />
+        </span>
       </SelectTrigger>
       <SelectContent>
         {CALENDAR_STATUS_OPTIONS.map((s) => {
