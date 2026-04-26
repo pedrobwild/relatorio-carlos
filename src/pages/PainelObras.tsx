@@ -612,6 +612,9 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           data-testid="painel-obras-cell-cliente"
           className={cn(
             'sticky left-0 z-20 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
+            // overflow-hidden na própria célula impede que halo/ring de
+            // foco interno (botões, links) vaze para fora da coluna sticky.
+            'overflow-hidden',
             stickyBase,
             expanded && 'bg-accent/25 group-hover:bg-accent/30',
           )}
@@ -619,11 +622,13 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           <div className="flex items-start gap-1.5 min-w-0 max-w-full">
             <Button type="button" size="icon" variant="ghost" onClick={onToggleExpanded}
               aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'} aria-expanded={expanded}
-              className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent">
+              className="h-6 w-6 shrink-0 mt-0.5 text-muted-foreground hover:text-primary hover:bg-transparent focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0">
               <ChevronRight className={cn('h-4 w-4 transition-transform duration-200', expanded && 'rotate-90 text-primary')} />
             </Button>
             <button type="button" onClick={onOpen}
-              className="text-left flex flex-col gap-0.5 flex-1 min-w-0 max-w-full overflow-hidden group/link focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-0.5"
+              // ring-inset + offset-0 mantém o halo de foco DENTRO do botão,
+              // evitando vazamento visual sobre a borda da célula sticky.
+              className="text-left flex flex-col gap-0.5 flex-1 min-w-0 max-w-full overflow-hidden group/link focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-0 rounded-md px-0.5"
               title={`${obra.customer_name ?? 'Sem cliente'} — ${obra.nome ?? ''}`.trim()}
             >
               <span className="flex items-center gap-1.5 min-w-0 max-w-full w-full">
