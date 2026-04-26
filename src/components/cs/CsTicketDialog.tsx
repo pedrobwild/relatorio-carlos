@@ -190,8 +190,16 @@ export function CsTicketDialog({
               >
                 <Command
                   filter={(value, search) => {
-                    // value contém "name — customer" em lowercase (cmdk lowercases)
-                    return value.includes(search.toLowerCase()) ? 1 : 0;
+                    // value já vem em lowercase pelo cmdk; normalizamos acentos
+                    // e exigimos que TODAS as palavras da busca apareçam (em qualquer ordem).
+                    const normalize = (s: string) =>
+                      s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    const haystack = normalize(value);
+                    const tokens = normalize(search.toLowerCase())
+                      .split(/\s+/)
+                      .filter(Boolean);
+                    if (tokens.length === 0) return 1;
+                    return tokens.every((t) => haystack.includes(t)) ? 1 : 0;
                   }}
                 >
                   <CommandInput placeholder="Buscar obra ou cliente…" />
