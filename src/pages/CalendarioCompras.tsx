@@ -213,47 +213,59 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
 // ─── Expandable row details ───────────────────────────────────────────────────
 function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-3 px-3 py-3 text-xs bg-muted/30 border-t">
-      {p.category && (
-        <div>
-          <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-            <Package className="h-3 w-3" /> Categoria
-          </span>
-          <p className="font-medium">{p.category}</p>
-        </div>
-      )}
-      {p.supplier_name && (
-        <div>
-          <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-            <Truck className="h-3 w-3" /> Fornecedor
-          </span>
-          <p className="font-medium">{p.supplier_name}</p>
-        </div>
-      )}
-      {p.quantity && (
-        <div>
-          <span className="text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Qtde / Unidade</span>
-          <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
-        </div>
-      )}
-      {p.delivery_address && (
-        <div>
-          <span className="text-muted-foreground flex items-center gap-1"><Truck className="h-3 w-3" /> Entrega</span>
-          <p className="font-medium">{p.delivery_address}</p>
-        </div>
-      )}
-      {p.description && (
-        <div className="col-span-full">
-          <span className="text-muted-foreground flex items-center gap-1 mb-0.5"><FileText className="h-3 w-3" /> Descrição</span>
-          <p className="text-foreground leading-snug">{p.description}</p>
-        </div>
-      )}
-      {p.notes && (
-        <div className="col-span-full">
-          <span className="text-muted-foreground">Observações</span>
-          <p className="text-foreground leading-snug">{p.notes}</p>
-        </div>
-      )}
+    // `sticky left-0` mantém o conteúdo do detail ancorado à borda esquerda
+    // mesmo quando o usuário rola a tabela horizontalmente em telas estreitas.
+    // `w-[min(100vw,72rem)]` evita que a div estique junto com a tabela e
+    // crie áreas vazias de difícil leitura.
+    <div className="sticky left-0 w-[min(100vw,72rem)]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3 px-3 py-3 text-xs bg-muted/30 border-t">
+        {p.category && (
+          <div className="min-w-0">
+            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+              <Package className="h-3 w-3 shrink-0" /> Categoria
+            </span>
+            <p className="font-medium break-words">{p.category}</p>
+          </div>
+        )}
+        {p.supplier_name && (
+          <div className="min-w-0">
+            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+              <Truck className="h-3 w-3 shrink-0" /> Fornecedor
+            </span>
+            <p className="font-medium break-words">{p.supplier_name}</p>
+          </div>
+        )}
+        {p.quantity && (
+          <div className="min-w-0">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Package className="h-3 w-3 shrink-0" /> Qtde / Unidade
+            </span>
+            <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
+          </div>
+        )}
+        {p.delivery_address && (
+          <div className="min-w-0">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Truck className="h-3 w-3 shrink-0" /> Entrega
+            </span>
+            <p className="font-medium break-words">{p.delivery_address}</p>
+          </div>
+        )}
+        {p.description && (
+          <div className="col-span-full min-w-0">
+            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+              <FileText className="h-3 w-3 shrink-0" /> Descrição
+            </span>
+            <p className="text-foreground leading-snug break-words">{p.description}</p>
+          </div>
+        )}
+        {p.notes && (
+          <div className="col-span-full min-w-0">
+            <span className="text-muted-foreground">Observações</span>
+            <p className="text-foreground leading-snug break-words">{p.notes}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
