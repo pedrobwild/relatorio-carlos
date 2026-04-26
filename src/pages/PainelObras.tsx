@@ -541,9 +541,8 @@ export default function PainelObras() {
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
                           <TableHead className="min-w-[260px] sticky left-0 z-20 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
                           <TableHead className="min-w-[130px]">Status</TableHead>
-                          <TableHead className="min-w-[150px]">Etapa</TableHead>
-                          <TableHead className="min-w-[130px]">Responsável</TableHead>
-                          <TableHead className="min-w-[110px] text-right">Progresso</TableHead>
+                         <TableHead className="min-w-[150px]">Etapa</TableHead>
+                         <TableHead className="min-w-[110px] text-right">Progresso</TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Início Of." sortKey="inicio_oficial" /></TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Entrega Of." sortKey="entrega_oficial" /></TableHead>
                           <TableHead className="min-w-[110px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
