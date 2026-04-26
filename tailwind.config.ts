@@ -90,6 +90,43 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      /**
+       * Z-INDEX SCALE — semantic layers (single source of truth).
+       *
+       * Use `z-<layer>` tokens (ex.: `z-modal`, `z-popover`) em vez de números
+       * arbitrários (`z-[100]`). Os números abaixo são *internos*: nunca os
+       * referencie diretamente em consumidores.
+       *
+       *   base       0      conteúdo padrão
+       *   sticky     10     conteúdo sticky em tabelas/timelines
+       *   raised     20     decoração elevada (badges, divisores)
+       *   docked     30     toolbars internas
+       *   shell      40     headers de shell, FABs, sticky toolbars
+       *   header     50     page headers sticky / tooltips ancorados
+       *   modal      100    Sheet/Dialog/Drawer overlay
+       *   modal-content 101 Sheet/Dialog/Drawer content
+       *   popover    200    Select, Popover, Dropdown, Context, Hover,
+       *                     Tooltip, Menubar — SEMPRE acima de modais
+       *   toast      250    Toaster (acima de modais, abaixo de alertas)
+       *   alert      300    AlertDialog overlay (confirmação destrutiva)
+       *   alert-content 301 AlertDialog content
+       *   max        2147483647 fallback de emergência (não usar)
+       */
+      zIndex: {
+        base: "0",
+        sticky: "10",
+        raised: "20",
+        docked: "30",
+        shell: "40",
+        header: "50",
+        modal: "100",
+        "modal-content": "101",
+        popover: "200",
+        toast: "250",
+        alert: "300",
+        "alert-content": "301",
+        max: "2147483647",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
