@@ -543,7 +543,7 @@ export function BreakActivityDialog({
                       <SelectTrigger className="mt-1 h-9">
                         <SelectValue placeholder={loadingStaff ? 'Carregando...' : 'Selecionar responsável'} />
                       </SelectTrigger>
-                      <SelectContent position="popper">>
+                      <SelectContent position="popper">
                         <SelectItem value={NO_RESPONSIBLE}>Sem responsável</SelectItem>
                         {staffUsers.map((u) => (
                           <SelectItem key={u.id} value={u.id}>
