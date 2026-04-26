@@ -915,7 +915,7 @@ export default function CalendarioCompras() {
                             {/* Expanded detail row */}
                             {expanded && hasDetails && (
                               <TableRow key={`${p.id}-detail`} className="bg-muted/10 hover:bg-muted/10">
-                                <TableCell colSpan={11} className="p-0">
+                                <TableCell colSpan={10} className="p-0">
                                   <PurchaseRowDetail p={p} />
                                 </TableCell>
                               </TableRow>
