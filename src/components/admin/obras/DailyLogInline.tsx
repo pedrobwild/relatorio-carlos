@@ -640,3 +640,54 @@ function MiniField({ label, type, value, onChange, disabled }: MiniFieldProps) {
     </div>
   );
 }
+
+/**
+ * Bloco com efeito shimmer (gradiente animado horizontal). Substitui o
+ * `animate-pulse` simples para uma sensação de carregamento mais fluida.
+ * Respeita prefers-reduced-motion via `motion-reduce:animate-none`.
+ */
+function ShimmerBlock({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        'rounded-md bg-muted/70 overflow-hidden relative',
+        // Gradiente sutil que se move através do bloco.
+        'bg-[linear-gradient(90deg,hsl(var(--muted))_0%,hsl(var(--muted-foreground)/0.12)_50%,hsl(var(--muted))_100%)]',
+        'bg-[length:200%_100%] animate-shimmer motion-reduce:animate-none motion-reduce:bg-muted',
+        className,
+      )}
+    />
+  );
+}
+
+/**
+ * DailyLogSkeleton — placeholder estruturado que mimetiza o layout das
+ * 4 seções colapsáveis. Aparece com fade curto e usa shimmer nos blocos
+ * para suavizar a transição até o `useProjectDailyLog` resolver.
+ * Mantém a mesma altura aproximada do estado fechado para evitar
+ * layout shift quando o conteúdo real renderiza.
+ */
+function DailyLogSkeleton() {
+  return (
+    <div
+      className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none"
+      role="status"
+      aria-busy="true"
+      aria-label="Carregando registro da semana"
+    >
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-lg border border-border bg-card overflow-hidden shadow-sm"
+        >
+          <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px]">
+            <ShimmerBlock className="h-4 w-4 rounded" />
+            <ShimmerBlock className="h-3.5 w-32" />
+            <ShimmerBlock className="ml-auto h-4 w-4 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
