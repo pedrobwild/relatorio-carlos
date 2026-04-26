@@ -346,7 +346,12 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             icon={<HardHat className="h-4 w-4 text-primary" />}
             title="Prestadores no local"
             count={workers.length}
-            defaultOpen
+            defaultOpen={workers.length > 0}
+            previewWhenClosed={
+              workers.length === 0
+                ? 'Nenhum prestador — toque para adicionar'
+                : `${workers.length} ${workers.length === 1 ? 'prestador' : 'prestadores'} registrado${workers.length === 1 ? '' : 's'}`
+            }
           >
             <div className="flex flex-col gap-3">
               {workers.length === 0 && (
