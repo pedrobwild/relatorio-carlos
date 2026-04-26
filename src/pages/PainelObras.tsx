@@ -692,7 +692,8 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell className="min-w-[140px] relative z-0 overflow-hidden">
           <Select value={obra.etapa ?? NONE}
             onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}>
-            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1',
+            <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1 rounded-md',
+              inlinePillTrigger,
               !obra.etapa && 'text-muted-foreground italic',
               obra.etapa === 'Finalizada' && 'text-success font-medium',
               obra.etapa === 'Vistoria reprovada' && 'text-destructive font-medium')}>
