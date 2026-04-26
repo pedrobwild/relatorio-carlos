@@ -83,7 +83,7 @@ import {
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
-import { ExternalBudgetCell } from '@/components/admin/painel/ExternalBudgetCell';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton as PageSkeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
