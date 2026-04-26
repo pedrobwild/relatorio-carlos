@@ -654,7 +654,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         </TableCell>
 
         {/* Status */}
-        <TableCell className="min-w-[120px] relative z-0 overflow-hidden">
+        <TableCell className="min-w-[120px] relative z-table-body overflow-hidden">
           {(() => {
             const displayStatus = computeDisplayStatus(obra);
             const isAuto = displayStatus === 'Atrasado' && obra.status !== 'Atrasado';
