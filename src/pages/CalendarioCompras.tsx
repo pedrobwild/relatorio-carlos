@@ -1106,12 +1106,17 @@ export default function CalendarioCompras() {
                               onClick={toggleRequestedSort}
                               aria-label={`Ordenar por solicitada em${requestedSort ? ` (${requestedSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
                               aria-sort={requestedSort === 'asc' ? 'ascending' : requestedSort === 'desc' ? 'descending' : 'none'}
-                              className="flex w-full items-center gap-1 px-4 py-3 text-left font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                              className={cn(
+                                'flex h-9 w-full items-center gap-1 px-3 text-left font-medium whitespace-nowrap',
+                                'hover:bg-muted/60 hover:text-foreground transition-colors',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                                requestedSort && 'text-foreground bg-muted/40',
+                              )}
                             >
                               Solicitada em
-                              {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5" aria-hidden />}
-                              {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5" aria-hidden />}
-                              {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-50" aria-hidden />}
+                              {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                              {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                              {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-40" aria-hidden />}
                             </button>
                           </TableHead>
                           <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
