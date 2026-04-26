@@ -4697,6 +4697,8 @@ export type Database = {
           activity_id: string | null
           actual_cost: number | null
           actual_delivery_date: string | null
+          boleto_code: string | null
+          boleto_file_path: string | null
           category: string | null
           contract_file_path: string | null
           created_at: string
@@ -4717,6 +4719,8 @@ export type Database = {
           orcamento_item_id: string | null
           order_date: string | null
           payment_due_date: string | null
+          payment_method: string | null
+          pix_key: string | null
           planned_purchase_date: string | null
           project_id: string
           purchase_type: string | null
@@ -4736,6 +4740,8 @@ export type Database = {
           activity_id?: string | null
           actual_cost?: number | null
           actual_delivery_date?: string | null
+          boleto_code?: string | null
+          boleto_file_path?: string | null
           category?: string | null
           contract_file_path?: string | null
           created_at?: string
@@ -4756,6 +4762,8 @@ export type Database = {
           orcamento_item_id?: string | null
           order_date?: string | null
           payment_due_date?: string | null
+          payment_method?: string | null
+          pix_key?: string | null
           planned_purchase_date?: string | null
           project_id: string
           purchase_type?: string | null
@@ -4775,6 +4783,8 @@ export type Database = {
           activity_id?: string | null
           actual_cost?: number | null
           actual_delivery_date?: string | null
+          boleto_code?: string | null
+          boleto_file_path?: string | null
           category?: string | null
           contract_file_path?: string | null
           created_at?: string
@@ -4795,6 +4805,8 @@ export type Database = {
           orcamento_item_id?: string | null
           order_date?: string | null
           payment_due_date?: string | null
+          payment_method?: string | null
+          pix_key?: string | null
           planned_purchase_date?: string | null
           project_id?: string
           purchase_type?: string | null
