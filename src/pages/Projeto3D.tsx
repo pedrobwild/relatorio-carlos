@@ -8,7 +8,7 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useProject } from "@/contexts/ProjectContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { useObraBreadcrumbs } from "@/hooks/useObraBreadcrumbs";
 import { useProject3DPhotos, Project3DPhoto } from "@/hooks/useProject3DPhotos";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ const Projeto3D = () => {
   const { paths } = useProjectNavigation();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { isStaff } = useUserRole();
+  const breadcrumbs = useObraBreadcrumbs("projeto-3d");
   const {
     photos,
     isLoading,
@@ -72,11 +73,7 @@ const Projeto3D = () => {
       <PageHeader
         title="Projeto 3D"
         backTo={paths.relatorio}
-        breadcrumbs={[
-          { label: "Minhas Obras", href: "/minhas-obras" },
-          { label: project?.name || "Obra", href: paths.relatorio },
-          { label: "Projeto 3D" },
-        ]}
+        breadcrumbs={breadcrumbs}
       >
         {isStaff && (
           <Button
@@ -102,7 +99,6 @@ const Projeto3D = () => {
           onChange={handleFiles}
         />
       </PageHeader>
-      <ProjectSubNav />
 
       <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
         <div className="max-w-7xl mx-auto space-y-6">

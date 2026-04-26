@@ -8,7 +8,7 @@ import { useProjectPayments, useMarkPaymentPaid, ProjectPayment } from "@/hooks/
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { useObraBreadcrumbs } from "@/hooks/useObraBreadcrumbs";
 import { EmptyState } from "@/components/EmptyState";
 import { FinancialSummary } from "./financeiro/FinancialSummary";
 import { DesktopPaymentCard, MobilePaymentCard } from "./financeiro/PaymentCard";
@@ -19,6 +19,7 @@ const Financeiro = () => {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const markPaidMutation = useMarkPaymentPaid();
   const { paths } = useProjectNavigation();
+  const breadcrumbs = useObraBreadcrumbs("financeiro");
 
   const totalValue = project?.contract_value ?? payments.reduce((sum, p) => sum + p.amount, 0);
   const paidAmount = payments.filter(p => p.paid_at).reduce((sum, p) => sum + p.amount, 0);
@@ -67,13 +68,8 @@ const Financeiro = () => {
         <PageHeader
           title="Financeiro"
           backTo={paths.relatorio}
-          breadcrumbs={[
-            { label: "Minhas Obras", href: "/minhas-obras" },
-            { label: project?.name || "Obra", href: paths.relatorio },
-            { label: "Financeiro" },
-          ]}
+          breadcrumbs={breadcrumbs}
         />
-        <ProjectSubNav />
 
         <div className="flex-1 max-w-5xl mx-auto w-full">
           {payments.length === 0 ? (

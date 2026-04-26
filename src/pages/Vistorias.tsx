@@ -9,6 +9,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { PageSkeleton } from '@/components/ui-premium';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { useObraBreadcrumbs } from '@/hooks/useObraBreadcrumbs';
 import { useInspections, type Inspection } from '@/hooks/useInspections';
 import { InspectionsList } from '@/components/vistorias/InspectionsList';
 import { CreateInspectionDialog } from '@/components/vistorias/CreateInspectionDialog';
@@ -21,6 +22,7 @@ import { useCan } from '@/hooks/useCan';
 
 export default function Vistorias() {
   const { projectId } = useProjectNavigation();
+  const breadcrumbs = useObraBreadcrumbs('vistorias');
   const { data: inspections = [], isLoading: loadingInspections } = useInspections(projectId);
   const { data: nonConformities = [] } = useNonConformities(projectId);
   const { can } = useCan();
@@ -53,6 +55,7 @@ export default function Vistorias() {
         title="Vistorias"
         maxWidth="full"
         showLogo={false}
+        breadcrumbs={breadcrumbs}
       >
         <div className="flex items-center gap-2">
           <Button

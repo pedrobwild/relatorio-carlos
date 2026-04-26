@@ -11,7 +11,6 @@ import {
   Box,
   Ruler,
   DollarSign,
-  Bell,
   CheckSquare,
   AlertTriangle,
   Users,
@@ -27,9 +26,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useHiddenSectionsBadge } from "@/hooks/useHiddenSectionsBadge";
 import { cn } from "@/lib/utils";
 
 interface MoreItem {
@@ -47,7 +45,7 @@ interface MoreGroup {
 export function MobileMoreSheet() {
   const [open, setOpen] = useState(false);
   const { paths } = useProjectNavigation();
-  const { unreadCount } = useNotifications();
+  const { count: hiddenBadgeCount, hasUrgent } = useHiddenSectionsBadge();
   const location = useLocation();
 
   const groups: MoreGroup[] = [
@@ -92,6 +90,10 @@ export function MobileMoreSheet() {
   const allItems = groups.flatMap((g) => g.items);
   const isAnyActive = allItems.some((i) => location.pathname.startsWith(i.to));
 
+  const ariaLabel = hiddenBadgeCount > 0
+    ? `Mais opções, ${hiddenBadgeCount} pendências em outras seções`
+    : "Mais opções";
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -100,13 +102,24 @@ export function MobileMoreSheet() {
             "relative flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 text-[10px] font-medium transition-colors active:scale-[0.95]",
             isAnyActive ? "text-primary" : "text-muted-foreground"
           )}
-          aria-label="Mais opções"
+          aria-label={ariaLabel}
         >
-          <span className="relative">
+          <span className="relative" aria-live="polite">
             <MoreHorizontal className="h-5 w-5" />
-            {isAnyActive && (
+            {hiddenBadgeCount > 0 ? (
+              <span
+                className={cn(
+                  "absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center",
+                  hasUrgent
+                    ? "bg-destructive text-destructive-foreground"
+                    : "bg-primary text-primary-foreground"
+                )}
+              >
+                {hiddenBadgeCount > 99 ? "99+" : hiddenBadgeCount}
+              </span>
+            ) : isAnyActive ? (
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary" />
-            )}
+            ) : null}
           </span>
           <span className="truncate">Mais</span>
         </button>

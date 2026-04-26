@@ -24,7 +24,7 @@ import { DocumentVersionUpload } from "@/components/DocumentVersionUpload";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { useObraBreadcrumbs } from "@/hooks/useObraBreadcrumbs";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -195,6 +195,7 @@ const Documentos = () => {
   const { projectId } = useParams();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { paths } = useProjectNavigation();
+  const breadcrumbs = useObraBreadcrumbs("documentos");
   const { documents: dbDocuments, loading, error, getLatestByCategory, getVersionHistory, refetch } = useDocuments(projectId);
   const { data: journeyDocs = [] } = useJourneyVersionDocuments(projectId);
 
@@ -269,17 +270,12 @@ const Documentos = () => {
       <PageHeader
         title="Documentos"
         backTo={paths.relatorio}
-        breadcrumbs={[
-          { label: "Minhas Obras", href: "/minhas-obras" },
-          { label: project?.name || "Obra", href: paths.relatorio },
-          { label: "Documentos" },
-        ]}
+        breadcrumbs={breadcrumbs}
       >
         {canUpload && projectId && (
           <DocumentUpload projectId={projectId} onSuccess={refetch} />
         )}
       </PageHeader>
-      <ProjectSubNav />
 
       {/* Content */}
       <div className="flex-1 py-6">

@@ -9,7 +9,7 @@ import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { useDocuments, ProjectDocument } from "@/hooks/useDocuments";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { useObraBreadcrumbs } from "@/hooks/useObraBreadcrumbs";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -17,6 +17,7 @@ const Contrato = () => {
   const { projectId } = useParams();
   const { project, loading: projectLoading, error: projectError } = useProject();
   const { paths } = useProjectNavigation();
+  const breadcrumbs = useObraBreadcrumbs("contrato");
   const { documents, loading: docsLoading, getLatestByCategory } = useDocuments(projectId);
   
   const mainContract = getLatestByCategory('contrato')[0];
@@ -73,11 +74,7 @@ const Contrato = () => {
         title="Contrato"
         backTo={paths.relatorio}
         maxWidth="xl"
-        breadcrumbs={[
-          { label: "Minhas Obras", href: "/minhas-obras" },
-          { label: project?.name || "Obra", href: paths.relatorio },
-          { label: "Contrato" },
-        ]}
+        breadcrumbs={breadcrumbs}
       >
         {hasContract && (
           <>
@@ -97,7 +94,6 @@ const Contrato = () => {
           </>
         )}
       </PageHeader>
-      <ProjectSubNav />
 
       {/* Content */}
       <div className="flex-1 min-h-0 p-2 sm:p-4 md:p-6 overflow-auto">

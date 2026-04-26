@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
+import { useObraBreadcrumbs } from '@/hooks/useObraBreadcrumbs';
 import { FormalizacaoCard, FormalizacaoSkeleton } from '@/components/tabs/formalizacoes/FormalizacaoCard';
 import { DesktopSidebar } from '@/components/tabs/formalizacoes/DesktopSidebar';
 import { MobileFormalizacoes } from '@/components/tabs/formalizacoes/MobileFormalizacoes';
@@ -26,6 +26,7 @@ export default function Formalizacoes() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const canCreate = can('formalizations:create');
+  const breadcrumbs = useObraBreadcrumbs('formalizacoes');
   const { data: formalizacoes, isLoading } = useFormalizacoes({ projectId: projectId ?? undefined });
 
   const filteredFormalizacoes = formalizacoes?.filter(f => {
@@ -45,11 +46,7 @@ export default function Formalizacoes() {
         title="Formalizações"
         backTo={paths.relatorio}
         maxWidth="xl"
-        breadcrumbs={[
-          { label: 'Minhas Obras', href: '/minhas-obras' },
-          { label: 'Obra', href: paths.relatorio },
-          { label: 'Formalizações' },
-        ]}
+        breadcrumbs={breadcrumbs}
       >
         {canCreate && (
           <Button
@@ -64,7 +61,6 @@ export default function Formalizacoes() {
           </Button>
         )}
       </PageHeader>
-      <ProjectSubNav />
 
       <main className="py-6">
         <PageContainer maxWidth="xl">

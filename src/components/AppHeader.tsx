@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,9 +12,31 @@ interface AppHeaderProps {
   children?: React.ReactNode;
 }
 
+/**
+ * Routes where the legacy AppHeader is allowed. Anywhere else is now
+ * served by AppShell (project / portfolio variants), so AppHeader becomes
+ * a no-op to prevent duplicated headers.
+ */
+const PUBLIC_HEADER_ROUTES = [
+  "/auth",
+  "/recuperar-senha",
+  "/redefinir-senha",
+  "/verificar",
+  "/verificar-assinatura",
+];
+
+const isPublicHeaderRoute = (pathname: string) =>
+  PUBLIC_HEADER_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
 export function AppHeader({ showBackButton, onBack, children }: AppHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading, signOut, isAuthenticated } = useAuth();
+
+  // Guard: only render on public/auth pages. AppShell drives every other route.
+  if (!isPublicHeaderRoute(location.pathname)) {
+    return null;
+  }
   
 
   const handleSignOut = async () => {

@@ -18,6 +18,7 @@ import { Progress } from '@/components/ui/progress';
 import { ImportScheduleModal } from '@/components/ImportScheduleModal';
 import { CronogramaMobileView } from '@/components/cronograma/CronogramaMobileView';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useObraBreadcrumbs } from '@/hooks/useObraBreadcrumbs';
 import { cn } from '@/lib/utils';
 
 interface ActivityFormData {
@@ -158,6 +159,7 @@ const Cronograma = () => {
   const navigate = useNavigate();
   const { project, loading: projectLoading } = useProject();
   const { projectId, paths } = useProjectNavigation();
+  const breadcrumbs = useObraBreadcrumbs('cronograma');
   const isMobile = useIsMobile();
   const {
     activities: existingActivities,
@@ -463,7 +465,7 @@ const Cronograma = () => {
           showLogo={false}
           maxWidth="md"
           onBack={() => navigate(-1)}
-          breadcrumbs={[{ label: 'Gestão', href: '/gestao' }, { label: 'Cronograma' }]}
+          breadcrumbs={breadcrumbs}
         />
         <div className="max-w-7xl mx-auto p-4">
           <ContentSkeleton variant="table" rows={6} />
@@ -484,11 +486,7 @@ const Cronograma = () => {
             if (window.history.length > 1) navigate(-1);
             else navigate('/gestao', { replace: true });
           }}
-          breadcrumbs={[
-            { label: 'Gestão', href: '/gestao' },
-            { label: project?.name || 'Obra', href: `/obra/${projectId}` },
-            { label: 'Cronograma' },
-          ]}
+          breadcrumbs={breadcrumbs}
         />
         <div className="max-w-lg mx-auto p-4">
           <CronogramaMobileView

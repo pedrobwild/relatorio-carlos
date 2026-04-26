@@ -5,7 +5,7 @@ import { usePendencias } from "@/hooks/usePendencias";
 import { useProjectNavigation } from "@/hooks/useProjectNavigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProjectSubNav } from "@/components/layout/ProjectSubNav";
+import { useObraBreadcrumbs } from "@/hooks/useObraBreadcrumbs";
 import { PageSkeleton } from "@/components/ui-premium";
 import { EmptyState } from "@/components/EmptyState";
 import { PendenciaItemCard } from "@/components/tabs/PendenciaItemCard";
@@ -14,6 +14,7 @@ const Pendencias = () => {
   const { projectId } = useParams();
   const { sortedItems, stats, isLoading } = usePendencias({ projectId });
   const { paths } = useProjectNavigation();
+  const breadcrumbs = useObraBreadcrumbs("pendencias");
 
   const getActionUrl = (item: typeof sortedItems[0]) => {
     if (item.actionUrl) return item.actionUrl;
@@ -33,13 +34,8 @@ const Pendencias = () => {
           title="Pendências"
           backTo={paths.relatorio}
           maxWidth="xl"
-          breadcrumbs={[
-            { label: "Minhas Obras", href: "/minhas-obras" },
-            { label: "Obra", href: paths.relatorio },
-            { label: "Pendências" },
-          ]}
+          breadcrumbs={breadcrumbs}
         />
-        <ProjectSubNav />
         <main className="py-6">
           <PageContainer maxWidth="xl">
             <PageSkeleton metrics content="cards" />
@@ -110,13 +106,8 @@ const Pendencias = () => {
         title="Pendências"
         backTo={paths.relatorio}
         maxWidth="xl"
-        breadcrumbs={[
-          { label: "Minhas Obras", href: "/minhas-obras" },
-          { label: "Obra", href: paths.relatorio },
-          { label: "Pendências" },
-        ]}
+        breadcrumbs={breadcrumbs}
       />
-      <ProjectSubNav />
 
       <main className="py-6">
         <PageContainer maxWidth="xl">

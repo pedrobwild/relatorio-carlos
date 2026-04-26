@@ -14,6 +14,7 @@ import { queryKeys } from '@/lib/queryKeys';
 import { PurchaseAlertsPanel } from '@/components/PurchaseAlertsPanel';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useObraBreadcrumbs } from '@/hooks/useObraBreadcrumbs';
 import { useComprasState } from './compras/useComprasState';
 import { ComprasKPICards } from './compras/ComprasKPICards';
 import { PurchasesTable } from './compras/PurchasesTable';
@@ -241,6 +242,7 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
 
 export default function Compras() {
   const [activeTab, setActiveTab] = useState<string>('produtos');
+  const breadcrumbs = useObraBreadcrumbs('compras');
 
   return (
     <div className="min-h-screen bg-background">
@@ -249,10 +251,7 @@ export default function Compras() {
         backTo="/gestao"
         maxWidth="full"
         showLogo={false}
-        breadcrumbs={[
-          { label: "Gestão", href: "/gestao" },
-          { label: "Compras" },
-        ]}
+        breadcrumbs={breadcrumbs}
       />
       <div className="py-6">
         <PageContainer maxWidth="full">

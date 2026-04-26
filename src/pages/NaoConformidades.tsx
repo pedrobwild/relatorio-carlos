@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { useObraBreadcrumbs } from '@/hooks/useObraBreadcrumbs';
 import { useNonConformities, type NonConformity } from '@/hooks/useNonConformities';
 import { NcManagementPanel } from '@/components/vistorias/NcManagementPanel';
 import { NcKanbanView } from '@/components/vistorias/NcKanbanView';
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
 
 export default function NaoConformidades() {
   const { projectId } = useProjectNavigation();
+  const breadcrumbs = useObraBreadcrumbs('naoConformidades');
   const { data: nonConformities = [], isLoading } = useNonConformities(projectId);
   const { can } = useCan();
 
@@ -43,6 +45,7 @@ export default function NaoConformidades() {
         title="Não Conformidades"
         maxWidth="full"
         showLogo={false}
+        breadcrumbs={breadcrumbs}
       >
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-lg border border-border/40 bg-muted/30 p-0.5" role="radiogroup">

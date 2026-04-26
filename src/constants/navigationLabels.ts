@@ -41,6 +41,9 @@ export const navigationLabels: NavLabels = {
     vistorias:      { staff: "Vistorias & NC",     client: "Vistorias" },
     jornada:        { staff: "Jornada",           client: "Minha Jornada" },
     atividades:     { staff: "Atividades",         client: "Atividades" },
+    naoConformidades: { staff: "Não Conformidades", client: "Não Conformidades" },
+    dadosCliente:   { staff: "Dados do Cliente",   client: "Dados do Cliente" },
+    orcamento:      { staff: "Orçamento",          client: "Orçamento" },
   },
 } as const;
 

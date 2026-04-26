@@ -9,6 +9,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useProjectJourney, useInitializeJourney } from '@/hooks/useProjectJourney';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProjectLayout } from '@/components/layout/ProjectLayoutContext';
+import { useObraBreadcrumbs } from '@/hooks/useObraBreadcrumbs';
 import { useTabKeyboardNav } from '@/hooks/useKeyboardShortcuts';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -23,6 +24,7 @@ export default function JornadaProjeto() {
   const { project, loading: projectLoading } = useProject();
   const { role, loading: roleLoading } = useUserRole();
   const { hasShell } = useProjectLayout();
+  const breadcrumbs = useObraBreadcrumbs('jornada');
   const { data: journey, isLoading: journeyLoading, refetch } = useProjectJourney(projectId);
   const initializeJourney = useInitializeJourney();
 
@@ -124,7 +126,7 @@ export default function JornadaProjeto() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-background">
-      <PageHeader title={journeyCopy.page.title} backTo="/minhas-obras">
+      <PageHeader title={journeyCopy.page.title} backTo="/minhas-obras" breadcrumbs={breadcrumbs}>
         <div className="flex items-center gap-2 min-w-0">
           <div className="text-right min-w-0 flex-1">
             <p className="font-medium text-sm truncate">{project.name}</p>
