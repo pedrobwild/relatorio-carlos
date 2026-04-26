@@ -1072,7 +1072,20 @@ export default function CalendarioCompras() {
                           <TableHead className="w-8" />
                           <TableHead className="whitespace-nowrap">Obra</TableHead>
                           <TableHead className="whitespace-nowrap">Item</TableHead>
-                          <TableHead className="whitespace-nowrap">Solicitada em</TableHead>
+                          <TableHead className="whitespace-nowrap p-0">
+                            <button
+                              type="button"
+                              onClick={toggleRequestedSort}
+                              aria-label={`Ordenar por solicitada em${requestedSort ? ` (${requestedSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
+                              aria-sort={requestedSort === 'asc' ? 'ascending' : requestedSort === 'desc' ? 'descending' : 'none'}
+                              className="flex w-full items-center gap-1 px-4 py-3 text-left font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                            >
+                              Solicitada em
+                              {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5" aria-hidden />}
+                              {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5" aria-hidden />}
+                              {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-50" aria-hidden />}
+                            </button>
+                          </TableHead>
                           <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Real</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
