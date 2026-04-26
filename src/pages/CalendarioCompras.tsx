@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon,
   FilterX, Plus, ChevronDown, ChevronUp, ExternalLink, Package,
-  FileText, Truck,
+  FileText, Truck, ArrowUpDown,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -516,6 +516,11 @@ export default function CalendarioCompras() {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  // Ordenação por "Solicitada em" (created_at). null = ordem padrão (planned_purchase_date asc).
+  const [requestedSort, setRequestedSort] = useState<'asc' | 'desc' | null>(null);
+  const toggleRequestedSort = () => {
+    setRequestedSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null));
+  };
 
   const toggleRow = (id: string) =>
     setExpandedRows((prev) => {
@@ -656,12 +661,31 @@ export default function CalendarioCompras() {
     return map;
   }, [filtered]);
 
-  const sortedForList = useMemo(() =>
-    [...filtered].filter((p) => p.planned_purchase_date)
-      .sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || '')),
-  [filtered]);
+  // Comparador por created_at — trata nulos sempre por último, qualquer que seja a direção.
+  const compareByCreatedAt = (a: PurchaseWithProject, b: PurchaseWithProject, dir: 'asc' | 'desc') => {
+    const av = a.created_at ?? '';
+    const bv = b.created_at ?? '';
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+    return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  };
 
-  const withoutDate = useMemo(() => filtered.filter((p) => !p.planned_purchase_date), [filtered]);
+  const sortedForList = useMemo(() => {
+    const base = [...filtered].filter((p) => p.planned_purchase_date);
+    if (requestedSort) {
+      return base.sort((a, b) => compareByCreatedAt(a, b, requestedSort));
+    }
+    return base.sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || ''));
+  }, [filtered, requestedSort]);
+
+  const withoutDate = useMemo(() => {
+    const base = filtered.filter((p) => !p.planned_purchase_date);
+    if (requestedSort) {
+      return [...base].sort((a, b) => compareByCreatedAt(a, b, requestedSort));
+    }
+    return base;
+  }, [filtered, requestedSort]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -927,7 +951,20 @@ export default function CalendarioCompras() {
                         <TableHead className="whitespace-nowrap">Data Compra</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
-                        <TableHead className="whitespace-nowrap">Solicitada em</TableHead>
+                        <TableHead className="whitespace-nowrap p-0">
+                          <button
+                            type="button"
+                            onClick={toggleRequestedSort}
+                            aria-label={`Ordenar por solicitada em${requestedSort ? ` (${requestedSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
+                            aria-sort={requestedSort === 'asc' ? 'ascending' : requestedSort === 'desc' ? 'descending' : 'none'}
+                            className="flex w-full items-center gap-1 px-4 py-3 text-left font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                          >
+                            Solicitada em
+                            {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5" aria-hidden />}
+                            {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5" aria-hidden />}
+                            {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-50" aria-hidden />}
+                          </button>
+                        </TableHead>
                         <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Real</TableHead>
                         <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
@@ -1035,7 +1072,20 @@ export default function CalendarioCompras() {
                           <TableHead className="w-8" />
                           <TableHead className="whitespace-nowrap">Obra</TableHead>
                           <TableHead className="whitespace-nowrap">Item</TableHead>
-                          <TableHead className="whitespace-nowrap">Solicitada em</TableHead>
+                          <TableHead className="whitespace-nowrap p-0">
+                            <button
+                              type="button"
+                              onClick={toggleRequestedSort}
+                              aria-label={`Ordenar por solicitada em${requestedSort ? ` (${requestedSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
+                              aria-sort={requestedSort === 'asc' ? 'ascending' : requestedSort === 'desc' ? 'descending' : 'none'}
+                              className="flex w-full items-center gap-1 px-4 py-3 text-left font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                            >
+                              Solicitada em
+                              {requestedSort === 'asc' && <ChevronUp className="h-3.5 w-3.5" aria-hidden />}
+                              {requestedSort === 'desc' && <ChevronDown className="h-3.5 w-3.5" aria-hidden />}
+                              {requestedSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-50" aria-hidden />}
+                            </button>
+                          </TableHead>
                           <TableHead className="whitespace-nowrap text-right">Previsto</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Real</TableHead>
                           <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
