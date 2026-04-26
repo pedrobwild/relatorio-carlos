@@ -472,6 +472,11 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             icon={<CalendarRange className="h-4 w-4 text-primary" />}
             title="Planejamento da semana"
             defaultOpen={!!planning}
+            previewWhenClosed={
+              planning.trim()
+                ? truncate(planning, 80)
+                : 'Sem planejamento — toque para preencher'
+            }
           >
             <Textarea
               value={planning}
@@ -487,6 +492,11 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             icon={<MessageSquareText className="h-4 w-4 text-primary" />}
             title="Observações gerais"
             defaultOpen={!!notes}
+            previewWhenClosed={
+              notes.trim()
+                ? truncate(notes, 80)
+                : 'Sem observações — toque para adicionar'
+            }
           >
             <Textarea
               value={notes}
