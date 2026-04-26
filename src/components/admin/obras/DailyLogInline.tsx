@@ -356,14 +356,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 : `${workers.length} ${workers.length === 1 ? 'prestador' : 'prestadores'} registrado${workers.length === 1 ? '' : 's'}`
             }
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:gap-3">
               {workers.length === 0 && (
                 <EmptyLine text="Nenhum prestador adicionado." />
               )}
               {workers.map((wk, i) => (
                 <div
                   key={i}
-                  className="rounded-lg border border-border bg-card p-3 flex flex-col gap-3 shadow-sm"
+                  className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover */}
                   <div className="flex items-center justify-between gap-2">
@@ -374,7 +374,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="h-9 w-9 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
+                      className="h-8 w-8 -mr-1 text-muted-foreground hover:text-destructive shrink-0"
                       onClick={() => removeWorker(i)}
                       disabled={isSaving}
                       title="Remover prestador"
@@ -385,14 +385,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   </div>
 
                   {/* Nome + função: empilha no mobile */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
                     <Input
                       value={wk.name}
                       placeholder="Nome do prestador"
                       onChange={(e) =>
                         updateWorker(i, { name: e.target.value })
                       }
-                      className="h-10 sm:h-9 text-sm"
+                      className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
                     />
                     <Input
@@ -401,13 +401,13 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       onChange={(e) =>
                         updateWorker(i, { role: e.target.value || null })
                       }
-                      className="h-10 sm:h-9 text-sm"
+                      className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
                     />
                   </div>
 
                   {/* Período (datas) — sempre 2 colunas */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 min-w-0">
                     <MiniField
                       label="Período de"
                       type="date"
@@ -427,7 +427,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   </div>
 
                   {/* Horário — 2 colunas no mobile (ao invés de 4 esmagadas) */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 min-w-0">
                     <MiniField
                       label="Entrada"
                       type="time"
@@ -451,7 +451,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     onChange={(e) =>
                       updateWorker(i, { notes: e.target.value || null })
                     }
-                    className="min-h-[56px] text-sm"
+                    className="min-h-[56px] text-sm w-full"
                     disabled={isSaving}
                   />
                 </div>
@@ -461,7 +461,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 variant="outline"
                 size="sm"
                 onClick={addWorker}
-                className="w-full sm:w-auto sm:self-start h-10 sm:h-9 text-sm"
+                className="w-full sm:w-auto sm:self-start h-9 text-sm"
                 disabled={isSaving}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
