@@ -221,11 +221,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-14 w-full" />
-        </div>
+        <DailyLogSkeleton />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
           {/* Serviços em execução */}
