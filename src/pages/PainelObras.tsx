@@ -539,10 +539,10 @@ export default function PainelObras() {
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
-                    <Table className="w-full text-sm [&_th]:h-11 [&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
+                    <Table className="w-full text-sm [&_th]:h-11 [&_th]:sticky [&_th]:top-0 [&_th]:z-table-header [&_td]:py-3 [&_td]:px-3 [&_th]:px-3 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:text-muted-foreground [&_th]:bg-surface-sunken [&_th]:uppercase [&_th]:tracking-[0.04em] [&_tr]:border-border-subtle">
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border-subtle">
-                          <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-30 bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
+                          <TableHead data-testid="painel-obras-th-cliente" className="w-[240px] min-w-[240px] max-w-[240px] sticky left-0 z-table-header-corner-left bg-surface-sunken border-r border-border-subtle">Cliente / Obra</TableHead>
                           <TableHead data-testid="painel-obras-th-status" className="min-w-[120px]">Status</TableHead>
                           <TableHead className="min-w-[140px]">Etapa</TableHead>
                           <TableHead className="min-w-[120px] text-right">Progresso</TableHead>
@@ -551,7 +551,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[100px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
                           <TableHead className="min-w-[100px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
                           <TableHead className="min-w-[130px]">Relacionamento</TableHead>
-                          <TableHead className="w-16 sticky right-0 z-30 bg-surface-sunken border-l border-border-subtle" />
+                          <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -617,7 +617,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell
           data-testid="painel-obras-cell-cliente"
           className={cn(
-            'sticky left-0 z-20 border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
+            'sticky left-0 z-sticky-left border-r border-border shadow-[1px_0_0_0_hsl(var(--border))] w-[240px] max-w-[240px]',
             // overflow-hidden na própria célula impede que halo/ring de
             // foco interno (botões, links) vaze para fora da coluna sticky.
             'overflow-hidden',
@@ -654,7 +654,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         </TableCell>
 
         {/* Status */}
-        <TableCell className="min-w-[120px] relative z-0 overflow-hidden">
+        <TableCell className="min-w-[120px] relative z-table-body overflow-hidden">
           {(() => {
             const displayStatus = computeDisplayStatus(obra);
             const isAuto = displayStatus === 'Atrasado' && obra.status !== 'Atrasado';
@@ -692,7 +692,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         </TableCell>
 
         {/* Etapa */}
-        <TableCell className="min-w-[140px] relative z-0 overflow-hidden">
+        <TableCell className="min-w-[140px] relative z-table-body overflow-hidden">
           <Select value={obra.etapa ?? NONE}
             onValueChange={(v) => onUpdate({ etapa: v === NONE ? null : (v as PainelEtapa) })}>
             <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 hover:bg-accent/60 [&>svg]:opacity-40 [&>svg]:ml-1 rounded-md',
@@ -736,7 +736,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
         <TableCell><DateCell value={obra.entrega_real} onChange={(v) => onUpdate({ entrega_real: v })} /></TableCell>
 
         {/* Relacionamento */}
-        <TableCell className="min-w-[110px] relative z-0 overflow-hidden">
+        <TableCell className="min-w-[110px] relative z-table-body overflow-hidden">
           <Select value={obra.relacionamento ?? NONE}
             onValueChange={(v) => onUpdate({ relacionamento: v === NONE ? null : (v as PainelRelacionamento) })}>
             <SelectTrigger className={cn('h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:hidden justify-start rounded-md', inlinePillTrigger, relacionamentoPillClass(obra.relacionamento))}>
@@ -751,7 +751,7 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
 
         {/* Ações — sticky right */}
         <TableCell className={cn(
-          'sticky right-0 z-20 border-l border-border',
+          'sticky right-0 z-sticky-right border-l border-border',
           // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
           // garantir que conteúdo de colunas não-sticky (badges de Status/
           // Etapa/Relacionamento) não apareça por baixo desta coluna durante
