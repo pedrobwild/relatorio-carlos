@@ -19,6 +19,7 @@ import {
   GridSkeleton, EmptyPortfolio, NoFilterResults,
   PortfolioErrorState, StaleDataBanner,
 } from './PortfolioStates';
+import { getProjectDelayInfo } from '@/lib/projectHealth';
 import type { ProjectWithCustomer } from '@/infra/repositories';
 
 export default function PortfolioPage() {
@@ -36,17 +37,19 @@ export default function PortfolioPage() {
   } = useProjectSummaryQuery();
 
   // ── Document title with alert count ─────────────────────────────────────
-  // Count unique projects that need attention (not individual issues)
+  // A project counts as "needing attention" when it is active AND either
+  // missed its planned end (delegated to getProjectDelayInfo) or has at
+  // least one overdue activity in its summary. Each project counts once,
+  // even if it has multiple issues — the title shows project urgency, not
+  // raw issue volume.
   const alertCount = useMemo(() => {
-    const now = Date.now();
-    let count = 0;
     const summaryMap = new Map(summaries.map(s => [s.id, s]));
+    let count = 0;
     for (const p of projects) {
       if (p.status !== 'active') continue;
-      const isOverdueDelivery = p.planned_end_date && new Date(p.planned_end_date).getTime() < now && !p.actual_end_date;
+      const isOverdueDelivery = !!getProjectDelayInfo(p)?.isOverdue;
       const s = summaryMap.get(p.id);
-      const hasOverdueActivities = s && s.overdue_count > 0;
-      // Count each project only once even if it has multiple issues
+      const hasOverdueActivities = !!(s && s.overdue_count > 0);
       if (isOverdueDelivery || hasOverdueActivities) count++;
     }
     return count;

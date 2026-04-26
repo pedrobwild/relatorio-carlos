@@ -8,9 +8,10 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate, getTodayLocal } from '@/lib/activityStatus';
+import { getProjectDelayInfo } from '@/lib/projectHealth';
 import { LastUpdateInfo } from '@/components/portfolio/LastUpdateInfo';
 import { ProjectStatusBadge } from '@/components/portfolio/ProjectStatusBadge';
 import type { ProjectWithCustomer } from '@/infra/repositories';
@@ -45,12 +46,16 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
   const progress = summary?.progress_percentage ?? 0;
   const contractValue = project.contract_value ?? 0;
 
+  // Display: parse planned_end_date for any project that has one (used to
+  // render "dd/MM" on the timeline row even when finished/non-active).
   const today = getTodayLocal();
   const plannedEnd = project.planned_end_date ? parseLocalDate(project.planned_end_date) : null;
-  const actualEnd = project.actual_end_date ? parseLocalDate(project.actual_end_date) : null;
-  const isFinished = !!actualEnd;
-  const daysRemaining = plannedEnd && !isFinished ? differenceInDays(plannedEnd, today) : null;
-  const isOverdue = daysRemaining !== null && daysRemaining < 0;
+  const isFinished = !!project.actual_end_date;
+
+  // Delay: centralized helper. Only returns non-null when status==='active'
+  // and there is a planned end (matches KPI strip / mobile list / status
+  // badge — same source of truth).
+  const delay = getProjectDelayInfo(project, today);
 
   const blockers: { icon: React.ReactNode; label: string; accent: string }[] = [];
   if (summary && summary.overdue_count > 0) {
@@ -130,18 +135,18 @@ export function WorkQuickPreviewDrawer({ project, summary, open, onOpenChange }:
             <div className="space-y-1.5 text-sm">
               <Row label="Início" value={project.planned_start_date ? format(parseLocalDate(project.planned_start_date), 'dd/MM/yyyy', { locale: ptBR }) : 'A definir'} />
               <Row label="Término previsto" value={plannedEnd ? format(plannedEnd, 'dd/MM/yyyy', { locale: ptBR }) : 'A definir'} />
-              {daysRemaining !== null && (
+              {delay && (
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-muted-foreground text-xs">Status</span>
-                  {isOverdue ? (
+                  {delay.isOverdue ? (
                     <span className="flex items-center gap-1 text-xs font-semibold text-destructive">
                       <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                      {Math.abs(daysRemaining)}d de atraso
+                      {delay.daysOverdue}d de atraso
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                       <Clock className="h-3 w-3" aria-hidden="true" />
-                      {daysRemaining}d restantes
+                      {delay.daysRemaining}d restantes
                     </span>
                   )}
                 </div>
