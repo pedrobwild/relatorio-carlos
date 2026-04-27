@@ -62,7 +62,7 @@ export function MaskedDateField({
     }
     const iso = parseFlexibleBRDate(trimmed);
     if (!iso) {
-      setError('Data inválida');
+      setError(INVALID_DATE_MESSAGE);
       return;
     }
     setError(null);
