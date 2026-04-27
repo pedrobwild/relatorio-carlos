@@ -64,6 +64,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
