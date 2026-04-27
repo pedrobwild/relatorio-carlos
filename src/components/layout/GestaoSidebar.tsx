@@ -14,6 +14,7 @@ import {
   Sparkles,
   Search,
   Package,
+  ArrowUpFromLine,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -124,6 +125,11 @@ export function GestaoSidebar() {
           label: "Estoque",
           icon: Package,
           path: "/gestao/estoque",
+        },
+        {
+          label: "Saídas de Estoque",
+          icon: ArrowUpFromLine,
+          path: "/gestao/estoque/saidas",
         },
         {
           label: "Arquivos",

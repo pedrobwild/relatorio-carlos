@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Package, Plus, Loader2, ArrowDownToLine, ArrowUpFromLine, Wrench, Building2, Warehouse } from "lucide-react";
 import { z } from "zod";
@@ -245,10 +246,21 @@ export default function Estoque() {
             Registre entradas, saídas e ajustes de materiais. O saldo é atualizado automaticamente.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setItemDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
             Novo item
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            disabled={(itemsQ.data?.length ?? 0) === 0}
+            className="gap-2"
+          >
+            <Link to="/gestao/estoque/saidas">
+              <ArrowUpFromLine className="h-4 w-4" />
+              Registrar saída
+            </Link>
           </Button>
           <Button
             onClick={() => setMovDialogOpen(true)}
@@ -256,7 +268,7 @@ export default function Estoque() {
             className="gap-2"
           >
             <ArrowDownToLine className="h-4 w-4" />
-            Registrar movimentação
+            Registrar entrada
           </Button>
         </div>
       </header>
