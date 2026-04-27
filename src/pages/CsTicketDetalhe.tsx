@@ -363,7 +363,13 @@ export default function CsTicketDetalhe() {
           {ticket.resolved_at && (
             <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3 text-success" />
-              Concluído em {fmtDateTime(ticket.resolved_at)}
+              Concluído em {fmtDateTime(ticket.resolved_at)} · resolução em{' '}
+              <span className="font-medium text-foreground">
+                {formatDuration(
+                  new Date(ticket.resolved_at).getTime() -
+                    new Date(ticket.created_at).getTime(),
+                )}
+              </span>
             </p>
           )}
         </div>
