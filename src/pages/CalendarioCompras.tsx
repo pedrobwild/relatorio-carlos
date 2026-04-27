@@ -1262,8 +1262,11 @@ export default function CalendarioCompras() {
                                   diff != null && diff < 0 && 'text-red-600',
                                 )}>{diff == null ? '—' : fmtDiff(diff)}</TableCell>
                                 <TableCell className="whitespace-nowrap">
-                                  <DateCell value={p.payment_due_date}
-                                    onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                                  <div className="inline-flex items-center">
+                                    <DateCell value={p.payment_due_date}
+                                      onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                                    <PaymentInfoBadges p={p} />
+                                  </div>
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
                                   <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
