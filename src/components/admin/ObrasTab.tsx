@@ -72,12 +72,10 @@ export function ObrasTab() {
   }, [projects]);
 
   const filteredProjects = useMemo(() => projects.filter((p: ProjectWithCustomer) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesQuery = matchesSearch(searchTerm, [p.name, p.customer_name, p.unit_name]);
     const matchesStatus = !statusFilter || p.status === statusFilter;
     const matchesEngineer = !engineerFilter || p.engineer_user_id === engineerFilter;
-    return matchesSearch && matchesStatus && matchesEngineer;
+    return matchesQuery && matchesStatus && matchesEngineer;
   }), [projects, searchTerm, statusFilter, engineerFilter]);
 
   const { draftCount, activeCount, completedCount, pausedCount } = useMemo(() => ({
