@@ -410,7 +410,7 @@ function NewPurchaseDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  projects: { id: string; name: string; address: string | null; bairro: string | null; cep: string | null }[];
+  projects: { id: string; name: string; address: string | null; bairro: string | null; cep: string | null; customer_name: string | null }[];
   onCreated: () => void;
 }) {
   const { user } = useAuth();
