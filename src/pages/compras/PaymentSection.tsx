@@ -307,10 +307,10 @@ export function PaymentSection({ purchase, onUpdateField }: PaymentSectionProps)
           <label className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
             <CalendarDays className="h-3 w-3" /> Data de vencimento
           </label>
-          <InlineField
-            type="date"
+          <MaskedDateField
             value={purchase.payment_due_date}
-            onSave={(v) => onUpdateField(purchase.id, 'payment_due_date', v || null)}
+            onSave={(v) => onUpdateField(purchase.id, 'payment_due_date', v)}
+            ariaLabel="Data de vencimento"
             className="w-full"
           />
         </div>
