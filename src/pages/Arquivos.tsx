@@ -180,12 +180,9 @@ export default function Arquivos() {
   // Filtered files
   const filteredFiles = useMemo(() => {
     return files.filter((f) => {
-      const matchesSearch =
-        !searchTerm ||
-        f.original_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.category?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesQuery = matchesSearch(searchTerm, [f.original_name, f.category]);
       const matchesProject = !projectFilter || f.project_id === projectFilter;
-      return matchesSearch && matchesProject;
+      return matchesQuery && matchesProject;
     });
   }, [files, searchTerm, projectFilter]);
 
