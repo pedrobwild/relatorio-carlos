@@ -49,12 +49,8 @@ export function ProjectSwitcherSheet({
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return otherProjects;
-    const q = searchQuery.toLowerCase();
-    return otherProjects.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.unit_name ?? "").toLowerCase().includes(q) ||
-        (p.customer_name ?? "").toLowerCase().includes(q)
+    return otherProjects.filter((p) =>
+      matchesSearch(searchQuery, [p.name, p.unit_name, p.customer_name]),
     );
   }, [otherProjects, searchQuery]);
 
