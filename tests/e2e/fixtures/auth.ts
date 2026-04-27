@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks -- Playwright fixtures use `use()` callbacks unrelated to React Hooks. */
 import { test as base, expect, Page } from '@playwright/test';
 
 // Test user credentials from environment
@@ -36,25 +37,24 @@ async function loginAs(page: Page, email: string, password: string) {
 /**
  * Extended test fixture with authenticated pages
  */
-// eslint-disable-next-line react-hooks/rules-of-hooks
 export const test = base.extend<TestFixtures>({
-  customerPage: async ({ browser }, use) => { // eslint-disable-line react-hooks/rules-of-hooks
+  customerPage: async ({ browser }, use) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAs(page, TEST_CUSTOMER_EMAIL, TEST_CUSTOMER_PASSWORD);
     await use(page);
     await context.close();
   },
-  
-  staffPage: async ({ browser }, use) => { // eslint-disable-line react-hooks/rules-of-hooks
+
+  staffPage: async ({ browser }, use) => {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAs(page, TEST_STAFF_EMAIL, TEST_STAFF_PASSWORD);
     await use(page);
     await context.close();
   },
-  
-  testProjectId: async (_params, use) => { // eslint-disable-line react-hooks/rules-of-hooks
+
+  testProjectId: async (_params, use) => {
     await use(TEST_PROJECT_ID);
   },
 });

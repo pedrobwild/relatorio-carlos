@@ -157,10 +157,10 @@ export function use3DVersions(projectId: string | undefined) {
       } catch (uploadError) {
         // Cleanup: remove uploaded files
         if (uploadedPaths.length > 0) {
-          try { await supabase.storage.from(BUCKET).remove(uploadedPaths); } catch {}
+          try { await supabase.storage.from(BUCKET).remove(uploadedPaths); } catch { /* best-effort cleanup */ }
         }
         // Cleanup: remove orphan version record
-        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch {}
+        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch { /* best-effort cleanup */ }
         throw uploadError;
       }
 

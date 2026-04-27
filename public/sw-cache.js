@@ -1,9 +1,9 @@
 /**
  * Offline-first data caching via Service Worker.
- * 
+ *
  * Caches critical API responses (projects, inspections, NCs) for offline use.
  * Uses a cache-then-network strategy for read operations.
- * 
+ *
  * Registration is guarded: never registers inside iframes or Lovable previews.
  */
 
@@ -21,14 +21,12 @@ const CACHEABLE_PATTERNS = [
   '/rest/v1/obra_tasks',
 ];
 
-// @ts-ignore - Service Worker scope
-self.addEventListener('install', (event: ExtendableEvent) => {
+self.addEventListener('install', (event) => {
   // Activate immediately
-  (self as any).skipWaiting();
+  self.skipWaiting();
 });
 
-// @ts-ignore
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
@@ -38,19 +36,18 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
       )
     )
   );
-  (self as any).clients.claim();
+  self.clients.claim();
 });
 
-function shouldCache(url: string): boolean {
+function shouldCache(url) {
   return CACHEABLE_PATTERNS.some(pattern => url.includes(pattern));
 }
 
-function isGetRequest(request: Request): boolean {
+function isGetRequest(request) {
   return request.method === 'GET';
 }
 
-// @ts-ignore
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('fetch', (event) => {
   const { request } = event;
 
   // Only cache GET requests to our API
@@ -83,14 +80,14 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         // Offline: serve from cache
         const cache = await caches.open(CACHE_NAME);
         const cachedResponse = await cache.match(request);
-        
+
         if (cachedResponse) {
           const cachedAt = parseInt(cachedResponse.headers.get('x-cached-at') || '0');
           if (Date.now() - cachedAt < CACHE_EXPIRY_MS) {
             return cachedResponse;
           }
         }
-        
+
         // No cache hit — return offline error
         return new Response(
           JSON.stringify({ error: 'offline', message: 'Sem conexão. Dados não disponíveis offline.' }),

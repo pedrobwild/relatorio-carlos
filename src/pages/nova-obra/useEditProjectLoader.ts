@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { FormData } from './types';
-import { initialFormData } from './types';
+import { initialFormData, type FormData } from './types';
 
 interface EditProjectData {
   formData: FormData;

@@ -108,7 +108,7 @@ export function useExecutivoVersions(projectId: string | undefined) {
         .upload(storagePath, file, { contentType: 'application/pdf' });
 
       if (uploadErr) {
-        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch {}
+        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch { /* best-effort cleanup */ }
         throw uploadErr;
       }
 
@@ -122,8 +122,8 @@ export function useExecutivoVersions(projectId: string | undefined) {
         });
 
       if (imgErr) {
-        try { await supabase.storage.from(BUCKET).remove([storagePath]); } catch {}
-        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch {}
+        try { await supabase.storage.from(BUCKET).remove([storagePath]); } catch { /* best-effort cleanup */ }
+        try { await supabase.from('project_3d_versions').delete().eq('id', version.id); } catch { /* best-effort cleanup */ }
         throw imgErr;
       }
 
