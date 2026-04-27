@@ -45,12 +45,13 @@ export function NcKanbanView({ nonConformities, searchQuery, onSelect, showProje
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return nonConformities;
-    const q = searchQuery.toLowerCase();
-    return nonConformities.filter(nc =>
-      nc.title.toLowerCase().includes(q) ||
-      nc.description?.toLowerCase().includes(q) ||
-      (nc.category || '').toLowerCase().includes(q) ||
-      (nc.responsible_user_name || '').toLowerCase().includes(q)
+    return nonConformities.filter((nc) =>
+      matchesSearch(searchQuery, [
+        nc.title,
+        nc.description,
+        nc.category,
+        nc.responsible_user_name,
+      ]),
     );
   }, [nonConformities, searchQuery]);
 
