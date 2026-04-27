@@ -10,6 +10,7 @@ import {
   type ProjectTemplate,
 } from '@/hooks/useProjectTemplates';
 import { activityTemplateSets } from '@/data/activityTemplates';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { emptyForm, type FormState, type ActivityItem, type SortField } from './types';
 
 export function useTemplatesTabState() {
