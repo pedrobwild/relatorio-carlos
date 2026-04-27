@@ -58,6 +58,7 @@ const OrcamentoDetalhe = lazy(() => import("./pages/gestao/OrcamentoDetalhe"));
 const NaoConformidadesGlobal = lazy(() => import("./pages/gestao/NaoConformidadesGlobal"));
 const GestaoAtividades = lazy(() => import("./pages/GestaoAtividades"));
 const PainelObras = lazy(() => import("./pages/PainelObras"));
+const Estoque = lazy(() => import("./pages/gestao/Estoque"));
 const Assistente = lazy(() => import("./pages/Assistente"));
 const AssistenteConsultas = lazy(() => import("./pages/AssistenteConsultas"));
 const AssistenteLogs = lazy(() => import("./pages/AssistenteLogs"));
