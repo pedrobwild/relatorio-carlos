@@ -64,6 +64,8 @@ import {
 } from '@/hooks/useCsTicketHistory';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
+import { CsTicketActionsPanel } from '@/components/cs/CsTicketActionsPanel';
+import { formatDuration } from '@/hooks/useCsTicketActions';
 
 // ----- helpers visuais (espelham CsTickets) -----
 
@@ -361,7 +363,13 @@ export default function CsTicketDetalhe() {
           {ticket.resolved_at && (
             <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3 text-success" />
-              Concluído em {fmtDateTime(ticket.resolved_at)}
+              Concluído em {fmtDateTime(ticket.resolved_at)} · resolução em{' '}
+              <span className="font-medium text-foreground">
+                {formatDuration(
+                  new Date(ticket.resolved_at).getTime() -
+                    new Date(ticket.created_at).getTime(),
+                )}
+              </span>
             </p>
           )}
         </div>
@@ -402,24 +410,23 @@ export default function CsTicketDetalhe() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Coluna principal */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Plano de ação */}
-          <section className="rounded-lg border border-border bg-card p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <ListChecks className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Plano de ação
-              </h2>
-            </div>
-            {ticket.action_plan ? (
+          {/* Ações do ticket */}
+          <CsTicketActionsPanel ticketId={ticket.id} />
+
+          {/* Plano de ação (resumo livre) */}
+          {ticket.action_plan && (
+            <section className="rounded-lg border border-border bg-card p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <ListChecks className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Resumo / plano de ação
+                </h2>
+              </div>
               <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                 {ticket.action_plan}
               </p>
-            ) : (
-              <p className="text-sm italic text-muted-foreground">
-                Nenhum plano de ação registrado. Use "Editar ticket" para adicionar.
-              </p>
-            )}
-          </section>
+            </section>
+          )}
 
           {/* Descrição */}
           <section className="rounded-lg border border-border bg-card p-5">

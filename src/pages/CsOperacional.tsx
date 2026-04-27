@@ -78,6 +78,7 @@ import {
   useUpdateCsTicket,
 } from '@/hooks/useCsTickets';
 import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
+import { useAllCsActionsSummary } from '@/hooks/useCsTicketActions';
 
 const ALL = '__all__';
 
@@ -154,6 +155,7 @@ export default function CsOperacional() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: tickets = [], isLoading } = useCsTickets();
+  const { data: actionsSummary = {} } = useAllCsActionsSummary();
   const updateMutation = useUpdateCsTicket();
   const deleteMutation = useDeleteCsTicket();
 
@@ -414,6 +416,50 @@ export default function CsOperacional() {
         ),
       },
       {
+        id: 'actions_progress',
+        header: 'Ações',
+        width: 'minmax(160px, 1.2fr)',
+        cell: (t) => {
+          const s = actionsSummary[t.id];
+          if (!s || s.total === 0) {
+            return <span className="text-xs italic text-muted-foreground">Sem ações</span>;
+          }
+          const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0;
+          return (
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="tabular-nums font-medium text-foreground">
+                  {s.done}/{s.total}
+                </span>
+                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden min-w-[40px] max-w-[80px]">
+                  <div
+                    className={cn(
+                      'h-full',
+                      s.overdue > 0 ? 'bg-destructive' : 'bg-success',
+                    )}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                {s.overdue > 0 && (
+                  <span className="text-destructive font-medium text-[11px]">
+                    {s.overdue} atras.
+                  </span>
+                )}
+              </div>
+              {s.nextDueDate && (
+                <span
+                  className="text-[11px] text-muted-foreground truncate"
+                  title={s.nextDueTitle ?? ''}
+                >
+                  Próx.: {format(parseISO(s.nextDueDate), 'dd/MM', { locale: ptBR })}
+                  {s.nextDueTitle ? ` · ${s.nextDueTitle}` : ''}
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         id: 'updated_at',
         header: 'Atualizado',
         width: '160px',
@@ -486,7 +532,7 @@ export default function CsOperacional() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [navigate],
+    [navigate, actionsSummary],
   );
 
   return (
