@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ClipboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type ClipboardEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { formatBR, maskBRDate, parseFlexibleBRDate } from '@/lib/dates';
@@ -24,6 +24,8 @@ interface MaskedDateFieldProps {
  *   exigir blur.
  * - Em blur, valida e persiste; entradas inválidas mostram erro inline.
  */
+const INVALID_DATE_MESSAGE = 'Data inválida. Use o formato dd/mm/aaaa.';
+
 export function MaskedDateField({
   value,
   onSave,
@@ -35,6 +37,7 @@ export function MaskedDateField({
   const [error, setError] = useState<string | null>(null);
   const lastCommittedRef = useRef<string | null>(value ?? null);
   const { saveState, runSave } = useFieldAutosave(value ?? '');
+  const errorId = useId();
 
   // Mantém o input em sincronia quando o valor canônico muda externamente.
   useEffect(() => {
@@ -59,7 +62,7 @@ export function MaskedDateField({
     }
     const iso = parseFlexibleBRDate(trimmed);
     if (!iso) {
-      setError('Data inválida');
+      setError(INVALID_DATE_MESSAGE);
       return;
     }
     setError(null);
@@ -94,7 +97,7 @@ export function MaskedDateField({
     // Fallback: aplica a máscara progressiva e aguarda mais digitação/blur.
     const masked = maskBRDate(pasted);
     setText(masked);
-    setError(masked.length === 10 ? 'Data inválida' : null);
+    setError(masked.length === 10 ? INVALID_DATE_MESSAGE : null);
   };
 
   return (
@@ -107,6 +110,7 @@ export function MaskedDateField({
         placeholder={placeholder}
         aria-label={ariaLabel}
         aria-invalid={!!error}
+        aria-describedby={error ? errorId : undefined}
         onChange={(e) => {
           setText(maskBRDate(e.target.value));
           if (error) setError(null);
@@ -125,7 +129,12 @@ export function MaskedDateField({
         <AutosaveStatusIcon state={saveState} />
       </span>
       {error && (
-        <p role="alert" className="mt-1 text-[11px] text-destructive">
+        <p
+          id={errorId}
+          role="alert"
+          aria-live="polite"
+          className="mt-1 text-sm font-medium text-destructive"
+        >
           {error}
         </p>
       )}
