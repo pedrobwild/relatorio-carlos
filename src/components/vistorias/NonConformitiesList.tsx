@@ -109,11 +109,8 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
 
     // Apply search
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(nc =>
-        nc.title.toLowerCase().includes(q) ||
-        nc.description?.toLowerCase().includes(q) ||
-        ((nc.category || '').toLowerCase().includes(q))
+      result = result.filter((nc) =>
+        matchesSearch(searchQuery, [nc.title, nc.description, nc.category]),
       );
     }
 
