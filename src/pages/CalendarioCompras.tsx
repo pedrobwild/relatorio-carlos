@@ -230,6 +230,43 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
   );
 }
 
+// ─── Indicadores de PIX / Boleto preenchidos ──────────────────────────────────
+/**
+ * Mostra dois micro-badges discretos quando a linha já possui dados de pagamento
+ * (chave PIX ou boleto anexado/código). Mantém alta densidade da tabela usando
+ * iniciais e tons semânticos do design system.
+ */
+function PaymentInfoBadges({ p }: { p: PurchaseWithProject }) {
+  const hasPix = !!(p as any).pix_key && String((p as any).pix_key).trim() !== '';
+  const hasBoleto =
+    !!(p as any).boleto_file_path || (!!(p as any).boleto_code && String((p as any).boleto_code).trim() !== '');
+
+  if (!hasPix && !hasBoleto) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1 ml-1 align-middle">
+      {hasPix && (
+        <span
+          title="Chave PIX preenchida"
+          aria-label="Chave PIX preenchida"
+          className="inline-flex items-center justify-center h-4 px-1 rounded text-[9px] font-semibold bg-success/15 text-success border border-success/25"
+        >
+          PIX
+        </span>
+      )}
+      {hasBoleto && (
+        <span
+          title={(p as any).boleto_file_path ? 'Boleto anexado' : 'Código do boleto preenchido'}
+          aria-label="Boleto preenchido"
+          className="inline-flex items-center justify-center h-4 px-1 rounded text-[9px] font-semibold bg-info/15 text-info border border-info/25"
+        >
+          BOL
+        </span>
+      )}
+    </span>
+  );
+}
+
 // ─── Expandable row details ───────────────────────────────────────────────────
 function PurchaseRowDetail({
   p,
@@ -1111,8 +1148,11 @@ export default function CalendarioCompras() {
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap">
-                                <DateCell value={p.payment_due_date}
-                                  onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                                <div className="inline-flex items-center">
+                                  <DateCell value={p.payment_due_date}
+                                    onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                                  <PaymentInfoBadges p={p} />
+                                </div>
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap">
@@ -1222,8 +1262,11 @@ export default function CalendarioCompras() {
                                   diff != null && diff < 0 && 'text-red-600',
                                 )}>{diff == null ? '—' : fmtDiff(diff)}</TableCell>
                                 <TableCell className="whitespace-nowrap">
-                                  <DateCell value={p.payment_due_date}
-                                    onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                                  <div className="inline-flex items-center">
+                                    <DateCell value={p.payment_due_date}
+                                      onSave={(v) => updateDateField.mutate({ id: p.id, field: 'payment_due_date', value: v })} />
+                                    <PaymentInfoBadges p={p} />
+                                  </div>
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
                                   <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
