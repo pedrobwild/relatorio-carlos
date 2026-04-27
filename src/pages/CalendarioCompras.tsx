@@ -39,6 +39,7 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
+import { parseFlexibleBRDate } from '@/lib/dates';
 
 /**
  * Payload tipado para INSERT em `project_purchases`.
