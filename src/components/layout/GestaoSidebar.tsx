@@ -13,6 +13,7 @@ import {
   BarChart3,
   Sparkles,
   Search,
+  Package,
   LucideIcon,
 } from "lucide-react";
 import {
