@@ -13,6 +13,7 @@ import {
   PRIORITY_LABEL, PRIORITY_TONE,
   getLabel, getTone,
 } from '@/lib/statusTones';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { Search, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
