@@ -110,6 +110,7 @@ export function MaskedDateField({
         placeholder={placeholder}
         aria-label={ariaLabel}
         aria-invalid={!!error}
+        aria-describedby={error ? errorId : undefined}
         onChange={(e) => {
           setText(maskBRDate(e.target.value));
           if (error) setError(null);
