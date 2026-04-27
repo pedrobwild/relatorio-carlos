@@ -388,6 +388,7 @@ function NewPurchaseDialog({
   const [form, setForm] = useState<NewPurchaseForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [dueDateOpen, setDueDateOpen] = useState(false);
 
   useEffect(() => { if (open) setForm(EMPTY_FORM); }, [open]);
 
