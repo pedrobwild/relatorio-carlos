@@ -410,7 +410,7 @@ function NewPurchaseDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  projects: { id: string; name: string; address: string | null; bairro: string | null; cep: string | null }[];
+  projects: { id: string; name: string; address: string | null; bairro: string | null; cep: string | null; customer_name: string | null }[];
   onCreated: () => void;
 }) {
   const { user } = useAuth();
@@ -583,7 +583,10 @@ function NewPurchaseDialog({
               </SelectTrigger>
               <SelectContent className="z-[300]">
                 {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                    {p.customer_name ? ` — ${p.customer_name}` : ''}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -740,6 +743,9 @@ function NewPurchaseDialog({
                 {form.delivery_location === 'obra' && !form.project_id && (
                   <span className="ml-1 text-destructive">— selecione a obra para preencher automaticamente</span>
                 )}
+                {form.delivery_location && form.delivery_location !== 'retirada' && (
+                  <span className="ml-1 text-muted-foreground">(editável)</span>
+                )}
               </Label>
               <Input
                 id="delivery_address"
@@ -747,12 +753,11 @@ function NewPurchaseDialog({
                   form.delivery_location === 'retirada'
                     ? 'Digite o endereço de retirada'
                     : form.delivery_location
-                      ? 'Endereço preenchido automaticamente'
-                      : 'Selecione o local acima'
+                      ? 'Endereço preenchido automaticamente — você pode editar se necessário'
+                      : 'Selecione o local acima ou digite o endereço'
                 }
                 value={form.delivery_address}
                 onChange={(e) => set('delivery_address', e.target.value)}
-                disabled={!form.delivery_location}
                 className="h-9"
               />
             </div>
@@ -845,9 +850,26 @@ export default function CalendarioCompras() {
     queryKey: ['all-projects-for-select'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('projects').select('id, name, address, bairro, cep').order('name');
+        .from('projects')
+        .select('id, name, address, bairro, cep, project_customers(customer_name)')
+        .order('name');
       if (error) throw error;
-      return (data || []) as { id: string; name: string; address: string | null; bairro: string | null; cep: string | null }[];
+      type Row = {
+        id: string;
+        name: string;
+        address: string | null;
+        bairro: string | null;
+        cep: string | null;
+        project_customers?: { customer_name: string | null }[] | null;
+      };
+      return (data || []).map((p: Row) => ({
+        id: p.id,
+        name: p.name,
+        address: p.address,
+        bairro: p.bairro,
+        cep: p.cep,
+        customer_name: p.project_customers?.[0]?.customer_name?.trim() || null,
+      })) as { id: string; name: string; address: string | null; bairro: string | null; cep: string | null; customer_name: string | null }[];
     },
     staleTime: 120_000,
   });
