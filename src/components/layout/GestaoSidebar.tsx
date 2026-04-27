@@ -15,6 +15,7 @@ import {
   Search,
   Package,
   ArrowUpFromLine,
+  History,
   LucideIcon,
 } from "lucide-react";
 import {
