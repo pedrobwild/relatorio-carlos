@@ -71,70 +71,73 @@ export function combineDateAndTimeISO(date: Date, time: string): string {
 }
 
 /**
- * Apply a `dd/MM/yyyy` mask to free-form input. Strips non-digits, then
- * inserts slashes after the day and month positions. Designed for
- * `onChange` handlers, so the cursor advances as the user types digits.
- *
- * Examples: `"23042025"` → `"23/04/2025"`, `"2304"` → `"23/04"`.
+ * Apply a `dd/MM/yyyy` mask while the user types. Strips non-digits, caps
+ * at 8 digits and inserts the slashes at positions 2 and 4. Safe to call
+ * on every keystroke — does not throw on partial input.
  */
-export function maskBRDate(input: string): string {
-  const digits = (input ?? '').replace(/\D/g, '').slice(0, 8);
-  const dd = digits.slice(0, 2);
-  const mm = digits.slice(2, 4);
-  const yyyy = digits.slice(4, 8);
-  if (digits.length <= 2) return dd;
-  if (digits.length <= 4) return `${dd}/${mm}`;
-  return `${dd}/${mm}/${yyyy}`;
+export function maskBRDate(input: string | null | undefined): string {
+  if (!input) return '';
+  const digits = String(input).replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
 /**
- * Parse a flexible Brazilian / ISO date string into a canonical
- * `yyyy-MM-dd` (Postgres `date` shape) without timezone drift. Accepts:
- *   - `dd/MM/yyyy` and `dd-MM-yyyy` (Brazilian human input)
- *   - `dd/MM/yy`   (assumes 20yy)
- *   - `yyyy-MM-dd` (already canonical — validated and returned as-is)
+ * Parse a date string in flexible Brazilian formats and return the
+ * canonical ISO `yyyy-MM-dd` representation. Returns `null` for empty,
+ * malformed, or calendar-invalid inputs (e.g. `31/02/2025`).
  *
- * Returns `null` for empty input or values that don't represent a real
- * calendar date (e.g. 31/02/2025). Use this when the source is a free
- * text input — pickers should pass Date objects to `toIsoDateSP`.
+ * Accepted shapes:
+ *   - `dd/MM/yyyy` and `dd/MM/yy`
+ *   - `dd-MM-yyyy` and `dd-MM-yy`
+ *   - `dd.MM.yyyy` and `dd.MM.yy`
+ *   - `yyyy-MM-dd` (ISO calendar date)
+ *
+ * Two-digit years are expanded as `20yy`.
  */
 export function parseFlexibleBRDate(input: string | null | undefined): string | null {
   if (input == null) return null;
-  const trimmed = String(input).trim();
-  if (!trimmed) return null;
+  const value = String(input).trim();
+  if (!value) return null;
 
-  // Already canonical yyyy-MM-dd
-  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  let day: number | undefined;
+  let month: number | undefined;
+  let year: number | undefined;
+
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (isoMatch) {
-    const [, y, m, d] = isoMatch;
-    return isValidYMD(+y, +m, +d) ? `${y}-${m}-${d}` : null;
+    year = Number(isoMatch[1]);
+    month = Number(isoMatch[2]);
+    day = Number(isoMatch[3]);
+  } else {
+    const brMatch = /^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2}|\d{4})$/.exec(value);
+    if (!brMatch) return null;
+    day = Number(brMatch[1]);
+    month = Number(brMatch[2]);
+    year = Number(brMatch[3]);
+    if (brMatch[3].length === 2) year = 2000 + year;
   }
 
-  // dd/MM/yyyy or dd-MM-yyyy (with optional 2-digit year)
-  const brMatch = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/);
-  if (brMatch) {
-    const [, ds, ms, ys] = brMatch;
-    const d = +ds;
-    const m = +ms;
-    const y = ys.length === 2 ? 2000 + +ys : +ys;
-    if (!isValidYMD(y, m, d)) return null;
-    return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  if (!day || !month || !year) return null;
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 31) return null;
+  if (year < 1900 || year > 2999) return null;
+
+  // Validate against the actual calendar (rejects 31/02, 31/04, 29/02 in non-leap).
+  const probe = new Date(year, month - 1, day);
+  if (
+    probe.getFullYear() !== year ||
+    probe.getMonth() !== month - 1 ||
+    probe.getDate() !== day
+  ) {
+    return null;
   }
 
-  return null;
-}
-
-function isValidYMD(y: number, m: number, d: number): boolean {
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return false;
-  if (y < 1900 || y > 2100) return false;
-  if (m < 1 || m > 12) return false;
-  if (d < 1 || d > 31) return false;
-  // Use UTC to avoid TZ rollovers; we only validate calendar arithmetic.
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+  const mm = String(month).padStart(2, '0');
+  const dd = String(day).padStart(2, '0');
+  return `${year}-${mm}-${dd}`;
 }
 
 /** Re-export for convenience so callers don't need a second import. */
 export { parseISO, formatFn as format, parseFn as parse };
-
-
