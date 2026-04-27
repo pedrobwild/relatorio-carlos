@@ -1124,7 +1124,7 @@ export default function CalendarioCompras() {
                             {expanded && hasDetails && (
                               <TableRow className="bg-muted/10 hover:bg-muted/10">
                                 <TableCell colSpan={10} className="p-0">
-                                  <PurchaseRowDetail p={p} />
+                                  <PurchaseRowDetail p={p} onUpdateField={handleUpdateField} />
                                 </TableCell>
                               </TableRow>
                             )}
