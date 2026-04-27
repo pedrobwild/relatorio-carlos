@@ -129,7 +129,12 @@ export function MaskedDateField({
         <AutosaveStatusIcon state={saveState} />
       </span>
       {error && (
-        <p role="alert" className="mt-1 text-[11px] text-destructive">
+        <p
+          id={errorId}
+          role="alert"
+          aria-live="polite"
+          className="mt-1 text-sm font-medium text-destructive"
+        >
           {error}
         </p>
       )}
