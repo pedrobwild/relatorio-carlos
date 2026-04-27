@@ -352,6 +352,10 @@ interface NewPurchaseForm {
   unit: string;
   description: string;
   notes: string;
+  /** Linha digitável / código do boleto. Salvo em `boleto_code`. */
+  boleto_code: string;
+  /** Data de vencimento do boleto. Salvo em `payment_due_date`. */
+  payment_due_date: Date | undefined;
 }
 
 const EMPTY_FORM: NewPurchaseForm = {
@@ -365,6 +369,8 @@ const EMPTY_FORM: NewPurchaseForm = {
   unit: '',
   description: '',
   notes: '',
+  boleto_code: '',
+  payment_due_date: undefined,
 };
 
 function NewPurchaseDialog({
@@ -382,6 +388,7 @@ function NewPurchaseDialog({
   const [form, setForm] = useState<NewPurchaseForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [dueDateOpen, setDueDateOpen] = useState(false);
 
   useEffect(() => { if (open) setForm(EMPTY_FORM); }, [open]);
 
@@ -434,6 +441,9 @@ function NewPurchaseDialog({
         ? format(planned, 'yyyy-MM-dd')
         : format(addDays(new Date(), 7), 'yyyy-MM-dd');
 
+      const dueDateValid = form.payment_due_date instanceof Date && isValid(form.payment_due_date);
+      const boletoCodeTrimmed = form.boleto_code.trim();
+
       const payload: ProjectPurchaseInsert = {
         project_id: form.project_id,
         created_by: user.id,
@@ -448,6 +458,11 @@ function NewPurchaseDialog({
         description: form.description.trim() || null,
         notes: form.notes.trim() || null,
         status: 'pending',
+        // Pagamento — boleto opcional. Se houver código ou vencimento informados,
+        // marcamos `payment_method` como 'boleto' para consistência com a coluna de Pagamento.
+        boleto_code: boletoCodeTrimmed || null,
+        payment_due_date: dueDateValid ? format(form.payment_due_date as Date, 'yyyy-MM-dd') : null,
+        payment_method: boletoCodeTrimmed || dueDateValid ? 'boleto' : null,
       };
       const { error } = await supabase.from('project_purchases').insert(payload);
       if (error) throw error;
@@ -546,6 +561,60 @@ function NewPurchaseDialog({
                   locale={ptBR} initialFocus className="p-3 pointer-events-auto" />
               </PopoverContent>
             </Popover>
+          </div>
+
+          {/* Boleto — opcional. Mantém paridade com a coluna "Pagamento" da listagem. */}
+          <div className="grid gap-2 rounded-md border border-dashed border-border/70 bg-muted/20 p-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Boleto (opcional)</Label>
+              <span className="text-[11px] text-muted-foreground">
+                Preencha se já possuir o boleto deste fornecedor
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="boleto_code" className="text-xs text-muted-foreground">
+                  Código / linha digitável
+                </Label>
+                <Input
+                  id="boleto_code"
+                  placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+                  value={form.boleto_code}
+                  onChange={(e) => set('boleto_code', e.target.value)}
+                  className="h-9 font-mono text-xs"
+                  inputMode="numeric"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label className="text-xs text-muted-foreground">Vencimento</Label>
+                <Popover open={dueDateOpen} onOpenChange={setDueDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full h-9 justify-start font-normal text-sm',
+                        !form.payment_due_date && 'text-muted-foreground',
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {form.payment_due_date
+                        ? format(form.payment_due_date, 'dd/MM/yyyy', { locale: ptBR })
+                        : 'Selecionar…'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-[300]" align="start">
+                    <CalendarPicker
+                      mode="single"
+                      selected={form.payment_due_date}
+                      onSelect={(d) => { set('payment_due_date', d); setDueDateOpen(false); }}
+                      locale={ptBR}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
           </div>
 
           {/* Descrição + Observações */}
