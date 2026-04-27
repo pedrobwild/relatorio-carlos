@@ -38,6 +38,7 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { ObraCard } from './obras/ObraCard';
 import { statusColors, statusLabels } from './obras/obraCardUtils';
 import { ObraExpandedRow } from './obras/ObraExpandedRow';
