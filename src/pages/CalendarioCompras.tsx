@@ -39,6 +39,26 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
+import { parseFlexibleBRDate } from '@/lib/dates';
+
+/**
+ * Campos `date` da tabela `project_purchases` que aceitam edição livre via
+ * `handleUpdateField`. Usados como camada de defesa: qualquer valor que
+ * chegue por estes campos é normalizado por `parseFlexibleBRDate` antes de
+ * ir ao banco. Mantenha em sincronia com o schema do Supabase.
+ */
+const PURCHASE_DATE_FIELDS = [
+  'required_by_date',
+  'planned_purchase_date',
+  'order_date',
+  'expected_delivery_date',
+  'actual_delivery_date',
+  'start_date',
+  'end_date',
+  'stock_entry_date',
+  'stock_exit_date',
+  'payment_due_date',
+] as const;
 
 /**
  * Payload tipado para INSERT em `project_purchases`.
@@ -731,14 +751,27 @@ export default function CalendarioCompras() {
 
   const updateDateField = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: 'planned_purchase_date' | 'payment_due_date'; value: string | null }) => {
-      const { error } = await supabase.from('project_purchases').update({ [field]: value }).eq('id', id);
+      let normalized: string | null = null;
+      if (value && value.trim()) {
+        const iso = parseFlexibleBRDate(value.trim());
+        if (!iso) throw new Error('INVALID_DATE');
+        normalized = iso;
+      }
+      const { error } = await supabase.from('project_purchases').update({ [field]: normalized }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
       toast.success(vars.field === 'planned_purchase_date' ? 'Data da compra atualizada' : 'Data de pagamento atualizada');
     },
-    onError: (e) => { console.error(e); toast.error('Erro ao atualizar data'); },
+    onError: (e: Error) => {
+      console.error(e);
+      if (e?.message === 'INVALID_DATE') {
+        toast.error('Data inválida. Use o formato dd/mm/aaaa.');
+      } else {
+        toast.error('Erro ao atualizar data');
+      }
+    },
   });
 
   // Mutação genérica para campos do detalhe colapsável (forma de pagamento,
@@ -754,12 +787,20 @@ export default function CalendarioCompras() {
         if (typeof updateValue === 'number' && isNaN(updateValue)) updateValue = null;
       }
 
-      if (
-        ['required_by_date', 'planned_purchase_date', 'order_date', 'expected_delivery_date',
-         'actual_delivery_date', 'start_date', 'end_date', 'stock_entry_date', 'stock_exit_date',
-         'payment_due_date'].includes(field)
-      ) {
-        updateValue = value && value.trim() ? value : null;
+      if ((PURCHASE_DATE_FIELDS as readonly string[]).includes(field)) {
+        const trimmed = value?.trim();
+        if (!trimmed) {
+          updateValue = null;
+        } else {
+          // Aceita ISO `yyyy-MM-dd`, `dd/MM/yyyy`, `dd-MM-yy`, etc.
+          // Rejeita datas inválidas (31/02, 29/02 fora de ano bissexto, etc.)
+          // antes de chegar ao banco — mensagem ao usuário tratada no caller.
+          const iso = parseFlexibleBRDate(trimmed);
+          if (!iso) {
+            throw new Error('INVALID_DATE');
+          }
+          updateValue = iso;
+        }
       }
 
       // Trata "none" do select de forma de pagamento como limpeza do campo
@@ -776,7 +817,14 @@ export default function CalendarioCompras() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
     },
-    onError: (e) => { console.error(e); toast.error('Erro ao salvar alteração'); },
+    onError: (e: Error) => {
+      console.error(e);
+      if (e?.message === 'INVALID_DATE') {
+        toast.error('Data inválida. Use o formato dd/mm/aaaa.');
+      } else {
+        toast.error('Erro ao salvar alteração');
+      }
+    },
   });
 
   const handleUpdateField = (id: string, field: string, value: string | null) => {
