@@ -376,7 +376,14 @@ interface NewPurchaseForm {
   boleto_code: string;
   /** Data de vencimento do boleto. Salvo em `payment_due_date`. */
   payment_due_date: Date | undefined;
+  /** Local de entrega: 'escritorio' | 'obra' | 'retirada'. Salvo em `delivery_location`. */
+  delivery_location: 'escritorio' | 'obra' | 'retirada' | '';
+  /** Endereço completo de entrega. Salvo em `delivery_address`. */
+  delivery_address: string;
 }
+
+/** Endereço fixo do escritório BWild — usado quando `delivery_location === 'escritorio'`. */
+const ESCRITORIO_ADDRESS = 'Rua Álvaro Rodrigues, 975';
 
 const EMPTY_FORM: NewPurchaseForm = {
   project_id: '',
@@ -391,6 +398,8 @@ const EMPTY_FORM: NewPurchaseForm = {
   notes: '',
   boleto_code: '',
   payment_due_date: undefined,
+  delivery_location: '',
+  delivery_address: '',
 };
 
 function NewPurchaseDialog({
@@ -401,7 +410,7 @@ function NewPurchaseDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  projects: { id: string; name: string }[];
+  projects: { id: string; name: string; address: string | null; bairro: string | null; cep: string | null }[];
   onCreated: () => void;
 }) {
   const { user } = useAuth();
@@ -414,6 +423,57 @@ function NewPurchaseDialog({
 
   const set = (field: keyof NewPurchaseForm, value: unknown) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  /**
+   * Compõe o endereço completo de uma obra a partir das colunas `address`,
+   * `bairro` e `cep`. Usado para auto-preencher o campo `delivery_address`
+   * quando o usuário escolhe "Obra" como local de entrega.
+   */
+  const buildProjectAddress = (projectId: string): string => {
+    const proj = projects.find((p) => p.id === projectId);
+    if (!proj) return '';
+    const parts = [proj.address, proj.bairro, proj.cep].filter((s) => !!s && s.trim().length > 0);
+    return parts.join(' — ');
+  };
+
+  /**
+   * Atualiza o local de entrega e auto-preenche o campo de endereço:
+   * - escritório → endereço fixo BWild
+   * - obra       → endereço cadastrado da obra selecionada
+   * - retirada   → limpa para o usuário digitar manualmente
+   */
+  const handleDeliveryLocationChange = (loc: NewPurchaseForm['delivery_location']) => {
+    setForm((prev) => {
+      let address = prev.delivery_address;
+      if (loc === 'escritorio') {
+        address = ESCRITORIO_ADDRESS;
+      } else if (loc === 'obra') {
+        address = buildProjectAddress(prev.project_id) || prev.delivery_address;
+      } else if (loc === 'retirada') {
+        // Campo livre — limpa apenas se ainda estiver com o endereço auto-preenchido
+        // de outro modo, para não apagar texto digitado manualmente pelo usuário.
+        if (prev.delivery_address === ESCRITORIO_ADDRESS || prev.delivery_address === buildProjectAddress(prev.project_id)) {
+          address = '';
+        }
+      }
+      return { ...prev, delivery_location: loc, delivery_address: address };
+    });
+  };
+
+  /**
+   * Quando a obra muda e o local já é "obra", reatualiza o endereço.
+   */
+  const handleProjectChange = (projectId: string) => {
+    setForm((prev) => {
+      const next = { ...prev, project_id: projectId };
+      if (prev.delivery_location === 'obra') {
+        const newAddr = projects.find((p) => p.id === projectId);
+        const parts = newAddr ? [newAddr.address, newAddr.bairro, newAddr.cep].filter((s) => !!s && s.trim().length > 0) : [];
+        next.delivery_address = parts.join(' — ');
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = async () => {
     // Validações de campos obrigatórios — mensagens específicas para cada caso
@@ -483,6 +543,10 @@ function NewPurchaseDialog({
         boleto_code: boletoCodeTrimmed || null,
         payment_due_date: dueDateValid ? format(form.payment_due_date as Date, 'yyyy-MM-dd') : null,
         payment_method: boletoCodeTrimmed || dueDateValid ? 'boleto' : null,
+        // Local e endereço de entrega — opcional. Constraint do banco aceita
+        // 'obra' | 'estoque' | 'escritorio' | 'retirada'.
+        delivery_location: form.delivery_location || null,
+        delivery_address: form.delivery_address.trim() || null,
       };
       const { error } = await supabase.from('project_purchases').insert(payload);
       if (error) throw error;
@@ -513,7 +577,7 @@ function NewPurchaseDialog({
           {/* Obra — obrigatório */}
           <div className="grid gap-1.5">
             <Label className="text-sm font-medium">Obra <span className="text-destructive">*</span></Label>
-            <Select value={form.project_id} onValueChange={(v) => set('project_id', v)}>
+            <Select value={form.project_id} onValueChange={handleProjectChange}>
               <SelectTrigger className={cn('h-9', !form.project_id && 'border-destructive/50')}>
                 <SelectValue placeholder="Selecionar obra…" />
               </SelectTrigger>
@@ -637,6 +701,63 @@ function NewPurchaseDialog({
             </div>
           </div>
 
+          {/* Local de entrega — escritório (auto), obra (auto a partir do cadastro) ou retirada (livre) */}
+          <div className="grid gap-2 rounded-md border border-dashed border-border/70 bg-muted/20 p-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Local de entrega</Label>
+              <span className="text-[11px] text-muted-foreground">
+                Define o endereço para onde o item será entregue
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { value: 'escritorio', label: 'Escritório', hint: 'Rua Álvaro Rodrigues, 975' },
+                { value: 'obra',       label: 'Obra',       hint: 'Endereço cadastrado da obra' },
+                { value: 'retirada',   label: 'Retirada',   hint: 'Endereço livre' },
+              ] as const).map((opt) => {
+                const active = form.delivery_location === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleDeliveryLocationChange(opt.value)}
+                    className={cn(
+                      'flex flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left transition-colors',
+                      active
+                        ? 'bg-primary/10 text-primary border-primary/40 ring-1 ring-primary/20'
+                        : 'bg-background text-foreground border-border hover:bg-accent/40',
+                    )}
+                  >
+                    <span className="text-sm font-medium">{opt.label}</span>
+                    <span className="text-[11px] text-muted-foreground">{opt.hint}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="delivery_address" className="text-xs text-muted-foreground">
+                Endereço de entrega
+                {form.delivery_location === 'obra' && !form.project_id && (
+                  <span className="ml-1 text-destructive">— selecione a obra para preencher automaticamente</span>
+                )}
+              </Label>
+              <Input
+                id="delivery_address"
+                placeholder={
+                  form.delivery_location === 'retirada'
+                    ? 'Digite o endereço de retirada'
+                    : form.delivery_location
+                      ? 'Endereço preenchido automaticamente'
+                      : 'Selecione o local acima'
+                }
+                value={form.delivery_address}
+                onChange={(e) => set('delivery_address', e.target.value)}
+                disabled={!form.delivery_location}
+                className="h-9"
+              />
+            </div>
+          </div>
+
           {/* Descrição + Observações */}
           <div className="grid gap-1.5">
             <Label className="text-sm">Descrição técnica</Label>
@@ -724,9 +845,9 @@ export default function CalendarioCompras() {
     queryKey: ['all-projects-for-select'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('projects').select('id, name').order('name');
+        .from('projects').select('id, name, address, bairro, cep').order('name');
       if (error) throw error;
-      return (data || []) as { id: string; name: string }[];
+      return (data || []) as { id: string; name: string; address: string | null; bairro: string | null; cep: string | null }[];
     },
     staleTime: 120_000,
   });
