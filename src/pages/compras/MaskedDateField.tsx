@@ -97,7 +97,7 @@ export function MaskedDateField({
     // Fallback: aplica a máscara progressiva e aguarda mais digitação/blur.
     const masked = maskBRDate(pasted);
     setText(masked);
-    setError(masked.length === 10 ? 'Data inválida' : null);
+    setError(masked.length === 10 ? INVALID_DATE_MESSAGE : null);
   };
 
   return (
