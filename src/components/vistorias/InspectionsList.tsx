@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import type { Inspection } from '@/hooks/useInspections';
 import type { NonConformity } from '@/hooks/useNonConformities';
 import { INSPECTION_TYPES, getInspectionTypeConfig, type InspectionType } from './inspectionConstants';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 type InspectionStatus = 'draft' | 'in_progress' | 'completed';
 
