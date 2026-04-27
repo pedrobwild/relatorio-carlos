@@ -49,12 +49,7 @@ export function useTemplatesTabState() {
       list = list.filter((t) => (t.category || 'geral') === filterCategory);
     }
     if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          t.description?.toLowerCase().includes(q)
-      );
+      list = list.filter((t) => matchesSearch(search, [t.name, t.description]));
     }
     return [...list].sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
