@@ -112,8 +112,35 @@ export function MaskedDateField({
         aria-invalid={!!error}
         aria-describedby={error ? errorId : undefined}
         onChange={(e) => {
-          setText(maskBRDate(e.target.value));
+          const input = e.target;
+          const rawBefore = input.value;
+          const caret = input.selectionStart ?? rawBefore.length;
+          // Conta dígitos à esquerda do caret no valor digitado bruto.
+          const digitsBeforeCaret = rawBefore.slice(0, caret).replace(/\D/g, '').length;
+          const masked = maskBRDate(rawBefore);
+          setText(masked);
           if (error) setError(null);
+          // Reposiciona o caret após o N-ésimo dígito do valor mascarado,
+          // pulando as barras inseridas pela máscara. Isso evita o "salto"
+          // quando o usuário edita no meio do campo.
+          requestAnimationFrame(() => {
+            if (document.activeElement !== input) return;
+            let pos = 0;
+            let seen = 0;
+            while (pos < masked.length && seen < digitsBeforeCaret) {
+              if (/\d/.test(masked[pos])) seen++;
+              pos++;
+            }
+            // Se o caret pousar imediatamente antes de uma barra, avança
+            // para depois dela — comportamento esperado ao acabar de
+            // preencher dia ou mês.
+            while (pos < masked.length && masked[pos] === '/') pos++;
+            try {
+              input.setSelectionRange(pos, pos);
+            } catch {
+              /* alguns browsers lançam para inputs não focáveis */
+            }
+          });
         }}
         onPaste={handlePaste}
         onBlur={(e) => void commit(e.target.value)}
