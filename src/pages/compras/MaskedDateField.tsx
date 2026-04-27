@@ -66,7 +66,7 @@ export function MaskedDateField({
     // Apagar = limpar o campo no banco
     if (!trimmed) {
       setInvalid(false);
-      runSave(null, async (v) => onSave(v));
+      runSave('', async (v) => onSave(v ? v : null));
       return;
     }
     const iso = parseFlexibleBRDate(trimmed);
