@@ -751,7 +751,7 @@ function NewPurchaseDialog({
                 id="delivery_address"
                 placeholder={
                   form.delivery_location === 'retirada'
-                    ? 'Digite o endereço de retirada'
+                    ? 'Ex: Rua das Flores, 123 — Apto 45 — Vila Mariana'
                     : form.delivery_location
                       ? 'Endereço preenchido automaticamente — você pode editar se necessário'
                       : 'Selecione o local acima ou digite o endereço'
@@ -759,7 +759,23 @@ function NewPurchaseDialog({
                 value={form.delivery_address}
                 onChange={(e) => set('delivery_address', e.target.value)}
                 className="h-9"
+                aria-describedby={form.delivery_location === 'retirada' ? 'delivery_address_hint' : undefined}
+                autoComplete="street-address"
+                list={form.delivery_location === 'retirada' ? 'delivery_address_suggestions' : undefined}
               />
+              {form.delivery_location === 'retirada' && (
+                <>
+                  <p id="delivery_address_hint" className="text-[11px] text-muted-foreground leading-snug">
+                    Formato sugerido: <span className="font-medium text-foreground/80">Rua, número, complemento, bairro</span>
+                    {' '}— ex.: <span className="italic">Av. Paulista, 1578 — Sala 201 — Bela Vista</span>
+                  </p>
+                  <datalist id="delivery_address_suggestions">
+                    <option value="Rua , nº  — Complemento  — Bairro " />
+                    <option value="Av. , nº  — Sala  — Bairro " />
+                    <option value="Rua Álvaro Rodrigues, 975 — Brooklin" />
+                  </datalist>
+                </>
+              )}
             </div>
           </div>
 
