@@ -81,13 +81,9 @@ export function ProjectSlimHeader() {
 
   /** Group other projects by status, filtered by search */
   const groupedProjects = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    const filtered = q
-      ? otherProjects.filter(
-          (p) =>
-            p.name.toLowerCase().includes(q) ||
-            p.unit_name?.toLowerCase().includes(q) ||
-            p.customer_name?.toLowerCase().includes(q)
+    const filtered = searchQuery.trim()
+      ? otherProjects.filter((p) =>
+          matchesSearch(searchQuery, [p.name, p.unit_name, p.customer_name]),
         )
       : otherProjects;
 
