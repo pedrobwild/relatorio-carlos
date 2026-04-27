@@ -11,6 +11,7 @@ import { Building2, Calendar, User, Flag, Search, LayoutList, Columns3, ChevronU
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
