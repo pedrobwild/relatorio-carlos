@@ -64,6 +64,8 @@ import {
 } from '@/hooks/useCsTicketHistory';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { CsTicketDialog } from '@/components/cs/CsTicketDialog';
+import { CsTicketActionsPanel } from '@/components/cs/CsTicketActionsPanel';
+import { formatDuration } from '@/hooks/useCsTicketActions';
 
 // ----- helpers visuais (espelham CsTickets) -----
 
