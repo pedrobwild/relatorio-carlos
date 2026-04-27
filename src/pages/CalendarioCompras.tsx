@@ -523,6 +523,10 @@ function NewPurchaseDialog({
         boleto_code: boletoCodeTrimmed || null,
         payment_due_date: dueDateValid ? format(form.payment_due_date as Date, 'yyyy-MM-dd') : null,
         payment_method: boletoCodeTrimmed || dueDateValid ? 'boleto' : null,
+        // Local e endereço de entrega — opcional. Constraint do banco aceita
+        // 'obra' | 'estoque' | 'escritorio' | 'retirada'.
+        delivery_location: form.delivery_location || null,
+        delivery_address: form.delivery_address.trim() || null,
       };
       const { error } = await supabase.from('project_purchases').insert(payload);
       if (error) throw error;
