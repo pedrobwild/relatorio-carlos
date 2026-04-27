@@ -82,13 +82,14 @@ export default function NaoConformidadesGlobal() {
     }
 
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(nc =>
-        nc.title.toLowerCase().includes(q) ||
-        nc.description?.toLowerCase().includes(q) ||
-        (nc.category || '').toLowerCase().includes(q) ||
-        (nc.responsible_user_name || '').toLowerCase().includes(q) ||
-        (nc.project_name || '').toLowerCase().includes(q)
+      result = result.filter((nc) =>
+        matchesSearch(searchQuery, [
+          nc.title,
+          nc.description,
+          nc.category,
+          nc.responsible_user_name,
+          nc.project_name,
+        ]),
       );
     }
 
