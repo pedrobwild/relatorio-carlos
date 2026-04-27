@@ -234,17 +234,13 @@ export default function Fornecedores() {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
     if (categoryFilter !== "all" && s.supplier_type !== categoryFilter) return false;
     if (subcategoryFilter !== "all" && s.supplier_subcategory !== subcategoryFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        s.nome.toLowerCase().includes(q) ||
-        s.produtos_servicos?.toLowerCase().includes(q) ||
-        s.cnpj_cpf?.toLowerCase().includes(q) ||
-        s.cidade?.toLowerCase().includes(q) ||
-        s.supplier_subcategory?.toLowerCase().includes(q)
-      );
-    }
-    return true;
+    return matchesSearch(search, [
+      s.nome,
+      s.produtos_servicos,
+      s.cnpj_cpf,
+      s.cidade,
+      s.supplier_subcategory,
+    ]);
   });
 
   const renderStars = (rating: number | null) => {
