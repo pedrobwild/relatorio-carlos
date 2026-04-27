@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ClipboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type ClipboardEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { formatBR, maskBRDate, parseFlexibleBRDate } from '@/lib/dates';
