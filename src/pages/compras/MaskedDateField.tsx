@@ -24,6 +24,8 @@ interface MaskedDateFieldProps {
  *   exigir blur.
  * - Em blur, valida e persiste; entradas inválidas mostram erro inline.
  */
+const INVALID_DATE_MESSAGE = 'Data inválida. Use o formato dd/mm/aaaa.';
+
 export function MaskedDateField({
   value,
   onSave,
@@ -35,6 +37,7 @@ export function MaskedDateField({
   const [error, setError] = useState<string | null>(null);
   const lastCommittedRef = useRef<string | null>(value ?? null);
   const { saveState, runSave } = useFieldAutosave(value ?? '');
+  const errorId = useId();
 
   // Mantém o input em sincronia quando o valor canônico muda externamente.
   useEffect(() => {
