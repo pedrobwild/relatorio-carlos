@@ -14,6 +14,7 @@ import { AtividadesMobileListView } from '@/components/atividades-obra/Atividade
 import { AtividadeFormDialog } from '@/components/atividades-obra/AtividadeFormDialog';
 import { cn } from '@/lib/utils';
 import { isTaskOverdue } from '@/lib/taskUtils';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 export default function AtividadesObra() {
   const { projectId } = useProjectNavigation();
@@ -43,11 +44,7 @@ export default function AtividadesObra() {
     else result = result.filter(t => t.responsible_user_id === filterResponsible);
 
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(t =>
-        t.title.toLowerCase().includes(q) ||
-        (t.description && t.description.toLowerCase().includes(q))
-      );
+      result = result.filter((t) => matchesSearch(searchQuery, [t.title, t.description]));
     }
     return result;
   }, [tasks, filterResponsible, searchQuery]);

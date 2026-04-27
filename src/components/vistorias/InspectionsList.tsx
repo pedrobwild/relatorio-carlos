@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import type { Inspection } from '@/hooks/useInspections';
 import type { NonConformity } from '@/hooks/useNonConformities';
 import { INSPECTION_TYPES, getInspectionTypeConfig, type InspectionType } from './inspectionConstants';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 type InspectionStatus = 'draft' | 'in_progress' | 'completed';
 
@@ -43,10 +44,8 @@ export function InspectionsList({ inspections, nonConformities = [], searchQuery
     if (filterStatus) result = result.filter(i => i.status === filterStatus);
     if (filterTypes.length > 0) result = result.filter(i => filterTypes.includes((i.inspection_type || 'rotina') as InspectionType));
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(i =>
-        i.notes?.toLowerCase().includes(q) ||
-        i.inspection_date.includes(q)
+      result = result.filter((i) =>
+        matchesSearch(searchQuery, [i.notes, i.inspection_date]),
       );
     }
     return result;

@@ -64,6 +64,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
@@ -213,16 +214,7 @@ export default function CsOperacional() {
     projectFilter !== ALL ||
     responsibleFilter !== ALL;
 
-  // Normaliza string para busca case+accent-insensitive (ex.: "João" === "joao").
-  const normalize = (s: string) =>
-    s
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
-
   const filtered = useMemo(() => {
-    const q = normalize(search);
     return tickets.filter((t) => {
       if (statusFilter !== ALL && t.status !== statusFilter) return false;
       if (severityFilter !== ALL && t.severity !== severityFilter) return false;
@@ -234,18 +226,17 @@ export default function CsOperacional() {
           return false;
         }
       }
-      if (q) {
-        const hay = normalize(
-          [
-            t.situation,
-            t.description ?? '',
-            t.action_plan ?? '',
-            t.project_name ?? '',
-            t.customer_name ?? '',
-            t.responsible_name ?? '',
-          ].join(' '),
-        );
-        if (!hay.includes(q)) return false;
+      if (
+        !matchesSearch(search, [
+          t.situation,
+          t.description,
+          t.action_plan,
+          t.project_name,
+          t.customer_name,
+          t.responsible_name,
+        ])
+      ) {
+        return false;
       }
       return true;
     });

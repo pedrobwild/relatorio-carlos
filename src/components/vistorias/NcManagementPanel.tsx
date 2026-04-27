@@ -26,6 +26,7 @@ import { NcSummaryCards, type NcFilter } from './NcSummaryCards';
 import { NcTimelineChart } from './NcTimelineChart';
 import { NcConsolidatedReport } from './NcConsolidatedReport';
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 // ── Status/Severity configs ──
 
@@ -106,12 +107,13 @@ export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCr
 
     // Search
     if (effectiveSearch.trim()) {
-      const q = effectiveSearch.toLowerCase();
-      result = result.filter(nc =>
-        nc.title.toLowerCase().includes(q) ||
-        nc.description?.toLowerCase().includes(q) ||
-        (nc.category || '').toLowerCase().includes(q) ||
-        (nc.responsible_user_name || '').toLowerCase().includes(q)
+      result = result.filter((nc) =>
+        matchesSearch(effectiveSearch, [
+          nc.title,
+          nc.description,
+          nc.category,
+          nc.responsible_user_name,
+        ]),
       );
     }
 

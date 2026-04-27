@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { ProjectSubNav } from '@/components/layout/ProjectSubNav';
 import { FormalizacaoCard, FormalizacaoSkeleton } from '@/components/tabs/formalizacoes/FormalizacaoCard';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { DesktopSidebar } from '@/components/tabs/formalizacoes/DesktopSidebar';
 import { MobileFormalizacoes } from '@/components/tabs/formalizacoes/MobileFormalizacoes';
 import { Card } from '@/components/ui/card';
@@ -31,7 +32,7 @@ export default function Formalizacoes() {
   const filteredFormalizacoes = formalizacoes?.filter(f => {
     if (activeTab === 'pendentes' && f.status !== 'pending_signatures') return false;
     if (activeTab === 'finalizadas' && f.status !== 'signed') return false;
-    if (searchTerm && !f.title?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (!matchesSearch(searchTerm, [f.title])) return false;
     if (typeFilter !== 'all' && f.type !== typeFilter) return false;
     return true;
   }) || [];

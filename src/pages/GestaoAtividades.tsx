@@ -11,6 +11,7 @@ import { Building2, Calendar, User, Flag, Search, LayoutList, Columns3, ChevronU
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
@@ -125,11 +126,8 @@ export default function GestaoAtividades() {
     }
     if (filterPriority !== 'all') result = result.filter(a => a.priority === filterPriority);
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(a =>
-        a.title.toLowerCase().includes(q) ||
-        a.project_name.toLowerCase().includes(q) ||
-        (a.description && a.description.toLowerCase().includes(q))
+      result = result.filter((a) =>
+        matchesSearch(searchQuery, [a.title, a.project_name, a.description]),
       );
     }
     return result;

@@ -17,6 +17,7 @@ import {
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
 import type { NcFilter } from './NcSummaryCards';
 import { NC_CATEGORIES } from './ncConstants';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 const severityConfig: Record<NcSeverity, { label: string; className: string }> = {
   low: { label: 'Baixa', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
@@ -108,11 +109,8 @@ export function NonConformitiesList({ nonConformities, searchQuery, onSelect, su
 
     // Apply search
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(nc =>
-        nc.title.toLowerCase().includes(q) ||
-        nc.description?.toLowerCase().includes(q) ||
-        ((nc.category || '').toLowerCase().includes(q))
+      result = result.filter((nc) =>
+        matchesSearch(searchQuery, [nc.title, nc.description, nc.category]),
       );
     }
 

@@ -38,6 +38,7 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/activityStatus';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { ObraCard } from './obras/ObraCard';
 import { statusColors, statusLabels } from './obras/obraCardUtils';
 import { ObraExpandedRow } from './obras/ObraExpandedRow';
@@ -71,12 +72,10 @@ export function ObrasTab() {
   }, [projects]);
 
   const filteredProjects = useMemo(() => projects.filter((p: ProjectWithCustomer) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.unit_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesQuery = matchesSearch(searchTerm, [p.name, p.customer_name, p.unit_name]);
     const matchesStatus = !statusFilter || p.status === statusFilter;
     const matchesEngineer = !engineerFilter || p.engineer_user_id === engineerFilter;
-    return matchesSearch && matchesStatus && matchesEngineer;
+    return matchesQuery && matchesStatus && matchesEngineer;
   }), [projects, searchTerm, statusFilter, engineerFilter]);
 
   const { draftCount, activeCount, completedCount, pausedCount } = useMemo(() => ({

@@ -13,6 +13,7 @@ import {
   PRIORITY_LABEL, PRIORITY_TONE,
   getLabel, getTone,
 } from '@/lib/statusTones';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { Search, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -37,15 +38,9 @@ export default function Orcamentos() {
     },
   });
 
-  const filtered = (orcamentos || []).filter((o) => {
-    if (!search) return true;
-    const s = search.toLowerCase();
-    return (
-      o.project_name?.toLowerCase().includes(s) ||
-      o.client_name?.toLowerCase().includes(s) ||
-      o.sequential_code?.toLowerCase().includes(s)
-    );
-  });
+  const filtered = (orcamentos || []).filter((o) =>
+    matchesSearch(search, [o.project_name, o.client_name, o.sequential_code]),
+  );
 
   return (
     <div className="p-4 sm:p-6 space-y-6">

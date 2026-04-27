@@ -14,6 +14,7 @@ import { useAllNonConformities } from '@/hooks/useAllNonConformities';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useCan } from '@/hooks/useCan';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { NonConformity, NcSeverity } from '@/hooks/useNonConformities';
@@ -81,13 +82,14 @@ export default function NaoConformidadesGlobal() {
     }
 
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(nc =>
-        nc.title.toLowerCase().includes(q) ||
-        nc.description?.toLowerCase().includes(q) ||
-        (nc.category || '').toLowerCase().includes(q) ||
-        (nc.responsible_user_name || '').toLowerCase().includes(q) ||
-        (nc.project_name || '').toLowerCase().includes(q)
+      result = result.filter((nc) =>
+        matchesSearch(searchQuery, [
+          nc.title,
+          nc.description,
+          nc.category,
+          nc.responsible_user_name,
+          nc.project_name,
+        ]),
       );
     }
 

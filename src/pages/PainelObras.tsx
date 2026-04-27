@@ -69,6 +69,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   ETAPA_OPTIONS,
@@ -303,12 +304,7 @@ export default function PainelObras() {
   const filtered = useMemo(() => {
     let rows = obras;
     if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      rows = rows.filter(
-        (o) =>
-          o.nome.toLowerCase().includes(q) ||
-          (o.customer_name ?? '').toLowerCase().includes(q),
-      );
+      rows = rows.filter((o) => matchesSearch(search, [o.nome, o.customer_name]));
     }
     if (filterEtapa !== ALL)
       rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));

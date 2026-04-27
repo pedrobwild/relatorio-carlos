@@ -4,6 +4,7 @@ import {
   Quote, Code, Minus, Image,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 export interface SlashCommand {
   id: string;
@@ -26,10 +27,8 @@ export function SlashCommandMenu({ open, onClose, position, commands }: SlashCom
   const [selectedIndex, setSelectedIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const filtered = commands.filter(
-    (c) =>
-      c.label.toLowerCase().includes(search.toLowerCase()) ||
-      c.description.toLowerCase().includes(search.toLowerCase())
+  const filtered = commands.filter((c) =>
+    matchesSearch(search, [c.label, c.description]),
   );
 
   useEffect(() => {

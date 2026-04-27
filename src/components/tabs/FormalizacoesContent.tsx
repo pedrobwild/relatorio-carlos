@@ -13,6 +13,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useCan } from '@/hooks/useCan';
 import { EmptyState } from '@/components/EmptyState';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
@@ -52,7 +53,7 @@ const FormalizacoesContent = () => {
   const filteredFormalizacoes = formalizacoes?.filter(f => {
     if (activeTab === 'pendentes' && f.status !== 'pending_signatures') return false;
     if (activeTab === 'finalizadas' && f.status !== 'signed') return false;
-    if (searchTerm && !f.title?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (!matchesSearch(searchTerm, [f.title])) return false;
     if (typeFilter !== 'all' && f.type !== typeFilter) return false;
     return true;
   }) || [];

@@ -21,18 +21,17 @@ import { RoleSelector } from './users/RoleSelector';
 import { EditUserDialog } from './users/EditUserDialog';
 import { ResetPasswordDialog } from './users/ResetPasswordDialog';
 import { DeleteUserAlert } from './users/DeleteUserAlert';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 export function UsersTab() {
   const { users, loading, error, updateUserRole, updateUserProfile, deleteUser, resetUserPassword, refetch } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | null>(null);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.display_name?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredUsers = users.filter((user) => {
+    const matchesQuery = matchesSearch(searchTerm, [user.email, user.display_name]);
     const matchesRole = !roleFilter || user.role === roleFilter;
-    return matchesSearch && matchesRole;
+    return matchesQuery && matchesRole;
   });
 
   const adminCount = users.filter(u => u.role === 'admin').length;

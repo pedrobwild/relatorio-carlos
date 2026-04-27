@@ -20,6 +20,7 @@ import { DocumentViewer } from '@/components/DocumentViewer';
 import { useFilesQuery, useDeleteFileMutation, useArchiveFileMutation } from '@/hooks/useFilesQuery';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { getSignedUrl, type FileMetadata } from '@/infra/repositories/files.repository';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -179,12 +180,9 @@ export default function Arquivos() {
   // Filtered files
   const filteredFiles = useMemo(() => {
     return files.filter((f) => {
-      const matchesSearch =
-        !searchTerm ||
-        f.original_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        f.category?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesQuery = matchesSearch(searchTerm, [f.original_name, f.category]);
       const matchesProject = !projectFilter || f.project_id === projectFilter;
-      return matchesSearch && matchesProject;
+      return matchesQuery && matchesProject;
     });
   }, [files, searchTerm, projectFilter]);
 
