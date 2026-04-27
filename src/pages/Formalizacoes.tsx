@@ -32,7 +32,7 @@ export default function Formalizacoes() {
   const filteredFormalizacoes = formalizacoes?.filter(f => {
     if (activeTab === 'pendentes' && f.status !== 'pending_signatures') return false;
     if (activeTab === 'finalizadas' && f.status !== 'signed') return false;
-    if (searchTerm && !f.title?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (!matchesSearch(searchTerm, [f.title])) return false;
     if (typeFilter !== 'all' && f.type !== typeFilter) return false;
     return true;
   }) || [];
