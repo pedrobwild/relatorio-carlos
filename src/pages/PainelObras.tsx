@@ -323,6 +323,20 @@ export default function PainelObras() {
         if (!av && !bv) return 0; if (!av) return 1; if (!bv) return -1;
         return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
       });
+    } else {
+      // Ordenação padrão: entrega oficial mais próxima / já atrasada primeiro.
+      // Obras já entregues (com entrega_real) e sem data vão para o final.
+      rows = [...rows].sort((a, b) => {
+        const aDelivered = !!a.entrega_real;
+        const bDelivered = !!b.entrega_real;
+        if (aDelivered !== bDelivered) return aDelivered ? 1 : -1;
+        const av = a.entrega_oficial ?? '';
+        const bv = b.entrega_oficial ?? '';
+        if (!av && !bv) return 0;
+        if (!av) return 1;
+        if (!bv) return -1;
+        return av.localeCompare(bv);
+      });
     }
     return rows;
   }, [obras, search, filterEtapa, filterStatus, filterRelacionamento, sortKey, sortDir]);
