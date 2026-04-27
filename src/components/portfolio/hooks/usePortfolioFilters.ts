@@ -128,13 +128,14 @@ export function usePortfolioFilters(
 
     // Text search
     if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.customer_name?.toLowerCase().includes(q) ||
-        p.unit_name?.toLowerCase().includes(q) ||
-        p.endereco_completo?.toLowerCase().includes(q) ||
-        p.cidade?.toLowerCase().includes(q)
+      result = result.filter((p) =>
+        matchesSearch(search, [
+          p.name,
+          p.customer_name,
+          p.unit_name,
+          p.endereco_completo,
+          p.cidade,
+        ]),
       );
     }
 
