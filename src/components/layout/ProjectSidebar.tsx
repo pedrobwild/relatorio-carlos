@@ -14,6 +14,7 @@ import {
   Map,
   ShoppingCart,
   Package,
+  Boxes,
   
   ClipboardCheck,
   ChevronDown,
@@ -158,6 +159,13 @@ export function ProjectSidebar() {
           icon: Package,
           path: paths.compras,
           disabledInProjectPhase: true,
+        },
+        {
+          label: L("estoque"),
+          icon: Boxes,
+          path: paths.estoque,
+          disabledInProjectPhase: true,
+          staffOnly: true,
         },
         {
           label: L("vistorias"),

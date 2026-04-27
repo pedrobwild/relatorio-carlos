@@ -96,6 +96,17 @@ export const queryKeys = {
   },
 
   // ============================================================================
+  // Stock / Inventário
+  // ============================================================================
+  stock: {
+    all: ['stock'] as const,
+    items: (projectId: string | undefined) =>
+      [...queryKeys.stock.all, 'items', projectId] as const,
+    movements: (projectId: string | undefined, itemId?: string) =>
+      [...queryKeys.stock.all, 'movements', projectId, itemId ?? 'all'] as const,
+  },
+
+  // ============================================================================
   // Pending Items
   // ============================================================================
   pendingItems: {

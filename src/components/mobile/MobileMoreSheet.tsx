@@ -18,6 +18,7 @@ import {
   GanttChartSquare,
   AlertCircle,
   ClipboardList,
+  Boxes,
   Building2,
 } from "lucide-react";
 import {
@@ -72,6 +73,7 @@ export function MobileMoreSheet() {
       items: [
         { label: "Cronograma", icon: GanttChartSquare, to: paths.cronograma, description: "Atividades e prazos" },
         { label: "Compras", icon: ShoppingCart, to: paths.compras, description: "Pedidos e cotações" },
+        { label: "Estoque", icon: Boxes, to: paths.estoque, description: "Materiais, saldo e perdas" },
         { label: "Vistorias & NC", icon: Eye, to: paths.vistorias, description: "Inspeções de qualidade" },
         { label: "Não Conformidades", icon: AlertTriangle, to: paths.naoConformidades, description: "Pendências técnicas" },
         { label: "Atividades", icon: CheckSquare, to: paths.atividades, description: "Tarefas da equipe" },
