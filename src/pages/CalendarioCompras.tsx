@@ -633,6 +633,48 @@ export default function CalendarioCompras() {
     onError: (e) => { console.error(e); toast.error('Erro ao atualizar data'); },
   });
 
+  // Mutação genérica para campos do detalhe colapsável (forma de pagamento,
+  // chave PIX, código do boleto, etc.). Espelha o padrão de `handleUpdateField`
+  // do módulo de Compras: parsing leve de números/datas, normalização de
+  // strings vazias para null e invalidação do cache da listagem.
+  const updateField = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string | null }) => {
+      let updateValue: string | number | null = value;
+
+      if (field === 'estimated_cost' || field === 'actual_cost' || field === 'quantity' || field === 'shipping_cost') {
+        updateValue = value ? parseFloat(value) : null;
+        if (typeof updateValue === 'number' && isNaN(updateValue)) updateValue = null;
+      }
+
+      if (
+        ['required_by_date', 'planned_purchase_date', 'order_date', 'expected_delivery_date',
+         'actual_delivery_date', 'start_date', 'end_date', 'stock_entry_date', 'stock_exit_date',
+         'payment_due_date'].includes(field)
+      ) {
+        updateValue = value && value.trim() ? value : null;
+      }
+
+      // Trata "none" do select de forma de pagamento como limpeza do campo
+      if (field === 'payment_method' && (value === 'none' || value === '')) {
+        updateValue = null;
+      }
+
+      const { error } = await supabase
+        .from('project_purchases')
+        .update({ [field]: updateValue })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+    },
+    onError: (e) => { console.error(e); toast.error('Erro ao salvar alteração'); },
+  });
+
+  const handleUpdateField = (id: string, field: string, value: string | null) => {
+    updateField.mutate({ id, field, value });
+  };
+
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach((p) => map.set(p.project_id, p.project_name));
