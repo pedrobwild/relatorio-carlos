@@ -441,6 +441,9 @@ function NewPurchaseDialog({
         ? format(planned, 'yyyy-MM-dd')
         : format(addDays(new Date(), 7), 'yyyy-MM-dd');
 
+      const dueDateValid = form.payment_due_date instanceof Date && isValid(form.payment_due_date);
+      const boletoCodeTrimmed = form.boleto_code.trim();
+
       const payload: ProjectPurchaseInsert = {
         project_id: form.project_id,
         created_by: user.id,
@@ -455,6 +458,11 @@ function NewPurchaseDialog({
         description: form.description.trim() || null,
         notes: form.notes.trim() || null,
         status: 'pending',
+        // Pagamento — boleto opcional. Se houver código ou vencimento informados,
+        // marcamos `payment_method` como 'boleto' para consistência com a coluna de Pagamento.
+        boleto_code: boletoCodeTrimmed || null,
+        payment_due_date: dueDateValid ? format(form.payment_due_date as Date, 'yyyy-MM-dd') : null,
+        payment_method: boletoCodeTrimmed || dueDateValid ? 'boleto' : null,
       };
       const { error } = await supabase.from('project_purchases').insert(payload);
       if (error) throw error;
