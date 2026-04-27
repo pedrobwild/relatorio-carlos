@@ -20,6 +20,7 @@ import { DocumentViewer } from '@/components/DocumentViewer';
 import { useFilesQuery, useDeleteFileMutation, useArchiveFileMutation } from '@/hooks/useFilesQuery';
 import { useProjectsQuery } from '@/hooks/useProjectsQuery';
 import { getSignedUrl, type FileMetadata } from '@/infra/repositories/files.repository';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
