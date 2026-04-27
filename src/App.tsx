@@ -61,6 +61,7 @@ const PainelObras = lazy(() => import("./pages/PainelObras"));
 const Estoque = lazy(() => import("./pages/gestao/Estoque"));
 const EstoqueSaidas = lazy(() => import("./pages/gestao/EstoqueSaidas"));
 const EstoqueItens = lazy(() => import("./pages/gestao/EstoqueItens"));
+const EstoqueHistorico = lazy(() => import("./pages/gestao/EstoqueHistorico"));
 const Assistente = lazy(() => import("./pages/Assistente"));
 const AssistenteConsultas = lazy(() => import("./pages/AssistenteConsultas"));
 const AssistenteLogs = lazy(() => import("./pages/AssistenteLogs"));
