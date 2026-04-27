@@ -13,6 +13,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useCan } from '@/hooks/useCan';
 import { EmptyState } from '@/components/EmptyState';
 import { useProjectNavigation } from '@/hooks/useProjectNavigation';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { 
   FORMALIZATION_TYPE_LABELS, 
   FORMALIZATION_STATUS_LABELS,
