@@ -804,7 +804,14 @@ export default function CalendarioCompras() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
     },
-    onError: (e) => { console.error(e); toast.error('Erro ao salvar alteração'); },
+    onError: (e: Error) => {
+      console.error(e);
+      if (e?.message === 'INVALID_DATE') {
+        toast.error('Data inválida. Use o formato dd/mm/aaaa.');
+      } else {
+        toast.error('Erro ao salvar alteração');
+      }
+    },
   });
 
   const handleUpdateField = (id: string, field: string, value: string | null) => {
