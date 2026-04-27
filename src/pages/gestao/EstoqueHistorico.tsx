@@ -140,7 +140,7 @@ export default function EstoqueHistorico() {
 
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as Movement[];
+      return (data ?? []) as unknown as Movement[];
     },
   });
 
