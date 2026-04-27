@@ -8,6 +8,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { matchesSearch } from '@/lib/searchNormalize';
 import { applyKpiFilter, type KpiFilterKey, type ProjectFinancial } from '../PortfolioKpiStrip';
 import { type AdvancedFilters, emptyFilters, isFiltersEmpty } from '../filters/types';
 import { applyAdvancedFilters } from '../filters/applyFilters';
