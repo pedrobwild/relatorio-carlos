@@ -553,7 +553,7 @@ function NewPurchaseDialog({
           {/* Obra — obrigatório */}
           <div className="grid gap-1.5">
             <Label className="text-sm font-medium">Obra <span className="text-destructive">*</span></Label>
-            <Select value={form.project_id} onValueChange={(v) => set('project_id', v)}>
+            <Select value={form.project_id} onValueChange={handleProjectChange}>
               <SelectTrigger className={cn('h-9', !form.project_id && 'border-destructive/50')}>
                 <SelectValue placeholder="Selecionar obra…" />
               </SelectTrigger>
