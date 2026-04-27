@@ -135,6 +135,6 @@ function isValidYMD(y: number, m: number, d: number): boolean {
 }
 
 /** Re-export for convenience so callers don't need a second import. */
-export { parseFlexibleBRDate as parseDateBR };
 export { parseISO, formatFn as format, parseFn as parse };
+
 
