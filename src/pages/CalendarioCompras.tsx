@@ -39,6 +39,7 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
+import { parseFlexibleBRDate } from '@/lib/dates';
 
 /**
  * Payload tipado para INSERT em `project_purchases`.
@@ -759,7 +760,11 @@ export default function CalendarioCompras() {
          'actual_delivery_date', 'start_date', 'end_date', 'stock_entry_date', 'stock_exit_date',
          'payment_due_date'].includes(field)
       ) {
-        updateValue = value && value.trim() ? value : null;
+        // Defesa em profundidade: aceita tanto `yyyy-MM-dd` (vindo do MaskedDateField
+        // ou de pickers) quanto entrada flexível (`dd/MM/yyyy`, colagens, etc.).
+        // `parseFlexibleBRDate` retorna null para qualquer string inválida.
+        const trimmed = value && value.trim();
+        updateValue = trimmed ? parseFlexibleBRDate(trimmed) : null;
       }
 
       // Trata "none" do select de forma de pagamento como limpeza do campo
