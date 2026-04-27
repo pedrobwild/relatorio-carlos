@@ -4,6 +4,7 @@ import {
   Quote, Code, Minus, Image,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 export interface SlashCommand {
   id: string;
