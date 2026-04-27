@@ -26,6 +26,7 @@ import { NcSummaryCards, type NcFilter } from './NcSummaryCards';
 import { NcTimelineChart } from './NcTimelineChart';
 import { NcConsolidatedReport } from './NcConsolidatedReport';
 import type { NonConformity, NcSeverity, NcStatus } from '@/hooks/useNonConformities';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 // ── Status/Severity configs ──
 
