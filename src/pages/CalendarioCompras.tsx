@@ -231,60 +231,71 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
 }
 
 // ─── Expandable row details ───────────────────────────────────────────────────
-function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
+function PurchaseRowDetail({
+  p,
+  onUpdateField,
+}: {
+  p: PurchaseWithProject;
+  onUpdateField: (id: string, field: string, value: string | null) => void;
+}) {
   return (
     // O detalhe ocupa naturalmente a largura da célula colSpan. Em telas largas
     // a tabela já é responsiva (sem scroll-x); em telas estreitas, o scroll
     // horizontal da própria tabela leva o detail row junto, mantendo alinhamento.
     // `max-w-screen-2xl` evita expansão visual exagerada quando há poucas colunas.
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-3 px-4 py-3 text-xs bg-muted/30 border-t max-w-screen-2xl">
-        {p.category && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Package className="h-3 w-3 shrink-0" /> Categoria
-            </span>
-            <p className="font-medium break-words">{p.category}</p>
-          </div>
-        )}
-        {p.supplier_name && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Truck className="h-3 w-3 shrink-0" /> Fornecedor
-            </span>
-            <p className="font-medium break-words">{p.supplier_name}</p>
-          </div>
-        )}
-        {p.quantity && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Package className="h-3 w-3 shrink-0" /> Qtde / Unidade
-            </span>
-            <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
-          </div>
-        )}
-        {p.delivery_address && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Truck className="h-3 w-3 shrink-0" /> Entrega
-            </span>
-            <p className="font-medium break-words">{p.delivery_address}</p>
-          </div>
-        )}
-        {p.description && (
-          <div className="col-span-full min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <FileText className="h-3 w-3 shrink-0" /> Descrição
-            </span>
-            <p className="text-foreground leading-snug break-words">{p.description}</p>
-          </div>
-        )}
-        {p.notes && (
-          <div className="col-span-full min-w-0">
-            <span className="text-muted-foreground mb-0.5 block">Observações</span>
-            <p className="text-foreground leading-snug break-words">{p.notes}</p>
-          </div>
-        )}
+      <div className="px-4 py-3 bg-muted/30 border-t max-w-screen-2xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-3 text-xs">
+          {p.category && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Package className="h-3 w-3 shrink-0" /> Categoria
+              </span>
+              <p className="font-medium break-words">{p.category}</p>
+            </div>
+          )}
+          {p.supplier_name && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Truck className="h-3 w-3 shrink-0" /> Fornecedor
+              </span>
+              <p className="font-medium break-words">{p.supplier_name}</p>
+            </div>
+          )}
+          {p.quantity && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Package className="h-3 w-3 shrink-0" /> Qtde / Unidade
+              </span>
+              <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
+            </div>
+          )}
+          {p.delivery_address && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Truck className="h-3 w-3 shrink-0" /> Entrega
+              </span>
+              <p className="font-medium break-words">{p.delivery_address}</p>
+            </div>
+          )}
+          {p.description && (
+            <div className="col-span-full min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <FileText className="h-3 w-3 shrink-0" /> Descrição
+              </span>
+              <p className="text-foreground leading-snug break-words">{p.description}</p>
+            </div>
+          )}
+          {p.notes && (
+            <div className="col-span-full min-w-0">
+              <span className="text-muted-foreground mb-0.5 block">Observações</span>
+              <p className="text-foreground leading-snug break-words">{p.notes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Pagamento — vencimento, forma e campos condicionais (PIX / Boleto) */}
+        <PaymentSection purchase={p} onUpdateField={onUpdateField} />
       </div>
     </div>
   );
