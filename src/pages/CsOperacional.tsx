@@ -155,6 +155,7 @@ export default function CsOperacional() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: tickets = [], isLoading } = useCsTickets();
+  const { data: actionsSummary = {} } = useAllCsActionsSummary();
   const updateMutation = useUpdateCsTicket();
   const deleteMutation = useDeleteCsTicket();
 
