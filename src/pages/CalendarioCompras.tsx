@@ -38,6 +38,7 @@ import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { PaymentSection } from '@/pages/compras/PaymentSection';
 
 /**
  * Payload tipado para INSERT em `project_purchases`.
@@ -230,60 +231,73 @@ function ActualCostCell({ purchase, onSave }: { purchase: PurchaseWithProject; o
 }
 
 // ─── Expandable row details ───────────────────────────────────────────────────
-function PurchaseRowDetail({ p }: { p: PurchaseWithProject }) {
+function PurchaseRowDetail({
+  p,
+  onUpdateField,
+}: {
+  p: PurchaseWithProject;
+  onUpdateField: (id: string, field: string, value: string | null) => void;
+}) {
   return (
     // O detalhe ocupa naturalmente a largura da célula colSpan. Em telas largas
     // a tabela já é responsiva (sem scroll-x); em telas estreitas, o scroll
     // horizontal da própria tabela leva o detail row junto, mantendo alinhamento.
     // `max-w-screen-2xl` evita expansão visual exagerada quando há poucas colunas.
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-3 px-4 py-3 text-xs bg-muted/30 border-t max-w-screen-2xl">
-        {p.category && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Package className="h-3 w-3 shrink-0" /> Categoria
-            </span>
-            <p className="font-medium break-words">{p.category}</p>
-          </div>
-        )}
-        {p.supplier_name && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Truck className="h-3 w-3 shrink-0" /> Fornecedor
-            </span>
-            <p className="font-medium break-words">{p.supplier_name}</p>
-          </div>
-        )}
-        {p.quantity && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Package className="h-3 w-3 shrink-0" /> Qtde / Unidade
-            </span>
-            <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
-          </div>
-        )}
-        {p.delivery_address && (
-          <div className="min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <Truck className="h-3 w-3 shrink-0" /> Entrega
-            </span>
-            <p className="font-medium break-words">{p.delivery_address}</p>
-          </div>
-        )}
-        {p.description && (
-          <div className="col-span-full min-w-0">
-            <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
-              <FileText className="h-3 w-3 shrink-0" /> Descrição
-            </span>
-            <p className="text-foreground leading-snug break-words">{p.description}</p>
-          </div>
-        )}
-        {p.notes && (
-          <div className="col-span-full min-w-0">
-            <span className="text-muted-foreground mb-0.5 block">Observações</span>
-            <p className="text-foreground leading-snug break-words">{p.notes}</p>
-          </div>
-        )}
+      <div className="px-4 py-3 bg-muted/30 border-t max-w-screen-2xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-3 text-xs">
+          {p.category && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Package className="h-3 w-3 shrink-0" /> Categoria
+              </span>
+              <p className="font-medium break-words">{p.category}</p>
+            </div>
+          )}
+          {p.supplier_name && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Truck className="h-3 w-3 shrink-0" /> Fornecedor
+              </span>
+              <p className="font-medium break-words">{p.supplier_name}</p>
+            </div>
+          )}
+          {p.quantity && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Package className="h-3 w-3 shrink-0" /> Qtde / Unidade
+              </span>
+              <p className="font-medium">{p.quantity}{p.unit ? ` ${p.unit}` : ''}</p>
+            </div>
+          )}
+          {p.delivery_address && (
+            <div className="min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <Truck className="h-3 w-3 shrink-0" /> Entrega
+              </span>
+              <p className="font-medium break-words">{p.delivery_address}</p>
+            </div>
+          )}
+          {p.description && (
+            <div className="col-span-full min-w-0">
+              <span className="text-muted-foreground flex items-center gap-1 mb-0.5">
+                <FileText className="h-3 w-3 shrink-0" /> Descrição
+              </span>
+              <p className="text-foreground leading-snug break-words">{p.description}</p>
+            </div>
+          )}
+          {p.notes && (
+            <div className="col-span-full min-w-0">
+              <span className="text-muted-foreground mb-0.5 block">Observações</span>
+              <p className="text-foreground leading-snug break-words">{p.notes}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Pagamento — vencimento, forma e campos condicionais (PIX / Boleto) */}
+        {/* Cast: `PurchaseWithProject` torna `created_at` opcional/nullable para tolerar
+            registros legados, mas `PaymentSection` espera o tipo canônico do hook. */}
+        <PaymentSection purchase={p as unknown as ProjectPurchase} onUpdateField={onUpdateField} />
       </div>
     </div>
   );
@@ -620,6 +634,48 @@ export default function CalendarioCompras() {
     },
     onError: (e) => { console.error(e); toast.error('Erro ao atualizar data'); },
   });
+
+  // Mutação genérica para campos do detalhe colapsável (forma de pagamento,
+  // chave PIX, código do boleto, etc.). Espelha o padrão de `handleUpdateField`
+  // do módulo de Compras: parsing leve de números/datas, normalização de
+  // strings vazias para null e invalidação do cache da listagem.
+  const updateField = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string | null }) => {
+      let updateValue: string | number | null = value;
+
+      if (field === 'estimated_cost' || field === 'actual_cost' || field === 'quantity' || field === 'shipping_cost') {
+        updateValue = value ? parseFloat(value) : null;
+        if (typeof updateValue === 'number' && isNaN(updateValue)) updateValue = null;
+      }
+
+      if (
+        ['required_by_date', 'planned_purchase_date', 'order_date', 'expected_delivery_date',
+         'actual_delivery_date', 'start_date', 'end_date', 'stock_entry_date', 'stock_exit_date',
+         'payment_due_date'].includes(field)
+      ) {
+        updateValue = value && value.trim() ? value : null;
+      }
+
+      // Trata "none" do select de forma de pagamento como limpeza do campo
+      if (field === 'payment_method' && (value === 'none' || value === '')) {
+        updateValue = null;
+      }
+
+      const { error } = await supabase
+        .from('project_purchases')
+        .update({ [field]: updateValue })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+    },
+    onError: (e) => { console.error(e); toast.error('Erro ao salvar alteração'); },
+  });
+
+  const handleUpdateField = (id: string, field: string, value: string | null) => {
+    updateField.mutate({ id, field, value });
+  };
 
   const projects = useMemo(() => {
     const map = new Map<string, string>();
@@ -1002,7 +1058,9 @@ export default function CalendarioCompras() {
                         const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                         const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
                         const expanded = expandedRows.has(p.id);
-                        const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
+                        // Expansão sempre disponível: o detalhe agora inclui a seção
+                        // de Pagamento (vencimento, forma, PIX, boleto), aplicável a qualquer linha.
+                        const hasDetails = true;
                         return (
                           <Fragment key={p.id}>
                             <TableRow className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
@@ -1066,7 +1124,7 @@ export default function CalendarioCompras() {
                             {expanded && hasDetails && (
                               <TableRow className="bg-muted/10 hover:bg-muted/10">
                                 <TableCell colSpan={10} className="p-0">
-                                  <PurchaseRowDetail p={p} />
+                                  <PurchaseRowDetail p={p} onUpdateField={handleUpdateField} />
                                 </TableCell>
                               </TableRow>
                             )}
@@ -1131,7 +1189,8 @@ export default function CalendarioCompras() {
                           const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                           const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
                           const expanded = expandedRows.has(p.id);
-                          const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
+                          // Expansão sempre disponível: o detalhe inclui a seção de Pagamento.
+                          const hasDetails = true;
                           return (
                             <Fragment key={p.id}>
                               <TableRow className={cn('hover:bg-muted/30', expanded && 'bg-muted/20')}>
@@ -1173,7 +1232,7 @@ export default function CalendarioCompras() {
                               {expanded && hasDetails && (
                                 <TableRow className="bg-muted/10 hover:bg-muted/10">
                                   <TableCell colSpan={9} className="p-0">
-                                    <PurchaseRowDetail p={p} />
+                                    <PurchaseRowDetail p={p} onUpdateField={handleUpdateField} />
                                   </TableCell>
                                 </TableRow>
                               )}
