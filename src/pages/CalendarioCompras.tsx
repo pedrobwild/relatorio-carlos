@@ -356,7 +356,14 @@ interface NewPurchaseForm {
   boleto_code: string;
   /** Data de vencimento do boleto. Salvo em `payment_due_date`. */
   payment_due_date: Date | undefined;
+  /** Local de entrega: 'escritorio' | 'obra' | 'retirada'. Salvo em `delivery_location`. */
+  delivery_location: 'escritorio' | 'obra' | 'retirada' | '';
+  /** Endereço completo de entrega. Salvo em `delivery_address`. */
+  delivery_address: string;
 }
+
+/** Endereço fixo do escritório BWild — usado quando `delivery_location === 'escritorio'`. */
+const ESCRITORIO_ADDRESS = 'Rua Álvaro Rodrigues, 975';
 
 const EMPTY_FORM: NewPurchaseForm = {
   project_id: '',
@@ -371,6 +378,8 @@ const EMPTY_FORM: NewPurchaseForm = {
   notes: '',
   boleto_code: '',
   payment_due_date: undefined,
+  delivery_location: '',
+  delivery_address: '',
 };
 
 function NewPurchaseDialog({
