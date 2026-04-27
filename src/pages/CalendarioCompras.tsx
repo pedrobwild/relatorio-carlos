@@ -743,6 +743,9 @@ function NewPurchaseDialog({
                 {form.delivery_location === 'obra' && !form.project_id && (
                   <span className="ml-1 text-destructive">— selecione a obra para preencher automaticamente</span>
                 )}
+                {form.delivery_location && form.delivery_location !== 'retirada' && (
+                  <span className="ml-1 text-muted-foreground">(editável)</span>
+                )}
               </Label>
               <Input
                 id="delivery_address"
@@ -750,12 +753,11 @@ function NewPurchaseDialog({
                   form.delivery_location === 'retirada'
                     ? 'Digite o endereço de retirada'
                     : form.delivery_location
-                      ? 'Endereço preenchido automaticamente'
-                      : 'Selecione o local acima'
+                      ? 'Endereço preenchido automaticamente — você pode editar se necessário'
+                      : 'Selecione o local acima ou digite o endereço'
                 }
                 value={form.delivery_address}
                 onChange={(e) => set('delivery_address', e.target.value)}
-                disabled={!form.delivery_location}
                 className="h-9"
               />
             </div>
