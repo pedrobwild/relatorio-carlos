@@ -504,6 +504,59 @@ export type Database = {
           },
         ]
       }
+      cs_ticket_actions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          responsible_user_id: string | null
+          sort_order: number
+          status: Database["public"]["Enums"]["cs_action_status"]
+          ticket_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          responsible_user_id?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["cs_action_status"]
+          ticket_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          responsible_user_id?: string | null
+          sort_order?: number
+          status?: Database["public"]["Enums"]["cs_action_status"]
+          ticket_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_ticket_actions_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "cs_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cs_ticket_history: {
         Row: {
           actor_id: string | null
@@ -6402,6 +6455,7 @@ export type Database = {
         | "bloqueada"
         | "concluida"
       auditoria_acao: "create" | "update" | "delete"
+      cs_action_status: "pendente" | "em_andamento" | "concluida" | "cancelada"
       cs_ticket_severity: "baixa" | "media" | "alta" | "critica"
       cs_ticket_status: "aberto" | "em_andamento" | "concluido"
       entidade_tipo: "obra" | "atividade" | "marco" | "cronograma"
@@ -6663,6 +6717,7 @@ export const Constants = {
         "concluida",
       ],
       auditoria_acao: ["create", "update", "delete"],
+      cs_action_status: ["pendente", "em_andamento", "concluida", "cancelada"],
       cs_ticket_severity: ["baixa", "media", "alta", "critica"],
       cs_ticket_status: ["aberto", "em_andamento", "concluido"],
       entidade_tipo: ["obra", "atividade", "marco", "cronograma"],
