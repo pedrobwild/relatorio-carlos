@@ -10,6 +10,7 @@ import type { ProjectPurchase } from '@/hooks/useProjectPurchases';
 import {
   InlineField, InlineSelect, useFieldAutosave, AutosaveStatusIcon,
 } from './InlineAutosave';
+import { MaskedDateField } from './MaskedDateField';
 
 interface PaymentSectionProps {
   purchase: ProjectPurchase;
