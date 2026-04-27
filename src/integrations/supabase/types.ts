@@ -5645,6 +5645,8 @@ export type Database = {
           notes: string | null
           project_id: string | null
           quantity: number
+          reason: string | null
+          responsible_user_id: string | null
           supplier_name: string | null
           unit_cost: number | null
           updated_at: string
@@ -5661,6 +5663,8 @@ export type Database = {
           notes?: string | null
           project_id?: string | null
           quantity: number
+          reason?: string | null
+          responsible_user_id?: string | null
           supplier_name?: string | null
           unit_cost?: number | null
           updated_at?: string
@@ -5677,6 +5681,8 @@ export type Database = {
           notes?: string | null
           project_id?: string | null
           quantity?: number
+          reason?: string | null
+          responsible_user_id?: string | null
           supplier_name?: string | null
           unit_cost?: number | null
           updated_at?: string
