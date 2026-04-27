@@ -751,14 +751,27 @@ export default function CalendarioCompras() {
 
   const updateDateField = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: 'planned_purchase_date' | 'payment_due_date'; value: string | null }) => {
-      const { error } = await supabase.from('project_purchases').update({ [field]: value }).eq('id', id);
+      let normalized: string | null = null;
+      if (value && value.trim()) {
+        const iso = parseFlexibleBRDate(value.trim());
+        if (!iso) throw new Error('INVALID_DATE');
+        normalized = iso;
+      }
+      const { error } = await supabase.from('project_purchases').update({ [field]: normalized }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
       toast.success(vars.field === 'planned_purchase_date' ? 'Data da compra atualizada' : 'Data de pagamento atualizada');
     },
-    onError: (e) => { console.error(e); toast.error('Erro ao atualizar data'); },
+    onError: (e: Error) => {
+      console.error(e);
+      if (e?.message === 'INVALID_DATE') {
+        toast.error('Data inválida. Use o formato dd/mm/aaaa.');
+      } else {
+        toast.error('Erro ao atualizar data');
+      }
+    },
   });
 
   // Mutação genérica para campos do detalhe colapsável (forma de pagamento,
