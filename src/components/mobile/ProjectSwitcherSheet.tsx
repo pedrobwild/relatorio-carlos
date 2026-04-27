@@ -10,6 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { matchesSearch } from "@/lib/searchNormalize";
 import type { ProjectWithCustomer } from "@/infra/repositories";
 
 const STATUS_LABELS: Record<string, string> = {
