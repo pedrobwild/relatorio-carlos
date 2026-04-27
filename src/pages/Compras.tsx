@@ -57,12 +57,8 @@ function ComprasTabContent({ purchaseType }: { purchaseType: PurchaseType }) {
 
   const searchFilteredPurchases = useMemo(() => {
     if (!searchQuery.trim()) return state.filteredPurchases;
-    const q = searchQuery.toLowerCase();
-    return state.filteredPurchases.filter(p =>
-      p.item_name.toLowerCase().includes(q) ||
-      (p.supplier_name && p.supplier_name.toLowerCase().includes(q)) ||
-      (p.category && p.category.toLowerCase().includes(q)) ||
-      (p.description && p.description.toLowerCase().includes(q))
+    return state.filteredPurchases.filter((p) =>
+      matchesSearch(searchQuery, [p.item_name, p.supplier_name, p.category, p.description]),
     );
   }, [state.filteredPurchases, searchQuery]);
 
