@@ -532,7 +532,7 @@ export default function CsOperacional() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [navigate],
+    [navigate, actionsSummary],
   );
 
   return (
