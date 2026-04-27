@@ -295,7 +295,9 @@ function PurchaseRowDetail({
         </div>
 
         {/* Pagamento — vencimento, forma e campos condicionais (PIX / Boleto) */}
-        <PaymentSection purchase={p} onUpdateField={onUpdateField} />
+        {/* Cast: `PurchaseWithProject` torna `created_at` opcional/nullable para tolerar
+            registros legados, mas `PaymentSection` espera o tipo canônico do hook. */}
+        <PaymentSection purchase={p as unknown as ProjectPurchase} onUpdateField={onUpdateField} />
       </div>
     </div>
   );
