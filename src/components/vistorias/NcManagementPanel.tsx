@@ -107,12 +107,13 @@ export function NcManagementPanel({ nonConformities, searchQuery, onSelect, onCr
 
     // Search
     if (effectiveSearch.trim()) {
-      const q = effectiveSearch.toLowerCase();
-      result = result.filter(nc =>
-        nc.title.toLowerCase().includes(q) ||
-        nc.description?.toLowerCase().includes(q) ||
-        (nc.category || '').toLowerCase().includes(q) ||
-        (nc.responsible_user_name || '').toLowerCase().includes(q)
+      result = result.filter((nc) =>
+        matchesSearch(effectiveSearch, [
+          nc.title,
+          nc.description,
+          nc.category,
+          nc.responsible_user_name,
+        ]),
       );
     }
 
