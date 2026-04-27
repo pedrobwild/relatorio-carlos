@@ -39,6 +39,26 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
+import { parseFlexibleBRDate } from '@/lib/dates';
+
+/**
+ * Campos `date` da tabela `project_purchases` que aceitam edição livre via
+ * `handleUpdateField`. Usados como camada de defesa: qualquer valor que
+ * chegue por estes campos é normalizado por `parseFlexibleBRDate` antes de
+ * ir ao banco. Mantenha em sincronia com o schema do Supabase.
+ */
+const PURCHASE_DATE_FIELDS = [
+  'required_by_date',
+  'planned_purchase_date',
+  'order_date',
+  'expected_delivery_date',
+  'actual_delivery_date',
+  'start_date',
+  'end_date',
+  'stock_entry_date',
+  'stock_exit_date',
+  'payment_due_date',
+] as const;
 
 /**
  * Payload tipado para INSERT em `project_purchases`.
