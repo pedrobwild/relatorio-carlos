@@ -713,9 +713,9 @@ export default function CalendarioCompras() {
     queryKey: ['all-projects-for-select'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('projects').select('id, name').order('name');
+        .from('projects').select('id, name, address, bairro, cep').order('name');
       if (error) throw error;
-      return (data || []) as { id: string; name: string }[];
+      return (data || []) as { id: string; name: string; address: string | null; bairro: string | null; cep: string | null }[];
     },
     staleTime: 120_000,
   });
