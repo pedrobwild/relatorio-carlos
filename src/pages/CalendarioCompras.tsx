@@ -1058,7 +1058,9 @@ export default function CalendarioCompras() {
                         const hasBoth = p.estimated_cost != null && p.actual_cost != null;
                         const diff = hasBoth ? p.estimated_cost! - p.actual_cost! : null;
                         const expanded = expandedRows.has(p.id);
-                        const hasDetails = !!(p.description || p.quantity || p.delivery_address || p.notes || p.category || p.supplier_name);
+                        // Expansão sempre disponível: o detalhe agora inclui a seção
+                        // de Pagamento (vencimento, forma, PIX, boleto), aplicável a qualquer linha.
+                        const hasDetails = true;
                         return (
                           <Fragment key={p.id}>
                             <TableRow className={cn('hover:bg-muted/30 transition-colors', expanded && 'bg-muted/20')}>
