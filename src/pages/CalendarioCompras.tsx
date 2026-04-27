@@ -352,6 +352,10 @@ interface NewPurchaseForm {
   unit: string;
   description: string;
   notes: string;
+  /** Linha digitável / código do boleto. Salvo em `boleto_code`. */
+  boleto_code: string;
+  /** Data de vencimento do boleto. Salvo em `payment_due_date`. */
+  payment_due_date: Date | undefined;
 }
 
 const EMPTY_FORM: NewPurchaseForm = {
@@ -365,6 +369,8 @@ const EMPTY_FORM: NewPurchaseForm = {
   unit: '',
   description: '',
   notes: '',
+  boleto_code: '',
+  payment_due_date: undefined,
 };
 
 function NewPurchaseDialog({
