@@ -404,6 +404,57 @@ function NewPurchaseDialog({
   const set = (field: keyof NewPurchaseForm, value: unknown) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  /**
+   * Compõe o endereço completo de uma obra a partir das colunas `address`,
+   * `bairro` e `cep`. Usado para auto-preencher o campo `delivery_address`
+   * quando o usuário escolhe "Obra" como local de entrega.
+   */
+  const buildProjectAddress = (projectId: string): string => {
+    const proj = projects.find((p) => p.id === projectId);
+    if (!proj) return '';
+    const parts = [proj.address, proj.bairro, proj.cep].filter((s) => !!s && s.trim().length > 0);
+    return parts.join(' — ');
+  };
+
+  /**
+   * Atualiza o local de entrega e auto-preenche o campo de endereço:
+   * - escritório → endereço fixo BWild
+   * - obra       → endereço cadastrado da obra selecionada
+   * - retirada   → limpa para o usuário digitar manualmente
+   */
+  const handleDeliveryLocationChange = (loc: NewPurchaseForm['delivery_location']) => {
+    setForm((prev) => {
+      let address = prev.delivery_address;
+      if (loc === 'escritorio') {
+        address = ESCRITORIO_ADDRESS;
+      } else if (loc === 'obra') {
+        address = buildProjectAddress(prev.project_id) || prev.delivery_address;
+      } else if (loc === 'retirada') {
+        // Campo livre — limpa apenas se ainda estiver com o endereço auto-preenchido
+        // de outro modo, para não apagar texto digitado manualmente pelo usuário.
+        if (prev.delivery_address === ESCRITORIO_ADDRESS || prev.delivery_address === buildProjectAddress(prev.project_id)) {
+          address = '';
+        }
+      }
+      return { ...prev, delivery_location: loc, delivery_address: address };
+    });
+  };
+
+  /**
+   * Quando a obra muda e o local já é "obra", reatualiza o endereço.
+   */
+  const handleProjectChange = (projectId: string) => {
+    setForm((prev) => {
+      const next = { ...prev, project_id: projectId };
+      if (prev.delivery_location === 'obra') {
+        const newAddr = projects.find((p) => p.id === projectId);
+        const parts = newAddr ? [newAddr.address, newAddr.bairro, newAddr.cep].filter((s) => !!s && s.trim().length > 0) : [];
+        next.delivery_address = parts.join(' — ');
+      }
+      return next;
+    });
+  };
+
   const handleSubmit = async () => {
     // Validações de campos obrigatórios — mensagens específicas para cada caso
     const missing: string[] = [];
