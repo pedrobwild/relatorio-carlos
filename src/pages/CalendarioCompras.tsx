@@ -845,9 +845,26 @@ export default function CalendarioCompras() {
     queryKey: ['all-projects-for-select'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('projects').select('id, name, address, bairro, cep').order('name');
+        .from('projects')
+        .select('id, name, address, bairro, cep, project_customers(customer_name)')
+        .order('name');
       if (error) throw error;
-      return (data || []) as { id: string; name: string; address: string | null; bairro: string | null; cep: string | null }[];
+      type Row = {
+        id: string;
+        name: string;
+        address: string | null;
+        bairro: string | null;
+        cep: string | null;
+        project_customers?: { customer_name: string | null }[] | null;
+      };
+      return (data || []).map((p: Row) => ({
+        id: p.id,
+        name: p.name,
+        address: p.address,
+        bairro: p.bairro,
+        cep: p.cep,
+        customer_name: p.project_customers?.[0]?.customer_name?.trim() || null,
+      })) as { id: string; name: string; address: string | null; bairro: string | null; cep: string | null; customer_name: string | null }[];
     },
     staleTime: 120_000,
   });
