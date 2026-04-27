@@ -61,6 +61,7 @@ const PainelObras = lazy(() => import("./pages/PainelObras"));
 const Estoque = lazy(() => import("./pages/gestao/Estoque"));
 const EstoqueSaidas = lazy(() => import("./pages/gestao/EstoqueSaidas"));
 const EstoqueItens = lazy(() => import("./pages/gestao/EstoqueItens"));
+const EstoqueHistorico = lazy(() => import("./pages/gestao/EstoqueHistorico"));
 const Assistente = lazy(() => import("./pages/Assistente"));
 const AssistenteConsultas = lazy(() => import("./pages/AssistenteConsultas"));
 const AssistenteLogs = lazy(() => import("./pages/AssistenteLogs"));
@@ -183,6 +184,7 @@ const App = () => (
             <Route path="/gestao/estoque" element={<StaffRoute><GestaoShell>{withSuspense(<Estoque />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/estoque/itens" element={<StaffRoute><GestaoShell>{withSuspense(<EstoqueItens />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/estoque/saidas" element={<StaffRoute><GestaoShell>{withSuspense(<EstoqueSaidas />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/estoque/historico" element={<StaffRoute><GestaoShell>{withSuspense(<EstoqueHistorico />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/calendario-obras" element={<ProtectedRoute><GestaoShell>{withSuspense(<CalendarioObras />)}</GestaoShell></ProtectedRoute>} />
             <Route path="/gestao/fornecedores" element={<StaffRoute><GestaoShell>{withSuspense(<Fornecedores />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/:id" element={<StaffRoute><GestaoShell>{withSuspense(<FornecedorDetalhe />)}</GestaoShell></StaffRoute>} />

@@ -15,6 +15,7 @@ import {
   Search,
   Package,
   ArrowUpFromLine,
+  History,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -135,6 +136,11 @@ export function GestaoSidebar() {
           label: "Saídas de Estoque",
           icon: ArrowUpFromLine,
           path: "/gestao/estoque/saidas",
+        },
+        {
+          label: "Histórico de Estoque",
+          icon: History,
+          path: "/gestao/estoque/historico",
         },
         {
           label: "Arquivos",
