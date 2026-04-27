@@ -14,6 +14,7 @@ import { AtividadesMobileListView } from '@/components/atividades-obra/Atividade
 import { AtividadeFormDialog } from '@/components/atividades-obra/AtividadeFormDialog';
 import { cn } from '@/lib/utils';
 import { isTaskOverdue } from '@/lib/taskUtils';
+import { matchesSearch } from '@/lib/searchNormalize';
 
 export default function AtividadesObra() {
   const { projectId } = useProjectNavigation();
