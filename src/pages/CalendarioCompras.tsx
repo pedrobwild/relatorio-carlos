@@ -583,7 +583,10 @@ function NewPurchaseDialog({
               </SelectTrigger>
               <SelectContent className="z-[300]">
                 {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                    {p.customer_name ? ` — ${p.customer_name}` : ''}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
