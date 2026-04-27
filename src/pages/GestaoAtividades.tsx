@@ -126,11 +126,8 @@ export default function GestaoAtividades() {
     }
     if (filterPriority !== 'all') result = result.filter(a => a.priority === filterPriority);
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(a =>
-        a.title.toLowerCase().includes(q) ||
-        a.project_name.toLowerCase().includes(q) ||
-        (a.description && a.description.toLowerCase().includes(q))
+      result = result.filter((a) =>
+        matchesSearch(searchQuery, [a.title, a.project_name, a.description]),
       );
     }
     return result;
