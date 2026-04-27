@@ -774,12 +774,20 @@ export default function CalendarioCompras() {
         if (typeof updateValue === 'number' && isNaN(updateValue)) updateValue = null;
       }
 
-      if (
-        ['required_by_date', 'planned_purchase_date', 'order_date', 'expected_delivery_date',
-         'actual_delivery_date', 'start_date', 'end_date', 'stock_entry_date', 'stock_exit_date',
-         'payment_due_date'].includes(field)
-      ) {
-        updateValue = value && value.trim() ? value : null;
+      if ((PURCHASE_DATE_FIELDS as readonly string[]).includes(field)) {
+        const trimmed = value?.trim();
+        if (!trimmed) {
+          updateValue = null;
+        } else {
+          // Aceita ISO `yyyy-MM-dd`, `dd/MM/yyyy`, `dd-MM-yy`, etc.
+          // Rejeita datas inválidas (31/02, 29/02 fora de ano bissexto, etc.)
+          // antes de chegar ao banco — mensagem ao usuário tratada no caller.
+          const iso = parseFlexibleBRDate(trimmed);
+          if (!iso) {
+            throw new Error('INVALID_DATE');
+          }
+          updateValue = iso;
+        }
       }
 
       // Trata "none" do select de forma de pagamento como limpeza do campo
