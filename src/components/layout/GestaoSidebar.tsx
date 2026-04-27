@@ -13,6 +13,7 @@ import {
   BarChart3,
   Sparkles,
   Search,
+  Package,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -118,6 +119,11 @@ export function GestaoSidebar() {
           label: "Calendário de Compras",
           icon: CalendarDays,
           path: "/gestao/calendario-compras",
+        },
+        {
+          label: "Estoque",
+          icon: Package,
+          path: "/gestao/estoque",
         },
         {
           label: "Arquivos",
