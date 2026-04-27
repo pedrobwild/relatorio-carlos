@@ -302,15 +302,16 @@ export function PaymentSection({ purchase, onUpdateField }: PaymentSectionProps)
       </h4>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Vencimento */}
+        {/* Vencimento — entrada com máscara dd/mm/aaaa, parsing flexível e
+            persistência sempre em yyyy-MM-dd para a coluna `date`. */}
         <div>
           <label className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
             <CalendarDays className="h-3 w-3" /> Data de vencimento
           </label>
-          <InlineField
-            type="date"
-            value={purchase.payment_due_date}
-            onSave={(v) => onUpdateField(purchase.id, 'payment_due_date', v || null)}
+          <MaskedDateField
+            value={purchase.payment_due_date ?? null}
+            onSave={(v) => onUpdateField(purchase.id, 'payment_due_date', v)}
+            ariaLabel="Data de vencimento do pagamento"
             className="w-full"
           />
         </div>
