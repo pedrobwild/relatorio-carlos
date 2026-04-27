@@ -138,6 +138,11 @@ export function GestaoSidebar() {
           path: "/gestao/estoque/saidas",
         },
         {
+          label: "Histórico de Estoque",
+          icon: History,
+          path: "/gestao/estoque/historico",
+        },
+        {
           label: "Arquivos",
           icon: FolderOpen,
           path: "/gestao/arquivos",
