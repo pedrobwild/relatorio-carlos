@@ -246,7 +246,17 @@ export default function CalendarioObras() {
     isUpdating,
     breakIntoSubActivities,
     isBreaking,
+    mergeSubActivities,
+    isMerging,
   } = useWeekActivities(fetchStartStr, fetchEndStr);
+
+  // Quantidade de micro-etapas (children) já existentes para a atividade-mãe
+  // que está sendo editada no BreakActivityDialog. Usado para habilitar a
+  // ação "Desfazer quebra" no rodapé do dialog.
+  const breakingChildrenCount = useMemo(() => {
+    if (!breakingActivity) return 0;
+    return activities.filter((a) => a.parent_activity_id === breakingActivity.id).length;
+  }, [activities, breakingActivity]);
 
   // Conjunto de project_ids com etapas anteriores não concluídas (atrasadas)
   // antes do início do recorte visível. Usado para sugerir "Replanejar
