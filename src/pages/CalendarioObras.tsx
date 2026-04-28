@@ -396,6 +396,16 @@ export default function CalendarioObras() {
   const handleReset = async (a: WeekActivity) => {
     await updateDates(a.id, { actual_start: null, actual_end: null });
   };
+  // Marcação rápida de status direto na timeline (usado em micro-etapas).
+  // 'in-progress' inicia, 'completed' conclui, 'pending' reseta as datas reais.
+  const handleQuickToggle = async (
+    a: WeekActivity,
+    next: 'pending' | 'in-progress' | 'completed',
+  ) => {
+    if (next === 'in-progress') return handleStart(a);
+    if (next === 'completed') return handleFinish(a);
+    return handleReset(a);
+  };
 
   // Navigation per view
   const goPrev = () => {
