@@ -200,8 +200,10 @@ export async function getCustomerProjects(userId: string): Promise<RepositoryLis
       .map(pc => pc.project)
       .filter((p): p is NonNullable<typeof p> => p !== null);
 
-    const allProjects = [...memberProjects, ...customerProjects];
-    const uniqueProjects = allProjects.filter((p, index, self) => 
+    const allProjects = [...memberProjects, ...customerProjects].filter(
+      (p): p is NonNullable<typeof p> => p != null && (p as { deleted_at?: string | null }).deleted_at == null
+    );
+    const uniqueProjects = allProjects.filter((p, index, self) =>
       index === self.findIndex(t => t.id === p.id)
     );
 
