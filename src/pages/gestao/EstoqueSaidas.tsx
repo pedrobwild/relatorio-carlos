@@ -136,6 +136,7 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
       const { data, error } = await supabase
         .from("projects")
         .select("id, name")
+        .is("deleted_at", null)
         .order("name");
       if (error) throw error;
       return (data ?? []) as { id: string; name: string }[];

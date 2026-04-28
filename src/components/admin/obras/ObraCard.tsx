@@ -71,9 +71,9 @@ export function ObraCard({ project, onView, onEdit, onDelete }: ObraCardProps) {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Deletar obra?</AlertDialogTitle>
+                    <AlertDialogTitle>Mover obra para a lixeira?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esta ação não pode ser desfeita. A obra <strong>{project.name}</strong> e todos os dados associados serão permanentemente removidos.
+                      A obra <strong>{project.name}</strong> deixará de aparecer nas listas, mas todos os dados associados serão preservados e poderão ser restaurados.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -82,7 +82,7 @@ export function ObraCard({ project, onView, onEdit, onDelete }: ObraCardProps) {
                       onClick={onDelete}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Deletar
+                      Mover para lixeira
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

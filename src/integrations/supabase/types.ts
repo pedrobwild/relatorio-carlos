@@ -5154,6 +5154,7 @@ export type Database = {
           date_mobilization_start: string | null
           date_official_delivery: string | null
           date_official_start: string | null
+          deleted_at: string | null
           estimated_duration_weeks: number | null
           external_id: string | null
           external_system: string | null
@@ -5208,6 +5209,7 @@ export type Database = {
           date_mobilization_start?: string | null
           date_official_delivery?: string | null
           date_official_start?: string | null
+          deleted_at?: string | null
           estimated_duration_weeks?: number | null
           external_id?: string | null
           external_system?: string | null
@@ -5262,6 +5264,7 @@ export type Database = {
           date_mobilization_start?: string | null
           date_official_delivery?: string | null
           date_official_start?: string | null
+          deleted_at?: string | null
           estimated_duration_weeks?: number | null
           external_id?: string | null
           external_system?: string | null
@@ -6472,6 +6475,10 @@ export type Database = {
           user_role: string
         }[]
       }
+      hard_delete_project: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
       has_obra_access: { Args: { p_obra_id: string }; Returns: boolean }
       has_project_access: {
         Args: { _project_id: string; _user_id: string }
@@ -6551,7 +6558,12 @@ export type Database = {
         Args: { p_project_id: string; p_rows: Json }
         Returns: undefined
       }
+      restore_project: { Args: { p_project_id: string }; Returns: undefined }
       save_project_baseline: {
+        Args: { p_project_id: string }
+        Returns: undefined
+      }
+      soft_delete_project: {
         Args: { p_project_id: string }
         Returns: undefined
       }

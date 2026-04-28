@@ -94,6 +94,7 @@ export async function getStaffProjects(): Promise<RepositoryListResult<ProjectWi
           customer_email
         )
       `)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (projectsError) return { data: null, error: projectsError };
@@ -199,8 +200,10 @@ export async function getCustomerProjects(userId: string): Promise<RepositoryLis
       .map(pc => pc.project)
       .filter((p): p is NonNullable<typeof p> => p !== null);
 
-    const allProjects = [...memberProjects, ...customerProjects];
-    const uniqueProjects = allProjects.filter((p, index, self) => 
+    const allProjects = [...memberProjects, ...customerProjects].filter(
+      (p): p is NonNullable<typeof p> => p != null && (p as { deleted_at?: string | null }).deleted_at == null
+    );
+    const uniqueProjects = allProjects.filter((p, index, self) =>
       index === self.findIndex(t => t.id === p.id)
     );
 
@@ -220,7 +223,8 @@ export async function getProjectById(projectId: string): Promise<RepositoryResul
       .from('projects')
       .select('*')
       .eq('id', projectId)
-      .single();
+      .is('deleted_at', null)
+      .maybeSingle();
 
     if (error) return { data: null, error };
 
@@ -266,10 +270,17 @@ export async function checkProjectAccess(
  */
 export async function deleteProject(projectId: string): Promise<RepositoryResult<null>> {
   return executeQuery(async () => {
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', projectId);
+    const { error } = await supabase.rpc('soft_delete_project', { p_project_id: projectId });
+    return { data: null, error };
+  });
+}
+
+/**
+ * Restore a soft-deleted project
+ */
+export async function restoreProject(projectId: string): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase.rpc('restore_project', { p_project_id: projectId });
     return { data: null, error };
   });
 }
@@ -629,6 +640,7 @@ export async function getProjectWithCustomer(projectId: string): Promise<Reposit
       .from('projects')
       .select(`*, project_customers (customer_name, customer_email)`)
       .eq('id', projectId)
+      .is('deleted_at', null)
       .maybeSingle();
 
     if (error) return { data: null, error };

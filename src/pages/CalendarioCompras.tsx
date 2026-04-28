@@ -868,6 +868,7 @@ export default function CalendarioCompras() {
       const { data, error } = await supabase
         .from('projects')
         .select('id, name, address, bairro, cep, project_customers(customer_name)')
+        .is('deleted_at', null)
         .order('name');
       if (error) throw error;
       type Row = {
