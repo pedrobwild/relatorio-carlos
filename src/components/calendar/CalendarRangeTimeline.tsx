@@ -358,6 +358,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                       canBreak={canBreak}
                       onBreak={onBreak}
                       onQuickToggle={onQuickToggle}
+                      statusItemId={statusItemId}
                     />
                   </div>
                 </div>
