@@ -212,6 +212,31 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
 
   return (
     <div ref={containerRef} className="rounded-lg border overflow-hidden bg-card">
+      {/* Legenda de status — visível sempre, não rola com o eixo X */}
+      <div
+        role="list"
+        aria-label="Legenda de status das atividades"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-b bg-muted/30 text-[11px] text-muted-foreground"
+      >
+        {(['pending', 'in-progress', 'completed', 'delayed'] as ActivityStatus[]).map((s) => {
+          const style = STATUS_BAR_STYLE[s];
+          const Icon = style.icon;
+          return (
+            <span key={s} role="listitem" className="inline-flex items-center gap-1.5">
+              <span
+                className={cn(
+                  'inline-flex items-center justify-center h-3.5 w-3.5 rounded-sm border',
+                  s === 'pending' ? 'bg-muted border-border' : style.bar,
+                )}
+                aria-hidden="true"
+              >
+                <Icon className={cn('h-2.5 w-2.5', style.icon_color)} />
+              </span>
+              <span>{STATUS_LABEL[s]}</span>
+            </span>
+          );
+        })}
+      </div>
       <div className="overflow-x-auto">
         <div style={{ minWidth: PROJECT_LABEL_WIDTH + totalWidth }}>
           {/* Header row */}
