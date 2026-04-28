@@ -94,6 +94,7 @@ export async function getStaffProjects(): Promise<RepositoryListResult<ProjectWi
           customer_email
         )
       `)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (projectsError) return { data: null, error: projectsError };
