@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Package, Plus, Loader2, ArrowDownToLine, ArrowUpFromLine, Wrench, Building2, Warehouse } from "lucide-react";
 import EstoqueSaidas from "./EstoqueSaidas";
