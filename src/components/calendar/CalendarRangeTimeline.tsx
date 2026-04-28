@@ -6,7 +6,7 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { differenceInCalendarDays, eachDayOfInterval, format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Building2, CalendarDays } from 'lucide-react';
+import { Building2, CalendarDays, Split } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
