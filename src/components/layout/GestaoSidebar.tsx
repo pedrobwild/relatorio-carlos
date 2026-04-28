@@ -14,7 +14,7 @@ import {
   Sparkles,
   Search,
   Package,
-  ArrowUpFromLine,
+  LucideIcon,
   LucideIcon,
 } from "lucide-react";
 import {
