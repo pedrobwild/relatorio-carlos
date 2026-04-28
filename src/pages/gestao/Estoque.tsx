@@ -278,6 +278,7 @@ export default function Estoque() {
           <TabsList>
             <TabsTrigger value="saldo">Saldo atual</TabsTrigger>
             <TabsTrigger value="movimentacoes">Movimentações</TabsTrigger>
+            <TabsTrigger value="saidas">Saídas</TabsTrigger>
             <TabsTrigger value="itens">Itens</TabsTrigger>
           </TabsList>
 
@@ -299,6 +300,11 @@ export default function Estoque() {
               projectMap={projectMap}
               onAdd={() => setMovDialogOpen(true)}
             />
+          </TabsContent>
+
+          {/* Saídas */}
+          <TabsContent value="saidas">
+            <EstoqueSaidas embedded />
           </TabsContent>
 
           {/* Itens */}
