@@ -179,6 +179,10 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const legendId = useId();
+  const legendTitleId = `${legendId}-title`;
+  const gridId = `${legendId}-grid`;
+  const statusItemId = (s: ActivityStatus) => `${legendId}-status-${s}`;
 
   const days = useMemo(
     () => eachDayOfInterval({ start: rangeStart, end: rangeEnd }),
