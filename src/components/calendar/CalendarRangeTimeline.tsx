@@ -405,6 +405,26 @@ function ProjectBars({
                     {seg.activity.description}
                   </span>
                 </button>
+                {showQuickToggle && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onQuickToggle!(seg.activity, nextStatus);
+                    }}
+                    title={`${statusLabel} • Clique para: ${nextLabel.toLowerCase()}`}
+                    aria-label={nextLabel}
+                    className={cn(
+                      'absolute top-1/2 -translate-y-1/2 left-0.5',
+                      'inline-flex items-center justify-center h-5 w-5 rounded',
+                      'bg-background/95 border border-border shadow-sm',
+                      'hover:scale-110 hover:border-primary focus:border-primary',
+                      'transition-transform',
+                    )}
+                  >
+                    <StatusIcon className={cn('h-3 w-3', statusStyle.icon_color)} />
+                  </button>
+                )}
                 {showBreak && barWidth >= 60 && (
                   <button
                     type="button"
