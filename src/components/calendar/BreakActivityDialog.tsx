@@ -117,6 +117,8 @@ export function BreakActivityDialog({
   isUndoing = false,
 }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
+  /** Confirmação para a ação destrutiva "Desfazer quebra" (apaga todos os children). */
+  const [confirmUndoOpen, setConfirmUndoOpen] = useState(false);
   /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
   const [chunkSize, setChunkSize] = useState<number>(2);
   const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
