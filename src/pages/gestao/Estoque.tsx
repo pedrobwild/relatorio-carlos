@@ -109,9 +109,30 @@ const movementSchema = z
 export default function Estoque() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState("saldo");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const VALID_TABS = ["saldo", "movimentacoes", "saidas", "itens"] as const;
+  const urlTab = searchParams.get("tab");
+  const initialTab =
+    urlTab && (VALID_TABS as readonly string[]).includes(urlTab) ? urlTab : "saldo";
+  const [tab, setTab] = useState<string>(initialTab);
   const [movDialogOpen, setMovDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
+
+  // Sync tab → URL (and vice-versa)
+  useEffect(() => {
+    if (urlTab && (VALID_TABS as readonly string[]).includes(urlTab) && urlTab !== tab) {
+      setTab(urlTab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlTab]);
+
+  const handleTabChange = (next: string) => {
+    setTab(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === "saldo") params.delete("tab");
+    else params.set("tab", next);
+    setSearchParams(params, { replace: true });
+  };
 
   // Queries
   const itemsQ = useQuery({
