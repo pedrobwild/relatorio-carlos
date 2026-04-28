@@ -609,6 +609,6 @@ export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean
           </Card>
         </div>
       )}
-    </main>
+    </Wrapper>
   );
 }
