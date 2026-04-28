@@ -380,6 +380,7 @@ function ProjectBars({
   canBreak,
   onBreak,
   onQuickToggle,
+  statusItemId,
 }: {
   lanes: BarSegment[][];
   dayWidth: number;
@@ -389,6 +390,7 @@ function ProjectBars({
   canBreak?: boolean;
   onBreak?: (a: WeekActivity) => void;
   onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
+  statusItemId?: (s: ActivityStatus) => string;
 }) {
   return (
     <div className="absolute inset-0 py-1.5">
