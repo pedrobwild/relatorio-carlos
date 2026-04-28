@@ -15,7 +15,6 @@ import {
   Search,
   Package,
   LucideIcon,
-  LucideIcon,
 } from "lucide-react";
 import {
   Sidebar,
