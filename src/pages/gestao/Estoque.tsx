@@ -234,41 +234,100 @@ export default function Estoque() {
 
   const isLoading = itemsQ.isLoading || balancesQ.isLoading;
 
+  const noItems = (itemsQ.data?.length ?? 0) === 0;
+
+  const tabMeta: Record<string, { title: string; description: string }> = {
+    saldo: {
+      title: "Saldo atual",
+      description: "Saldos consolidados por material e localização (estoque central ou obra).",
+    },
+    movimentacoes: {
+      title: "Movimentações",
+      description: "Histórico cronológico de entradas, saídas e ajustes de materiais.",
+    },
+    saidas: {
+      title: "Saídas de materiais",
+      description: "Registre retiradas do estoque ou da obra. O saldo é reduzido automaticamente.",
+    },
+    itens: {
+      title: "Itens cadastrados",
+      description: "Catálogo de materiais controlados no estoque.",
+    },
+  };
+  const meta = tabMeta[tab] ?? tabMeta.saldo;
+
+  const renderActions = () => {
+    switch (tab) {
+      case "saldo":
+        return (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setTab("saidas")}
+              disabled={noItems}
+              className="gap-2"
+            >
+              <ArrowUpFromLine className="h-4 w-4" />
+              Registrar saída
+            </Button>
+            <Button onClick={() => setMovDialogOpen(true)} disabled={noItems} className="gap-2">
+              <ArrowDownToLine className="h-4 w-4" />
+              Registrar entrada
+            </Button>
+          </>
+        );
+      case "movimentacoes":
+        return (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setTab("saidas")}
+              disabled={noItems}
+              className="gap-2"
+            >
+              <ArrowUpFromLine className="h-4 w-4" />
+              Registrar saída
+            </Button>
+            <Button onClick={() => setMovDialogOpen(true)} disabled={noItems} className="gap-2">
+              <ArrowDownToLine className="h-4 w-4" />
+              Registrar entrada
+            </Button>
+          </>
+        );
+      case "saidas":
+        return (
+          <Button
+            variant="outline"
+            onClick={() => setTab("movimentacoes")}
+            className="gap-2"
+          >
+            <Wrench className="h-4 w-4" />
+            Ver movimentações
+          </Button>
+        );
+      case "itens":
+        return (
+          <Button onClick={() => setItemDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Novo item
+          </Button>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-h2 font-bold flex items-center gap-2">
             <Package className="h-6 w-6" />
-            Estoque
+            Estoque · {meta.title}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Registre entradas, saídas e ajustes de materiais. O saldo é atualizado automaticamente.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{meta.description}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setItemDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo item
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setTab("saidas")}
-            disabled={(itemsQ.data?.length ?? 0) === 0}
-            className="gap-2"
-          >
-            <ArrowUpFromLine className="h-4 w-4" />
-            Registrar saída
-          </Button>
-          <Button
-            onClick={() => setMovDialogOpen(true)}
-            disabled={(itemsQ.data?.length ?? 0) === 0}
-            className="gap-2"
-          >
-            <ArrowDownToLine className="h-4 w-4" />
-            Registrar entrada
-          </Button>
-        </div>
+        <div className="flex flex-wrap gap-2">{renderActions()}</div>
       </header>
 
       {isLoading ? (
