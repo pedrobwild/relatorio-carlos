@@ -216,17 +216,29 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
 
   return (
     <div ref={containerRef} className="rounded-lg border overflow-hidden bg-card">
-      {/* Legenda de status — visível sempre, não rola com o eixo X */}
+      {/* Legenda de status — visível sempre, não rola com o eixo X.
+          Cada item tem id único, referenciado por aria-describedby nas barras
+          da timeline para vincular semanticamente status ↔ legenda. */}
       <div
-        role="list"
-        aria-label="Legenda de status das atividades"
+        id={legendId}
+        role="group"
+        aria-labelledby={legendTitleId}
         className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-b bg-muted/30 text-[11px] text-muted-foreground"
       >
+        <span id={legendTitleId} className="sr-only">
+          Legenda de status das atividades
+        </span>
         {(['pending', 'in-progress', 'completed', 'delayed'] as ActivityStatus[]).map((s) => {
           const style = STATUS_BAR_STYLE[s];
           const Icon = style.icon;
           return (
-            <span key={s} role="listitem" className="inline-flex items-center gap-1.5">
+            <span
+              key={s}
+              id={statusItemId(s)}
+              role="note"
+              aria-label={`Status ${STATUS_LABEL[s]}`}
+              className="inline-flex items-center gap-1.5"
+            >
               <span
                 className={cn(
                   'inline-flex items-center justify-center h-3.5 w-3.5 rounded-sm border',
@@ -242,7 +254,14 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
         })}
       </div>
       <div className="overflow-x-auto">
-        <div style={{ minWidth: PROJECT_LABEL_WIDTH + totalWidth }}>
+        <div
+          id={gridId}
+          role="grid"
+          aria-labelledby={legendTitleId}
+          aria-describedby={legendId}
+          aria-rowcount={byProject.length}
+          style={{ minWidth: PROJECT_LABEL_WIDTH + totalWidth }}
+        >
           {/* Header row */}
           <div className="flex border-b bg-muted/40 sticky top-0 z-10">
             <div
