@@ -336,18 +336,28 @@ export default function CalendarioObras() {
         ? visibleByProject
         : visibleByProject.filter((g) => g.project_id === projectFilter);
     // 2) Filtro de etapa: aplicado por atividade; remove grupos vazios.
-    if (etapaFilter === 'all') return byProj;
-    return byProj
-      .map((g) => ({
-        ...g,
-        items: g.items.filter((a) => {
-          const e = (a.etapa ?? '').trim();
-          if (etapaFilter === '__none__') return e === '';
-          return e === etapaFilter;
-        }),
-      }))
+    const byEtapa =
+      etapaFilter === 'all'
+        ? byProj
+        : byProj
+            .map((g) => ({
+              ...g,
+              items: g.items.filter((a) => {
+                const e = (a.etapa ?? '').trim();
+                if (etapaFilter === '__none__') return e === '';
+                return e === etapaFilter;
+              }),
+            }))
+            .filter((g) => g.items.length > 0);
+
+    // 3) Filtro "apenas micro-etapas" — válido só em week-timeline + staff.
+    //    Mantém somente atividades que são children (parent_activity_id !== null),
+    //    ou seja, resultados de uma quebra em micro-etapas.
+    if (!onlyMicroSteps || view !== 'week-timeline' || !canBreak) return byEtapa;
+    return byEtapa
+      .map((g) => ({ ...g, items: g.items.filter((a) => a.parent_activity_id !== null) }))
       .filter((g) => g.items.length > 0);
-  }, [visibleByProject, projectFilter, etapaFilter]);
+  }, [visibleByProject, projectFilter, etapaFilter, onlyMicroSteps, view, canBreak]);
 
   const filteredActivities = useMemo(
     () => filteredByProject.flatMap((g) => g.items),
