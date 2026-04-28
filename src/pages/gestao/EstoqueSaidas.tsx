@@ -103,7 +103,7 @@ const schema = z
 
 // ─── Página ──────────────────────────────────────────────────────────────────
 
-export default function EstoqueSaidas() {
+export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean } = {}) {
   const { user } = useAuth();
   const qc = useQueryClient();
 
