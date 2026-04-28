@@ -228,6 +228,8 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                       colorClass={color.bg}
                       borderClass={color.border}
                       onActivityClick={onActivityClick}
+                      canBreak={canBreak}
+                      onBreak={onBreak}
                     />
                   </div>
                 </div>
