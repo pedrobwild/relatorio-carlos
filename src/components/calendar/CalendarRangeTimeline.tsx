@@ -326,7 +326,18 @@ function ProjectBars({
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
-                  title={`${seg.activity.description} — ${statusLabel} — ${seg.activity.planned_start} → ${seg.activity.planned_end}${isChild ? ' (micro-etapa)' : ''}`}
+                  title={(() => {
+                    const fmt = (iso: string) => format(parseISO(iso), 'dd/MM/yyyy');
+                    const planned = `Previsto: ${fmt(seg.activity.planned_start)} → ${fmt(seg.activity.planned_end)}`;
+                    const as = seg.activity.actual_start;
+                    const ae = seg.activity.actual_end;
+                    let real = '';
+                    if (as && ae) real = `\nReal: ${fmt(as)} → ${fmt(ae)}`;
+                    else if (as) real = `\nReal: ${fmt(as)} → em andamento`;
+                    else if (ae) real = `\nReal: concluído em ${fmt(ae)}`;
+                    const tag = isChild ? ' (micro-etapa)' : '';
+                    return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}`;
+                  })()}
                   className={cn(
                     'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
                     'hover:ring-2 hover:ring-primary/40 transition-shadow',
