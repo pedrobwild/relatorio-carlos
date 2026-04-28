@@ -132,6 +132,12 @@ export default function CalendarioObras() {
   const [includeCompleted, setIncludeCompleted] = useState<boolean>(
     () => searchParams.get('concluidas') === '1',
   );
+  // Filtro (somente week-timeline + staff): mostrar apenas micro-etapas, ou seja,
+  // atividades-mãe que já foram quebradas em sub-atividades. Útil para focar no
+  // detalhamento granular de execução. Persistido via ?microetapas=1.
+  const [onlyMicroSteps, setOnlyMicroSteps] = useState<boolean>(
+    () => searchParams.get('microetapas') === '1',
+  );
 
   // Sincroniza os filtros + visualização atuais para a query string. Usamos
   // `replace` para não poluir o histórico de navegação a cada toggle e
@@ -148,6 +154,8 @@ export default function CalendarioObras() {
     else next.delete('etapa');
     if (includeCompleted) next.set('concluidas', '1');
     else next.delete('concluidas');
+    if (onlyMicroSteps && view === 'week-timeline') next.set('microetapas', '1');
+    else next.delete('microetapas');
 
     // Visualização: só persiste se diferente do default ('week-list') para manter URLs limpas.
     if (view && view !== 'week-list') next.set('view', view);
@@ -181,7 +189,7 @@ export default function CalendarioObras() {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectFilter, etapaFilter, includeCompleted, view, refDate, rangeStartDate, rangeEndDate]);
+  }, [projectFilter, etapaFilter, includeCompleted, onlyMicroSteps, view, refDate, rangeStartDate, rangeEndDate]);
 
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
@@ -328,18 +336,28 @@ export default function CalendarioObras() {
         ? visibleByProject
         : visibleByProject.filter((g) => g.project_id === projectFilter);
     // 2) Filtro de etapa: aplicado por atividade; remove grupos vazios.
-    if (etapaFilter === 'all') return byProj;
-    return byProj
-      .map((g) => ({
-        ...g,
-        items: g.items.filter((a) => {
-          const e = (a.etapa ?? '').trim();
-          if (etapaFilter === '__none__') return e === '';
-          return e === etapaFilter;
-        }),
-      }))
+    const byEtapa =
+      etapaFilter === 'all'
+        ? byProj
+        : byProj
+            .map((g) => ({
+              ...g,
+              items: g.items.filter((a) => {
+                const e = (a.etapa ?? '').trim();
+                if (etapaFilter === '__none__') return e === '';
+                return e === etapaFilter;
+              }),
+            }))
+            .filter((g) => g.items.length > 0);
+
+    // 3) Filtro "apenas micro-etapas" — válido só em week-timeline + staff.
+    //    Mantém somente atividades que são children (parent_activity_id !== null),
+    //    ou seja, resultados de uma quebra em micro-etapas.
+    if (!onlyMicroSteps || view !== 'week-timeline' || !canBreak) return byEtapa;
+    return byEtapa
+      .map((g) => ({ ...g, items: g.items.filter((a) => a.parent_activity_id !== null) }))
       .filter((g) => g.items.length > 0);
-  }, [visibleByProject, projectFilter, etapaFilter]);
+  }, [visibleByProject, projectFilter, etapaFilter, onlyMicroSteps, view, canBreak]);
 
   const filteredActivities = useMemo(
     () => filteredByProject.flatMap((g) => g.items),
@@ -720,6 +738,24 @@ export default function CalendarioObras() {
             )}
           </Label>
         </div>
+
+        {/* Toggle: apenas micro-etapas (week-timeline + staff) */}
+        {view === 'week-timeline' && canBreak && (
+          <div className="flex items-center gap-2">
+            <Switch
+              id="only-microsteps"
+              checked={onlyMicroSteps}
+              onCheckedChange={setOnlyMicroSteps}
+            />
+            <Label
+              htmlFor="only-microsteps"
+              className="text-xs text-muted-foreground cursor-pointer select-none"
+              title="Mostra apenas atividades que já foram quebradas em micro-etapas (sub-atividades). Útil para focar no detalhamento granular de execução."
+            >
+              Apenas micro-etapas
+            </Label>
+          </div>
+        )}
       </div>
 
       {/* Body */}
