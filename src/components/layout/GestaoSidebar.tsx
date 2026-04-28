@@ -127,11 +127,6 @@ export function GestaoSidebar() {
           path: "/gestao/estoque",
         },
         {
-          label: "Saídas de Estoque",
-          icon: ArrowUpFromLine,
-          path: "/gestao/estoque/saidas",
-        },
-        {
           label: "Arquivos",
           icon: FolderOpen,
           path: "/gestao/arquivos",
