@@ -103,7 +103,7 @@ const schema = z
 
 // ─── Página ──────────────────────────────────────────────────────────────────
 
-export default function EstoqueSaidas() {
+export default function EstoqueSaidas({ embedded = false }: { embedded?: boolean } = {}) {
   const { user } = useAuth();
   const qc = useQueryClient();
 
@@ -278,25 +278,28 @@ export default function EstoqueSaidas() {
 
   const isLoading = itemsQ.isLoading || balancesQ.isLoading || staffQ.isLoading;
 
+  const Wrapper: any = embedded ? "div" : "main";
   return (
-    <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <Button asChild variant="ghost" size="sm" className="gap-2 mb-2 -ml-2">
-            <Link to="/gestao/estoque">
-              <ArrowLeft className="h-4 w-4" /> Voltar ao Estoque
-            </Link>
-          </Button>
-          <h1 className="text-h2 font-bold flex items-center gap-2">
-            <ArrowUpFromLine className="h-6 w-6" />
-            Saídas de materiais
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Registre a retirada de materiais do estoque ou da obra. O saldo é reduzido
-            automaticamente.
-          </p>
-        </div>
-      </header>
+    <Wrapper className={embedded ? "space-y-6" : "max-w-6xl mx-auto px-4 py-6 space-y-6"}>
+      {!embedded && (
+        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <Button asChild variant="ghost" size="sm" className="gap-2 mb-2 -ml-2">
+              <Link to="/gestao/estoque">
+                <ArrowLeft className="h-4 w-4" /> Voltar ao Estoque
+              </Link>
+            </Button>
+            <h1 className="text-h2 font-bold flex items-center gap-2">
+              <ArrowUpFromLine className="h-6 w-6" />
+              Saídas de materiais
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Registre a retirada de materiais do estoque ou da obra. O saldo é reduzido
+              automaticamente.
+            </p>
+          </div>
+        </header>
+      )}
 
       {isLoading ? (
         <PageSkeleton />
@@ -606,6 +609,6 @@ export default function EstoqueSaidas() {
           </Card>
         </div>
       )}
-    </main>
+    </Wrapper>
   );
 }

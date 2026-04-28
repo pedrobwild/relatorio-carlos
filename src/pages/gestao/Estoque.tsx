@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Package, Plus, Loader2, ArrowDownToLine, ArrowUpFromLine, Wrench, Building2, Warehouse } from "lucide-react";
+import EstoqueSaidas from "./EstoqueSaidas";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -252,15 +252,13 @@ export default function Estoque() {
             Novo item
           </Button>
           <Button
-            asChild
             variant="outline"
+            onClick={() => setTab("saidas")}
             disabled={(itemsQ.data?.length ?? 0) === 0}
             className="gap-2"
           >
-            <Link to="/gestao/estoque/saidas">
-              <ArrowUpFromLine className="h-4 w-4" />
-              Registrar saída
-            </Link>
+            <ArrowUpFromLine className="h-4 w-4" />
+            Registrar saída
           </Button>
           <Button
             onClick={() => setMovDialogOpen(true)}
@@ -280,6 +278,7 @@ export default function Estoque() {
           <TabsList>
             <TabsTrigger value="saldo">Saldo atual</TabsTrigger>
             <TabsTrigger value="movimentacoes">Movimentações</TabsTrigger>
+            <TabsTrigger value="saidas">Saídas</TabsTrigger>
             <TabsTrigger value="itens">Itens</TabsTrigger>
           </TabsList>
 
@@ -301,6 +300,11 @@ export default function Estoque() {
               projectMap={projectMap}
               onAdd={() => setMovDialogOpen(true)}
             />
+          </TabsContent>
+
+          {/* Saídas */}
+          <TabsContent value="saidas">
+            <EstoqueSaidas embedded />
           </TabsContent>
 
           {/* Itens */}
