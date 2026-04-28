@@ -179,6 +179,7 @@ export default function Estoque() {
       const { data, error } = await supabase
         .from("projects")
         .select("id, name")
+        .is("deleted_at", null)
         .order("name", { ascending: true });
       if (error) throw error;
       return (data ?? []) as { id: string; name: string }[];
