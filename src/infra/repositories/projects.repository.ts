@@ -221,7 +221,8 @@ export async function getProjectById(projectId: string): Promise<RepositoryResul
       .from('projects')
       .select('*')
       .eq('id', projectId)
-      .single();
+      .is('deleted_at', null)
+      .maybeSingle();
 
     if (error) return { data: null, error };
 
