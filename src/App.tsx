@@ -180,7 +180,7 @@ const App = () => (
             <Route path="/gestao/arquivos" element={<ProtectedRoute><GestaoShell>{withSuspense(<Arquivos />)}</GestaoShell></ProtectedRoute>} />
             <Route path="/gestao/calendario-compras" element={<StaffRoute><GestaoShell>{withSuspense(<CalendarioCompras />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/estoque" element={<StaffRoute><GestaoShell>{withSuspense(<Estoque />)}</GestaoShell></StaffRoute>} />
-            <Route path="/gestao/estoque/saidas" element={<StaffRoute><GestaoShell>{withSuspense(<EstoqueSaidas />)}</GestaoShell></StaffRoute>} />
+            <Route path="/gestao/estoque/saidas" element={<Navigate to="/gestao/estoque?tab=saidas" replace />} />
             <Route path="/gestao/calendario-obras" element={<ProtectedRoute><GestaoShell>{withSuspense(<CalendarioObras />)}</GestaoShell></ProtectedRoute>} />
             <Route path="/gestao/fornecedores" element={<StaffRoute><GestaoShell>{withSuspense(<Fornecedores />)}</GestaoShell></StaffRoute>} />
             <Route path="/gestao/fornecedores/:id" element={<StaffRoute><GestaoShell>{withSuspense(<FornecedorDetalhe />)}</GestaoShell></StaffRoute>} />
