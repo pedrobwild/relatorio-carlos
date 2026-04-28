@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Package, Plus, Loader2, ArrowDownToLine, ArrowUpFromLine, Wrench, Building2, Warehouse } from "lucide-react";
 import EstoqueSaidas from "./EstoqueSaidas";
@@ -108,9 +109,30 @@ const movementSchema = z
 export default function Estoque() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState("saldo");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const VALID_TABS = ["saldo", "movimentacoes", "saidas", "itens"] as const;
+  const urlTab = searchParams.get("tab");
+  const initialTab =
+    urlTab && (VALID_TABS as readonly string[]).includes(urlTab) ? urlTab : "saldo";
+  const [tab, setTab] = useState<string>(initialTab);
   const [movDialogOpen, setMovDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
+
+  // Sync tab → URL (and vice-versa)
+  useEffect(() => {
+    if (urlTab && (VALID_TABS as readonly string[]).includes(urlTab) && urlTab !== tab) {
+      setTab(urlTab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlTab]);
+
+  const handleTabChange = (next: string) => {
+    setTab(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === "saldo") params.delete("tab");
+    else params.set("tab", next);
+    setSearchParams(params, { replace: true });
+  };
 
   // Queries
   const itemsQ = useQuery({
@@ -263,7 +285,7 @@ export default function Estoque() {
           <>
             <Button
               variant="outline"
-              onClick={() => setTab("saidas")}
+              onClick={() => handleTabChange("saidas")}
               disabled={noItems}
               className="gap-2"
             >
@@ -281,7 +303,7 @@ export default function Estoque() {
           <>
             <Button
               variant="outline"
-              onClick={() => setTab("saidas")}
+              onClick={() => handleTabChange("saidas")}
               disabled={noItems}
               className="gap-2"
             >
@@ -298,7 +320,7 @@ export default function Estoque() {
         return (
           <Button
             variant="outline"
-            onClick={() => setTab("movimentacoes")}
+            onClick={() => handleTabChange("movimentacoes")}
             className="gap-2"
           >
             <Wrench className="h-4 w-4" />
@@ -333,7 +355,7 @@ export default function Estoque() {
       {isLoading ? (
         <PageSkeleton />
       ) : (
-        <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList>
             <TabsTrigger value="saldo">Saldo atual</TabsTrigger>
             <TabsTrigger value="movimentacoes">Movimentações</TabsTrigger>
