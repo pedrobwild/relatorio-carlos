@@ -434,6 +434,9 @@ function ProjectBars({
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
+                  aria-label={`${seg.activity.description}${isChild ? ' (micro-etapa)' : ''} — ${statusLabel}`}
+                  aria-describedby={statusItemId?.(status)}
+                  data-status={status}
                   title={(() => {
                     const fmt = (iso: string) => format(parseISO(iso), 'dd/MM/yyyy');
                     const planned = `Previsto: ${fmt(seg.activity.planned_start)} → ${fmt(seg.activity.planned_end)}`;
@@ -460,10 +463,11 @@ function ProjectBars({
                 >
                   <StatusIcon
                     className={cn('h-3 w-3 shrink-0', statusStyle.icon_color)}
-                    aria-label={statusLabel}
+                    aria-hidden="true"
                   />
-                  {isChild && <span className="text-primary/80 shrink-0">└</span>}
-                  <span className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
+                  <span className="sr-only">{`Status: ${statusLabel}.`}</span>
+                  {isChild && <span aria-hidden="true" className="text-primary/80 shrink-0">└</span>}
+                  <span aria-hidden="true" className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
                     {seg.activity.description}
                   </span>
                 </button>
