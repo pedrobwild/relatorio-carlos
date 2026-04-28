@@ -738,6 +738,24 @@ export default function CalendarioObras() {
             )}
           </Label>
         </div>
+
+        {/* Toggle: apenas micro-etapas (week-timeline + staff) */}
+        {view === 'week-timeline' && canBreak && (
+          <div className="flex items-center gap-2">
+            <Switch
+              id="only-microsteps"
+              checked={onlyMicroSteps}
+              onCheckedChange={setOnlyMicroSteps}
+            />
+            <Label
+              htmlFor="only-microsteps"
+              className="text-xs text-muted-foreground cursor-pointer select-none"
+              title="Mostra apenas atividades que já foram quebradas em micro-etapas (sub-atividades). Útil para focar no detalhamento granular de execução."
+            >
+              Apenas micro-etapas
+            </Label>
+          </div>
+        )}
       </div>
 
       {/* Body */}
