@@ -268,10 +268,17 @@ export async function checkProjectAccess(
  */
 export async function deleteProject(projectId: string): Promise<RepositoryResult<null>> {
   return executeQuery(async () => {
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', projectId);
+    const { error } = await supabase.rpc('soft_delete_project', { p_project_id: projectId });
+    return { data: null, error };
+  });
+}
+
+/**
+ * Restore a soft-deleted project
+ */
+export async function restoreProject(projectId: string): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase.rpc('restore_project', { p_project_id: projectId });
     return { data: null, error };
   });
 }
