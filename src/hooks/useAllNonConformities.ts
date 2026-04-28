@@ -20,7 +20,8 @@ export function useAllNonConformities() {
           .select('id, nome'),
         supabase
           .from('projects')
-          .select('id, name'),
+          .select('id, name')
+          .is('deleted_at', null),
       ]);
 
       if (ncsResult.error) throw ncsResult.error;
