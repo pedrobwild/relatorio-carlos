@@ -101,6 +101,9 @@ export function BreakActivityDialog({
   onOpenChange,
   onConfirm,
   isSubmitting,
+  existingChildrenCount = 0,
+  onUndoBreak,
+  isUndoing = false,
 }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
   /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
