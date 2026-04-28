@@ -638,6 +638,7 @@ export async function getProjectWithCustomer(projectId: string): Promise<Reposit
       .from('projects')
       .select(`*, project_customers (customer_name, customer_email)`)
       .eq('id', projectId)
+      .is('deleted_at', null)
       .maybeSingle();
 
     if (error) return { data: null, error };
