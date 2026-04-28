@@ -6,17 +6,53 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { differenceInCalendarDays, eachDayOfInterval, format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Building2, CalendarDays, Split } from 'lucide-react';
+import { Building2, CalendarDays, Split, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getProjectColor } from '@/lib/taskUtils';
 import type { WeekActivity } from '@/hooks/useWeekActivities';
 import { EmptyState } from '@/components/ui/states';
+import { computeEffectiveStatus, type ActivityStatus } from '@/lib/activityStatus';
 
 const MIN_DAY_WIDTH = 28;     // px
 const ROW_BASE_PADDING = 12;  // py-1.5 * 2 dentro do container
 const LANE_HEIGHT = 28;       // 24px da barra (h-6) + 4px de gap (mb-1)
 const MIN_LANES = 1;          // mínimo de faixas mesmo quando a obra não tem atividades no range
 const PROJECT_LABEL_WIDTH = 200;
+
+/**
+ * Estilo visual por status efetivo da atividade/micro-etapa.
+ * Usa tokens semânticos (success/info/warning/destructive) já definidos
+ * em index.css — sem cores hard-coded.
+ */
+const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
+  completed: {
+    bar: 'bg-success/15 border-success/40 text-success-foreground',
+    icon: CheckCircle2,
+    icon_color: 'text-success',
+  },
+  'in-progress': {
+    bar: 'bg-info/15 border-info/40 text-info-foreground',
+    icon: Clock,
+    icon_color: 'text-info',
+  },
+  delayed: {
+    bar: 'bg-destructive/15 border-destructive/45 text-destructive',
+    icon: AlertTriangle,
+    icon_color: 'text-destructive',
+  },
+  pending: {
+    bar: '',
+    icon: Clock,
+    icon_color: 'text-muted-foreground',
+  },
+};
+
+const STATUS_LABEL: Record<ActivityStatus, string> = {
+  completed: 'Concluído',
+  'in-progress': 'Em andamento',
+  delayed: 'Atrasado',
+  pending: 'Previsto',
+};
 
 /**
  * Segmento de atividade já clipado ao range visível.
@@ -267,6 +303,15 @@ function ProjectBars({
             const isChild = !!seg.activity.parent_activity_id;
             const showBreak = canBreak && !!onBreak && !isChild;
             const barWidth = seg.span * dayWidth - 4;
+            const { status } = computeEffectiveStatus({
+              plannedStart: seg.activity.planned_start,
+              plannedEnd: seg.activity.planned_end,
+              actualStart: seg.activity.actual_start,
+              actualEnd: seg.activity.actual_end,
+            });
+            const statusStyle = STATUS_BAR_STYLE[status];
+            const StatusIcon = statusStyle.icon;
+            const statusLabel = STATUS_LABEL[status];
             return (
               <div
                 key={seg.activity.id}
@@ -281,19 +326,27 @@ function ProjectBars({
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
-                  title={`${seg.activity.description} — ${seg.activity.planned_start} → ${seg.activity.planned_end}${isChild ? ' (micro-etapa)' : ''}`}
+                  title={`${seg.activity.description} — ${statusLabel} — ${seg.activity.planned_start} → ${seg.activity.planned_end}${isChild ? ' (micro-etapa)' : ''}`}
                   className={cn(
                     'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
                     'hover:ring-2 hover:ring-primary/40 transition-shadow',
-                    colorClass,
-                    borderClass,
+                    'flex items-center gap-1',
+                    // Cor base por projeto só quando não há status acionável (pendente)
+                    status === 'pending' ? cn(colorClass, borderClass) : statusStyle.bar,
                     isChild && 'border-l-2 border-l-primary/70 border-dashed opacity-95',
+                    status === 'completed' && 'opacity-80',
                     seg.startsBefore && 'rounded-l-none border-l-0',
                     seg.endsAfter && 'rounded-r-none border-r-0',
                   )}
                 >
-                  {isChild && <span className="mr-1 text-primary/80">└</span>}
-                  {seg.activity.description}
+                  <StatusIcon
+                    className={cn('h-3 w-3 shrink-0', statusStyle.icon_color)}
+                    aria-label={statusLabel}
+                  />
+                  {isChild && <span className="text-primary/80 shrink-0">└</span>}
+                  <span className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
+                    {seg.activity.description}
+                  </span>
                 </button>
                 {showBreak && barWidth >= 60 && (
                   <button
