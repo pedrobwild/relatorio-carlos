@@ -252,15 +252,13 @@ export default function Estoque() {
             Novo item
           </Button>
           <Button
-            asChild
             variant="outline"
+            onClick={() => setTab("saidas")}
             disabled={(itemsQ.data?.length ?? 0) === 0}
             className="gap-2"
           >
-            <Link to="/gestao/estoque/saidas">
-              <ArrowUpFromLine className="h-4 w-4" />
-              Registrar saída
-            </Link>
+            <ArrowUpFromLine className="h-4 w-4" />
+            Registrar saída
           </Button>
           <Button
             onClick={() => setMovDialogOpen(true)}
