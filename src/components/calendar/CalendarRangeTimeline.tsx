@@ -268,6 +268,15 @@ function ProjectBars({
             const isChild = !!seg.activity.parent_activity_id;
             const showBreak = canBreak && !!onBreak && !isChild;
             const barWidth = seg.span * dayWidth - 4;
+            const { status } = computeEffectiveStatus({
+              plannedStart: seg.activity.planned_start,
+              plannedEnd: seg.activity.planned_end,
+              actualStart: seg.activity.actual_start,
+              actualEnd: seg.activity.actual_end,
+            });
+            const statusStyle = STATUS_BAR_STYLE[status];
+            const StatusIcon = statusStyle.icon;
+            const statusLabel = STATUS_LABEL[status];
             return (
               <div
                 key={seg.activity.id}
@@ -282,19 +291,27 @@ function ProjectBars({
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
-                  title={`${seg.activity.description} — ${seg.activity.planned_start} → ${seg.activity.planned_end}${isChild ? ' (micro-etapa)' : ''}`}
+                  title={`${seg.activity.description} — ${statusLabel} — ${seg.activity.planned_start} → ${seg.activity.planned_end}${isChild ? ' (micro-etapa)' : ''}`}
                   className={cn(
                     'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
                     'hover:ring-2 hover:ring-primary/40 transition-shadow',
-                    colorClass,
-                    borderClass,
+                    'flex items-center gap-1',
+                    // Cor base por projeto só quando não há status acionável (pendente)
+                    status === 'pending' ? cn(colorClass, borderClass) : statusStyle.bar,
                     isChild && 'border-l-2 border-l-primary/70 border-dashed opacity-95',
+                    status === 'completed' && 'opacity-80',
                     seg.startsBefore && 'rounded-l-none border-l-0',
                     seg.endsAfter && 'rounded-r-none border-r-0',
                   )}
                 >
-                  {isChild && <span className="mr-1 text-primary/80">└</span>}
-                  {seg.activity.description}
+                  <StatusIcon
+                    className={cn('h-3 w-3 shrink-0', statusStyle.icon_color)}
+                    aria-label={statusLabel}
+                  />
+                  {isChild && <span className="text-primary/80 shrink-0">└</span>}
+                  <span className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
+                    {seg.activity.description}
+                  </span>
                 </button>
                 {showBreak && barWidth >= 60 && (
                   <button
