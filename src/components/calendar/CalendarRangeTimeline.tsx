@@ -98,10 +98,46 @@ function computeLanes(
     })
     .filter(Boolean) as BarSegment[];
 
+  // Ordenação determinística: dia de início → parent antes de child →
+  // planned_start exato → maior duração primeiro → descrição → id.
+  // Isso garante que micro-etapas filhas apareçam sempre na mesma ordem,
+  // mesmo quando há sobreposição no mesmo dia.
+  const parentOrder = new Map<string, number>();
+  segs.forEach((s, idx) => {
+    if (!s.activity.parent_activity_id) parentOrder.set(s.activity.id, idx);
+  });
+  const getGroupKey = (s: BarSegment) =>
+    s.activity.parent_activity_id ?? s.activity.id;
+  const getParentRank = (s: BarSegment) => {
+    const key = getGroupKey(s);
+    return parentOrder.get(key) ?? Number.MAX_SAFE_INTEGER;
+  };
+
   const lanes: BarSegment[][] = [];
   segs
     .slice()
-    .sort((a, b) => a.startOffset - b.startOffset)
+    .sort((a, b) => {
+      if (a.startOffset !== b.startOffset) return a.startOffset - b.startOffset;
+      // Agrupa parent + filhos juntos
+      const pa = getParentRank(a);
+      const pb = getParentRank(b);
+      if (pa !== pb) return pa - pb;
+      // Dentro do grupo, parent vem antes dos filhos
+      const aIsChild = a.activity.parent_activity_id ? 1 : 0;
+      const bIsChild = b.activity.parent_activity_id ? 1 : 0;
+      if (aIsChild !== bIsChild) return aIsChild - bIsChild;
+      // Ordena por planned_start exato (string ISO ordena lexicograficamente)
+      if (a.activity.planned_start !== b.activity.planned_start) {
+        return a.activity.planned_start < b.activity.planned_start ? -1 : 1;
+      }
+      // Maior duração primeiro (barra mais longa em cima)
+      if (a.span !== b.span) return b.span - a.span;
+      // Fallback estável por descrição e id
+      const da = a.activity.description ?? '';
+      const db = b.activity.description ?? '';
+      if (da !== db) return da.localeCompare(db);
+      return a.activity.id.localeCompare(b.activity.id);
+    })
     .forEach((seg) => {
       let placed = false;
       for (const lane of lanes) {
