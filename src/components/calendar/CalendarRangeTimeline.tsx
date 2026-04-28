@@ -309,6 +309,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                       onActivityClick={onActivityClick}
                       canBreak={canBreak}
                       onBreak={onBreak}
+                      onQuickToggle={onQuickToggle}
                     />
                   </div>
                 </div>
