@@ -3,7 +3,7 @@
  * date range. Each project is a row; activities are bars positioned by their
  * planned interval clipped to the range. Click a bar to open detail dialog.
  */
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useRef, useEffect, useState, useId } from 'react';
 import { differenceInCalendarDays, eachDayOfInterval, format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Building2, CalendarDays, Split, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
