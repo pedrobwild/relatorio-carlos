@@ -36,8 +36,19 @@ import {
   Plus,
   Split,
   Trash2,
+  Undo2,
   Wand2,
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -75,6 +86,19 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onConfirm: (parent: WeekActivity, subs: SubActivityInput[]) => Promise<unknown>;
   isSubmitting: boolean;
+  /**
+   * Quantidade de micro-etapas (children) já existentes para a atividade-mãe.
+   * Quando > 0, o dialog exibe a ação "Desfazer quebra", que remove todos os
+   * children e restaura a atividade original como única no cronograma.
+   */
+  existingChildrenCount?: number;
+  /**
+   * Disparado ao confirmar o "Desfazer quebra" — deve remover todos os
+   * children da atividade-mãe (idealmente via `mergeSubActivities`).
+   */
+  onUndoBreak?: (parent: WeekActivity) => Promise<unknown>;
+  /** True enquanto a operação de undo está em andamento. */
+  isUndoing?: boolean;
 }
 
 const fmtDate = (d: Date) => format(d, 'yyyy-MM-dd');
@@ -88,8 +112,13 @@ export function BreakActivityDialog({
   onOpenChange,
   onConfirm,
   isSubmitting,
+  existingChildrenCount = 0,
+  onUndoBreak,
+  isUndoing = false,
 }: Props) {
   const [rows, setRows] = useState<Row[]>([]);
+  /** Confirmação para a ação destrutiva "Desfazer quebra" (apaga todos os children). */
+  const [confirmUndoOpen, setConfirmUndoOpen] = useState(false);
   /** Tamanho (em dias úteis) de cada bloco gerado pelo "Cobrir 100%". */
   const [chunkSize, setChunkSize] = useState<number>(2);
   const { data: staffUsers = [], isLoading: loadingStaff } = useStaffUsers();
@@ -629,16 +658,71 @@ export function BreakActivityDialog({
           </div>
         </ScrollArea>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancelar
-          </Button>
-          <Button onClick={handleConfirm} disabled={!canSubmit}>
-            <Split className="h-4 w-4 mr-1" />
-            Quebrar atividade
-          </Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {/* Ação destrutiva: aparece apenas quando já existem micro-etapas para esta mãe. */}
+          {existingChildrenCount > 0 && onUndoBreak ? (
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmUndoOpen(true)}
+              disabled={isSubmitting || isUndoing}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              title={`Remove as ${existingChildrenCount} micro-etapa(s) e mantém apenas a atividade original.`}
+            >
+              <Undo2 className="h-4 w-4 mr-1" />
+              {isUndoing ? 'Desfazendo…' : `Desfazer quebra (${existingChildrenCount})`}
+            </Button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting || isUndoing}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirm} disabled={!canSubmit || isUndoing}>
+              <Split className="h-4 w-4 mr-1" />
+              Quebrar atividade
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
+
+      {/* Confirmação destrutiva — exigida pelo padrão de UI Safety. */}
+      <AlertDialog open={confirmUndoOpen} onOpenChange={setConfirmUndoOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desfazer quebra em micro-etapas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isto vai remover {existingChildrenCount} micro-etapa
+              {existingChildrenCount !== 1 ? 's' : ''} de
+              {' '}
+              <strong>{parent?.description}</strong> e restaurar a atividade original como única
+              no cronograma. As datas e responsáveis das micro-etapas serão perdidos. Esta ação
+              não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUndoing}>Manter micro-etapas</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!parent || !onUndoBreak) return;
+                try {
+                  await onUndoBreak(parent);
+                  setConfirmUndoOpen(false);
+                  onOpenChange(false);
+                } catch {
+                  // Erro já exibido via toast no hook.
+                }
+              }}
+              disabled={isUndoing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Undo2 className="h-4 w-4 mr-1" />
+              {isUndoing ? 'Desfazendo…' : 'Desfazer quebra'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
