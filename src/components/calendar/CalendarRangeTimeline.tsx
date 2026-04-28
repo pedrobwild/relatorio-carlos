@@ -358,6 +358,17 @@ function ProjectBars({
             const statusStyle = STATUS_BAR_STYLE[status];
             const StatusIcon = statusStyle.icon;
             const statusLabel = STATUS_LABEL[status];
+            // Quick-toggle disponível apenas para micro-etapas (filhas).
+            // Ciclo: pending → in-progress → completed → pending.
+            const showQuickToggle = isChild && !!onQuickToggle && barWidth >= 28;
+            const nextStatus: 'pending' | 'in-progress' | 'completed' =
+              status === 'completed' ? 'pending'
+              : status === 'in-progress' ? 'completed'
+              : 'in-progress';
+            const nextLabel =
+              nextStatus === 'in-progress' ? 'Marcar como em andamento'
+              : nextStatus === 'completed' ? 'Marcar como concluído'
+              : 'Reabrir (limpar datas reais)';
             return (
               <div
                 key={seg.activity.id}
