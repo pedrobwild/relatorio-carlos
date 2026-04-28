@@ -75,6 +75,19 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onConfirm: (parent: WeekActivity, subs: SubActivityInput[]) => Promise<unknown>;
   isSubmitting: boolean;
+  /**
+   * Quantidade de micro-etapas (children) já existentes para a atividade-mãe.
+   * Quando > 0, o dialog exibe a ação "Desfazer quebra", que remove todos os
+   * children e restaura a atividade original como única no cronograma.
+   */
+  existingChildrenCount?: number;
+  /**
+   * Disparado ao confirmar o "Desfazer quebra" — deve remover todos os
+   * children da atividade-mãe (idealmente via `mergeSubActivities`).
+   */
+  onUndoBreak?: (parent: WeekActivity) => Promise<unknown>;
+  /** True enquanto a operação de undo está em andamento. */
+  isUndoing?: boolean;
 }
 
 const fmtDate = (d: Date) => format(d, 'yyyy-MM-dd');
