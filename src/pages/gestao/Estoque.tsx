@@ -286,7 +286,7 @@ export default function Estoque() {
           <>
             <Button
               variant="outline"
-              onClick={() => setTab("saidas")}
+              onClick={() => handleTabChange("saidas")}
               disabled={noItems}
               className="gap-2"
             >
@@ -304,7 +304,7 @@ export default function Estoque() {
           <>
             <Button
               variant="outline"
-              onClick={() => setTab("saidas")}
+              onClick={() => handleTabChange("saidas")}
               disabled={noItems}
               className="gap-2"
             >
@@ -321,7 +321,7 @@ export default function Estoque() {
         return (
           <Button
             variant="outline"
-            onClick={() => setTab("movimentacoes")}
+            onClick={() => handleTabChange("movimentacoes")}
             className="gap-2"
           >
             <Wrench className="h-4 w-4" />
@@ -356,7 +356,7 @@ export default function Estoque() {
       {isLoading ? (
         <PageSkeleton />
       ) : (
-        <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList>
             <TabsTrigger value="saldo">Saldo atual</TabsTrigger>
             <TabsTrigger value="movimentacoes">Movimentações</TabsTrigger>
