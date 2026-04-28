@@ -762,6 +762,8 @@ export default function CalendarioObras() {
           rangeEnd={viewEnd}
           byProject={filteredByProject}
           onActivityClick={setSelectedActivity}
+          canBreak={canBreak}
+          onBreak={(parent) => setBreakingActivity(parent)}
         />
       ) : view === 'week-timeline' ? (
         <CalendarRangeTimeline
@@ -769,6 +771,8 @@ export default function CalendarioObras() {
           rangeEnd={viewEnd}
           byProject={filteredByProject}
           onActivityClick={setSelectedActivity}
+          canBreak={canBreak}
+          onBreak={(parent) => setBreakingActivity(parent)}
         />
       ) : (
         // Week list view (default)
