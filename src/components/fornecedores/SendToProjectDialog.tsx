@@ -44,6 +44,7 @@ export function SendToProjectDialog({ open, onOpenChange, priceItem, fornecedorN
         .from("projects")
         .select("id, name")
         .eq("status", "active")
+        .is("deleted_at", null)
         .order("name");
       if (error) throw error;
       return data;
