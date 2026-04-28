@@ -248,42 +248,77 @@ function ProjectBars({
   colorClass,
   borderClass,
   onActivityClick,
+  canBreak,
+  onBreak,
 }: {
   lanes: BarSegment[][];
   dayWidth: number;
   colorClass: string;
   borderClass: string;
   onActivityClick: (a: WeekActivity) => void;
+  canBreak?: boolean;
+  onBreak?: (a: WeekActivity) => void;
 }) {
   return (
     <div className="absolute inset-0 py-1.5">
       {lanes.map((lane, laneIdx) => (
         <div key={laneIdx} className="relative h-6 mb-1 last:mb-0">
-          {lane.map((seg) => (
-            <button
-              key={seg.activity.id}
-              type="button"
-              onClick={() => onActivityClick(seg.activity)}
-              title={`${seg.activity.description} — ${seg.activity.planned_start} → ${seg.activity.planned_end}`}
-              style={{
-                position: 'absolute',
-                left: seg.startOffset * dayWidth + 2,
-                width: seg.span * dayWidth - 4,
-                top: 0,
-                height: '100%',
-              }}
-              className={cn(
-                'rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
-                'hover:ring-2 hover:ring-primary/40 transition-shadow',
-                colorClass,
-                borderClass,
-                seg.startsBefore && 'rounded-l-none border-l-0',
-                seg.endsAfter && 'rounded-r-none border-r-0',
-              )}
-            >
-              {seg.activity.description}
-            </button>
-          ))}
+          {lane.map((seg) => {
+            const isChild = !!seg.activity.parent_activity_id;
+            const showBreak = canBreak && !!onBreak && !isChild;
+            const barWidth = seg.span * dayWidth - 4;
+            return (
+              <div
+                key={seg.activity.id}
+                className="group absolute"
+                style={{
+                  left: seg.startOffset * dayWidth + 2,
+                  width: barWidth,
+                  top: 0,
+                  height: '100%',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => onActivityClick(seg.activity)}
+                  title={`${seg.activity.description} — ${seg.activity.planned_start} → ${seg.activity.planned_end}${isChild ? ' (micro-etapa)' : ''}`}
+                  className={cn(
+                    'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
+                    'hover:ring-2 hover:ring-primary/40 transition-shadow',
+                    colorClass,
+                    borderClass,
+                    isChild && 'border-l-2 border-l-primary/70 border-dashed opacity-95',
+                    seg.startsBefore && 'rounded-l-none border-l-0',
+                    seg.endsAfter && 'rounded-r-none border-r-0',
+                  )}
+                >
+                  {isChild && <span className="mr-1 text-primary/80">└</span>}
+                  {seg.activity.description}
+                </button>
+                {showBreak && barWidth >= 60 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onBreak!(seg.activity);
+                    }}
+                    title="Quebrar em micro-etapas"
+                    aria-label={`Quebrar atividade ${seg.activity.description} em micro-etapas`}
+                    className={cn(
+                      'absolute top-1/2 -translate-y-1/2 right-1',
+                      'opacity-0 group-hover:opacity-100 focus:opacity-100',
+                      'inline-flex items-center justify-center h-5 w-5 rounded',
+                      'bg-background/90 border border-border shadow-sm',
+                      'text-foreground hover:bg-primary hover:text-primary-foreground',
+                      'transition-opacity',
+                    )}
+                  >
+                    <Split className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
