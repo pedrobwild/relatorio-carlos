@@ -167,9 +167,16 @@ interface Props {
   canBreak?: boolean;
   /** Disparado ao clicar no atalho "Quebrar" exibido em hover sobre uma barra-mãe. */
   onBreak?: (a: WeekActivity) => void;
+  /**
+   * Marcação rápida do status de uma micro-etapa (filha) direto na timeline.
+   * Recebe o status-alvo: 'in-progress' inicia (define actual_start),
+   * 'completed' conclui (define actual_end), 'pending' reseta as datas reais.
+   */
+  onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
 }
 
-export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak }: Props) {
+export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak, onQuickToggle }: Props) {
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
