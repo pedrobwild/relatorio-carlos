@@ -189,7 +189,7 @@ export default function CalendarioObras() {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectFilter, etapaFilter, includeCompleted, view, refDate, rangeStartDate, rangeEndDate]);
+  }, [projectFilter, etapaFilter, includeCompleted, onlyMicroSteps, view, refDate, rangeStartDate, rangeEndDate]);
 
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
