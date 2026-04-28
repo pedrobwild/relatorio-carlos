@@ -858,8 +858,10 @@ export default function CalendarioObras() {
           onOpenChange={(o) => !o && setBreakingActivity(null)}
           onConfirm={breakIntoSubActivities}
           isSubmitting={isBreaking}
-        />
-      )}
+          existingChildrenCount={breakingChildrenCount}
+          onUndoBreak={(p) => mergeSubActivities(p.id)}
+          isUndoing={isMerging}
+        />)}
 
       {/* Dialog para gerenciar dias não úteis (Admin/Engineer) */}
       {canBreak && (
