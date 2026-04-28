@@ -285,12 +285,9 @@ export default function PainelObras() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', deleteTarget.id);
+      const { error } = await supabase.rpc('soft_delete_project', { p_project_id: deleteTarget.id });
       if (error) throw error;
-      toast.success(`Obra "${deleteTarget.nome}" excluída com sucesso.`);
+      toast.success(`Obra "${deleteTarget.nome}" movida para a lixeira.`);
       queryClient.invalidateQueries({ queryKey: ['painel-obras'] });
       setDeleteTarget(null);
     } catch (e) {
