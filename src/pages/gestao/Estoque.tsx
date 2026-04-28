@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Package, Plus, Loader2, ArrowDownToLine, ArrowUpFromLine, Wrench, Building2, Warehouse } from "lucide-react";
+import EstoqueSaidas from "./EstoqueSaidas";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
