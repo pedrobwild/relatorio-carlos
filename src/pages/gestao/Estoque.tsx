@@ -355,7 +355,7 @@ export default function Estoque() {
       {isLoading ? (
         <PageSkeleton />
       ) : (
-        <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList>
             <TabsTrigger value="saldo">Saldo atual</TabsTrigger>
             <TabsTrigger value="movimentacoes">Movimentações</TabsTrigger>
