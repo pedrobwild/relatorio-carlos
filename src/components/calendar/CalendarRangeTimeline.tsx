@@ -20,6 +20,41 @@ const MIN_LANES = 1;          // mínimo de faixas mesmo quando a obra não tem 
 const PROJECT_LABEL_WIDTH = 200;
 
 /**
+ * Estilo visual por status efetivo da atividade/micro-etapa.
+ * Usa tokens semânticos (success/info/warning/destructive) já definidos
+ * em index.css — sem cores hard-coded.
+ */
+const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
+  completed: {
+    bar: 'bg-success/15 border-success/40 text-success-foreground',
+    icon: CheckCircle2,
+    icon_color: 'text-success',
+  },
+  'in-progress': {
+    bar: 'bg-info/15 border-info/40 text-info-foreground',
+    icon: Clock,
+    icon_color: 'text-info',
+  },
+  delayed: {
+    bar: 'bg-destructive/15 border-destructive/45 text-destructive',
+    icon: AlertTriangle,
+    icon_color: 'text-destructive',
+  },
+  pending: {
+    bar: '',
+    icon: Clock,
+    icon_color: 'text-muted-foreground',
+  },
+};
+
+const STATUS_LABEL: Record<ActivityStatus, string> = {
+  completed: 'Concluído',
+  'in-progress': 'Em andamento',
+  delayed: 'Atrasado',
+  pending: 'Previsto',
+};
+
+/**
  * Segmento de atividade já clipado ao range visível.
  */
 interface BarSegment {
