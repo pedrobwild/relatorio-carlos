@@ -91,9 +91,13 @@ interface Props {
     items: WeekActivity[];
   }[];
   onActivityClick: (a: WeekActivity) => void;
+  /** Habilita ações inline de quebra em micro-etapas (Admin/Engineer). */
+  canBreak?: boolean;
+  /** Disparado ao clicar no atalho "Quebrar" exibido em hover sobre uma barra-mãe. */
+  onBreak?: (a: WeekActivity) => void;
 }
 
-export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick }: Props) {
+export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
