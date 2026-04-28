@@ -3,7 +3,7 @@
  * date range. Each project is a row; activities are bars positioned by their
  * planned interval clipped to the range. Click a bar to open detail dialog.
  */
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useRef, useEffect, useState, useId } from 'react';
 import { differenceInCalendarDays, eachDayOfInterval, format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Building2, CalendarDays, Split, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
@@ -179,6 +179,10 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const legendId = useId();
+  const legendTitleId = `${legendId}-title`;
+  const gridId = `${legendId}-grid`;
+  const statusItemId = (s: ActivityStatus) => `${legendId}-status-${s}`;
 
   const days = useMemo(
     () => eachDayOfInterval({ start: rangeStart, end: rangeEnd }),
@@ -212,17 +216,29 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
 
   return (
     <div ref={containerRef} className="rounded-lg border overflow-hidden bg-card">
-      {/* Legenda de status — visível sempre, não rola com o eixo X */}
+      {/* Legenda de status — visível sempre, não rola com o eixo X.
+          Cada item tem id único, referenciado por aria-describedby nas barras
+          da timeline para vincular semanticamente status ↔ legenda. */}
       <div
-        role="list"
-        aria-label="Legenda de status das atividades"
+        id={legendId}
+        role="group"
+        aria-labelledby={legendTitleId}
         className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 border-b bg-muted/30 text-[11px] text-muted-foreground"
       >
+        <span id={legendTitleId} className="sr-only">
+          Legenda de status das atividades
+        </span>
         {(['pending', 'in-progress', 'completed', 'delayed'] as ActivityStatus[]).map((s) => {
           const style = STATUS_BAR_STYLE[s];
           const Icon = style.icon;
           return (
-            <span key={s} role="listitem" className="inline-flex items-center gap-1.5">
+            <span
+              key={s}
+              id={statusItemId(s)}
+              role="note"
+              aria-label={`Status ${STATUS_LABEL[s]}`}
+              className="inline-flex items-center gap-1.5"
+            >
               <span
                 className={cn(
                   'inline-flex items-center justify-center h-3.5 w-3.5 rounded-sm border',
@@ -238,7 +254,14 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
         })}
       </div>
       <div className="overflow-x-auto">
-        <div style={{ minWidth: PROJECT_LABEL_WIDTH + totalWidth }}>
+        <div
+          id={gridId}
+          role="grid"
+          aria-labelledby={legendTitleId}
+          aria-describedby={legendId}
+          aria-rowcount={byProject.length}
+          style={{ minWidth: PROJECT_LABEL_WIDTH + totalWidth }}
+        >
           {/* Header row */}
           <div className="flex border-b bg-muted/40 sticky top-0 z-10">
             <div
@@ -335,6 +358,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                       canBreak={canBreak}
                       onBreak={onBreak}
                       onQuickToggle={onQuickToggle}
+                      statusItemId={statusItemId}
                     />
                   </div>
                 </div>
@@ -356,6 +380,7 @@ function ProjectBars({
   canBreak,
   onBreak,
   onQuickToggle,
+  statusItemId,
 }: {
   lanes: BarSegment[][];
   dayWidth: number;
@@ -365,6 +390,7 @@ function ProjectBars({
   canBreak?: boolean;
   onBreak?: (a: WeekActivity) => void;
   onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
+  statusItemId?: (s: ActivityStatus) => string;
 }) {
   return (
     <div className="absolute inset-0 py-1.5">
@@ -408,6 +434,9 @@ function ProjectBars({
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
+                  aria-label={`${seg.activity.description}${isChild ? ' (micro-etapa)' : ''} — ${statusLabel}`}
+                  aria-describedby={statusItemId?.(status)}
+                  data-status={status}
                   title={(() => {
                     const fmt = (iso: string) => format(parseISO(iso), 'dd/MM/yyyy');
                     const planned = `Previsto: ${fmt(seg.activity.planned_start)} → ${fmt(seg.activity.planned_end)}`;
@@ -434,10 +463,11 @@ function ProjectBars({
                 >
                   <StatusIcon
                     className={cn('h-3 w-3 shrink-0', statusStyle.icon_color)}
-                    aria-label={statusLabel}
+                    aria-hidden="true"
                   />
-                  {isChild && <span className="text-primary/80 shrink-0">└</span>}
-                  <span className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
+                  <span className="sr-only">{`Status: ${statusLabel}.`}</span>
+                  {isChild && <span aria-hidden="true" className="text-primary/80 shrink-0">└</span>}
+                  <span aria-hidden="true" className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
                     {seg.activity.description}
                   </span>
                 </button>
