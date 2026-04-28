@@ -132,6 +132,12 @@ export default function CalendarioObras() {
   const [includeCompleted, setIncludeCompleted] = useState<boolean>(
     () => searchParams.get('concluidas') === '1',
   );
+  // Filtro (somente week-timeline + staff): mostrar apenas micro-etapas, ou seja,
+  // atividades-mãe que já foram quebradas em sub-atividades. Útil para focar no
+  // detalhamento granular de execução. Persistido via ?microetapas=1.
+  const [onlyMicroSteps, setOnlyMicroSteps] = useState<boolean>(
+    () => searchParams.get('microetapas') === '1',
+  );
 
   // Sincroniza os filtros + visualização atuais para a query string. Usamos
   // `replace` para não poluir o histórico de navegação a cada toggle e
