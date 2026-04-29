@@ -829,14 +829,50 @@ export default function CalendarioObras() {
           // *planejadas* mas ainda não começaram na prática.
           const weekStartStr = format(viewStart, 'yyyy-MM-dd');
           const weekEndStr = format(viewEnd, 'yyyy-MM-dd');
-          const inProgressByProject = filteredByProject.filter((g) =>
-            g.items.some(
-              (a) =>
-                !!a.actual_start &&
-                a.actual_start >= weekStartStr &&
-                a.actual_start <= weekEndStr,
-            ),
-          );
+          const inProgressByProject = filteredByProject
+            .filter((g) =>
+              g.items.some(
+                (a) =>
+                  !!a.actual_start &&
+                  a.actual_start >= weekStartStr &&
+                  a.actual_start <= weekEndStr,
+              ),
+            )
+            // Ordenação por prioridade de leitura da semana:
+            //  1) menor `actual_start` que caiu DENTRO da semana (obras que
+            //     começaram antes aparecem primeiro — facilita varredura
+            //     temporal de cima para baixo);
+            //  2) atrasos da semana (qualquer atividade com planned_end
+            //     dentro da semana e ainda sem actual_end) sobem como
+            //     desempate, para chamar atenção;
+            //  3) nome da obra (estável, alfabético pt-BR) como fallback.
+            .map((g) => {
+              const earliestStart = g.items
+                .filter(
+                  (a) =>
+                    !!a.actual_start &&
+                    a.actual_start >= weekStartStr &&
+                    a.actual_start <= weekEndStr,
+                )
+                .map((a) => a.actual_start as string)
+                .sort()[0] ?? '9999-12-31';
+              const hasOverdueInWeek = g.items.some(
+                (a) =>
+                  !a.actual_end &&
+                  a.planned_end >= weekStartStr &&
+                  a.planned_end <= weekEndStr &&
+                  a.planned_end < format(today, 'yyyy-MM-dd'),
+              );
+              return { g, earliestStart, hasOverdueInWeek };
+            })
+            .sort((a, b) => {
+              if (a.earliestStart !== b.earliestStart)
+                return a.earliestStart.localeCompare(b.earliestStart);
+              if (a.hasOverdueInWeek !== b.hasOverdueInWeek)
+                return a.hasOverdueInWeek ? -1 : 1;
+              return a.g.project_name.localeCompare(b.g.project_name, 'pt-BR');
+            })
+            .map((x) => x.g);
           return (
             <CalendarRangeTimeline
               rangeStart={viewStart}
