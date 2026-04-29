@@ -1148,7 +1148,7 @@ export default function CalendarioCompras() {
 
   const filtered = useMemo(() => {
     return allPurchases.filter((p) => {
-      if (filterStatus !== 'all' && toCalendarStatus(p.status) !== filterStatus) return false;
+      if (filterStatus !== 'all' && toCalendarStatus(p.status, (p as any).paid_at) !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterCustomer !== 'all' && (p.customer_name || '').trim() !== filterCustomer) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
@@ -1245,7 +1245,7 @@ export default function CalendarioCompras() {
 
   // KPIs
   const totalItems = filtered.length;
-  const pendingItems = filtered.filter((p) => toCalendarStatus(p.status) === 'pending').length;
+  const pendingItems = filtered.filter((p) => toCalendarStatus(p.status, (p as any).paid_at) === 'pending').length;
   const thisMonthItems = filtered.filter((p) => p.planned_purchase_date && isSameMonth(parseISO(p.planned_purchase_date), currentMonth)).length;
   const totalEstimated = filtered.reduce((s, p) => s + (p.estimated_cost || 0), 0);
   const itemsWithBoth = filtered.filter((p) => p.estimated_cost != null && p.actual_cost != null);
@@ -1512,7 +1512,7 @@ export default function CalendarioCompras() {
                         <span className={cn('font-medium', isToday && 'text-primary')}>{format(day, 'd')}</span>
                         <div className="mt-1 space-y-0.5">
                           {dayPurchases.slice(0, 3).map((p) => {
-                            const cs = toCalendarStatus(p.status);
+                            const cs = toCalendarStatus(p.status, (p as any).paid_at);
                             const cfg = calendarStatusConfig[cs];
                             return (
                               <div key={p.id} className={cn('text-[10px] leading-tight rounded-sm px-1 py-0.5 truncate border', cfg.color)} title={`${p.project_name} — ${p.item_name}`}>
