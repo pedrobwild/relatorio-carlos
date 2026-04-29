@@ -318,6 +318,10 @@ export default function PainelObras() {
       rows = rows.filter((o) =>
         filterRelacionamento === NONE ? !o.relacionamento : o.relacionamento === filterRelacionamento,
       );
+    if (filterResponsavel !== ALL)
+      rows = rows.filter((o) =>
+        filterResponsavel === NONE ? !o.responsavel_id : o.responsavel_id === filterResponsavel,
+      );
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
         const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
