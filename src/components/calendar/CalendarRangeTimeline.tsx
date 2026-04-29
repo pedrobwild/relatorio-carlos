@@ -476,13 +476,14 @@ function ProjectBars({
                     return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}${prest}`;
                   })()}
                   className={cn(
-                    'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
+                    'w-full h-full rounded-sm border text-[11px] font-medium px-1.5 leading-6 truncate text-left',
                     'hover:ring-2 hover:ring-primary/40 transition-shadow',
                     'flex items-center gap-1',
-                    // Cor base por projeto só quando não há status acionável (pendente)
-                    status === 'pending' ? cn(colorClass, borderClass) : statusStyle.bar,
-                    isChild && 'border-l-2 border-l-primary/70 border-dashed opacity-95',
-                    status === 'completed' && 'opacity-80',
+                    // Para status pendente, usa o estilo neutro (texto escuro sobre fundo muted)
+                    // — não usamos mais a cor do projeto como fundo da barra para preservar contraste.
+                    statusStyle.bar,
+                    isChild && 'border-l-2 border-l-primary border-dashed',
+                    status === 'completed' && 'opacity-90',
                     seg.startsBefore && 'rounded-l-none border-l-0',
                     seg.endsAfter && 'rounded-r-none border-r-0',
                   )}
