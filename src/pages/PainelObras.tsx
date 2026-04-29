@@ -71,6 +71,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { matchesSearch } from '@/lib/searchNormalize';
+import { countBusinessDaysInclusive } from '@/lib/businessDays';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   ETAPA_OPTIONS,
