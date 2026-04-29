@@ -591,6 +591,8 @@ interface SectionCardProps {
   isLoading?: boolean;
   /** Skeleton específico desta seção (renderizado dentro do conteúdo aberto). */
   loadingSkeleton?: React.ReactNode;
+  /** Classes extras aplicadas ao wrapper externo (útil p/ col-span no grid). */
+  className?: string;
   children: React.ReactNode;
 }
 
@@ -602,6 +604,7 @@ function SectionCard({
   previewWhenClosed,
   isLoading = false,
   loadingSkeleton,
+  className,
   children,
 }: SectionCardProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -612,7 +615,7 @@ function SectionCard({
   // o estado controlado pelo usuário volta a valer.
   const effectiveOpen = isLoading ? true : open;
   return (
-    <Collapsible open={effectiveOpen} onOpenChange={setOpen}>
+    <Collapsible open={effectiveOpen} onOpenChange={setOpen} className={className}>
       <div
         className={cn(
           'rounded-lg border border-border bg-card overflow-hidden shadow-sm transition-all min-w-0',
