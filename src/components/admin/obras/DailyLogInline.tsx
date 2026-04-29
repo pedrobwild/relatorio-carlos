@@ -506,6 +506,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       }
                       className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
+                      data-autofocus="true"
                     />
                     <Input
                       value={wk.role ?? ''}
