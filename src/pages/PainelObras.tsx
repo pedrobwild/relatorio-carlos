@@ -801,7 +801,7 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE}>(nenhum)</SelectItem>
+              <SelectItem value={NONE}>(sem responsável)</SelectItem>
               {staffUsers.map((u) => (
                 <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
               ))}
