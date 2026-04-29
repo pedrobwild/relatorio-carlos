@@ -588,6 +588,7 @@ export default function PainelObras() {
                           <ObraRow
                             key={o.id}
                             obra={o}
+                            staffUsers={staffUsers}
                             expanded={expandedIds.has(o.id)}
                             onToggleExpanded={() => toggleExpanded(o.id)}
                             onUpdate={(patch) => updateObra(o.id, patch)}
