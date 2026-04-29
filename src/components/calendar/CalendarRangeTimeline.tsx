@@ -26,22 +26,22 @@ const PROJECT_LABEL_WIDTH = 200;
  */
 const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
   completed: {
-    bar: 'bg-success/15 border-success/40 text-success-foreground',
+    bar: 'bg-success/25 border-success/60 text-foreground',
     icon: CheckCircle2,
     icon_color: 'text-success',
   },
   'in-progress': {
-    bar: 'bg-info/15 border-info/40 text-info-foreground',
+    bar: 'bg-info/25 border-info/60 text-foreground',
     icon: Clock,
     icon_color: 'text-info',
   },
   delayed: {
-    bar: 'bg-destructive/15 border-destructive/45 text-destructive',
+    bar: 'bg-destructive border-destructive text-destructive-foreground',
     icon: AlertTriangle,
-    icon_color: 'text-destructive',
+    icon_color: 'text-destructive-foreground',
   },
   pending: {
-    bar: '',
+    bar: 'bg-muted border-border text-foreground',
     icon: Clock,
     icon_color: 'text-muted-foreground',
   },
