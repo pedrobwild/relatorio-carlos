@@ -50,6 +50,11 @@ import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
 import { parseFlexibleBRDate, parseLocalDate } from '@/lib/dates';
 import { addBusinessDays } from '@/lib/businessDays';
+import {
+  PurchaseAttachmentsField,
+  uploadPendingAttachments,
+  type PendingAttachment,
+} from '@/pages/compras/PurchaseAttachmentsField';
 
 /**
  * Recalcula a data prevista de entrega como N dias úteis após a data âncora.
