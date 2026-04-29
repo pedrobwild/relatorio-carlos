@@ -887,8 +887,15 @@ export default function CalendarioCompras() {
   const navigate = useNavigate();
   // Ordenação por "Solicitada em" (created_at). null = ordem padrão (planned_purchase_date asc).
   const [requestedSort, setRequestedSort] = useState<'asc' | 'desc' | null>(null);
+  // Ordenação por nome do cliente (asc/desc). Mutuamente exclusivo com requestedSort.
+  const [customerSort, setCustomerSort] = useState<'asc' | 'desc' | null>(null);
   const toggleRequestedSort = () => {
+    setCustomerSort(null);
     setRequestedSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null));
+  };
+  const toggleCustomerSort = () => {
+    setRequestedSort(null);
+    setCustomerSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null));
   };
 
   const toggleRow = (id: string) =>
@@ -1168,21 +1175,38 @@ export default function CalendarioCompras() {
     return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
   };
 
+  const compareByCustomer = (a: PurchaseWithProject, b: PurchaseWithProject, dir: 'asc' | 'desc') => {
+    const av = (a.customer_name || '').trim();
+    const bv = (b.customer_name || '').trim();
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+    return dir === 'asc'
+      ? av.localeCompare(bv, 'pt-BR', { sensitivity: 'base' })
+      : bv.localeCompare(av, 'pt-BR', { sensitivity: 'base' });
+  };
+
   const sortedForList = useMemo(() => {
     const base = [...filtered].filter((p) => p.planned_purchase_date);
+    if (customerSort) {
+      return base.sort((a, b) => compareByCustomer(a, b, customerSort));
+    }
     if (requestedSort) {
       return base.sort((a, b) => compareByCreatedAt(a, b, requestedSort));
     }
     return base.sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || ''));
-  }, [filtered, requestedSort]);
+  }, [filtered, requestedSort, customerSort]);
 
   const withoutDate = useMemo(() => {
     const base = filtered.filter((p) => !p.planned_purchase_date);
+    if (customerSort) {
+      return [...base].sort((a, b) => compareByCustomer(a, b, customerSort));
+    }
     if (requestedSort) {
       return [...base].sort((a, b) => compareByCreatedAt(a, b, requestedSort));
     }
     return base;
-  }, [filtered, requestedSort]);
+  }, [filtered, requestedSort, customerSort]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -1477,7 +1501,25 @@ export default function CalendarioCompras() {
                       <TableRow className="bg-muted/50">
                         {/* expand toggle col */}
                         <TableHead className="w-8" />
-                        <TableHead className="whitespace-nowrap">Cliente</TableHead>
+                        <TableHead className="whitespace-nowrap p-0">
+                          <button
+                            type="button"
+                            onClick={toggleCustomerSort}
+                            aria-label={`Ordenar por cliente${customerSort ? ` (${customerSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
+                            aria-sort={customerSort === 'asc' ? 'ascending' : customerSort === 'desc' ? 'descending' : 'none'}
+                            className={cn(
+                              'flex h-9 w-full items-center gap-1 px-3 text-left font-medium whitespace-nowrap',
+                              'hover:bg-muted/60 hover:text-foreground transition-colors',
+                              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                              customerSort && 'text-foreground bg-muted/40',
+                            )}
+                          >
+                            Cliente
+                            {customerSort === 'asc' && <ChevronUp className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                            {customerSort === 'desc' && <ChevronDown className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                            {customerSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-40" aria-hidden />}
+                          </button>
+                        </TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
                         <TableHead className="whitespace-nowrap p-0">
