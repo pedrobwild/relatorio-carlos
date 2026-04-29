@@ -998,6 +998,7 @@ export default function CalendarioObras() {
               canBreak={canBreak}
               onBreak={(parent) => setBreakingActivity(parent)}
               onQuickToggle={handleQuickToggle}
+              highContrast={highContrast}
             />
           );
         })()
