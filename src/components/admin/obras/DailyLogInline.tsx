@@ -319,13 +319,29 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   icon={ClipboardList}
                   title="Serviços em execução"
                   count={services.length}
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={addService}
+                      disabled={isSaving}
+                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
+                      aria-label="Adicionar serviço"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                      Adicionar
+                    </Button>
+                  }
                 />
                 {services.length === 0 && (
-                  <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar serviço abaixo." />
+                  <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar para começar." />
                 )}
+              <div ref={servicesListRef} className="flex flex-col gap-2 sm:gap-3 min-w-0">
               {services.map((svc, i) => (
                 <div
                   key={i}
+                  data-row-index={i}
                   className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover (mobile-friendly) */}
