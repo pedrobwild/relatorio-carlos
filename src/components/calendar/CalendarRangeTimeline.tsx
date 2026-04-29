@@ -312,8 +312,33 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                       <Building2 className="h-3 w-3" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs font-medium truncate" title={g.project_name}>
-                        {g.project_name}
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="text-xs font-medium truncate" title={g.project_name}>
+                          {g.project_name}
+                        </div>
+                        {(() => {
+                          // Badge "Em andamento nesta semana": exibida quando há
+                          // pelo menos uma atividade da obra cujo `actual_start`
+                          // (data real de início) cai dentro do range visível.
+                          // Usa token semântico `info` (mesma cor das barras
+                          // 'in-progress') para reforçar consistência visual.
+                          const rs = format(rangeStart, 'yyyy-MM-dd');
+                          const re = format(rangeEnd, 'yyyy-MM-dd');
+                          const isActiveInRange = g.items.some(
+                            (a) => !!a.actual_start && a.actual_start >= rs && a.actual_start <= re,
+                          );
+                          if (!isActiveInRange) return null;
+                          return (
+                            <span
+                              className="shrink-0 inline-flex items-center gap-1 rounded-full border border-info/40 bg-info/15 px-1.5 py-0.5 text-[9px] font-medium text-info leading-none"
+                              title="Esta obra teve atividade iniciada dentro do período visível"
+                              aria-label="Obra em andamento nesta semana"
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-info" aria-hidden="true" />
+                              Em andamento
+                            </span>
+                          );
+                        })()}
                       </div>
                       {g.client_name && (
                         <div
