@@ -25,7 +25,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ContentSkeleton } from '@/components/ContentSkeleton';
-import { EmptyState } from '@/components/states';
+import { EmptyState } from '@/components/ui/states';
 import { statusColors, statusLabels } from '@/components/admin/obras/obraCardUtils';
 
 type SortKey = 'deleted_at' | 'name' | 'customer_name';
