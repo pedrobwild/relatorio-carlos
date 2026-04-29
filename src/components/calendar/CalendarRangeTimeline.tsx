@@ -450,6 +450,7 @@ function ProjectBars({
   onBreak,
   onQuickToggle,
   statusItemId,
+  highContrast = false,
 }: {
   lanes: BarSegment[][];
   dayWidth: number;
@@ -460,7 +461,9 @@ function ProjectBars({
   onBreak?: (a: WeekActivity) => void;
   onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
   statusItemId?: (s: ActivityStatus) => string;
+  highContrast?: boolean;
 }) {
+  const STYLE_MAP = highContrast ? STATUS_BAR_STYLE_HC : STATUS_BAR_STYLE;
   return (
     <div className="absolute inset-0 py-1.5">
       {lanes.map((lane, laneIdx) => (
@@ -475,7 +478,7 @@ function ProjectBars({
               actualStart: seg.activity.actual_start,
               actualEnd: seg.activity.actual_end,
             });
-            const statusStyle = STATUS_BAR_STYLE[status];
+            const statusStyle = STYLE_MAP[status];
             const StatusIcon = statusStyle.icon;
             const statusLabel = STATUS_LABEL[status];
             // Quick-toggle disponível apenas para micro-etapas (filhas).
