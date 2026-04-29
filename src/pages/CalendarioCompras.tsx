@@ -1611,7 +1611,14 @@ export default function CalendarioCompras() {
                                       {p.customer_name || '—'}
                                     </span>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" align="start" className="max-w-xs break-words">
+                                  <TooltipContent
+                                    side="top"
+                                    align="center"
+                                    sideOffset={6}
+                                    collisionPadding={12}
+                                    avoidCollisions
+                                    className="max-w-[min(320px,calc(100vw-24px))] whitespace-normal break-words text-xs leading-snug"
+                                  >
                                     {p.customer_name || 'Sem cliente vinculado a esta obra'}
                                   </TooltipContent>
                                 </Tooltip>
