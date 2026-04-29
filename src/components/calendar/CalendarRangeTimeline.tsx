@@ -472,7 +472,8 @@ function ProjectBars({
                     else if (as) real = `\nReal: ${fmt(as)} → em andamento`;
                     else if (ae) real = `\nReal: concluído em ${fmt(ae)}`;
                     const tag = isChild ? ' (micro-etapa)' : '';
-                    return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}`;
+                    const prest = seg.activity.fornecedor_nome ? `\nPrestador: ${seg.activity.fornecedor_nome}` : '';
+                    return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}${prest}`;
                   })()}
                   className={cn(
                     'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
