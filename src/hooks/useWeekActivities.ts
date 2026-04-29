@@ -46,6 +46,10 @@ export interface WeekActivity {
   responsible_user_id: string | null;
   /** Nome do responsável (pré-resolvido a partir de users_profile). */
   responsible_name: string | null;
+  /** ID do prestador (fornecedor) que executará esta atividade/micro-etapa. */
+  fornecedor_id: string | null;
+  /** Nome do prestador (pré-resolvido a partir de fornecedores). */
+  fornecedor_nome: string | null;
 }
 
 /** Payload para criar uma micro-etapa (sub-atividade) de uma atividade-mãe. */
@@ -55,6 +59,11 @@ export interface SubActivityInput {
   planned_end: string;   // YYYY-MM-DD
   /** Opcional: Staff responsável por esta micro-etapa. */
   responsible_user_id?: string | null;
+  /**
+   * Opcional: Prestador (fornecedor) que executará esta micro-etapa.
+   * Indicado direto no momento da quebra para evitar um segundo modal.
+   */
+  fornecedor_id?: string | null;
 }
 
 interface FetchArgs {
