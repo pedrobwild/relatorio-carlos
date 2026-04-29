@@ -24,6 +24,10 @@ const PROJECT_LABEL_WIDTH = 200;
  * Usa tokens semânticos (success/info/warning/destructive) já definidos
  * em index.css — sem cores hard-coded.
  */
+/**
+ * Estilo padrão (modo normal): tons semânticos suaves com texto escuro
+ * (`text-foreground`) — bom contraste em ambiente claro.
+ */
 const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
   completed: {
     bar: 'bg-success/25 border-success/60 text-foreground',
@@ -44,6 +48,35 @@ const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof Check
     bar: 'bg-muted border-border text-foreground',
     icon: Clock,
     icon_color: 'text-muted-foreground',
+  },
+};
+
+/**
+ * Estilo de ALTO CONTRASTE: fundos sólidos + texto/ícone na cor *-foreground
+ * correspondente. Garante contraste >= AA mesmo em ambientes claros, monitores
+ * com brilho baixo ou para usuários com baixa visão. Usa apenas tokens
+ * semânticos (sem cor hard-coded).
+ */
+const STATUS_BAR_STYLE_HC: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
+  completed: {
+    bar: 'bg-success border-success text-success-foreground',
+    icon: CheckCircle2,
+    icon_color: 'text-success-foreground',
+  },
+  'in-progress': {
+    bar: 'bg-info border-info text-info-foreground',
+    icon: Clock,
+    icon_color: 'text-info-foreground',
+  },
+  delayed: {
+    bar: 'bg-destructive border-destructive text-destructive-foreground',
+    icon: AlertTriangle,
+    icon_color: 'text-destructive-foreground',
+  },
+  pending: {
+    bar: 'bg-foreground border-foreground text-background',
+    icon: Clock,
+    icon_color: 'text-background',
   },
 };
 
