@@ -48,7 +48,31 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
-import { parseFlexibleBRDate } from '@/lib/dates';
+import { parseFlexibleBRDate, parseLocalDate } from '@/lib/dates';
+import { addBusinessDays } from '@/lib/businessDays';
+
+/**
+ * Recalcula a data prevista de entrega como N dias úteis após a data âncora.
+ * - `anchorISO`: data base no formato `YYYY-MM-DD` (ex.: payment_due_date) ou
+ *   timestamptz (ex.: paid_at). Em ambos casos extraímos a parte de data
+ *   no fuso local do navegador para preservar o dia-calendário.
+ * - `leadDays`: prazo do fornecedor em dias úteis (pula fins de semana e
+ *   feriados de SP via `addBusinessDays`).
+ * Retorna `null` se a entrada for inválida.
+ */
+function calcExpectedDelivery(anchorISO: string | null | undefined, leadDays: number | null | undefined): string | null {
+  if (!anchorISO) return null;
+  const lead = Math.max(0, Number(leadDays ?? 7) || 0);
+  // Aceita 'YYYY-MM-DD' (date) e 'YYYY-MM-DDTHH:mm:ss...' (timestamptz)
+  const datePart = anchorISO.slice(0, 10);
+  const anchor = parseLocalDate(datePart);
+  if (Number.isNaN(anchor.getTime())) return null;
+  const result = addBusinessDays(anchor, lead);
+  const y = result.getFullYear();
+  const m = String(result.getMonth() + 1).padStart(2, '0');
+  const d = String(result.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 /**
  * Campos `date` da tabela `project_purchases` que aceitam edição livre via
