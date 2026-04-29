@@ -908,11 +908,18 @@ export default function CalendarioCompras() {
       if (error) throw error;
       const projectIds = [...new Set((purchases || []).map((p) => p.project_id))];
       const { data: projects } = await supabase
-        .from('projects').select('id, name').in('id', projectIds);
-      const projectMap = new Map((projects || []).map((p) => [p.id, p.name]));
+        .from('projects').select('id, name, project_customers(customer_name)').in('id', projectIds);
+      type ProjectRow = { id: string; name: string; project_customers?: { customer_name: string | null }[] | null };
+      const projectMap = new Map<string, { name: string; customer_name: string | null }>(
+        ((projects || []) as ProjectRow[]).map((p) => [p.id, {
+          name: p.name,
+          customer_name: p.project_customers?.[0]?.customer_name?.trim() || null,
+        }])
+      );
       return (purchases || []).map((p) => ({
         ...p,
-        project_name: projectMap.get(p.project_id) || 'Projeto',
+        project_name: projectMap.get(p.project_id)?.name || 'Projeto',
+        customer_name: projectMap.get(p.project_id)?.customer_name || null,
       })) as PurchaseWithProject[];
     },
     staleTime: 60_000,
