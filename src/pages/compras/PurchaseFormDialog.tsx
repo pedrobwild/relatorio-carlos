@@ -15,6 +15,7 @@ import { FornecedorSelector } from './FornecedorSelector';
 import { QuickCreateFornecedor } from './QuickCreateFornecedor';
 import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
 import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
+import { PurchaseAttachmentsField } from './PurchaseAttachmentsField';
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -109,15 +110,30 @@ export function PurchaseFormDialog({
               </div>
             </div>
 
-            {/* Item Name */}
-            <div className="col-span-2">
-              <Label htmlFor="item_name">{isPrestador ? 'Nome do Serviço' : 'Nome do Produto'} *</Label>
-              <Input
-                id="item_name"
-                value={formData.item_name || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, item_name: e.target.value }))}
-                placeholder={isPrestador ? 'Ex: Instalação de piso' : 'Ex: Piso porcelanato 60x60'}
-              />
+            {/* Item Name + Marca (opcional, lado a lado) */}
+            <div className="col-span-2 grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3">
+              <div>
+                <Label htmlFor="item_name">{isPrestador ? 'Nome do Serviço' : 'Nome do Produto'} *</Label>
+                <Input
+                  id="item_name"
+                  value={formData.item_name || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, item_name: e.target.value }))}
+                  placeholder={isPrestador ? 'Ex: Instalação de piso' : 'Ex: Piso porcelanato 60x60'}
+                />
+              </div>
+              {!isPrestador && (
+                <div>
+                  <Label htmlFor="brand">
+                    Marca <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+                  </Label>
+                  <Input
+                    id="brand"
+                    value={formData.brand || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                    placeholder="Ex: Portobello, Tigre…"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="col-span-2">
@@ -432,6 +448,18 @@ export function PurchaseFormDialog({
                 rows={2}
               />
             </div>
+
+            {/* Anexos — só disponível quando a compra já existe (edição). */}
+            {isEditing && editingPurchaseId && formData.project_id && (
+              <div className="col-span-2 rounded-md border border-dashed border-border/70 bg-muted/20 p-3">
+                <PurchaseAttachmentsField
+                  mode="live"
+                  purchaseId={editingPurchaseId}
+                  projectId={formData.project_id}
+                  helperText="Imagens, PDF, planilhas — até 20 MB cada"
+                />
+              </div>
+            )}
           </div>
         </div>
 

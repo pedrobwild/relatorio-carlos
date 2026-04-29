@@ -50,6 +50,11 @@ import { Clock, ThumbsUp, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { PaymentSection } from '@/pages/compras/PaymentSection';
 import { parseFlexibleBRDate, parseLocalDate } from '@/lib/dates';
 import { addBusinessDays } from '@/lib/businessDays';
+import {
+  PurchaseAttachmentsField,
+  uploadPendingAttachments,
+  type PendingAttachment,
+} from '@/pages/compras/PurchaseAttachmentsField';
 
 /**
  * Recalcula a data prevista de entrega como N dias úteis após a data âncora.
@@ -405,6 +410,8 @@ function PurchaseRowDetail({
 interface NewPurchaseForm {
   project_id: string;
   item_name: string;
+  /** Marca do material — opcional. */
+  brand: string;
   category: string;
   supplier_name: string;
   estimated_cost: string;
@@ -429,6 +436,7 @@ const ESCRITORIO_ADDRESS = 'Rua Álvaro Rodrigues, 975';
 const EMPTY_FORM: NewPurchaseForm = {
   project_id: '',
   item_name: '',
+  brand: '',
   category: '',
   supplier_name: '',
   estimated_cost: '',
@@ -513,8 +521,14 @@ function NewPurchaseDialog({
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [dueDateOpen, setDueDateOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
 
-  useEffect(() => { if (open) setForm(EMPTY_FORM); }, [open]);
+  useEffect(() => {
+    if (open) {
+      setForm(EMPTY_FORM);
+      setPendingFiles([]);
+    }
+  }, [open]);
 
   const set = (field: keyof NewPurchaseForm, value: unknown) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -623,6 +637,7 @@ function NewPurchaseDialog({
         project_id: form.project_id,
         created_by: user.id,
         item_name: form.item_name.trim(),
+        brand: form.brand.trim() || null,
         category: form.category.trim() || null,
         supplier_name: form.supplier_name.trim() || null,
         estimated_cost: form.estimated_cost ? Number(form.estimated_cost.replace(',', '.')) : null,
@@ -657,8 +672,30 @@ function NewPurchaseDialog({
         if (expected) payload.expected_delivery_date = expected;
       }
 
-      const { error } = await supabase.from('project_purchases').insert(payload);
+      const { data: created, error } = await supabase
+        .from('project_purchases')
+        .insert(payload)
+        .select('id, project_id')
+        .single();
       if (error) throw error;
+
+      // Upload dos arquivos anexados (best-effort).
+      if (created && pendingFiles.length > 0) {
+        const { uploaded, failed } = await uploadPendingAttachments({
+          pending: pendingFiles,
+          purchaseId: created.id,
+          projectId: created.project_id,
+          userId: user.id,
+        });
+        if (failed > 0) {
+          toast.warning(`${failed} anexo(s) não foram enviados`, {
+            description: 'A solicitação foi criada. Tente reenviar os arquivos pela tela de edição.',
+          });
+        } else if (uploaded > 0) {
+          toast.success(`${uploaded} anexo(s) enviados`);
+        }
+      }
+
       toast.success('Solicitação criada com sucesso!', {
         description: `${form.item_name.trim()} foi adicionada ao calendário de compras.`,
       });
@@ -701,11 +738,24 @@ function NewPurchaseDialog({
             </Select>
           </div>
 
-          {/* Item — obrigatório */}
-          <div className="grid gap-1.5">
-            <Label className="text-sm font-medium">Item / Produto <span className="text-destructive">*</span></Label>
-            <Input placeholder="Ex: Cimento CP-II, Vergalhão 10mm…" value={form.item_name}
-              onChange={(e) => set('item_name', e.target.value)} className="h-9" />
+          {/* Item + Marca — marca opcional, lado a lado */}
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3">
+            <div className="grid gap-1.5">
+              <Label className="text-sm font-medium">Item / Produto <span className="text-destructive">*</span></Label>
+              <Input placeholder="Ex: Cimento CP-II, Vergalhão 10mm…" value={form.item_name}
+                onChange={(e) => set('item_name', e.target.value)} className="h-9" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-sm">
+                Marca <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                placeholder="Ex: Votorantim, Tigre…"
+                value={form.brand}
+                onChange={(e) => set('brand', e.target.value)}
+                className="h-9"
+              />
+            </div>
           </div>
 
           {/* Categoria + Fornecedor */}
@@ -898,6 +948,16 @@ function NewPurchaseDialog({
             <Label className="text-sm">Observações</Label>
             <Textarea placeholder="Urgência, ponto de entrega, contato do fornecedor…" value={form.notes}
               onChange={(e) => set('notes', e.target.value)} rows={2} className="text-sm resize-none" />
+          </div>
+
+          {/* Anexos — imagens e documentos da requisição */}
+          <div className="rounded-md border border-dashed border-border/70 bg-muted/20 p-3">
+            <PurchaseAttachmentsField
+              mode="pending"
+              pending={pendingFiles}
+              onPendingChange={setPendingFiles}
+              helperText="Imagens, PDF, planilhas — até 20 MB cada"
+            />
           </div>
         </div>
 
@@ -1719,6 +1779,11 @@ export default function CalendarioCompras() {
 
                               <TableCell className="max-w-[200px]">
                                 <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
+                                {(p as any).brand && (
+                                  <p className="text-[11px] text-muted-foreground truncate" title={(p as any).brand}>
+                                    {(p as any).brand}
+                                  </p>
+                                )}
                               </TableCell>
 
                               <TableCell className={cn(
