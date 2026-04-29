@@ -22,6 +22,7 @@ import {
   Plus,
   MoreHorizontal,
   Trash2,
+  User,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
