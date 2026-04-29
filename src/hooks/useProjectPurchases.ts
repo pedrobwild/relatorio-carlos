@@ -59,6 +59,7 @@ export interface PurchaseInput {
   activity_id?: string | null;
   fornecedor_id?: string | null;
   item_name: string;
+  brand?: string | null;
   description?: string | null;
   quantity: number;
   unit: string;
