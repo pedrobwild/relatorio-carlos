@@ -20,7 +20,9 @@ import {
   ChevronDown,
   ClipboardList,
   HardHat,
+  Info,
   Loader2,
+  type LucideIcon,
   MessageSquareText,
   Plus,
   Trash2,
@@ -263,22 +265,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 aria-labelledby={`subsec-services-${projectId}`}
                 className="flex flex-col gap-2 sm:gap-3 min-w-0"
               >
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/60">
-                  <ClipboardList className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                  <h4
-                    id={`subsec-services-${projectId}`}
-                    className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    Serviços em execução
-                  </h4>
-                  {services.length > 0 && (
-                    <span className="ml-auto text-[11px] font-medium text-muted-foreground tabular-nums">
-                      {services.length}
-                    </span>
-                  )}
-                </div>
+                <SubsectionHeader
+                  id={`subsec-services-${projectId}`}
+                  icon={ClipboardList}
+                  title="Serviços em execução"
+                  count={services.length}
+                />
                 {services.length === 0 && (
-                  <EmptyLine text="Nenhum serviço adicionado." />
+                  <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar serviço abaixo." />
                 )}
               {services.map((svc, i) => (
                 <div
@@ -384,22 +378,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 aria-labelledby={`subsec-workers-${projectId}`}
                 className="flex flex-col gap-2 sm:gap-3 min-w-0"
               >
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/60">
-                  <HardHat className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                  <h4
-                    id={`subsec-workers-${projectId}`}
-                    className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    Prestadores no local
-                  </h4>
-                  {workers.length > 0 && (
-                    <span className="ml-auto text-[11px] font-medium text-muted-foreground tabular-nums">
-                      {workers.length}
-                    </span>
-                  )}
-                </div>
+                <SubsectionHeader
+                  id={`subsec-workers-${projectId}`}
+                  icon={HardHat}
+                  title="Prestadores no local"
+                  count={workers.length}
+                />
                 {workers.length === 0 && (
-                  <EmptyLine text="Nenhum prestador adicionado." />
+                  <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar prestador abaixo." />
                 )}
               {workers.map((wk, i) => (
                 <div
@@ -689,7 +675,56 @@ function truncate(text: string, max: number): string {
 
 function EmptyLine({ text }: { text: string }) {
   return (
-    <div className="text-xs text-muted-foreground italic py-1">{text}</div>
+    <div
+      className="flex items-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
+      role="status"
+    >
+      <Info className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden="true" />
+      <span className="leading-snug">{text}</span>
+    </div>
+  );
+}
+
+interface SubsectionHeaderProps {
+  id: string;
+  icon: LucideIcon;
+  title: string;
+  /** Quando undefined, renderiza um placeholder shimmer (estado de carregamento). */
+  count?: number;
+}
+
+/**
+ * Cabeçalho padronizado das subseções (Serviços / Prestadores) dentro
+ * do card unificado. Mantém ícone, título e contador alinhados na mesma
+ * baseline (h-7) tanto no estado real quanto no de carregamento — assim
+ * não há "salto" visual quando os dados chegam.
+ */
+function SubsectionHeader({ id, icon: Icon, title, count }: SubsectionHeaderProps) {
+  const isLoading = count === undefined;
+  return (
+    <div className="flex h-7 items-center gap-2 pb-1.5 border-b border-border/60">
+      <Icon className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+      <h4
+        id={id}
+        className="text-xs font-semibold uppercase tracking-wide text-foreground/80 truncate"
+      >
+        {title}
+      </h4>
+      {isLoading ? (
+        <span
+          className={cn(SHIMMER_CLASS, 'ml-auto h-5 w-7 rounded-full shrink-0')}
+          aria-hidden
+        />
+      ) : (
+        <Badge
+          variant={count > 0 ? 'secondary' : 'outline'}
+          className="ml-auto h-5 min-w-[22px] justify-center px-1.5 text-[11px] font-semibold tabular-nums shrink-0"
+          aria-label={`${count} ${count === 1 ? 'item' : 'itens'}`}
+        >
+          {count}
+        </Badge>
+      )}
+    </div>
   );
 }
 
@@ -772,11 +807,16 @@ const LIST_ROW_SKELETON = (
 const ServicesSkeleton = memo(function ServicesSkeleton() {
   return (
     <div
-      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[260px]')}
+      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[300px]')}
       role="status"
       aria-busy="true"
       aria-label="Carregando serviços em execução"
     >
+      <SubsectionHeader
+        id="subsec-services-skeleton"
+        icon={ClipboardList}
+        title="Serviços em execução"
+      />
       {LIST_ROW_SKELETON}
       <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
     </div>
@@ -786,11 +826,16 @@ const ServicesSkeleton = memo(function ServicesSkeleton() {
 const WorkersSkeleton = memo(function WorkersSkeleton() {
   return (
     <div
-      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[260px]')}
+      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[300px]')}
       role="status"
       aria-busy="true"
       aria-label="Carregando prestadores no local"
     >
+      <SubsectionHeader
+        id="subsec-workers-skeleton"
+        icon={HardHat}
+        title="Prestadores no local"
+      />
       {LIST_ROW_SKELETON}
       <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
     </div>
