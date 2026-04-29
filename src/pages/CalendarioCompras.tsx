@@ -1779,6 +1779,11 @@ export default function CalendarioCompras() {
 
                               <TableCell className="max-w-[200px]">
                                 <p className="font-medium truncate" title={p.item_name}>{p.item_name}</p>
+                                {(p as any).brand && (
+                                  <p className="text-[11px] text-muted-foreground truncate" title={(p as any).brand}>
+                                    {(p as any).brand}
+                                  </p>
+                                )}
                               </TableCell>
 
                               <TableCell className={cn(
