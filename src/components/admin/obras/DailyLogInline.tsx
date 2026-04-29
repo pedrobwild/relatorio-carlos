@@ -221,22 +221,62 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none">
-          {/* Serviços em execução */}
+          {/* Serviços e prestadores — UNIFICADO num único colapsável.
+              Mantém duas subseções (Serviços / Prestadores) lado a lado em
+              telas largas e empilhadas no mobile. Modelo de dados continua
+              separado (services + workers); a unificação é puramente de
+              UI/UX para reduzir cliques e dar uma visão única de "quem está
+              fazendo o quê" no dia. */}
           <SectionCard
             icon={<ClipboardList className="h-4 w-4 text-primary" />}
-            title="Serviços em execução"
-            count={isLoading ? undefined : services.length}
-            defaultOpen={!isLoading && services.length > 0}
+            title="Serviços e prestadores"
+            count={isLoading ? undefined : services.length + workers.length}
+            defaultOpen={!isLoading && (services.length > 0 || workers.length > 0)}
             isLoading={isLoading}
-            loadingSkeleton={<ServicesSkeleton />}
-            previewWhenClosed={
-              isLoading
-                ? 'Carregando serviços…'
-                : services.length === 0
-                ? 'Nenhum serviço — toque para adicionar'
-                : `${services.length} ${services.length === 1 ? 'serviço' : 'serviços'} registrado${services.length === 1 ? '' : 's'}`
+            loadingSkeleton={
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <ServicesSkeleton />
+                <WorkersSkeleton />
+              </div>
             }
+            previewWhenClosed={(() => {
+              if (isLoading) return 'Carregando…';
+              if (services.length === 0 && workers.length === 0) {
+                return 'Nenhum serviço ou prestador — toque para adicionar';
+              }
+              const parts: string[] = [];
+              if (services.length > 0) {
+                parts.push(`${services.length} ${services.length === 1 ? 'serviço' : 'serviços'}`);
+              }
+              if (workers.length > 0) {
+                parts.push(`${workers.length} ${workers.length === 1 ? 'prestador' : 'prestadores'}`);
+              }
+              return parts.join(' • ');
+            })()}
+            // Esta seção ocupa as duas colunas do grid externo, já que
+            // internamente ela própria divide em duas colunas.
+            className="lg:col-span-2"
           >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              {/* ============== SUBSEÇÃO: Serviços em execução ============== */}
+              <section
+                aria-labelledby={`subsec-services-${projectId}`}
+                className="flex flex-col gap-2 sm:gap-3 min-w-0"
+              >
+                <div className="flex items-center gap-2 pb-1.5 border-b border-border/60">
+                  <ClipboardList className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                  <h4
+                    id={`subsec-services-${projectId}`}
+                    className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Serviços em execução
+                  </h4>
+                  {services.length > 0 && (
+                    <span className="ml-auto text-[11px] font-medium text-muted-foreground tabular-nums">
+                      {services.length}
+                    </span>
+                  )}
+                </div>
             <div className="flex flex-col gap-2 sm:gap-3">
               {services.length === 0 && (
                 <EmptyLine text="Nenhum serviço adicionado." />
