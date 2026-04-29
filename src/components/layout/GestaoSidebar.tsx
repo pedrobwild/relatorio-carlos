@@ -14,6 +14,7 @@ import {
   Sparkles,
   Search,
   Package,
+  Trash2,
   LucideIcon,
 } from "lucide-react";
 import {
@@ -64,6 +65,11 @@ export function GestaoSidebar() {
           label: "Nova Obra",
           icon: Plus,
           path: "/gestao/nova-obra",
+        },
+        {
+          label: "Lixeira",
+          icon: Trash2,
+          path: "/gestao/lixeira",
         },
       ],
     },
