@@ -493,9 +493,7 @@ export default function CalendarioObras() {
             <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
               <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="month">Mês</TabsTrigger>
-                <TabsTrigger value="week-list" title="Semana em formato de lista agrupada por obra">
-                  Semana · Lista
-                </TabsTrigger>
+                {/* "Semana · Lista" foi ocultada — Semana · Timeline é o default */}
                 <TabsTrigger value="week-timeline" title="Semana em formato de linha do tempo (Gantt)">
                   Semana · Timeline
                 </TabsTrigger>
