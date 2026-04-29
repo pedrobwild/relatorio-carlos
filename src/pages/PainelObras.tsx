@@ -71,6 +71,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { matchesSearch } from '@/lib/searchNormalize';
+import { countBusinessDaysInclusive } from '@/lib/businessDays';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   ETAPA_OPTIONS,
@@ -116,6 +117,31 @@ const computeDisplayStatus = (obra: {
   const hojeIso = format(new Date(), 'yyyy-MM-dd');
   if (entrega_oficial < hojeIso) return 'Atrasado';
   return status;
+};
+
+/**
+ * Calcula dias úteis de atraso entre `entrega_oficial` (cronograma planejado) e
+ * hoje. Retorna 0 quando: não há data planejada, a obra já foi entregue
+ * (`entrega_real`), está marcada como `Finalizada`, ou a entrega oficial ainda
+ * é hoje/futura. Reformular o cronograma (mover `entrega_oficial` para o
+ * futuro) zera o atraso automaticamente.
+ */
+const computeOverdueDays = (obra: {
+  entrega_oficial: string | null;
+  entrega_real: string | null;
+  etapa: PainelEtapa | null;
+}): number => {
+  if (!obra.entrega_oficial) return 0;
+  if (obra.entrega_real) return 0;
+  if (obra.etapa === 'Finalizada') return 0;
+  const hojeIso = format(new Date(), 'yyyy-MM-dd');
+  if (obra.entrega_oficial >= hojeIso) return 0;
+  const planned = parseISO(obra.entrega_oficial);
+  const today = new Date();
+  // Dias úteis entre o dia seguinte à entrega oficial e hoje (inclusivo).
+  const start = new Date(planned);
+  start.setDate(start.getDate() + 1);
+  return countBusinessDaysInclusive(start, today);
 };
 
 const statusDotClass = (s: PainelStatus | null): string => {
@@ -580,6 +606,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[100px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
                           <TableHead className="min-w-[130px]">Relacionamento</TableHead>
                           <TableHead className="min-w-[150px]"><SortableHeader label="Responsável" sortKey="responsavel_nome" /></TableHead>
+                          <TableHead className="min-w-[110px] text-right">Atraso</TableHead>
                           <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
@@ -626,8 +653,8 @@ export default function PainelObras() {
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Status · 3) Etapa · 4) Progresso · 5) Início Of. ·
 // 6) Entrega Of. · 7) Início Real · 8) Entrega Real · 9) Relacionamento ·
-// 10) Responsável · 11) Ações
-const PAINEL_COLUMN_COUNT = 11;
+// 10) Responsável · 11) Atraso · 12) Ações
+const PAINEL_COLUMN_COUNT = 12;
 
 interface ObraRowProps {
   obra: PainelObra;
@@ -807,6 +834,37 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
               ))}
             </SelectContent>
           </Select>
+        </TableCell>
+
+        {/* Atraso (dias úteis vs. cronograma planejado) */}
+        <TableCell className="text-right tabular-nums">
+          {(() => {
+            const dias = computeOverdueDays(obra);
+            if (dias <= 0) {
+              return <span className="text-xs text-muted-foreground">—</span>;
+            }
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold',
+                      dias > 10
+                        ? 'bg-destructive/10 text-destructive'
+                        : 'bg-warning/15 text-warning-foreground',
+                    )}
+                    aria-label={`${dias} dias úteis de atraso`}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {dias}d
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {dias} dia{dias === 1 ? '' : 's'} útil{dias === 1 ? '' : 'eis'} de atraso vs. entrega oficial. Ajuste o cronograma para zerar.
+                </TooltipContent>
+              </Tooltip>
+            );
+          })()}
         </TableCell>
 
         <TableCell className={cn(
