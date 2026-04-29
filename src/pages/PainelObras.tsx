@@ -836,6 +836,37 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
           </Select>
         </TableCell>
 
+        {/* Atraso (dias úteis vs. cronograma planejado) */}
+        <TableCell className="text-right tabular-nums">
+          {(() => {
+            const dias = computeOverdueDays(obra);
+            if (dias <= 0) {
+              return <span className="text-xs text-muted-foreground">—</span>;
+            }
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold',
+                      dias > 10
+                        ? 'bg-destructive/10 text-destructive'
+                        : 'bg-warning/15 text-warning-foreground',
+                    )}
+                    aria-label={`${dias} dias úteis de atraso`}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {dias}d
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {dias} dia{dias === 1 ? '' : 's'} útil{dias === 1 ? '' : 'eis'} de atraso vs. entrega oficial. Ajuste o cronograma para zerar.
+                </TooltipContent>
+              </Tooltip>
+            );
+          })()}
+        </TableCell>
+
         <TableCell className={cn(
           'sticky right-0 z-sticky-right border-l border-border',
           // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
