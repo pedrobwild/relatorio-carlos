@@ -625,11 +625,13 @@ export default function PainelObras() {
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Status · 3) Etapa · 4) Progresso · 5) Início Of. ·
-// 6) Entrega Of. · 7) Início Real · 8) Entrega Real · 9) Relacionamento · 10) Ações
-const PAINEL_COLUMN_COUNT = 10;
+// 6) Entrega Of. · 7) Início Real · 8) Entrega Real · 9) Relacionamento ·
+// 10) Responsável · 11) Ações
+const PAINEL_COLUMN_COUNT = 11;
 
 interface ObraRowProps {
   obra: PainelObra;
+  staffUsers: { id: string; nome: string }[];
   expanded: boolean;
   onToggleExpanded: () => void;
   onUpdate: (patch: PainelObraPatch) => void;
@@ -637,7 +639,7 @@ interface ObraRowProps {
   onDeleteRequest: () => void;
 }
 
-function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
+function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
   return (
