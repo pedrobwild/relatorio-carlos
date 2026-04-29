@@ -1596,12 +1596,22 @@ export default function CalendarioCompras() {
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap max-w-[180px]">
-                                <span
-                                  className={cn('truncate inline-block max-w-full align-middle', !p.customer_name && 'text-muted-foreground italic')}
-                                  title={p.customer_name || 'Sem cliente'}
-                                >
-                                  {p.customer_name || '—'}
-                                </span>
+                                {p.customer_name ? (
+                                  <span
+                                    className="truncate inline-block max-w-full align-middle"
+                                    title={p.customer_name}
+                                  >
+                                    {p.customer_name}
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="truncate inline-block max-w-full align-middle text-muted-foreground italic"
+                                    title="Sem cliente vinculado a esta obra"
+                                    aria-label="Sem cliente vinculado a esta obra"
+                                  >
+                                    —
+                                  </span>
+                                )}
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap max-w-[160px]">
