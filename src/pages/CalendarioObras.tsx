@@ -811,6 +811,42 @@ export default function CalendarioObras() {
             </Label>
           </div>
         )}
+
+        {/* Filtro por prestador (somente week-timeline) */}
+        {view === 'week-timeline' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" />
+              Prestador:
+            </div>
+            <Select value={fornecedorFilter} onValueChange={setFornecedorFilter}>
+              <SelectTrigger className="h-9 w-full sm:w-[240px]">
+                <SelectValue placeholder="Todos os prestadores" />
+              </SelectTrigger>
+              <SelectContent position="popper" className="max-h-72">
+                <SelectItem value="all">
+                  Todos os prestadores ({fornecedorOptions.list.length + (fornecedorOptions.hasEmpty ? 1 : 0)})
+                </SelectItem>
+                {fornecedorOptions.list.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.nome}
+                  </SelectItem>
+                ))}
+                {fornecedorOptions.hasEmpty && (
+                  <SelectItem value="__none__">
+                    <span className="text-muted-foreground italic">Sem prestador</span>
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {fornecedorFilter !== 'all' && (
+              <Button variant="ghost" size="sm" onClick={() => setFornecedorFilter('all')} className="h-9">
+                <X className="h-3.5 w-3.5 mr-1" />
+                Limpar
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Body */}
