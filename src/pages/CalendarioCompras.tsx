@@ -1004,6 +1004,39 @@ export default function CalendarioCompras() {
     updateField.mutate({ id, field, value });
   };
 
+  // Quick action: exclusão hard delete. As solicitações de compra deste módulo
+  // não têm soft delete (não há coluna deleted_at em project_purchases), então
+  // a remoção é definitiva — por isso o fluxo passa por AlertDialog antes de
+  // chegar aqui.
+  const deletePurchase = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('project_purchases').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      toast.success('Solicitação de compra excluída');
+      setDeleteTarget(null);
+    },
+    onError: (e: Error) => {
+      console.error('[CalendarioCompras] delete error:', e);
+      toast.error('Não foi possível excluir', {
+        description: e?.message ?? 'Tente novamente em alguns instantes.',
+      });
+    },
+  });
+
+  /**
+   * Quick action: editar.
+   * O calendário consolida compras de várias obras; a edição completa
+   * (com parcelas, atividade vinculada, etc.) vive na página da obra.
+   * Navegamos para `/obra/:projectId/compras` — o usuário cai direto no
+   * módulo CRUD daquela obra.
+   */
+  const handleEditPurchase = (p: PurchaseWithProject) => {
+    navigate(`/obra/${p.project_id}/compras`);
+  };
+
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach((p) => map.set(p.project_id, p.project_name));
