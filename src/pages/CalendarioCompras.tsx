@@ -410,6 +410,8 @@ function PurchaseRowDetail({
 interface NewPurchaseForm {
   project_id: string;
   item_name: string;
+  /** Marca do material — opcional. */
+  brand: string;
   category: string;
   supplier_name: string;
   estimated_cost: string;
@@ -434,6 +436,7 @@ const ESCRITORIO_ADDRESS = 'Rua Álvaro Rodrigues, 975';
 const EMPTY_FORM: NewPurchaseForm = {
   project_id: '',
   item_name: '',
+  brand: '',
   category: '',
   supplier_name: '',
   estimated_cost: '',
