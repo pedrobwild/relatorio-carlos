@@ -452,13 +452,29 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   icon={HardHat}
                   title="Prestadores no local"
                   count={workers.length}
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={addWorker}
+                      disabled={isSaving}
+                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
+                      aria-label="Adicionar prestador"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                      Adicionar
+                    </Button>
+                  }
                 />
                 {workers.length === 0 && (
-                  <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar prestador abaixo." />
+                  <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar para começar." />
                 )}
+              <div ref={workersListRef} className="flex flex-col gap-2 sm:gap-3 min-w-0">
               {workers.map((wk, i) => (
                 <div
                   key={i}
+                  data-row-index={i}
                   className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover */}
