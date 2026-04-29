@@ -239,6 +239,7 @@ export function usePainelObras() {
             if ('relacionamento' in patch) next.painel_relacionamento = patch.relacionamento;
             if ('external_budget_id' in patch)
               next.painel_external_budget_id = patch.external_budget_id;
+            if ('responsavel_id' in patch) next.painel_responsavel_id = patch.responsavel_id;
             if ('inicio_oficial' in patch) next.planned_start_date = patch.inicio_oficial;
             if ('entrega_oficial' in patch) next.planned_end_date = patch.entrega_oficial;
             if ('inicio_real' in patch) next.actual_start_date = patch.inicio_real;
