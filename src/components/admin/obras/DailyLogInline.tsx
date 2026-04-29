@@ -14,7 +14,7 @@
  * project_daily_logs + filhos). A data default é a segunda-feira da
  * semana corrente ("registro da semana") — pode ser ajustada.
  */
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CalendarRange,
   ChevronDown,
@@ -123,19 +123,33 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
     [services, workers, notes, planning],
   );
 
+  // ----- refs para foco pós-inserção -----
+  // Quando o usuário aciona "Adicionar" (header ou rodapé), guardamos o
+  // índice do novo item em pendingFocusRef.{services|workers}; um efeito
+  // após o re-render localiza a linha via [data-row-index] dentro do
+  // container correspondente e dá scrollIntoView + focus no primeiro
+  // campo marcado com [data-autofocus].
+  const servicesListRef = useRef<HTMLDivElement | null>(null);
+  const workersListRef = useRef<HTMLDivElement | null>(null);
+  const pendingFocusRef = useRef<{ services?: number; workers?: number }>({});
+
   // ----- ações serviços -----
-  const addService = () =>
-    setServices((curr) => [
-      ...curr,
-      {
-        description: '',
-        status: 'Em andamento',
-        observations: null,
-        start_date: null,
-        end_date: null,
-        position: curr.length,
-      },
-    ]);
+  const addService = useCallback(() => {
+    setServices((curr) => {
+      pendingFocusRef.current.services = curr.length;
+      return [
+        ...curr,
+        {
+          description: '',
+          status: 'Em andamento',
+          observations: null,
+          start_date: null,
+          end_date: null,
+          position: curr.length,
+        },
+      ];
+    });
+  }, []);
   const updateService = (index: number, patch: Partial<DailyLogService>) =>
     setServices((curr) =>
       curr.map((s, i) => (i === index ? { ...s, ...patch } : s)),
@@ -144,26 +158,61 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
     setServices((curr) => curr.filter((_, i) => i !== index));
 
   // ----- ações prestadores -----
-  const addWorker = () =>
-    setWorkers((curr) => [
-      ...curr,
-      {
-        name: '',
-        role: null,
-        period_start: null,
-        period_end: null,
-        shift_start: null,
-        shift_end: null,
-        notes: null,
-        position: curr.length,
-      },
-    ]);
+  const addWorker = useCallback(() => {
+    setWorkers((curr) => {
+      pendingFocusRef.current.workers = curr.length;
+      return [
+        ...curr,
+        {
+          name: '',
+          role: null,
+          period_start: null,
+          period_end: null,
+          shift_start: null,
+          shift_end: null,
+          notes: null,
+          position: curr.length,
+        },
+      ];
+    });
+  }, []);
   const updateWorker = (index: number, patch: Partial<DailyLogWorker>) =>
     setWorkers((curr) =>
       curr.map((w, i) => (i === index ? { ...w, ...patch } : w)),
     );
   const removeWorker = (index: number) =>
     setWorkers((curr) => curr.filter((_, i) => i !== index));
+
+  // Foca o último item adicionado depois do re-render. Usa um pequeno
+  // requestAnimationFrame para garantir que o DOM da nova linha já está
+  // pintado antes do scroll/focus.
+  useEffect(() => {
+    const idx = pendingFocusRef.current.services;
+    if (idx === undefined || !servicesListRef.current) return;
+    pendingFocusRef.current.services = undefined;
+    requestAnimationFrame(() => {
+      const row = servicesListRef.current?.querySelector<HTMLElement>(
+        `[data-row-index="${idx}"]`,
+      );
+      if (!row) return;
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      row.querySelector<HTMLElement>('[data-autofocus="true"]')?.focus();
+    });
+  }, [services.length]);
+
+  useEffect(() => {
+    const idx = pendingFocusRef.current.workers;
+    if (idx === undefined || !workersListRef.current) return;
+    pendingFocusRef.current.workers = undefined;
+    requestAnimationFrame(() => {
+      const row = workersListRef.current?.querySelector<HTMLElement>(
+        `[data-row-index="${idx}"]`,
+      );
+      if (!row) return;
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      row.querySelector<HTMLElement>('[data-autofocus="true"]')?.focus();
+    });
+  }, [workers.length]);
 
   // ----- salvar -----
   const handleSave = async () => {
@@ -270,13 +319,29 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   icon={ClipboardList}
                   title="Serviços em execução"
                   count={services.length}
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={addService}
+                      disabled={isSaving}
+                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
+                      aria-label="Adicionar serviço"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                      Adicionar
+                    </Button>
+                  }
                 />
                 {services.length === 0 && (
-                  <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar serviço abaixo." />
+                  <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar para começar." />
                 )}
+              <div ref={servicesListRef} className="flex flex-col gap-2 sm:gap-3 min-w-0">
               {services.map((svc, i) => (
                 <div
                   key={i}
+                  data-row-index={i}
                   className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover (mobile-friendly) */}
@@ -308,6 +373,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       }
                       className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
+                      data-autofocus="true"
                     />
                     <Select
                       value={svc.status ?? ''}
@@ -360,17 +426,20 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addService}
-                className="w-full sm:w-auto sm:self-start h-9 text-sm"
-                disabled={isSaving}
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Adicionar serviço
-              </Button>
+              </div>
+              {services.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addService}
+                  className="w-full sm:w-auto sm:self-start h-9 text-sm"
+                  disabled={isSaving}
+                >
+                  <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Adicionar outro serviço
+                </Button>
+              )}
               </section>
 
               {/* ============== SUBSEÇÃO: Prestadores no local ============== */}
@@ -383,13 +452,29 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   icon={HardHat}
                   title="Prestadores no local"
                   count={workers.length}
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={addWorker}
+                      disabled={isSaving}
+                      className="h-7 px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10"
+                      aria-label="Adicionar prestador"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                      Adicionar
+                    </Button>
+                  }
                 />
                 {workers.length === 0 && (
-                  <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar prestador abaixo." />
+                  <EmptyLine text="Nenhum prestador adicionado — toque em Adicionar para começar." />
                 )}
+              <div ref={workersListRef} className="flex flex-col gap-2 sm:gap-3 min-w-0">
               {workers.map((wk, i) => (
                 <div
                   key={i}
+                  data-row-index={i}
                   className="rounded-lg border border-border bg-card p-2.5 sm:p-3 flex flex-col gap-2 sm:gap-3 shadow-sm min-w-0"
                 >
                   {/* Header da linha: índice + remover */}
@@ -421,6 +506,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                       }
                       className="h-9 text-sm w-full min-w-0"
                       disabled={isSaving}
+                      data-autofocus="true"
                     />
                     <Input
                       value={wk.role ?? ''}
@@ -483,17 +569,20 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   />
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addWorker}
-                className="w-full sm:w-auto sm:self-start h-9 text-sm"
-                disabled={isSaving}
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Adicionar prestador
-              </Button>
+              </div>
+              {workers.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addWorker}
+                  className="w-full sm:w-auto sm:self-start h-9 text-sm"
+                  disabled={isSaving}
+                >
+                  <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Adicionar outro prestador
+                </Button>
+              )}
               </section>
             </div>
           </SectionCard>
@@ -691,18 +780,26 @@ interface SubsectionHeaderProps {
   title: string;
   /** Quando undefined, renderiza um placeholder shimmer (estado de carregamento). */
   count?: number;
+  /** Slot opcional para uma ação rápida (ex.: "Adicionar"). */
+  action?: React.ReactNode;
 }
 
 /**
  * Cabeçalho padronizado das subseções (Serviços / Prestadores) dentro
- * do card unificado. Mantém ícone, título e contador alinhados na mesma
- * baseline (h-7) tanto no estado real quanto no de carregamento — assim
- * não há "salto" visual quando os dados chegam.
+ * do card unificado. Mantém ícone, título, contador e ação rápida
+ * alinhados na mesma baseline tanto no estado real quanto no de
+ * carregamento — assim não há "salto" visual quando os dados chegam.
  */
-function SubsectionHeader({ id, icon: Icon, title, count }: SubsectionHeaderProps) {
+function SubsectionHeader({
+  id,
+  icon: Icon,
+  title,
+  count,
+  action,
+}: SubsectionHeaderProps) {
   const isLoading = count === undefined;
   return (
-    <div className="flex h-7 items-center gap-2 pb-1.5 border-b border-border/60">
+    <div className="flex min-h-9 items-center gap-2 pb-1.5 border-b border-border/60">
       <Icon className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
       <h4
         id={id}
@@ -718,12 +815,16 @@ function SubsectionHeader({ id, icon: Icon, title, count }: SubsectionHeaderProp
       ) : (
         <Badge
           variant={count > 0 ? 'secondary' : 'outline'}
-          className="ml-auto h-5 min-w-[22px] justify-center px-1.5 text-[11px] font-semibold tabular-nums shrink-0"
+          className={cn(
+            'h-5 min-w-[22px] justify-center px-1.5 text-[11px] font-semibold tabular-nums shrink-0',
+            action ? 'ml-auto' : 'ml-auto',
+          )}
           aria-label={`${count} ${count === 1 ? 'item' : 'itens'}`}
         >
           {count}
         </Badge>
       )}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
