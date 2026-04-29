@@ -118,6 +118,31 @@ const computeDisplayStatus = (obra: {
   return status;
 };
 
+/**
+ * Calcula dias úteis de atraso entre `entrega_oficial` (cronograma planejado) e
+ * hoje. Retorna 0 quando: não há data planejada, a obra já foi entregue
+ * (`entrega_real`), está marcada como `Finalizada`, ou a entrega oficial ainda
+ * é hoje/futura. Reformular o cronograma (mover `entrega_oficial` para o
+ * futuro) zera o atraso automaticamente.
+ */
+const computeOverdueDays = (obra: {
+  entrega_oficial: string | null;
+  entrega_real: string | null;
+  etapa: PainelEtapa | null;
+}): number => {
+  if (!obra.entrega_oficial) return 0;
+  if (obra.entrega_real) return 0;
+  if (obra.etapa === 'Finalizada') return 0;
+  const hojeIso = format(new Date(), 'yyyy-MM-dd');
+  if (obra.entrega_oficial >= hojeIso) return 0;
+  const planned = parseISO(obra.entrega_oficial);
+  const today = new Date();
+  // Dias úteis entre o dia seguinte à entrega oficial e hoje (inclusivo).
+  const start = new Date(planned);
+  start.setDate(start.getDate() + 1);
+  return countBusinessDaysInclusive(start, today);
+};
+
 const statusDotClass = (s: PainelStatus | null): string => {
   switch (s) {
     case 'Aguardando': return 'bg-info';
