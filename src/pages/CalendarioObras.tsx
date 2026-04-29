@@ -138,6 +138,11 @@ export default function CalendarioObras() {
   const [onlyMicroSteps, setOnlyMicroSteps] = useState<boolean>(
     () => searchParams.get('microetapas') === '1',
   );
+  // Filtro (somente week-timeline): atividades de um prestador específico.
+  // '__none__' representa atividades sem prestador atribuído. Persistido em ?prestador=.
+  const [fornecedorFilter, setFornecedorFilter] = useState<string>(
+    () => searchParams.get('prestador') || 'all',
+  );
 
   // Sincroniza os filtros + visualização atuais para a query string. Usamos
   // `replace` para não poluir o histórico de navegação a cada toggle e
@@ -156,6 +161,8 @@ export default function CalendarioObras() {
     else next.delete('concluidas');
     if (onlyMicroSteps && view === 'week-timeline') next.set('microetapas', '1');
     else next.delete('microetapas');
+    if (fornecedorFilter && fornecedorFilter !== 'all' && view === 'week-timeline') next.set('prestador', fornecedorFilter);
+    else next.delete('prestador');
 
     // Visualização: só persiste se diferente do default ('week-timeline') para manter URLs limpas.
     if (view && view !== 'week-timeline') next.set('view', view);
@@ -189,7 +196,7 @@ export default function CalendarioObras() {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectFilter, etapaFilter, includeCompleted, onlyMicroSteps, view, refDate, rangeStartDate, rangeEndDate]);
+  }, [projectFilter, etapaFilter, includeCompleted, onlyMicroSteps, fornecedorFilter, view, refDate, rangeStartDate, rangeEndDate]);
 
 
   // Range validation (start ≤ end). Used to gate the "Aplicar" button.
@@ -339,6 +346,24 @@ export default function CalendarioObras() {
     return { list, hasEmpty };
   }, [visibleByProject]);
 
+  // Prestadores disponíveis no recorte visível (week-timeline). Cada item carrega
+  // o id do fornecedor e o nome resolvido. '__none__' é exposto se houver
+  // atividades sem prestador atribuído.
+  const fornecedorOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    let hasEmpty = false;
+    for (const g of visibleByProject) {
+      for (const a of g.items) {
+        if (a.fornecedor_id && a.fornecedor_nome) map.set(a.fornecedor_id, a.fornecedor_nome);
+        else hasEmpty = true;
+      }
+    }
+    const list = Array.from(map.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    return { list, hasEmpty };
+  }, [visibleByProject]);
+
   const filteredByProject = useMemo(() => {
     // 1) Filtro de obra
     const byProj =
@@ -363,11 +388,23 @@ export default function CalendarioObras() {
     // 3) Filtro "apenas micro-etapas" — válido só em week-timeline + staff.
     //    Mantém somente atividades que são children (parent_activity_id !== null),
     //    ou seja, resultados de uma quebra em micro-etapas.
-    if (!onlyMicroSteps || view !== 'week-timeline' || !canBreak) return byEtapa;
-    return byEtapa
-      .map((g) => ({ ...g, items: g.items.filter((a) => a.parent_activity_id !== null) }))
+    const byMicro = (!onlyMicroSteps || view !== 'week-timeline' || !canBreak)
+      ? byEtapa
+      : byEtapa
+          .map((g) => ({ ...g, items: g.items.filter((a) => a.parent_activity_id !== null) }))
+          .filter((g) => g.items.length > 0);
+
+    // 4) Filtro por prestador — válido só em week-timeline. '__none__' = sem prestador.
+    if (fornecedorFilter === 'all' || view !== 'week-timeline') return byMicro;
+    return byMicro
+      .map((g) => ({
+        ...g,
+        items: g.items.filter((a) =>
+          fornecedorFilter === '__none__' ? !a.fornecedor_id : a.fornecedor_id === fornecedorFilter,
+        ),
+      }))
       .filter((g) => g.items.length > 0);
-  }, [visibleByProject, projectFilter, etapaFilter, onlyMicroSteps, view, canBreak]);
+  }, [visibleByProject, projectFilter, etapaFilter, onlyMicroSteps, fornecedorFilter, view, canBreak]);
 
   const filteredActivities = useMemo(
     () => filteredByProject.flatMap((g) => g.items),
@@ -772,6 +809,42 @@ export default function CalendarioObras() {
             >
               Apenas micro-etapas
             </Label>
+          </div>
+        )}
+
+        {/* Filtro por prestador (somente week-timeline) */}
+        {view === 'week-timeline' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" />
+              Prestador:
+            </div>
+            <Select value={fornecedorFilter} onValueChange={setFornecedorFilter}>
+              <SelectTrigger className="h-9 w-full sm:w-[240px]">
+                <SelectValue placeholder="Todos os prestadores" />
+              </SelectTrigger>
+              <SelectContent position="popper" className="max-h-72">
+                <SelectItem value="all">
+                  Todos os prestadores ({fornecedorOptions.list.length + (fornecedorOptions.hasEmpty ? 1 : 0)})
+                </SelectItem>
+                {fornecedorOptions.list.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.nome}
+                  </SelectItem>
+                ))}
+                {fornecedorOptions.hasEmpty && (
+                  <SelectItem value="__none__">
+                    <span className="text-muted-foreground italic">Sem prestador</span>
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {fornecedorFilter !== 'all' && (
+              <Button variant="ghost" size="sm" onClick={() => setFornecedorFilter('all')} className="h-9">
+                <X className="h-3.5 w-3.5 mr-1" />
+                Limpar
+              </Button>
+            )}
           </div>
         )}
       </div>
