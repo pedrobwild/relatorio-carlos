@@ -69,6 +69,7 @@ import { isNonBusinessDay } from '@/lib/businessDays';
 import { useNonWorkingDays } from '@/hooks/useNonWorkingDays';
 import type { WeekActivity, SubActivityInput } from '@/hooks/useWeekActivities';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
+import { useFornecedoresPrestadores } from '@/hooks/useFornecedoresPrestadores';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Row {
@@ -76,9 +77,15 @@ interface Row {
   planned_start: Date;
   planned_end: Date;
   responsible_user_id: string | null;
+  /**
+   * Prestador (fornecedor terceirizado) que executará esta micro-etapa.
+   * Indicado direto no mesmo modal — sem precisar abrir outro fluxo.
+   */
+  fornecedor_id: string | null;
 }
 
 const NO_RESPONSIBLE = '__none__';
+const NO_FORNECEDOR = '__none__';
 
 interface Props {
   parent: WeekActivity | null;
