@@ -263,22 +263,14 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 aria-labelledby={`subsec-services-${projectId}`}
                 className="flex flex-col gap-2 sm:gap-3 min-w-0"
               >
-                <div className="flex items-center gap-2 pb-1.5 border-b border-border/60">
-                  <ClipboardList className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                  <h4
-                    id={`subsec-services-${projectId}`}
-                    className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    Serviços em execução
-                  </h4>
-                  {services.length > 0 && (
-                    <span className="ml-auto text-[11px] font-medium text-muted-foreground tabular-nums">
-                      {services.length}
-                    </span>
-                  )}
-                </div>
+                <SubsectionHeader
+                  id={`subsec-services-${projectId}`}
+                  icon={ClipboardList}
+                  title="Serviços em execução"
+                  count={services.length}
+                />
                 {services.length === 0 && (
-                  <EmptyLine text="Nenhum serviço adicionado." />
+                  <EmptyLine text="Nenhum serviço adicionado — toque em Adicionar serviço abaixo." />
                 )}
               {services.map((svc, i) => (
                 <div
