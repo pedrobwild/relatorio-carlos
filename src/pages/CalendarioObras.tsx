@@ -138,6 +138,11 @@ export default function CalendarioObras() {
   const [onlyMicroSteps, setOnlyMicroSteps] = useState<boolean>(
     () => searchParams.get('microetapas') === '1',
   );
+  // Filtro (somente week-timeline): atividades de um prestador específico.
+  // '__none__' representa atividades sem prestador atribuído. Persistido em ?prestador=.
+  const [fornecedorFilter, setFornecedorFilter] = useState<string>(
+    () => searchParams.get('prestador') || 'all',
+  );
 
   // Sincroniza os filtros + visualização atuais para a query string. Usamos
   // `replace` para não poluir o histórico de navegação a cada toggle e
