@@ -34,8 +34,9 @@ vi.mock('@/hooks/useProjectDailyLog', async () => {
     );
   return {
     ...actual,
-    useProjectDailyLog: (...args: unknown[]) => mockUseProjectDailyLog(...args),
-    useSaveProjectDailyLog: (...args: unknown[]) =>
+    useProjectDailyLog: (...args: Parameters<typeof actual.useProjectDailyLog>) =>
+      mockUseProjectDailyLog(...args),
+    useSaveProjectDailyLog: (...args: Parameters<typeof actual.useSaveProjectDailyLog>) =>
       mockUseSaveProjectDailyLog(...args),
   };
 });
