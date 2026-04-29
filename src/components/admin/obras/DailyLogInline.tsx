@@ -257,7 +257,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             // internamente ela própria divide em duas colunas.
             className="lg:col-span-2"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
               {/* ============== SUBSEÇÃO: Serviços em execução ============== */}
               <section
                 aria-labelledby={`subsec-services-${projectId}`}
