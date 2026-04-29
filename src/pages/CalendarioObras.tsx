@@ -346,6 +346,24 @@ export default function CalendarioObras() {
     return { list, hasEmpty };
   }, [visibleByProject]);
 
+  // Prestadores disponíveis no recorte visível (week-timeline). Cada item carrega
+  // o id do fornecedor e o nome resolvido. '__none__' é exposto se houver
+  // atividades sem prestador atribuído.
+  const fornecedorOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    let hasEmpty = false;
+    for (const g of visibleByProject) {
+      for (const a of g.items) {
+        if (a.fornecedor_id && a.fornecedor_nome) map.set(a.fornecedor_id, a.fornecedor_nome);
+        else hasEmpty = true;
+      }
+    }
+    const list = Array.from(map.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    return { list, hasEmpty };
+  }, [visibleByProject]);
+
   const filteredByProject = useMemo(() => {
     // 1) Filtro de obra
     const byProj =
