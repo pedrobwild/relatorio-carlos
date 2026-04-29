@@ -165,7 +165,7 @@ function DateCell({
 
 // ─── StatusCell ───────────────────────────────────────────────────────────────
 function StatusCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSave: (id: string, v: CalendarStatus) => void }) {
-  const current = toCalendarStatus(purchase.status);
+  const current = toCalendarStatus(purchase.status, (purchase as any).paid_at);
   const cfg = calendarStatusConfig[current];
   const Icon = cfg.icon;
   return (
