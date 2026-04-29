@@ -293,6 +293,7 @@ export default function PainelObras() {
   const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
 
   type SortKey =
+    | 'atraso'
     | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
     | 'entrega_real'   | 'responsavel_nome' | null;
   const [sortKey, setSortKey] = useState<SortKey>(null);
@@ -350,6 +351,11 @@ export default function PainelObras() {
       );
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
+        if (sortKey === 'atraso') {
+          const av = computeOverdueDays(a);
+          const bv = computeOverdueDays(b);
+          return sortDir === 'asc' ? av - bv : bv - av;
+        }
         const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
         if (!av && !bv) return 0; if (!av) return 1; if (!bv) return -1;
         return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
@@ -606,7 +612,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[100px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
                           <TableHead className="min-w-[130px]">Relacionamento</TableHead>
                           <TableHead className="min-w-[150px]"><SortableHeader label="Responsável" sortKey="responsavel_nome" /></TableHead>
-                          <TableHead className="min-w-[110px] text-right">Atraso</TableHead>
+                          <TableHead className="min-w-[110px] text-right"><SortableHeader label="Atraso" sortKey="atraso" /></TableHead>
                           <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
