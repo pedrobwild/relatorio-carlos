@@ -153,9 +153,11 @@ export function usePainelObras() {
     refetch,
   } = useProjectsQuery();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
+  const { data: staffUsers = [] } = useStaffUsers();
 
   const obras = useMemo<PainelObra[]>(() => {
     const summaryMap = new Map(summaries.map((s) => [s.id, s]));
+    const staffMap = new Map(staffUsers.map((u) => [u.id, u.nome]));
     return projects.map((p) => {
       const s = summaryMap.get(p.id);
       // Campos do painel vêm da row crua de projects (cast por compatibilidade
@@ -168,8 +170,10 @@ export function usePainelObras() {
         painel_status?: PainelStatus | null;
         painel_relacionamento?: PainelRelacionamento | null;
         painel_external_budget_id?: string | null;
+        painel_responsavel_id?: string | null;
         painel_ultima_atualizacao?: string;
       };
+      const responsavelId = raw.painel_responsavel_id ?? null;
       return {
         id: p.id,
         nome: p.name,
@@ -186,6 +190,8 @@ export function usePainelObras() {
         status: raw.painel_status ?? null,
         relacionamento: raw.painel_relacionamento ?? null,
         external_budget_id: raw.painel_external_budget_id ?? null,
+        responsavel_id: responsavelId,
+        responsavel_nome: responsavelId ? (staffMap.get(responsavelId) ?? null) : null,
         ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
         progress_percentage:
           s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
@@ -193,7 +199,7 @@ export function usePainelObras() {
         overdue_count: s?.overdue_count ?? 0,
       };
     });
-  }, [projects, summaries]);
+  }, [projects, summaries, staffUsers]);
 
   const update = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: PainelObraPatch }) => {
