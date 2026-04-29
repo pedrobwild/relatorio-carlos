@@ -1465,6 +1465,7 @@ export default function CalendarioCompras() {
                         <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
                         <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                         <TableHead className="whitespace-nowrap">Status</TableHead>
+                        <TableHead className="w-10 text-right pr-2"><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
