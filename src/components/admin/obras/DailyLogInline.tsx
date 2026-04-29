@@ -377,29 +377,30 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 <Plus className="h-4 w-4 mr-1.5" />
                 Adicionar serviço
               </Button>
-            </div>
-          </SectionCard>
+              </section>
 
-          {/* Prestadores no local */}
-          <SectionCard
-            icon={<HardHat className="h-4 w-4 text-primary" />}
-            title="Prestadores no local"
-            count={isLoading ? undefined : workers.length}
-            defaultOpen={!isLoading && workers.length > 0}
-            isLoading={isLoading}
-            loadingSkeleton={<WorkersSkeleton />}
-            previewWhenClosed={
-              isLoading
-                ? 'Carregando prestadores…'
-                : workers.length === 0
-                ? 'Nenhum prestador — toque para adicionar'
-                : `${workers.length} ${workers.length === 1 ? 'prestador' : 'prestadores'} registrado${workers.length === 1 ? '' : 's'}`
-            }
-          >
-            <div className="flex flex-col gap-2 sm:gap-3">
-              {workers.length === 0 && (
-                <EmptyLine text="Nenhum prestador adicionado." />
-              )}
+              {/* ============== SUBSEÇÃO: Prestadores no local ============== */}
+              <section
+                aria-labelledby={`subsec-workers-${projectId}`}
+                className="flex flex-col gap-2 sm:gap-3 min-w-0"
+              >
+                <div className="flex items-center gap-2 pb-1.5 border-b border-border/60">
+                  <HardHat className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                  <h4
+                    id={`subsec-workers-${projectId}`}
+                    className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Prestadores no local
+                  </h4>
+                  {workers.length > 0 && (
+                    <span className="ml-auto text-[11px] font-medium text-muted-foreground tabular-nums">
+                      {workers.length}
+                    </span>
+                  )}
+                </div>
+                {workers.length === 0 && (
+                  <EmptyLine text="Nenhum prestador adicionado." />
+                )}
               {workers.map((wk, i) => (
                 <div
                   key={i}
