@@ -887,8 +887,15 @@ export default function CalendarioCompras() {
   const navigate = useNavigate();
   // Ordenação por "Solicitada em" (created_at). null = ordem padrão (planned_purchase_date asc).
   const [requestedSort, setRequestedSort] = useState<'asc' | 'desc' | null>(null);
+  // Ordenação por nome do cliente (asc/desc). Mutuamente exclusivo com requestedSort.
+  const [customerSort, setCustomerSort] = useState<'asc' | 'desc' | null>(null);
   const toggleRequestedSort = () => {
+    setCustomerSort(null);
     setRequestedSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null));
+  };
+  const toggleCustomerSort = () => {
+    setRequestedSort(null);
+    setCustomerSort((prev) => (prev === null ? 'asc' : prev === 'asc' ? 'desc' : null));
   };
 
   const toggleRow = (id: string) =>
