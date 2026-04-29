@@ -568,9 +568,48 @@ export function BreakActivityDialog({
                     </Button>
                   </div>
 
-                  {/* Responsável pela micro-etapa (Staff interno) */}
+                  {/* Prestador (fornecedor) que executará — campo principal,
+                      indicado direto aqui para não exigir um segundo modal. */}
                   <div className="col-span-12 md:col-span-6">
-                    <Label className="text-[11px] text-muted-foreground">Responsável</Label>
+                    <Label className="text-[11px] text-muted-foreground">
+                      Prestador <span className="text-muted-foreground/70">(quem executa)</span>
+                    </Label>
+                    <Select
+                      value={row.fornecedor_id ?? NO_FORNECEDOR}
+                      onValueChange={(value) =>
+                        updateRow(i, {
+                          fornecedor_id: value === NO_FORNECEDOR ? null : value,
+                        })
+                      }
+                      disabled={loadingPrestadores}
+                    >
+                      <SelectTrigger className="mt-1 h-9">
+                        <SelectValue
+                          placeholder={
+                            loadingPrestadores ? 'Carregando...' : 'Selecionar prestador'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent position="popper">
+                        <SelectItem value={NO_FORNECEDOR}>Sem prestador</SelectItem>
+                        {prestadores.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nome}
+                            {p.categoria && (
+                              <span className="text-muted-foreground"> · {p.categoria}</span>
+                            )}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Responsável interno (Staff) — opcional, usado para
+                      acompanhamento da equipe. */}
+                  <div className="col-span-12 md:col-span-6">
+                    <Label className="text-[11px] text-muted-foreground">
+                      Responsável <span className="text-muted-foreground/70">(equipe interna)</span>
+                    </Label>
                     <Select
                       value={row.responsible_user_id ?? NO_RESPONSIBLE}
                       onValueChange={(value) =>
