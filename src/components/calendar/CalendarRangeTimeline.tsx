@@ -267,7 +267,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
           Legenda de status das atividades
         </span>
         {(['pending', 'in-progress', 'completed', 'delayed'] as ActivityStatus[]).map((s) => {
-          const style = STATUS_BAR_STYLE[s];
+          const style = (highContrast ? STATUS_BAR_STYLE_HC : STATUS_BAR_STYLE)[s];
           const Icon = style.icon;
           return (
             <span
@@ -280,7 +280,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
               <span
                 className={cn(
                   'inline-flex items-center justify-center h-3.5 w-3.5 rounded-sm border',
-                  s === 'pending' ? 'bg-muted border-border' : style.bar,
+                  style.bar,
                 )}
                 aria-hidden="true"
               >
@@ -290,6 +290,11 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
             </span>
           );
         })}
+        {highContrast && (
+          <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+            Alto contraste
+          </span>
+        )}
       </div>
       <div className="overflow-x-auto">
         <div
