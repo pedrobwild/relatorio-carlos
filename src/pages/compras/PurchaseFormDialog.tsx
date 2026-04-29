@@ -15,6 +15,7 @@ import { FornecedorSelector } from './FornecedorSelector';
 import { QuickCreateFornecedor } from './QuickCreateFornecedor';
 import { safeParseInt, trackBlock1CUsage } from '@/lib/block1cMonitor';
 import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
+import { PurchaseAttachmentsField } from './PurchaseAttachmentsField';
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
