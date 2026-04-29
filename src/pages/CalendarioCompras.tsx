@@ -873,6 +873,7 @@ export default function CalendarioCompras() {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProject, setFilterProject] = useState<string>('all');
+  const [filterCustomer, setFilterCustomer] = useState<string>('all');
   const [filterSupplier, setFilterSupplier] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterActualCost, setFilterActualCost] = useState<'all' | 'informed' | 'pending'>('all');
