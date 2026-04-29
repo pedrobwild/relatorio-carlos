@@ -459,7 +459,7 @@ function ProjectBars({
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
-                  aria-label={`${seg.activity.description}${isChild ? ' (micro-etapa)' : ''} — ${statusLabel}`}
+                  aria-label={`${seg.activity.description}${isChild ? ' (micro-etapa)' : ''} — ${statusLabel}${seg.activity.fornecedor_nome ? ` — Prestador: ${seg.activity.fornecedor_nome}` : ''}`}
                   aria-describedby={statusItemId?.(status)}
                   data-status={status}
                   title={(() => {
