@@ -873,6 +873,7 @@ export default function CalendarioCompras() {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterProject, setFilterProject] = useState<string>('all');
+  const [filterCustomer, setFilterCustomer] = useState<string>('all');
   const [filterSupplier, setFilterSupplier] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterActualCost, setFilterActualCost] = useState<'all' | 'informed' | 'pending'>('all');
@@ -1131,6 +1132,7 @@ export default function CalendarioCompras() {
     return allPurchases.filter((p) => {
       if (filterStatus !== 'all' && toCalendarStatus(p.status) !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
+      if (filterCustomer !== 'all' && (p.customer_name || '').trim() !== filterCustomer) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
       if (filterCategory !== 'all' && (p.category || '') !== filterCategory) return false;
       if (filterActualCost === 'informed' && p.actual_cost == null) return false;
@@ -1142,15 +1144,26 @@ export default function CalendarioCompras() {
       }
       return true;
     });
-  }, [allPurchases, filterStatus, filterProject, filterSupplier, filterCategory, filterActualCost, dateFromStr, dateToStr]);
+  }, [allPurchases, filterStatus, filterProject, filterCustomer, filterSupplier, filterCategory, filterActualCost, dateFromStr, dateToStr]);
+
+  // Lista única de clientes derivada das compras (ordenada alfabeticamente, pt-BR).
+  const customers = useMemo(() => {
+    const set = new Set<string>();
+    allPurchases.forEach((p) => {
+      const name = (p.customer_name || '').trim();
+      if (name) set.add(name);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+  }, [allPurchases]);
 
   const activeFilterCount =
     (filterStatus !== 'all' ? 1 : 0) + (filterProject !== 'all' ? 1 : 0) +
+    (filterCustomer !== 'all' ? 1 : 0) +
     (filterSupplier !== 'all' ? 1 : 0) + (filterCategory !== 'all' ? 1 : 0) +
     (filterActualCost !== 'all' ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
 
   const clearFilters = () => {
-    setFilterStatus('all'); setFilterProject('all'); setFilterSupplier('all');
+    setFilterStatus('all'); setFilterProject('all'); setFilterCustomer('all'); setFilterSupplier('all');
     setFilterCategory('all'); setFilterActualCost('all');
     setDateFrom(undefined); setDateTo(undefined);
   };
@@ -1374,6 +1387,18 @@ export default function CalendarioCompras() {
                     <SelectContent>
                       <SelectItem value="all">Todas as obras</SelectItem>
                       {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Cliente */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Cliente</Label>
+                  <Select value={filterCustomer} onValueChange={setFilterCustomer}>
+                    <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Cliente" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os clientes</SelectItem>
+                      {customers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
