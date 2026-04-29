@@ -92,7 +92,7 @@ interface PurchaseWithProject extends Omit<ProjectPurchase, 'created_at'> {
   created_at?: string | null;
 }
 
-type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'delayed';
+type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'delayed';
 
 /**
  * Tons das badges de status — usam variantes claras + escuras com `dark:` para
@@ -105,12 +105,19 @@ const calendarStatusConfig: Record<CalendarStatus, { label: string; color: strin
   pending:   { label: 'Pendente',  color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40',           icon: Clock },
   approved:  { label: 'Aprovado',  color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40',                 icon: ThumbsUp },
   delivered: { label: 'Entregue',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40', icon: CheckCircle2 },
+  paid:      { label: 'Pago',      color: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/40',                 icon: CheckCircle2 },
   delayed:   { label: 'Atrasado',  color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',                       icon: AlertTriangle },
 };
 
-const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'delayed'];
+const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'paid', 'delayed'];
 
-function toCalendarStatus(s: string | null | undefined): CalendarStatus {
+/**
+ * Mapeia o estado bruto da compra para o status simplificado do calendário.
+ * "Pago" tem precedência: se `paid_at` está preenchido, exibimos como Pago
+ * independentemente do status logístico (entregue, em trânsito etc.).
+ */
+function toCalendarStatus(s: string | null | undefined, paidAt?: string | null): CalendarStatus {
+  if (paidAt) return 'paid';
   if (s === 'approved' || s === 'awaiting_approval' || s === 'purchased' || s === 'ordered' || s === 'in_transit') return 'approved';
   if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
   if (s === 'delayed') return 'delayed';
@@ -158,7 +165,7 @@ function DateCell({
 
 // ─── StatusCell ───────────────────────────────────────────────────────────────
 function StatusCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSave: (id: string, v: CalendarStatus) => void }) {
-  const current = toCalendarStatus(purchase.status);
+  const current = toCalendarStatus(purchase.status, (purchase as any).paid_at);
   const cfg = calendarStatusConfig[current];
   const Icon = cfg.icon;
   return (
@@ -986,7 +993,17 @@ export default function CalendarioCompras() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: CalendarStatus }) => {
-      const { error } = await supabase.from('project_purchases').update({ status: value }).eq('id', id);
+      // "Pago" é um estado derivado de paid_at. Ao marcar Pago: registramos
+      // a data atual; ao mover para outro status: limpamos paid_at e gravamos
+      // o status logístico (mantendo 'delivered' como default ao "despagar").
+      const updates: Record<string, unknown> = {};
+      if (value === 'paid') {
+        updates.paid_at = new Date().toISOString();
+      } else {
+        updates.paid_at = null;
+        updates.status = value;
+      }
+      const { error } = await supabase.from('project_purchases').update(updates).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] }); toast.success('Status atualizado'); },
@@ -1131,7 +1148,7 @@ export default function CalendarioCompras() {
 
   const filtered = useMemo(() => {
     return allPurchases.filter((p) => {
-      if (filterStatus !== 'all' && toCalendarStatus(p.status) !== filterStatus) return false;
+      if (filterStatus !== 'all' && toCalendarStatus(p.status, (p as any).paid_at) !== filterStatus) return false;
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterCustomer !== 'all' && (p.customer_name || '').trim() !== filterCustomer) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
@@ -1228,7 +1245,7 @@ export default function CalendarioCompras() {
 
   // KPIs
   const totalItems = filtered.length;
-  const pendingItems = filtered.filter((p) => toCalendarStatus(p.status) === 'pending').length;
+  const pendingItems = filtered.filter((p) => toCalendarStatus(p.status, (p as any).paid_at) === 'pending').length;
   const thisMonthItems = filtered.filter((p) => p.planned_purchase_date && isSameMonth(parseISO(p.planned_purchase_date), currentMonth)).length;
   const totalEstimated = filtered.reduce((s, p) => s + (p.estimated_cost || 0), 0);
   const itemsWithBoth = filtered.filter((p) => p.estimated_cost != null && p.actual_cost != null);
@@ -1495,7 +1512,7 @@ export default function CalendarioCompras() {
                         <span className={cn('font-medium', isToday && 'text-primary')}>{format(day, 'd')}</span>
                         <div className="mt-1 space-y-0.5">
                           {dayPurchases.slice(0, 3).map((p) => {
-                            const cs = toCalendarStatus(p.status);
+                            const cs = toCalendarStatus(p.status, (p as any).paid_at);
                             const cfg = calendarStatusConfig[cs];
                             return (
                               <div key={p.id} className={cn('text-[10px] leading-tight rounded-sm px-1 py-0.5 truncate border', cfg.color)} title={`${p.project_name} — ${p.item_name}`}>

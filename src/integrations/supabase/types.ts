@@ -4781,6 +4781,7 @@ export type Database = {
           notes: string | null
           orcamento_item_id: string | null
           order_date: string | null
+          paid_at: string | null
           payment_due_date: string | null
           payment_method: string | null
           pix_key: string | null
@@ -4824,6 +4825,7 @@ export type Database = {
           notes?: string | null
           orcamento_item_id?: string | null
           order_date?: string | null
+          paid_at?: string | null
           payment_due_date?: string | null
           payment_method?: string | null
           pix_key?: string | null
@@ -4867,6 +4869,7 @@ export type Database = {
           notes?: string | null
           orcamento_item_id?: string | null
           order_date?: string | null
+          paid_at?: string | null
           payment_due_date?: string | null
           payment_method?: string | null
           pix_key?: string | null
