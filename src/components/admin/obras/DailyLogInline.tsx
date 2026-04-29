@@ -508,6 +508,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                 <Plus className="h-4 w-4 mr-1.5" />
                 Adicionar prestador
               </Button>
+              </section>
             </div>
           </SectionCard>
 
