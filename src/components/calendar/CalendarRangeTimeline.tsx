@@ -24,6 +24,10 @@ const PROJECT_LABEL_WIDTH = 200;
  * Usa tokens semânticos (success/info/warning/destructive) já definidos
  * em index.css — sem cores hard-coded.
  */
+/**
+ * Estilo padrão (modo normal): tons semânticos suaves com texto escuro
+ * (`text-foreground`) — bom contraste em ambiente claro.
+ */
 const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
   completed: {
     bar: 'bg-success/25 border-success/60 text-foreground',
@@ -44,6 +48,35 @@ const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof Check
     bar: 'bg-muted border-border text-foreground',
     icon: Clock,
     icon_color: 'text-muted-foreground',
+  },
+};
+
+/**
+ * Estilo de ALTO CONTRASTE: fundos sólidos + texto/ícone na cor *-foreground
+ * correspondente. Garante contraste >= AA mesmo em ambientes claros, monitores
+ * com brilho baixo ou para usuários com baixa visão. Usa apenas tokens
+ * semânticos (sem cor hard-coded).
+ */
+const STATUS_BAR_STYLE_HC: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
+  completed: {
+    bar: 'bg-success border-success text-success-foreground',
+    icon: CheckCircle2,
+    icon_color: 'text-success-foreground',
+  },
+  'in-progress': {
+    bar: 'bg-info border-info text-info-foreground',
+    icon: Clock,
+    icon_color: 'text-info-foreground',
+  },
+  delayed: {
+    bar: 'bg-destructive border-destructive text-destructive-foreground',
+    icon: AlertTriangle,
+    icon_color: 'text-destructive-foreground',
+  },
+  pending: {
+    bar: 'bg-foreground border-foreground text-background',
+    icon: Clock,
+    icon_color: 'text-background',
   },
 };
 
@@ -173,9 +206,14 @@ interface Props {
    * 'completed' conclui (define actual_end), 'pending' reseta as datas reais.
    */
   onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
+  /**
+   * Quando `true`, ativa o modo de alto contraste das barras e chips.
+   * Persistência fica a cargo do componente pai (ex.: localStorage).
+   */
+  highContrast?: boolean;
 }
 
-export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak, onQuickToggle }: Props) {
+export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak, onQuickToggle, highContrast = false }: Props) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -229,7 +267,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
           Legenda de status das atividades
         </span>
         {(['pending', 'in-progress', 'completed', 'delayed'] as ActivityStatus[]).map((s) => {
-          const style = STATUS_BAR_STYLE[s];
+          const style = (highContrast ? STATUS_BAR_STYLE_HC : STATUS_BAR_STYLE)[s];
           const Icon = style.icon;
           return (
             <span
@@ -242,7 +280,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
               <span
                 className={cn(
                   'inline-flex items-center justify-center h-3.5 w-3.5 rounded-sm border',
-                  s === 'pending' ? 'bg-muted border-border' : style.bar,
+                  style.bar,
                 )}
                 aria-hidden="true"
               >
@@ -252,6 +290,11 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
             </span>
           );
         })}
+        {highContrast && (
+          <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+            Alto contraste
+          </span>
+        )}
       </div>
       <div className="overflow-x-auto">
         <div
@@ -384,6 +427,7 @@ export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActiv
                       onBreak={onBreak}
                       onQuickToggle={onQuickToggle}
                       statusItemId={statusItemId}
+                      highContrast={highContrast}
                     />
                   </div>
                 </div>
@@ -406,6 +450,7 @@ function ProjectBars({
   onBreak,
   onQuickToggle,
   statusItemId,
+  highContrast = false,
 }: {
   lanes: BarSegment[][];
   dayWidth: number;
@@ -416,7 +461,9 @@ function ProjectBars({
   onBreak?: (a: WeekActivity) => void;
   onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
   statusItemId?: (s: ActivityStatus) => string;
+  highContrast?: boolean;
 }) {
+  const STYLE_MAP = highContrast ? STATUS_BAR_STYLE_HC : STATUS_BAR_STYLE;
   return (
     <div className="absolute inset-0 py-1.5">
       {lanes.map((lane, laneIdx) => (
@@ -431,7 +478,7 @@ function ProjectBars({
               actualStart: seg.activity.actual_start,
               actualEnd: seg.activity.actual_end,
             });
-            const statusStyle = STATUS_BAR_STYLE[status];
+            const statusStyle = STYLE_MAP[status];
             const StatusIcon = statusStyle.icon;
             const statusLabel = STATUS_LABEL[status];
             // Quick-toggle disponível apenas para micro-etapas (filhas).
