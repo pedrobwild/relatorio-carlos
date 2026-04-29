@@ -993,7 +993,17 @@ export default function CalendarioCompras() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: CalendarStatus }) => {
-      const { error } = await supabase.from('project_purchases').update({ status: value }).eq('id', id);
+      // "Pago" é um estado derivado de paid_at. Ao marcar Pago: registramos
+      // a data atual; ao mover para outro status: limpamos paid_at e gravamos
+      // o status logístico (mantendo 'delivered' como default ao "despagar").
+      const updates: Record<string, unknown> = {};
+      if (value === 'paid') {
+        updates.paid_at = new Date().toISOString();
+      } else {
+        updates.paid_at = null;
+        updates.status = value;
+      }
+      const { error } = await supabase.from('project_purchases').update(updates).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] }); toast.success('Status atualizado'); },
