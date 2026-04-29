@@ -14,7 +14,7 @@
  * project_daily_logs + filhos). A data default é a segunda-feira da
  * semana corrente ("registro da semana") — pode ser ajustada.
  */
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CalendarRange,
   ChevronDown,
