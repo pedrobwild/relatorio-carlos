@@ -866,6 +866,29 @@ export default function CalendarioObras() {
             )}
           </div>
         )}
+
+        {/* Toggle: alto contraste (somente week-timeline). Reforça a leitura
+            das barras para usuários com baixa visão, monitores com brilho
+            baixo ou ambientes muito iluminados. Persistido em localStorage. */}
+        {view === 'week-timeline' && (
+          <div className="flex items-center gap-2">
+            <Switch
+              id="high-contrast-toggle"
+              checked={highContrast}
+              onCheckedChange={setHighContrast}
+              aria-describedby="high-contrast-help"
+            />
+            <Label
+              htmlFor="high-contrast-toggle"
+              className="text-xs font-medium cursor-pointer select-none"
+            >
+              Alto contraste
+            </Label>
+            <span id="high-contrast-help" className="sr-only">
+              Quando ativo, as barras da timeline usam fundos sólidos e texto de máxima legibilidade.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Body */}
