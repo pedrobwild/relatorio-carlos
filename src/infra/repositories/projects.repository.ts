@@ -286,6 +286,44 @@ export async function restoreProject(projectId: string): Promise<RepositoryResul
 }
 
 /**
+ * Permanently delete a soft-deleted project (admin only)
+ */
+export async function hardDeleteProject(projectId: string): Promise<RepositoryResult<null>> {
+  return executeQuery(async () => {
+    const { error } = await supabase.rpc('hard_delete_project', { p_project_id: projectId });
+    return { data: null, error };
+  });
+}
+
+/**
+ * Fetch soft-deleted projects (trash)
+ */
+export async function getDeletedProjects(): Promise<RepositoryListResult<ProjectWithCustomer>> {
+  return executeListQuery(async () => {
+    const { data: projectsData, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        project_customers (customer_name, customer_email)
+      `)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false });
+
+    if (error) return { data: null, error };
+
+    return {
+      data: (projectsData ?? []).map(p => ({
+        ...p,
+        status: p.status as ProjectStatus,
+        customer_name: p.project_customers?.[0]?.customer_name,
+        customer_email: p.project_customers?.[0]?.customer_email,
+      })),
+      error: null,
+    };
+  });
+}
+
+/**
  * Create a new project with customer and engineer
  */
 export async function createProjectWithCustomer(input: {
