@@ -92,7 +92,7 @@ interface PurchaseWithProject extends Omit<ProjectPurchase, 'created_at'> {
   created_at?: string | null;
 }
 
-type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'delayed';
+type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'delayed';
 
 /**
  * Tons das badges de status — usam variantes claras + escuras com `dark:` para
@@ -105,12 +105,19 @@ const calendarStatusConfig: Record<CalendarStatus, { label: string; color: strin
   pending:   { label: 'Pendente',  color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40',           icon: Clock },
   approved:  { label: 'Aprovado',  color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40',                 icon: ThumbsUp },
   delivered: { label: 'Entregue',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40', icon: CheckCircle2 },
+  paid:      { label: 'Pago',      color: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/40',                 icon: CheckCircle2 },
   delayed:   { label: 'Atrasado',  color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',                       icon: AlertTriangle },
 };
 
-const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'delayed'];
+const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'paid', 'delayed'];
 
-function toCalendarStatus(s: string | null | undefined): CalendarStatus {
+/**
+ * Mapeia o estado bruto da compra para o status simplificado do calendário.
+ * "Pago" tem precedência: se `paid_at` está preenchido, exibimos como Pago
+ * independentemente do status logístico (entregue, em trânsito etc.).
+ */
+function toCalendarStatus(s: string | null | undefined, paidAt?: string | null): CalendarStatus {
+  if (paidAt) return 'paid';
   if (s === 'approved' || s === 'awaiting_approval' || s === 'purchased' || s === 'ordered' || s === 'in_transit') return 'approved';
   if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
   if (s === 'delayed') return 'delayed';
