@@ -137,6 +137,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     parent_activity_id: row.parent_activity_id ?? null,
     responsible_user_id: row.responsible_user_id ?? null,
     responsible_name: row.responsible?.nome ?? null,
+    fornecedor_id: row.fornecedor_id ?? null,
+    fornecedor_nome: row.fornecedor?.nome ?? null,
   }));
 }
 
