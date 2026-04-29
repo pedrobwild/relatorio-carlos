@@ -637,6 +637,7 @@ function NewPurchaseDialog({
         project_id: form.project_id,
         created_by: user.id,
         item_name: form.item_name.trim(),
+        brand: form.brand.trim() || null,
         category: form.category.trim() || null,
         supplier_name: form.supplier_name.trim() || null,
         estimated_cost: form.estimated_cost ? Number(form.estimated_cost.replace(',', '.')) : null,
