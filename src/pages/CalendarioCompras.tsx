@@ -1232,6 +1232,37 @@ export default function CalendarioCompras() {
         onCreated={() => queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] })}
       />
 
+      {/* Confirmação de exclusão — destrutiva, exige AlertDialog. */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir solicitação de compra?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget ? (
+                <>
+                  Esta ação removerá definitivamente <strong>{deleteTarget.item_name}</strong>
+                  {deleteTarget.project_name ? <> da obra <strong>{deleteTarget.project_name}</strong></> : null}.
+                  Não é possível desfazer.
+                </>
+              ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePurchase.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletePurchase.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteTarget) deletePurchase.mutate(deleteTarget.id);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePurchase.isPending ? 'Excluindo…' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="py-6">
         <PageContainer maxWidth="full" className="space-y-6">
 
