@@ -500,7 +500,7 @@ function ProjectBars({
                   {seg.activity.fornecedor_nome && barWidth >= 90 && (
                     <span
                       aria-hidden="true"
-                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border/60 bg-background/70 px-1 py-px text-[9.5px] leading-none text-muted-foreground"
+                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border bg-background px-1 py-px text-[10px] font-medium leading-none text-foreground"
                       title={`Prestador: ${seg.activity.fornecedor_nome}`}
                     >
                       {seg.activity.fornecedor_nome}
