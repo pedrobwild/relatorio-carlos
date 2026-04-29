@@ -1036,7 +1036,19 @@ export default function CalendarioCompras() {
       // o status logístico (mantendo 'delivered' como default ao "despagar").
       const updates: Record<string, unknown> = {};
       if (value === 'paid') {
-        updates.paid_at = new Date().toISOString();
+        const paidAt = new Date().toISOString();
+        updates.paid_at = paidAt;
+        // Recalcula a data prevista de entrega: âncora = data efetiva do
+        // pagamento + lead_time_days úteis. Sempre sobrescreve o valor
+        // anterior (regra de negócio: o pagamento real é a fonte da verdade
+        // do início do prazo logístico).
+        const { data: row } = await supabase
+          .from('project_purchases')
+          .select('lead_time_days')
+          .eq('id', id)
+          .maybeSingle();
+        const expected = calcExpectedDelivery(paidAt, row?.lead_time_days ?? 7);
+        if (expected) updates.expected_delivery_date = expected;
       } else {
         updates.paid_at = null;
         updates.status = value;
@@ -1056,7 +1068,27 @@ export default function CalendarioCompras() {
         if (!iso) throw new Error('INVALID_DATE');
         normalized = iso;
       }
-      const { error } = await supabase.from('project_purchases').update({ [field]: normalized }).eq('id', id);
+      const updates: Record<string, unknown> = { [field]: normalized };
+
+      // Quando o usuário ajusta a data prevista de pagamento e a compra
+      // ainda não foi paga (paid_at vazio), recalculamos a data prevista
+      // de entrega usando essa nova âncora + lead_time_days. Após o
+      // pagamento, a âncora passa a ser paid_at e edições em
+      // payment_due_date não devem mais alterar a previsão de entrega.
+      if (field === 'payment_due_date') {
+        const { data: row } = await supabase
+          .from('project_purchases')
+          .select('lead_time_days, paid_at')
+          .eq('id', id)
+          .maybeSingle();
+        if (!row?.paid_at) {
+          updates.expected_delivery_date = normalized
+            ? calcExpectedDelivery(normalized, row?.lead_time_days ?? 7)
+            : null;
+        }
+      }
+
+      const { error } = await supabase.from('project_purchases').update(updates).eq('id', id);
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
