@@ -1658,10 +1658,17 @@ export default function CalendarioCompras() {
                                 <TableCell className="whitespace-nowrap">
                                   <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
                                 </TableCell>
+                                <TableCell className="w-10 text-right pr-2">
+                                  <PurchaseRowActions
+                                    purchase={p}
+                                    onEdit={handleEditPurchase}
+                                    onRequestDelete={setDeleteTarget}
+                                  />
+                                </TableCell>
                               </TableRow>
                               {expanded && hasDetails && (
                                 <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                  <TableCell colSpan={9} className="p-0">
+                                  <TableCell colSpan={10} className="p-0">
                                     <PurchaseRowDetail p={p} onUpdateField={handleUpdateField} />
                                   </TableCell>
                                 </TableRow>
