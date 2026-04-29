@@ -307,6 +307,9 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             // Esta seção ocupa as duas colunas do grid externo, já que
             // internamente ela própria divide em duas colunas.
             className="lg:col-span-2"
+            // Persistência por projeto: cada obra mantém sua própria
+            // preferência de aberto/fechado para a seção unificada.
+            persistKey={`dailyLog:services-workers:open:${projectId}`}
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
               {/* ============== SUBSEÇÃO: Serviços em execução ============== */}
@@ -668,6 +671,14 @@ interface SectionCardProps {
   loadingSkeleton?: React.ReactNode;
   /** Classes extras aplicadas ao wrapper externo (útil p/ col-span no grid). */
   className?: string;
+  /**
+   * Quando informado, persiste o estado aberto/fechado no localStorage
+   * sob esta chave — assim a preferência do usuário sobrevive entre
+   * visitas. Útil em seções "âncora" do painel (ex.: Serviços e
+   * prestadores), onde o usuário costuma manter a seção em um modo
+   * específico (sempre aberta no desktop, sempre fechada no mobile).
+   */
+  persistKey?: string;
   children: React.ReactNode;
 }
 
@@ -680,9 +691,38 @@ function SectionCard({
   isLoading = false,
   loadingSkeleton,
   className,
+  persistKey,
   children,
 }: SectionCardProps) {
-  const [open, setOpen] = useState(defaultOpen);
+  // Estado inicial lazy: se houver persistKey e valor salvo, respeita
+  // o último estado escolhido pelo usuário. Caso contrário, cai no
+  // defaultOpen calculado pelo pai (ex.: aberto se já há conteúdo).
+  // O try/catch protege contra ambientes sem acesso a localStorage
+  // (modo privado restrito, SSR, etc.) — nesses casos só perdemos a
+  // persistência, sem quebrar a UI.
+  const [open, setOpen] = useState<boolean>(() => {
+    if (persistKey && typeof window !== 'undefined') {
+      try {
+        const raw = window.localStorage.getItem(persistKey);
+        if (raw === '1') return true;
+        if (raw === '0') return false;
+      } catch {
+        /* ignore */
+      }
+    }
+    return defaultOpen;
+  });
+
+  // Sincroniza alterações de estado com o localStorage (idempotente).
+  useEffect(() => {
+    if (!persistKey || typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(persistKey, open ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  }, [open, persistKey]);
+
   const hasCount = typeof count === 'number';
   // Enquanto está carregando, força a seção aberta para que o skeleton
   // ocupe a mesma altura aproximada do conteúdo final — evitando layout
