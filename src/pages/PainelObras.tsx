@@ -84,6 +84,7 @@ import {
   type PainelStatus,
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
