@@ -12,6 +12,7 @@ import {
   useProjectSummaryQuery,
   projectKeys,
 } from './useProjectsQuery';
+import { useStaffUsers } from './useStaffUsers';
 import type { ProjectWithCustomer } from '@/infra/repositories/projects.repository';
 
 export type PainelEtapa =
