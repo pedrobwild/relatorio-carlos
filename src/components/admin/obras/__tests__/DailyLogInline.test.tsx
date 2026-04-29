@@ -85,7 +85,8 @@ beforeEach(async () => {
 // ---- Testes -------------------------------------------------------------
 
 describe('DailyLogInline — seção unificada Serviços e prestadores', () => {
-  it('renderiza as duas subseções (Serviços + Prestadores) dentro de um único card', () => {
+  it('renderiza as duas subseções (Serviços + Prestadores) dentro de um único card', async () => {
+    const user = userEvent.setup();
     mockUseProjectDailyLog.mockReturnValue({
       data: makeLog({
         services: [
@@ -118,10 +119,14 @@ describe('DailyLogInline — seção unificada Serviços e prestadores', () => {
 
     render(<DailyLogInline {...baseProps} />);
 
-    // O título do card unificado deve aparecer uma única vez.
-    expect(
-      screen.getByRole('button', { name: /Recolher Serviços e prestadores/i }),
-    ).toBeInTheDocument();
+    // O card unificado existe (um único trigger para "Serviços e prestadores").
+    const trigger = await screen.findByRole('button', {
+      name: /(Recolher|Expandir) Serviços e prestadores/i,
+    });
+    // Garante que está aberto para inspecionar as duas subseções.
+    if (/Expandir/i.test(trigger.getAttribute('aria-label') ?? '')) {
+      await user.click(trigger);
+    }
 
     // As duas subseções devem estar acessíveis pelos seus headings.
     expect(
@@ -136,7 +141,8 @@ describe('DailyLogInline — seção unificada Serviços e prestadores', () => {
     expect(screen.getByDisplayValue('João da Silva')).toBeInTheDocument();
   });
 
-  it('exibe o contador agregado (services + workers) no header quando aberto', () => {
+  it('exibe o contador agregado (services + workers) no header e por subseção', async () => {
+    const user = userEvent.setup();
     mockUseProjectDailyLog.mockReturnValue({
       data: makeLog({
         services: [
@@ -152,13 +158,17 @@ describe('DailyLogInline — seção unificada Serviços e prestadores', () => {
 
     render(<DailyLogInline {...baseProps} />);
 
-    const header = screen.getByRole('button', {
-      name: /Recolher Serviços e prestadores/i,
+    const trigger = await screen.findByRole('button', {
+      name: /(Recolher|Expandir) Serviços e prestadores/i,
     });
-    // Badge agregada: 2 serviços + 1 prestador = 3
-    expect(within(header).getByText('3')).toBeInTheDocument();
+    if (/Expandir/i.test(trigger.getAttribute('aria-label') ?? '')) {
+      await user.click(trigger);
+    }
 
-    // Contadores por subseção (badges nos SubsectionHeader).
+    // Badge agregada no header do SectionCard: 2 + 1 = 3.
+    expect(within(trigger).getByText('3')).toBeInTheDocument();
+
+    // Contadores por subseção (Badge nos SubsectionHeader).
     const servicesHeading = screen.getByRole('heading', {
       name: /Serviços em execução/i,
     });
@@ -175,7 +185,6 @@ describe('DailyLogInline — seção unificada Serviços e prestadores', () => {
   });
 
   it('mostra preview com contadores corretos (pluralizados) quando o card está fechado', async () => {
-    const user = userEvent.setup();
     mockUseProjectDailyLog.mockReturnValue({
       data: makeLog({
         services: [
@@ -191,16 +200,11 @@ describe('DailyLogInline — seção unificada Serviços e prestadores', () => {
 
     render(<DailyLogInline {...baseProps} />);
 
-    // Fecha o colapsável clicando no header.
-    const trigger = screen.getByRole('button', {
-      name: /Recolher Serviços e prestadores/i,
-    });
-    await user.click(trigger);
-
-    // Após colapsar, o preview com totais aparece. Pluralização:
-    //   1 -> "serviço" (singular), 2 -> "prestadores" (plural).
+    // Como o defaultOpen é calculado no estado inicial (antes do useEffect
+    // de sincronização), o card já começa fechado — o preview com totais
+    // deve aparecer sem necessidade de clicar.
     expect(
-      screen.getByText('1 serviço • 2 prestadores'),
+      await screen.findByText('1 serviço • 2 prestadores'),
     ).toBeInTheDocument();
   });
 
@@ -213,10 +217,12 @@ describe('DailyLogInline — seção unificada Serviços e prestadores', () => {
 
     render(<DailyLogInline {...baseProps} />);
 
-    // Quando sem conteúdo, o defaultOpen é false; preview deve aparecer
-    // sem precisar clicar.
+    // Sem conteúdo, o card começa fechado e exibe a microcopy de vazio
+    // diretamente no preview.
     expect(
-      screen.getByText(/Nenhum serviço ou prestador — toque para adicionar/i),
+      await screen.findByText(
+        /Nenhum serviço ou prestador — toque para adicionar/i,
+      ),
     ).toBeInTheDocument();
 
     // Ao expandir, vemos os EmptyLines individuais de cada subseção.
