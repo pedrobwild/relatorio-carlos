@@ -206,9 +206,14 @@ interface Props {
    * 'completed' conclui (define actual_end), 'pending' reseta as datas reais.
    */
   onQuickToggle?: (a: WeekActivity, next: 'pending' | 'in-progress' | 'completed') => void;
+  /**
+   * Quando `true`, ativa o modo de alto contraste das barras e chips.
+   * Persistência fica a cargo do componente pai (ex.: localStorage).
+   */
+  highContrast?: boolean;
 }
 
-export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak, onQuickToggle }: Props) {
+export function CalendarRangeTimeline({ rangeStart, rangeEnd, byProject, onActivityClick, canBreak, onBreak, onQuickToggle, highContrast = false }: Props) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
