@@ -247,6 +247,7 @@ export default function PainelObras() {
   const navigate = useNavigate();
   const { isStaff, loading: roleLoading } = useUserRole();
   const { obras, isLoading, updateObra } = usePainelObras();
+  const { data: staffUsers = [] } = useStaffUsers();
   const queryClient = useQueryClient();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -263,6 +264,7 @@ export default function PainelObras() {
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
   const [filterStatus, setFilterStatus] = useState<string>(ALL);
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
+  const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
 
   type SortKey =
     | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
