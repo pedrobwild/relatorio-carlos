@@ -1536,12 +1536,20 @@ export default function CalendarioCompras() {
                               <TableCell className="whitespace-nowrap">
                                 <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
                               </TableCell>
+
+                              <TableCell className="w-10 text-right pr-2">
+                                <PurchaseRowActions
+                                  purchase={p}
+                                  onEdit={handleEditPurchase}
+                                  onRequestDelete={setDeleteTarget}
+                                />
+                              </TableCell>
                             </TableRow>
 
                             {/* Expanded detail row */}
                             {expanded && hasDetails && (
                               <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                <TableCell colSpan={10} className="p-0">
+                                <TableCell colSpan={11} className="p-0">
                                   <PurchaseRowDetail p={p} onUpdateField={handleUpdateField} />
                                 </TableCell>
                               </TableRow>
@@ -1551,7 +1559,7 @@ export default function CalendarioCompras() {
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                          <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
