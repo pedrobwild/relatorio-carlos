@@ -459,7 +459,7 @@ function ProjectBars({
                 <button
                   type="button"
                   onClick={() => onActivityClick(seg.activity)}
-                  aria-label={`${seg.activity.description}${isChild ? ' (micro-etapa)' : ''} — ${statusLabel}`}
+                  aria-label={`${seg.activity.description}${isChild ? ' (micro-etapa)' : ''} — ${statusLabel}${seg.activity.fornecedor_nome ? ` — Prestador: ${seg.activity.fornecedor_nome}` : ''}`}
                   aria-describedby={statusItemId?.(status)}
                   data-status={status}
                   title={(() => {
@@ -472,7 +472,8 @@ function ProjectBars({
                     else if (as) real = `\nReal: ${fmt(as)} → em andamento`;
                     else if (ae) real = `\nReal: concluído em ${fmt(ae)}`;
                     const tag = isChild ? ' (micro-etapa)' : '';
-                    return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}`;
+                    const prest = seg.activity.fornecedor_nome ? `\nPrestador: ${seg.activity.fornecedor_nome}` : '';
+                    return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}${prest}`;
                   })()}
                   className={cn(
                     'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
@@ -495,6 +496,15 @@ function ProjectBars({
                   <span aria-hidden="true" className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
                     {seg.activity.description}
                   </span>
+                  {seg.activity.fornecedor_nome && barWidth >= 90 && (
+                    <span
+                      aria-hidden="true"
+                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border/60 bg-background/70 px-1 py-px text-[9.5px] leading-none text-muted-foreground"
+                      title={`Prestador: ${seg.activity.fornecedor_nome}`}
+                    >
+                      {seg.activity.fornecedor_nome}
+                    </span>
+                  )}
                 </button>
                 {showQuickToggle && (
                   <button
