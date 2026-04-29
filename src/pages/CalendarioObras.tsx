@@ -161,6 +161,8 @@ export default function CalendarioObras() {
     else next.delete('concluidas');
     if (onlyMicroSteps && view === 'week-timeline') next.set('microetapas', '1');
     else next.delete('microetapas');
+    if (fornecedorFilter && fornecedorFilter !== 'all' && view === 'week-timeline') next.set('prestador', fornecedorFilter);
+    else next.delete('prestador');
 
     // Visualização: só persiste se diferente do default ('week-timeline') para manter URLs limpas.
     if (view && view !== 'week-timeline') next.set('view', view);
