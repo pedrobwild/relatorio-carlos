@@ -254,6 +254,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
           s.responsible_user_id !== undefined
             ? s.responsible_user_id
             : parent.responsible_user_id ?? null,
+        // Mesma lógica para o prestador (fornecedor): herda da mãe quando
+        // o usuário não escolhe explicitamente uma opção na linha.
+        fornecedor_id:
+          s.fornecedor_id !== undefined
+            ? s.fornecedor_id
+            : parent.fornecedor_id ?? null,
       }));
 
       const { error: insErr } = await supabase.from('project_activities').insert(rows);
