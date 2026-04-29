@@ -26,22 +26,22 @@ const PROJECT_LABEL_WIDTH = 200;
  */
 const STATUS_BAR_STYLE: Record<ActivityStatus, { bar: string; icon: typeof CheckCircle2; icon_color: string }> = {
   completed: {
-    bar: 'bg-success/15 border-success/40 text-success-foreground',
+    bar: 'bg-success/25 border-success/60 text-foreground',
     icon: CheckCircle2,
     icon_color: 'text-success',
   },
   'in-progress': {
-    bar: 'bg-info/15 border-info/40 text-info-foreground',
+    bar: 'bg-info/25 border-info/60 text-foreground',
     icon: Clock,
     icon_color: 'text-info',
   },
   delayed: {
-    bar: 'bg-destructive/15 border-destructive/45 text-destructive',
+    bar: 'bg-destructive border-destructive text-destructive-foreground',
     icon: AlertTriangle,
-    icon_color: 'text-destructive',
+    icon_color: 'text-destructive-foreground',
   },
   pending: {
-    bar: '',
+    bar: 'bg-muted border-border text-foreground',
     icon: Clock,
     icon_color: 'text-muted-foreground',
   },
@@ -476,13 +476,14 @@ function ProjectBars({
                     return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}${prest}`;
                   })()}
                   className={cn(
-                    'w-full h-full rounded-sm border text-[10.5px] px-1.5 leading-6 truncate text-left',
+                    'w-full h-full rounded-sm border text-[11px] font-medium px-1.5 leading-6 truncate text-left',
                     'hover:ring-2 hover:ring-primary/40 transition-shadow',
                     'flex items-center gap-1',
-                    // Cor base por projeto só quando não há status acionável (pendente)
-                    status === 'pending' ? cn(colorClass, borderClass) : statusStyle.bar,
-                    isChild && 'border-l-2 border-l-primary/70 border-dashed opacity-95',
-                    status === 'completed' && 'opacity-80',
+                    // Para status pendente, usa o estilo neutro (texto escuro sobre fundo muted)
+                    // — não usamos mais a cor do projeto como fundo da barra para preservar contraste.
+                    statusStyle.bar,
+                    isChild && 'border-l-2 border-l-primary border-dashed',
+                    status === 'completed' && 'opacity-90',
                     seg.startsBefore && 'rounded-l-none border-l-0',
                     seg.endsAfter && 'rounded-r-none border-r-0',
                   )}
@@ -499,7 +500,7 @@ function ProjectBars({
                   {seg.activity.fornecedor_nome && barWidth >= 90 && (
                     <span
                       aria-hidden="true"
-                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border/60 bg-background/70 px-1 py-px text-[9.5px] leading-none text-muted-foreground"
+                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border bg-background px-1 py-px text-[10px] font-medium leading-none text-foreground"
                       title={`Prestador: ${seg.activity.fornecedor_nome}`}
                     >
                       {seg.activity.fornecedor_nome}
