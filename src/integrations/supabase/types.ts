@@ -4755,6 +4755,67 @@ export type Database = {
           },
         ]
       }
+      project_purchase_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          project_id: string
+          purchase_id: string
+          size_bytes: number | null
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          project_id: string
+          purchase_id: string
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          project_id?: string
+          purchase_id?: string
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_purchase_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_dashboard_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_purchase_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_purchase_attachments_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "project_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_purchases: {
         Row: {
           activity_id: string | null
@@ -4762,6 +4823,7 @@ export type Database = {
           actual_delivery_date: string | null
           boleto_code: string | null
           boleto_file_path: string | null
+          brand: string | null
           category: string | null
           contract_file_path: string | null
           created_at: string
@@ -4806,6 +4868,7 @@ export type Database = {
           actual_delivery_date?: string | null
           boleto_code?: string | null
           boleto_file_path?: string | null
+          brand?: string | null
           category?: string | null
           contract_file_path?: string | null
           created_at?: string
@@ -4850,6 +4913,7 @@ export type Database = {
           actual_delivery_date?: string | null
           boleto_code?: string | null
           boleto_file_path?: string | null
+          brand?: string | null
           category?: string | null
           contract_file_path?: string | null
           created_at?: string
