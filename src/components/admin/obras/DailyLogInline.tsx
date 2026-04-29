@@ -426,17 +426,20 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   <ServiceTasksList serviceId={svc.id} serviceSaved={!!svc.id} />
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addService}
-                className="w-full sm:w-auto sm:self-start h-9 text-sm"
-                disabled={isSaving}
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Adicionar serviço
-              </Button>
+              </div>
+              {services.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addService}
+                  className="w-full sm:w-auto sm:self-start h-9 text-sm"
+                  disabled={isSaving}
+                >
+                  <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Adicionar outro serviço
+                </Button>
+              )}
               </section>
 
               {/* ============== SUBSEÇÃO: Prestadores no local ============== */}
