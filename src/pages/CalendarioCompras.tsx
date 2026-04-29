@@ -81,6 +81,7 @@ export type ProjectPurchaseInsert = TablesInsert<'project_purchases'>;
 
 interface PurchaseWithProject extends Omit<ProjectPurchase, 'created_at'> {
   project_name: string;
+  customer_name: string | null;
   /**
    * Override defensivo: embora a coluna `created_at` seja NOT NULL no banco,
    * registros antigos sincronizados ou casos de borda podem chegar sem o campo.
@@ -907,11 +908,18 @@ export default function CalendarioCompras() {
       if (error) throw error;
       const projectIds = [...new Set((purchases || []).map((p) => p.project_id))];
       const { data: projects } = await supabase
-        .from('projects').select('id, name').in('id', projectIds);
-      const projectMap = new Map((projects || []).map((p) => [p.id, p.name]));
+        .from('projects').select('id, name, project_customers(customer_name)').in('id', projectIds);
+      type ProjectRow = { id: string; name: string; project_customers?: { customer_name: string | null }[] | null };
+      const projectMap = new Map<string, { name: string; customer_name: string | null }>(
+        ((projects || []) as ProjectRow[]).map((p) => [p.id, {
+          name: p.name,
+          customer_name: p.project_customers?.[0]?.customer_name?.trim() || null,
+        }])
+      );
       return (purchases || []).map((p) => ({
         ...p,
-        project_name: projectMap.get(p.project_id) || 'Projeto',
+        project_name: projectMap.get(p.project_id)?.name || 'Projeto',
+        customer_name: projectMap.get(p.project_id)?.customer_name || null,
       })) as PurchaseWithProject[];
     },
     staleTime: 60_000,
@@ -1469,7 +1477,7 @@ export default function CalendarioCompras() {
                       <TableRow className="bg-muted/50">
                         {/* expand toggle col */}
                         <TableHead className="w-8" />
-                        <TableHead className="whitespace-nowrap">Data Compra</TableHead>
+                        <TableHead className="whitespace-nowrap">Cliente</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
                         <TableHead className="whitespace-nowrap p-0">
@@ -1520,9 +1528,13 @@ export default function CalendarioCompras() {
                                 ) : <span className="inline-block w-5" />}
                               </TableCell>
 
-                              <TableCell className="font-medium whitespace-nowrap">
-                                <DateCell value={p.planned_purchase_date}
-                                  onSave={(v) => updateDateField.mutate({ id: p.id, field: 'planned_purchase_date', value: v })} />
+                              <TableCell className="whitespace-nowrap max-w-[180px]">
+                                <span
+                                  className={cn('truncate inline-block max-w-full align-middle', !p.customer_name && 'text-muted-foreground italic')}
+                                  title={p.customer_name || 'Sem cliente'}
+                                >
+                                  {p.customer_name || '—'}
+                                </span>
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap max-w-[160px]">
