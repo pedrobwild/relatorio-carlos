@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon,
   FilterX, Plus, ChevronDown, ChevronUp, ExternalLink, Package,
-  FileText, Truck, ArrowUpDown,
+  FileText, Truck, ArrowUpDown, MoreHorizontal, Trash2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,6 +29,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -401,6 +409,60 @@ const EMPTY_FORM: NewPurchaseForm = {
   delivery_location: '',
   delivery_address: '',
 };
+
+// ─── PurchaseRowActions ──────────────────────────────────────────────────────
+/**
+ * Quick actions por linha da tabela: Editar e Excluir.
+ *
+ * - **Editar** (atalho): leva para `/obra/:projectId/compras`, onde o
+ *   usuário tem o formulário completo (parcelas, atividade vinculada,
+ *   anexos, etc.).
+ * - **Excluir**: dispara o AlertDialog no nível da página (controlado por
+ *   `onRequestDelete`) — a confirmação é obrigatória porque a exclusão é
+ *   definitiva (project_purchases não tem soft delete).
+ *
+ * Usa `DropdownMenu` para manter densidade da tabela; em mobile o overlay
+ * já garante alvo de toque adequado.
+ */
+function PurchaseRowActions({
+  purchase,
+  onEdit,
+  onRequestDelete,
+}: {
+  purchase: PurchaseWithProject;
+  onEdit: (p: PurchaseWithProject) => void;
+  onRequestDelete: (p: PurchaseWithProject) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          aria-label={`Ações para ${purchase.item_name}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem onSelect={() => onEdit(purchase)} className="gap-2">
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+          Editar na obra
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={() => onRequestDelete(purchase)}
+          className="gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+        >
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Excluir solicitação
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function NewPurchaseDialog({
   open,
@@ -817,6 +879,11 @@ export default function CalendarioCompras() {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  // Quick action: confirmação de exclusão de uma solicitação. Guardamos a
+  // linha alvo aqui para mostrar contexto (nome do item + obra) no
+  // AlertDialog antes de chamar a mutation.
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseWithProject | null>(null);
+  const navigate = useNavigate();
   // Ordenação por "Solicitada em" (created_at). null = ordem padrão (planned_purchase_date asc).
   const [requestedSort, setRequestedSort] = useState<'asc' | 'desc' | null>(null);
   const toggleRequestedSort = () => {
@@ -991,6 +1058,39 @@ export default function CalendarioCompras() {
     updateField.mutate({ id, field, value });
   };
 
+  // Quick action: exclusão hard delete. As solicitações de compra deste módulo
+  // não têm soft delete (não há coluna deleted_at em project_purchases), então
+  // a remoção é definitiva — por isso o fluxo passa por AlertDialog antes de
+  // chegar aqui.
+  const deletePurchase = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('project_purchases').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      toast.success('Solicitação de compra excluída');
+      setDeleteTarget(null);
+    },
+    onError: (e: Error) => {
+      console.error('[CalendarioCompras] delete error:', e);
+      toast.error('Não foi possível excluir', {
+        description: e?.message ?? 'Tente novamente em alguns instantes.',
+      });
+    },
+  });
+
+  /**
+   * Quick action: editar.
+   * O calendário consolida compras de várias obras; a edição completa
+   * (com parcelas, atividade vinculada, etc.) vive na página da obra.
+   * Navegamos para `/obra/:projectId/compras` — o usuário cai direto no
+   * módulo CRUD daquela obra.
+   */
+  const handleEditPurchase = (p: PurchaseWithProject) => {
+    navigate(`/obra/${p.project_id}/compras`);
+  };
+
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     allPurchases.forEach((p) => map.set(p.project_id, p.project_name));
@@ -1131,6 +1231,37 @@ export default function CalendarioCompras() {
         projects={allProjects}
         onCreated={() => queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] })}
       />
+
+      {/* Confirmação de exclusão — destrutiva, exige AlertDialog. */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir solicitação de compra?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget ? (
+                <>
+                  Esta ação removerá definitivamente <strong>{deleteTarget.item_name}</strong>
+                  {deleteTarget.project_name ? <> da obra <strong>{deleteTarget.project_name}</strong></> : null}.
+                  Não é possível desfazer.
+                </>
+              ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePurchase.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletePurchase.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteTarget) deletePurchase.mutate(deleteTarget.id);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletePurchase.isPending ? 'Excluindo…' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="py-6">
         <PageContainer maxWidth="full" className="space-y-6">
@@ -1365,6 +1496,7 @@ export default function CalendarioCompras() {
                         <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
                         <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                         <TableHead className="whitespace-nowrap">Status</TableHead>
+                        <TableHead className="w-10 text-right pr-2"><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1435,12 +1567,20 @@ export default function CalendarioCompras() {
                               <TableCell className="whitespace-nowrap">
                                 <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
                               </TableCell>
+
+                              <TableCell className="w-10 text-right pr-2">
+                                <PurchaseRowActions
+                                  purchase={p}
+                                  onEdit={handleEditPurchase}
+                                  onRequestDelete={setDeleteTarget}
+                                />
+                              </TableCell>
                             </TableRow>
 
                             {/* Expanded detail row */}
                             {expanded && hasDetails && (
                               <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                <TableCell colSpan={10} className="p-0">
+                                <TableCell colSpan={11} className="p-0">
                                   <PurchaseRowDetail p={p} onUpdateField={handleUpdateField} />
                                 </TableCell>
                               </TableRow>
@@ -1450,7 +1590,7 @@ export default function CalendarioCompras() {
                       })}
                       {sortedForList.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                          <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
                             Nenhuma compra agendada encontrada
                           </TableCell>
                         </TableRow>
@@ -1499,6 +1639,7 @@ export default function CalendarioCompras() {
                           <TableHead className="whitespace-nowrap text-right">Dif.</TableHead>
                           <TableHead className="whitespace-nowrap">Pagamento</TableHead>
                           <TableHead className="whitespace-nowrap">Status</TableHead>
+                          <TableHead className="w-10 text-right pr-2"><span className="sr-only">Ações</span></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1548,10 +1689,17 @@ export default function CalendarioCompras() {
                                 <TableCell className="whitespace-nowrap">
                                   <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
                                 </TableCell>
+                                <TableCell className="w-10 text-right pr-2">
+                                  <PurchaseRowActions
+                                    purchase={p}
+                                    onEdit={handleEditPurchase}
+                                    onRequestDelete={setDeleteTarget}
+                                  />
+                                </TableCell>
                               </TableRow>
                               {expanded && hasDetails && (
                                 <TableRow className="bg-muted/10 hover:bg-muted/10">
-                                  <TableCell colSpan={9} className="p-0">
+                                  <TableCell colSpan={10} className="p-0">
                                     <PurchaseRowDetail p={p} onUpdateField={handleUpdateField} />
                                   </TableCell>
                                 </TableRow>
