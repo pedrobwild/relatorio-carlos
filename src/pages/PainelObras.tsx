@@ -293,6 +293,7 @@ export default function PainelObras() {
   const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
 
   type SortKey =
+    | 'atraso'
     | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
     | 'entrega_real'   | 'responsavel_nome' | null;
   const [sortKey, setSortKey] = useState<SortKey>(null);
