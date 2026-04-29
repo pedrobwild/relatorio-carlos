@@ -825,6 +825,11 @@ export default function CalendarioCompras() {
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [newDialogOpen, setNewDialogOpen] = useState(false);
+  // Quick action: confirmação de exclusão de uma solicitação. Guardamos a
+  // linha alvo aqui para mostrar contexto (nome do item + obra) no
+  // AlertDialog antes de chamar a mutation.
+  const [deleteTarget, setDeleteTarget] = useState<PurchaseWithProject | null>(null);
+  const navigate = useNavigate();
   // Ordenação por "Solicitada em" (created_at). null = ordem padrão (planned_purchase_date asc).
   const [requestedSort, setRequestedSort] = useState<'asc' | 'desc' | null>(null);
   const toggleRequestedSort = () => {
