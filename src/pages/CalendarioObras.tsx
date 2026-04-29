@@ -143,6 +143,25 @@ export default function CalendarioObras() {
   const [fornecedorFilter, setFornecedorFilter] = useState<string>(
     () => searchParams.get('prestador') || 'all',
   );
+  // Toggle de alto contraste para a Semana · Timeline. Persistido em
+  // localStorage para que a preferência sobreviva entre sessões. Aplica-se
+  // apenas à visualização week-timeline (e range, por consistência visual).
+  const HC_STORAGE_KEY = 'calendario:high-contrast';
+  const [highContrast, setHighContrast] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.localStorage.getItem(HC_STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(HC_STORAGE_KEY, highContrast ? '1' : '0');
+    } catch {
+      // localStorage indisponível (modo privado / SSR) — toggle continua funcional em memória.
+    }
+  }, [highContrast]);
 
   // Sincroniza os filtros + visualização atuais para a query string. Usamos
   // `replace` para não poluir o histórico de navegação a cada toggle e
