@@ -12,6 +12,7 @@ import {
   useProjectSummaryQuery,
   projectKeys,
 } from './useProjectsQuery';
+import { useStaffUsers } from './useStaffUsers';
 import type { ProjectWithCustomer } from '@/infra/repositories/projects.repository';
 
 export type PainelEtapa =
@@ -64,6 +65,10 @@ export interface PainelObra {
   status: PainelStatus | null;
   relacionamento: PainelRelacionamento | null;
   external_budget_id: string | null;
+  /** ID do usuário responsável pela obra (FK -> users_profile.id). */
+  responsavel_id: string | null;
+  /** Nome do responsável (resolvido em runtime via useStaffUsers). */
+  responsavel_nome: string | null;
   ultima_atualizacao: string;
 
   // Métricas (do summary)
@@ -113,6 +118,7 @@ export type PainelObraPatch = Partial<{
   status: PainelStatus | null;
   relacionamento: PainelRelacionamento | null;
   external_budget_id: string | null;
+  responsavel_id: string | null;
   inicio_oficial: string | null;
   entrega_oficial: string | null;
   inicio_real: string | null;
@@ -130,6 +136,7 @@ function patchToDbColumns(patch: PainelObraPatch): Record<string, unknown> {
   if ('relacionamento' in patch) out.painel_relacionamento = patch.relacionamento;
   if ('external_budget_id' in patch)
     out.painel_external_budget_id = patch.external_budget_id;
+  if ('responsavel_id' in patch) out.painel_responsavel_id = patch.responsavel_id;
   if ('inicio_oficial' in patch) out.planned_start_date = patch.inicio_oficial;
   if ('entrega_oficial' in patch) out.planned_end_date = patch.entrega_oficial;
   if ('inicio_real' in patch) out.actual_start_date = patch.inicio_real;
@@ -146,9 +153,11 @@ export function usePainelObras() {
     refetch,
   } = useProjectsQuery();
   const { data: summaries = [], isLoading: summariesLoading } = useProjectSummaryQuery();
+  const { data: staffUsers = [] } = useStaffUsers();
 
   const obras = useMemo<PainelObra[]>(() => {
     const summaryMap = new Map(summaries.map((s) => [s.id, s]));
+    const staffMap = new Map(staffUsers.map((u) => [u.id, u.nome]));
     return projects.map((p) => {
       const s = summaryMap.get(p.id);
       // Campos do painel vêm da row crua de projects (cast por compatibilidade
@@ -161,8 +170,10 @@ export function usePainelObras() {
         painel_status?: PainelStatus | null;
         painel_relacionamento?: PainelRelacionamento | null;
         painel_external_budget_id?: string | null;
+        painel_responsavel_id?: string | null;
         painel_ultima_atualizacao?: string;
       };
+      const responsavelId = raw.painel_responsavel_id ?? null;
       return {
         id: p.id,
         nome: p.name,
@@ -179,6 +190,8 @@ export function usePainelObras() {
         status: raw.painel_status ?? null,
         relacionamento: raw.painel_relacionamento ?? null,
         external_budget_id: raw.painel_external_budget_id ?? null,
+        responsavel_id: responsavelId,
+        responsavel_nome: responsavelId ? (staffMap.get(responsavelId) ?? null) : null,
         ultima_atualizacao: raw.painel_ultima_atualizacao ?? p.updated_at,
         progress_percentage:
           s?.progress_percentage != null ? Math.round(Math.min(100, Number(s.progress_percentage))) : null,
@@ -186,7 +199,7 @@ export function usePainelObras() {
         overdue_count: s?.overdue_count ?? 0,
       };
     });
-  }, [projects, summaries]);
+  }, [projects, summaries, staffUsers]);
 
   const update = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: PainelObraPatch }) => {
@@ -226,6 +239,7 @@ export function usePainelObras() {
             if ('relacionamento' in patch) next.painel_relacionamento = patch.relacionamento;
             if ('external_budget_id' in patch)
               next.painel_external_budget_id = patch.external_budget_id;
+            if ('responsavel_id' in patch) next.painel_responsavel_id = patch.responsavel_id;
             if ('inicio_oficial' in patch) next.planned_start_date = patch.inicio_oficial;
             if ('entrega_oficial' in patch) next.planned_end_date = patch.entrega_oficial;
             if ('inicio_real' in patch) next.actual_start_date = patch.inicio_real;

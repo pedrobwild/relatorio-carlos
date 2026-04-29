@@ -22,6 +22,7 @@ import {
   Plus,
   MoreHorizontal,
   Trash2,
+  User,
 } from 'lucide-react';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { PageHeader, PageToolbar, MetricCard, MetricRail, SectionCard, FilterPill } from '@/components/ui-premium';
@@ -83,6 +84,7 @@ import {
   type PainelStatus,
 } from '@/hooks/usePainelObras';
 import { EmptyState } from '@/components/ui/states';
+import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { DailyLogInline } from '@/components/admin/obras/DailyLogInline';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -245,6 +247,7 @@ export default function PainelObras() {
   const navigate = useNavigate();
   const { isStaff, loading: roleLoading } = useUserRole();
   const { obras, isLoading, updateObra } = usePainelObras();
+  const { data: staffUsers = [] } = useStaffUsers();
   const queryClient = useQueryClient();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -261,6 +264,7 @@ export default function PainelObras() {
   const [filterEtapa, setFilterEtapa] = useState<string>(ALL);
   const [filterStatus, setFilterStatus] = useState<string>(ALL);
   const [filterRelacionamento, setFilterRelacionamento] = useState<string>(ALL);
+  const [filterResponsavel, setFilterResponsavel] = useState<string>(ALL);
 
   type SortKey =
     | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
@@ -314,6 +318,10 @@ export default function PainelObras() {
       rows = rows.filter((o) =>
         filterRelacionamento === NONE ? !o.relacionamento : o.relacionamento === filterRelacionamento,
       );
+    if (filterResponsavel !== ALL)
+      rows = rows.filter((o) =>
+        filterResponsavel === NONE ? !o.responsavel_id : o.responsavel_id === filterResponsavel,
+      );
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
         const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
@@ -336,7 +344,7 @@ export default function PainelObras() {
       });
     }
     return rows;
-  }, [obras, search, filterEtapa, filterStatus, filterRelacionamento, sortKey, sortDir]);
+  }, [obras, search, filterEtapa, filterStatus, filterRelacionamento, filterResponsavel, sortKey, sortDir]);
 
   const toggleSort = (key: NonNullable<SortKey>) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -344,10 +352,10 @@ export default function PainelObras() {
   };
 
   const clearFilters = () => {
-    setSearch(''); setFilterEtapa(ALL); setFilterStatus(ALL); setFilterRelacionamento(ALL);
+    setSearch(''); setFilterEtapa(ALL); setFilterStatus(ALL); setFilterRelacionamento(ALL); setFilterResponsavel(ALL);
   };
 
-  const hasFilters = !!search.trim() || filterEtapa !== ALL || filterStatus !== ALL || filterRelacionamento !== ALL;
+  const hasFilters = !!search.trim() || filterEtapa !== ALL || filterStatus !== ALL || filterRelacionamento !== ALL || filterResponsavel !== ALL;
 
   const summary = useMemo(() => {
     const displayed = obras.map((o) => computeDisplayStatus(o));
@@ -518,6 +526,19 @@ export default function PainelObras() {
                     </SelectContent>
                   </Select>
 
+                  <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
+                    <SelectTrigger className="h-8 w-[170px] text-xs border-border-subtle bg-surface">
+                      <SelectValue placeholder="Responsável" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>Todos responsáveis</SelectItem>
+                      <SelectItem value={NONE}>(sem responsável)</SelectItem>
+                      {staffUsers.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
                   {hasFilters && (
                     <Button size="sm" variant="ghost" onClick={clearFilters}
                       className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground">
@@ -558,6 +579,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[100px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
                           <TableHead className="min-w-[100px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
                           <TableHead className="min-w-[130px]">Relacionamento</TableHead>
+                          <TableHead className="min-w-[150px]">Responsável</TableHead>
                           <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
@@ -566,6 +588,7 @@ export default function PainelObras() {
                           <ObraRow
                             key={o.id}
                             obra={o}
+                            staffUsers={staffUsers}
                             expanded={expandedIds.has(o.id)}
                             onToggleExpanded={() => toggleExpanded(o.id)}
                             onUpdate={(patch) => updateObra(o.id, patch)}
@@ -602,11 +625,13 @@ export default function PainelObras() {
 // Total de colunas da tabela do Painel de Obras. Mantenha em sincronia com o
 // <TableHeader> acima e com as <TableCell> de <ObraRow>:
 // 1) Cliente / Obra · 2) Status · 3) Etapa · 4) Progresso · 5) Início Of. ·
-// 6) Entrega Of. · 7) Início Real · 8) Entrega Real · 9) Relacionamento · 10) Ações
-const PAINEL_COLUMN_COUNT = 10;
+// 6) Entrega Of. · 7) Início Real · 8) Entrega Real · 9) Relacionamento ·
+// 10) Responsável · 11) Ações
+const PAINEL_COLUMN_COUNT = 11;
 
 interface ObraRowProps {
   obra: PainelObra;
+  staffUsers: { id: string; nome: string }[];
   expanded: boolean;
   onToggleExpanded: () => void;
   onUpdate: (patch: PainelObraPatch) => void;
@@ -614,7 +639,7 @@ interface ObraRowProps {
   onDeleteRequest: () => void;
 }
 
-function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
+function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteRequest }: ObraRowProps) {
   const stickyBase = 'bg-card group-hover:bg-accent/40 transition-colors';
 
   return (
@@ -756,7 +781,34 @@ function ObraRow({ obra, expanded, onToggleExpanded, onUpdate, onOpen, onDeleteR
           </Select>
         </TableCell>
 
-        {/* Ações — sticky right */}
+        {/* Responsável */}
+        <TableCell className="min-w-[150px] relative z-table-body overflow-hidden">
+          <Select
+            value={obra.responsavel_id ?? NONE}
+            onValueChange={(v) => onUpdate({ responsavel_id: v === NONE ? null : v })}
+          >
+            <SelectTrigger
+              className={cn(
+                'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:opacity-40 [&>svg]:ml-1 hover:bg-accent/60 rounded-md justify-start gap-1.5',
+                inlinePillTrigger,
+                !obra.responsavel_id && 'text-muted-foreground italic',
+              )}
+              aria-label="Responsável pela obra"
+            >
+              <User className="h-3 w-3 shrink-0 opacity-60" />
+              <span className="truncate font-medium">
+                {obra.responsavel_nome ?? (obra.responsavel_id ? '—' : 'Definir')}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>(nenhum)</SelectItem>
+              {staffUsers.map((u) => (
+                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </TableCell>
+
         <TableCell className={cn(
           'sticky right-0 z-sticky-right border-l border-border',
           // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
