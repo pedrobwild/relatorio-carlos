@@ -781,7 +781,34 @@ function ObraRow({ obra, staffUsers, expanded, onToggleExpanded, onUpdate, onOpe
           </Select>
         </TableCell>
 
-        {/* Ações — sticky right */}
+        {/* Responsável */}
+        <TableCell className="min-w-[150px] relative z-table-body overflow-hidden">
+          <Select
+            value={obra.responsavel_id ?? NONE}
+            onValueChange={(v) => onUpdate({ responsavel_id: v === NONE ? null : v })}
+          >
+            <SelectTrigger
+              className={cn(
+                'h-7 w-fit max-w-full text-xs border-0 shadow-none px-2 py-0 [&>svg]:opacity-40 [&>svg]:ml-1 hover:bg-accent/60 rounded-md justify-start gap-1.5',
+                inlinePillTrigger,
+                !obra.responsavel_id && 'text-muted-foreground italic',
+              )}
+              aria-label="Responsável pela obra"
+            >
+              <User className="h-3 w-3 shrink-0 opacity-60" />
+              <span className="truncate font-medium">
+                {obra.responsavel_nome ?? (obra.responsavel_id ? '—' : 'Definir')}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>(nenhum)</SelectItem>
+              {staffUsers.map((u) => (
+                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </TableCell>
+
         <TableCell className={cn(
           'sticky right-0 z-sticky-right border-l border-border',
           // Fundo SEMPRE opaco (bg-card) — sem tonalidades translúcidas para
