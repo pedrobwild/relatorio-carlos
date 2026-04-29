@@ -821,16 +821,34 @@ export default function CalendarioObras() {
           onQuickToggle={handleQuickToggle}
         />
       ) : view === 'week-timeline' ? (
-        <CalendarRangeTimeline
-          rangeStart={viewStart}
-          rangeEnd={viewEnd}
-          byProject={filteredByProject}
-          onActivityClick={setSelectedActivity}
-          canBreak={canBreak}
-          onBreak={(parent) => setBreakingActivity(parent)}
-          onQuickToggle={handleQuickToggle}
-        />
-      ) : (
+        (() => {
+          // Na visão "Semana · Timeline" exibimos apenas obras que estão de
+          // fato em andamento na semana — i.e., possuem ao menos uma atividade
+          // cujo `actual_start` (data real de início) cai dentro do intervalo
+          // [viewStart, viewEnd]. Isso filtra obras que apenas têm atividades
+          // *planejadas* mas ainda não começaram na prática.
+          const weekStartStr = format(viewStart, 'yyyy-MM-dd');
+          const weekEndStr = format(viewEnd, 'yyyy-MM-dd');
+          const inProgressByProject = filteredByProject.filter((g) =>
+            g.items.some(
+              (a) =>
+                !!a.actual_start &&
+                a.actual_start >= weekStartStr &&
+                a.actual_start <= weekEndStr,
+            ),
+          );
+          return (
+            <CalendarRangeTimeline
+              rangeStart={viewStart}
+              rangeEnd={viewEnd}
+              byProject={inProgressByProject}
+              onActivityClick={setSelectedActivity}
+              canBreak={canBreak}
+              onBreak={(parent) => setBreakingActivity(parent)}
+              onQuickToggle={handleQuickToggle}
+            />
+          );
+        })()
         // Week list view (default)
         <WeekListView
           filteredByProject={filteredByProject}
