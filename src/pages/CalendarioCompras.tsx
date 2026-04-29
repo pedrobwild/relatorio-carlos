@@ -1175,21 +1175,38 @@ export default function CalendarioCompras() {
     return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
   };
 
+  const compareByCustomer = (a: PurchaseWithProject, b: PurchaseWithProject, dir: 'asc' | 'desc') => {
+    const av = (a.customer_name || '').trim();
+    const bv = (b.customer_name || '').trim();
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+    return dir === 'asc'
+      ? av.localeCompare(bv, 'pt-BR', { sensitivity: 'base' })
+      : bv.localeCompare(av, 'pt-BR', { sensitivity: 'base' });
+  };
+
   const sortedForList = useMemo(() => {
     const base = [...filtered].filter((p) => p.planned_purchase_date);
+    if (customerSort) {
+      return base.sort((a, b) => compareByCustomer(a, b, customerSort));
+    }
     if (requestedSort) {
       return base.sort((a, b) => compareByCreatedAt(a, b, requestedSort));
     }
     return base.sort((a, b) => (a.planned_purchase_date || '').localeCompare(b.planned_purchase_date || ''));
-  }, [filtered, requestedSort]);
+  }, [filtered, requestedSort, customerSort]);
 
   const withoutDate = useMemo(() => {
     const base = filtered.filter((p) => !p.planned_purchase_date);
+    if (customerSort) {
+      return [...base].sort((a, b) => compareByCustomer(a, b, customerSort));
+    }
     if (requestedSort) {
       return [...base].sort((a, b) => compareByCreatedAt(a, b, requestedSort));
     }
     return base;
-  }, [filtered, requestedSort]);
+  }, [filtered, requestedSort, customerSort]);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
