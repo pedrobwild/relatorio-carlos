@@ -410,6 +410,60 @@ const EMPTY_FORM: NewPurchaseForm = {
   delivery_address: '',
 };
 
+// ─── PurchaseRowActions ──────────────────────────────────────────────────────
+/**
+ * Quick actions por linha da tabela: Editar e Excluir.
+ *
+ * - **Editar** (atalho): leva para `/obra/:projectId/compras`, onde o
+ *   usuário tem o formulário completo (parcelas, atividade vinculada,
+ *   anexos, etc.).
+ * - **Excluir**: dispara o AlertDialog no nível da página (controlado por
+ *   `onRequestDelete`) — a confirmação é obrigatória porque a exclusão é
+ *   definitiva (project_purchases não tem soft delete).
+ *
+ * Usa `DropdownMenu` para manter densidade da tabela; em mobile o overlay
+ * já garante alvo de toque adequado.
+ */
+function PurchaseRowActions({
+  purchase,
+  onEdit,
+  onRequestDelete,
+}: {
+  purchase: PurchaseWithProject;
+  onEdit: (p: PurchaseWithProject) => void;
+  onRequestDelete: (p: PurchaseWithProject) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          aria-label={`Ações para ${purchase.item_name}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem onSelect={() => onEdit(purchase)} className="gap-2">
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+          Editar na obra
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={() => onRequestDelete(purchase)}
+          className="gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+        >
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Excluir solicitação
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function NewPurchaseDialog({
   open,
   onClose,
