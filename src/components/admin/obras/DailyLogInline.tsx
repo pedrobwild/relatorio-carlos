@@ -807,11 +807,16 @@ const LIST_ROW_SKELETON = (
 const ServicesSkeleton = memo(function ServicesSkeleton() {
   return (
     <div
-      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[260px]')}
+      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[300px]')}
       role="status"
       aria-busy="true"
       aria-label="Carregando serviços em execução"
     >
+      <SubsectionHeader
+        id="subsec-services-skeleton"
+        icon={ClipboardList}
+        title="Serviços em execução"
+      />
       {LIST_ROW_SKELETON}
       <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
     </div>
@@ -821,11 +826,16 @@ const ServicesSkeleton = memo(function ServicesSkeleton() {
 const WorkersSkeleton = memo(function WorkersSkeleton() {
   return (
     <div
-      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[260px]')}
+      className={cn(SKELETON_WRAPPER_CLASS, 'min-h-[300px]')}
       role="status"
       aria-busy="true"
       aria-label="Carregando prestadores no local"
     >
+      <SubsectionHeader
+        id="subsec-workers-skeleton"
+        icon={HardHat}
+        title="Prestadores no local"
+      />
       {LIST_ROW_SKELETON}
       <span className={cn(SHIMMER_CLASS, 'h-9 w-full sm:w-40')} />
     </div>
