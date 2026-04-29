@@ -1477,7 +1477,7 @@ export default function CalendarioCompras() {
                       <TableRow className="bg-muted/50">
                         {/* expand toggle col */}
                         <TableHead className="w-8" />
-                        <TableHead className="whitespace-nowrap">Data Compra</TableHead>
+                        <TableHead className="whitespace-nowrap">Cliente</TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
                         <TableHead className="whitespace-nowrap p-0">
