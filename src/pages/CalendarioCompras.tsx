@@ -672,8 +672,30 @@ function NewPurchaseDialog({
         if (expected) payload.expected_delivery_date = expected;
       }
 
-      const { error } = await supabase.from('project_purchases').insert(payload);
+      const { data: created, error } = await supabase
+        .from('project_purchases')
+        .insert(payload)
+        .select('id, project_id')
+        .single();
       if (error) throw error;
+
+      // Upload dos arquivos anexados (best-effort).
+      if (created && pendingFiles.length > 0) {
+        const { uploaded, failed } = await uploadPendingAttachments({
+          pending: pendingFiles,
+          purchaseId: created.id,
+          projectId: created.project_id,
+          userId: user.id,
+        });
+        if (failed > 0) {
+          toast.warning(`${failed} anexo(s) não foram enviados`, {
+            description: 'A solicitação foi criada. Tente reenviar os arquivos pela tela de edição.',
+          });
+        } else if (uploaded > 0) {
+          toast.success(`${uploaded} anexo(s) enviados`);
+        }
+      }
+
       toast.success('Solicitação criada com sucesso!', {
         description: `${form.item_name.trim()} foi adicionada ao calendário de compras.`,
       });
