@@ -579,6 +579,7 @@ export default function PainelObras() {
                           <TableHead className="min-w-[100px]"><SortableHeader label="Início Real" sortKey="inicio_real" /></TableHead>
                           <TableHead className="min-w-[100px]"><SortableHeader label="Entrega Real" sortKey="entrega_real" /></TableHead>
                           <TableHead className="min-w-[130px]">Relacionamento</TableHead>
+                          <TableHead className="min-w-[150px]">Responsável</TableHead>
                           <TableHead className="w-16 sticky right-0 z-table-header-corner-right bg-surface-sunken border-l border-border-subtle" />
                         </TableRow>
                       </TableHeader>
