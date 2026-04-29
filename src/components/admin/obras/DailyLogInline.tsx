@@ -234,7 +234,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             defaultOpen={!isLoading && (services.length > 0 || workers.length > 0)}
             isLoading={isLoading}
             loadingSkeleton={
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
                 <ServicesSkeleton />
                 <WorkersSkeleton />
               </div>
