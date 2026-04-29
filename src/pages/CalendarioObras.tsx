@@ -157,8 +157,8 @@ export default function CalendarioObras() {
     if (onlyMicroSteps && view === 'week-timeline') next.set('microetapas', '1');
     else next.delete('microetapas');
 
-    // Visualização: só persiste se diferente do default ('week-list') para manter URLs limpas.
-    if (view && view !== 'week-list') next.set('view', view);
+    // Visualização: só persiste se diferente do default ('week-timeline') para manter URLs limpas.
+    if (view && view !== 'week-timeline') next.set('view', view);
     else next.delete('view');
 
     // Datas: only persist when the user actually navigated away from "today"
