@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import {
   ChevronLeft, ChevronRight, Calendar, Check, X, Pencil, CalendarIcon,
   FilterX, Plus, ChevronDown, ChevronUp, ExternalLink, Package,
-  FileText, Truck, ArrowUpDown,
+  FileText, Truck, ArrowUpDown, MoreHorizontal, Trash2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
