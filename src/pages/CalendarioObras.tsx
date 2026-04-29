@@ -103,7 +103,7 @@ export default function CalendarioObras() {
 
   const initialView: ViewMode = isViewMode(searchParams.get('view'))
     ? (searchParams.get('view') as ViewMode)
-    : 'week-list';
+    : 'week-timeline';
   const initialRefDate = parseDateParam(searchParams.get('date'), today);
   const initialRangeStart = parseDateParam(searchParams.get('from'), today);
   const initialRangeEnd = parseDateParam(searchParams.get('to'), addDays(today, 13));
@@ -157,8 +157,8 @@ export default function CalendarioObras() {
     if (onlyMicroSteps && view === 'week-timeline') next.set('microetapas', '1');
     else next.delete('microetapas');
 
-    // Visualização: só persiste se diferente do default ('week-list') para manter URLs limpas.
-    if (view && view !== 'week-list') next.set('view', view);
+    // Visualização: só persiste se diferente do default ('week-timeline') para manter URLs limpas.
+    if (view && view !== 'week-timeline') next.set('view', view);
     else next.delete('view');
 
     // Datas: only persist when the user actually navigated away from "today"
@@ -493,9 +493,7 @@ export default function CalendarioObras() {
             <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
               <TabsList className="flex-wrap h-auto">
                 <TabsTrigger value="month">Mês</TabsTrigger>
-                <TabsTrigger value="week-list" title="Semana em formato de lista agrupada por obra">
-                  Semana · Lista
-                </TabsTrigger>
+                {/* "Semana · Lista" foi ocultada — Semana · Timeline é o default */}
                 <TabsTrigger value="week-timeline" title="Semana em formato de linha do tempo (Gantt)">
                   Semana · Timeline
                 </TabsTrigger>
@@ -823,17 +821,36 @@ export default function CalendarioObras() {
           onQuickToggle={handleQuickToggle}
         />
       ) : view === 'week-timeline' ? (
-        <CalendarRangeTimeline
-          rangeStart={viewStart}
-          rangeEnd={viewEnd}
-          byProject={filteredByProject}
-          onActivityClick={setSelectedActivity}
-          canBreak={canBreak}
-          onBreak={(parent) => setBreakingActivity(parent)}
-          onQuickToggle={handleQuickToggle}
-        />
+        (() => {
+          // Na visão "Semana · Timeline" exibimos apenas obras que estão de
+          // fato em andamento na semana — i.e., possuem ao menos uma atividade
+          // cujo `actual_start` (data real de início) cai dentro do intervalo
+          // [viewStart, viewEnd]. Isso filtra obras que apenas têm atividades
+          // *planejadas* mas ainda não começaram na prática.
+          const weekStartStr = format(viewStart, 'yyyy-MM-dd');
+          const weekEndStr = format(viewEnd, 'yyyy-MM-dd');
+          const inProgressByProject = filteredByProject.filter((g) =>
+            g.items.some(
+              (a) =>
+                !!a.actual_start &&
+                a.actual_start >= weekStartStr &&
+                a.actual_start <= weekEndStr,
+            ),
+          );
+          return (
+            <CalendarRangeTimeline
+              rangeStart={viewStart}
+              rangeEnd={viewEnd}
+              byProject={inProgressByProject}
+              onActivityClick={setSelectedActivity}
+              canBreak={canBreak}
+              onBreak={(parent) => setBreakingActivity(parent)}
+              onQuickToggle={handleQuickToggle}
+            />
+          );
+        })()
       ) : (
-        // Week list view (default)
+        // Week list view (mantida por compatibilidade — aba oculta)
         <WeekListView
           filteredByProject={filteredByProject}
           today={today}
