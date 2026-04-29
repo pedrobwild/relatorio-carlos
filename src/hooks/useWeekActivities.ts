@@ -84,6 +84,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       updated_at,
       parent_activity_id,
       responsible_user_id,
+      fornecedor_id,
       projects:project_id (
         name,
         client_name,
@@ -92,7 +93,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
           customer_name
         )
       ),
-      responsible:responsible_user_id ( id, nome )
+      responsible:responsible_user_id ( id, nome ),
+      fornecedor:fornecedor_id ( id, nome )
     `)
     // Trazemos atividades cujo intervalo PLANEJADO intersecta a semana
     // OU cujo `actual_start` (data real de início) cai dentro da semana.
