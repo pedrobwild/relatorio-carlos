@@ -307,6 +307,9 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
             // Esta seção ocupa as duas colunas do grid externo, já que
             // internamente ela própria divide em duas colunas.
             className="lg:col-span-2"
+            // Persistência por projeto: cada obra mantém sua própria
+            // preferência de aberto/fechado para a seção unificada.
+            persistKey={`dailyLog:services-workers:open:${projectId}`}
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-start">
               {/* ============== SUBSEÇÃO: Serviços em execução ============== */}
