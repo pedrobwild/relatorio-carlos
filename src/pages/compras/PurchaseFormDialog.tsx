@@ -448,6 +448,18 @@ export function PurchaseFormDialog({
                 rows={2}
               />
             </div>
+
+            {/* Anexos — só disponível quando a compra já existe (edição). */}
+            {isEditing && editingPurchaseId && formData.project_id && (
+              <div className="col-span-2 rounded-md border border-dashed border-border/70 bg-muted/20 p-3">
+                <PurchaseAttachmentsField
+                  mode="live"
+                  purchaseId={editingPurchaseId}
+                  projectId={formData.project_id}
+                  helperText="Imagens, PDF, planilhas — até 20 MB cada"
+                />
+              </div>
+            )}
           </div>
         </div>
 
