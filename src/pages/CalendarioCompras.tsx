@@ -643,6 +643,20 @@ function NewPurchaseDialog({
         delivery_location: form.delivery_location || null,
         delivery_address: form.delivery_address.trim() || null,
       };
+
+      // Preenche automaticamente expected_delivery_date a partir da data
+      // prevista de pagamento + prazo (lead_time_days, default 7 dias úteis).
+      // Permite ao calendário e à coluna "Entrega" mostrarem a previsão sem
+      // exigir entrada manual. Será recalculado no momento do "Pago" usando
+      // a data efetiva (paid_at).
+      if (payload.payment_due_date) {
+        const expected = calcExpectedDelivery(
+          payload.payment_due_date,
+          payload.lead_time_days ?? 7,
+        );
+        if (expected) payload.expected_delivery_date = expected;
+      }
+
       const { error } = await supabase.from('project_purchases').insert(payload);
       if (error) throw error;
       toast.success('Solicitação criada com sucesso!', {
