@@ -220,7 +220,7 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 animate-fade-in motion-reduce:animate-none">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-start animate-fade-in motion-reduce:animate-none">
           {/* Serviços e prestadores — UNIFICADO num único colapsável.
               Mantém duas subseções (Serviços / Prestadores) lado a lado em
               telas largas e empilhadas no mobile. Modelo de dados continua
