@@ -740,18 +740,26 @@ interface SubsectionHeaderProps {
   title: string;
   /** Quando undefined, renderiza um placeholder shimmer (estado de carregamento). */
   count?: number;
+  /** Slot opcional para uma ação rápida (ex.: "Adicionar"). */
+  action?: React.ReactNode;
 }
 
 /**
  * Cabeçalho padronizado das subseções (Serviços / Prestadores) dentro
- * do card unificado. Mantém ícone, título e contador alinhados na mesma
- * baseline (h-7) tanto no estado real quanto no de carregamento — assim
- * não há "salto" visual quando os dados chegam.
+ * do card unificado. Mantém ícone, título, contador e ação rápida
+ * alinhados na mesma baseline tanto no estado real quanto no de
+ * carregamento — assim não há "salto" visual quando os dados chegam.
  */
-function SubsectionHeader({ id, icon: Icon, title, count }: SubsectionHeaderProps) {
+function SubsectionHeader({
+  id,
+  icon: Icon,
+  title,
+  count,
+  action,
+}: SubsectionHeaderProps) {
   const isLoading = count === undefined;
   return (
-    <div className="flex h-7 items-center gap-2 pb-1.5 border-b border-border/60">
+    <div className="flex min-h-9 items-center gap-2 pb-1.5 border-b border-border/60">
       <Icon className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
       <h4
         id={id}
@@ -767,12 +775,16 @@ function SubsectionHeader({ id, icon: Icon, title, count }: SubsectionHeaderProp
       ) : (
         <Badge
           variant={count > 0 ? 'secondary' : 'outline'}
-          className="ml-auto h-5 min-w-[22px] justify-center px-1.5 text-[11px] font-semibold tabular-nums shrink-0"
+          className={cn(
+            'h-5 min-w-[22px] justify-center px-1.5 text-[11px] font-semibold tabular-nums shrink-0',
+            action ? 'ml-auto' : 'ml-auto',
+          )}
           aria-label={`${count} ${count === 1 ? 'item' : 'itens'}`}
         >
           {count}
         </Badge>
       )}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
