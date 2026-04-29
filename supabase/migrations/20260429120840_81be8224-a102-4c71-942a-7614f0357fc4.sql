@@ -1,0 +1,2 @@
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS painel_responsavel_id uuid REFERENCES public.users_profile(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_projects_painel_responsavel_id ON public.projects(painel_responsavel_id);

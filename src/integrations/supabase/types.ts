@@ -5182,6 +5182,7 @@ export type Database = {
           painel_relacionamento:
             | Database["public"]["Enums"]["painel_relacionamento_enum"]
             | null
+          painel_responsavel_id: string | null
           painel_status:
             | Database["public"]["Enums"]["painel_status_enum"]
             | null
@@ -5237,6 +5238,7 @@ export type Database = {
           painel_relacionamento?:
             | Database["public"]["Enums"]["painel_relacionamento_enum"]
             | null
+          painel_responsavel_id?: string | null
           painel_status?:
             | Database["public"]["Enums"]["painel_status_enum"]
             | null
@@ -5292,6 +5294,7 @@ export type Database = {
           painel_relacionamento?:
             | Database["public"]["Enums"]["painel_relacionamento_enum"]
             | null
+          painel_responsavel_id?: string | null
           painel_status?:
             | Database["public"]["Enums"]["painel_status_enum"]
             | null
@@ -5310,6 +5313,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_painel_responsavel_id_fkey"
+            columns: ["painel_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
             referencedColumns: ["id"]
           },
         ]
