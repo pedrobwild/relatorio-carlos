@@ -526,6 +526,19 @@ export default function PainelObras() {
                     </SelectContent>
                   </Select>
 
+                  <Select value={filterResponsavel} onValueChange={setFilterResponsavel}>
+                    <SelectTrigger className="h-8 w-[170px] text-xs border-border-subtle bg-surface">
+                      <SelectValue placeholder="Responsável" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>Todos responsáveis</SelectItem>
+                      <SelectItem value={NONE}>(sem responsável)</SelectItem>
+                      {staffUsers.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
                   {hasFilters && (
                     <Button size="sm" variant="ghost" onClick={clearFilters}
                       className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground">
