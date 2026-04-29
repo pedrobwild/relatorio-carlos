@@ -1391,6 +1391,18 @@ export default function CalendarioCompras() {
                   </Select>
                 </div>
 
+                {/* Cliente */}
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Cliente</Label>
+                  <Select value={filterCustomer} onValueChange={setFilterCustomer}>
+                    <SelectTrigger className="w-52 h-9"><SelectValue placeholder="Cliente" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os clientes</SelectItem>
+                      {customers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Fornecedor */}
                 <div className="flex flex-col gap-1">
                   <Label className="text-xs text-muted-foreground">Fornecedor</Label>
