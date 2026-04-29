@@ -109,15 +109,30 @@ export function PurchaseFormDialog({
               </div>
             </div>
 
-            {/* Item Name */}
-            <div className="col-span-2">
-              <Label htmlFor="item_name">{isPrestador ? 'Nome do Serviço' : 'Nome do Produto'} *</Label>
-              <Input
-                id="item_name"
-                value={formData.item_name || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, item_name: e.target.value }))}
-                placeholder={isPrestador ? 'Ex: Instalação de piso' : 'Ex: Piso porcelanato 60x60'}
-              />
+            {/* Item Name + Marca (opcional, lado a lado) */}
+            <div className="col-span-2 grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3">
+              <div>
+                <Label htmlFor="item_name">{isPrestador ? 'Nome do Serviço' : 'Nome do Produto'} *</Label>
+                <Input
+                  id="item_name"
+                  value={formData.item_name || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, item_name: e.target.value }))}
+                  placeholder={isPrestador ? 'Ex: Instalação de piso' : 'Ex: Piso porcelanato 60x60'}
+                />
+              </div>
+              {!isPrestador && (
+                <div>
+                  <Label htmlFor="brand">
+                    Marca <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
+                  </Label>
+                  <Input
+                    id="brand"
+                    value={formData.brand || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                    placeholder="Ex: Portobello, Tigre…"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="col-span-2">
