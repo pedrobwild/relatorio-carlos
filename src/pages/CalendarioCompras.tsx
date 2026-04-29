@@ -738,11 +738,24 @@ function NewPurchaseDialog({
             </Select>
           </div>
 
-          {/* Item — obrigatório */}
-          <div className="grid gap-1.5">
-            <Label className="text-sm font-medium">Item / Produto <span className="text-destructive">*</span></Label>
-            <Input placeholder="Ex: Cimento CP-II, Vergalhão 10mm…" value={form.item_name}
-              onChange={(e) => set('item_name', e.target.value)} className="h-9" />
+          {/* Item + Marca — marca opcional, lado a lado */}
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3">
+            <div className="grid gap-1.5">
+              <Label className="text-sm font-medium">Item / Produto <span className="text-destructive">*</span></Label>
+              <Input placeholder="Ex: Cimento CP-II, Vergalhão 10mm…" value={form.item_name}
+                onChange={(e) => set('item_name', e.target.value)} className="h-9" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-sm">
+                Marca <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                placeholder="Ex: Votorantim, Tigre…"
+                value={form.brand}
+                onChange={(e) => set('brand', e.target.value)}
+                className="h-9"
+              />
+            </div>
           </div>
 
           {/* Categoria + Fornecedor */}
