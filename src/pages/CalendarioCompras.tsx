@@ -949,6 +949,16 @@ function NewPurchaseDialog({
             <Textarea placeholder="Urgência, ponto de entrega, contato do fornecedor…" value={form.notes}
               onChange={(e) => set('notes', e.target.value)} rows={2} className="text-sm resize-none" />
           </div>
+
+          {/* Anexos — imagens e documentos da requisição */}
+          <div className="rounded-md border border-dashed border-border/70 bg-muted/20 p-3">
+            <PurchaseAttachmentsField
+              mode="pending"
+              pending={pendingFiles}
+              onPendingChange={setPendingFiles}
+              helperText="Imagens, PDF, planilhas — até 20 MB cada"
+            />
+          </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
