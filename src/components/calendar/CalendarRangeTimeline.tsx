@@ -523,7 +523,7 @@ function ProjectBars({
                     return `${seg.activity.description}${tag}\n${statusLabel}\n${planned}${real}${prest}`;
                   })()}
                   className={cn(
-                    'w-full h-full rounded-sm border text-[11px] font-medium px-1.5 leading-6 truncate text-left',
+                    'w-full h-full rounded-sm border text-[12px] font-semibold tracking-tight px-1.5 leading-6 truncate text-left',
                     'hover:ring-2 hover:ring-primary/40 transition-shadow',
                     'flex items-center gap-1',
                     // Para status pendente, usa o estilo neutro (texto escuro sobre fundo muted)
@@ -536,18 +536,18 @@ function ProjectBars({
                   )}
                 >
                   <StatusIcon
-                    className={cn('h-3 w-3 shrink-0', statusStyle.icon_color)}
+                    className={cn('h-3.5 w-3.5 shrink-0', statusStyle.icon_color)}
                     aria-hidden="true"
                   />
                   <span className="sr-only">{`Status: ${statusLabel}.`}</span>
-                  {isChild && <span aria-hidden="true" className="text-primary/80 shrink-0">└</span>}
+                  {isChild && <span aria-hidden="true" className="text-primary font-bold shrink-0">└</span>}
                   <span aria-hidden="true" className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
                     {seg.activity.description}
                   </span>
                   {seg.activity.fornecedor_nome && barWidth >= 90 && (
                     <span
                       aria-hidden="true"
-                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border bg-background px-1 py-px text-[10px] font-medium leading-none text-foreground"
+                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border bg-background px-1.5 py-px text-[11px] font-semibold leading-none text-foreground"
                       title={`Prestador: ${seg.activity.fornecedor_nome}`}
                     >
                       {seg.activity.fornecedor_nome}
