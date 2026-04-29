@@ -849,7 +849,8 @@ export default function CalendarioObras() {
             />
           );
         })()
-        // Week list view (default)
+      ) : (
+        // Week list view (mantida por compatibilidade — aba oculta)
         <WeekListView
           filteredByProject={filteredByProject}
           today={today}
