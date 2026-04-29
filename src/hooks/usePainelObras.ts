@@ -65,6 +65,10 @@ export interface PainelObra {
   status: PainelStatus | null;
   relacionamento: PainelRelacionamento | null;
   external_budget_id: string | null;
+  /** ID do usuário responsável pela obra (FK -> users_profile.id). */
+  responsavel_id: string | null;
+  /** Nome do responsável (resolvido em runtime via useStaffUsers). */
+  responsavel_nome: string | null;
   ultima_atualizacao: string;
 
   // Métricas (do summary)
