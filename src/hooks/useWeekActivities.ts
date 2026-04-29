@@ -94,8 +94,16 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       ),
       responsible:responsible_user_id ( id, nome )
     `)
-    .lte('planned_start', weekEnd)
-    .gte('planned_end', weekStart)
+    // Trazemos atividades cujo intervalo PLANEJADO intersecta a semana
+    // OU cujo `actual_start` (data real de início) cai dentro da semana.
+    // O segundo caso é essencial para o filtro "obras em andamento nesta
+    // semana" da Semana · Timeline: uma atividade pode ter sido iniciada
+    // dentro da semana mesmo que seu planejamento original esteja fora do
+    // recorte (ex.: começou atrasada). Comparações usam `YYYY-MM-DD` puro
+    // (colunas `date` no Postgres) — sem fuso horário envolvido.
+    .or(
+      `and(planned_start.lte.${weekEnd},planned_end.gte.${weekStart}),and(actual_start.gte.${weekStart},actual_start.lte.${weekEnd})`,
+    )
     .order('planned_start', { ascending: true });
 
   if (error) throw error;
