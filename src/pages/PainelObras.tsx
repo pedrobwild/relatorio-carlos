@@ -305,7 +305,7 @@ export default function PainelObras() {
   const filtered = useMemo(() => {
     let rows = obras;
     if (search.trim()) {
-      rows = rows.filter((o) => matchesSearch(search, [o.nome, o.customer_name]));
+      rows = rows.filter((o) => matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]));
     }
     if (filterEtapa !== ALL)
       rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));
