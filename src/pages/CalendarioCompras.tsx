@@ -1528,9 +1528,13 @@ export default function CalendarioCompras() {
                                 ) : <span className="inline-block w-5" />}
                               </TableCell>
 
-                              <TableCell className="font-medium whitespace-nowrap">
-                                <DateCell value={p.planned_purchase_date}
-                                  onSave={(v) => updateDateField.mutate({ id: p.id, field: 'planned_purchase_date', value: v })} />
+                              <TableCell className="whitespace-nowrap max-w-[180px]">
+                                <span
+                                  className={cn('truncate inline-block max-w-full align-middle', !p.customer_name && 'text-muted-foreground italic')}
+                                  title={p.customer_name || 'Sem cliente'}
+                                >
+                                  {p.customer_name || '—'}
+                                </span>
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap max-w-[160px]">
