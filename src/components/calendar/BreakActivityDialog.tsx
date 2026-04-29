@@ -242,7 +242,7 @@ export function BreakActivityDialog({
     const last = rows[rows.length - 1];
     const start = last ? addDays(last.planned_end, 1) : ps!;
     const safeStart = start > pe ? pe : start;
-    setRows((prev) => [...prev, { description: '', planned_start: safeStart, planned_end: pe, responsible_user_id: parent?.responsible_user_id ?? null }]);
+    setRows((prev) => [...prev, { description: '', planned_start: safeStart, planned_end: pe, responsible_user_id: parent?.responsible_user_id ?? null, fornecedor_id: parent?.fornecedor_id ?? null }]);
   };
 
   const removeRow = (i: number) => setRows((prev) => prev.filter((_, idx) => idx !== i));
