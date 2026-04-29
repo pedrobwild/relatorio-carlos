@@ -569,17 +569,20 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                   />
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addWorker}
-                className="w-full sm:w-auto sm:self-start h-9 text-sm"
-                disabled={isSaving}
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Adicionar prestador
-              </Button>
+              </div>
+              {workers.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addWorker}
+                  className="w-full sm:w-auto sm:self-start h-9 text-sm"
+                  disabled={isSaving}
+                >
+                  <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
+                  Adicionar outro prestador
+                </Button>
+              )}
               </section>
             </div>
           </SectionCard>
