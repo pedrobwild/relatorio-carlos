@@ -46,6 +46,10 @@ export interface WeekActivity {
   responsible_user_id: string | null;
   /** Nome do responsável (pré-resolvido a partir de users_profile). */
   responsible_name: string | null;
+  /** ID do prestador (fornecedor) que executará esta atividade/micro-etapa. */
+  fornecedor_id: string | null;
+  /** Nome do prestador (pré-resolvido a partir de fornecedores). */
+  fornecedor_nome: string | null;
 }
 
 /** Payload para criar uma micro-etapa (sub-atividade) de uma atividade-mãe. */
@@ -55,6 +59,11 @@ export interface SubActivityInput {
   planned_end: string;   // YYYY-MM-DD
   /** Opcional: Staff responsável por esta micro-etapa. */
   responsible_user_id?: string | null;
+  /**
+   * Opcional: Prestador (fornecedor) que executará esta micro-etapa.
+   * Indicado direto no momento da quebra para evitar um segundo modal.
+   */
+  fornecedor_id?: string | null;
 }
 
 interface FetchArgs {
@@ -84,6 +93,7 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
       updated_at,
       parent_activity_id,
       responsible_user_id,
+      fornecedor_id,
       projects:project_id (
         name,
         client_name,
@@ -92,7 +102,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
           customer_name
         )
       ),
-      responsible:responsible_user_id ( id, nome )
+      responsible:responsible_user_id ( id, nome ),
+      fornecedor:fornecedor_id ( id, nome )
     `)
     // Trazemos atividades cujo intervalo PLANEJADO intersecta a semana
     // OU cujo `actual_start` (data real de início) cai dentro da semana.
@@ -135,6 +146,8 @@ async function fetchWeekActivities({ weekStart, weekEnd }: FetchArgs): Promise<W
     parent_activity_id: row.parent_activity_id ?? null,
     responsible_user_id: row.responsible_user_id ?? null,
     responsible_name: row.responsible?.nome ?? null,
+    fornecedor_id: row.fornecedor_id ?? null,
+    fornecedor_nome: row.fornecedor?.nome ?? null,
   }));
 }
 
@@ -241,6 +254,12 @@ export function useWeekActivities(weekStart: string, weekEnd: string) {
           s.responsible_user_id !== undefined
             ? s.responsible_user_id
             : parent.responsible_user_id ?? null,
+        // Mesma lógica para o prestador (fornecedor): herda da mãe quando
+        // o usuário não escolhe explicitamente uma opção na linha.
+        fornecedor_id:
+          s.fornecedor_id !== undefined
+            ? s.fornecedor_id
+            : parent.fornecedor_id ?? null,
       }));
 
       const { error: insErr } = await supabase.from('project_activities').insert(rows);
