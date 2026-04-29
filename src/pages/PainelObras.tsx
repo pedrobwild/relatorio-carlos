@@ -268,7 +268,7 @@ export default function PainelObras() {
 
   type SortKey =
     | 'inicio_oficial' | 'entrega_oficial' | 'inicio_real'
-    | 'entrega_real'   | null;
+    | 'entrega_real'   | 'responsavel_nome' | null;
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
