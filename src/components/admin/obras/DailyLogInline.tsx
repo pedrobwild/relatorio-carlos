@@ -277,10 +277,9 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
                     </span>
                   )}
                 </div>
-            <div className="flex flex-col gap-2 sm:gap-3">
-              {services.length === 0 && (
-                <EmptyLine text="Nenhum serviço adicionado." />
-              )}
+                {services.length === 0 && (
+                  <EmptyLine text="Nenhum serviço adicionado." />
+                )}
               {services.map((svc, i) => (
                 <div
                   key={i}
