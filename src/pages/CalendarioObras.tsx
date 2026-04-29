@@ -103,7 +103,7 @@ export default function CalendarioObras() {
 
   const initialView: ViewMode = isViewMode(searchParams.get('view'))
     ? (searchParams.get('view') as ViewMode)
-    : 'week-list';
+    : 'week-timeline';
   const initialRefDate = parseDateParam(searchParams.get('date'), today);
   const initialRangeStart = parseDateParam(searchParams.get('from'), today);
   const initialRangeEnd = parseDateParam(searchParams.get('to'), addDays(today, 13));
