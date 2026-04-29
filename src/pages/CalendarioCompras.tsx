@@ -521,8 +521,14 @@ function NewPurchaseDialog({
   const [saving, setSaving] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [dueDateOpen, setDueDateOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
 
-  useEffect(() => { if (open) setForm(EMPTY_FORM); }, [open]);
+  useEffect(() => {
+    if (open) {
+      setForm(EMPTY_FORM);
+      setPendingFiles([]);
+    }
+  }, [open]);
 
   const set = (field: keyof NewPurchaseForm, value: unknown) =>
     setForm((prev) => ({ ...prev, [field]: value }));
