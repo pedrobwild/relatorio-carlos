@@ -351,6 +351,11 @@ export default function PainelObras() {
       );
     if (sortKey) {
       rows = [...rows].sort((a, b) => {
+        if (sortKey === 'atraso') {
+          const av = computeOverdueDays(a);
+          const bv = computeOverdueDays(b);
+          return sortDir === 'asc' ? av - bv : bv - av;
+        }
         const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
         if (!av && !bv) return 0; if (!av) return 1; if (!bv) return -1;
         return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
