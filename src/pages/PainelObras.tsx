@@ -305,7 +305,7 @@ export default function PainelObras() {
   const filtered = useMemo(() => {
     let rows = obras;
     if (search.trim()) {
-      rows = rows.filter((o) => matchesSearch(search, [o.nome, o.customer_name]));
+      rows = rows.filter((o) => matchesSearch(search, [o.nome, o.customer_name, o.responsavel_nome]));
     }
     if (filterEtapa !== ALL)
       rows = rows.filter((o) => (filterEtapa === NONE ? !o.etapa : o.etapa === filterEtapa));
@@ -481,7 +481,7 @@ export default function PainelObras() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                   <Input value={search} onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Buscar obra ou cliente…"
+                    placeholder="Buscar por obra, cliente ou responsável…"
                     className="h-9 pl-8 text-sm bg-surface border-border-subtle" />
                 </div>
               }
