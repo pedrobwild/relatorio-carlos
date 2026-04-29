@@ -346,6 +346,7 @@ export function BreakActivityDialog({
         planned_start: start,
         planned_end: end,
         responsible_user_id: parent?.responsible_user_id ?? null,
+        fornecedor_id: parent?.fornecedor_id ?? null,
       });
     }
     setRows(next);
@@ -358,6 +359,7 @@ export function BreakActivityDialog({
       planned_start: fmtDate(r.planned_start),
       planned_end: fmtDate(r.planned_end),
       responsible_user_id: r.responsible_user_id,
+      fornecedor_id: r.fornecedor_id,
     }));
     await onConfirm(parent, payload);
     onOpenChange(false);
