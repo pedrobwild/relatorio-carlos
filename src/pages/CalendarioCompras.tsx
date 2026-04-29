@@ -1501,7 +1501,25 @@ export default function CalendarioCompras() {
                       <TableRow className="bg-muted/50">
                         {/* expand toggle col */}
                         <TableHead className="w-8" />
-                        <TableHead className="whitespace-nowrap">Cliente</TableHead>
+                        <TableHead className="whitespace-nowrap p-0">
+                          <button
+                            type="button"
+                            onClick={toggleCustomerSort}
+                            aria-label={`Ordenar por cliente${customerSort ? ` (${customerSort === 'asc' ? 'ascendente' : 'descendente'})` : ''}`}
+                            aria-sort={customerSort === 'asc' ? 'ascending' : customerSort === 'desc' ? 'descending' : 'none'}
+                            className={cn(
+                              'flex h-9 w-full items-center gap-1 px-3 text-left font-medium whitespace-nowrap',
+                              'hover:bg-muted/60 hover:text-foreground transition-colors',
+                              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                              customerSort && 'text-foreground bg-muted/40',
+                            )}
+                          >
+                            Cliente
+                            {customerSort === 'asc' && <ChevronUp className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                            {customerSort === 'desc' && <ChevronDown className="h-3.5 w-3.5 text-primary" aria-hidden />}
+                            {customerSort === null && <ArrowUpDown className="h-3.5 w-3.5 opacity-40" aria-hidden />}
+                          </button>
+                        </TableHead>
                         <TableHead className="whitespace-nowrap">Obra</TableHead>
                         <TableHead className="whitespace-nowrap">Item</TableHead>
                         <TableHead className="whitespace-nowrap p-0">
