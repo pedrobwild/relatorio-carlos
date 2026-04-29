@@ -496,6 +496,15 @@ function ProjectBars({
                   <span aria-hidden="true" className={cn('truncate', status === 'completed' && 'line-through decoration-1')}>
                     {seg.activity.description}
                   </span>
+                  {seg.activity.fornecedor_nome && barWidth >= 90 && (
+                    <span
+                      aria-hidden="true"
+                      className="ml-auto shrink-0 max-w-[45%] truncate inline-flex items-center rounded-sm border border-border/60 bg-background/70 px-1 py-px text-[9.5px] leading-none text-muted-foreground"
+                      title={`Prestador: ${seg.activity.fornecedor_nome}`}
+                    >
+                      {seg.activity.fornecedor_nome}
+                    </span>
+                  )}
                 </button>
                 {showQuickToggle && (
                   <button
