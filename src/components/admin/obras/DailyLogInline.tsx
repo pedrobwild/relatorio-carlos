@@ -123,19 +123,33 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
     [services, workers, notes, planning],
   );
 
+  // ----- refs para foco pós-inserção -----
+  // Quando o usuário aciona "Adicionar" (header ou rodapé), guardamos o
+  // índice do novo item em pendingFocusRef.{services|workers}; um efeito
+  // após o re-render localiza a linha via [data-row-index] dentro do
+  // container correspondente e dá scrollIntoView + focus no primeiro
+  // campo marcado com [data-autofocus].
+  const servicesListRef = useRef<HTMLDivElement | null>(null);
+  const workersListRef = useRef<HTMLDivElement | null>(null);
+  const pendingFocusRef = useRef<{ services?: number; workers?: number }>({});
+
   // ----- ações serviços -----
-  const addService = () =>
-    setServices((curr) => [
-      ...curr,
-      {
-        description: '',
-        status: 'Em andamento',
-        observations: null,
-        start_date: null,
-        end_date: null,
-        position: curr.length,
-      },
-    ]);
+  const addService = useCallback(() => {
+    setServices((curr) => {
+      pendingFocusRef.current.services = curr.length;
+      return [
+        ...curr,
+        {
+          description: '',
+          status: 'Em andamento',
+          observations: null,
+          start_date: null,
+          end_date: null,
+          position: curr.length,
+        },
+      ];
+    });
+  }, []);
   const updateService = (index: number, patch: Partial<DailyLogService>) =>
     setServices((curr) =>
       curr.map((s, i) => (i === index ? { ...s, ...patch } : s)),
@@ -144,26 +158,61 @@ export function DailyLogInline({ projectId, initialDate }: DailyLogInlineProps) 
     setServices((curr) => curr.filter((_, i) => i !== index));
 
   // ----- ações prestadores -----
-  const addWorker = () =>
-    setWorkers((curr) => [
-      ...curr,
-      {
-        name: '',
-        role: null,
-        period_start: null,
-        period_end: null,
-        shift_start: null,
-        shift_end: null,
-        notes: null,
-        position: curr.length,
-      },
-    ]);
+  const addWorker = useCallback(() => {
+    setWorkers((curr) => {
+      pendingFocusRef.current.workers = curr.length;
+      return [
+        ...curr,
+        {
+          name: '',
+          role: null,
+          period_start: null,
+          period_end: null,
+          shift_start: null,
+          shift_end: null,
+          notes: null,
+          position: curr.length,
+        },
+      ];
+    });
+  }, []);
   const updateWorker = (index: number, patch: Partial<DailyLogWorker>) =>
     setWorkers((curr) =>
       curr.map((w, i) => (i === index ? { ...w, ...patch } : w)),
     );
   const removeWorker = (index: number) =>
     setWorkers((curr) => curr.filter((_, i) => i !== index));
+
+  // Foca o último item adicionado depois do re-render. Usa um pequeno
+  // requestAnimationFrame para garantir que o DOM da nova linha já está
+  // pintado antes do scroll/focus.
+  useEffect(() => {
+    const idx = pendingFocusRef.current.services;
+    if (idx === undefined || !servicesListRef.current) return;
+    pendingFocusRef.current.services = undefined;
+    requestAnimationFrame(() => {
+      const row = servicesListRef.current?.querySelector<HTMLElement>(
+        `[data-row-index="${idx}"]`,
+      );
+      if (!row) return;
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      row.querySelector<HTMLElement>('[data-autofocus="true"]')?.focus();
+    });
+  }, [services.length]);
+
+  useEffect(() => {
+    const idx = pendingFocusRef.current.workers;
+    if (idx === undefined || !workersListRef.current) return;
+    pendingFocusRef.current.workers = undefined;
+    requestAnimationFrame(() => {
+      const row = workersListRef.current?.querySelector<HTMLElement>(
+        `[data-row-index="${idx}"]`,
+      );
+      if (!row) return;
+      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      row.querySelector<HTMLElement>('[data-autofocus="true"]')?.focus();
+    });
+  }, [workers.length]);
 
   // ----- salvar -----
   const handleSave = async () => {
