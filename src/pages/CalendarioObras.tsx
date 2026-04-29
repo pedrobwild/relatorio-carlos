@@ -388,11 +388,23 @@ export default function CalendarioObras() {
     // 3) Filtro "apenas micro-etapas" — válido só em week-timeline + staff.
     //    Mantém somente atividades que são children (parent_activity_id !== null),
     //    ou seja, resultados de uma quebra em micro-etapas.
-    if (!onlyMicroSteps || view !== 'week-timeline' || !canBreak) return byEtapa;
-    return byEtapa
-      .map((g) => ({ ...g, items: g.items.filter((a) => a.parent_activity_id !== null) }))
+    const byMicro = (!onlyMicroSteps || view !== 'week-timeline' || !canBreak)
+      ? byEtapa
+      : byEtapa
+          .map((g) => ({ ...g, items: g.items.filter((a) => a.parent_activity_id !== null) }))
+          .filter((g) => g.items.length > 0);
+
+    // 4) Filtro por prestador — válido só em week-timeline. '__none__' = sem prestador.
+    if (fornecedorFilter === 'all' || view !== 'week-timeline') return byMicro;
+    return byMicro
+      .map((g) => ({
+        ...g,
+        items: g.items.filter((a) =>
+          fornecedorFilter === '__none__' ? !a.fornecedor_id : a.fornecedor_id === fornecedorFilter,
+        ),
+      }))
       .filter((g) => g.items.length > 0);
-  }, [visibleByProject, projectFilter, etapaFilter, onlyMicroSteps, view, canBreak]);
+  }, [visibleByProject, projectFilter, etapaFilter, onlyMicroSteps, fornecedorFilter, view, canBreak]);
 
   const filteredActivities = useMemo(
     () => filteredByProject.flatMap((g) => g.items),
