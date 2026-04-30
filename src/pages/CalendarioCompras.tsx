@@ -1336,11 +1336,7 @@ export default function CalendarioCompras() {
     },
     onError: (e) => { console.error(e); toast.error('Erro ao atualizar status'); },
   });
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] }); toast.success('Status atualizado'); },
-    onError: (e) => { console.error(e); toast.error('Erro ao atualizar status'); },
-  });
+
 
   const updateDateField = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: 'planned_purchase_date' | 'payment_due_date'; value: string | null }) => {
