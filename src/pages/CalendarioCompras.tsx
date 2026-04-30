@@ -1152,13 +1152,17 @@ export default function CalendarioCompras() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, value }: { id: string; value: CalendarStatus }) => {
+    mutationFn: async ({ id, value, paidDate }: { id: string; value: CalendarStatus; paidDate?: string }) => {
       // "Pago" é um estado derivado de paid_at. Ao marcar Pago: registramos
-      // a data atual; ao mover para outro status: limpamos paid_at e gravamos
-      // o status logístico (mantendo 'delivered' como default ao "despagar").
+      // a data escolhida pelo usuário (default = hoje); ao mover para outro
+      // status: limpamos paid_at e gravamos o status logístico (mantendo
+      // 'delivered' como default ao "despagar").
       const updates: Record<string, unknown> = {};
       if (value === 'paid') {
-        const paidAt = new Date().toISOString();
+        // `paidDate` chega como 'YYYY-MM-DD' (data local escolhida no picker).
+        // Convertemos para ISO no fuso local — meio-dia evita drift de UTC.
+        const dateStr = paidDate ?? format(new Date(), 'yyyy-MM-dd');
+        const paidAt = new Date(`${dateStr}T12:00:00`).toISOString();
         updates.paid_at = paidAt;
         // Recalcula a data prevista de entrega: âncora = data efetiva do
         // pagamento + lead_time_days úteis. Sempre sobrescreve o valor
