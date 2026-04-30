@@ -1755,6 +1755,31 @@ export default function CalendarioCompras() {
             ))}
           </div>
 
+          {/* ── Filtros rápidos por status de pagamento ── */}
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtros rápidos de pagamento">
+            {([
+              { key: 'all',     label: 'Todos' },
+              { key: 'paid',    label: 'Pagos' },
+              { key: 'partial', label: 'Pago Parcial' },
+              { key: 'pending', label: 'Pendentes' },
+            ] as const).map(({ key, label }) => {
+              const active = filterStatus === key;
+              return (
+                <Button
+                  key={key}
+                  type="button"
+                  size="sm"
+                  variant={active ? 'default' : 'outline'}
+                  aria-pressed={active}
+                  onClick={() => setFilterStatus(key)}
+                  className="h-8"
+                >
+                  {label}
+                </Button>
+              );
+            })}
+          </div>
+
           {/* ── Filters + View Toggle + New Button ── */}
           {/* sticky para manter filtros e ações de troca de visão sempre visíveis ao rolar listas longas */}
           <Card className="sticky top-0 z-20 bg-card/95 backdrop-blur-sm shadow-sm">
