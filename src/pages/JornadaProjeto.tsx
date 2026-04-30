@@ -16,6 +16,7 @@ import { usePendencias } from '@/hooks/usePendencias';
 import { JornadaTabsBar } from './jornada/JornadaTabsBar';
 import { JornadaTabContent } from './jornada/JornadaTabContent';
 import { MobileNavDrawer } from './jornada/MobileNavDrawer';
+import { ProjectPhaseCompletionBanner } from '@/components/journey/ProjectPhaseCompletionBanner';
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
