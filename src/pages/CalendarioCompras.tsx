@@ -1910,7 +1910,8 @@ export default function CalendarioCompras() {
                         <span className={cn('font-medium', isToday && 'text-primary')}>{format(day, 'd')}</span>
                         <div className="mt-1 space-y-0.5">
                           {dayPurchases.slice(0, 3).map((p) => {
-                            const cs = toCalendarStatus(p.status, (p as any).paid_at);
+                            const agg = getPaidAggregate(p);
+                            const cs = toCalendarStatus(p.status, (p as any).paid_at, agg.paidSum, Number(p.estimated_cost ?? 0));
                             const cfg = calendarStatusConfig[cs];
                             return (
                               <div key={p.id} className={cn('text-[10px] leading-tight rounded-sm px-1 py-0.5 truncate border', cfg.color)} title={`${p.project_name} — ${p.item_name}`}>
