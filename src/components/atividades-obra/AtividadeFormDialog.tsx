@@ -1,16 +1,37 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import type { ObraTaskInput, ObraTask, ObraTaskPriority } from '@/hooks/useObraTasks';
 import { useStaffUsers } from '@/hooks/useStaffUsers';
 import { useDialogDraft } from '@/hooks/useDialogDraft';
 import { AutosaveIndicator } from '@/components/ui/AutosaveIndicator';
 import { toast } from 'sonner';
 import { trackAmplitude } from '@/lib/amplitude';
+import { formatCurrencyBRL, parseCurrencyBRL } from '@/lib/currencyMask';
 
 interface Props {
   open: boolean;
@@ -24,11 +45,17 @@ interface Props {
   draftScope?: string;
 }
 
-const priorities: { value: ObraTaskPriority; label: string }[] = [
-  { value: 'baixa', label: 'Baixa' },
-  { value: 'media', label: 'Média' },
-  { value: 'alta', label: 'Alta' },
-  { value: 'critica', label: 'Crítica' },
+const TITLE_MAX = 120;
+
+const priorities: {
+  value: ObraTaskPriority;
+  label: string;
+  dot: string;
+}[] = [
+  { value: 'baixa', label: 'Baixa', dot: 'bg-muted-foreground/60' },
+  { value: 'media', label: 'Média', dot: 'bg-info' },
+  { value: 'alta', label: 'Alta', dot: 'bg-warning' },
+  { value: 'critica', label: 'Crítica', dot: 'bg-destructive' },
 ];
 
 interface AtividadeDraft {
@@ -45,10 +72,12 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
   const { data: staffUsers = [] } = useStaffUsers();
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
-  const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsible_user_id || '');
+  const [responsibleUserId, setResponsibleUserId] = useState(initialData?.responsible_user_id || 'none');
   const [dueDate, setDueDate] = useState(initialData?.due_date || '');
   const [startDate, setStartDate] = useState(initialData?.start_date || '');
-  const [cost, setCost] = useState(initialData?.cost?.toString() || '');
+  const [cost, setCost] = useState(
+    initialData?.cost != null ? formatCurrencyBRL(String(Math.round(initialData.cost * 100))) : ''
+  );
   const [priority, setPriority] = useState<ObraTaskPriority>(initialData?.priority || 'media');
 
   // Autosave draft (per scope + new/editing target)
@@ -58,11 +87,11 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
     enabled: open,
     values: { title, description, responsibleUserId, dueDate, startDate, cost, priority },
     isDirty: (v) =>
-      !!(v.title.trim() || v.description.trim() || v.responsibleUserId || v.dueDate || v.startDate || v.cost),
+      !!(v.title.trim() || v.description.trim() || (v.responsibleUserId && v.responsibleUserId !== 'none') || v.dueDate || v.startDate || v.cost),
     onRestore: (draft) => {
       if (draft.title !== undefined) setTitle(draft.title);
       if (draft.description !== undefined) setDescription(draft.description);
-      if (draft.responsibleUserId !== undefined) setResponsibleUserId(draft.responsibleUserId);
+      if (draft.responsibleUserId !== undefined) setResponsibleUserId(draft.responsibleUserId || 'none');
       if (draft.dueDate !== undefined) setDueDate(draft.dueDate);
       if (draft.startDate !== undefined) setStartDate(draft.startDate);
       if (draft.cost !== undefined) setCost(draft.cost);
@@ -80,17 +109,30 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
     }
   }, [restored]);
 
+  const trimmedTitle = title.trim();
+  const titleTooLong = trimmedTitle.length > TITLE_MAX;
+  const dateRangeInvalid = !!(startDate && dueDate && dueDate < startDate);
+  const isValid = !!trimmedTitle && !titleTooLong && !dateRangeInvalid;
+
+  const disabledReason = useMemo(() => {
+    if (!trimmedTitle) return 'Informe o título da atividade.';
+    if (titleTooLong) return `Título excede ${TITLE_MAX} caracteres.`;
+    if (dateRangeInvalid) return 'O prazo não pode ser anterior à data de início.';
+    return '';
+  }, [trimmedTitle, titleTooLong, dateRangeInvalid]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!isValid) return;
     const isEdit = !!initialData?.id;
+    const numericCost = cost ? parseFloat(parseCurrencyBRL(cost)) : NaN;
     onSubmit({
-      title: title.trim(),
-      description: description || null,
-      responsible_user_id: (responsibleUserId && responsibleUserId !== 'none') ? responsibleUserId : null,
+      title: trimmedTitle,
+      description: description.trim() || null,
+      responsible_user_id: responsibleUserId && responsibleUserId !== 'none' ? responsibleUserId : null,
       due_date: dueDate || null,
       start_date: startDate || null,
-      cost: cost ? parseFloat(cost) : null,
+      cost: Number.isFinite(numericCost) ? numericCost : null,
       priority,
     });
     trackAmplitude('Activity Saved', {
@@ -108,7 +150,7 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setResponsibleUserId('');
+    setResponsibleUserId('none');
     setDueDate('');
     setStartDate('');
     setCost('');
@@ -119,10 +161,14 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
     if (isOpen && initialData) {
       setTitle(initialData.title);
       setDescription(initialData.description || '');
-      setResponsibleUserId(initialData.responsible_user_id || '');
+      setResponsibleUserId(initialData.responsible_user_id || 'none');
       setDueDate(initialData.due_date || '');
       setStartDate(initialData.start_date || '');
-      setCost(initialData.cost?.toString() || '');
+      setCost(
+        initialData.cost != null
+          ? formatCurrencyBRL(String(Math.round(initialData.cost * 100)))
+          : ''
+      );
       setPriority(initialData.priority || 'media');
     } else if (!isOpen) {
       // Keep the draft on close (so accidental close doesn't lose data).
@@ -132,79 +178,211 @@ export function AtividadeFormDialog({ open, onOpenChange, onSubmit, initialData,
     onOpenChange(isOpen);
   };
 
+  const titleCount = title.length;
+  const titleCounterClass = cn(
+    'text-[11px] tabular-nums',
+    titleTooLong ? 'text-destructive' : titleCount > TITLE_MAX * 0.85 ? 'text-warning' : 'text-muted-foreground',
+  );
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{initialData ? 'Editar Atividade' : 'Nova Atividade'}</DialogTitle>
+      <DialogContent
+        className="sm:max-w-lg max-h-[92dvh] flex flex-col gap-0 p-0 overflow-hidden"
+      >
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border-subtle">
+          <DialogTitle className="text-base">
+            {initialData ? 'Editar atividade' : 'Nova atividade'}
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            {initialData
+              ? 'Atualize as informações da atividade.'
+              : 'Cadastre uma tarefa interna da equipe para esta obra.'}
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Título da atividade *</Label>
-            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Comprar material elétrico" required />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="responsible">Responsável</Label>
-              <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar" />
-                </SelectTrigger>
-                <SelectContent position="popper" >
-                  <SelectItem value="none">Sem responsável</SelectItem>
-                  {staffUsers.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.nome} ({u.perfil})
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+            {/* Título */}
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <Label htmlFor="title" className="text-xs font-medium">
+                  Título <span className="text-destructive">*</span>
+                </Label>
+                <span className={titleCounterClass}>
+                  {titleCount}/{TITLE_MAX}
+                </span>
+              </div>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX + 20))}
+                placeholder="Ex.: Comprar material elétrico"
+                required
+                maxLength={TITLE_MAX + 20}
+                aria-invalid={titleTooLong || undefined}
+                autoFocus
+              />
+              {titleTooLong && (
+                <p className="text-[11px] text-destructive">
+                  Reduza para até {TITLE_MAX} caracteres.
+                </p>
+              )}
+            </div>
+
+            {/* Responsável + Prioridade */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="responsible" className="text-xs font-medium">
+                  Responsável
+                </Label>
+                <Select value={responsibleUserId} onValueChange={setResponsibleUserId}>
+                  <SelectTrigger id="responsible">
+                    <SelectValue placeholder="Sem responsável" />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    <SelectItem value="none">
+                      <span className="text-muted-foreground">Sem responsável</span>
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {staffUsers.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        <span className="truncate">
+                          {u.nome}
+                          <span className="text-muted-foreground text-xs ml-1">
+                            · {u.perfil}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="priority" className="text-xs font-medium">
+                  Prioridade
+                </Label>
+                <Select value={priority} onValueChange={(v) => setPriority(v as ObraTaskPriority)}>
+                  <SelectTrigger id="priority">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    {priorities.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>
+                        <span className="flex items-center gap-2">
+                          <span
+                            aria-hidden
+                            className={cn('inline-block h-2 w-2 rounded-full', p.dot)}
+                          />
+                          {p.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="priority">Prioridade</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as ObraTaskPriority)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorities.map(p => (
-                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Datas */}
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="start_date" className="text-xs font-medium">
+                    Data de início
+                  </Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    max={dueDate || undefined}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="due_date" className="text-xs font-medium">
+                    Prazo
+                  </Label>
+                  <Input
+                    id="due_date"
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    min={startDate || undefined}
+                    aria-invalid={dateRangeInvalid || undefined}
+                  />
+                </div>
+              </div>
+              {dateRangeInvalid && (
+                <p className="text-[11px] text-destructive">
+                  O prazo não pode ser anterior à data de início.
+                </p>
+              )}
+            </div>
+
+            {/* Custo */}
+            <div className="space-y-1.5">
+              <Label htmlFor="cost" className="text-xs font-medium">
+                Custo estimado
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+                  R$
+                </span>
+                <Input
+                  id="cost"
+                  type="text"
+                  inputMode="decimal"
+                  value={cost}
+                  onChange={(e) => setCost(formatCurrencyBRL(e.target.value))}
+                  placeholder="0,00"
+                  className="pl-9 tabular-nums"
+                />
+              </div>
+            </div>
+
+            {/* Descrição */}
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs font-medium">
+                Descrição
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Detalhes, contexto ou instruções para quem for executar."
+                rows={3}
+                className="resize-y"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="start_date">Data início</Label>
-              <Input id="start_date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="due_date">Prazo</Label>
-              <Input id="due_date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="cost">Custo (R$)</Label>
-            <Input id="cost" type="number" step="0.01" min="0" value={cost} onChange={e => setCost(e.target.value)} placeholder="0,00" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
-            <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Detalhes da atividade..." rows={3} />
-          </div>
-
-          <DialogFooter className="gap-2 sm:justify-between">
-            <AutosaveIndicator lastSavedAt={lastSavedAt} className="self-center" />
+          <DialogFooter className="border-t border-border-subtle bg-muted/30 px-5 py-3 gap-2 sm:justify-between">
+            <AutosaveIndicator
+              lastSavedAt={lastSavedAt}
+              className="self-center text-[11px]"
+            />
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={!title.trim()}>
-                {initialData ? 'Salvar' : 'Criar Atividade'}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
+                Cancelar
               </Button>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {/* span wrapper so disabled button still triggers tooltip */}
+                    <span tabIndex={isValid ? -1 : 0}>
+                      <Button type="submit" disabled={!isValid}>
+                        {initialData ? 'Salvar alterações' : 'Criar atividade'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!isValid && disabledReason && (
+                    <TooltipContent side="top">{disabledReason}</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </DialogFooter>
         </form>
