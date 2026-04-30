@@ -210,41 +210,97 @@ function DateCell({
 }
 
 // ─── StatusCell ───────────────────────────────────────────────────────────────
+/**
+ * Payload de pagamento ao confirmar Pago / Pago Parcial.
+ * - `paidDate` em formato 'YYYY-MM-DD' (data local escolhida pelo usuário).
+ * - `paidAmount` é opcional; quando informado representa o valor acumulado
+ *   pago (não a parcela isolada). Para `partial` é obrigatório e < total.
+ */
+export interface PaidPayload { paidDate: string; paidAmount?: number | null }
+
 function StatusCell({
   purchase,
+  paidAggregate,
   onSave,
 }: {
   purchase: PurchaseWithProject;
-  /** Quando `value === 'paid'`, `paidDate` traz a data escolhida pelo usuário (YYYY-MM-DD). */
-  onSave: (id: string, v: CalendarStatus, paidDate?: string) => void;
+  /** Agregado de parcelas pagas (regra híbrida). Quando `hasInstallments`,
+   *  o valor pago é derivado das parcelas e o campo manual `paid_amount`
+   *  é ignorado — nesse caso "Pago Parcial" só pode ser ajustado editando
+   *  as parcelas no formulário da compra. */
+  paidAggregate?: PaidAggregate;
+  /** Quando `value` for `paid` ou `partial`, `payload` traz a data e (para partial) o valor. */
+  onSave: (id: string, v: CalendarStatus, payload?: PaidPayload) => void;
 }) {
-  const current = toCalendarStatus(purchase.status, (purchase as any).paid_at);
+  const total = Number(purchase.estimated_cost ?? 0);
+  const paidSum = paidAggregate?.hasInstallments
+    ? paidAggregate.paidSum
+    : Number((purchase as any).paid_amount ?? (purchase as any).paid_at ? total : 0);
+  const current = toCalendarStatus(
+    purchase.status,
+    (purchase as any).paid_at,
+    paidSum,
+    total,
+  );
   const cfg = calendarStatusConfig[current];
   const Icon = cfg.icon;
 
-  // Controle do popover de seleção de data ao marcar como Pago.
+  // ── Dialogs de Pago / Pago Parcial ────────────────────────────────────
   const [paidPickerOpen, setPaidPickerOpen] = useState(false);
+  const [partialOpen, setPartialOpen] = useState(false);
   const initialPaid = (purchase as any).paid_at
     ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
     : new Date();
   const [paidDate, setPaidDate] = useState<Date>(initialPaid);
+  const [partialAmount, setPartialAmount] = useState<string>(
+    paidSum > 0 && paidSum < total ? String(paidSum) : '',
+  );
 
   const handleChange = (v: string) => {
     if (v === 'paid') {
-      // Default = hoje (ou data atual já registrada, se houver). Abre o picker
-      // para o usuário confirmar/alterar antes de gravar.
       setPaidDate((purchase as any).paid_at
         ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
         : new Date());
       setPaidPickerOpen(true);
       return;
     }
+    if (v === 'partial') {
+      // Quando há parcelas, "Pago Parcial" é um estado derivado das parcelas
+      // pagas — não faz sentido sobrescrever via campo manual.
+      if (paidAggregate?.hasInstallments) {
+        toast.info('Esta compra usa parcelas. Edite os pagamentos das parcelas no formulário da compra.');
+        return;
+      }
+      if (!total || total <= 0) {
+        toast.error('Defina o valor estimado da compra antes de marcar como Pago Parcial.');
+        return;
+      }
+      setPaidDate((purchase as any).paid_at
+        ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
+        : new Date());
+      setPartialAmount(paidSum > 0 && paidSum < total ? String(paidSum) : '');
+      setPartialOpen(true);
+      return;
+    }
     onSave(purchase.id, v as CalendarStatus);
   };
 
   const confirmPaid = () => {
-    onSave(purchase.id, 'paid', format(paidDate, 'yyyy-MM-dd'));
+    onSave(purchase.id, 'paid', { paidDate: format(paidDate, 'yyyy-MM-dd') });
     setPaidPickerOpen(false);
+  };
+
+  const partialNumber = Number(String(partialAmount).replace(',', '.'));
+  const partialValid =
+    Number.isFinite(partialNumber) && partialNumber > 0 && partialNumber < total;
+
+  const confirmPartial = () => {
+    if (!partialValid) return;
+    onSave(purchase.id, 'partial', {
+      paidDate: format(paidDate, 'yyyy-MM-dd'),
+      paidAmount: partialNumber,
+    });
+    setPartialOpen(false);
   };
 
   return (
@@ -277,6 +333,7 @@ function StatusCell({
         </SelectContent>
       </Select>
 
+      {/* Dialog: Pago integral */}
       <Dialog open={paidPickerOpen} onOpenChange={setPaidPickerOpen}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
@@ -302,6 +359,67 @@ function StatusCell({
           <DialogFooter>
             <Button variant="ghost" onClick={() => setPaidPickerOpen(false)}>Cancelar</Button>
             <Button onClick={confirmPaid}>Confirmar pagamento</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Pago Parcial — exige data + valor pago */}
+      <Dialog open={partialOpen} onOpenChange={setPartialOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Registrar pagamento parcial</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded border bg-muted/40 p-3 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total da compra:</span>
+                <span className="font-medium tabular-nums">{fmt(total)}</span>
+              </div>
+              {paidSum > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pago até agora:</span>
+                  <span className="font-medium tabular-nums">{fmt(paidSum)}</span>
+                </div>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="partial-amount" className="text-xs">Valor pago acumulado (R$)</Label>
+              <Input
+                id="partial-amount"
+                type="number"
+                inputMode="decimal"
+                min={0.01}
+                max={total - 0.01}
+                step="0.01"
+                value={partialAmount}
+                onChange={(e) => setPartialAmount(e.target.value)}
+                placeholder="Ex: 1500.00"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Informe o total já pago. Para registrar quitação completa, use o status "Pago".
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Data do primeiro pagamento</Label>
+              <CalendarPicker
+                mode="single"
+                selected={paidDate}
+                onSelect={(d) => d && setPaidDate(d)}
+                locale={ptBR}
+                disabled={(d) => d > new Date()}
+                className="p-3 pointer-events-auto rounded border"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Esta data é usada como âncora para recalcular a previsão de entrega
+                (lead time em dias úteis a partir do primeiro pagamento).
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPartialOpen(false)}>Cancelar</Button>
+            <Button onClick={confirmPartial} disabled={!partialValid}>
+              Confirmar pagamento parcial
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
