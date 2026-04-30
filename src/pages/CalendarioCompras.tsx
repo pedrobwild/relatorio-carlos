@@ -121,7 +121,7 @@ interface PurchaseWithProject extends Omit<ProjectPurchase, 'created_at'> {
   created_at?: string | null;
 }
 
-type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'delayed';
+type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'partial' | 'delayed';
 
 /**
  * Tons das badges de status — usam variantes claras + escuras com `dark:` para
@@ -131,21 +131,38 @@ type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'delayed';
  * telas (Compras, Painel de Obras).
  */
 const calendarStatusConfig: Record<CalendarStatus, { label: string; color: string; icon: React.ElementType }> = {
-  pending:   { label: 'Pendente',  color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40',           icon: Clock },
-  approved:  { label: 'Aprovado',  color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40',                 icon: ThumbsUp },
-  delivered: { label: 'Entregue',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40', icon: CheckCircle2 },
-  paid:      { label: 'Pago',      color: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/40',                 icon: CheckCircle2 },
-  delayed:   { label: 'Atrasado',  color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',                       icon: AlertTriangle },
+  pending:   { label: 'Pendente',     color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40',           icon: Clock },
+  approved:  { label: 'Aprovado',     color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40',                 icon: ThumbsUp },
+  delivered: { label: 'Entregue',     color: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40', icon: CheckCircle2 },
+  paid:      { label: 'Pago',         color: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/40',                 icon: CheckCircle2 },
+  partial:   { label: 'Pago Parcial', color: 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/40',                 icon: Clock },
+  delayed:   { label: 'Atrasado',     color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',                       icon: AlertTriangle },
 };
 
-const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'paid', 'delayed'];
+const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'partial', 'paid', 'delayed'];
+
+export interface PaidAggregate {
+  paidSum: number;
+  firstPaidAt: string | null;
+  hasInstallments: boolean;
+}
 
 /**
  * Mapeia o estado bruto da compra para o status simplificado do calendário.
- * "Pago" tem precedência: se `paid_at` está preenchido, exibimos como Pago
- * independentemente do status logístico (entregue, em trânsito etc.).
+ * Precedência:
+ *   1. `partial` se houve pagamento (paid_at) e o valor pago < total da compra.
+ *   2. `paid` se há paid_at sem condição de parcial atendida.
+ *   3. status logístico (approved/delivered/delayed/pending).
  */
-function toCalendarStatus(s: string | null | undefined, paidAt?: string | null): CalendarStatus {
+function toCalendarStatus(
+  s: string | null | undefined,
+  paidAt?: string | null,
+  paidSum?: number | null,
+  total?: number | null,
+): CalendarStatus {
+  const sum = Number(paidSum ?? 0);
+  const tot = Number(total ?? 0);
+  if (paidAt && tot > 0 && sum > 0 && sum < tot) return 'partial';
   if (paidAt) return 'paid';
   if (s === 'approved' || s === 'awaiting_approval' || s === 'purchased' || s === 'ordered' || s === 'in_transit') return 'approved';
   if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
