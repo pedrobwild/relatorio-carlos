@@ -1165,15 +1165,18 @@ export default function CalendarioCompras() {
         const paidAt = new Date(`${dateStr}T12:00:00`).toISOString();
         updates.paid_at = paidAt;
         // Recalcula a data prevista de entrega: âncora = data efetiva do
-        // pagamento + lead_time_days úteis. Sempre sobrescreve o valor
-        // anterior (regra de negócio: o pagamento real é a fonte da verdade
-        // do início do prazo logístico).
+        // pagamento + `lead_time_days` em DIAS ÚTEIS (skip fins de semana e
+        // feriados de SP via `businessDays.ts`). Se a própria data de pagamento
+        // cair em dia não-útil, `addBusinessDays` antes avança para o próximo
+        // dia útil e só então conta o lead time — garantindo "ponta a ponta"
+        // útil. Passamos `dateStr` (YYYY-MM-DD local) em vez do ISO completo
+        // para eliminar qualquer drift de fuso ao reinterpretar a âncora.
         const { data: row } = await supabase
           .from('project_purchases')
           .select('lead_time_days')
           .eq('id', id)
           .maybeSingle();
-        const expected = calcExpectedDelivery(paidAt, row?.lead_time_days ?? 7);
+        const expected = calcExpectedDelivery(dateStr, row?.lead_time_days ?? 7);
         if (expected) updates.expected_delivery_date = expected;
       } else {
         updates.paid_at = null;
