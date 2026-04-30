@@ -16,6 +16,7 @@ import { usePendencias } from '@/hooks/usePendencias';
 import { JornadaTabsBar } from './jornada/JornadaTabsBar';
 import { JornadaTabContent } from './jornada/JornadaTabContent';
 import { MobileNavDrawer } from './jornada/MobileNavDrawer';
+import { ProjectPhaseCompletionBanner } from '@/components/journey/ProjectPhaseCompletionBanner';
 
 export default function JornadaProjeto() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -157,6 +158,15 @@ export default function JornadaProjeto() {
         role="region"
         aria-label={`Conteúdo da aba ${activeTab === 'jornada' ? 'Jornada' : activeTab === 'financeiro' ? 'Financeiro' : activeTab === 'documentos' ? 'Documentos' : activeTab === 'formalizacoes' ? 'Formalizações' : 'Pendências'}`}
       >
+        {activeTab === 'jornada' && (
+          <ProjectPhaseCompletionBanner
+            projectId={projectId!}
+            projectName={project.name}
+            isProjectPhase={!!project.is_project_phase}
+            stages={journey.stages}
+            isStaff={isAdmin}
+          />
+        )}
         <JornadaTabContent
           activeTab={activeTab}
           handleTabChange={handleTabChange}
