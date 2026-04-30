@@ -1533,11 +1533,12 @@ export default function CalendarioCompras() {
         <PageContainer maxWidth="full" className="space-y-6">
 
           {/* ── KPIs ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
             {[
               { label: 'Total de Itens', value: totalItems, cls: '' },
               { label: 'Pendentes', value: pendingItems, cls: 'text-amber-600' },
               { label: 'Este Mês', value: thisMonthItems, cls: '' },
+              { label: 'Pagos no Mês', value: paidThisMonth, cls: 'text-teal-600' },
               { label: 'Total Estimado', value: fmt(totalEstimated), cls: 'text-xl' },
               {
                 label: `Diferença (${itemsWithBoth.length})`,
