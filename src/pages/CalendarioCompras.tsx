@@ -1532,7 +1532,10 @@ export default function CalendarioCompras() {
 
   const filtered = useMemo(() => {
     return allPurchases.filter((p) => {
-      if (filterStatus !== 'all' && toCalendarStatus(p.status, (p as any).paid_at) !== filterStatus) return false;
+      if (filterStatus !== 'all') {
+        const agg = getPaidAggregate(p);
+        if (toCalendarStatus(p.status, (p as any).paid_at, agg.paidSum, Number(p.estimated_cost ?? 0)) !== filterStatus) return false;
+      }
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterCustomer !== 'all' && (p.customer_name || '').trim() !== filterCustomer) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
