@@ -1632,7 +1632,10 @@ export default function CalendarioCompras() {
 
   // KPIs
   const totalItems = filtered.length;
-  const pendingItems = filtered.filter((p) => toCalendarStatus(p.status, (p as any).paid_at) === 'pending').length;
+  const pendingItems = filtered.filter((p) => {
+    const agg = getPaidAggregate(p);
+    return toCalendarStatus(p.status, (p as any).paid_at, agg.paidSum, Number(p.estimated_cost ?? 0)) === 'pending';
+  }).length;
   const thisMonthItems = filtered.filter((p) => p.planned_purchase_date && isSameMonth(parseISO(p.planned_purchase_date), currentMonth)).length;
   // "Pagos no mês": itens cuja data efetiva de pagamento (paid_at) cai no mês visível.
   // Usa o início (10 chars YYYY-MM-DD) para comparar como data local sem drift de UTC.
