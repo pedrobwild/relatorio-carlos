@@ -1443,6 +1443,13 @@ export default function CalendarioCompras() {
   const totalItems = filtered.length;
   const pendingItems = filtered.filter((p) => toCalendarStatus(p.status, (p as any).paid_at) === 'pending').length;
   const thisMonthItems = filtered.filter((p) => p.planned_purchase_date && isSameMonth(parseISO(p.planned_purchase_date), currentMonth)).length;
+  // "Pagos no mês": itens cuja data efetiva de pagamento (paid_at) cai no mês visível.
+  // Usa o início (10 chars YYYY-MM-DD) para comparar como data local sem drift de UTC.
+  const paidThisMonth = filtered.filter((p) => {
+    const paidAt = (p as any).paid_at as string | null | undefined;
+    if (!paidAt) return false;
+    return isSameMonth(parseISO(paidAt.slice(0, 10)), currentMonth);
+  }).length;
   const totalEstimated = filtered.reduce((s, p) => s + (p.estimated_cost || 0), 0);
   const itemsWithBoth = filtered.filter((p) => p.estimated_cost != null && p.actual_cost != null);
   const totalDiff = itemsWithBoth.reduce((s, p) => s + (p.estimated_cost! - p.actual_cost!), 0);
@@ -1526,11 +1533,12 @@ export default function CalendarioCompras() {
         <PageContainer maxWidth="full" className="space-y-6">
 
           {/* ── KPIs ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
             {[
               { label: 'Total de Itens', value: totalItems, cls: '' },
               { label: 'Pendentes', value: pendingItems, cls: 'text-amber-600' },
               { label: 'Este Mês', value: thisMonthItems, cls: '' },
+              { label: 'Pagos no Mês', value: paidThisMonth, cls: 'text-teal-600' },
               { label: 'Total Estimado', value: fmt(totalEstimated), cls: 'text-xl' },
               {
                 label: `Diferença (${itemsWithBoth.length})`,
