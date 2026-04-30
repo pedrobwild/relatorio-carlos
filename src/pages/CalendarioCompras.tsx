@@ -121,7 +121,7 @@ interface PurchaseWithProject extends Omit<ProjectPurchase, 'created_at'> {
   created_at?: string | null;
 }
 
-type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'delayed';
+type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'partial' | 'delayed';
 
 /**
  * Tons das badges de status — usam variantes claras + escuras com `dark:` para
@@ -131,21 +131,38 @@ type CalendarStatus = 'pending' | 'approved' | 'delivered' | 'paid' | 'delayed';
  * telas (Compras, Painel de Obras).
  */
 const calendarStatusConfig: Record<CalendarStatus, { label: string; color: string; icon: React.ElementType }> = {
-  pending:   { label: 'Pendente',  color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40',           icon: Clock },
-  approved:  { label: 'Aprovado',  color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40',                 icon: ThumbsUp },
-  delivered: { label: 'Entregue',  color: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40', icon: CheckCircle2 },
-  paid:      { label: 'Pago',      color: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/40',                 icon: CheckCircle2 },
-  delayed:   { label: 'Atrasado',  color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',                       icon: AlertTriangle },
+  pending:   { label: 'Pendente',     color: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40',           icon: Clock },
+  approved:  { label: 'Aprovado',     color: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40',                 icon: ThumbsUp },
+  delivered: { label: 'Entregue',     color: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40', icon: CheckCircle2 },
+  paid:      { label: 'Pago',         color: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/40',                 icon: CheckCircle2 },
+  partial:   { label: 'Pago Parcial', color: 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-500/15 dark:text-cyan-300 dark:border-cyan-500/40',                 icon: Clock },
+  delayed:   { label: 'Atrasado',     color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40',                       icon: AlertTriangle },
 };
 
-const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'paid', 'delayed'];
+const CALENDAR_STATUS_OPTIONS: CalendarStatus[] = ['pending', 'approved', 'delivered', 'partial', 'paid', 'delayed'];
+
+export interface PaidAggregate {
+  paidSum: number;
+  firstPaidAt: string | null;
+  hasInstallments: boolean;
+}
 
 /**
  * Mapeia o estado bruto da compra para o status simplificado do calendário.
- * "Pago" tem precedência: se `paid_at` está preenchido, exibimos como Pago
- * independentemente do status logístico (entregue, em trânsito etc.).
+ * Precedência:
+ *   1. `partial` se houve pagamento (paid_at) e o valor pago < total da compra.
+ *   2. `paid` se há paid_at sem condição de parcial atendida.
+ *   3. status logístico (approved/delivered/delayed/pending).
  */
-function toCalendarStatus(s: string | null | undefined, paidAt?: string | null): CalendarStatus {
+function toCalendarStatus(
+  s: string | null | undefined,
+  paidAt?: string | null,
+  paidSum?: number | null,
+  total?: number | null,
+): CalendarStatus {
+  const sum = Number(paidSum ?? 0);
+  const tot = Number(total ?? 0);
+  if (paidAt && tot > 0 && sum > 0 && sum < tot) return 'partial';
   if (paidAt) return 'paid';
   if (s === 'approved' || s === 'awaiting_approval' || s === 'purchased' || s === 'ordered' || s === 'in_transit') return 'approved';
   if (s === 'delivered' || s === 'sent_to_site') return 'delivered';
@@ -193,41 +210,97 @@ function DateCell({
 }
 
 // ─── StatusCell ───────────────────────────────────────────────────────────────
+/**
+ * Payload de pagamento ao confirmar Pago / Pago Parcial.
+ * - `paidDate` em formato 'YYYY-MM-DD' (data local escolhida pelo usuário).
+ * - `paidAmount` é opcional; quando informado representa o valor acumulado
+ *   pago (não a parcela isolada). Para `partial` é obrigatório e < total.
+ */
+export interface PaidPayload { paidDate: string; paidAmount?: number | null }
+
 function StatusCell({
   purchase,
+  paidAggregate,
   onSave,
 }: {
   purchase: PurchaseWithProject;
-  /** Quando `value === 'paid'`, `paidDate` traz a data escolhida pelo usuário (YYYY-MM-DD). */
-  onSave: (id: string, v: CalendarStatus, paidDate?: string) => void;
+  /** Agregado de parcelas pagas (regra híbrida). Quando `hasInstallments`,
+   *  o valor pago é derivado das parcelas e o campo manual `paid_amount`
+   *  é ignorado — nesse caso "Pago Parcial" só pode ser ajustado editando
+   *  as parcelas no formulário da compra. */
+  paidAggregate?: PaidAggregate;
+  /** Quando `value` for `paid` ou `partial`, `payload` traz a data e (para partial) o valor. */
+  onSave: (id: string, v: CalendarStatus, payload?: PaidPayload) => void;
 }) {
-  const current = toCalendarStatus(purchase.status, (purchase as any).paid_at);
+  const total = Number(purchase.estimated_cost ?? 0);
+  const paidSum = paidAggregate?.hasInstallments
+    ? paidAggregate.paidSum
+    : Number((purchase as any).paid_amount ?? (purchase as any).paid_at ? total : 0);
+  const current = toCalendarStatus(
+    purchase.status,
+    (purchase as any).paid_at,
+    paidSum,
+    total,
+  );
   const cfg = calendarStatusConfig[current];
   const Icon = cfg.icon;
 
-  // Controle do popover de seleção de data ao marcar como Pago.
+  // ── Dialogs de Pago / Pago Parcial ────────────────────────────────────
   const [paidPickerOpen, setPaidPickerOpen] = useState(false);
+  const [partialOpen, setPartialOpen] = useState(false);
   const initialPaid = (purchase as any).paid_at
     ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
     : new Date();
   const [paidDate, setPaidDate] = useState<Date>(initialPaid);
+  const [partialAmount, setPartialAmount] = useState<string>(
+    paidSum > 0 && paidSum < total ? String(paidSum) : '',
+  );
 
   const handleChange = (v: string) => {
     if (v === 'paid') {
-      // Default = hoje (ou data atual já registrada, se houver). Abre o picker
-      // para o usuário confirmar/alterar antes de gravar.
       setPaidDate((purchase as any).paid_at
         ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
         : new Date());
       setPaidPickerOpen(true);
       return;
     }
+    if (v === 'partial') {
+      // Quando há parcelas, "Pago Parcial" é um estado derivado das parcelas
+      // pagas — não faz sentido sobrescrever via campo manual.
+      if (paidAggregate?.hasInstallments) {
+        toast.info('Esta compra usa parcelas. Edite os pagamentos das parcelas no formulário da compra.');
+        return;
+      }
+      if (!total || total <= 0) {
+        toast.error('Defina o valor estimado da compra antes de marcar como Pago Parcial.');
+        return;
+      }
+      setPaidDate((purchase as any).paid_at
+        ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
+        : new Date());
+      setPartialAmount(paidSum > 0 && paidSum < total ? String(paidSum) : '');
+      setPartialOpen(true);
+      return;
+    }
     onSave(purchase.id, v as CalendarStatus);
   };
 
   const confirmPaid = () => {
-    onSave(purchase.id, 'paid', format(paidDate, 'yyyy-MM-dd'));
+    onSave(purchase.id, 'paid', { paidDate: format(paidDate, 'yyyy-MM-dd') });
     setPaidPickerOpen(false);
+  };
+
+  const partialNumber = Number(String(partialAmount).replace(',', '.'));
+  const partialValid =
+    Number.isFinite(partialNumber) && partialNumber > 0 && partialNumber < total;
+
+  const confirmPartial = () => {
+    if (!partialValid) return;
+    onSave(purchase.id, 'partial', {
+      paidDate: format(paidDate, 'yyyy-MM-dd'),
+      paidAmount: partialNumber,
+    });
+    setPartialOpen(false);
   };
 
   return (
@@ -260,6 +333,7 @@ function StatusCell({
         </SelectContent>
       </Select>
 
+      {/* Dialog: Pago integral */}
       <Dialog open={paidPickerOpen} onOpenChange={setPaidPickerOpen}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
@@ -285,6 +359,67 @@ function StatusCell({
           <DialogFooter>
             <Button variant="ghost" onClick={() => setPaidPickerOpen(false)}>Cancelar</Button>
             <Button onClick={confirmPaid}>Confirmar pagamento</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Pago Parcial — exige data + valor pago */}
+      <Dialog open={partialOpen} onOpenChange={setPartialOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Registrar pagamento parcial</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded border bg-muted/40 p-3 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total da compra:</span>
+                <span className="font-medium tabular-nums">{fmt(total)}</span>
+              </div>
+              {paidSum > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pago até agora:</span>
+                  <span className="font-medium tabular-nums">{fmt(paidSum)}</span>
+                </div>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="partial-amount" className="text-xs">Valor pago acumulado (R$)</Label>
+              <Input
+                id="partial-amount"
+                type="number"
+                inputMode="decimal"
+                min={0.01}
+                max={total - 0.01}
+                step="0.01"
+                value={partialAmount}
+                onChange={(e) => setPartialAmount(e.target.value)}
+                placeholder="Ex: 1500.00"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Informe o total já pago. Para registrar quitação completa, use o status "Pago".
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Data do primeiro pagamento</Label>
+              <CalendarPicker
+                mode="single"
+                selected={paidDate}
+                onSelect={(d) => d && setPaidDate(d)}
+                locale={ptBR}
+                disabled={(d) => d > new Date()}
+                className="p-3 pointer-events-auto rounded border"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Esta data é usada como âncora para recalcular a previsão de entrega
+                (lead time em dias úteis a partir do primeiro pagamento).
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPartialOpen(false)}>Cancelar</Button>
+            <Button onClick={confirmPartial} disabled={!partialValid}>
+              Confirmar pagamento parcial
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1112,6 +1247,42 @@ export default function CalendarioCompras() {
     staleTime: 60_000,
   });
 
+  // Agregado de parcelas pagas por compra (regra híbrida): permite identificar
+  // "Pago Parcial" mesmo sem usar o campo manual `paid_amount`.
+  const { data: installmentTotals = new Map<string, PaidAggregate>() } = useQuery({
+    queryKey: ['purchase-installments-totals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('purchase_payment_schedule')
+        .select('purchase_id, amount, paid_at');
+      if (error) throw error;
+      const map = new Map<string, PaidAggregate>();
+      (data || []).forEach((row) => {
+        const cur = map.get(row.purchase_id) ?? { paidSum: 0, firstPaidAt: null, hasInstallments: false };
+        cur.hasInstallments = true;
+        if (row.paid_at) {
+          cur.paidSum += Number(row.amount) || 0;
+          if (!cur.firstPaidAt || row.paid_at < cur.firstPaidAt) cur.firstPaidAt = row.paid_at;
+        }
+        map.set(row.purchase_id, cur);
+      });
+      return map;
+    },
+    staleTime: 60_000,
+  });
+
+  /** Resolve agregado de pagamento (regra híbrida) para uma compra. */
+  const getPaidAggregate = (p: PurchaseWithProject): PaidAggregate => {
+    const fromInstallments = installmentTotals.get(p.id);
+    if (fromInstallments?.hasInstallments) return fromInstallments;
+    const manual = Number((p as any).paid_amount ?? 0);
+    return {
+      paidSum: manual,
+      firstPaidAt: (p as any).paid_at ?? null,
+      hasInstallments: false,
+    };
+  };
+
   // Fetch all projects for the New Purchase dialog (not just the ones with purchases)
   const { data: allProjects = [] } = useQuery({
     queryKey: ['all-projects-for-select'],
@@ -1152,25 +1323,32 @@ export default function CalendarioCompras() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, value, paidDate }: { id: string; value: CalendarStatus; paidDate?: string }) => {
-      // "Pago" é um estado derivado de paid_at. Ao marcar Pago: registramos
-      // a data escolhida pelo usuário (default = hoje); ao mover para outro
-      // status: limpamos paid_at e gravamos o status logístico (mantendo
-      // 'delivered' como default ao "despagar").
+    mutationFn: async ({
+      id,
+      value,
+      payload,
+    }: {
+      id: string;
+      value: CalendarStatus;
+      payload?: PaidPayload;
+    }) => {
+      // "Pago" e "Pago Parcial" são estados derivados de paid_at + paid_amount.
+      // Ao mover para outro status logístico: limpamos paid_at/paid_amount.
       const updates: Record<string, unknown> = {};
-      if (value === 'paid') {
+      if (value === 'paid' || value === 'partial') {
         // `paidDate` chega como 'YYYY-MM-DD' (data local escolhida no picker).
         // Convertemos para ISO no fuso local — meio-dia evita drift de UTC.
-        const dateStr = paidDate ?? format(new Date(), 'yyyy-MM-dd');
+        const dateStr = payload?.paidDate ?? format(new Date(), 'yyyy-MM-dd');
         const paidAt = new Date(`${dateStr}T12:00:00`).toISOString();
         updates.paid_at = paidAt;
-        // Recalcula a data prevista de entrega: âncora = data efetiva do
-        // pagamento + `lead_time_days` em DIAS ÚTEIS (skip fins de semana e
-        // feriados de SP via `businessDays.ts`). Se a própria data de pagamento
-        // cair em dia não-útil, `addBusinessDays` antes avança para o próximo
-        // dia útil e só então conta o lead time — garantindo "ponta a ponta"
-        // útil. Passamos `dateStr` (YYYY-MM-DD local) em vez do ISO completo
-        // para eliminar qualquer drift de fuso ao reinterpretar a âncora.
+        // Quando Pago Parcial, gravamos o valor pago acumulado.
+        // Quando Pago integral, limpamos `paid_amount` (o status já indica quitação total).
+        updates.paid_amount = value === 'partial' ? (payload?.paidAmount ?? null) : null;
+
+        // Recalcula a previsão de entrega: âncora = data do PRIMEIRO pagamento
+        // (mesma para Pago e Pago Parcial, conforme regra de negócio acordada
+        // — lead total inalterado). `addBusinessDays` normaliza a âncora para
+        // próximo dia útil se cair em fim de semana/feriado SP.
         const { data: row } = await supabase
           .from('project_purchases')
           .select('lead_time_days')
@@ -1180,14 +1358,21 @@ export default function CalendarioCompras() {
         if (expected) updates.expected_delivery_date = expected;
       } else {
         updates.paid_at = null;
+        updates.paid_amount = null;
         updates.status = value;
       }
       const { error } = await supabase.from('project_purchases').update(updates).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] }); toast.success('Status atualizado'); },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-installments-totals'] });
+      const msg = vars.value === 'partial' ? 'Pagamento parcial registrado' : 'Status atualizado';
+      toast.success(msg);
+    },
     onError: (e) => { console.error(e); toast.error('Erro ao atualizar status'); },
   });
+
 
   const updateDateField = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: 'planned_purchase_date' | 'payment_due_date'; value: string | null }) => {
@@ -1347,7 +1532,10 @@ export default function CalendarioCompras() {
 
   const filtered = useMemo(() => {
     return allPurchases.filter((p) => {
-      if (filterStatus !== 'all' && toCalendarStatus(p.status, (p as any).paid_at) !== filterStatus) return false;
+      if (filterStatus !== 'all') {
+        const agg = getPaidAggregate(p);
+        if (toCalendarStatus(p.status, (p as any).paid_at, agg.paidSum, Number(p.estimated_cost ?? 0)) !== filterStatus) return false;
+      }
       if (filterProject !== 'all' && p.project_id !== filterProject) return false;
       if (filterCustomer !== 'all' && (p.customer_name || '').trim() !== filterCustomer) return false;
       if (filterSupplier !== 'all' && (p.supplier_name || '') !== filterSupplier) return false;
@@ -1444,7 +1632,10 @@ export default function CalendarioCompras() {
 
   // KPIs
   const totalItems = filtered.length;
-  const pendingItems = filtered.filter((p) => toCalendarStatus(p.status, (p as any).paid_at) === 'pending').length;
+  const pendingItems = filtered.filter((p) => {
+    const agg = getPaidAggregate(p);
+    return toCalendarStatus(p.status, (p as any).paid_at, agg.paidSum, Number(p.estimated_cost ?? 0)) === 'pending';
+  }).length;
   const thisMonthItems = filtered.filter((p) => p.planned_purchase_date && isSameMonth(parseISO(p.planned_purchase_date), currentMonth)).length;
   // "Pagos no mês": itens cuja data efetiva de pagamento (paid_at) cai no mês visível.
   // Usa o início (10 chars YYYY-MM-DD) para comparar como data local sem drift de UTC.
@@ -1719,7 +1910,8 @@ export default function CalendarioCompras() {
                         <span className={cn('font-medium', isToday && 'text-primary')}>{format(day, 'd')}</span>
                         <div className="mt-1 space-y-0.5">
                           {dayPurchases.slice(0, 3).map((p) => {
-                            const cs = toCalendarStatus(p.status, (p as any).paid_at);
+                            const agg = getPaidAggregate(p);
+                            const cs = toCalendarStatus(p.status, (p as any).paid_at, agg.paidSum, Number(p.estimated_cost ?? 0));
                             const cfg = calendarStatusConfig[cs];
                             return (
                               <div key={p.id} className={cn('text-[10px] leading-tight rounded-sm px-1 py-0.5 truncate border', cfg.color)} title={`${p.project_name} — ${p.item_name}`}>
@@ -1893,7 +2085,7 @@ export default function CalendarioCompras() {
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap">
-                                <StatusCell purchase={p} onSave={(id, v, paidDate) => updateStatus.mutate({ id, value: v, paidDate })} />
+                                <StatusCell purchase={p} paidAggregate={getPaidAggregate(p)} onSave={(id, v, payload) => updateStatus.mutate({ id, value: v, payload })} />
                               </TableCell>
 
                               <TableCell className="w-10 text-right pr-2">
@@ -2015,7 +2207,7 @@ export default function CalendarioCompras() {
                                   </div>
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
-                                  <StatusCell purchase={p} onSave={(id, v, paidDate) => updateStatus.mutate({ id, value: v, paidDate })} />
+                                  <StatusCell purchase={p} paidAggregate={getPaidAggregate(p)} onSave={(id, v, payload) => updateStatus.mutate({ id, value: v, payload })} />
                                 </TableCell>
                                 <TableCell className="w-10 text-right pr-2">
                                   <PurchaseRowActions
