@@ -1247,6 +1247,42 @@ export default function CalendarioCompras() {
     staleTime: 60_000,
   });
 
+  // Agregado de parcelas pagas por compra (regra híbrida): permite identificar
+  // "Pago Parcial" mesmo sem usar o campo manual `paid_amount`.
+  const { data: installmentTotals = new Map<string, PaidAggregate>() } = useQuery({
+    queryKey: ['purchase-installments-totals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('purchase_payment_schedule')
+        .select('purchase_id, amount, paid_at');
+      if (error) throw error;
+      const map = new Map<string, PaidAggregate>();
+      (data || []).forEach((row) => {
+        const cur = map.get(row.purchase_id) ?? { paidSum: 0, firstPaidAt: null, hasInstallments: false };
+        cur.hasInstallments = true;
+        if (row.paid_at) {
+          cur.paidSum += Number(row.amount) || 0;
+          if (!cur.firstPaidAt || row.paid_at < cur.firstPaidAt) cur.firstPaidAt = row.paid_at;
+        }
+        map.set(row.purchase_id, cur);
+      });
+      return map;
+    },
+    staleTime: 60_000,
+  });
+
+  /** Resolve agregado de pagamento (regra híbrida) para uma compra. */
+  const getPaidAggregate = (p: PurchaseWithProject): PaidAggregate => {
+    const fromInstallments = installmentTotals.get(p.id);
+    if (fromInstallments?.hasInstallments) return fromInstallments;
+    const manual = Number((p as any).paid_amount ?? 0);
+    return {
+      paidSum: manual,
+      firstPaidAt: (p as any).paid_at ?? null,
+      hasInstallments: false,
+    };
+  };
+
   // Fetch all projects for the New Purchase dialog (not just the ones with purchases)
   const { data: allProjects = [] } = useQuery({
     queryKey: ['all-projects-for-select'],
