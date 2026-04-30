@@ -1882,7 +1882,7 @@ export default function CalendarioCompras() {
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap">
-                                <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
+                                <StatusCell purchase={p} onSave={(id, v, paidDate) => updateStatus.mutate({ id, value: v, paidDate })} />
                               </TableCell>
 
                               <TableCell className="w-10 text-right pr-2">
@@ -2004,7 +2004,7 @@ export default function CalendarioCompras() {
                                   </div>
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
-                                  <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
+                                  <StatusCell purchase={p} onSave={(id, v, paidDate) => updateStatus.mutate({ id, value: v, paidDate })} />
                                 </TableCell>
                                 <TableCell className="w-10 text-right pr-2">
                                   <PurchaseRowActions
