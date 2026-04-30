@@ -1287,25 +1287,32 @@ export default function CalendarioCompras() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, value, paidDate }: { id: string; value: CalendarStatus; paidDate?: string }) => {
-      // "Pago" é um estado derivado de paid_at. Ao marcar Pago: registramos
-      // a data escolhida pelo usuário (default = hoje); ao mover para outro
-      // status: limpamos paid_at e gravamos o status logístico (mantendo
-      // 'delivered' como default ao "despagar").
+    mutationFn: async ({
+      id,
+      value,
+      payload,
+    }: {
+      id: string;
+      value: CalendarStatus;
+      payload?: PaidPayload;
+    }) => {
+      // "Pago" e "Pago Parcial" são estados derivados de paid_at + paid_amount.
+      // Ao mover para outro status logístico: limpamos paid_at/paid_amount.
       const updates: Record<string, unknown> = {};
-      if (value === 'paid') {
+      if (value === 'paid' || value === 'partial') {
         // `paidDate` chega como 'YYYY-MM-DD' (data local escolhida no picker).
         // Convertemos para ISO no fuso local — meio-dia evita drift de UTC.
-        const dateStr = paidDate ?? format(new Date(), 'yyyy-MM-dd');
+        const dateStr = payload?.paidDate ?? format(new Date(), 'yyyy-MM-dd');
         const paidAt = new Date(`${dateStr}T12:00:00`).toISOString();
         updates.paid_at = paidAt;
-        // Recalcula a data prevista de entrega: âncora = data efetiva do
-        // pagamento + `lead_time_days` em DIAS ÚTEIS (skip fins de semana e
-        // feriados de SP via `businessDays.ts`). Se a própria data de pagamento
-        // cair em dia não-útil, `addBusinessDays` antes avança para o próximo
-        // dia útil e só então conta o lead time — garantindo "ponta a ponta"
-        // útil. Passamos `dateStr` (YYYY-MM-DD local) em vez do ISO completo
-        // para eliminar qualquer drift de fuso ao reinterpretar a âncora.
+        // Quando Pago Parcial, gravamos o valor pago acumulado.
+        // Quando Pago integral, limpamos `paid_amount` (o status já indica quitação total).
+        updates.paid_amount = value === 'partial' ? (payload?.paidAmount ?? null) : null;
+
+        // Recalcula a previsão de entrega: âncora = data do PRIMEIRO pagamento
+        // (mesma para Pago e Pago Parcial, conforme regra de negócio acordada
+        // — lead total inalterado). `addBusinessDays` normaliza a âncora para
+        // próximo dia útil se cair em fim de semana/feriado SP.
         const { data: row } = await supabase
           .from('project_purchases')
           .select('lead_time_days')
@@ -1315,9 +1322,20 @@ export default function CalendarioCompras() {
         if (expected) updates.expected_delivery_date = expected;
       } else {
         updates.paid_at = null;
+        updates.paid_amount = null;
         updates.status = value;
       }
       const { error } = await supabase.from('project_purchases').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-installments-totals'] });
+      const msg = vars.value === 'partial' ? 'Pagamento parcial registrado' : 'Status atualizado';
+      toast.success(msg);
+    },
+    onError: (e) => { console.error(e); toast.error('Erro ao atualizar status'); },
+  });
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-purchases-calendar'] }); toast.success('Status atualizado'); },
