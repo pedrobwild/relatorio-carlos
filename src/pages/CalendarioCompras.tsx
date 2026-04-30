@@ -193,40 +193,102 @@ function DateCell({
 }
 
 // ─── StatusCell ───────────────────────────────────────────────────────────────
-function StatusCell({ purchase, onSave }: { purchase: PurchaseWithProject; onSave: (id: string, v: CalendarStatus) => void }) {
+function StatusCell({
+  purchase,
+  onSave,
+}: {
+  purchase: PurchaseWithProject;
+  /** Quando `value === 'paid'`, `paidDate` traz a data escolhida pelo usuário (YYYY-MM-DD). */
+  onSave: (id: string, v: CalendarStatus, paidDate?: string) => void;
+}) {
   const current = toCalendarStatus(purchase.status, (purchase as any).paid_at);
   const cfg = calendarStatusConfig[current];
   const Icon = cfg.icon;
+
+  // Controle do popover de seleção de data ao marcar como Pago.
+  const [paidPickerOpen, setPaidPickerOpen] = useState(false);
+  const initialPaid = (purchase as any).paid_at
+    ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
+    : new Date();
+  const [paidDate, setPaidDate] = useState<Date>(initialPaid);
+
+  const handleChange = (v: string) => {
+    if (v === 'paid') {
+      // Default = hoje (ou data atual já registrada, se houver). Abre o picker
+      // para o usuário confirmar/alterar antes de gravar.
+      setPaidDate((purchase as any).paid_at
+        ? parseISO(((purchase as any).paid_at as string).slice(0, 10))
+        : new Date());
+      setPaidPickerOpen(true);
+      return;
+    }
+    onSave(purchase.id, v as CalendarStatus);
+  };
+
+  const confirmPaid = () => {
+    onSave(purchase.id, 'paid', format(paidDate, 'yyyy-MM-dd'));
+    setPaidPickerOpen(false);
+  };
+
   return (
-    <Select value={current} onValueChange={(v) => onSave(purchase.id, v as CalendarStatus)}>
-      <SelectTrigger
-        className={cn(
-          // h-7 + padding fino + cor do status. `[&>span]:line-clamp-none` evita
-          // que o SelectValue corte o label em uma linha muito apertada.
-          'h-7 min-w-[120px] w-auto text-[11px] pl-2 pr-1.5 py-0 gap-1 border rounded-full font-medium',
-          '[&>span]:line-clamp-none [&>span]:flex [&>span]:items-center [&>span]:gap-1',
-          '[&_svg]:opacity-70',
-          cfg.color,
-        )}
-        aria-label={`Status: ${cfg.label}`}
-      >
-        <span className="inline-flex items-center gap-1 whitespace-nowrap">
-          <Icon className="h-3 w-3 shrink-0" aria-hidden />
-          <SelectValue />
-        </span>
-      </SelectTrigger>
-      <SelectContent>
-        {CALENDAR_STATUS_OPTIONS.map((s) => {
-          const c = calendarStatusConfig[s];
-          const I = c.icon;
-          return (
-            <SelectItem key={s} value={s} className="text-xs">
-              <span className="inline-flex items-center gap-1.5"><I className="h-3 w-3" />{c.label}</span>
-            </SelectItem>
-          );
-        })}
-      </SelectContent>
-    </Select>
+    <>
+      <Select value={current} onValueChange={handleChange}>
+        <SelectTrigger
+          className={cn(
+            'h-7 min-w-[120px] w-auto text-[11px] pl-2 pr-1.5 py-0 gap-1 border rounded-full font-medium',
+            '[&>span]:line-clamp-none [&>span]:flex [&>span]:items-center [&>span]:gap-1',
+            '[&_svg]:opacity-70',
+            cfg.color,
+          )}
+          aria-label={`Status: ${cfg.label}`}
+        >
+          <span className="inline-flex items-center gap-1 whitespace-nowrap">
+            <Icon className="h-3 w-3 shrink-0" aria-hidden />
+            <SelectValue />
+          </span>
+        </SelectTrigger>
+        <SelectContent>
+          {CALENDAR_STATUS_OPTIONS.map((s) => {
+            const c = calendarStatusConfig[s];
+            const I = c.icon;
+            return (
+              <SelectItem key={s} value={s} className="text-xs">
+                <span className="inline-flex items-center gap-1.5"><I className="h-3 w-3" />{c.label}</span>
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+
+      <Dialog open={paidPickerOpen} onOpenChange={setPaidPickerOpen}>
+        <DialogContent className="sm:max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle>Data do pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-xs text-muted-foreground self-start">
+              Selecione a data em que o pagamento foi efetivamente realizado.
+            </p>
+            <CalendarPicker
+              mode="single"
+              selected={paidDate}
+              onSelect={(d) => d && setPaidDate(d)}
+              locale={ptBR}
+              initialFocus
+              disabled={(d) => d > new Date()}
+              className="p-3 pointer-events-auto"
+            />
+            <p className="text-sm font-medium self-start">
+              {format(paidDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPaidPickerOpen(false)}>Cancelar</Button>
+            <Button onClick={confirmPaid}>Confirmar pagamento</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -1090,13 +1152,17 @@ export default function CalendarioCompras() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, value }: { id: string; value: CalendarStatus }) => {
+    mutationFn: async ({ id, value, paidDate }: { id: string; value: CalendarStatus; paidDate?: string }) => {
       // "Pago" é um estado derivado de paid_at. Ao marcar Pago: registramos
-      // a data atual; ao mover para outro status: limpamos paid_at e gravamos
-      // o status logístico (mantendo 'delivered' como default ao "despagar").
+      // a data escolhida pelo usuário (default = hoje); ao mover para outro
+      // status: limpamos paid_at e gravamos o status logístico (mantendo
+      // 'delivered' como default ao "despagar").
       const updates: Record<string, unknown> = {};
       if (value === 'paid') {
-        const paidAt = new Date().toISOString();
+        // `paidDate` chega como 'YYYY-MM-DD' (data local escolhida no picker).
+        // Convertemos para ISO no fuso local — meio-dia evita drift de UTC.
+        const dateStr = paidDate ?? format(new Date(), 'yyyy-MM-dd');
+        const paidAt = new Date(`${dateStr}T12:00:00`).toISOString();
         updates.paid_at = paidAt;
         // Recalcula a data prevista de entrega: âncora = data efetiva do
         // pagamento + lead_time_days úteis. Sempre sobrescreve o valor
@@ -1816,7 +1882,7 @@ export default function CalendarioCompras() {
                               </TableCell>
 
                               <TableCell className="whitespace-nowrap">
-                                <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
+                                <StatusCell purchase={p} onSave={(id, v, paidDate) => updateStatus.mutate({ id, value: v, paidDate })} />
                               </TableCell>
 
                               <TableCell className="w-10 text-right pr-2">
@@ -1938,7 +2004,7 @@ export default function CalendarioCompras() {
                                   </div>
                                 </TableCell>
                                 <TableCell className="whitespace-nowrap">
-                                  <StatusCell purchase={p} onSave={(id, v) => updateStatus.mutate({ id, value: v })} />
+                                  <StatusCell purchase={p} onSave={(id, v, paidDate) => updateStatus.mutate({ id, value: v, paidDate })} />
                                 </TableCell>
                                 <TableCell className="w-10 text-right pr-2">
                                   <PurchaseRowActions
