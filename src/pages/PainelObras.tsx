@@ -1385,9 +1385,26 @@ function KanbanView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [obras, order, groupBy]);
 
-  // Filtro/seleção atualmente vigente para o critério escolhido.
-  const selectedGroup = groupBy === 'status' ? selectedStatus : selectedEtapa;
-  const onSelectGroup = groupBy === 'status' ? onSelectStatus : onSelectEtapa;
+  // Helpers de "chip ativo" e "ação ao clicar no chip" por critério:
+  // - Etapa: single-select clássico (clica = filtra; reclicar = limpa).
+  // - Status: multi-select que reflete o popover de status na toolbar
+  //   (clica = toggle no Set; chip aparece marcado se status está no filtro).
+  const isChipActive = (filterValue: string): boolean => {
+    if (groupBy === 'status') return filterStatuses.has(filterValue);
+    return selectedEtapa === filterValue;
+  };
+  const onChipClick = (filterValue: string): void => {
+    if (groupBy === 'status') {
+      onToggleStatusFilter(filterValue);
+      return;
+    }
+    onSelectEtapa(selectedEtapa === filterValue ? ALL : filterValue);
+  };
+  const hasGroupFilter = groupBy === 'status' ? filterStatuses.size > 0 : selectedEtapa !== ALL;
+  const clearGroupFilter = () => {
+    if (groupBy === 'status') onClearStatusFilter();
+    else onSelectEtapa(ALL);
+  };
 
   // Modo de layout das colunas (manual vs auto pela ordenação ativa).
   const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('manual');
