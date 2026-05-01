@@ -1425,7 +1425,24 @@ function KanbanView({
   };
 
   // Modo de layout das colunas (manual vs auto pela ordenação ativa).
-  const [layoutMode, setLayoutMode] = useState<'manual' | 'auto'>('manual');
+  // Persistido em localStorage por critério de agrupamento — ao recarregar
+  // a página ou alternar Etapa/Status, voltamos no mesmo modo escolhido.
+  const [layoutMode, setLayoutMode] = useState<KanbanLayoutMode>(() =>
+    loadKanbanLayoutMode(groupBy),
+  );
+  // Ao trocar o critério de agrupamento, recarrega a preferência salva
+  // daquele critério (cada um tem seu próprio modo).
+  useEffect(() => {
+    setLayoutMode(loadKanbanLayoutMode(groupBy));
+  }, [groupBy]);
+  // Persiste sempre que o usuário alterna entre manual/auto.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(getLayoutStorageKeyFor(groupBy), layoutMode);
+    } catch {
+      /* ignore (modo privado, quota etc.) */
+    }
+  }, [layoutMode, groupBy]);
 
   const aggregateByCol = useMemo(() => {
     const agg = new Map<KanbanColKey, { num: number | null; str: string | null }>();
