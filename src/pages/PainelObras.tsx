@@ -640,6 +640,12 @@ export default function PainelObras() {
                     title={obras.length === 0 ? 'Nenhuma obra cadastrada' : 'Nenhum resultado'}
                     description={obras.length === 0 ? 'Crie uma nova obra a partir do botão acima.' : 'Tente ajustar ou limpar os filtros.'} />
                 </SectionCard>
+              ) : activeView === 'kanban' ? (
+                <KanbanView
+                  obras={filtered}
+                  onOpen={(id) => navigate(`/obra/${id}`)}
+                  onUpdateEtapa={(id, etapa) => updateObra(id, { etapa })}
+                />
               ) : (
                 <SectionCard flush>
                   <div className="overflow-x-auto">
