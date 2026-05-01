@@ -617,13 +617,13 @@ export default function PainelObras() {
           customerName={dadosTarget?.customer_name ?? null}
         />
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-6">
-          <TabsList className="bg-surface-sunken border border-border-subtle">
-            <TabsTrigger value="obras" className="text-xs data-[state=active]:bg-card">Obras</TabsTrigger>
-            <TabsTrigger value="fornecedores" className="text-xs data-[state=active]:bg-card">Fornecedores</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-3">
+          <TabsList className="h-8 bg-surface-sunken border border-border-subtle">
+            <TabsTrigger value="obras" className="h-7 text-xs data-[state=active]:bg-card">Obras</TabsTrigger>
+            <TabsTrigger value="fornecedores" className="h-7 text-xs data-[state=active]:bg-card">Fornecedores</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="obras" className="mt-4 focus-visible:outline-none">
+          <TabsContent value="obras" className="mt-2 focus-visible:outline-none">
             <PageToolbar
               sticky={false}
               search={
