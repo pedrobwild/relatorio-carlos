@@ -1971,6 +1971,9 @@ function KanbanCard({
     <div
       role="button"
       tabIndex={0}
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       onClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1980,11 +1983,13 @@ function KanbanCard({
       }}
       aria-label={`Abrir obra ${obra.nome}`}
       aria-selected={selected}
+      aria-grabbed={dragging}
       className={cn(
         'group relative rounded-md bg-card border p-2.5 text-left',
-        'hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer',
+        'hover:border-primary/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         selected ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border-subtle',
+        dragging && 'opacity-50',
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
